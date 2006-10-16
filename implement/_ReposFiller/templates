@@ -1,0 +1,43 @@
+1000 casa/Containers/Map.cc synthesis/Parallel/Algorithm.h 
+     template class ConstMapIter<Int, Algorithm *> 
+     template class MapIter<Int, Algorithm *> 
+     template class MapIterRep<Int, Algorithm *> 
+     template class MapRep<Int, Algorithm *> 
+     template class Map<Int, Algorithm *> 
+1000 casa/Containers/OrderedMap.cc synthesis/Parallel/Algorithm.h 
+     template class OrderedMapRep<Int, Algorithm *> 
+     template class OrderedMapIterRep<Int, Algorithm *> 
+     template class OrderedMap<Int, Algorithm *> 
+     template class OrderedMapNotice<Int, Algorithm *> 
+1000 casa/Containers/OrderedPair.cc synthesis/Parallel/Algorithm.h 
+     template class OrderedPair<Int, Algorithm *> 
+1000 casa/Utilities/CountedPtr.cc 
+     = synthesis/MeasurementComponents/PBMathInterface.h 
+     template class CountedConstPtr<PBMathInterface> 
+     template class CountedPtr<PBMathInterface> 
+     template class PtrRep<PBMathInterface> 
+     template class SimpleCountedConstPtr<PBMathInterface> 
+     template class SimpleCountedPtr<PBMathInterface> 
+1000 casa/Utilities/Register.cc casa/Containers/OrderedMap.h 
+     = synthesis/Parallel/Algorithm.h 
+     template uInt Register(OrderedMapNotice<Int, Algorithm *> const *) 
+1000 synthesis/MeasurementEquations/ArrayModel.cc 
+     template class ArrayModel<Float> 
+1000 synthesis/MeasurementEquations/LinearEquation.cc 
+     = casa/Arrays/Array.h 
+     template class LinearEquation<Array<Float>, Array<Float> > 
+1010 synthesis/MeasurementEquations/LinearEquation.cc 
+     = lattices/Lattices/Lattice.h 
+     template class LinearEquation<Lattice<Float>, Lattice<Float> > 
+1000 synthesis/MeasurementEquations/LinearModel.cc 
+     = casa/Arrays/Array.h 
+     template class LinearModel<Array<Float> > 
+1010 synthesis/MeasurementEquations/LinearModel.cc 
+     = lattices/Lattices/Lattice.h 
+     template class LinearModel<Lattice<Float> > 
+1000 synthesis/MeasurementEquations/ResidualEquation.cc 
+     = casa/Arrays/Array.h 
+     template class ResidualEquation<Array<Float> > 
+1010 synthesis/MeasurementEquations/ResidualEquation.cc 
+     = lattices/Lattices/Lattice.h 
+     template class ResidualEquation<Lattice<Float> > 

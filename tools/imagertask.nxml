@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="file:///Users/wyoung/casa/interfaces/casa2acsidl.xsl"?>
+<imagertasks xmlns="http://www.aoc.nrao.edu/~wyoung/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.aoc.nrao.edu/~wyoung/psetTypes.html
+file:///users/wyoung/casa/interfaces/psetdef.xsd">
+
+   <task name="imagermaketestms">
+   <shortdescription>Make a standard MeasurementSet that can be used for experimentation</shortdescription>
+   
+<description>
+A standard dataset is converted from a FITS file to 
+a MeasurementSet. The dataset used is an
+observation of 3C273 at 8GHz using the C-configuration of the VLA. It
+is part of the \aipspp\ distribution.
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="string" name="msfile">
+     <description>Name of output ms</description>
+     <value>"3c273XC1.ms"</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagermaketestms('MY3C273.ms')
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagermaketestsdms">
+   <shortdescription>Make a standard single dish MeasurementSet that can be used for experimentation</shortdescription>
+   
+<description>
+A standard dataset is converted from a set of GBT fits files
+to a MeasurementSet. The dataset used is an
+observation of the Cygnus loop at 800MHz using GBT. It
+is part of the \aipspp\ distribution.
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="string" name="msfile">
+     <description>Name of output ms</description>
+     <value>"gbt\_cygnus\_800MHz.ms"</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagermaketestsdms('mySD.ms')
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagermaketestmfms">
+   <shortdescription>Make a standard multifield MeasurementSet that can be used for experimentation</shortdescription>
+   
+<description>
+A standard multifield dataset is converted from a FITS file to 
+a MeasurementSet. The dataset used is a seven field 
+VLA D-array observation of CAS A at 8 GHz and
+is part of the \aipspp\ distribution.
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="string" name="msfile">
+     <description>Name of output ms</description>
+     <value>"XCAS.ms"</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagermaketestmfms('XCAS.ms')
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagermaketestcl">
+   <shortdescription>Make a standard componentlist for a standard MeasurementSet</shortdescription>
+   
+<description>
+A standard component list is made for the 3C273XC1 data set.
+The reference for the component can be specified: the components
+will be then converted to this reference (e.g. 'gal') before processing.
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="string" name="clfile">
+     <description>Name of output cl</description>
+     <value>"3C273XC1.cl"</value>
+     </param>
+
+     <param xsi:type="string" name="refer">
+     <description>Reference</description>
+     <value>"gal"</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagermaketestcl('MY3C273.cl', 'gal')
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagertest">
+   <shortdescription>Perform a test of imaging from a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test. The dataset used is an observation of 3C273 at 8GHz
+using the C-configuration of the VLA. It is part of the \aipspp\
+distribution.
+
+Note that if doshift is set to T then the imaging is done in
+Galactic coordinates.
+
+The test does the following:
+\begin{itemize}
+\item The uvfits file that is to be read in is
+in a standard place in the \aipspp\ code source area.
+\item The MeasurementSet is read from the uvfits file.
+\item A summary of what exists is logged.
+\item The data are weighted using the Briggs algorithm.
+\item An initial CLEAN-only deconvolution is performed, and then restored.
+\item A CLEAN mask is constructed by thresholding $I&gt;0.015$
+\item The deconvolution is repeated with 
+masks enabled.
+\item Residual images are calculated for the North Celestial pole,
+on the Sun, and for azimuth elevation (0d, 0d).
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="int" name="size">
+     <description>Number of pixels on a side</description>
+     <value>128</value>
+     </param>
+
+     <param xsi:type="int" name="cleanniter">
+     <description>Number of clean iterations</description>
+     <value>1000</value>
+     </param>
+
+     <param xsi:type="double" name="cleangain">
+     <description>Clean loop gain</description>
+     <value>0.1</value>
+     </param>
+
+     <param xsi:type="bool" name="doshift">
+     <description>Shift the phase center</description>
+     <value>True</value>
+     </param>
+
+     <param xsi:type="bool" name="doplot">
+     <description>Plot?</description>
+     <value>True</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+include 'imager.g'
+imagertest(size=256)
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagerlongtest">
+   <shortdescription>Perform a long test of imaging from a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test. The dataset used is an observation of 3C273 at 8GHz
+using the C-configuration of the VLA. It is part of the \aipspp\
+distribution.
+
+The test is similar to imagertest, except that the various
+functions are checked one by one and status reported.
+</description>
+<example>
+\begin{verbatim}
+include 'imager.g'
+imagerlongtest()
+\end{verbatim}
+</example>
+<returns xsi:type="bool"/>
+</task>
+
+ 
+   <task name="imagermftest">
+   <shortdescription>Perform a test of multi-field processing using a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test of multi-field processing. The dataset used is an
+observation of 3C273 at 8GHz using the C-configuration of the VLA. It
+is part of the \aipspp\ distribution.
+
+Note that if doshift is set to T then the imaging is done in
+Galactic coordinates.
+
+The test does the following:
+\begin{itemize}
+\item The uvfits file that is to be read in is
+in a standard place in the \aipspp\ code source area.
+\item The MeasurementSet is read from the uvfits file.
+\item The data are weighted using the Briggs algorithm.
+\item Two fields are cleaned, one on the core and one on the
+jet, using the standard component list.
+\item If doplot=T then the visibilities are plotted.
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="bool" name="doplot">
+     <description>Plot?</description>
+     <value>True</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagermftest()
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagerspectraltest">
+   <shortdescription>Perform a test of spectral processing using a standard spectral line MeasurementSet</shortdescription>
+   
+<description>
+Perform a test. The dataset used is an observation of BLLAC
+at 110 GHz using the BIMA array. It is part of the \aipspp\
+distribution.
+
+The test does the following:
+\begin{itemize}
+\item The uvfits file that is to be read in is
+in a standard place in the \aipspp\ code source area.
+\item The MeasurementSet is read from the uvfits file.
+\item An CLEAN-only deconvolution is performed, and then restored.
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<example>
+\begin{verbatim}
+imagerspectraltest()
+\end{verbatim}
+</example>
+</task>
+%
+ 
+   <task name="imagerpbtest">
+   <shortdescription>Perform a test of primary beam processing using a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test of primary processing. The dataset used is an
+observation of 3C273 at 8GHz using the C-configuration of the VLA. It
+is part of the \aipspp\ distribution.
+
+The test does the following:
+\begin{itemize}
+\item The uvfits file that is to be read in is
+in a standard place in the \aipspp\ code source area.
+\item The MeasurementSet is read from the uvfits file.
+\item A default calibration is applied
+\item The data are weighted using the Briggs algorithm.
+\item One field is cleaned, using the mf algorithm and the primary
+beam is applied both during the subtraction of components (the
+major cycle) and in estimating the residuals.
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<example>
+\begin{verbatim}
+imagerpbtest()
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imagercomponenttest">
+   <shortdescription>Perform a test of component model processing using a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test of component model processing. The dataset used is an
+observation of 3C273 at 8GHz using the C-configuration of the VLA. It
+is part of the \aipspp\ distribution. 
+
+The test does the following:
+\begin{itemize}
+\item The uvfits file that is to be read in is
+in a standard place in the \aipspp\ code source area.
+\item The MeasurementSet is read from the uvfits file.
+\item A component list is constructed and using in the
+subsequent processing. A point component is placed at the
+position of the core of 3C273, but specified in Galactic
+coordinates.
+\item The component model is used in predicting the
+model visibilities.
+\item A plot of the visibilities is made.
+\item The image is cleaned and restored. The center of the image
+is shifted to half way down the jet.
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="int" name="size">
+     <description>Number of pixels on a side</description>
+     <value>128</value>
+     </param>
+
+     <param xsi:type="bool" name="doshift">
+     <description>Shift the phase center</description>
+     <value>True</value>
+     </param>
+
+     <param xsi:type="bool" name="doplot">
+     <description>Plot?</description>
+     <value>True</value>
+     </param>
+</input>
+<example>
+\begin{verbatim}
+imagercomponenttest()
+\end{verbatim}
+</example>
+</task>
+
+   <task name="imagersdtest">
+   <shortdescription>Perform a test of single dish imaging from a standard MeasurementSet</shortdescription>
+   
+<description>
+Perform a test. The dataset used is an observation of the Cygnus
+region at 800 MHz using the GBT. It is part of the \aipspp\
+distribution.
+
+The test does the following:
+\begin{itemize}
+\item The GBT FITS files that are to be read in are
+in a standard place in the \aipspp\ data respository.
+\item The MeasurementSet is created using the 
+<link anchor="gbtmsfiller">gbtmsfiller</link>
+\item The data are calibrated using 
+<link anchor="gbtcal">gbtcal</link>.
+\item Two images are constructed: the data gridded and the weights
+gridded.
+\item The <link anchor="imagecalc">image calculator</link> is used to normalize
+by the weights image.
+\end{itemize}
+</description>
+<returns xsi:type="bool"/>
+<example>
+\begin{verbatim}
+include 'imager.g'
+imagersdtest();
+\end{verbatim}
+</example>
+</task>
+
+ 
+   <task name="imageralltests">
+   <shortdescription>Perform all imager tests using standard MeasurementSets</shortdescription>
+   
+<description>
+All tests are run and the status returned. The complete
+suite takes about 500s (real-time) on a Pentium Pro 200MHz.
+</description>
+<returns xsi:type="bool"/>
+</task>
+
+ 
+   <task name="imagermultiscale">
+   <shortdescription>Makes multi-resolution multiscale images.</shortdescription>
+   
+<description>
+Based on user-specified image sizes and cell sizes, we make several rounds of
+multiscale clean images and use each model image as a fisr guess for
+successively higher resolution images.  After the first image, each clean
+is solving for deltas, and will tend to be neither positive nor negative.
+
+For each round of multiscale cleaning, uniform weighting with a uv taper 
+coresponding to 2.5 times the cell size is used.  The number of 
+multiscale clean iterations used in each round is given by 
+\begin{equation}
+niter = nitermult * imsizes[i] ^{niterpower}.
+\end{equation}
+
+</description>
+<returns xsi:type="bool"/>
+<input>
+
+     <param xsi:type="string" name="msname">
+     <description>Name of input ms</description>
+     <value>""</value>
+     </param>
+
+     <param xsi:type="intArray" name="imsizes">
+     <description>Image sizes for each round (should be monatonically increasing)</description>
+     <value>[128, 256]</value>
+     </param>
+
+     <param xsi:type="doubleArray" name="cellsizes">
+     <description>Cell sizes [in arcsec] for each round (should be monatonically decreasing)</description>
+     <value>[2,1]</value>
+     </param>
+
+     <param xsi:type="intArray" name="scales">
+     <description>Name of input ms</description>
+     <value>[0,5,15]</value>
+     </param>
+
+     <param xsi:type="double" name="nitermult">
+     <description>Multiplier parameter used to adjust niter with imsizes</description>
+     <value>0.15</value>
+     </param>
+
+     <param xsi:type="double" name="niterpower">
+     <description>Exponent of imsizes used to adjust niter with imsizes</description>
+     <value>1.2</value>
+     </param>
+
+     <param xsi:type="intArray" name="fields">
+     <description>Vector of field ids to image</description>
+     <value>[1]</value>
+     </param>
+
+     <param xsi:type="int" name="spwid">
+     <description>Spectral window to image</description>
+     <value>1</value>
+     </param>
+
+     <param xsi:type="int" name="centerfield">
+     <description>Field id for central pointing</description>
+     <value>1</value>
+     </param>
+</input>
+
+<example>
+\begin{verbatim}
+imagermultiscale(msname='orion.ms', imsizes=[128, 256, 512], cellsizes=[16,8,4], 
+scales=[0, 5, 15], nitermult=0.15, niterpower=1.2, fields=[1:4], 
+spwid=[1], centerfield=1);
+\end{verbatim}
+</example>
+</task>
+
+
+
+</imagertasks>
