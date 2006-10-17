@@ -163,7 +163,7 @@ public:
 //		       const VisBuffer& vb);
   void wbinitializeToVis(ImageInterface<Complex>& image,
 		  PtrBlock<ImageInterface<Complex>* > & iimagespec, 
-		       const VisBuffer& vb, Int &model, Int ntaylor);
+		       const VisBuffer& vb, Int model, Int ntaylor);
   // This version returns the gridded vis...should be used in conjunction 
   // with the version of 'get' that needs the gridded visdata 
   void initializeToVis(ImageInterface<Complex>& image,
@@ -184,7 +184,7 @@ public:
   void wbinitializeToSky(ImageInterface<Complex>& iimage, 
 		  PtrBlock<ImageInterface<Complex>* > & iimagespec, 
 		  Matrix<Float>& weight,const VisBuffer& vb,
-		  Int &model, Int ntaylor);
+		  Int model, Int ntaylor);
 
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb, Vector<Double>& uvscale,
@@ -226,7 +226,7 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ////ImageInterface<Complex>& wbgetImage(PtrBlock<ImageInterface<Complex>* > & inpimagespec, Matrix<Float>&, const Bool normalize=True);
-  ImageInterface<Complex>& wbgetImage(PtrBlock<ImageInterface<Complex>* > & inpimagespec, Matrix<Float>&, const Bool normalize=True, Int &model=0, Int ntaylor=1);
+  ImageInterface<Complex>& wbgetImage(PtrBlock<ImageInterface<Complex>* > & inpimagespec, Matrix<Float>&, const Bool normalize=True, Int model=0, Int ntaylor=1);
 
   ImageInterface<Complex>& getImage(Matrix<Float>&, const Bool normalize=True);
  

@@ -354,7 +354,7 @@ void WideBandFT::initializeToVis(ImageInterface<Complex>& iimage,
 
 void WideBandFT::wbinitializeToVis(ImageInterface<Complex>& iimage,
 		PtrBlock<ImageInterface<Complex>* > & iimagespec,
-			     const VisBuffer& vb, Int &model, Int ntaylor)
+			     const VisBuffer& vb, Int model, Int ntaylor)
 {
   image=&iimage;
 //  image1=&iimage1;
@@ -624,7 +624,7 @@ void WideBandFT::initializeToSky(ImageInterface<Complex>& iimage,
 void WideBandFT::wbinitializeToSky(ImageInterface<Complex>& iimage,
 		 		PtrBlock<ImageInterface<Complex>*> & iimagespec,
 			     Matrix<Float>& weight, const VisBuffer& vb,
-			     Int &model, Int ntaylor)
+			     Int model, Int ntaylor)
 {
   // image always points to the image
   image=&iimage;
@@ -1584,7 +1584,7 @@ ImageInterface<Complex>& WideBandFT::getImage(Matrix<Float>& weights, Bool norma
 //// WIDEBAND
 // Finalize the FFT to the Sky. Here we actually do the FFT and
 // return the resulting image
-ImageInterface<Complex>& WideBandFT::wbgetImage(PtrBlock<ImageInterface<Complex>* > & inpimagespec, Matrix<Float>& weights, const Bool normalize, Int &model, Int ntaylor) 
+ImageInterface<Complex>& WideBandFT::wbgetImage(PtrBlock<ImageInterface<Complex>* > & inpimagespec, Matrix<Float>& weights, const Bool normalize, Int model, Int ntaylor) 
 {
   AlwaysAssert(lattice, AipsError);
   //AlwaysAssert(lattice1, AipsError);
