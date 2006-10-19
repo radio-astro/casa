@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: Simulator.cc,v 1.1.2.4 2006/10/06 21:03:19 kgolap Exp $
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -79,8 +79,6 @@
 #include <lattices/Lattices/LatticeExpr.h> 
 
 #include <synthesis/MeasurementEquations/Simulator.h>
-
-#include <casa/System/PGPlotter.h>
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
@@ -115,7 +113,8 @@ Simulator::Simulator(String& msname)
   
   // Make a MeasurementSet object for the disk-base MeasurementSet that we just
   // created
-  ms_p = new MeasurementSet(msname, Table::Update);
+  ms_p = new MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+			    Table::Update);
   AlwaysAssert(ms_p, AipsError);
 }
 
@@ -192,11 +191,13 @@ Simulator &Simulator::operator=(const Simulator &other)
 Simulator::~Simulator()
 {
   if (ms_p) {
+    ms_p->relinquishAutoLocks();
     ms_p->unlock();
     delete ms_p;
   }
   ms_p = 0;
   if (mssel_p) {
+    mssel_p->relinquishAutoLocks();
     mssel_p->unlock();
     delete mssel_p;
   }
@@ -245,7 +246,8 @@ void Simulator::defaults()
   gridfunction_p="SF";
   // Use half the machine memory as cache. The user can override
   // this via the setoptions function().
-  cache_p=HostInfo::memoryTotal()*1024*1024*1024/(2*8);
+  cache_p=(HostInfo::memoryTotal()/8)*1024;
+
   tile_p=16;
   ftmachine_p="gridft";
   padding_p=1.3;
@@ -725,12 +727,13 @@ Bool Simulator::setmosaicfield(const String& sourcename, const String& calcode, 
             } 
             Quantity newdirra(newraval, "rad");
             Quantity newdirdec(newdecval, "rad");
-            MDirection newdir(newdirra, newdirdec,
-			      MDirection::Ref(fieldcenter.type()));
+            MDirection newdir(newdirra, newdirdec);
+	    newdir.setRefString(fieldcenter.getRefString());
 	    ostringstream oos;
 	    oos << sourcename << "_" << k ;
   
-            setfield(String(oos), newdir, calcode, distance); 
+
+           setfield(String(oos), newdir, calcode, distance); 
     
             ++k;
           }
@@ -1162,7 +1165,9 @@ Bool Simulator::observe(const String&   sourcename,
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;
-    ms_p = new MeasurementSet(msname_p, Table::Update);
+    ms_p = new MeasurementSet(msname_p, 
+			      TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Update);
 
     ms_p->flush();
 
