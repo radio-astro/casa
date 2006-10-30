@@ -539,6 +539,17 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   if(!assertDefinedImageParameters()) return False;
   LogIO os(LogOrigin("Imager", "imagecoordinates()", WHERE));
   
+  //===Adjust for some setimage defaults if imageNchan=-1 and spwids=-1
+  if(imageNchan_p <=0){
+    imageNchan_p=1;
+  }
+  if(spectralwindowids_p.nelements()==1){
+    if(spectralwindowids_p[0]<0){
+      spectralwindowids_p.resize();
+      spectralwindowids_p=dataspectralwindowids_p;
+    }
+  }
+  //===end of default
   Vector<Double> deltas(2);
   deltas(0)=-mcellx_p.get("rad").getValue();
   deltas(1)=mcelly_p.get("rad").getValue();
@@ -1268,11 +1279,12 @@ Bool Imager::setimage(const Int nx, const Int ny,
 	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " << nyc << 
 	      " or " << nnyc << " will be more efficient" << LogIO::POST;
 	}
-      }
-      os << LogIO::WARN 
-	 << "You may safely ignore this message for single dish imaging" 
-	 << LogIO::POST;
+	os << LogIO::WARN 
+	   << "You may safely ignore this message for single dish imaging" 
+	   << LogIO::POST;
 
+      }
+      
     }
 
     paStep_p = paStep;
@@ -1696,6 +1708,12 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	datadescids_p(datadescids_p.nelements()-1)=row;
       };
     };
+    // Invalid spwids then lets select all
+    if(datadescids_p.nelements()==0){
+      Int nspwinms=ms_p->spectralWindow().nrow();
+      dataspectralwindowids_p.resize(nspwinms);
+      indgen(dataspectralwindowids_p);
+    } 
 
     // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
@@ -7028,7 +7046,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	    return False;
 	  }
 	 
-	  if(dataNchan[i]==0) nch=vs.numberChan()(spwid);
+	  if(dataNchan[i]<=0) nch=vs.numberChan()(spwid);
 	  else nch = dataNchan[i];
 	  Int end = Int(dataStart[i]) + Int(nch) * Int(dataStep[i]);
 	  if(end < 1 || end > vs.numberChan()(spwid)) {
@@ -7046,7 +7064,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  dataNchan[i]=nch;
 	}
       }	else {
-	if(dataNchan[0]==0) dataNchan[0]=vs.numberChan()(0);
+	if(dataNchan[0]<=0) dataNchan[0]=vs.numberChan()(0);
 	Int end = Int(dataStart[0]) + Int(dataNchan[0]) 
 	  * Int(dataStep[0]);
 	if(end < 1 || end > vs.numberChan()(0)) {
@@ -7059,8 +7077,8 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	 << dataStart[0] + 1 << " stepped by "
 	   << dataStep[0] << LogIO::POST;
       }
-    }
-    else if (dataMode=="velocity") {
+  }
+  else if (dataMode=="velocity") {
       MVRadialVelocity mvStart(mDataStart.get("m/s"));
       MVRadialVelocity mvStep(mDataStep.get("m/s"));
       MRadialVelocity::Types
@@ -7071,8 +7089,8 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
       vs.iter().selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
 				  vType, MDoppler::RADIO);
-    }
-    else if (dataMode=="opticalvelocity") {
+  }
+  else if (dataMode=="opticalvelocity") {
       MVRadialVelocity mvStart(mDataStart.get("m/s"));
       MVRadialVelocity mvStep(mDataStep.get("m/s"));
       MRadialVelocity::Types
@@ -7083,7 +7101,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
       vs.iter().selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
 				  vType, MDoppler::OPTICAL);
-    }
+  }
 
   return True;
 

@@ -382,7 +382,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	    return False;
 	  }
 	 
-	  if(dataNchan_p[i]==0) nch=blockNChan_p[numMS_p-1](i);
+	  if(dataNchan_p[i]<=0) nch=blockNChan_p[numMS_p-1](i);
 	  else nch = dataNchan_p[i];
 	  Int end = Int(dataStart_p[i]) + Int(nch) * Int(dataStep_p[i]);
 	  if(end < 1 || end > blockNChan_p[numMS_p-1](i)) {
