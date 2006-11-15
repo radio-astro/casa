@@ -32,6 +32,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
+
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
@@ -51,6 +52,7 @@ class VisSet;
 class MSHistoryHandler;
 class PBMath;
 class MeasurementSet;
+class MFrequency;
 class File;
 class VPSkyJones;
 class PGPlotter;
@@ -160,9 +162,21 @@ class Imager
                 const Int start, const Int step,
 		const MRadialVelocity& mStart, const MRadialVelocity& mStep,
 		const Vector<Int>& spectralwindowids, const Int fieldid,
-		const Int facets, const Quantity& distance,
-		const Float &paStep, const Float &pbLimit);
-  
+		const Int facets, const Quantity& distance);
+
+  virtual Bool defineImage(const Int nx, const Int ny,
+			   const Quantity& cellx, const Quantity& celly,
+			   const String& stokes,
+			   const MDirection& phaseCenter, 
+			   const Int fieldid,
+			   const String& mode, const Int nchan,
+			   const Int start, const Int step,
+			   const MFrequency& mFreqStart,
+			   const MRadialVelocity& mStart, 
+			   const Quantity& qStep,
+			   const Vector<Int>& spectralwindowids, 
+			   const Quantity& restFreq,
+			   const Int facets, const Quantity& distance);
   // Set the data selection parameters
  
   virtual  Bool setDataPerMS(const String& msname, const String& mode, 
@@ -171,7 +185,11 @@ class Imager
 			     const Vector<Int>& step,
 			     const Vector<Int>& spectralwindowids,
 			     const Vector<Int>& fieldid,
-			     const String& msSelect="");
+			     const String& msSelect="",
+                             const String& timerng="",
+			     const String& fieldnames="",
+			     const Vector<Int>& antIndex=Vector<Int>(),
+			     const String& antnames="");
 
 
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
@@ -180,7 +198,11 @@ class Imager
 	       const MRadialVelocity& mStep,
 	       const Vector<Int>& spectralwindowids,
 	       const Vector<Int>& fieldid,
-	       const String& msSelect="");
+	       const String& msSelect="",
+	       const String& timerng="",
+	       const String& fieldnames="",
+	       const Vector<Int>& antIndex=Vector<Int>(),
+	       const String& antnames="" );
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
@@ -190,7 +212,9 @@ class Imager
 		  const String& epJTableName="",
 		  const Bool applyPointingOffsets=True,
 		  const Bool doPointingCorrection=True,
-		  const String& cfCacheDirName="");
+		  const String& cfCacheDirName="", 
+		  const Float& pastep=5.0,
+		  const Float& pbLimit=5.0e-2);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -464,7 +488,9 @@ protected:
   Int imageStart_p, imageStep_p;
   MRadialVelocity mDataStart_p, mImageStart_p;
   MRadialVelocity mDataStep_p,  mImageStep_p;
+  MFrequency mfImageStart_p, mfImageStep_p;
   MDirection phaseCenter_p;
+  Quantity restFreq_p;
   Quantity distance_p;
   Bool doShift_p;
   Quantity shiftx_p;
@@ -547,6 +573,10 @@ protected:
 
   // Add or replace the masks
   Bool addMasksToSkyEquation(const Vector<String>& mask);
+
+  // Get the rest frequency ..returns 1 element in restfreq 
+  // if user specified or try to get the info from the SOURCE table 
+  Bool getRestFreq(Vector<Double>& restFreq, const Int& spw);
 
   Bool restoreImages(const Vector<String>& restored);
 

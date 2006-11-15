@@ -42,12 +42,16 @@ namespace casa {
       
       // Set the data selection on for each ms seperately
       virtual  Bool setDataPerMS(const String& msname, const String& mode, 
-		   const Vector<Int>& nchan, 
-		   const Vector<Int>& start,
-		   const Vector<Int>& step,
-		   const Vector<Int>& spectralwindowids,
-		   const Vector<Int>& fieldids,
-		   const String& msSelect="");
+				 const Vector<Int>& nchan, 
+				 const Vector<Int>& start,
+				 const Vector<Int>& step,
+				 const Vector<Int>& spectralwindowids,
+				 const Vector<Int>& fieldids,
+				 const String& msSelect="",
+				 const String& timerng="",
+				 const String& fieldnames="",
+				 const Vector<Int>& antIndex=Vector<Int>(),
+				 const String& antnames="");
 
 
        // Set image construction parameters
@@ -61,8 +65,7 @@ namespace casa {
                 const Int start, const Int step,
 		const MRadialVelocity& mStart, const MRadialVelocity& mStep,
 		const Vector<Int>& spectralwindowids, const Int fieldid,
-		const Int facets, const Quantity& distance,
-		const Float &paStep, const Float &pbLimit);
+		const Int facets, const Quantity& distance);
   
 
       Bool selectDataChannel();

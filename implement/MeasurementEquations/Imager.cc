@@ -43,8 +43,6 @@
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Containers/Record.h>
-
-
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableParse.h>
@@ -84,7 +82,8 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
-
+#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSDataDescIndex.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSummary.h>
@@ -165,6 +164,7 @@ Imager::Imager()
   :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
+  lockCounter_p=0;
   defaults();
 };
 
@@ -189,7 +189,7 @@ traceEvent(1,"Entering imager::defaults",25);
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
   dataMode_p="none";
-  imageMode_p="mfs";
+  imageMode_p="MFS";
   dataNchan_p=0;
   imageNchan_p=0;
   doVP_p=False;
@@ -351,7 +351,7 @@ Imager::~Imager()
 
   destroySkyEquation();
   this->unlock(); //unlock things if they are in a locked state
-
+  
   if (mssel_p) {
     delete mssel_p;
   }
@@ -372,7 +372,7 @@ Imager::~Imager()
     delete cft_p;
   }
   cft_p = 0;
-
+  
   //Note we don't deal with pgplotter here.
   
 
@@ -548,6 +548,15 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       spectralwindowids_p.resize();
       spectralwindowids_p=dataspectralwindowids_p;
     }
+    
+  }
+  if(fieldid_p < 0){
+     if(datafieldids_p.shape() !=0) {
+       fieldid_p=datafieldids_p[0];
+     }
+     else{
+       fieldid_p=0; //best default if nothing is specified
+     }
   }
   //===end of default
   Vector<Double> deltas(2);
@@ -563,9 +572,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   if(measFreqRef(spectralwindowids_p(0)) >=0) 
      obsFreqRef=(MFrequency::Types)measFreqRef(spectralwindowids_p(0));
 			    
-
-  // MS Doppler tracking utility
-  MSDopplerUtil msdoppler(*ms_p);
 
   MVDirection mvPhaseCenter(phaseCenter_p.getAngle());
   // Normalize correctly
@@ -658,7 +664,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   // Spectral synthesis
   // For mfs band we set the window to include all spectral windows
   Int nspw=spectralwindowids_p.nelements();
-  if (imageMode_p=="mfs") {
+  if (imageMode_p=="MFS") {
     Double fmin=C::dbl_max;
     Double fmax=-(C::dbl_max);
     Double fmean=0.0;
@@ -697,13 +703,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     }
 
     fmean=(fmax+fmin)/2.0;
-    // Look up first rest frequency found (for now)
     Vector<Double> restFreqArray;
     Double restFreq=fmean;
-    Int fieldid = (datafieldids_p.nelements()>0 ? datafieldids_p(0) : fieldid_p);
-    if (msdoppler.dopplerInfo(restFreqArray,spectralwindowids_p(0),fieldid)) {
-      restFreq = restFreqArray(0);    
-    } 
+    if(getRestFreq(restFreqArray, spectralwindowids_p(0))){
+      restFreq=restFreqArray[0];
+    }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
     mySpectral = new SpectralCoordinate(obsFreqRef,  fmean, finc,
@@ -714,6 +718,35 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
        << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
        << " GHz" << LogIO::POST;
   }
+  
+  else if(imageMode_p.contains("FREQ")) {
+      if(imageNchan_p==0) {
+	this->unlock();
+	os << LogIO::SEVERE << "Must specify number of channels" 
+	   << LogIO::POST;
+	return False;
+      }
+      Double restFreq=mfImageStart_p.get("Hz").getValue();
+      Vector<Double> restFreqVec;
+      if(getRestFreq(restFreqVec, spectralwindowids_p(0))){
+	restFreq=restFreqVec[0];
+      }
+      mySpectral = new SpectralCoordinate(obsFreqRef,
+					  mfImageStart_p.get("Hz").getValue(),
+					  mfImageStep_p.get("Hz").getValue(),
+					  refChan, restFreq);
+      os <<  "Frequency = "
+	 << mfImageStart_p.get("GHz").getValue()
+	 << ", channel increment = "
+	 << mfImageStep_p.get("GHz").getValue() 
+	 << "GHz" << endl;
+      os << LogIO::NORMAL << "Rest frequency is " 
+	 << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
+	 << "GHz" << LogIO::POST;
+      
+  }
+  
+
   else {
     //    if(nspw>1) {
     //      os << LogIO::SEVERE << "Line modes allow only one spectral window"
@@ -738,12 +771,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       freqResolution(Slice(origsize, newsize-origsize))=
 	msc.spectralWindow().resolution()(spw); 
       
-      // Look up first rest frequency found (for now)
+
      
       Vector<Double> restFreqArray;
-      Int fieldid = (datafieldids_p.nelements()>0 ? datafieldids_p(0) : 
-		     fieldid_p);
-      if (msdoppler.dopplerInfo(restFreqArray,spw,fieldid)) {
+      if(getRestFreq(restFreqArray, spw)){
 	if(spwIndex==0){
 	  restFreq = restFreqArray(0);
 	}
@@ -759,8 +790,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}	
       }
     }
+  
 
-    if(imageMode_p=="channel") {
+    if(imageMode_p=="CHANNEL") {
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
@@ -807,7 +839,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     // Spectral channels resampled at equal increments in optical velocity
     // Here we compute just the first two channels and use increments for
     // the others
-    else if (imageMode_p=="velocity") {
+    else if (imageMode_p=="VELOCITY") {
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
@@ -863,7 +895,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     // Since optical velocity is non-linear in frequency, we have to
     // pass in all the frequencies. For radio velocity we can use 
     // a linear axis.
-    else if (imageMode_p=="opticalvelocity") {
+    else if (imageMode_p=="OPTICALVELOCITY") {
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
@@ -1099,7 +1131,7 @@ String Imager::state()
 	os << "  Refocusing to distance " << distance_p << endl;
       }
       
-      if(imageMode_p=="mfs") {
+      if(imageMode_p=="MFS") {
 	os << "  Image mode is mfs: Image will be frequency synthesised from spectral windows : ";
 	for (uInt i=0;i<spectralwindowids_p.nelements();++i) {
 	  os << spectralwindowids_p(i)+1 << " ";
@@ -1196,8 +1228,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
 		      const Vector<Int>& spectralwindowids,
 		      const Int fieldid,
 		      const Int facets,
-		      const Quantity& distance,
-		      const Float &paStep, const Float &pbLimit)
+		      const Quantity& distance)
 {
 
 
@@ -1287,8 +1318,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
       
     }
 
-    paStep_p = paStep;
-    pbLimit_p = pbLimit;
+  
     nx_p=nx;
     ny_p=ny;
     mcellx_p=cellx;
@@ -1296,6 +1326,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
     distance_p=distance;
     stokes_p=stokes;
     imageMode_p=mode;
+    imageMode_p.upcase();
     imageNchan_p=nchan;
     imageStart_p=start;
     imageStep_p=step;
@@ -1395,6 +1426,181 @@ Bool Imager::setimage(const Int nx, const Int ny,
   traceEvent(1,"Exiting Imager::setimage",25);
 #endif
 
+  return True;
+}
+
+
+Bool Imager::defineImage(const Int nx, const Int ny,
+			 const Quantity& cellx, const Quantity& celly,
+			 const String& stokes,
+			 const MDirection& phaseCenter, const Int fieldid,
+			 const String& mode, const Int nchan,
+			 const Int start, const Int step,
+			 const MFrequency& mFreqStart,
+			 const MRadialVelocity& mStart, 
+			 const Quantity& qStep,
+			 const Vector<Int>& spectralwindowids,
+			 const Quantity& restFreq,
+			 const Int facets,
+			 const Quantity& distance)
+{
+
+
+
+
+  //Clear the sink 
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
+
+  os << "nx=" << nx << " ny=" << ny
+     << " cellx='" << cellx.getValue() << cellx.getUnit()
+     << "' celly='" << celly.getValue() << celly.getUnit()
+     << "' stokes=" << stokes 
+     << "' mode=" << mode << " nchan=" << nchan
+     << " start=" << start << " step=" << step
+     << " spwids=" << spectralwindowids
+     << " fieldid=" <<   fieldid << " facets=" << facets
+     << " distance='" << distance.getValue() << distance.getUnit() <<"'";
+  ostringstream clicom;
+  clicom << " phaseCenter='" << phaseCenter;
+  clicom << "' mStart='" << mStart << "' mStep='" << qStep << "'";
+  os << String(clicom);
+  
+  try {
+    
+    this->lock();
+    this->writeCommand(os);
+
+    os << "Defining image properties" << LogIO::POST;
+  
+    /**** this check is not really needed here especially for SD imaging
+    if(2*Int(nx/2)!=nx) {
+      this->unlock();
+      os << LogIO::SEVERE << "nx must be even" << LogIO::POST;
+      return False;
+    }
+    if(2*Int(ny/2)!=ny) {
+      this->unlock();
+      os << LogIO::SEVERE << "ny must be even" << LogIO::POST;
+      return False;
+    }
+
+    */
+    {
+      CompositeNumber cn(nx);
+      if (! cn.isComposite(nx)) {
+	Int nxc = (Int)cn.nextLargerEven(nx);
+	Int nnxc = (Int)cn.nearestEven(nx);
+	if (nxc == nnxc) {
+	  os << LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	     << nxc << " will be more efficient" << LogIO::POST;
+	} else {
+	  os <<  LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	     << nxc <<  " or " << nnxc << " will be more efficient" << LogIO::POST;
+	}
+      }
+      if (! cn.isComposite(ny)) {
+	Int nyc = (Int)cn.nextLargerEven(ny);
+	Int nnyc = (Int)cn.nearestEven(ny);
+	if (nyc == nnyc) {
+	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " 
+	     << nyc << " will be more efficient" << LogIO::POST;
+	} else {
+	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " << nyc << 
+	      " or " << nnyc << " will be more efficient" << LogIO::POST;
+	}
+	os << LogIO::WARN 
+	   << "You may safely ignore this message for single dish imaging" 
+	   << LogIO::POST;
+
+      }
+      
+    }
+
+    nx_p=nx;
+    ny_p=ny;
+    mcellx_p=cellx;
+    mcelly_p=celly;
+    distance_p=distance;
+    stokes_p=stokes;
+    imageMode_p=mode;
+    imageMode_p.upcase();
+    imageNchan_p=nchan;
+    imageStart_p=start;
+    imageStep_p=step;
+    if(mode.contains("VEL")){
+      mImageStart_p=mStart;
+      mImageStep_p=MRadialVelocity(qStep);
+    }
+    if(mode.contains("FREQ")){
+      mfImageStart_p=mFreqStart;
+      mfImageStep_p=MFrequency(qStep);
+    }
+    restFreq_p=restFreq;
+    spectralwindowids_p.resize(spectralwindowids.nelements());
+    spectralwindowids_p=spectralwindowids;
+    fieldid_p=fieldid;
+    facets_p=facets;
+    redoSkyModel_p=True;
+    destroySkyEquation();    
+
+    // Now make the derived quantities 
+    if(stokes_p=="I") {
+      npol_p=1;
+    }
+    else if(stokes_p=="IQ") {
+      npol_p=2;
+    }
+    else if(stokes_p=="IV") {
+      npol_p=2;
+    }
+    else if(stokes_p=="IQU") {
+      npol_p=3;
+    }
+    else if(stokes_p=="IQUV") {
+      npol_p=4;
+    }
+    else {
+      this->unlock();
+      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
+	 << LogIO::POST;
+      
+
+#ifdef PABLO_IO
+      traceEvent(1,"Exiting Imager::setimage",25);
+#endif
+
+      return False;
+    };
+
+
+    // nchan we need to get rid of one of these variables 
+    nchan_p=imageNchan_p;
+    
+    if(fieldid < 0){      
+      doShift_p=True;
+      phaseCenter_p=phaseCenter;
+    }
+    else {
+      ROMSFieldColumns msfield(ms_p->field());
+      phaseCenter_p=msfield.phaseDirMeas(fieldid_p);
+    }
+    
+    
+    // Now we have set the image parameters
+    setimaged_p=True;
+    beamValid_p=False;
+    
+    this->unlock();
+
+
+    return True;
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::POST;
+    this->unlock();
+    return False;
+  } 
   return True;
 }
 
@@ -1616,7 +1822,10 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const Vector<Int>& step,
 			  const Vector<Int>& spectralwindowids,
 			  const Vector<Int>& fieldids,
-			  const String& msSelect)
+			  const String& msSelect, const String& timerng,
+			  const String& fieldnames, 
+			  const Vector<Int>& antIndex,
+			  const String& antnames)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1636,7 +1845,8 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   MRadialVelocity dummy;
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
-		   fieldids, msSelect);
+		   fieldids, msSelect, timerng, fieldnames, antIndex, 
+		   antnames);
 
 }
 
@@ -1647,7 +1857,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const MRadialVelocity& mStep,
 		     const Vector<Int>& spectralwindowids,
 		     const Vector<Int>& fieldids,
-		     const String& msSelect)
+		     const String& msSelect, const String& timerng,
+		     const String& fieldnames, const Vector<Int>& antIndex,
+		     const String& antnames )
   
 {
   logSink_p.clearLocally();
@@ -1692,33 +1904,24 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << "Multiple fields specified via fieldids" << LogIO::POST;
       multiFields_p = True;
     }
-
-   // Map the selected spectral window ids to data description ids
-    MSDataDescColumns dataDescCol(ms_p->dataDescription());
-    Vector<Int> ddSpwIds=dataDescCol.spectralWindowId().getColumn();
-
-    datadescids_p.resize(0);
-    for (uInt row=0; row<ddSpwIds.nelements(); ++row) {
-      Bool found=False;
-      for (uInt j=0; j<dataspectralwindowids_p.nelements(); ++j) {
-	if (ddSpwIds(row)==dataspectralwindowids_p(j)) found=True;
-      };
-      if (found) {
-	datadescids_p.resize(datadescids_p.nelements()+1,True);
-	datadescids_p(datadescids_p.nelements()-1)=row;
-      };
-    };
+    
     // Invalid spwids then lets select all
     if(datadescids_p.nelements()==0){
       Int nspwinms=ms_p->spectralWindow().nrow();
       dataspectralwindowids_p.resize(nspwinms);
       indgen(dataspectralwindowids_p);
-    } 
+    }
+
+    // Map the selected spectral window ids to data description ids
+    MSDataDescIndex msDatIndex(ms_p->dataDescription());
+    datadescids_p.resize(0);
+    datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
+     
 
     // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
     // MS. 
-    if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
+    //if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
       os << "Performing selection on MeasurementSet" << LogIO::POST;
       if(vs_p) delete vs_p; vs_p=0;
       if(mssel_p) delete mssel_p; mssel_p=0;
@@ -1726,12 +1929,56 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       // check that sorted table exists (it should), if not, make it now.
       this->makeVisSet(*ms_p);
       
-      Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
+      MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
       
       
+      //Some MSSelection 
+      MSSelection thisSelection;
+      if(datafieldids_p.nelements() > 0){
+	thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
+	os << "Selecting on field ids" << LogIO::POST;
+      }
+      if(fieldnames != ""){
+	// In fact here should set the field expression and then
+	// have a method to get the ids back...such 
+	// datafieldid_p=thisSelection.getFieldIndices(*ms_p);
+	os << LogIO::SEVERE 
+	   << "Imager is not yet supporting the use of MSSelection syntax for field names" 
+	   << LogIO::POST; 
+	return False;
+      }
+      if(datadescids_p.nelements() > 0){
+	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
+	os << "Selecting on spectral windows" << LogIO::POST;
+      }
+      if(antIndex.nelements() >0){
+	thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
+	os << "Selecting on antenna ids" << LogIO::POST;	
+      }
+      if(antnames != ""){
+	Vector<String>antNames(1, antnames);
+	//       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antNames));
+	thisSelection.setAntennaExpr(antnames);
+	os << "Selecting on antenna names" << LogIO::POST;
+	
+      }            
+      if(timerng != ""){
+	Vector<String>timerange(1, timerng);
+	thisSelection.setTimeExpr(MSSelection::nameExprStr(timerange));
+	os << "Selecting on time range" << LogIO::POST;	
+      }
+      //***************
+
+      TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+    
+
+      
+      ////////REPLACING THE OLD SELECTION will remove this if above is  
+      ///////  working we;;
       // Now we make a condition to do the old FIELD_ID, SPECTRAL_WINDOW_ID
       // selection
-      TableExprNode condition;
+      
+      /*      TableExprNode condition;
       String colf=MS::columnName(MS::FIELD_ID);
       String cols=MS::columnName(MS::DATA_DESC_ID);
       if(datafieldids_p.nelements()>0&&datadescids_p.nelements()>0){
@@ -1750,7 +1997,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       
       // Now remake the selected ms
       mssel_p = new MeasurementSet(sorted(condition));
-
+      */
+      mssel_p = new MeasurementSet(sorted(exprNode));
       AlwaysAssert(mssel_p, AipsError);
       mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
       if(mssel_p->nrow()==0) {
@@ -1811,7 +2059,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       else {
 	os << "Selection did not drop any rows" << LogIO::POST;
       }
-    }
+      //    }
     
     // Now create the VisSet
     this->makeVisSet(vs_p, *mssel_p); 
@@ -1936,7 +2184,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const String& epJTableName,
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
-			const String& cfCacheDirName)
+			const String& cfCacheDirName,const Float& paStep, 
+			const Float& pbLimit)
 {
 
 #ifdef PABLO_IO
@@ -1980,6 +2229,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   wprojPlanes_p=wprojplanes;
   epJTableName_p = epJTableName;
   cfCacheDirName_p = cfCacheDirName;
+  paStep_p = paStep;
+  pbLimit_p = pbLimit;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -3154,7 +3405,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
      // This is message may not be helpful as mfs is set with setimage()
      // which may sometimes get called after uvrange()
-     if (nrows > 1 && imageMode_p=="mfs") {
+     if (nrows > 1 && imageMode_p=="MFS") {
  	 os << LogIO::WARN 
  	    << "When using mfs over a broad range of frequencies, It is more "
  	    << "accurate to " << endl 
@@ -4653,7 +4904,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
   // which has a different representation for the image internally.
   Vector<String> residualNames(images_p.nelements());
   Vector<String> modelNames(images_p.nelements());
-  for(Int k=0; k < modelNames.nelements() ; ++k){
+  for(uInt k=0; k < modelNames.nelements() ; ++k){
     residualNames[k]=residuals_p[k]->name();
     modelNames[k]=images_p[k]->name();
   }
@@ -6567,8 +6818,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   if(doVP_p) {
     if (doDefaultVP_p) {
       vp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
-    } else { //cout<<"before "<<vpTableStr_p<<endl;
-      Table vpTable( vpTableStr_p );   //cout<<"after"<<endl;
+    } else { 
+      Table vpTable( vpTableStr_p ); 
       vp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p, skyPosThreshold_p);
     }
     se_p->setSkyJones(*vp_p);
@@ -7116,11 +7367,11 @@ Bool Imager::checkCoord(CoordinateSystem& coordsys,
   Vector<Int> imageShape= image.shape().asVector();
 
   if(imageShape.nelements() > 3){
-    if(imageShape(3) != nchan_p)
+    if(imageShape(3) != imageNchan_p)
       return False;
   }
   else{
-    if(nchan_p >1)
+    if(imageNchan_p >1)
       return False;
   }
 
@@ -7299,7 +7550,7 @@ Bool Imager::makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage){
 Bool Imager::makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, 
 			 const String& diskPBName){
 
-  IPosition imShape(4, nx_p, ny_p, npol_p, nchan_p);
+  IPosition imShape(4, nx_p, ny_p, npol_p, imageNchan_p);
   PagedImage<Float> pbImage(imShape, imageCoord, diskPBName);
   return makePBImage(pbMath, pbImage);
 }
@@ -7336,7 +7587,8 @@ ObsInfo& Imager::latestObsInfo(){
 }
 
 Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID){
-  IPosition imageShape(4, nx_p, ny_p, npol_p, nchan_p);
+
+  IPosition imageShape(4, nx_p, ny_p, npol_p, imageNchan_p);
   PagedImage<Float> modelImage(imageShape, coords, name);
   modelImage.set(0.0);
   modelImage.table().markForDelete();
@@ -7368,6 +7620,26 @@ String Imager::frmtTime(const Double time) {
   return mvtime.string(MVTime::DMY,6);
 }
 
+Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
+  // MS Doppler tracking utility
+  MSDopplerUtil msdoppler(*ms_p);
+  restFreq.resize();
+  if(restFreq_p.getValue() > 0){// User defined restfrequency
+    restFreq.resize(1);
+    restFreq[0]=restFreq_p.getValue("Hz");
+  }
+  else{
+    // Look up first rest frequency found (for now)
+     
+    Int fieldid = (datafieldids_p.nelements()>0 ? datafieldids_p(0) : 
+		   fieldid_p);
+    msdoppler.dopplerInfo(restFreq ,spw,fieldid);
+
+  }
+  if(restFreq.nelements() >0) 
+    return True;
+  return False;
+}
 
 } //# NAMESPACE CASA - END
 

@@ -34,6 +34,8 @@
 
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSDataDescIndex.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -63,16 +65,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockMSSel_p(0), numMS_p(0), dataSet_p(False)
   {
     
-
+    lockCounter_p=0;
+    ms_p=0;
+    mssel_p=0;
+    se_p=0;
+    vs_p=0;
+    ft_p=0;
+    cft_p=0;
+    
   }
 
   Bool ImagerMultiMS::setDataPerMS(const String& msname, const String& mode, 
-		   const Vector<Int>& nchan, 
-		   const Vector<Int>& start,
-		   const Vector<Int>& step,
-		   const Vector<Int>& spectralwindowids,
-		   const Vector<Int>& fieldids,
-		   const String& msSelect) {
+				   const Vector<Int>& nchan, 
+				   const Vector<Int>& start,
+				   const Vector<Int>& step,
+				   const Vector<Int>& spectralwindowids,
+				   const Vector<Int>& fieldids,
+				   const String& msSelect,
+				   const String& timerng,
+				   const String& fieldnames,
+				   const Vector<Int>& antIndex,
+				   const String& antnames) {
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);  
 
 
@@ -112,6 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       thisms=MeasurementSet(msname, TableLock(TableLock::AutoLocking), 
 			    Table::Update);
       blockMSSel_p[numMS_p-1]=thisms;
+      //breaking reference
       ms_p=new MeasurementSet();
       (*ms_p)=thisms;
     }
@@ -129,25 +143,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     // Map the selected spectral window ids to data description ids
-    MSDataDescColumns dataDescCol(thisms.dataDescription());
-    Vector<Int> ddSpwIds=dataDescCol.spectralWindowId().getColumn();
-
+    MSDataDescIndex msDatIndex(thisms.dataDescription());
     datadescids_p.resize(0);
-    for (uInt row=0; row<ddSpwIds.nelements(); row++) {
-      Bool found=False;
-      for (uInt j=0; j<dataspectralwindowids_p.nelements(); j++) {
-	if (ddSpwIds(row)==dataspectralwindowids_p(j)) found=True;
-      };
-      if (found) {
-	datadescids_p.resize(datadescids_p.nelements()+1,True);
-	datadescids_p(datadescids_p.nelements()-1)=row;
-      };
-    };
+    datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
 
  // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
-    // MS. 
-    if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
+    // MS.
+    //I don't think i need this if statement
+    //   if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
       os << "Performing selection on MeasurementSet" << LogIO::POST;
       if(vs_p) delete vs_p; vs_p=0;
       if(mssel_p) delete mssel_p; mssel_p=0;
@@ -155,12 +159,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // check that sorted table exists (it should), if not, make it now.
       this->makeVisSet(thisms);
       
-      Table sorted=thisms.keywordSet().asTable("SORTED_TABLE");
+      MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
       
       
       // Now we make a condition to do the old FIELD_ID, SPECTRAL_WINDOW_ID
       // selection
-      TableExprNode condition;
+      /*      TableExprNode condition;
       String colf=MS::columnName(MS::FIELD_ID);
       String cols=MS::columnName(MS::DATA_DESC_ID);
       if(datafieldids_p.nelements()>0&&datadescids_p.nelements()>0){
@@ -177,9 +181,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         os << "Selecting on field id" << LogIO::POST;
       }
       
-      // Now remake the selected ms
-      mssel_p = new MeasurementSet(sorted(condition));
+      */
+      //Some MSSelection 
+      MSSelection thisSelection;
+      if(datafieldids_p.nelements() > 0){
+	thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
+	os << "Selecting on field ids" << LogIO::POST;
+      }
+      if(fieldnames != ""){
+	// In fact here should set the field expression and then
+	// have a method to get the ids back...such 
+	// datafieldid_p=thisSelection.getFieldIndices(*ms_p);
+	os << LogIO::SEVERE 
+	   << "Imager is not yet supporting the use of MSSelection syntax for field names" 
+	   << LogIO::POST; 
+	return False;
+      }
+      if(datadescids_p.nelements() > 0){
+	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
+	os << "Selecting on spectral windows" << LogIO::POST;
+      }
+      if(antIndex.nelements() >0){
+	thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex) );
+	os << "Selecting on antenna ids" << LogIO::POST;	
+      }
+      if(antnames != ""){
+	Vector<String> antNames(1, antnames);
+	// thisSelection.setAntennaExpr(MSSelection::nameExprStr( antNames));
+	thisSelection.setAntennaExpr(antnames);
+	os << "Selecting on antenna names" << LogIO::POST;
+	
+      }            
+      if(timerng != ""){
+	Vector<String>timerange(1, timerng);
+	thisSelection.setTimeExpr(MSSelection::nameExprStr(timerange));
+	os << "Selecting on time range" << LogIO::POST;	
+      }
+      //***************
 
+      TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+      // Now remake the selected ms
+      mssel_p = new MeasurementSet(sorted(exprNode));
       AlwaysAssert(mssel_p, AipsError);
       mssel_p->rename(msname+"/SELECTED_IMAGER_TABLE", Table::Scratch);
       if(mssel_p->nrow()==0) {
@@ -234,7 +276,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else {
 	os << "Selection did not drop any rows" << LogIO::POST;
       }
-    }
+      //  }
 
     blockMSSel_p[numMS_p-1]=*mssel_p;
     //lets make the visSet now
@@ -264,8 +306,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 			     const Vector<Int>& spectralwindowids,
 			     const Int fieldid,
 			     const Int facets,
-			     const Quantity& distance,
-			     const Float &paStep, const Float &pbLimit)
+			     const Quantity& distance)
 {
 
   if(!dataSet_p){
@@ -281,7 +322,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 				  phaseCenter, shiftx, shifty, mode, nchan,
 				  start, step, mStart, mStep, 
 				  spectralwindowids, 
-				  fieldid, facets, distance, paStep, pbLimit);
+				  fieldid, facets, distance);
 
   return returnval;
 }
