@@ -24,73 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: GJonesPoly.h,v 19.7 2004/11/30 17:50:48 ddebonis Exp $
 
-#ifndef SYNTHESIS_GJONESPOLY_H
-#define SYNTHESIS_GJONESPOLY_H
+#ifndef SYNTHESIS_GSPLINE_H
+#define SYNTHESIS_GSPLINE_H
 
-#include <synthesis/MeasurementComponents/SolvableVisJones.h>
+#include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/StandardVisCal.h>
 #include <calibration/CalTables/GJonesMBuf.h>
 #include <casa/Containers/SimOrdMap.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-// <summary> Electronic gain Jones matrix as a polynomial over time
-// </summary>
-
-// <use visibility=export>
-
-// <reviewed reviewer="" date="" tests="" demos="">
-
-// <prerequisite>
-//   <li> <linkto module="GJones">GJones</linkto> module
-// </prerequisite>
-//
-// <etymology>
-// GJonesPoly describes the electronic gain visibility Jones matrix 
-// parametrized as a polynomial over time.
-// </etymology>
-//
-// <synopsis> 
-//
-// See <linkto class="VisEquation">VisEquation</linkto> for definition of the
-// Visibility Measurement Equation.
-//
-// The elements of GJonesSpline are only non-zero on the diagonal.
-//
-// </synopsis> 
-//
-// <motivation>
-// Support electronic gain calibration using polynomials over time.
-// </motivation>
-//
-// <todo asof="02/02/01">
-// i) Splines supported at present; add general polynomial support
-// </todo>
-
-class GJonesPoly : public GJones {
-public:
-
-  // Construct from a visibility data set
-  GJonesPoly (VisSet& vs) {};
-
-  // Destructor
-  virtual ~GJonesPoly() {};
-
-  // Set the solver parameters
-  virtual void setSolver (const Record& solver) {};
-
-  // Set the interpolation parameters
-  virtual void setInterpolation (const Record& interpolation) {};
-
-  // Solve
-  virtual Bool solve (VisEquation& me) {return True;};
-
- protected:
-
- private:
-
-};
 
 // <summary> Electronic gain Jones matrix as spline polynomial over time
 // </summary>
@@ -126,6 +70,8 @@ public:
 // i) Support solution and pre-averaging intervals
 // </todo>
 
+class VisEquation;
+
 class GJonesSpline : public GJones {
 public:
 
@@ -135,44 +81,56 @@ public:
   // Destructor
   virtual ~GJonesSpline();
 
+  // Return the type enum
+  virtual Type type() { return VisCal::G; };
+
+  // Return type name as a string
+  virtual String typeName()     { return "G Jones SPLINE"; };
+  virtual String longTypeName() { return "G Jones SPLINE (elec. gain)"; };
+
+
+  virtual Bool standardSolve() { return False; };
+
+  // Type of Jones matrix according to nPar()
+  // TBD:
+  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
+
   // Set the solver parameters
-  virtual void setSolver (const Record& solver);
+  using GJones::setSolve;
+  virtual void setSolve(const Record& solvepar);
 
   // Set the interpolation parameters
-  virtual void setInterpolation (const Record& interpolation);
+  using GJones::setApply;
+  virtual void setApply(const Record& applypar);
 
   // Solve
-  virtual Bool solve (VisEquation& me);
+  virtual void selfSolve (VisSet& vs, VisEquation& ve);
 
+/*
   // Set raw phase transfer from another spw
   void setRawPhaseVisSet(VisSet& rawvs_p);
 
-
   // Set parameters for phase wrapping resolution
-
   void setPhaseWrapHelp(const Int& numpoi, const Double& phaseWrap);
+*/
 
  protected:
-  // Check the validity of the antenna and baseline gain cache;
-  // re-compute the spline polynomial corrections and refresh
-  // the cache as necessary.
-  virtual void getThisGain(const VisBuffer& vb, 
-			   const Bool& forceAntMat=True, 
-			   const Bool& doInverse=False,
-			   const Bool& forceIntMat=True);
+
+  // GSPLINE has one trivial Complex parameter (single pol, for now)
+  // TBD:
+  virtual Int nPar() { return 2; };
+
+  // Calc G pars from spline info
+  virtual void calcPar();
 
  private:
-  // Private variables containing the solver parameters
-  String solveTable_p;
-  Bool append_p;
-  String mode_p;
-  Bool solveAmp_p, solvePhase_p;
-  Double interval_p, preavg_p, splinetime_p;
-  Int refant_p;
 
-  // Private variables containing the interpolation parameters
-  String applyTable_p, applySelect_p;
-  Double applyInterval_p;
+  // The underlying VisSet
+  VisSet* vs_p;
+
+  // Private variables containing the solver parameters
+  Bool solveAmp_p, solvePhase_p;
+  Double splinetime_p;
 
   // Time for which the current calibration cache is valid
   Double cacheTimeValid_p;
@@ -216,11 +174,14 @@ public:
 		       Vector<Double>& coeff);
 
 
+/*
   // fill the raw phase buffer for usage
   void fillRawPhaseBuff();
 
   // return the rawphase of 
   Double getRawPhase(Int ant1, Int ant2, Double time);
+
+*/
 
   //Plot solutions as compare with data
   void plotsolve(const Vector<Double>& x, 
@@ -231,8 +192,6 @@ public:
 
   // Return all field id.'s in the underlying MS
   Vector<Int> fieldIdRange();
-
-
 
   //Logging solution and rms
   void writeAsciiLog(const String& filename, const Matrix<Double>& coeff, const Vector<Double>& rmsFit, Bool phasesoln);

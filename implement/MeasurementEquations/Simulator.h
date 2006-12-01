@@ -34,13 +34,13 @@
 #include <measures/Measures/MPosition.h>
 #include <synthesis/MeasurementComponents/BeamSquint.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/EPJones.h>
+//#include <synthesis/MeasurementComponents/EPJones.h>
 
 #include <casa/namespace.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 class MeasurementSet;
 class VisSet;
-class VisJones;
+  //class VisJones;
 class ACoh;
 class SkyEquation;
 class ComponentList;
@@ -307,10 +307,10 @@ private:
 
   Int seed_p;
 
-  VisJones *gj_p;
-  VisJones *pj_p;
-  VisJones *dj_p;
-  VisJones *bj_p;
+  //  VisJones *gj_p;
+  //  VisJones *pj_p;
+  //  VisJones *dj_p;
+  //  VisJones *bj_p;
   ACoh     *ac_p;
 
   SkyEquation* se_p;
@@ -414,7 +414,7 @@ private:
   // doPBCorrection is True, the model image will be divided by the
   // primary beam before being used to predict the visibilities.
   // <group>
-  EPJones *epJ_p;
+  //  EPJones *epJ_p;
   String epJTableName_p;
   Bool applyPointingOffsets_p;
   Bool doPBCorrection_p;

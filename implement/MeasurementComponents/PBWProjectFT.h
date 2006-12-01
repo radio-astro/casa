@@ -52,7 +52,7 @@
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 
-#include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/MeasurementComponents/EJones.h>
 #include <synthesis/MeasurementComponents/ConvFuncDiskCache.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

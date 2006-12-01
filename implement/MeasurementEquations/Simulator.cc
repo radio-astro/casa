@@ -52,7 +52,7 @@
 
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
-#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
+//#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 
 #include <measures/Measures/Stokes.h>
@@ -69,11 +69,11 @@
 
 #include <ms/MeasurementSets/MSSummary.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementEquations/VisEquation.h>
+//#include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 #include <synthesis/MeasurementComponents/SimACohCalc.h>
 #include <synthesis/MeasurementComponents/SimACoh.h>
-#include <synthesis/MeasurementComponents/SimVisJones.h>
+//#include <synthesis/MeasurementComponents/SimVisJones.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeExpr.h> 
@@ -94,14 +94,21 @@
 #include <casa/namespace.h>
 
 Simulator::Simulator(): msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    gj_p(0), pj_p(0), dj_p(0), bj_p(0), ac_p(0), vp_p(0), gvp_p(0), 
-			sim_p(0),epJ_p(0),epJTableName_p(){
+			// VisJones deprecating   gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+			ac_p(0), vp_p(0), gvp_p(0), 
+			sim_p(0),
+			// epJ_p(0),
+			epJTableName_p()
+{
 }
 
 Simulator::Simulator(String& msname) 
   : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    gj_p(0), pj_p(0), dj_p(0), bj_p(0), ac_p(0), vp_p(0), gvp_p(0), 
-    sim_p(0),epJ_p(0),epJTableName_p()
+    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ac_p(0), vp_p(0), gvp_p(0), 
+    sim_p(0),
+    // epJ_p(0),
+    epJTableName_p()
 {
   LogIO os(LogOrigin("simulator", "simulator(String& msname)", WHERE));
 
@@ -120,8 +127,11 @@ Simulator::Simulator(String& msname)
 
 Simulator::Simulator(MeasurementSet &theMs)
   : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    gj_p(0), pj_p(0), dj_p(0), bj_p(0), ac_p(0), vp_p(0), gvp_p(0), 
-    sim_p(0),epJ_p(0),epJTableName_p()
+    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ac_p(0), vp_p(0), gvp_p(0), 
+    sim_p(0),
+    // epJ_p(0),
+    epJTableName_p()
 {
   LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)", WHERE));
 
@@ -139,8 +149,11 @@ Simulator::Simulator(MeasurementSet &theMs)
 
 Simulator::Simulator(const Simulator &other)
   : msname_p(""), ms_p(0), vs_p(0), seed_p(11111),
-    gj_p(0), pj_p(0), dj_p(0), bj_p(0), ac_p(0), vp_p(0), gvp_p(0),
-    sim_p(0),epJ_p(0),epJTableName_p()
+    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ac_p(0), vp_p(0), gvp_p(0),
+    sim_p(0),
+    // epJ_p(0),
+    epJTableName_p()
 {
   defaults();
   ms_p = new MeasurementSet(*other.ms_p);
@@ -160,6 +173,11 @@ Simulator &Simulator::operator=(const Simulator &other)
   if (vs_p && this != &other) {
     *vs_p = *(other.vs_p);
   }
+  if (ac_p && this != &other) {
+    *ac_p = *(other.ac_p);
+  }
+
+  /*  VisJones deprecating...
   if (gj_p && this != &other) {
     *gj_p = *(other.gj_p);
   }
@@ -172,9 +190,8 @@ Simulator &Simulator::operator=(const Simulator &other)
   if (bj_p && this != &other) {
     *bj_p = *(other.bj_p);
   }
-  if (ac_p && this != &other) {
-    *ac_p = *(other.ac_p);
-  }
+  */
+
   if (vp_p && this != &other) {
     *vp_p = *(other.vp_p);
   }
@@ -206,6 +223,8 @@ Simulator::~Simulator()
     delete vs_p;
   }
   vs_p = 0;
+
+/* VisJones deprecating
   if (gj_p) {
     delete gj_p;
   }
@@ -222,11 +241,12 @@ Simulator::~Simulator()
     delete bj_p;
   }
   bj_p = 0;
+*/
+
   if (ac_p) {
     delete ac_p;
   }
   ac_p = 0;
-  if (epJ_p) delete epJ_p; epJ_p = 0;
 
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
@@ -234,7 +254,7 @@ Simulator::~Simulator()
   if(vp_p) delete vp_p; vp_p = 0;
   if(gvp_p) delete gvp_p; gvp_p = 0;
   if(sim_p) delete sim_p; sim_p = 0;
-  if(epJ_p) delete epJ_p; epJ_p = 0;
+  //  if(epJ_p) delete epJ_p; epJ_p = 0;
 }
 
 
@@ -303,19 +323,20 @@ Bool Simulator::close()
      << LogIO::POST;
   ms_p->unlock();
   if(mssel_p) mssel_p->unlock();
-  if(gj_p) delete gj_p; gj_p = 0;
-  if(pj_p) delete pj_p; pj_p = 0;
   if(vs_p) delete vs_p; vs_p = 0;
   if(mssel_p) delete mssel_p; mssel_p = 0;
   if(ms_p) delete ms_p; ms_p = 0;
-  if(dj_p) delete dj_p; dj_p = 0;
-  if(bj_p) delete bj_p; bj_p = 0;
   if(ac_p) delete ac_p; ac_p = 0;
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
+/* VisJones deprecating
+  if(gj_p) delete gj_p; gj_p = 0;
+  if(pj_p) delete pj_p; pj_p = 0;
+  if(dj_p) delete dj_p; dj_p = 0;
+  if(bj_p) delete bj_p; bj_p = 0;
   if(epJ_p) delete epJ_p; epJ_p = 0;
-
+*/
   return True;
 }
 
@@ -494,39 +515,51 @@ Bool Simulator::corruptSummary(LogIO& os)
 }
 Bool Simulator::gainSummary(LogIO& os)
 {
+  return False;
+  /*
   if(!gj_p) {
     return False;
   } else {
     os << "Gain corruption activated" << LogIO::POST;
   }
   return True;
+  */
 }
 Bool Simulator::leakageSummary(LogIO& os)
 {
+  return False;
+  /*  
   if(!dj_p) {
     return False;
   } else {
     os << "Polarization leakage corruption activated" << LogIO::POST;
-  }
+  } 
   return True;
+  */
 }
 Bool Simulator::bandpassSummary(LogIO& os)
 {
+  return False;
+  /*
   if(!bj_p) {
     return False;
   } else {
     os << "Bandpass corruption activated" << LogIO::POST;
   }
   return True;
+  */
 }
 Bool Simulator::paSummary(LogIO& os)
 {
+  return False;
+  /*
   if(!pj_p) {
     return False;
   } else {
     os << "PA corruption activated" << LogIO::POST;
   }
   return True;
+  */
 }
 Bool Simulator::noiseSummary(LogIO& os)
 {
@@ -850,6 +883,8 @@ Bool Simulator::setpa(const String& mode, const String& table,
   
   try {
     
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+ /*
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
       return False;
@@ -860,7 +895,7 @@ Bool Simulator::setpa(const String& mode, const String& table,
       pj_p = new PJones (*vs_p, interval.get("s").getValue());
       os <<"Using parallactic angle correction"<< LogIO::POST;
     }
-
+ */
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -925,6 +960,9 @@ Bool Simulator::setgain(const String& mode, const String& table,
 
   try {
     
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+
+    /*
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
       return False;
@@ -938,6 +976,7 @@ Bool Simulator::setgain(const String& mode, const String& table,
 		      SimVisJones::normal, 0.0, amplitude(1),
 		      interval.get("s").getValue());
     }
+    */
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -953,7 +992,10 @@ Bool Simulator::setbandpass(const String& mode, const String& table,
   LogIO os(LogOrigin("Simulator", "setbandpass()", WHERE));
   
   try {
-    
+
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+
+    /*    
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
       return False;
@@ -963,8 +1005,10 @@ Bool Simulator::setbandpass(const String& mode, const String& table,
       return False;
     }
     return True;
+    */
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+
     return False;
   } 
   return True;
@@ -976,13 +1020,17 @@ Bool Simulator::setpointingerror(const String& epJTableName,
 {
   LogIO os(LogOrigin("Simulator", "close()", WHERE));
   epJTableName_p = epJTableName;
-  makeVisSet();
-  if (epJ_p) delete epJ_p;epJ_p=0;
-  try
+  //  makeVisSet();
+  try {
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+    /*    
+    if (epJ_p) delete epJ_p;epJ_p=0;
     {
       epJ_p = new EPJones(*vs_p);
       epJ_p->load(epJTableName_p,"","diagonal");
     }
+    */
+  }
   catch (AipsError x)
     {
       os << LogIO::SEVERE << "Caught exception: "
@@ -1002,7 +1050,9 @@ Bool Simulator::setleakage(const String& mode, const String& table,
   LogIO os(LogOrigin("Simulator", "setleakage()", WHERE));
   
   try {
-    
+
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+    /*    
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
       return False;
@@ -1014,6 +1064,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
 			   SimVisJones::normal,0.0,amplitude,
 			   interval.get("s").getValue());
     }
+    */
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -1026,15 +1077,16 @@ Bool Simulator::reset() {
   LogIO os(LogOrigin("Simulator", "simulate()", WHERE));
   try {
     
-    if(gj_p) delete gj_p; gj_p=0;
-    if(dj_p) delete dj_p; dj_p=0;
-    if(pj_p) delete pj_p; pj_p=0;
     if(ac_p) delete ac_p; ac_p=0;
     if(vp_p) delete vp_p; vp_p=0;
     if(gvp_p) delete gvp_p; gvp_p=0;
     if(sim_p) delete sim_p; sim_p=0;
+    /*
+    if(gj_p) delete gj_p; gj_p=0;
+    if(dj_p) delete dj_p; dj_p=0;
+    if(pj_p) delete pj_p; pj_p=0;
     if(epJ_p) delete epJ_p; epJ_p=0;
-    
+    */
     os << "Reset all components" << LogIO::POST;
 
   } catch (AipsError x) {
@@ -1050,6 +1102,9 @@ Bool Simulator::corrupt() {
 
   try {
     
+    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+
+ /*
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
     makeVisSet();
@@ -1075,6 +1130,8 @@ Bool Simulator::corrupt() {
     
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
+ */
+
 
   } catch (AipsError x) {
     ms_p->unlock();
@@ -1387,10 +1444,13 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	   << LogIO::POST;
 	os << formatDirection(sourceDirection_p) << LogIO::POST;
 	
-	if (!epJ_p)
+	//	if (!epJ_p)
 	  os << "Antenna pointing related term (EPJones) not set.  "
 	     << "This is required when using pbwproject FTMachine." 
+	     << "(gmoellen 06Nov20: pointing errors temporarily disabled)"
 	     << LogIO::EXCEPTION;
+
+   /*
 	doVP_p = False; // Since this FTMachine includes PB
 	if (wprojPlanes_p<=1)
 	  {
@@ -1409,38 +1469,41 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    os << "Performing pb + w-plane projection"
 	       << LogIO::POST;
 	  }
-	/*
-	  epJ_p = new EPJones(*vs_p);
-	  epJ_p->load(epJTableName_p,"","diagonal");
-	*/
+//	  epJ_p = new EPJones(*vs_p);
+//	  epJ_p->load(epJTableName_p,"","diagonal");
 	if(!gvp_p) 
 	  {
 	    os << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	    gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p);
 	  }
-	/*
-	  ft_p = new PBWProjectFT(*ms_p, epJ, gvp_p, facets_p, cache_p/2, 
-	  doPointing, tile_p, paStep_p, 
-	  pbLimit_p, True);
-	*/
+//	  ft_p = new PBWProjectFT(*ms_p, epJ, gvp_p, facets_p, cache_p/2, 
+//	  doPointing, tile_p, paStep_p, 
+//	  pbLimit_p, True);
+
 	String cfCacheDirName = "cache";
 	if (mssel_p)
-	  ft_p = new PBWProjectFT(*mssel_p, epJ_p, /*gvp_p,*/ wprojPlanes_p, cache_p/2, 
+	  ft_p = new PBWProjectFT(*mssel_p, epJ_p, 
+	  // gvp_p,
+				  wprojPlanes_p, cache_p/2, 
 				  cfCacheDirName,
 				  applyPointingOffsets_p, doPBCorrection_p, 
 				  tile_p, 
-				  0.0, /* Not required here. parAngleInc_p is used in gvp_p */
+				  0.0, // Not required here. parAngleInc_p is used in gvp_p 
 				  pbLimit_p, True);
 	else
-	  ft_p = new PBWProjectFT(*ms_p, epJ_p, /*gvp_p,*/ wprojPlanes_p, cache_p/2, 
+	  ft_p = new PBWProjectFT(*ms_p, epJ_p, 
+				  // gvp_p, 
+				  wprojPlanes_p, cache_p/2, 
 				  cfCacheDirName,
 				  applyPointingOffsets_p, doPBCorrection_p, 
 				  tile_p, 
-				  0.0, /* Not required here. parAngleInc_p is used in gvp_p */
+				  0.0, // Not required here. parAngleInc_p is used in gvp_p 
 				  pbLimit_p, True);
 	AlwaysAssert(ft_p, AipsError);
 	cft_p = new SimpleComponentFTMachine();
 	AlwaysAssert(cft_p, AipsError);
+
+   */
       }
       else {
 	os << "Fourier transforms will use image centers as tangent points" << LogIO::POST;

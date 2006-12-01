@@ -38,7 +38,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/EPTimeVarVisJones.h>
+// Apparently not required here? (gmoellen 06Nov20)
+//#include <synthesis/MeasurementComponents/EPTimeVarVisJones.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   // <summary> 

@@ -1,5 +1,5 @@
-//# GJonesDSB.h: A GJones matrix containing a sideband gain ratio
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002
+//# BJonesPoly.h: A bandpass visibility Jones matrix of polynomial form
+//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -24,16 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: BJonesPoly.h,v 19.9 2004/11/30 17:50:47 ddebonis Exp $
 
-#ifndef SYNTHESIS_GJONESDSB_H
-#define SYNTHESIS_GJONESDSB_H
+#ifndef SYNTHESIS_BPOLY_H
+#define SYNTHESIS_BPOLY_H
 
-#include <synthesis/MeasurementComponents/SolvableVisJones.h>
+#include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/StandardVisCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> A GJones matrix containing a sideband gain ratio
+// <summary> A bandpass visibility Jones matrix of polynomial form
 // </summary>
 
 // <use visibility=export>
@@ -41,12 +42,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto module="GJones">GJones</linkto> module
+//   <li> <linkto module="BJones">BJones</linkto> module
 // </prerequisite>
 //
 // <etymology>
-// GJonesDSB describes an electronic visibility Jones matrix
-// containing a sideband gain ratio.
+// BJonesPoly describes a bandpass visibility Jones matrix of
+// polynomial form.
 // </etymology>
 //
 // <synopsis> 
@@ -54,50 +55,69 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // See <linkto class="VisEquation">VisEquation</linkto> for definition of the
 // Visibility Measurement Equation.
 //
-// The elements of GJonesDSB are only non-zero on the diagonal.
+// The elements of BJonesPoly are only non-zero on the diagonal.
 //
 // </synopsis> 
 //
 // <motivation>
-// Support sideband gain ratio corrections explicitly as a Jones matrix subtype
+// Support polynomial bandpass calibration.
 // </motivation>
 //
 // <todo asof="02/02/01">
+// i) Support solution intervals
 // </todo>
 
-class GJonesDSB : public GJones {
+class VisEquation;
+
+class BJonesPoly : public BJones {
 public:
 
   // Construct from a visibility data set
-  GJonesDSB (VisSet& vs);
+  BJonesPoly (VisSet& vs);
 
   // Destructor
-  virtual ~GJonesDSB() {};
+  virtual ~BJonesPoly() {};
+
+  // Return the type enum
+  virtual Type type() { return VisCal::B; };
+
+  // Return type name as string
+  virtual String typeName()     { return "B Jones Poly"; };
+  virtual String longTypeName() { return "B Jones Poly (bandpass)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
 
   // Set the solver parameters
-  virtual void setSolver (const Record& solver);
+  using BJones::setSolve;
+  virtual void setSolve(const Record& solvepar);
 
   // Set the interpolation parameters
-  virtual void setInterpolation (const Record& interpolation);
+  using BJones::setApply;
+  virtual void setApply(const Record& applypar);
 
   // Solve
-  virtual Bool solve (VisEquation& me);
+  virtual Bool solve (VisEquation& ve);
 
- protected:
-  // Virtual function to check the gain correction cache validity
-  // Null here to allow unmodified use of TimeVarVisJones::apply()/applyInv()
-  virtual void checkCache (const VisBuffer& vb, Int spw, Double time) {};
-  
 
- private:
+protected:
+
+  // BPOLY has two trivial Complex parameter (formed at fill)
+  virtual Int nPar() { return 2; };
+
+  // Calculate current parameters
+  virtual void calcPar();
+
+private:
+
+  // The underlying VisSet
+  VisSet* vs_p;
+
   // Private variables containing the solver parameters
-  String solveTable_p;
-  Bool append_p;
-  Double interval_p;
+  Int degamp_p, degphase_p;
+  Bool visnorm_p, bpnorm_p;
   Int maskcenter_p;
   Float maskedge_p;
-  String mode_p, refsideband_p;
-  Int refant_p;
 
   // Derived solver parameters
   // Center mask half width (in channels)
@@ -105,23 +125,29 @@ public:
   // Fractional edge mask
   Float maskedgeFrac_p;
 
-  // Private variables containing the interpolation parameters
-  String applyTable_p, applySelect_p;
-  Double applyInterval_p;
-
   // Determine if a given channel is masked
   Bool maskedChannel (const Int& chan, const Int& nChan);
 
   // Update the output calibration table to include the
   // current solution parameters
-  void updateCalTable (const Vector<String>& freqGrpName, 
+  void updateCalTable (const String& freqGrpName, 
 		       const Vector<Int>& antennaId,
-		       const Matrix<Complex>& sideBandRef,
+		       const Vector<String>& polyType, 
+		       const Vector<Complex>& scaleFactor,
+		       const Matrix<Double>& validDomain,
+		       const Matrix<Double>& polyCoeffAmp,
+		       const Matrix<Double>& polyCoeffPhase,
+		       const Vector<String>& phaseUnits,
+		       const Vector<Complex>& sideBandRef,
 		       const Vector<MFrequency>& refFreq, 
 		       const Vector<Int>& refAnt);
 
-  // Load the sideband gain rations from a calibration table and
-  // cache the corrections (and their inverse)
+  // Compute a Chebyshev polynomial using the CLIC library
+  Double getChebVal (const Vector<Double>& coeff, const Double& xinit,
+		     const Double& xfinal, const Double& x);
+
+  // Load bandpass parameters from a calibration table and
+  // pre-compute the corrections (and their inverse)
   void load (const String& applyTable);
 
   // Utility function to return the bandwidth-weighted average 
@@ -131,18 +157,19 @@ public:
   // Utility function to return the frequency group name for a given spw. id.
   String freqGrpName (const Int& spwId);
 
-  // Utility function to return the frequency group id. associated with
-  // a given frequency group name
-  Int freqGrpId (const String& freqGrpName);
-
-  // Utility to return the net sideband for a given spectral window id.
-  Int sideBand (const Int& spwid);
-
   // Utility function to return the spw id.'s in a given freq. group
   Vector<Int> spwIdsInGroup (const String& freqGrpName);
 
   // Utility function to return the frequency axis for a given spw. id.
   Vector<Double> freqAxis (const Int& spwId);
+
+  void plotsolve2(const Vector<Double>& x, 
+		  const Matrix<Double>& ampdata, 
+		  const Matrix<Double>& phadata, 
+		  const Matrix<Double>& wtdata, 
+		  const Vector<Int>& ant1idx, const Vector<Int>& ant2idx, 
+		  const Vector<Double>& amperr, Matrix<Double>& ampcoeff, 
+		  const Vector<Double>& phaerr, Matrix<Double>& phacoeff) ;
 
 };
 

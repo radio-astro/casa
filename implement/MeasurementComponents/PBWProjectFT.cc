@@ -474,9 +474,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Array<Float> &m_off,
 					Bool Evaluate)
   {
+
+    throw(AipsError("PBWProject::findPointingOffsets temporarily disabled. (gmoellen 06Nov10)"));
+
     Cube<Float> pointingOffsets;
     Int NAnt = 0;
-    pointingOffsets = epJ->getPar(vb);
+
+    // TBD: adapt the following to VisCal mechanism:
+    pointingOffsets = Cube<Float>(2,1,1); //epJ->getPar(vb);
+    pointingOffsets = 0.0;
     MEpoch LAST;
     
     NAnt=pointingOffsets.shape()(2)-1;

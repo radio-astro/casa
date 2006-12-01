@@ -42,8 +42,6 @@
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementComponents/EPJones.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -56,6 +54,7 @@ class MFrequency;
 class File;
 class VPSkyJones;
 class PGPlotter;
+class EPJones;
 
 template<class T> class ImageInterface;
 

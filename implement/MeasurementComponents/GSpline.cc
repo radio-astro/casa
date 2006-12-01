@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: GJonesPoly.cc,v 19.15 2006/02/03 00:29:52 gmoellen Exp $
 
-#include <synthesis/MeasurementComponents/GJonesPoly.h>
+#include <synthesis/MeasurementComponents/GSpline.h>
+#include <synthesis/MeasurementEquations/VisEquation.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
@@ -39,8 +40,8 @@
 #include <casa/fstream.h>
 
 #include <casa/System/PGPlotter.h>
-#include <graphics/Graphics/PGPlotterLocal.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <calibration/CalTables/GJonesMBuf.h>
 #include <calibration/CalTables/GJonesTable.h>
 #include <calibration/CalTables/CalIter.h>
@@ -80,19 +81,13 @@ extern "C" {
 //----------------------------------------------------------------------------
 
 GJonesSpline::GJonesSpline (VisSet& vs) :
+  VisCal(vs),
+  VisMueller(vs),
   GJones(vs),
-  solveTable_p(""),
-  append_p(True),
-  mode_p("PHAS"),
+  vs_p(&vs),
   solveAmp_p(False),
   solvePhase_p(True),
-  interval_p(DBL_MAX),
-  preavg_p(0),
   splinetime_p(7200.0),
-  refant_p(0),
-  applyTable_p(""),
-  applySelect_p(""),
-  applyInterval_p(0),
   cacheTimeValid_p(0),
   calBuffer_p(NULL),
   rawPhaseRemoval_p(False),
@@ -102,43 +97,20 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
 // Input:
 //    vs                VisSet&            Visibility set
 // Output to private data:
-//    solveTable_p      String             Cal. table name for solutions
-//    append_p          Bool               True if appending solutions
-//                                         to an existing calibration table
-//    mode_p            String             Solve mode (AMP, PHAS or A&P)
 //    solveAmp_p        Bool               True if mode_p includes amp. soln.
 //    solvePhase_p      Bool               True if mode_p includes phase soln.
-//    interval_p        Double             Solution interval (sec)
-//    preavg_p          Double             Pre-averaging interval (sec)
-//    refant_p          Int                Reference antenna number
-//    applyTable_p      String             Cal. table name containing
-//                                         solutions to be applied
-//    applySelect_p     String             Selection for the applied
-//                                         calibration table
-//    applyInterval_p   Double             Interpolation interval
 //    cacheTimeValid_p  Double             Time for which the current
 //                                         calibration cache is valid
 //    calBuffer_p       GJonesSplineMBuf*  Ptr to the applied cal. buffer
 //
-  // Initialize a visibility set for iteration with the
-  // specified solution interval (set to DBL_MAX for now
-  // to conform with CLIC default).
-  Block<Int> columns(0);
-  vs_ = new VisSet (vs, columns, interval_p);
-  localVS_=True;
-  
-  // Initialize protected TimeVarVisJones data 
-  //  numberAnt_ = vs.numberAnt();
-  //  numberSpw_ = vs.numberSpw();
+
+  if (prtlev()>2) cout << "GSpline::GSpline(vs)" << endl;
 
   // Mark the Jones matrix as neither solved for nor applied,
   // pending initialization by setSolver() or setInterpolation()
   setSolved(False);
   setApplied(False);
 
-  // Set the pre-averaging interval used in the ME when forming
-  // the corrected and corrupted data
-  preavg_ = preavg_p;
 };
 
 //----------------------------------------------------------------------------
@@ -149,59 +121,64 @@ GJonesSpline::~GJonesSpline ()
 // Output to private data:
 //    calBuffer_p       GJonesSplineMBuf*  Ptr to the applied cal. buffer
 //
+
+  if (prtlev()>2) cout << "GSpline::~GSpline(vs)" << endl;
+
   // Delete the calibration buffer
   if (calBuffer_p) delete(calBuffer_p);
 };
 
 //----------------------------------------------------------------------------
 
-void GJonesSpline::setSolver (const Record& solver)
+void GJonesSpline::setSolve(const Record& solvepar)
 {
 // Set the solver parameters
 // Input:
-//    solver            const Record&      Solver parameters
+//    solvepar            const Record&      Solver parameters
 // Output to private data:
-//    solveTable_p      String             Cal. table name for solutions
-//    append_p          Bool               True if appending solutions
-//                                         to an existing calibration table
-//    mode_p            String             Solve mode (AMP, PHAS or A&P)
-//    interval_p        Double             Solution interval (sec)
-//    preavg_p          Double             Pre-averaging interval (sec)
 //    splinetime_p      Double             Spline knot timescale
-//    refant_p          Int                Reference antenna number
-//
-  // Extract the solver parameters
-  if (solver.isDefined("table")) solveTable_p = solver.asString("table");
-  if (solver.isDefined("append")) append_p = solver.asBool("append");
 
-  if (solver.isDefined("mode")) mode_p = solver.asString("mode");
-  solveAmp_p = (mode_p.contains("AMP") || mode_p.contains("amp"));
-  solvePhase_p = (mode_p.contains("PHAS") || mode_p.contains("phas"));
+  if (prtlev()>2) cout << "GSpline::setSolve()" << endl;
 
-  if (solver.isDefined("t")) interval_p = solver.asDouble("t");
-  if (solver.isDefined("preavg")) preavg_p = solver.asDouble("preavg");
-  if (solver.isDefined("splinetime")) splinetime_p = solver.asDouble("splinetime");
+  // Call parent for generic pars
+  SolvableVisCal::setSolve(solvepar);
 
+  // Total solution interval is always all selecte data (for now)
+  interval()=DBL_MAX;
 
-  if (solver.isDefined("refant")) refant_p = solver.asInt("refant");
+  // Spline-specific pars:
+  if (solvepar.isDefined("splinetime")) 
+    splinetime_p = solvepar.asDouble("splinetime");
+  if (solvepar.isDefined("numpoint"))   
+    numpoint_p   = solvepar.asInt("numpoint");
+  if (solvepar.isDefined("phasewrap"))    // deg->rad
+    phaseWrap_p  = solvepar.asDouble("phasewrap")*C::pi/180.0;
+  if (solvepar.isDefined("mode"))       
+    mode()  = solvepar.asString("mode");
+
+  // Interpret mode for SPLINE case
+  solveAmp_p = (mode().contains("AMP") || mode().contains("amp"));
+  solvePhase_p = (mode().contains("PHAS") || mode().contains("phas"));
+
+  cout << "mode() = " << mode() << endl;
+  cout << "solveAmp_p = " << solveAmp_p << endl;
+  cout << "solvePhase_p = " << solvePhase_p << endl;
+
+  cout << "calTableName() = " << calTableName() << endl;
 
   // Mark the Jones matrix as being solved for
   setSolved(True);
-
-  // Set the pre-averaging interval used in the ME when forming
-  // the corrected and corrupted data
-  preavg_ = preavg_p;
 
   return;
 };
 
 //----------------------------------------------------------------------------
 
-void GJonesSpline::setInterpolation (const Record& interpolation)
+void GJonesSpline::setApply(const Record& applypar)
 {
-// Set the interpolation parameters
+// Set the apply parameters
 // Input:
-//    interpolation     const Record&      Interpolation parameters
+//    applypar     const Record&      Interpolation parameters
 // Output to private data:
 //    applyTable_p      String             Cal. table name containing
 //                                         solutions to be applied
@@ -209,23 +186,20 @@ void GJonesSpline::setInterpolation (const Record& interpolation)
 //                                         calibration table
 //    applyInterval_p   Double             Interpolation interval
 //
-  // Extract the interpolation parameters
-  if (interpolation.isDefined("table")) {
-    applyTable_p = interpolation.asString("table");
-  };
-  if (interpolation.isDefined("select")) {
-    applySelect_p = interpolation.asString("select");
-  };
-  if (interpolation.isDefined("t")) {
-    applyInterval_p = interpolation.asDouble("t");
-  };
 
-  // Initialize the TimeVarVisJones gain correction cache
-  TimeVarVisJones::initThisGain();
+  if (prtlev()>2) cout << "GSpline::setApply()" << endl;
+
+  // Extract the parameters
+  if (applypar.isDefined("table"))
+    calTableName() = applypar.asString("table");
+  if (applypar.isDefined("select"))
+    calTableSelect() = applypar.asString("select");
+  if (applypar.isDefined("t"))
+    interval() = applypar.asDouble("t");
 
   // Attach a calibration buffer and iterator to the calibration 
   // table containing corrections to be applied
-  GJonesSplineTable calTable(applyTable_p, Table::Update);
+  GJonesSplineTable calTable(calTableName(), Table::Update);
   CalIter calIter(calTable);
   // Create the buffer and synchronize with the iterator
   if (calBuffer_p) delete calBuffer_p;
@@ -241,7 +215,7 @@ void GJonesSpline::setInterpolation (const Record& interpolation)
 
 //----------------------------------------------------------------------------
 
-Bool GJonesSpline::solve (VisEquation& me)
+void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 {
 // Solver for the electronic gain in spline form
 // Input:
@@ -251,7 +225,15 @@ Bool GJonesSpline::solve (VisEquation& me)
 //    solve        Bool                 True is solution succeeded
 //                                      else False
 //
+
+  if (prtlev()>2) cout << "GSpline::selfSolve(vs,ve)" << endl;
+
+
+  cout << "Entering GSpline::solve." << endl;
+
+
   LogIO os (LogOrigin("GJonesSpline", "solve()", WHERE));
+
 
   os << LogIO::NORMAL
      << "Fitting time-dependent cubic splines."
@@ -267,41 +249,47 @@ Bool GJonesSpline::solve (VisEquation& me)
        << LogIO::POST;
   }
 
-  // Construct a local ME which can be modified
-  VisEquation lme(me);
-  
-  // Set the visibility set on which the local ME is to
-  // operate. This visibility set is already initialized
-  // in the constructor for iteration in data chunks of
-  // duration interval_p.
-  lme.setVisSet(*vs_);
-
-  // Use the iterator from the underlying visibility set,
-  // and attach a visibility data buffer
-  VisIter& vi(vs_->iter());
+  // Arrange for iteration over data
+  Block<Int> columns;
+  // avoid scan iteration
+  columns.resize(4);
+  columns[0]=MS::ARRAY_ID;
+  columns[1]=MS::FIELD_ID;      
+  columns[2]=MS::DATA_DESC_ID;
+  columns[3]=MS::TIME;
+  vs.resetVisIter(columns,interval());
+  VisIter& vi(vs.iter());
   VisBuffer vb(vi);
+
+  // Count polarizations
+  Int nPH(0);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+    vi.origin();
+    Int ncorr(vb.corrType().nelements());
+    nPH= max(nPH,min(ncorr,2));
+  }
+
+  // nPH has the number of correlations (1 or 2) to process
 
   // Initialize time-series accumulation buffers for the
   // corrected and corrupted visibility data and associated
   // weights. 
   SimpleOrderedMap<String,Int> timeValueMap(0);
   Vector<Double> timeValues;
-  PtrBlock<Vector<Complex>* > visTimeSeries, modelTimeSeries;
-  PtrBlock<Vector<Double>* > weightTimeSeries;
+  PtrBlock<Matrix<Complex>* > visTimeSeries;
+  PtrBlock<Matrix<Double>* > weightTimeSeries;
   Int nTimeSeries = 0;
 
-  // Initialize the baseline index
-  Int nAnt = vs_->numberAnt();
-  Int nBasl = nAnt * (nAnt - 1) / 2;
-  Vector<Int> ant1(nBasl, -1);
-  Vector<Int> ant2(nBasl, -1);
+  // Initialize antenna indices
+  Vector<Int> ant1(nBln(), -1);
+  Vector<Int> ant2(nBln(), -1);
 
-  for (Int k=0; k < nAnt; k++) {
-    for (Int j=k+1; j < nAnt; j++) {
-      // The antenna numbering is one-based for the FORTRAN CLIC solver
-      Int index = k * nAnt - k * (k+1) / 2 + j - 1 - k;
-      ant1(index) = k + 1;
-      ant2(index) = j + 1;
+  Int k=0;
+  for (Int a1=0; a1 < nAnt(); a1++) {
+    for (Int a2=a1; a2 < nAnt(); a2++,k++) {
+      ant1(k) = a1 + 1;
+      ant2(k) = a2 + 1;
+      //      cout << a1 << " " << a2 << " " << k << " " << blnidx(a1,a2) << endl;
     };
   };
 
@@ -311,12 +299,14 @@ Bool GJonesSpline::solve (VisEquation& me)
   Double meanFreq = 0;
   Int nMeanFreq = 0;
 
+  // With current VisIter sort order, this chunking does
+  //   all times for each spw and field
   for (chunk=0, vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
 
     // Extract the current visibility buffer spectral window id.
     // and number for frequency channels
     Int spwid = vi.spectralWindow();
-    Int nChan = vs_->numberChan()(spwid);
+    Int nChan = vs.numberChan()(spwid);
     String fieldName = vi.fieldName();
 
     os << LogIO::NORMAL 
@@ -332,35 +322,69 @@ Bool GJonesSpline::solve (VisEquation& me)
     // The corrected data are the observed data corrected for all
     // Jones matrices up to the immediate left of the current Jones
     // matrix.
-    lme.initChiSquare(*this);
-    VisBuffer correctedvb = lme.corrected();
-    VisBuffer corruptedvb = lme.corrupted();
 
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+
+    vi.origin();
+    Double t0=86400.0*floor(vb.time()(0)/86400.0);
+    
+    // Collapse each timestamp in this chunk according to VisEq
+    //  with calibration and averaging
+    for (vi.origin(); vi.more(); vi++) {
+
+      cout << "Time = " << vb.time()(0) - t0 << endl;
+      
+      // TBD: initialize weights from sigma here?
+      
+      ve.collapse(vb);
+      
+      // If permitted/required by solvable component, normalize
+      if (normalizable())
+        vb.normalize();
+      
+      // Accumulate collapsed vb in a time average
+      vba.accumulate(vb);
+    }
+    vba.finalizeAverage();
+    
+    // The VisBuffer to work with in solve
+    VisBuffer& svb(vba.aveVisBuff());
+
+    cout << " (Chunk accumulated) nrow = " << svb.nRow() << endl;
+    cout << " nChan = " << svb.nChannel() << endl;
+
+    // NB: The svb VisBuffer has many timestamps in it....
+
+    // index to parallel hands (assumes canonical order)
+    Int nCorr = svb.corrType().nelements();
+    Vector<Int> polidx(2,0);
+    polidx(1)=nCorr-1;
+    
     // Accumulate mean frequency of the averaged data
-    meanFreq += mean(correctedvb.frequency());
+    meanFreq += mean(svb.frequency());
     nMeanFreq++;
 
-    // Iterate of the current visibility buffer, accumulating
+    // Iterate over the current accumulated visibility buffer, obtaining
     // a common time series in the visibility data
-    for (Int row=0; row < correctedvb.nRow(); row++) {
+    for (Int row=0; row < svb.nRow(); row++) {
       // Antenna numbers
-      Int ant1num = correctedvb.antenna1()(row);
-      Int ant2num = correctedvb.antenna2()(row);
+      Int ant1num = svb.antenna1()(row);
+      Int ant2num = svb.antenna2()(row);
 
       // Reject auto-correlation data
-      if (correctedvb.antenna1()(row) != correctedvb.antenna2()(row)) {
+      if (ant1num != ant2num) {
 	// Compute baseline index
-	Int baselineIndex = ant1num * nAnt - ant1num * (ant1num + 1) / 2 +
-	  ant2num - 1 - ant1num;
+	Int baselineIndex = blnidx(ant1num,ant2num);
 
 	// Weight
-	Double rowWeight = correctedvb.weight()(row);
-	if (rowWeight > 0) {
+	Vector<Float> rowWeight(svb.weightMat().column(row));
+	if (sum(rowWeight) > 0) {
 	  // Map the current time stamp to a time series index
 	  // using 0.1 second precision, i.e. time values within
 	  // a tenth of a second of each other will be accumulated
 	  // within the same bin.
-	  MVTime mvt(correctedvb.time()(row) / C::day);
+	  MVTime mvt(svb.time()(row) / C::day);
 	  String timeKey = mvt.string(MVTime::TIME, 7);
 	  Int timeIndex = 0;
 	  // Check the time stamp index to this precision
@@ -371,22 +395,21 @@ Bool GJonesSpline::solve (VisEquation& me)
 	    timeIndex = nTimeSeries++;
 	    timeValueMap.define(timeKey, timeIndex);
 	    timeValues.resize(nTimeSeries, True);
-	    timeValues(timeIndex) = correctedvb.time()(row);
-	    visTimeSeries.resize(nTimeSeries, True);
+	    timeValues(timeIndex) = svb.time()(row);
 	    Complex czero(0,0);
-	    visTimeSeries[timeIndex] = new Vector<Complex>(nBasl, czero);
-	    modelTimeSeries.resize(nTimeSeries, True);
-	    modelTimeSeries[timeIndex] = new Vector<Complex>(nBasl, czero);
+	    visTimeSeries.resize(nTimeSeries, True);
+	    visTimeSeries[timeIndex] = new Matrix<Complex>(nBln(),nPH, czero);
 	    weightTimeSeries.resize(nTimeSeries, True);
-	    weightTimeSeries[timeIndex] = new Vector<Double>(nBasl, 0);
+	    weightTimeSeries[timeIndex] = new Matrix<Double>(nBln(),nPH, 0);
 	  };
 
 	  // Accumulate the current visbility row in the common time series
-	  (*visTimeSeries[timeIndex])(baselineIndex) +=
-	    correctedvb.visibility()(0,row)(0) * rowWeight;
-	  (*modelTimeSeries[timeIndex])(baselineIndex) +=
-	    corruptedvb.visibility()(0,row)(0) * rowWeight;
-	  (*weightTimeSeries[timeIndex])(baselineIndex) += rowWeight;
+	  for (Int ip=0;ip<nPH;++ip) {
+	    Double dwt=Double(rowWeight(polidx(ip)));
+	    (*visTimeSeries[timeIndex])(baselineIndex,ip) +=
+	      svb.visCube()(polidx(ip),0,row) * dwt;
+	    (*weightTimeSeries[timeIndex])(baselineIndex,ip) += dwt;
+	  }
 	};
       };
     };
@@ -402,9 +425,9 @@ Bool GJonesSpline::solve (VisEquation& me)
      << LogIO::POST;
 
   Vector<Double> time(nTimes, 0);
-  Matrix<Double> amp(nTimes, nBasl, 0);
-  Matrix<Double> phase(nTimes, nBasl, 0);
-  Matrix<Double> weight(nTimes, nBasl, 0);
+  Cube<Double> amp(nTimes, nBln(), nPH, 0);
+  Cube<Double> phase(nTimes, nBln(), nPH, 0);
+  Cube<Double> weight(nTimes, nBln(),nPH, 0);
   //
   // First create a simple index in order of ascending time ordinate
   Vector<Int> index(nTimes);
@@ -422,106 +445,51 @@ Bool GJonesSpline::solve (VisEquation& me)
   // Fill the amplitude, phase and weight arrays with normalized 
   // and scaled vaues from the accumulated time series.
   for (Int t=0; t < nTimes; t++) {
-    for (Int baselineIndex=0; baselineIndex < nBasl; ++baselineIndex) {
+    for (Int baselineIndex=0; baselineIndex < nBln(); ++baselineIndex) {
       // Iterate in ascending time order
       Int indx = index(t);
       // Time
       time(t) = timeValues(indx);
 
-      Double wgt = (*weightTimeSeries[indx])(baselineIndex);
-      if (wgt > 0) {
-	Complex vis = (*visTimeSeries[indx])(baselineIndex) / 
-	  (*modelTimeSeries[indx])(baselineIndex);
-	// Amplitude
-	if (abs(vis) > 0) {
-	  amp(t,baselineIndex) = log(abs(vis));
-	};
-	// Phase
-	Double visPhase = arg(vis);
-	
-	if(solvePhase_p){
-	  visPhase = remainder(visPhase, 2*C::pi);
-	  if (visPhase > C::pi) {
-	    visPhase -= 2 * C::pi;
-	  } else if (visPhase < -C::pi) {
-	    visPhase += 2 * C::pi;
-	  };
-	}
-	
-	phase(t,baselineIndex) = visPhase;
+      for (Int ip=0;ip<nPH;++ip) {
 
-	// Weight
-	weight(t,baselineIndex) = wgt;
+	Double wgt = (*weightTimeSeries[indx])(baselineIndex,ip);
+	if (wgt > 0) {
+	  Complex vis = (*visTimeSeries[indx])(baselineIndex,ip);
+	  
+	  // Amplitude
+	  if (abs(vis) > 0) {
+	    amp(t,baselineIndex,ip) = log(abs(vis));
+	  };
+	  
+	  
+	  // Phase
+	  if(solvePhase_p){
+	    Double visPhase = arg(vis);
+	    visPhase = remainder(visPhase, 2*C::pi);
+	    if (visPhase > C::pi) {
+	      visPhase -= 2 * C::pi;
+	    } else if (visPhase < -C::pi) {
+	      visPhase += 2 * C::pi;
+	    };
+	    phase(t,baselineIndex,ip) = visPhase;
+	  }
+	  
+
+	  // Weight
+	  //	weight(t,baselineIndex,ip) = wgt;
+	  weight(t,baselineIndex,ip) = 1.0;
+	}
       };
     };
   };
 
-  if(solvePhase_p){
-    os << LogIO::NORMAL 
-       << "Searching for and correcting phase-wraps on each baseline."
-       << LogIO::POST;
+  //  cout << "weight = " << weight << endl;
+  //  cout << "weight.shape() = " << weight.shape() << endl;
 
-    for(Int bsInd=0; bsInd < nBasl ; ++bsInd){
-      
-      Int npoi=numpoint_p; 
-      if (npoi < 2) npoi=2;
-      
-      for (Int k1=npoi; k1 < nTimes-npoi; k1=k1+(npoi/2)){
-	Vector<Double> vecAheadPh(npoi), vecBheadPh(npoi);
-	for (Int k=0; k < npoi; ++k){
-	  vecBheadPh[k]=phase(k1-k-1,bsInd);
-	  vecAheadPh[k]=phase(k1+k, bsInd);
-	}
-	Double medA=median(vecAheadPh);
-	Double medB=median(vecBheadPh);
-	if((medA- medB) >phaseWrap_p)
-	  for(Int k=k1; k< nTimes; ++k)
-	    phase(k, bsInd) -= 2*C::pi;
-	if((medA-medB) < -phaseWrap_p)
-	  for(Int k=k1; k< nTimes; ++k)
-	    phase(k, bsInd) += 2*C::pi;
-	
-      }
-      
-      if(nTimes >npoi*2){
-      
-	//the last npoi pts
-	Vector<Double> vecAheadPh(npoi), vecBheadPh(npoi);
-	for (Int k=0; k <npoi; ++k){
-	  vecBheadPh[k]=phase(nTimes-2*npoi+k,bsInd);
-	  vecAheadPh[k]=phase(nTimes-npoi+k, bsInd);
-	}
-	Double medA=median(vecAheadPh);
-	Double medB=median(vecBheadPh);
-	if((medA- medB) > phaseWrap_p)
-	  for(Int k=(nTimes-npoi); k< nTimes; ++k)
-	    phase(k, bsInd) -= 2*C::pi;
-	if((medA-medB) < -phaseWrap_p)
-	  for(Int k=(nTimes-npoi); k< nTimes; ++k)
-	    phase(k, bsInd) += 2*C::pi;
-	
-	// The first npoi points
-	
-	for (Int k=0; k <npoi; ++k){
-	  vecBheadPh[k]=phase(k,bsInd);
-	  vecAheadPh[k]=phase(npoi+k, bsInd);
-	}
-	medA=median(vecAheadPh);
-	medB=median(vecBheadPh);
-	if((medA- medB) > phaseWrap_p)
-	  for(Int k=0; k< npoi; ++k)
-	    phase(k, bsInd) += 2*C::pi;
-	if((medA-medB) < -phaseWrap_p)
-	  for(Int k=0; k< npoi; ++k)
-	    phase(k, bsInd) -= 2*C::pi;
-	
-      }
-    }
-  }
   // Delete the accumulation buffers
   for (Int k=0; k < nTimes; k++) {
     delete(visTimeSeries[k]);
-    delete(modelTimeSeries[k]);
     delete(weightTimeSeries[k]);
   };
 
@@ -530,6 +498,10 @@ Bool GJonesSpline::solve (VisEquation& me)
   Int nKnots = getKnots(time, knots);
   
   os << LogIO::NORMAL 
+     << "Number of cubic spline control points = " << nKnots-4
+     << LogIO::POST;
+
+  os << LogIO::NORMAL 
      << "Number of cubic spline knots = " << nKnots
      << LogIO::POST;
 
@@ -537,34 +509,38 @@ Bool GJonesSpline::solve (VisEquation& me)
      << "Number of cubic spline segments = " << nKnots-7
      << LogIO::POST;
 
-  if (nTimes < (nKnots-2) ) {
+  if (nTimes < (nKnots-4) ) {
     os << LogIO::SEVERE
        << "Insufficient number of timestamps for cubic splines:" << endl 
-       << "  nKnots - nTimes > 2  (" << nKnots-nTimes << ")"
+       << "  Control points - nTimes > 0  (" << nKnots-4-nTimes << ")"
        << LogIO::POST;
     os << LogIO::SEVERE
        << "Increase splinetime or reduce preavg (if possible), or " << endl
        << "  solve for ordinary G instead."
        << LogIO::POST;
-    return False;
+    return;
   };
 
   // Declare work arrays and returned value
   // arrays to be used by the solver
   Matrix<Double> wk1(4, nTimes);
-  Matrix<Double> wk2(4*nAnt, nKnots*nAnt);
-  Vector<Double> wk3(nKnots*nAnt);
-  Vector<Double> rmsfit(nBasl, 0);
+  Matrix<Double> wk2(4*nAnt(), nKnots*nAnt());
+  Vector<Double> wk3(nKnots*nAnt());
+  Vector<Double> rmsfit(nBln(),0);
 
   Double dzero(0);
-  Matrix<Double> polyCoeffAmp(nAnt,1, dzero);
-  Matrix<Double> polyCoeffPhase(nAnt,1, dzero);
+
+  // GSpline is nominally dual-pol
+  Cube<Double> polyCoeffAmp(nAnt(),nKnots,2, dzero);
+  Cube<Double> polyCoeffPhase(nAnt(),nKnots,2, dzero);
 
   // Fit using spline polynomials (GILDAS splinant)
   Bool dum;
   Int iy;
   // GILDAS solver uses one-relative antenna numbers
-  Int refant = refant_p + 1;
+  Int rAnt = refant() + 1;
+  Int nBL(nBln());
+  Int nA(nAnt());
 
   if (solveAmp_p) {
     // Amplitude solution
@@ -573,94 +549,169 @@ Bool GJonesSpline::solve (VisEquation& me)
        << "Fitting amplitude spline."
        << LogIO::POST;
 
-    polyCoeffAmp.resize(nAnt,nKnots);
-    polyCoeffAmp=dzero;
     ampKnots.resize(knots.shape());
     ampKnots=knots;
+
     iy = 1;
-    splinant(&iy,
-	     &nTimes,
-	     &nBasl,
-	     ant1.getStorage(dum),
-	     ant2.getStorage(dum),
-	     &refant,
-	     &nKnots,
-	     &nAnt,
-	     time.getStorage(dum),
-	     amp.getStorage(dum),
-	     weight.getStorage(dum),
-	     knots.getStorage(dum),
-	     wk1.getStorage(dum),
-	     wk2.getStorage(dum),
-	     wk3.getStorage(dum),
-	     rmsfit.getStorage(dum),
-	     polyCoeffAmp.getStorage(dum));
     
-    String logfile;
-    //    logfile=(vs_->msName().before("/SELECTED"));
-    //    logfile=(logfile.before("/SORTED_TABLE"))+".amp.log";
-    logfile=solveTable_p + ".AMP.log";
-    writeAsciiLog(logfile, polyCoeffAmp, rmsfit, False);
-    plotsolve(time, amp, weight, rmsfit, polyCoeffAmp, False);
+    for (Int ip=0;ip<nPH;++ip) {
+
+      splinant(&iy,
+	       &nTimes,
+	       &nBL,
+	       ant1.getStorage(dum),
+	       ant2.getStorage(dum),
+	       &rAnt,
+	       &nKnots,
+	       &nA,
+	       time.getStorage(dum),
+	       amp.xyPlane(ip).getStorage(dum),
+	       weight.xyPlane(ip).getStorage(dum),
+	       knots.getStorage(dum),
+	       wk1.getStorage(dum),
+	       wk2.getStorage(dum),
+	       wk3.getStorage(dum),
+	       rmsfit.getStorage(dum),
+	       polyCoeffAmp.xyPlane(ip).getStorage(dum));
+    
+      ostringstream o;
+      o << calTableName() << ".AMP.pol" << ip << ".log";
+      String logfile=o.str();
+      writeAsciiLog(logfile, polyCoeffAmp.xyPlane(ip), rmsfit, False);
+      //    plotsolve(time, amp, weight, rmsfit, polyCoeffAmp, False);
+
+    }
 
   }
 
   if (solvePhase_p){
     // Phase solution
 
+    for (Int ip=0;ip<nPH;++ip) {
+      os << LogIO::NORMAL 
+	 << "Searching for and correcting phase-wraps on each baseline."
+	 << LogIO::POST;
+      
+      for(Int bsInd=0; bsInd < nBln() ; ++bsInd){
+	
+	Int npoi=numpoint_p; 
+	if (npoi < 2) npoi=2;
+	
+	for (Int k1=npoi; k1 < nTimes-npoi; k1=k1+(npoi/2)){
+	  Vector<Double> vecAheadPh(npoi), vecBheadPh(npoi);
+	  for (Int k=0; k < npoi; ++k){
+	    vecBheadPh[k]=phase(k1-k-1,bsInd,ip);
+	    vecAheadPh[k]=phase(k1+k, bsInd,ip);
+	  }
+	  Double medA=median(vecAheadPh);
+	  Double medB=median(vecBheadPh);
+	  if((medA- medB) >phaseWrap_p)
+	    for(Int k=k1; k< nTimes; ++k)
+	      phase(k, bsInd,ip) -= 2*C::pi;
+	  if((medA-medB) < -phaseWrap_p)
+	    for(Int k=k1; k< nTimes; ++k)
+	      phase(k, bsInd,ip) += 2*C::pi;
+	  
+	}
+	
+	if(nTimes >npoi*2){
+	  
+	  //the last npoi pts
+	  Vector<Double> vecAheadPh(npoi), vecBheadPh(npoi);
+	  for (Int k=0; k <npoi; ++k){
+	    vecBheadPh[k]=phase(nTimes-2*npoi+k,bsInd,ip);
+	    vecAheadPh[k]=phase(nTimes-npoi+k, bsInd,ip);
+	  }
+	  Double medA=median(vecAheadPh);
+	  Double medB=median(vecBheadPh);
+	  if((medA- medB) > phaseWrap_p)
+	    for(Int k=(nTimes-npoi); k< nTimes; ++k)
+	      phase(k, bsInd,ip) -= 2*C::pi;
+	  if((medA-medB) < -phaseWrap_p)
+	    for(Int k=(nTimes-npoi); k< nTimes; ++k)
+	      phase(k, bsInd,ip) += 2*C::pi;
+	  
+	  // The first npoi points
+	  
+	  for (Int k=0; k <npoi; ++k){
+	    vecBheadPh[k]=phase(k,bsInd,ip);
+	    vecAheadPh[k]=phase(npoi+k, bsInd,ip);
+	  }
+	  medA=median(vecAheadPh);
+	  medB=median(vecBheadPh);
+	  if((medA- medB) > phaseWrap_p)
+	    for(Int k=0; k< npoi; ++k)
+	      phase(k, bsInd,ip) += 2*C::pi;
+	  if((medA-medB) < -phaseWrap_p)
+	    for(Int k=0; k< npoi; ++k)
+	      phase(k, bsInd,ip) -= 2*C::pi;
+	  
+	}
+      }
+    }
+
     os << LogIO::NORMAL 
        << "Fitting phase spline."
        << LogIO::POST;
 
-    polyCoeffPhase.resize(nAnt,nKnots);
-    polyCoeffPhase=dzero;
     phaKnots.resize(knots.shape());
     phaKnots=knots;
-
     iy = 2;
-    Matrix<Double> wght(nTimes, nBasl, 1.0);
-    splinant(&iy,
-	     &nTimes,
-	     &nBasl,
-	     ant1.getStorage(dum),
-	     ant2.getStorage(dum),
-	     &refant,
-	     &nKnots,
-	     &nAnt,
-	     time.getStorage(dum),
-	     phase.getStorage(dum),
-	     wght.getStorage(dum),
-	     knots.getStorage(dum),
-	     wk1.getStorage(dum),
-	     wk2.getStorage(dum),
-	     wk3.getStorage(dum),
-	     rmsfit.getStorage(dum),
-	     polyCoeffPhase.getStorage(dum));
 
-    String logfile;
-    //    logfile=(vs_->msName().before("/SELECTED"));
-    //    logfile=(logfile.before("/SORTED_TABLE"))+".phase.log";
-    logfile=solveTable_p + ".PHASE.log";
-    writeAsciiLog(logfile, polyCoeffPhase, rmsfit, True);
+    for (Int ip=0;ip<nPH;++ip) {
 
-    plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, True);
+      wk1=0.0; wk2=0.0; wk3=0.0;
+
+      splinant(&iy,
+	       &nTimes,
+	       &nBL,
+	       ant1.getStorage(dum),
+	       ant2.getStorage(dum),
+	       &rAnt,
+	       &nKnots,
+	       &nA,
+	       time.getStorage(dum),
+	       phase.xyPlane(ip).getStorage(dum),
+	       weight.xyPlane(ip).getStorage(dum),
+	       knots.getStorage(dum),
+	       wk1.getStorage(dum),
+	       wk2.getStorage(dum),
+	       wk3.getStorage(dum),
+	       rmsfit.getStorage(dum),
+	       polyCoeffPhase.xyPlane(ip).getStorage(dum));
+
+
+      cout << "Finished solve." << endl;
+
+
+      ostringstream o;
+      o << calTableName() << ".PHASE.pol" << ip << ".log";
+      String logfile=o.str();
+      writeAsciiLog(logfile, polyCoeffPhase.xyPlane(ip), rmsfit, True);
+
+      // TBD: make multi-pol plotsolve
+      //    plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, True);
+
+    }
+
+
 
   };
 
   // Update the output calibration table
-  Vector<Int> antId(nAnt);
+  Vector<Int> antId(nAnt());
   indgen(antId);
   Vector<Int> fieldIdKeys = fieldIdRange();
-  Vector<String> freqGrpName(nAnt, "");
-  Vector<String> polyType(nAnt, "SPLINE");
-  Vector<String> polyMode(nAnt, mode_p);
-  Vector<Complex> scaleFactor(nAnt, Complex(1,0));
-  Vector<String> phaseUnits(nAnt, "RADIANS");
-  Vector<Int> refAnt(nAnt, refant_p);
+  Vector<String> freqGrpName(nAnt(), "");
+  Vector<String> polyType(nAnt(), "SPLINE");
+  Vector<String> polyMode(nAnt(), mode());
+  Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
+  Vector<String> phaseUnits(nAnt(), "RADIANS");
+  Vector<Int> refAnt(nAnt(), refant());
   
   // Use mean frequency as the reference frequency
   if (nMeanFreq > 0) meanFreq = meanFreq / nMeanFreq;
-  Vector<MFrequency> refFreq(nAnt, MFrequency(Quantity(meanFreq, "Hz")));
+  Vector<MFrequency> refFreq(nAnt(), MFrequency(Quantity(meanFreq, "Hz")));
 
   // If not incremental calibration then create an empty
   // calibration buffer to hold the output calibration solutions
@@ -675,85 +726,63 @@ Bool GJonesSpline::solve (VisEquation& me)
   };
 
   // Update the calibration table
+  cout << "ampKnots.nelements() = " << ampKnots.nelements() << endl;
+  cout << "phaKnots.nelements() = " << phaKnots.nelements() << endl;
+  cout << "nKnots = " << nKnots << endl;
+
+  cout << "polyCoeffPhase.shape() = " << polyCoeffPhase.shape() << endl;
+  cout << "polyCoeffPhase.reform(IPosition(nAnt(),ampKnots.nelements()*2)).shape() = " << polyCoeffPhase.reform(IPosition(2,nAnt(),nKnots*2)).shape() << endl;
+
+
+  Matrix<Double> ampco(polyCoeffAmp.reform(IPosition(2,nAnt(),nKnots*2)));
+  Matrix<Double> phaco(polyCoeffPhase.reform(IPosition(2,nAnt(),nKnots*2)));
+
+
   updateCalTable(fieldIdKeys, antId, freqGrpName, polyType, polyMode, 
-		 scaleFactor, polyCoeffAmp, polyCoeffPhase, phaseUnits, 
-		 ampKnots, phaKnots, refFreq, refAnt);
+		 scaleFactor, 
+		 ampco,phaco,
+		 //		 polyCoeffAmp.xyPlane(0), polyCoeffPhase.xyPlane(0), 
+		 phaseUnits, ampKnots, phaKnots, refFreq, refAnt);
 	
-  return True;
+  return;
 };
 
 //----------------------------------------------------------------------------
 
-void GJonesSpline::getThisGain(const VisBuffer& vb,
-			       const Bool& forceAntMat,
-			       const Bool& doInverse,
-			       const Bool& forceIntMat)
+void GJonesSpline::calcPar() {
 
-{
-// Check and refresh the antenna- and baseline-based gain cache as necessary
-// Input:
-//    vb           const VisBuffer&         Input visibility buffer
-//    spw          Int                      Spectral window id. in buffer
-//    time         Double                   Time in buffer
-// Output to protected data:
-//    Various antenna and baseline gain cache arrays.
-//
-  LogIO os (LogOrigin("GJonesSpline", "getThisGain", WHERE));
+// Calculate new gain parameters (in this case, the G matrix elements)
 
-  currentSpw_=vb.spectralWindow();
-  Double currTimeStamp(vb.time()(0));
+  if (prtlev()>6) cout << "      GSpline::calcPar()" << endl;
 
-  // realize spw mapping:
-  currentCalSpw_= (spwMap_(currentSpw_)>0) ? spwMap_(currentSpw_) : currentSpw_;
+  LogIO os (LogOrigin("GJonesSpline", "calcPar", WHERE));
 
-  // Only re-compute the calibration corrections if the visibility
-  // buffer time stamp has changed; else use the cached corrections
-
-  if (currTimeStamp == cacheTimeValid_p) return;
-  cacheTimeValid_p = currTimeStamp;
-
-  // Extract the antenna id. range in the visibility buffer
-  Vector<Int> antennaIds = vb.antIdRange();
   Double freqRatio=1.0;
+  Double vbFreqHz = 1.0e9*mean(currFreq());
 
-  String timeKey;
-  Bool isTimeDefined=False;
-  if(rawPhaseRemoval_p){
-    MVTime mvt(currTimeStamp / C::day);
-    timeKey = mvt.string(MVTime::TIME, 7);
-    isTimeDefined=timeValueMap_p.isDefined(timeKey);
-    //   if(!isTimeDefined) cout << "Time " << timeKey << "is not defined" << endl;
-  }
+  //  cout << "vbFreqHz = " << vbFreqHz << endl;
 
+  currCPar().resize(nPar(),1,nAnt());
+  currParOK().resize(1,nAnt());
+  currParOK()=False;
 
-  // References to ease syntax
-  Matrix<mjJones2> tAGM1; tAGM1.reference( *thisJonesMat_[currentCalSpw_] );
-  Vector<Bool>     tAGOK; tAGOK.reference( *thisJonesOK_[currentCalSpw_] );
-  Cube<mjJones4>   tIGM;  tIGM.reference(  *thisMuellerMat_[currentCalSpw_] );
-
-  // Space to hold conjugates for int matrix calculation
-  Matrix<mjJones2> tAGM2(1,numberAnt_);
-  tAGM2 = mjJones2(Complex(1.0,0.0));
-
-
-  // Compute antenna-based spline polynomial correction factors
-
-  for (uInt j=0; j < antennaIds.nelements(); j++) {
-    Int antId = antennaIds(j);
+  // Compute them, per antenna
+  for (Int iant=0; iant < nAnt(); iant++) {
 
     // Match this antenna id. and the visibility buffer field id. 
     // in the calibration buffer
     Vector<Int> matchingRows = 
-      calBuffer_p->matchAntenna1AndFieldId(antId, vb.fieldId());
+      calBuffer_p->matchAntenna1AndFieldId(iant,currField());
 
     if (matchingRows.nelements() > 0) {
       // Matching calibration solution found
       Int row = matchingRows(0);
-      tAGOK(antId) = True;
-      Double ampVal = 1.0;
-      Double phaseVal = 0.0;
+      Vector<Double> ampVal(2,1.0);
+      Vector<Double> phaseVal(2,0.0);
       Complex gain(calBuffer_p->scaleFactor()(row));
       String mode = calBuffer_p->polyMode()(row);
+
+      //      cout << "gain = " << gain << endl;
 
       // Compute the ratio between the calibration solution 
       // reference frequency and the mean observed frequency
@@ -763,9 +792,9 @@ void GJonesSpline::getThisGain(const VisBuffer& vb,
       refFreqPos.setLast(IPosition(1,row));
       MFrequency refFreq = calBuffer_p->refFreqMeas()(refFreqPos);
       Double refFreqHz = refFreq.get("Hz").getValue();
-      Double vbFreqHz = mean(vb.frequency());
       freqRatio = abs(refFreqHz) > 0 ? vbFreqHz / refFreqHz : 1.0;
-      //      cout << "FreqRation " << freqRatio << endl;
+      //      cout << "freqRatio = " << freqRatio << endl;
+
       // Compute amplitude polynomial
       if (mode.contains("AMP") || mode.contains("A&P")) {
 	// Extract amplitude spline polynomial knots
@@ -786,104 +815,85 @@ void GJonesSpline::getThisGain(const VisBuffer& vb,
 	Int nAmpCoeffPos = ampCoeffPos.nelements();
 	ampCoeffPos[nAmpCoeffPos-1] = row;
 	Int nPoly = calBuffer_p->nPolyAmp()(row);
-	Vector<Double> ampCoeff(nPoly);
-	for (Int k=0; k < nPoly; k++) {
+	Vector<Double> ampCoeff(2*nPoly);
+	for (Int k=0; k < 2*nPoly; k++) {
 	  ampCoeffPos[nAmpCoeffPos-2] = k;
 	  ampCoeff(k) = calBuffer_p->polyCoeffAmp()(ampCoeffPos);
 	};
 
 	// Compute amplitude spline polynomial value
-	ampVal *= exp(getSplineVal(currTimeStamp, ampKnots, ampCoeff));
+	Vector<Double> ac;
+	for (Int i=0;i<2;++i) {
+	  ac.reference(ampCoeff(IPosition(1,i*nPoly),
+				IPosition(1,(i+1)*nPoly-1)));
+	  ampVal(i) *= exp(getSplineVal(currTime(), ampKnots, ac));
+	}
       };
 
       // Compute phase polynomial
       if (mode.contains("PHAS") || mode.contains("A&P")) {
-	if(!rawPhaseRemoval_p || !isTimeDefined){
-	// Extract phase spline polynomial knots
-	IPosition phaseKnotsPos = calBuffer_p->splineKnotsPhase().shape();
-	phaseKnotsPos = 0;
-	Int nPhaseKnotsPos = phaseKnotsPos.nelements();
-	phaseKnotsPos[nPhaseKnotsPos-1] = row;
-	Int nKnots = calBuffer_p->nKnotsPhase()(row);
-	Vector<Double> phaseKnots(nKnots);
-	for (Int k=0; k < nKnots; k++) {
-	  phaseKnotsPos[nPhaseKnotsPos-2] = k;
-	  phaseKnots(k) = calBuffer_p->splineKnotsPhase()(phaseKnotsPos);
-	};
 
-	// Extract phase spline polynomial coefficients
-	IPosition phaseCoeffPos = calBuffer_p->polyCoeffPhase().shape();
-	phaseCoeffPos = 0;
-	Int nPhaseCoeffPos = phaseCoeffPos.nelements();
-	phaseCoeffPos[nPhaseCoeffPos-1] = row;
-	Int nPoly = calBuffer_p->nPolyPhase()(row);
-	Vector<Double> phaseCoeff(nPoly);
-	for (Int k=0; k < nPoly; k++) {
-	  phaseCoeffPos[nPhaseCoeffPos-2] = k;
-	  phaseCoeff(k) = calBuffer_p->polyCoeffPhase()(phaseCoeffPos);
-	};
+	  // Extract phase spline polynomial knots
+	  IPosition phaseKnotsPos = calBuffer_p->splineKnotsPhase().shape();
+	  phaseKnotsPos = 0;
+	  Int nPhaseKnotsPos = phaseKnotsPos.nelements();
+	  phaseKnotsPos[nPhaseKnotsPos-1] = row;
+	  Int nKnots = calBuffer_p->nKnotsPhase()(row);
+	  Vector<Double> phaseKnots(nKnots);
+	  for (Int k=0; k < nKnots; k++) {
+	    phaseKnotsPos[nPhaseKnotsPos-2] = k;
+	    phaseKnots(k) = calBuffer_p->splineKnotsPhase()(phaseKnotsPos);
+	  };
+	  
+	  // Extract phase spline polynomial coefficients
+	  IPosition phaseCoeffPos = calBuffer_p->polyCoeffPhase().shape();
+	  phaseCoeffPos = 0;
+	  Int nPhaseCoeffPos = phaseCoeffPos.nelements();
+	  phaseCoeffPos[nPhaseCoeffPos-1] = row;
+	  Int nPoly = calBuffer_p->nPolyPhase()(row);
+	  Vector<Double> phaseCoeff(2*nPoly);
+	  for (Int k=0; k < 2*nPoly; k++) {
+	    phaseCoeffPos[nPhaseCoeffPos-2] = k;
+	    phaseCoeff(k) = calBuffer_p->polyCoeffPhase()(phaseCoeffPos);
+	  };
 
-	// Compute phase spline polynomial value
-	phaseVal = getSplineVal(currTimeStamp, phaseKnots, phaseCoeff);
-	
-	// Handle gildas sign convention on spline phases
-	phaseVal = -phaseVal;
+	  //	  cout << "phaseCoeff = " << phaseCoeff << endl;
+	  
+	  // Compute phase spline polynomial value
+	  Vector<Double> pc;
+	  for (Int i=0;i<2;++i) {
+	    pc.reference(phaseCoeff(IPosition(1,i*nPoly),
+				    IPosition(1,(i+1)*nPoly-1)));
 
-	// Scale by the ratio of the observing frequency of the 
-	// data to be corrected and the reference frequency of the
-	// calibration solution
-	phaseVal *= freqRatio;
-	}
-	else{
-	  phaseVal=0;
-	  //	  cout << "CHKCACHE In rawphase removal " << endl;
-	}
+	    //	    cout << "pc = " << pc << endl;
+
+	    phaseVal(i) = getSplineVal(currTime(), phaseKnots, pc);
+	  
+	    // Handle gildas sign convention on spline phases
+	    phaseVal(i) = -phaseVal(i);
+	  
+	    // Scale by the ratio of the observing frequency of the 
+	    // data to be corrected and the reference frequency of the
+	    // calibration solution
+	    phaseVal(i) *= freqRatio;
+	  }
       };
 
-      // Fill antenna-based gain correction cache
-      tAGM1(0,antId) = gain * ampVal * Complex(cos(phaseVal), sin(phaseVal));
-      tAGOK(antId) = True;
+      //      cout << "phaseVal = " << phaseVal << endl;
       
-      // If requested (correct context), invert:
-      if (doInverse) {
-	mjJones2 agInv;
-	tAGM1(0,antId).inverse(agInv);
-	tAGM1(0,antId) = agInv;
-      }
-
-      // Form conjugate, too
-      tAGM2(0,antId) = tAGM1(0,antId); 
-      tAGM2(0,antId).conj();
-
-    } else {
-      // No valid calibration solution found
-      tAGOK(antId) = False;
+      // Fill the (matrix element) parameters
+      for (Int i=0;i<2;++i) 
+	currCPar()(i,0,iant) = gain * ampVal(i) * Complex(cos(phaseVal(i)), 
+							  sin(phaseVal(i)) );
+      currParOK()(0,iant) = True;
+      
     };
   };
-  validateJM(currentCalSpw_);
 
-  // Fill interferometer-based gain correction cache
-  for (Int iant1=0;iant1<numberAnt_;iant1++) {
-    for (Int iant2=iant1;iant2<numberAnt_;iant2++) {
-      if (tAGOK(iant1) && tAGOK(iant2)) {
-	directProduct(tIGM(0,iant1,iant2),tAGM1(0,iant1),tAGM2(0,iant2));
+  //cout << "currCPar() = " << currCPar() << endl;
 
-	// Handle raw phase removal
-	//  (this may have cycle slip issues w.r.t. freqRatio application)
-	if(rawPhaseRemoval_p && isTimeDefined) {
-	  Double phaseval= getRawPhase(iant1,iant2,currTimeStamp)*freqRatio;
-	  if (doInverse) phaseval = -phaseval;
-	  SquareMatrix<Complex,4> rawphase;
-	  rawphase = (Complex(cos(phaseval),sin(phaseval)));
-	  tIGM(0,iant1,iant2)*=rawphase;
-	}
-
-      } else {
-	tIGM(0,iant1,iant2)=mjJones4(Complex(1.0,0.0));
-      }
-    }
-  }
-  validateMM(currentCalSpw_);
+  validateP();
+  invalidateJ();
 
   return;
 };
@@ -933,8 +943,10 @@ Int GJonesSpline::getKnots (const Vector<Double>& times, Vector<Double>& knots)
 
   // Use algorithm in GILDAS, with user-defined timescale
   Int n=times.nelements();
-  Int ncenterKnots = Int((times(n-1)-times(0))/splinetime_p);
-  Double step = (times(n-1) - times(0)) / (ncenterKnots+1);
+  Int nSeg = Int(0.5 + (times(n-1)-times(0))/splinetime_p);
+  nSeg = max(1,nSeg);     // never fewer than 1, obviously
+  Int ncenterKnots = nSeg -1;
+  Double step = (times(n-1) - times(0)) / nSeg;
 
   os << LogIO::NORMAL
      << "Gridded splinetime = " << step << " sec."
@@ -1003,8 +1015,8 @@ void GJonesSpline::updateCalTable (const Vector<Int>& fieldIdKeys,
       // Update the matching rows in the calibration buffer
       calBuffer_p->fillMatchingRows(matchingRows, freqGrpName(k), polyType(k), 
 				    polyMode(k), scaleFactor(k), 
-				    polyCoeffAmp.row(k).nelements(),
-				    polyCoeffPhase.row(k).nelements(),
+				    polyCoeffAmp.row(k).nelements()/2,
+				    polyCoeffPhase.row(k).nelements()/2,
 				    polyCoeffAmp.row(k), polyCoeffPhase.row(k),
 				    phaseUnits(k), splineKnotsAmp.nelements(),
 				    splineKnotsPhase.nelements(),
@@ -1014,18 +1026,18 @@ void GJonesSpline::updateCalTable (const Vector<Int>& fieldIdKeys,
   };
 
   // Delete the output calibration table if it already exists
-  if (Table::canDeleteTable(solveTable_p)) {
-    Table::deleteTable(solveTable_p);
+  if (Table::canDeleteTable(calTableName())) {
+    Table::deleteTable(calTableName());
   };
 
   os << LogIO::NORMAL
-     << "Storing solutions in table " << solveTable_p
+     << "Storing solutions in table " << calTableName()
      << LogIO::POST;
 
   // Write the calibration buffer to the output calibration table
   Table::TableOption accessMode = Table::New;
-  if (Table::isWritable(solveTable_p)) accessMode = Table::Update;
-  GJonesSplineTable calTable(solveTable_p, accessMode);
+  if (Table::isWritable(calTableName())) accessMode = Table::Update;
+  GJonesSplineTable calTable(calTableName(), accessMode);
   calBuffer_p->append(calTable);
 
   return;
@@ -1083,15 +1095,11 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
   LogIO os (LogOrigin("GJonesSpline", "plotsolve()", WHERE));
 
   String device;
-  device = solveTable_p;
+  device = calTableName();
   if (phasesoln){
-    //    device=(vs_->msName().before("/SELECTED"));
-    //    device=(device.before("/SORTED_TABLE"))+".PHASE.ps/cps";
     device = device + ".PHASE.ps/cps";
   }
   else{
-    //    device=(vs_->msName().before("/SELECTED"));
-    //    device=(device.before("/SORTED_TABLE"))+".AMP.ps/cps";
     device = device + ".AMP.ps/cps";
   }
 
@@ -1099,10 +1107,10 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
      << "Generating plot file: " << device
      << LogIO::POST;
 
-  PGPlotterLocal pg(device);
+  PGPlotter pg(device);
   pg.subp(4,3);
   Vector<Double> knots;
-  Int numOfKnots=getKnots(x,knots);
+  getKnots(x,knots);
   Int numpoints= max(x.shape().asVector());
   Int numplotpoints=20*numpoints;
   Int num_valid_points=0;
@@ -1114,7 +1122,7 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
   Vector<Float> soly1(numplotpoints);
   Vector<Double> y, weight;
   Double err;
-  Int num_ant = vs_->numberAnt();
+  Int num_ant = vs_p->numberAnt();
   Vector<Double> ant1coeff, ant2coeff; 
 
   //  Float max_data, min_data, max_err;
@@ -1258,9 +1266,8 @@ Vector<Int> GJonesSpline::fieldIdRange()
 //    fieldIdRange      Vector<Int>        All FIELD_ID's in the MS
 //
   // Open the FIELD sub-table
-  //  MeasurementSet ms(vs_->msName());
 
-  const ROMSColumns& mscol(vs_->iter().msColumns());
+  const ROMSColumns& mscol(vs_p->iter().msColumns());
   const ROMSFieldColumns& fldCol(mscol.field());
 
   // Fill vector containing all field id.'s
@@ -1271,6 +1278,8 @@ Vector<Int> GJonesSpline::fieldIdRange()
 };
 
 //----------------------------------------------------------------------------
+
+/*  TBD... (no raw phase processing, for now)
 
 void GJonesSpline::setRawPhaseVisSet(VisSet& vs){
 
@@ -1300,7 +1309,7 @@ void GJonesSpline::fillRawPhaseBuff(){
   Int nTimeSeries = 0;
 
   // Initialize the baseline index
-  Int nAnt = vs_->numberAnt();
+  Int nAnt = vs_p->numberAnt();
   Int nBasl = nAnt * (nAnt - 1) / 2;
 
 
@@ -1398,7 +1407,7 @@ void GJonesSpline::fillRawPhaseBuff(){
 Double GJonesSpline::getRawPhase(Int ant1, Int ant2, Double time){
 
   if (ant1 == ant2) return 0.0;
-  Int nAnt = vs_->numberAnt();
+  Int nAnt = vs_p->numberAnt();
   Bool flip=False;
   if(ant1 > ant2){
     Int tmp=ant1;
@@ -1424,6 +1433,7 @@ Double GJonesSpline::getRawPhase(Int ant1, Int ant2, Double time){
 
 }
 
+*/
 
 void GJonesSpline::writeAsciiLog(const String& filename, const Matrix<Double>& coeff, const Vector<Double>& rmsFit, Bool phasesoln){
 
@@ -1453,15 +1463,6 @@ void GJonesSpline::writeAsciiLog(const String& filename, const Matrix<Double>& c
 	     << rmsFit[basnum] << endl;  
     }
   }
-}
-
-void GJonesSpline::setPhaseWrapHelp(const Int& numpoi, 
-				    const Double& phaseWrap){
-
-  numpoint_p=numpoi;
-  phaseWrap_p=phaseWrap;
-
-
 }
 
 } //# NAMESPACE CASA - END

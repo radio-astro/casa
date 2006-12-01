@@ -67,7 +67,8 @@
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
-#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
+// Disabling Imager::correct() (gmoellen 06Nov20)
+//#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/UnitMap.h>
@@ -90,7 +91,8 @@
 #include <synthesis/MeasurementEquations/MosaicSkyEquation.h>
 #include <synthesis/MeasurementEquations/WFSkyEquation.h>
 #include <synthesis/MeasurementEquations/WBSkyEquation.h>
-#include <synthesis/MeasurementEquations/VisEquation.h>
+// Disabling Imager::correct() (gmoellen 06Nov20)
+//#include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 #include <synthesis/MeasurementComponents/CEMemImageSkyModel.h>
 #include <synthesis/MeasurementComponents/MFCEMemImageSkyModel.h>
@@ -5540,11 +5542,21 @@ Bool Imager::setbeam(const Quantity& mbmaj, const Quantity& mbmin,
 Bool Imager::correct(const Bool doparallactic, const Quantity& t) 
 {
   if(!valid()) return False;
-  
+
   LogIO os(LogOrigin("imager", "correct()", WHERE));
   
+  // (gmoellen 06Nov20)
+  // VisEquation/VisJones have been extensively revised, so
+  //  so we are disabling this method.  Will probably soon
+  /// delete it entirely, since this is a calibrater responsibility....
+
   this->lock();
   try {
+
+    // Warn users we are disabled.
+    throw(AipsError("Imager::correct() has been disabled (gmoellen 06Nov20)."));
+
+ /* Commenting out old VisEquation/VisJones usage
     os << "Correcting data: CORRECTED_DATA column will be replaced"
        << LogIO::POST;
     
@@ -5564,6 +5576,9 @@ Bool Imager::correct(const Bool doparallactic, const Quantity& t)
     }
     this->unlock();
     return True;
+ */
+
+
   } catch (AipsError x) {
     this->unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
@@ -6434,8 +6449,11 @@ Bool Imager::createFTMachine()
       {
 	try
 	  {
-	    epJ = new EPJones(*vs_p);
-	    epJ->load(epJTableName_p,"","diagonal");
+	    // Warn users we are have temporarily disabled pointing cal
+	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
+	    //  TBD: Bring this up-to-date with new VisCal mechanisms
+	    //	    epJ = new EPJones(*vs_p);
+	    //	    epJ->load(epJTableName_p,"","diagonal");
 	  }
 	catch(AipsError& x)
 	  {

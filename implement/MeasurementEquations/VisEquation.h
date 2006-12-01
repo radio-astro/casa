@@ -24,22 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
 
 #ifndef SYNTHESIS_VISEQUATION_H
 #define SYNTHESIS_VISEQUATION_H
 
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Matrix.h>
-#include <synthesis/MeasurementComponents/VisJones.h>
-#include <synthesis/MeasurementComponents/VisCal.h>
-#include <synthesis/MeasurementComponents/XCorr.h>
-#include <synthesis/MeasurementComponents/MJones.h>
-#include <synthesis/MeasurementComponents/ACoh.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisSet.h>
+#include <casa/Arrays/Array.h>
+#include <casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MeasurementComponents/VisCal.h>
+#include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -68,44 +63,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // See <linkto module="MeasurementEquations">MeasurementEquations</linkto>
 // for more details of the form of the VisEquation.
 //
-// The following components can be plugged into VisEquation
+// VisEquation provides the following:
 // <ul>
-// <li> Antenna-based terms: <linkto class="VisJones">VisJones</linkto>
-// <li> Correlator-based multiplicative terms: <linkto class="MJones">MJones</linkto>
-// <li> Correlator-based additive terms: <linkto class="ACoh">ACoh</linkto>
-// <li> Non-linear functions: <linkto class="XCorr">XCorr</linkto>
+// <li> Sorting of calibration terms (VisCals) in the Visibility Equation
+// <li> Application of calibration terms to data (via delegation to VisCals)
+// <li> Delivery of other evaluations of the VisEquation, e.g., (differentiated) residuals
 // </ul>
 // </synopsis> 
 //
 // <example>
 // <srcblock>
 //
-//      // Read the VisSet from disk
-//      VisSet vs("3c84.MS");
-//
-//      // Define a VisEquation
-//      VisEquation ve(vs);
-//
-//      // Solve for calibration of G matrix every 5 minutes
-//      GJones gj(vs, 5*60);
-//
-//      ve.setVisJones(gj);
-//
-//      ve.solve(gj);
-//
-//      // Solve for calibration of D matrix every 12 hours
-//      DJones dj(vs, 12*60*60);
-//
-//      ve.setVisJones(dj);
-//
-//      ve.solve(dj);
-//
 // </srcblock>
 // </example>
 //
 // <motivation>
 // VisEquation is part of a framework of classes that are
-// designed for synthesis and single dish imaging. The others are the 
+// designed for synthesis calibration and imaging. The others are the 
 // <linkto module=MeasurementComponents>MeasurementComponents</linkto>.
 // </motivation>
 //
@@ -115,127 +89,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class VisEquation {
 public:
 
-  VisEquation(VisSet& vs);
+  // Contructor
+  VisEquation();
   
-  virtual ~VisEquation();
-  
+  // Copy ctor
   VisEquation(const VisEquation& other);
 
+  // Destructor
+  virtual ~VisEquation();
+  
+  // Assignment
   VisEquation& operator=(const VisEquation& other);
 
-  void setVisSet(VisSet& vs);
+  // Arrange for apply of a VisCal list (i.e., sort them into the correct order)
+  void setapply(PtrBlock<VisCal*>& vcin);
 
-  void setVisJones(VisJones& j);
-  void unSetVisJones(VisJones& j);
+  // Arrange for solve of a single SolvableVisCal
+  void setsolve(SolvableVisCal& svc);
 
-  void setVisCal(VisCal& vc);
-  void unSetVisCal(VisCal& vc);
+  // Correct in place the OBSERVED visibilities in a VisBuffer
+  //  with the apply-able VisCals
+  void correct(VisBuffer& vb);
 
-  void setMJones(MJones& j);
+  // Corrupt in place the MODEL visibilities in a VisBuffer
+  //  with the apply-able VisCals
+  void corrupt(VisBuffer& vb);
 
-  // Set Additive error coherence vector
-  void setACoh(ACoh& c);
+  // Correct/Corrupt in place the OBSERVED/MODEL visibilities in a VisBuffer
+  //  with the apply-able VisCals on either side of the SolvableVisCal
+  void collapse(VisBuffer& vb);
 
-  // Set non-linear correlator function
-  void setXCorr( XCorr& j);
-
-  // Correct the measured "Vis" coherences to obtain an
-  // estimate of the "Sky" visibilities
-  virtual void correct();
-
-  // Corrupt the measred "Vis" coherences to simulate
-  // errors
-  virtual void corrupt();
-
-  // Initialize the gradient calculations, pre-computes & averages
-  // lhs and rhs of the equation.
-  void initChiSquare(VisJones& vj);
-
-  void initChiSquare(SolvableVisCal& svc);
-
-  void initChiSquare(const Int& type,
-		     const Bool& freqdep,
-		     const Bool& prenorm=False,
-		     const Double& preavg=DBL_MAX);
+  // Calculate residuals 
+  //   (optionally for specific chan)
+  void residuals(VisBuffer& vb, 
+		 Cube<Complex>& R,
+		 const Int& chan=-1);
   
-  // Find sum of weights, Chi-squared per spectral window, and antenna
-  virtual void chiSquared(Matrix<Float>& iChisq, Matrix<Float>& iSumwt);
+  // Calculate residuals and differentiated residuals
+  //   (optionally for specific chan)
+  void diffResiduals(VisBuffer& vb, 
+		     Cube<Complex>& R, 
+		     Array<Complex>& dR,
+		     Matrix<Bool>& Rflg); 
 
-  // Find sum of weights, Chi-squared per antenna
-  virtual void chiSquared(Vector<Float>& iChisq, Vector<Float>& iSumwt);
-
-  // VisJones: Find sum of weights, Chi-squared, and the first and second derivatives
-  virtual void gradientsChiSquared(const Matrix<Bool>& required, VisJones& vj);
-
-  // MJones: Find sum of weights, Chi-squared, and the first and second derivatives
-  virtual void gradientsChiSquared(MJones& mj);
-
-  // Solve for variables. 
-  // <group>
-  virtual Bool solve(MJones& mj);
-  virtual Bool solve(ACoh& ac);
-  virtual Bool solve(VisJones& vj);
-
-  virtual Bool solve(SolvableVisCal& svc);
-
-  // </group>
-
-  // Accessor functions for the corrected and corrupted data
-  const VisBuffer& corrected() {return correctedvb;};
-  const VisBuffer& corrupted() {return corruptedvb;};
-
-  // Apply actual Jones matrix and adjoint
-  // <group>
-  virtual VisBuffer& apply(VisBuffer& result);
-  virtual VisBuffer& applyInv(VisBuffer& result);
-  // </group>
  
+  // Report the VisEq's state
+  void state();
+  
 protected:
 
   Bool ok();
- 
-  // Fix up the weights for the VisBuffer (use sigmas)
-  void fixWeights(VisBuffer& vb);
 
-  // Apply Gradient of VisJones
-  virtual VisBuffer& applyGradient(VisBuffer& result, 
-				   const Vector<Int>& antenna, Int i, Int j, 
-				   Int pos);
+  // Access to the PB of apply terms 
+  inline PtrBlock<VisCal*>& vc()  { return (*vcpb_); };
 
-  // Apply Gradient of MJones
-  virtual VisBuffer& applyGradient(VisBuffer& result);
+  // Access to SVC
+  inline SolvableVisCal&    svc() { return *svc_; };
 
-  // VisSet
-  VisSet* vs_;
-  
-  // List of terms in left to right order
-  // <group>
-  XCorr* xc_;
+  // Detect freq dependence along the Vis Equation
+  void setFreqDep();
 
-  VisCal* mfm_;   // Freq-dep multiplicative closure
-  VisCal* mm_;    // Multiplicative closure
-  VisCal* km_;    // Fringe-fitting
+private:
 
-  MJones* mj_;
-  VisJones* kj_;
-  VisJones* bj_;
-  VisJones* gj_;
-  VisJones* dj_;
-  VisJones* cj_;
-  VisJones* ej_;
-  VisJones* pj_;
-  VisJones* tj_;
-  ACoh* ac_;
-  // </group>
+  // Diagnostic print level access
+  inline Int& prtlev() { return prtlev_; };
 
-  // Buffers for gradient calculation
-  VisBuffer corruptedvb,correctedvb;
+  // A local copy of the list of VisCal (pointers) for applying
+  //  (No ownership responsibilities)
+  PtrBlock<VisCal*>* vcpb_;
 
-  // VisJones still to be applied in gradient calculation
-  VisJones* vj_;
+  // Number of apply VisCals in vc_
+  Int napp_;
+
+  // Frequency dependence indices
+  Int lfd_;     // Right-most freq-dep term on LEFT  side
+  Int rfd_;     // Left-most  freq-dep term on RIGHT side
 
   // VisCal with solving interface
+  //  (No ownership responsibilities)
   SolvableVisCal* svc_;
+
+  // Diagnostic print level
+  Int prtlev_;
 
 };
 
