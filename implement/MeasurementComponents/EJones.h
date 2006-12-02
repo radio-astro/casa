@@ -126,8 +126,22 @@ public:
   // Type of Jones matrix according to nPar()
   Jones::JonesType jonesType() { return Jones::Diagonal; };
 
-  // Calculate current parameters
-  virtual void calcPar();
+  // Specialized access to pointing parameters (no chan axis)
+  Matrix<Float>& pointPar();
+
+  // Arrange to apply (corrupt only)
+  using SolvableVisCal::setApply;
+  virtual void setApply(const Record& applypar);
+
+  // Apply calibration to a VisBuffer 
+  virtual void applyCal(VisBuffer& vb, 
+			Cube<Complex>& Mout);
+
+  // Differentiate a VisBuffer w.r.t. pointng parameters
+  virtual void differentiate(VisBuffer& vb,
+			     Cube<Complex>& Mout,
+			     Array<Complex>& dMout,
+			     Matrix<Bool>& Mflg);
 
 protected:
 
@@ -139,8 +153,9 @@ protected:
 
 private:
 
-  // <nothing>
-  
+  // Local Matrix for referencing pointing pars in a convenient way
+  Matrix<Float> pointPar_;
+
 };
 
 

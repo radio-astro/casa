@@ -191,6 +191,41 @@ void VisCal::corrupt(VisBuffer& vb) {
   corrupt(vb,vb.modelVisCube());
 }
 
+void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
+
+  if (prtlev()>3) cout << " VC::correct()" << endl;
+  
+  // Prepare output Cube<Complex> for its own in-place apply:
+  //  (this is a no-op if referencing same storage)
+  Vout = vb.visCube();
+
+  // Bring calibration up-to-date with the vb, 
+  //   with inversion turned ON
+  syncCal(vb,True);
+
+  // Call generic row-by-row apply, with inversion turned ON
+  applyCal(vb,Vout);
+
+}
+
+ 
+void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
+
+  if (prtlev()>3) cout << " VC::corrupt()" << endl;
+
+  // Prepare output Cube<Complex> for its own in-place apply:
+  //  (this is a no-op if referencing same storage)
+  Mout = vb.modelVisCube();
+
+  // Bring calibration up-to-date with the vb, 
+  //   with inversion turned OFF
+  syncCal(vb,False);
+
+  // Call generic row-by-row apply, with inversion turned OFF
+  applyCal(vb,Mout);
+
+}
+
 
 void VisCal::state() {
 
@@ -233,33 +268,6 @@ void VisCal::state() {
 
 // VisCal PROTECTED:
   
-void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
-
-  if (prtlev()>3) cout << " VC::correct()" << endl;
-  
-  // Prepare output Cube<Complex> for its own in-place apply:
-  //  (this is a no-op if referencing same storage)
-  Vout = vb.visCube();
-
-  // Call generic row-by-row apply, with inversion turned ON
-  applyCal(vb,Vout,True);
-
-}
-
- 
-void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
-
-  if (prtlev()>3) cout << " VC::corrupt()" << endl;
-
-  // Prepare output Cube<Complex> for its own in-place apply:
-  //  (this is a no-op if referencing same storage)
-  Mout = vb.modelVisCube();
-
-  // Call generic row-by-row apply, with inversion turned OFF
-  applyCal(vb,Mout,False);
-
-}
-
 void VisCal::syncCal(const VisBuffer& vb,
 		     const Bool& doInv) {
   
@@ -304,6 +312,11 @@ void VisCal::syncMeta(const VisBuffer& vb) {
 	   vb.fieldId(),
 	   vb.frequency(),
 	   vb.nChannel());
+
+  // Ensure VisVector for data acces has correct form
+  Int ncorr(vb.corrType().nelements());
+  if (V().type() != ncorr)
+    V().setType(visType(ncorr));
 
 }
 
@@ -560,21 +573,11 @@ void VisMueller::state() {
 }
 
 // Apply this calibration to VisBuffer visibilities
-void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv) {
+void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 
   if (prtlev()>3) cout << "  VM::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
-
-  // Ensure VisVector has correct form
-  // TBD: move this to syncMeta?
-  Int ncorr(vb.corrType().nelements());
-  if (V().type() != ncorr)
-    V().setType(visType(ncorr));
-
-  // Obtain gain matrices appropriate to this VisBuffer
-  //   (Ignoring fieldid for now)
-  syncCal(vb,doInv);
 
   // Data info/indices
   Int* dataChan;
@@ -944,28 +947,17 @@ void VisJones::state() {
 // VisJones: PROTECTED methods
 
 // Apply this calibration to VisBuffer visibilities
-void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv) {
+void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 
   if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
 
   if (applyByMueller()) 
-    VisMueller::applyCal(vb,Vout,doInv);
+    VisMueller::applyCal(vb,Vout);
   else {
 
     // TBD: applyByJones()=True necessarily
-
-    // Ensure VisVector has correct form
-    // TBD: move this to syncMeta?  (V()=*V_[currSpw]!)
-    currSpw()=vb.spectralWindow();
-    Int ncorr(vb.corrType().nelements());
-    if (V().type() != ncorr)
-      V().setType(visType(ncorr));
-    
-    // Obtain gain matrices appropriate to this VisBuffer
-    //   (Ignoring fieldid for now)
-    syncCal(vb,doInv);
 
     // Data info/indices
     Int* dataChan;
@@ -1007,7 +999,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv) {
 	V().sync(Vout(0,0,row));
 
 	wtvec.reference(wt.array());
-
 
 	for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
 	  

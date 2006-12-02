@@ -205,7 +205,7 @@ void EGainCurve::calcPar() {
   za().resize(nAnt());
   Vector<MDirection> antazel(vb().azel(currTime()));
   Double* a=za().data();
-  for (Int iant=0;iant<nAnt();++iant) 
+  for (Int iant=0;iant<nAnt();++iant,++a) 
     (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
 
   // Pars now valid, matrices not yet
@@ -250,7 +250,8 @@ void EGainCurve::calcAllJones() {
 EPJones::EPJones(VisSet& vs) :
   VisCal(vs), 
   VisMueller(vs),
-  SolvableVisJones(vs)
+  SolvableVisJones(vs),
+  pointPar_()
 {
   if (prtlev()>2) cout << "EP::EP(vs)" << endl;
 }
@@ -259,23 +260,82 @@ EPJones::~EPJones() {
   if (prtlev()>2) cout << "EP::~EP()" << endl;
 }
 
-void EPJones::calcPar() {
+Matrix<Float>& EPJones::pointPar() {
 
-  if (prtlev()>6) cout << "      EP::calcPar()" << endl;
+  // Local reference to reshaped currpar()
+  pointPar_.reference(currRPar().nonDegenerate(1));
+  return pointPar_;
 
-  // Assume zero pointing offset for now
+}
+		      
 
-  // Initialize parameter arrays
-  currRPar().resize(2,1,nAnt());
-  currRPar()=0.0;
-  currParOK().resize(1,nAnt());
-  currParOK()=True;
 
-  validateP();
-  invalidateJ();
+// Specialized setapply extracts image info
+void EPJones::setApply(const Record& applypar) {
+
+  // Call generic
+  SolvableVisCal::setApply(applypar);
+
+  // Extract image or complist to predict from
+
+  // TBD
 
 }
 
+void EPJones::applyCal(VisBuffer& vb,
+		       Cube<Complex>& Mout) {
+
+  // Inflate model data in VB, Mout references it
+  //  (In this type, model data is always re-calc'd from scratch)
+  vb.modelVisCube(True);
+  Mout.reference(vb.modelVisCube());
+
+  // Call predict:
+  //  TBD
+
+  // At this point Mout (and thus vb.modelVisibility) contain
+  //  pointing-corrupted visibilities
+
+}
+
+
+void EPJones::differentiate(VisBuffer& vb,
+		   Cube<Complex>& Mout,
+		   Array<Complex>& dMout,
+		   Matrix<Bool>& Mflg) {
+
+  Int nCorr(2); // TBD
+
+  // Size differentiated model
+  dMout.resize(IPosition(5,nCorr,nPar(),1,vb.nRow(),2));
+  IPosition blc(dMout.shape()); blc=0;
+  IPosition trc(dMout.shape()); trc-=1;
+  
+  // Model vis shape must match visibility
+  vb.modelVisCube(False);
+  Mout.reference(vb.modelVisCube());
+
+  // Since predict likes to fill the VisBuffer,
+  //  we will fill modelVisibility() for each type of
+  //  predict, and copy out the result (morphing shape)
+  //  as needed
+
+  // Predict w/ derivatives w.r.t. FIRST par (az?)
+  // TBD!
+
+  // Copy to dMout
+  blc(1)=trc(1)=0;   // deriv w.r.t. FIRST par
+  //  blc(4)=trc(4)=; // ???   (which ant in each baseline?)
+  //  dMout(blc,trc)=;
+  blc(1)=trc(1)=1;   // deriv w.r.t SECOND par
+  //  blc(4)=trc(4)=; // ???   (which ant in each baseline?)
+  //  dMout(blc,trc)=;
+
+
+  // Mflg just references vb.flag()?
+  Mflg.reference(vb.flag());
+
+}
 
 
 } //# NAMESPACE CASA - END

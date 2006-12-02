@@ -290,6 +290,7 @@ void VisCalSolver::chiSquare() {
 	  for (Int icorr=0;icorr<nCorr;++icorr) {
 
 	    chiSq()+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
+	    //	    chiSq()+=Double( real((*Rp)*conj(*Rp)) );
 	    chiSqV()(icorr)+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
 	    sumWt()+=Double(*wt);   // for each channel?!
 	    
@@ -456,8 +457,8 @@ void VisCalSolver::accGradHess() {
 
 	    for (Int icorr=0;icorr<nCorr;++icorr) {
 
-	      (*G1) += DComplex( (*wt)*(*Rp)  *conj(*dR0p) );
-	      (*G2) += DComplex( (*wt)*(*dR1p)*conj(*Rp) );
+	      (*G1) += DComplex( (*wt)*((*Rp)  *conj(*dR0p)) );
+	      (*G2) += DComplex( (*wt)*((*dR1p)*conj(*Rp)) );
 	      (*H1) +=   Double( (*wt)*real((*dR0p)*conj(*dR0p)) );
 	      (*H2) +=   Double( (*wt)*real((*dR1p)*conj(*dR1p)) );
      /*
@@ -466,6 +467,7 @@ void VisCalSolver::accGradHess() {
 	      (*H1) +=   Double( real((*dR0p)*conj(*dR0p)) );
 	      (*H2) +=   Double( real((*dR1p)*conj(*dR1p)) );
      */
+    
 
 	      //Advance to next corr
 	      ++wt;
@@ -570,7 +572,7 @@ void VisCalSolver::solveGradHess() {
 
   Double lmfact(1.0+lambda());
 
-  dpar()=0.0f;
+  dpar()=Complex(0.0);
   for (Int ipar=0; ipar<nTotalPar(); ipar++) {
     if (hess()(ipar)!=0.0) {
       // good hess for this par:

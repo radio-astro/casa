@@ -1113,7 +1113,9 @@ void SolvableVisJones::reReference() {
   }
   else 
     throw(AipsError("Attempt to reference non-trivial calibration type."));
-  }
+
+
+}
 
 
 void SolvableVisJones::differentiate(VisBuffer& vb,
@@ -1139,9 +1141,11 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   // dVout = [nCorr,nPar,nChan,nRow,2]   (1 set of dV for both ants on baseline)
   Vout.resize(IPosition(3,nCorr,nChanMat(),nRow));
   Vout.unique();             // ensure unique storage
+
   dVout.resize(IPosition(5,nCorr,nPar(),nChanMat(),nRow,2));
   dVout.unique();
-
+  dVout=Complex(0.0);
+  
   // Copy the input model data from the VisBuffer to Vout
   //  for in-place application (do this according to focusChan)
   //  (also flags)
@@ -1239,13 +1243,13 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
 	  
 	  // Partial applies for repeated use below
 	  VJ2=cVm;                    
-	  J2().applyLeft(VJ2);      // Vm*J2  
+	  J2().applyLeft(VJ2);      // VJ2 = Vm*J2  
 
 	  J1().applyRight(cVm);     
-	  J1V=cVm;                  // J1*Vm
+	  J1V=cVm;                  // J1V = J1*Vm
 
 	  // Finish trial corruption
-	  J2().applyLeft(cVm);      // (J1*Vm)*J2
+	  J2().applyLeft(cVm);      // cVm = (J1*Vm)*J2
 	  
 	  // Differentiation per par
 	  for (Int ip=0;ip<nPar();ip++,
@@ -1253,10 +1257,10 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
 		 dV2++,dJ2()++) {
 	    
 	    dV1=VJ2;
-	    dJ1().applyRight(dV1);  // dV1(ip)*Vm*J2
+	    dJ1().applyRight(dV1);  // dV1 = dJ1(ip)*(Vm*J2)
 	    
 	    dV2=J1V;
-	    dJ2().applyLeft(dV2);   // J1*Vm*dV2(ip)
+	    dJ2().applyLeft(dV2);   // dV2 = (J1*Vm)*dJ2(ip)
 	  }
 	  
 	} // (!*flag)

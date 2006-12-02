@@ -103,10 +103,14 @@ public:
   // Trigger calibration of weights
   inline Bool& calWt() { return calWt_; };
 
-  // Apply calibration in-place to data in VisBuffer 
-  //  (correct Data or corrupt Model)
+  // Apply calibration to data in VisBuffer (correct Data or corrupt Model)
+  //  (in-place versions)
   virtual void correct(VisBuffer& vb);
   virtual void corrupt(VisBuffer& vb);
+  // Apply calibration to data in VisBuffer; 
+  //  (alternate output versions)
+  virtual void correct(VisBuffer& vb, Cube<Complex>& Vout);
+  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
 
   // Report the state
   virtual void state();
@@ -172,13 +176,8 @@ protected:
   // Access to weight-scaling factors
   inline Matrix<Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
 
-  // Apply calibration to data in VisBuffer; to alternate output (make public?)
-  //  (correct Data or corrupt Model)
-  virtual void correct(VisBuffer& vb, Cube<Complex>& Vout);
-  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
-
   // Row-by-row apply to a Cube<Complex> (generic)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv)=0;
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout)=0;
 
   // Synchronize "gains" with a VisBuffer or another VisCal
   virtual void syncCal(const VisBuffer& vb,
@@ -338,7 +337,7 @@ protected:
   inline Bool MValid()      {return MValid_(currSpw());};
 
   // Row-by-row apply to a Cube<Complex> (applyByMueller override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv);
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout);
 
   // Sync matrices for current meta data (Mueller override)
   virtual void syncCalMat(const Bool& doInv=False);
@@ -461,7 +460,7 @@ protected:
   inline Bool JValid()      {return JValid_(currSpw());};
 
   // Row-by-row apply to a Cube<Complex> (applyByJones override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, const Bool& doInv);
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout);
 
   // Sync matrices for current meta data (VisJones override)
   virtual void syncCalMat(const Bool& doInv=False);

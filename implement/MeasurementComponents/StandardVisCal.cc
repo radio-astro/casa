@@ -924,7 +924,7 @@ void TOpac::calcPar() {
   za().resize(nAnt());
   Vector<MDirection> antazel(vb().azel(currTime()));
   Double* a=za().data();
-  for (Int iant=0;iant<nAnt();++iant) 
+  for (Int iant=0;iant<nAnt();++iant,++a) 
     (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
 
   // Pars now valid, matrices not yet
@@ -949,6 +949,7 @@ void TOpac::calcAllJones() {
     if ((*opok) && (*a)<C::pi_2) 
       (*J) = Complex(sqrt(exp(-1.0 * Double(*op)/cos(*a))));
   }
+
 }
 
 
