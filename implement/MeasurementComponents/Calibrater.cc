@@ -180,6 +180,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
 
 Bool Calibrater::initCalSet(const Int& calSet) 
 {
+
+  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL;
+
   if (vs_p) {
     vs_p->initCalSet(calSet);
     return True;
@@ -422,7 +425,13 @@ Bool Calibrater::setapply(const String& type,
   applypar.define ("spwmap",spwmap);
   applypar.define ("opacity", opacity);
   
-  return setapply(type,applypar);
+  String upType=type;
+  upType.upcase();
+  if (upType=="")
+    // Get type from table
+    upType = calTableType(table);
+
+  return setapply(upType,applypar);
 
 }
 
@@ -435,7 +444,8 @@ Bool Calibrater::setapply (const String& type,
   try {
 
     if(!ok()) return False;
-    String upType = type;
+
+    String upType=type;
     upType.upcase();
 
     // Add a new VisCal to the apply list
@@ -485,7 +495,7 @@ Bool Calibrater::setsolve (const String& type,
                            const Bool& append)
 {
   
-  logSink() << LogOrigin("Calibrater","setsolve()",WHERE) << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolve",WHERE) << LogIO::NORMAL;
   
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
@@ -517,6 +527,8 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Int& maskcenter,
 				  const Float& maskedge,
 				  const Int& refant) {
+
+  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL;
 
   // TBD: support solution interval!
 
@@ -566,30 +578,34 @@ Bool Calibrater::setsolvegainspline(const String& table,
 				    const Int& numpoint,
 				    const Double& phasewrap) {
   
-    // Create a record description containing the solver parameters
-    RecordDesc solveparDesc;
-    solveparDesc.addField ("table", TpString);
-    solveparDesc.addField ("append", TpBool);
-    solveparDesc.addField ("mode", TpString);
-    solveparDesc.addField ("splinetime", TpDouble);
-    solveparDesc.addField ("preavg", TpDouble);
-    solveparDesc.addField ("refant", TpInt);
-    solveparDesc.addField ("numpoint", TpInt);
-    solveparDesc.addField ("phasewrap", TpDouble);
+  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL;
 
-    // Create a solver record with the requisite field values
-    Record solvepar(solveparDesc);
-    solvepar.define ("table", table);
-    solvepar.define ("append", append);
-    solvepar.define ("mode", mode);
-    solvepar.define ("splinetime",splinetime);
-    solvepar.define ("preavg", preavg);
-    solvepar.define ("refant", refant);
-    solvepar.define ("numpoint",numpoint);
-    solvepar.define ("phasewrap",phasewrap);
-
-    return setsolve("GSPLINE",solvepar);
-
+  // Create a record description containing the solver parameters
+  RecordDesc solveparDesc;
+  solveparDesc.addField ("table", TpString);
+  solveparDesc.addField ("append", TpBool);
+  solveparDesc.addField ("mode", TpString);
+  solveparDesc.addField ("splinetime", TpDouble);
+  solveparDesc.addField ("preavg", TpDouble);
+  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("numpoint", TpInt);
+  solveparDesc.addField ("phasewrap", TpDouble);
+  
+  // Create a solver record with the requisite field values
+  Record solvepar(solveparDesc);
+  solvepar.define ("table", table);
+  solvepar.define ("append", append);
+  String upMode=mode;
+  upMode.upcase();
+  solvepar.define ("mode", upMode);
+  solvepar.define ("splinetime",splinetime);
+  solvepar.define ("preavg", preavg);
+  solvepar.define ("refant", refant);
+  solvepar.define ("numpoint",numpoint);
+  solvepar.define ("phasewrap",phasewrap);
+  
+  return setsolve("GSPLINE",solvepar);
+  
 }
 
 Bool Calibrater::setsolve (const String& type, 
@@ -638,6 +654,8 @@ Bool Calibrater::setsolve (const String& type,
 
 Bool Calibrater::state() {
 
+  logSink() << LogOrigin("Calibrater","state") << LogIO::NORMAL;
+
   applystate();
   solvestate();
 
@@ -646,6 +664,9 @@ Bool Calibrater::state() {
 }
 
 Bool Calibrater::applystate() {
+
+
+  logSink() << LogOrigin("Calibrater","applystate") << LogIO::NORMAL;
 
   logSink() << LogIO::NORMAL 
 	    << "The following calibration terms are arranged for apply:"
@@ -669,6 +690,8 @@ Bool Calibrater::applystate() {
 
 Bool Calibrater::solvestate() {
 
+  logSink() << LogOrigin("Calibrater","solvestate") << LogIO::NORMAL;
+
   logSink() << LogIO::NORMAL 
 	    << "The following calibration term is arranged for solve:"
 	    << LogIO::POST;
@@ -688,6 +711,8 @@ Bool Calibrater::solvestate() {
 
 Bool Calibrater::cleanup() {
 
+  logSink() << LogOrigin("Calibrater","cleanup") << LogIO::NORMAL;
+
   // Delete the VisCals
   reset();
 
@@ -704,6 +729,8 @@ Bool Calibrater::cleanup() {
 
 Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
 
+  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
+
   // Delete the VisCal apply list
   if (apply) 
     unsetapply();
@@ -717,6 +744,8 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
 
 // Delete all (default) or one VisCal in apply list
 Bool Calibrater::unsetapply(const Int& which) {
+
+  logSink() << LogOrigin("Calibrater","unsetapply") << LogIO::NORMAL;
   
   try {
     if (which<0) {
@@ -744,6 +773,8 @@ Bool Calibrater::unsetapply(const Int& which) {
 
   // Delete solve VisCal
 Bool Calibrater::unsetsolve() {
+
+  logSink() << LogOrigin("Calibrater","unsetsolve") << LogIO::NORMAL;
 
   try {
     if (svc_p) delete svc_p;
@@ -1030,7 +1061,6 @@ Vector<Double> Calibrater::modelfit(const Int& niter,
 
 }
 
-
 void Calibrater::fluxscale(const String& infile, 
 			   const String& outfile,
 			   const Vector<String>& refFields, 
@@ -1041,6 +1071,8 @@ void Calibrater::fluxscale(const String& infile,
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
+
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
@@ -1096,6 +1128,7 @@ void Calibrater::fluxscale(const String& infile,
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
   // TBD: write inputs to MSHistory
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
 
   logSink() << "Beginning fluxscale." << LogIO::POST;
 
@@ -1210,45 +1243,100 @@ void Calibrater::fluxscale(const String& infile,
 void Calibrater::accumulate(const String& intab,
 			    const String& incrtab,
 			    const String& outtab,
+			    const Vector<String>& fields,
+			    const Vector<String>& calFields,
+			    const String& interp,
+			    const Double& t,
+			    const Vector<Int>& spwmap) {
+
+  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+
+  // Convert refFields/transFields to index lists
+  Vector<Int> fldidx(0);
+  Vector<Int> cfldidx(0);
+
+  // Field name->index matcher
+  MSFieldIndex msfldidx(ms_p->field());
+
+  Int nfld;
+  { 
+    nfld=fields.nelements();
+    if (nfld>0) {
+      fldidx.resize(nfld);
+      for (Int i=0;i<nfld;++i) {
+	Vector<Int> idx=msfldidx.matchFieldName(fields(i));
+	if (idx.nelements()>0)
+	  fldidx(i)=idx(0);
+	else
+	  throw(AipsError("field name matching error"));
+      }
+    }
+  }
+  { 
+    nfld=calFields.nelements();
+    if (nfld>0) {
+      cfldidx.resize(nfld);
+      for (Int i=0;i<nfld;++i) {
+	Vector<Int> idx=msfldidx.matchFieldName(calFields(i));
+	if (idx.nelements()>0)
+	  cfldidx(i)=idx(0);
+	else
+	  throw(AipsError("calfield name matching error"));
+      }
+      
+    }
+  }
+
+  // Call Vector<Int> version
+  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
+
+}
+
+void Calibrater::accumulate(const String& intab,
+			    const String& incrtab,
+			    const String& outtab,
 			    const Vector<Int>& fields,
 			    const Vector<Int>& calFields,
 			    const String& interp,
-			    const Double& t) {
+			    const Double& t,
+			    const Vector<Int>& spwmap) {
 
   //  throw(AipsError("Method 'accumulate' is temporarily disabled."));
   
+  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+
   logSink() << "Beginning accumulate." << LogIO::POST;
 
   // SVJ objects:
   SolvableVisCal *incal_(NULL), *incrcal_(NULL);
 
   try {
-
-    // Abort if incremental table isn't a cal table
-    if ( !(Table::isReadable(incrtab) && 
-	   Table::tableInfo(incrtab).type()=="Calibration") ) {
-
-      ostringstream typeErr;
-      typeErr << "Table " << incrtab
-	      << " does not exist or is not a readable cal table.";      
-      throw(AipsError(typeErr.str()));
-
-    }
     
-    // Incre table sets type we are accumulating
-    String caltype(Table::tableInfo(incrtab).subType());
+  /*
+    cout << "intab     = " << intab << endl;
+    cout << "incrtab   = " << incrtab << endl;
+    cout << "outtab    = " << outtab << endl;
+    cout << "fields    = " << fields << endl;
+    cout << "calFields = " << calFields << endl;
+    cout << "interp    = " << interp << endl;
+    cout << "t         = " << t << endl;
+  */
+
+    // Incremental table's type sets the type we are dealing with
+    String caltype=calTableType(incrtab);
 
     // If no input cumulative timescale specified, then
     //   a valid input cumulative table must be specified
     if (t < 0.0) {
-      if (!(Table::isReadable(intab) && 
-	    Table::tableInfo(intab).type()=="Calibration" &&
-	    Table::tableInfo(intab).subType()==caltype) ) {
+
+      String intype=calTableType(intab);
+
+      if (intype!=caltype) {
       
 	ostringstream typeErr;
 	typeErr << "Table " << intab
-		<< " does not exist or is not a readable cal table of type "
-		<< caltype;
+		<< " is not the same type as "
+		<< incrtab << " (" << caltype << ")";
 	throw(AipsError(typeErr.str()));
       }
     }
@@ -1258,9 +1346,17 @@ void Calibrater::accumulate(const String& intab,
     //  o create a new cumulative table from scratch (t>0)
 
     // If creating a new cumulative table, it must span the whole dataset,
-    //   so reset data selection to whole MS
-    if (t>0.0)
+    //   so reset data selection to whole MS, and setup iterator
+    if (t>0.0) {
       setdata();
+      Block<Int> columns;
+      columns.resize(4);
+      columns[0]=MS::ARRAY_ID;
+      columns[1]=MS::TIME;
+      columns[2]=MS::FIELD_ID;
+      columns[3]=MS::DATA_DESC_ID;
+      vs_p->resetVisIter(columns,t);
+    }
 
     //	logSink() << "Table " << infile 
     //		  << " is of type: "<< caltype 
@@ -1285,7 +1381,7 @@ void Calibrater::accumulate(const String& intab,
     
     // form selection on incr table
     String incrSel="";
-    if (calFields(0)>=0) {
+    if (calFields.shape()>0) {
       
       // Assemble TaQL
       ostringstream selectstr;
@@ -1317,14 +1413,12 @@ void Calibrater::accumulate(const String& intab,
     applypar.define ("table", incrtab);
     applypar.define ("select", incrSel);
     applypar.define ("interp", interp);
-    applypar.define ("spwmap",Vector<Int>(1,-1));
+    applypar.define ("spwmap",spwmap);
 
     incrcal_->setApply(applypar);
 
     // All ready, now do the accumulation
-    Vector<Int> tfields(fields);
-    if (tfields(0)<0) tfields.resize();
-    incal_->accumulate(incrcal_,tfields);
+    incal_->accumulate(incrcal_,fields);
     
     // ...and store the result
     logSink() << "Storing accumulated calibration in table: " 
@@ -1359,125 +1453,117 @@ void Calibrater::accumulate(const String& intab,
 
 
 Bool Calibrater::smooth(const String& infile, 
-                        const String& outfile,const Bool& append,
-                        const String& select,
-                        const String& smoothtype,const Double& smoothtime,
-                        const String& interptype,const Double& interptime)
+			String& outfile,  // const Bool& append,
+                        const String& smoothtype,
+			const Double& smoothtime,
+                        const Vector<String>& fields)
 {
 
-  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
   
-/*
+  // TBD: support append?
+  // TBD: spw selection?
+
+  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
+
   logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
 
-  // Make some pointers for SVJs at each step
-  SolvableVisJones * currvj;
 
-  // Open input table
-  currvj = new GJones(*vs_p);
-  currvj->setInterpolationParam(infile,select,0.0);
+  // A pointer to an SVC
+  SolvableVisCal *svc(NULL);
 
-  if (smoothtype!="none") {
-    // Process smoothing parameters
-    SolvableVisJones::FilterType smtype(SolvableVisJones::meanFilter);
-    String smtypetxt;
-    if (smoothtype.contains("smedian")) {
-      smtype=SolvableVisJones::slidingMedian;
-      smtypetxt=" sliding median";
-    }
-    else if (smoothtype.contains("median")) {
-      smtype=SolvableVisJones::medianFilter;
-      smtypetxt=" decimating median";
-    }
-    else if (smoothtype.contains("smean")) {
-      smtype=SolvableVisJones::slidingMean;
-      smtypetxt=" sliding mean";
-    }
-    else if (smoothtype.contains("mean")) {
-      smtype=SolvableVisJones::meanFilter;
-      smtypetxt=" decimating mean";
+  try {
+    
+    // Handle no in file 
+    if (infile=="")
+      throw(AipsError("Please specify an input calibration table."));
+
+    // Handle bad smoothtype
+    if (smoothtype!="mean" && smoothtype!="median")
+      throw(AipsError("Unrecognized smooth type!"));
+
+    // Handle bad smoothtime
+    if (smoothtime<=0)
+      throw(AipsError("Please specify a strictly positive smoothtime."));
+
+    // Handle no outfile
+    if (outfile=="") {
+      outfile=infile;
+      logSink() << "Will overwrite input file with smoothing result." 
+		<< LogIO::POST;
     }
 
-    Bool doAmpPhase(False);
-    String doAPtxt="";
-    if (smoothtype.contains("AP")) {
-      doAmpPhase=True;
-      doAPtxt=" amp/phase";
-    }
 
-    logSink() << "Smoothing" << doAPtxt << " solutions with a" 
-	      << smtypetxt <<" on a " << smoothtime << "-sec timescale."
+    svc = createSolvableVisCal(calTableType(infile),*vs_p);
+    
+    if (svc->smoothable()) {
+      
+      // Fill calibration table using setApply
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      svc->setApply(applypar);
+
+      // Convert refFields/transFields to index lists
+      Vector<Int> fldidx(0);
+
+      // Field name->index matcher
+      MSFieldIndex msfldidx(ms_p->field());
+      
+      Int nfld;
+      { 
+	nfld=fields.nelements();
+	if (nfld>0) {
+	  fldidx.resize(nfld);
+	  for (Int i=0;i<nfld;++i) {
+	    Vector<Int> idx=msfldidx.matchFieldName(fields(i));
+	    if (idx.nelements()>0)
+	      fldidx(i)=idx(0);
+	    else
+	      throw(AipsError("field name matching error"));
+	  }
+	}
+      }
+
+      // Delegate to SVC
+      svc->smooth(fldidx,smoothtype,smoothtime);
+      
+      // Store the result on disk
+      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
+      //else 
+      logSink() << "Storing result in " << outfile << LogIO::POST;
+      
+      
+      if (outfile != "") 
+	svc->calTableName()=outfile;
+      svc->store();
+
+      //TBD:      svc->store(outfile,append);
+      
+      // Clean up
+      if (svc) delete svc; svc=NULL;
+      
+      // Apparently, it worked
+      return True;
+
+    }
+    else
+      throw(AipsError("This type does not support smoothing."));
+
+  } catch (AipsError x) {
+   
+    // Clean up
+    if (svc) delete svc; svc=NULL;
+
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
 	      << LogIO::POST;
 
-    // Make a SVJ to hold smoothed table 
-    SolvableVisJones *smvj;
-    smvj = new GJones(*vs_p);
-    smvj->setInterpolationParam(infile,select,0.0);
-
-    // ...and smooth it
-    smvj->filterFrom(*currvj,smtype,Float(smoothtime),doAmpPhase);
-
-    // Delete input vj and point to smoothed one
-    delete currvj;
-    currvj=smvj;
-  };
-
-  if (interptype!="none") {
-
-    SolvableVisJones::InterpolaterType inttype(SolvableVisJones::spline);
-    String intypetxt;
-    if (interptype.contains("nearest")) {
-      inttype=SolvableVisJones::nearestNeighbour;
-      intypetxt=" nearest neighbor";
-    }
-    else if (interptype.contains("linear")) {
-      inttype=SolvableVisJones::linear;
-      intypetxt=" linear";
-    }
-    else if (interptype.contains("cubic")) {
-      inttype=SolvableVisJones::cubic;
-      intypetxt=" cubic";
-    }
-    else if (interptype.contains("spline")) {
-      inttype=SolvableVisJones::spline;
-      intypetxt=" spline";
-    }
-
-    Bool doAmpPhase(False);
-    String doAPtxt=" to";
-    if (interptype.contains("AP")) {
-      doAmpPhase=True;
-      doAPtxt=" to amp/phase";
-    }
-
-    logSink() << "Applying" << intypetxt << " interpolation" << doAPtxt 
-	      << " solutions on a " << interptime << "-sec timescale."
-	      << LogIO::POST;
-
-    // Make a SVJ to hold interpolated solutions....
-    SolvableVisJones *intvj;
-    intvj = new GJones(*vs_p);
-    intvj->setSolverParam(outfile,interptime);
-
-    // ...and interpolate
-    intvj->interpolateFrom(*currvj,inttype,doAmpPhase);
-
-    // Delete input vj and point to interpolated one
-    delete currvj;
-    currvj=intvj;
-  };
-
-  // Store the result on disk
-  if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
-  else logSink() << "Storing result in " << outfile << LogIO::POST;
-  currvj->store(outfile,append);
-
-  // Clean up
-  if (currvj) delete currvj; currvj=0;
-
-  return True;
-
-*/
+    return False;
+  }
+  return False;
 }
 
 // Query apply types if we are calibrating the weights

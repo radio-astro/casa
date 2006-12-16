@@ -81,8 +81,10 @@ public:
   virtual Bool normalizable()=0;
 
   // Is this type capable of accumulation?  (nominally no)
-  //  TBD: distinguish to/from of accumulation?
   virtual Bool accumulatable() { return False; };
+
+  // Is this type capable of smoothing?  (nominally no)
+  virtual Bool smoothable() { return False; };
 
   // Access to focus channel
   inline Int&         focusChan()      { return focusChan_; };
@@ -151,6 +153,10 @@ public:
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
 			  const Vector<Int>& fields)=0;
+
+  virtual void smooth(Vector<Int>& fields,
+		      const String& smtype,
+		      const Double& smtime);
 
   // File the current solved solution into a slot in the CalSet
   void keep(const Int& slot);
@@ -495,6 +501,15 @@ private:
   Bool DJValid_;
   
 };
+
+// Global methods
+
+// Discern cal table type from the table itself
+String calTableType(const String& tablename);
+
+
+
+
 
 } //# NAMESPACE CASA - END
 

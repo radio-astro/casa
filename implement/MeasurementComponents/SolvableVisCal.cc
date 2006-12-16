@@ -163,6 +163,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 
   if (apply.isDefined("select"))
     calTableSelect()=apply.asString("select");
+
+  // Does this belong here?
   if (apply.isDefined("append"))
     append()=apply.asBool("append");
 
@@ -269,6 +271,9 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("table"))
     calTableName()=solve.asString("table");
 
+  if (solve.isDefined("append"))
+    append()=solve.asBool("append");
+
   // TBD: Warn if table exists (and append=F)!
 
   // If normalizable & preavg<0, use inteval for preavg 
@@ -364,10 +369,16 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
     setSolveChannelization(vs);
     inflate(vs,True);
 
+    // Set parOK,etc. to true
+    for (Int ispw=0;ispw<nSpw();ispw++) {
+      cs().parOK(ispw)=True;
+      cs().iSolutionOK(ispw)=True;
+      cs().solutionOK(ispw)=True;
+    }
+
   }
 
 }
-
 
 
 void SolvableVisCal::initSolve(VisSet& vs) {
@@ -601,6 +612,19 @@ void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
 
 }
 
+void SolvableVisCal::smooth(Vector<Int>& fields,
+			    const String& smtype,
+			    const Double& smtime) {
+
+  if (smoothable()) 
+    // Call CalSet's global smooth method
+    casa::smooth(cs(),smtype,smtime,fields);
+  else
+    throw(AipsError("This type does not support smoothing!"));
+
+}
+
+
 void SolvableVisCal::syncPar(const Int& spw, const Int& slot) {
 
   if (prtlev()>4) cout << "    SVC::syncPar(spw,slot)" << endl;
@@ -609,7 +633,7 @@ void SolvableVisCal::syncPar(const Int& spw, const Int& slot) {
   IPosition trc(4,cs().nPar()-1,cs().nChan(spw)-1,cs().nElem()-1,slot);
 
   currCPar().reference(cs().par(spw)(blc,trc).nonDegenerate(3));;
-  //  currParOK().reference(cs().parOK(spw).);
+  currParOK().reference(cs().parOK(spw)(blc.getLast(3),trc.getLast(3)).nonDegenerate(2));
 
   validateP();
   invalidateCalMat();
@@ -734,11 +758,9 @@ void SolvableVisCal::keep(const Int& slot) {
 
 void SolvableVisCal::store() {
 
-  // TBD: Support append=T
-
   if (prtlev()>3) cout << " SVC::store()" << endl;
 
-  cs().store(calTableName(),typeName(),False);
+  cs().store(calTableName(),typeName(),append());
 
 }
 
@@ -748,6 +770,7 @@ void SolvableVisCal::store(const String& table,const Bool& append) {
 
   // Override tablename
   calTableName()=table;
+  SolvableVisCal::append()=append;
 
   // Call conventional store
   store();
@@ -808,40 +831,15 @@ void SolvableVisCal::deleteSVC() {
 
 void SolvableVisCal::verifyCalTable(const String& caltablename) {
 
-  // Check existence...
-  if (!Table::isReadable(caltablename)) {
+  // Call external method to get type (will throw if bad table)
+  String calType=calTableType(caltablename);
+
+  // Check if proper Calibration type...
+  if (calType!=typeName()) {
     ostringstream o;
     o << "Table " << caltablename 
-      << " does not exist.";
+      << " has wrong Calibration type: " << calType;
     throw(AipsError(String(o)));
-  }
-  else {
-
-    // Table exists...
-    
-    TableInfo ti(Table::tableInfo(caltablename));
-
-    // ...Check if Calibration table....
-    if (ti.type()!="Calibration") {
-      ostringstream o;
-      o << "Table " << caltablename 
-	<< " is not a valid Calibration table.";
-      throw(AipsError(String(o)));
-        
-    }
-    else {
-
-      // Table is Cal Table...
-      String calType=ti.subType();
-      
-      // ...Check if proper Calibration type...
-      if (calType!=typeName()) {
-	ostringstream o;
-	o << "Table " << caltablename 
-	  << " has wrong Calibration type: " << calType;
-	throw(AipsError(String(o)));
-      }
-    }
   }
 }
 
@@ -1311,23 +1309,24 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 
     currSpw()=ispw;
 
-    // TBD: currFreq()
-
-    Int nSlot(cs().nTime(currSpw()));
+    Int nSlot(cs().nTime(ispw));
 
     // For each slot in this spw
     for (Int islot=0; islot<nSlot; islot++) {
 
-      currTime() = cs().time(currSpw())(islot);
-      currField()=cs().fieldId(currSpw())(islot);
+      Double thistime=cs().time(ispw)(islot);
+      Int thisfield=cs().fieldId(ispw)(islot);
+      
+      // TBD: proper frequency?  (from CalSet?)
+      Vector<Double> thisfreq(nSpw(),0.0);
 
       // Is current field among those we need to update?
-      fldok = (nfield==0 || anyEQ(fields,currField()));
+      fldok = (nfield==0 || anyEQ(fields,thisfield));
 
       if (fldok) {
 
 	// TBD: group following into syncCal(cs)?
-	syncMeta(currSpw(),currTime(),currField(),currFreq(),nChanPar());
+	syncMeta(currSpw(),thistime,thisfield,thisfreq,nChanPar());
 	syncPar(currSpw(),islot);
 	syncCalMat(False);
 
@@ -1353,8 +1352,9 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 	    svj->J1()++;
 	    svjOk++;
           } // ichan
+	  cs().iSolutionOK(currSpw()).column(islot)(iant)=anyEQ(currJElemOK().column(iant),True);
         } // iant
-
+	cs().solutionOK(currSpw())(islot)=anyEQ(cs().iSolutionOK(currSpw()).column(islot),True);
       } // fldok
     } // islot
   } // ispw
@@ -2093,6 +2093,39 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
   }
 
 }
+
+// Globals
+
+// Return a cal table's type, verifying its existence
+String calTableType(const String& tablename) {
+
+  // Check existence...
+  if (!Table::isReadable(tablename)) {
+    ostringstream o;
+    o << "Table " << tablename
+      << " does not exist.";
+    throw(AipsError(String(o)));
+  }
+
+  // Table exists...
+  
+  TableInfo ti(Table::tableInfo(tablename));
+  
+  // ...Check if Calibration table....
+  if (ti.type()!="Calibration") {
+    ostringstream o;
+    o << "Table " << tablename
+      << " is not a valid Calibration table.";
+    throw(AipsError(String(o)));
+    
+  }
+  
+  // If we get here, we have a calibration table,
+  //  so return its type
+  return ti.subType();
+
+}
+
 
 
 } //# NAMESPACE CASA - END

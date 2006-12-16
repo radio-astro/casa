@@ -342,6 +342,8 @@ void VisCal::syncMeta(const Int& spw,
 		      const Vector<Double>& freq,
 		      const Int& nchan) {
 
+  if (prtlev()>4) cout << "     VC::syncMeta(...)" << endl;
+
   // Remember which spw this is---EVERYTHING below pivots on this
   currSpw()=spw;
 

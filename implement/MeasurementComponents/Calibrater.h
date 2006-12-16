@@ -158,20 +158,28 @@ class Calibrater
   void accumulate(const String& intab,
 		  const String& incrtab,
 		  const String& outtab,
+		  const Vector<String>& fields,
+		  const Vector<String>& calFields,
+		  const String& interp="linear",
+		  const Double& t=-1.0,
+		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
+
+  void accumulate(const String& intab,
+		  const String& incrtab,
+		  const String& outtab,
 		  const Vector<Int>& fields,
 		  const Vector<Int>& calFields,
 		  const String& interp="linear",
-		  const Double& t=-1.0);
+		  const Double& t=-1.0,
+		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
 
-  // Smooth and Interpolate calibration
+  // Smooth  calibration
   Bool smooth(const String& infile,
-              const String& outfile, 
-	      const Bool& append,
-              const String& select,
-              const String& smoothtype, 
+              String& outfile, 
+	      const String& smoothtype, 
 	      const Double& smoothtime,
-              const String& interptype, 
-	      const Double& interptime);
+	      const Vector<String>& fields);
+
 
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,

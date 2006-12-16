@@ -156,9 +156,11 @@ void GJonesSpline::setSolve(const Record& solvepar)
   if (solvepar.isDefined("mode"))       
     mode()  = solvepar.asString("mode");
 
+  mode().upcase();
+
   // Interpret mode for SPLINE case
-  solveAmp_p = (mode().contains("AMP") || mode().contains("amp"));
-  solvePhase_p = (mode().contains("PHAS") || mode().contains("phas"));
+  solveAmp_p = (mode().contains("A"));
+  solvePhase_p = (mode().contains("P"));
 
   cout << "mode() = " << mode() << endl;
   cout << "solveAmp_p = " << solveAmp_p << endl;
@@ -333,7 +335,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
     //  with calibration and averaging
     for (vi.origin(); vi.more(); vi++) {
 
-      cout << "Time = " << vb.time()(0) - t0 << endl;
+      //      cout << "Time = " << vb.time()(0) - t0 << endl;
       
       // TBD: initialize weights from sigma here?
       
@@ -351,8 +353,8 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
     // The VisBuffer to work with in solve
     VisBuffer& svb(vba.aveVisBuff());
 
-    cout << " (Chunk accumulated) nrow = " << svb.nRow() << endl;
-    cout << " nChan = " << svb.nChannel() << endl;
+    //    cout << " (Chunk accumulated) nrow = " << svb.nRow() << endl;
+    //    cout << " nChan = " << svb.nChannel() << endl;
 
     // NB: The svb VisBuffer has many timestamps in it....
 
@@ -459,10 +461,9 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 	  
 	  // Amplitude
 	  if (abs(vis) > 0) {
-	    amp(t,baselineIndex,ip) = log(abs(vis));
+	    amp(t,baselineIndex,ip) = log(abs(vis)/wgt);
 	  };
-	  
-	  
+
 	  // Phase
 	  if(solvePhase_p){
 	    Double visPhase = arg(vis);
@@ -477,8 +478,8 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 	  
 
 	  // Weight
-	  //	weight(t,baselineIndex,ip) = wgt;
-	  weight(t,baselineIndex,ip) = 1.0;
+	  weight(t,baselineIndex,ip) = wgt;
+	  //weight(t,baselineIndex,ip) = 1.0;
 	}
       };
     };
@@ -587,10 +588,11 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
   if (solvePhase_p){
     // Phase solution
 
+    os << LogIO::NORMAL 
+       << "Searching for and correcting phase-wraps on each baseline."
+       << LogIO::POST;
+
     for (Int ip=0;ip<nPH;++ip) {
-      os << LogIO::NORMAL 
-	 << "Searching for and correcting phase-wraps on each baseline."
-	 << LogIO::POST;
       
       for(Int bsInd=0; bsInd < nBln() ; ++bsInd){
 	
@@ -681,7 +683,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 	       polyCoeffPhase.xyPlane(ip).getStorage(dum));
 
 
-      cout << "Finished solve." << endl;
+      //      cout << "Finished solve." << endl;
 
 
       ostringstream o;
@@ -690,7 +692,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
       writeAsciiLog(logfile, polyCoeffPhase.xyPlane(ip), rmsfit, True);
 
       // TBD: make multi-pol plotsolve
-      //    plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, True);
+      //      plotsolve(time, phase, weight, rmsfit, polyCoeffPhase, True);
 
     }
 
@@ -705,6 +707,13 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
   Vector<String> freqGrpName(nAnt(), "");
   Vector<String> polyType(nAnt(), "SPLINE");
   Vector<String> polyMode(nAnt(), mode());
+  if (mode()=="AP")
+    polyMode="PHASAMP";
+  if (mode()=="P")
+    polyMode="PHAS";
+  if (mode()=="A")
+    polyMode="AMP";
+
   Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
   Vector<String> phaseUnits(nAnt(), "RADIANS");
   Vector<Int> refAnt(nAnt(), refant());
@@ -726,17 +735,17 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
   };
 
   // Update the calibration table
-  cout << "ampKnots.nelements() = " << ampKnots.nelements() << endl;
-  cout << "phaKnots.nelements() = " << phaKnots.nelements() << endl;
-  cout << "nKnots = " << nKnots << endl;
+  //  cout << "ampKnots.nelements() = " << ampKnots.nelements() << endl;
+  //  cout << "phaKnots.nelements() = " << phaKnots.nelements() << endl;
+  //  cout << "nKnots = " << nKnots << endl;
 
-  cout << "polyCoeffPhase.shape() = " << polyCoeffPhase.shape() << endl;
-  cout << "polyCoeffPhase.reform(IPosition(nAnt(),ampKnots.nelements()*2)).shape() = " << polyCoeffPhase.reform(IPosition(2,nAnt(),nKnots*2)).shape() << endl;
+  //  cout << "polyCoeffPhase.shape() = " << polyCoeffPhase.shape() << endl;
+  //  cout << "polyCoeffPhase.reform(IPosition(nAnt(),ampKnots.nelements()*2)).shape() = " 
+  //       << polyCoeffPhase.reform(IPosition(2,nAnt(),nKnots*2)).shape() << endl;
 
 
   Matrix<Double> ampco(polyCoeffAmp.reform(IPosition(2,nAnt(),nKnots*2)));
   Matrix<Double> phaco(polyCoeffPhase.reform(IPosition(2,nAnt(),nKnots*2)));
-
 
   updateCalTable(fieldIdKeys, antId, freqGrpName, polyType, polyMode, 
 		 scaleFactor, 
@@ -821,6 +830,8 @@ void GJonesSpline::calcPar() {
 	  ampCoeff(k) = calBuffer_p->polyCoeffAmp()(ampCoeffPos);
 	};
 
+	//	cout << "ampCoeff = " << ampCoeff << endl;
+
 	// Compute amplitude spline polynomial value
 	Vector<Double> ac;
 	for (Int i=0;i<2;++i) {
@@ -828,6 +839,7 @@ void GJonesSpline::calcPar() {
 				IPosition(1,(i+1)*nPoly-1)));
 	  ampVal(i) *= exp(getSplineVal(currTime(), ampKnots, ac));
 	}
+	//	cout << iant << " ampVal = " << ampVal << endl;
       };
 
       // Compute phase polynomial

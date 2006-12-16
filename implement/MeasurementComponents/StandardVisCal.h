@@ -105,6 +105,12 @@ public:
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Scalar; };
 
+  // This type is accumulatable
+  virtual Bool accumulatable() { return True; };
+
+  // This type is smoothable
+  virtual Bool smoothable() { return True; };
+
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
@@ -150,6 +156,12 @@ public:
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
+
+  // This type is accumulatable
+  virtual Bool accumulatable() { return True; };
+
+  // This type is smoothable
+  virtual Bool smoothable() { return True; };
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);

@@ -36,7 +36,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Create a specialized VisCal from VisSet
 VisCal* createVisCal(const String& type, VisSet& vs) {
 
-  if (type=="P") 
+  String uptype=type;
+  uptype.upcase();
+
+  if (type=="P" || type=="P JONES") 
     return new PJones(vs);
 
   else if (type=="TOPAC")  // Not yet solvable (even though an SVJ)
@@ -64,39 +67,43 @@ VisCal* createVisCal(const String& type, const Int& nAnt) {
 // Create a specialized SolvableVisCal from VisSet
 SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 
-  if      (type=="B" || type=="B Jones") 
+  String uptype=type;
+  uptype.upcase();
+
+  if      (type=="B" || type=="B JONES") 
     return new BJones(vs);
 
   else if (type=="BPOLY") 
     return new BJonesPoly(vs);
 
-  else if (type=="G") 
+  else if (type=="G" || type=="G JONES") 
     return new GJones(vs);
 
   else if (type=="GSPLINE") 
     return new GJonesSpline(vs);
   
-  else if (type=="T") 
+  else if (type=="T" || type=="T JONES") 
     return new TJones(vs);
 
-  else if (type=="D") 
+  else if (type=="D" || type=="D JONES") 
     return new DJones(vs);
 
-  else if (type=="DF") 
+  else if (type=="DF" || type=="DF JONES") 
     return new DfJones(vs);
 
-  else if (type=="J") 
+  else if (type=="J" || type=="J JONES") 
     return new JJones(vs);
 
-  else if (type=="M")
+  else if (type=="M" || type=="M MUELLER")
     return new MMueller(vs);
 
-  else if (type=="MF")
+  else if (type=="MF" || type=="MF MUELLER")
     return new MfMueller(vs);
      
-  else
+  else {
+    cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));
-
+  }
 };
 
 // Create a specialized SolvableVisCal from nAnt
@@ -120,9 +127,10 @@ SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt) {
   else if (type=="J") 
     return new JJones(nAnt);
      
-  else
+  else {
+    cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));
-
+  }
 };
 
 } //# NAMESPACE CASA - END
