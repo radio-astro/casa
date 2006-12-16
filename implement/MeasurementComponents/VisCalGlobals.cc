@@ -39,13 +39,13 @@ VisCal* createVisCal(const String& type, VisSet& vs) {
   String uptype=type;
   uptype.upcase();
 
-  if (type=="P" || type=="P JONES") 
+  if (uptype=="P" || uptype=="P JONES") 
     return new PJones(vs);
 
-  else if (type=="TOPAC")  // Not yet solvable (even though an SVJ)
+  else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
     return new TOpac(vs);
 
-  else if (type=="GAINCURVE")  // Not yet solvable (even though an SVJ)
+  else if (uptype=="GAINCURVE")  // Not yet solvable (even though an SVJ)
     return new EGainCurve(vs);
   
   else
@@ -70,34 +70,34 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   String uptype=type;
   uptype.upcase();
 
-  if      (type=="B" || type=="B JONES") 
+  if      (uptype=="B" || uptype=="B JONES") 
     return new BJones(vs);
 
-  else if (type=="BPOLY") 
+  else if (uptype=="BPOLY") 
     return new BJonesPoly(vs);
 
-  else if (type=="G" || type=="G JONES") 
+  else if (uptype=="G" || uptype=="G JONES") 
     return new GJones(vs);
 
-  else if (type=="GSPLINE") 
+  else if (uptype=="GSPLINE") 
     return new GJonesSpline(vs);
   
-  else if (type=="T" || type=="T JONES") 
+  else if (uptype=="T" || uptype=="T JONES") 
     return new TJones(vs);
 
-  else if (type=="D" || type=="D JONES") 
+  else if (uptype=="D" || uptype=="D JONES") 
     return new DJones(vs);
 
-  else if (type=="DF" || type=="DF JONES") 
+  else if (uptype=="DF" || uptype=="DF JONES") 
     return new DfJones(vs);
 
-  else if (type=="J" || type=="J JONES") 
+  else if (uptype=="J" || uptype=="J JONES") 
     return new JJones(vs);
 
-  else if (type=="M" || type=="M MUELLER")
+  else if (uptype=="M" || uptype=="M MUELLER")
     return new MMueller(vs);
 
-  else if (type=="MF" || type=="MF MUELLER")
+  else if (uptype=="MF" || uptype=="MF MUELLER")
     return new MfMueller(vs);
      
   else {

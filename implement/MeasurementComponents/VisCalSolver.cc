@@ -68,6 +68,7 @@ VisCalSolver::VisCalSolver() :
   par_(), parOK_(), lastPar_(), dpar_(),
   grad_(),hess_(),
   lambda_(2.0),
+  optstep_(True),
   prtlev_(VCS_PRTLEV)
 {
   if (prtlev()>0) cout << "VCS::VCS()" << endl;
@@ -122,6 +123,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
     // Differentiate the VB and get current Chi2
     differentiate();
     chiSquare();
+    dChiSq() = chiSq()-lastChiSq();
 
     // Continuue if we haven't converged
     if (!converged()) {
@@ -135,18 +137,27 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 
 	//...and adjust lambda downward
 	//	lambda()/=2.0;
-	lambda()=0.8;
+	//	lambda()=0.8;
+	lambda()=1.0;
       }
       else {
 	// last step was bad, revert to previous 
 	revert();
 	//...with a larger lambda
-	lambda()*=4.0;
-	//lambda()=1.0;
+	//	lambda()*=4.0;
+	lambda()=1.0;
       }
       
       // Solve for the parameter step
       solveGradHess();
+
+      // Remember curr pars
+      lastPar()=par();
+
+      // Refine the step size by exploring chi2 in the
+      //  gradient direction
+      if (optstep_) //  && cvrgcount_>=3)
+	optStepSize();
 
       // Update current parameters (saves a copy of them)
       updatePar();
@@ -233,6 +244,20 @@ void VisCalSolver::initSolve() {
 
 }
 
+void VisCalSolver::residualate() {
+
+  if (prtlev()>2) cout << "  VCS::residualate()" << endl;
+
+  // Delegate to VisEquation
+  //  ve().residuals(svb(),R(),Rflag());
+
+  // For now, just use ve.diffResid, until we have
+  //  implemented focuschan-aware trial corrupt in SVC
+  //  (this will hurt performance a bit)
+  ve().diffResiduals(svb(),R(),dR(),Rflg());
+
+}
+
 void VisCalSolver::differentiate() {
 
   if (prtlev()>2) cout << "  VCS::differentiate()" << endl;
@@ -312,10 +337,9 @@ void VisCalSolver::chiSquare() {
     wtMat.next();
   }
 
+  // Do this?
   chiSq()/=sumWt();
 
-  // Calc chiSq() change
-  dChiSq() = chiSq()-lastChiSq();
 }
 
 
@@ -341,7 +365,7 @@ Bool VisCalSolver::converged() {
       //      if (cvrgcount_==2) lambda()=2.0;
 
       // Four such steps we believe we have converged!
-      if (cvrgcount_>6)
+      if (cvrgcount_>3)
 	return True;
     }
 
@@ -572,6 +596,8 @@ void VisCalSolver::solveGradHess() {
 
   Double lmfact(1.0+lambda());
 
+  lmfact=2.0;
+
   dpar()=Complex(0.0);
   for (Int ipar=0; ipar<nTotalPar(); ipar++) {
     if (hess()(ipar)!=0.0) {
@@ -584,6 +610,10 @@ void VisCalSolver::solveGradHess() {
     //      cout << "aha: " << ipar << " " << ipar/svc().nPar() << endl;
     //      parOK()(ipar/svc().nPar())=False;
   }
+
+  // Negate (so updatePar() can _add_)
+  dpar()*=Complex(-1.0f);
+
   
   //  cout << "dpar() = " << dpar() << endl;
 }
@@ -596,16 +626,92 @@ void VisCalSolver::updatePar() {
 
   //  if (prtlev()>4) cout << "        dpar=" << dpar() << endl;
 
-  // Remember curr pars
-  lastPar()=par();
-
   // Subtract dpar from par
-  par()-=dpar();
+  par()+=dpar();
 
   if (prtlev()>4) 
     cout << "        new =" << endl
 	 << "amp = " << amplitude(par()) << endl
 	 << "pha = " << phase(par()) << endl;
+
+}
+
+
+void VisCalSolver::optStepSize() {
+
+  Vector<Double> x2(3,-999.0);
+  Float step(1.0);
+  
+  // Starting point is curr chiSq
+  x2(0)=chiSq();
+
+  // take nominal step
+  par()+=dpar();  
+  residualate();
+  chiSquare();
+  x2(1)=chiSq();
+
+  // If nominal step is an improvement...
+  if (x2(1)<x2(0)) {
+
+    // ...double step size until x2 starts increasing
+    par()=dpar(); par()*=Complex(2.0*step); par()+=lastPar();
+    residualate();
+    chiSquare();
+    x2(2)=chiSq();
+    //    cout <<   "  down:    " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    while (x2(2)<x2(1)) {    //  && step<4.0) {
+      step*=2.0;
+      par()=dpar(); par()*=Complex(2.0*step); par()+=lastPar();
+      residualate();
+      chiSquare();
+      x2(1)=x2(2);
+      x2(2)=chiSq();
+      //      cout << "  stretch: " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+
+    }
+  }
+  // else nominal step too big, so...
+  else {
+
+    // ... contract by halves until we bracket a minimum
+    step*=0.5;
+    par()=dpar(); par()*=Complex(step); par()+=lastPar();
+    residualate();
+    chiSquare();
+    x2(2)=x2(1);
+    x2(1)=chiSq();
+    //    cout <<   "  up:       " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    while (x2(1)>x2(0)) { //  && step>0.125) {
+      step*=0.5;
+      par()=dpar(); par()*=Complex(step); par()+=lastPar();
+      residualate();
+      chiSquare();
+      x2(2)=x2(1);
+      x2(1)=chiSq();
+      //      cout << "  contract: " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    }
+
+  }
+
+
+
+  // At this point   x2(0) > x2(1) < x2(2), so 
+  //   calculate (quadratic) step optimization factor
+  Double optfactor;
+  optfactor=Double(step)*(1.5-(x2(2)-x2(1))/(x2(0)-2*x2(1)+x2(2)));
+
+ /*
+  cout << "Optimization: " 
+       << step << " " 
+       << optfactor << " "
+       << x2 << endl;
+ */
+
+  par()=lastPar();
+  
+  // Adjust step by the optfactor
+  dpar()*=Complex(optfactor);
 
 }
 

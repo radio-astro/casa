@@ -477,6 +477,9 @@ public:
   // Local specialization of setApply to extract opacity
   void setApply(const Record& applypar);
 
+  // Report apply-related info
+  String applyinfo();
+
 protected:
 
   // TOpac has one Float par per ant

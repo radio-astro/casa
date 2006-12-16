@@ -157,9 +157,6 @@ void VisCal::setApply(const Record& apply) {
   if (apply.isDefined("calwt"))
     calWt()=apply.asBool("calwt");
 
-  if (calWt())
-    cout << "Weight calibration turned on." << endl;
-
   // This is apply context  
   setApplied(True);
 

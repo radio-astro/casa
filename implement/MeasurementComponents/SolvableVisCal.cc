@@ -220,17 +220,17 @@ String SolvableVisCal::applyinfo() {
 
   ostringstream o;
   o << typeName()
-    << " table="  << calTableName()
+    << ": table="  << calTableName()
     << " select=" << calTableSelect()
-    << " t="      << interval();
+    << boolalpha
+    << " calWt=" << calWt();
+    //    << " t="      << interval();
 
   return String(o);
 
 }
 
-
-void SolvableVisCal::setSolve() 
-{
+void SolvableVisCal::setSolve() {
 
   if (prtlev()>2) cout << "SVC::setSolve()" << endl;
 
@@ -305,10 +305,10 @@ String SolvableVisCal::solveinfo() {
   ostringstream o;
   o << boolalpha
     << typeName()
-    << " table="      << calTableName()
+    << ": table="      << calTableName()
     << " append="     << append()
     << " t="          << interval()
-    << " preavg="     << preavg()
+    //    << " preavg="     << preavg()
     << " refant="     << refant()
     << " phaseonly="  << mode().contains("phaseonly");
 
@@ -337,12 +337,10 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
   // If interval<0, this signals an existing input cumulative table
   if (interval()<0.0) {
 
-    ostringstream o;
-    o << "Loading existing " << typeName()
-      << " table: " << table
-      << " for accumulation.";
-    message.message(o);
-    //    logSink().post(message);
+    logSink() << "Loading existing " << typeName()
+	      << " table: " << table
+	      << " for accumulation."
+	      << LogIO::POST;
 
     // Create CalSet, from table
     cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
@@ -355,11 +353,9 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
   // else, we are creating a cumulative table from scratch (the VisSet)
   else {
 
-    ostringstream o;
-    o << "Creating " << typeName()
-      << " table for accumulation.";
-    message.message(o);
-    //    logSink().post(message);
+    logSink() << "Creating " << typeName()
+	      << " table for accumulation."
+	      << LogIO::POST;
 
     // Create a pristine CalSet
     //  TBD: move this to inflate()?
@@ -425,10 +421,9 @@ void SolvableVisCal::inflate(VisSet& vs, const Bool& fillMeta) {
       nSlot(vi.spectralWindow())++;
     vi.originChunks();
 
-    LogMessage message(LogOrigin("SolvableVisCal", "solve"));
-    ostringstream o; o<<"For interval of "<<interval()<<" seconds, found "<<
-                       sum(nSlot)<<" slots";message.message(o);
-    //    logsink.post(message);
+    logSink() << "For interval of "<<interval()<<" seconds, found "
+	      <<  sum(nSlot)<<" slots"
+	      << LogIO::POST;
   }
 
   // Call generic version to actually inflate the CalSet
@@ -760,6 +755,13 @@ void SolvableVisCal::store() {
 
   if (prtlev()>3) cout << " SVC::store()" << endl;
 
+  if (append())
+    logSink() << "Appending solutions to table: " << calTableName()
+	      << LogIO::POST;
+  else
+    logSink() << "Writing solutions to table: " << calTableName()
+	      << LogIO::POST;
+    
   cs().store(calTableName(),typeName(),append());
 
 }
@@ -1630,12 +1632,10 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
         }
       }
       String noRefSol=x.str();
-      //oss << LogIO::WARN
-      cout 
-	<< " The following reference fields have no solutions available: "
-          << noRefSol
-	<< endl;
-      //          << LogIO::POST;
+      logSink() << LogIO::WARN
+		<< " The following reference fields have no solutions available: "
+		<< noRefSol
+		<< LogIO::POST;
       refField.reference(implRefField);
     }
     refField.shape(nRef);
@@ -1663,12 +1663,10 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
           }
         }
         String noTranSol=x.str();
-	//        oss << LogIO::WARN
-	cout
-            << " The following transfer fields have no solutions available: "
-            << noTranSol
-	    << endl;
-	  //            << LogIO::POST;
+	logSink() << LogIO::WARN
+		  << " The following transfer fields have no solutions available: "
+		  << noTranSol
+		  << LogIO::POST;
         tranField.reference(implTranField);
       }
     }
@@ -1680,21 +1678,15 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
       refNames+=" ";
       refNames+=fldNames(refField(iRef));
     }
-    //oss
-    cout 
-      << " Found reference field(s): " << refNames 
-	 << endl;
-    //<< LogIO::POST;
+    logSink() << " Found reference field(s): " << refNames 
+	      << LogIO::POST;
     String tranNames(fldNames(tranField(0)));
     for (Int iTran=1; iTran<nTran; iTran++) {
       tranNames+=" ";
       tranNames+=fldNames(tranField(iTran));
     }
-    //oss
-    cout 
-      << " Found transfer field(s):  " << tranNames 
-      << endl;
-    // << LogIO::POST;
+    logSink() << " Found transfer field(s):  " << tranNames 
+	      << LogIO::POST;
 
     //    cout << "fldList = " << fldList << endl;
 
@@ -1709,19 +1701,14 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     if (inRefSpwMap(0)>-1) {
       if (inRefSpwMap.nelements()==1) {
         refSpwMap=inRefSpwMap(0);
-        //oss
-	cout << " All spectral windows will be referenced to spw=" << inRefSpwMap(0)+1 
-	     << endl;
-	//<< LogIO::POST;
+        logSink() << " All spectral windows will be referenced to spw=" << inRefSpwMap(0)+1 
+		  << LogIO::POST;
       } else {
         for (Int i=0; i<Int(inRefSpwMap.nelements()); i++) {
           if (inRefSpwMap(i)>-1 && inRefSpwMap(i)!=i) {
             refSpwMap(i)=inRefSpwMap(i);
-            // oss 
-	    cout 
-	      << " Spw=" << i+1 << " will be referenced to spw=" << inRefSpwMap(i)+1 
-	      << endl;
-	    // << LogIO::POST;
+	    logSink() << " Spw=" << i+1 << " will be referenced to spw=" << inRefSpwMap(i)+1 
+		      << LogIO::POST;
           }
         }
       }
@@ -1971,20 +1958,16 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
             cout << endl;
           */
             // Report flux densities:
-            //oss 
-	    cout 
-	      << " Flux density for " << fldNames(tranidx)
-                << " in SpW=" << iSpw+1;
-            if (refSpw!=iSpw) // oss 
-	      cout << " (ref SpW=" << refSpw+1 << ")";
-            //oss 
-	    cout 
-	      << " is: " << fluxScaleFactor(iSpw,tranidx)
-	      << " +/- " << fluxScaleError(iSpw,tranidx)
-	      << " (SNR = " << fluxScaleFactor(iSpw,tranidx)/fluxScaleError(iSpw,tranidx)
-	      << ")"
-	      << endl;
-	    //                << LogIO::POST;
+	    logSink() << " Flux density for " << fldNames(tranidx)
+		      << " in SpW=" << iSpw+1;
+            if (refSpw!=iSpw) 
+	      logSink() << " (ref SpW=" << refSpw+1 << ")";
+
+	    logSink() << " is: " << fluxScaleFactor(iSpw,tranidx)
+		      << " +/- " << fluxScaleError(iSpw,tranidx)
+		      << " (SNR = " << fluxScaleFactor(iSpw,tranidx)/fluxScaleError(iSpw,tranidx)
+		      << ")"
+		      << LogIO::POST;
 
             // form scale factor from mean ratio
             sfrat  /= (Double(sfrn));
@@ -1999,13 +1982,11 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
             cout << endl;
           */
           } else {
-            //oss << LogIO::WARN
-	    cout 
-	      << " Insufficient information to calculate scale factor for "
-	      << fldname(tranidx)
-	      << " in SpW="<< iSpw+1
-	      << endl;
-	    //                << LogIO::POST;
+            logSink() << LogIO::WARN
+		      << " Insufficient information to calculate scale factor for "
+		      << fldname(tranidx)
+		      << " in SpW="<< iSpw+1
+		      << LogIO::POST;
           }
 
         } // ntrue(antOKT) > 0

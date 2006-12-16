@@ -893,15 +893,15 @@ void TOpac::setApply(const Record& applypar) {
 
   // This version uses user-supplied opacity value for all ants
 
-  Double opacity(0.0);
+  //  Double opacity(0.0);
   if (applypar.isDefined("opacity"))
-    opacity=applypar.asFloat("opacity");  
+    opacity_=applypar.asFloat("opacity");  
  
   Int oldspw; oldspw=currSpw();
   for (Int ispw=0;ispw<nSpw();++ispw) {
     currSpw()=ispw;
     currRPar().resize(1,1,nAnt());
-    currRPar()=opacity;
+    currRPar()=opacity_;
     currParOK().resize(1,nAnt());
     currParOK()=True;
   }
@@ -909,6 +909,19 @@ void TOpac::setApply(const Record& applypar) {
 
   // Resize za()
   za().resize(nAnt());
+
+}
+
+String TOpac::applyinfo() {
+
+  ostringstream o;
+  o << typeName()
+    << ": opacity=" << opacity_
+    << boolalpha
+    << " calWt=" << calWt();
+    //    << " t="      << interval();
+
+  return String(o);
 
 }
 

@@ -40,6 +40,10 @@
 #include <calibration/CalTables/CalInterp.h>
 #include <msvis/MSVis/VisSet.h>
 
+#include <casa/Logging/LogMessage.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/LogIO.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // **********************************************************
@@ -214,6 +218,9 @@ protected:
   // Report the SVC-specific state, w/ option for VC::state()
   virtual void stateSVC(const Bool& doVC);
 
+  // Logger
+  LogIO& logSink() { return logsink_p; };
+
 private:
 
   // Default ctor is private
@@ -271,6 +278,9 @@ private:
   // Current parameters
   PtrBlock<Cube<Complex>*>    solvePar_;        // [nSpw](nPar,1,{1|nElem})
   PtrBlock<Matrix<Bool>*>     solveParOK_;      // [nSpw](1,{1|nElm})
+
+  // LogIO
+  LogIO logsink_p;
 
 };
 

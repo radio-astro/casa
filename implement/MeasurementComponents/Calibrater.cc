@@ -104,7 +104,7 @@ String Calibrater::timerString() {
 
 Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
   
-  logSink() << LogOrigin("Calibrater","initialize") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL;
   
   try {
     timer_p.mark();
@@ -181,7 +181,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
 Bool Calibrater::initCalSet(const Int& calSet) 
 {
 
-  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL;
 
   if (vs_p) {
     vs_p->initCalSet(calSet);
@@ -448,9 +448,17 @@ Bool Calibrater::setapply (const String& type,
     String upType=type;
     upType.upcase();
 
+    logSink() << LogIO::NORMAL 
+	      << "Arranging to APPLY:"
+	      << LogIO::POST;
+
     // Add a new VisCal to the apply list
     vc = createVisCal(upType,*vs_p);  
     vc->setApply(applypar);       
+
+      logSink() << LogIO::NORMAL << ".   "
+		<< vc->applyinfo()
+		<< LogIO::POST;
 
   } catch (AipsError x) {
     if (vc) delete vc;
@@ -467,12 +475,10 @@ Bool Calibrater::setapply (const String& type,
     vc_p.resize(napp+1,False,True);      
     vc_p[napp] = vc;
     vc=NULL;
-    
+   
     // Maintain sort of apply list
     ve_p->setapply(vc_p);
     
-    applystate();
-
     return True;
 
   } catch (AipsError x) {
@@ -495,7 +501,7 @@ Bool Calibrater::setsolve (const String& type,
                            const Bool& append)
 {
   
-  logSink() << LogOrigin("Calibrater","setsolve",WHERE) << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
   
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
@@ -622,10 +628,18 @@ Bool Calibrater::setsolve (const String& type,
     // Clean out any old solve that was lying around
     unsetsolve();
 
+    logSink() << LogIO::NORMAL 
+	      << "Arranging to SOLVE:"
+	      << LogIO::POST;
+
     // Create the new SolvableVisCal
     svc = createSolvableVisCal(upType,*vs_p);
     svc->setSolve(solvepar);
     
+    logSink() << LogIO::NORMAL << ".   "
+	      << svc->solveinfo()
+	      << LogIO::POST;
+
   } catch (AipsError x) {
     if (svc) delete svc;
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
@@ -637,8 +651,6 @@ Bool Calibrater::setsolve (const String& type,
   try {
     svc_p=svc;
     svc=NULL;
-
-    solvestate();
 
     return True;
 
@@ -666,7 +678,7 @@ Bool Calibrater::state() {
 Bool Calibrater::applystate() {
 
 
-  logSink() << LogOrigin("Calibrater","applystate") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","applystate") << LogIO::NORMAL;
 
   logSink() << LogIO::NORMAL 
 	    << "The following calibration terms are arranged for apply:"
@@ -675,11 +687,11 @@ Bool Calibrater::applystate() {
   Int napp(vc_p.nelements());
   if (napp>0)
     for (Int iapp=0;iapp<napp;++iapp)
-      logSink() << LogIO::NORMAL << "  "
+      logSink() << LogIO::NORMAL << ".   "
 		<< vc_p[iapp]->applyinfo()
 		<< LogIO::POST;
   else
-    logSink() << LogIO::NORMAL << "  "
+    logSink() << LogIO::NORMAL << ".   "
 	      << "(None)"
 	      << LogIO::POST;
 
@@ -690,18 +702,18 @@ Bool Calibrater::applystate() {
 
 Bool Calibrater::solvestate() {
 
-  logSink() << LogOrigin("Calibrater","solvestate") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","solvestate") << LogIO::NORMAL;
 
   logSink() << LogIO::NORMAL 
 	    << "The following calibration term is arranged for solve:"
 	    << LogIO::POST;
 
   if (svc_p)
-    logSink() << LogIO::NORMAL << "  "
+    logSink() << LogIO::NORMAL << ".   "
 	      << svc_p->solveinfo()
 	      << LogIO::POST;
   else
-    logSink() << LogIO::NORMAL << "  "
+    logSink()  << LogIO::NORMAL << ".   "
 	      << "(None)"
 	      << LogIO::POST;
 
@@ -711,7 +723,7 @@ Bool Calibrater::solvestate() {
 
 Bool Calibrater::cleanup() {
 
-  logSink() << LogOrigin("Calibrater","cleanup") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","cleanup") << LogIO::NORMAL;
 
   // Delete the VisCals
   reset();
@@ -729,7 +741,7 @@ Bool Calibrater::cleanup() {
 
 Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
 
-  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
 
   // Delete the VisCal apply list
   if (apply) 
@@ -745,7 +757,7 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
 // Delete all (default) or one VisCal in apply list
 Bool Calibrater::unsetapply(const Int& which) {
 
-  logSink() << LogOrigin("Calibrater","unsetapply") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","unsetapply") << LogIO::NORMAL;
   
   try {
     if (which<0) {
@@ -774,7 +786,7 @@ Bool Calibrater::unsetapply(const Int& which) {
   // Delete solve VisCal
 Bool Calibrater::unsetsolve() {
 
-  logSink() << LogOrigin("Calibrater","unsetsolve") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","unsetsolve") << LogIO::NORMAL;
 
   try {
     if (svc_p) delete svc_p;
@@ -806,7 +818,6 @@ Bool Calibrater::correct() {
 
     // Report the types that will be applied
     applystate();
-
 
     // Arrange for iteration over data
     Block<Int> columns;
@@ -869,7 +880,8 @@ Bool Calibrater::solve() {
     ve_p->setapply(vc_p);
 
     // Report what is being applied and solved-for
-    state();
+    applystate();
+    solvestate();
 
     // Generally use standard solver
     if (svc_p->standardSolve())
@@ -927,6 +939,7 @@ Bool Calibrater::standardSolve() {
   
   // Solve each solution interval (chunk)
   Vector<Int> islot(vs_p->numberSpw(),0);
+  Int nGood(0);
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     
     Int spw(vi.spectralWindow());
@@ -975,6 +988,7 @@ Bool Calibrater::standardSolve() {
       
       // (NB: force const version of nChanPar()  [why?])
       //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
+      Bool totalGoodSol(False);
       for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
 	
 	// If pars chan-dep, SVC mechanisms for only one channel at a time
@@ -987,6 +1001,7 @@ Bool Calibrater::standardSolve() {
 	
 	// If good... 
 	if (goodSoln) {
+	  totalGoodSol=True;
 	  // ...consider referencing to refant...
 	  if (svc_p->refant()>-1)
 	    svc_p->reReference();
@@ -995,15 +1010,19 @@ Bool Calibrater::standardSolve() {
 	}
 	
       } // parameter channels
+
+      // Cound good solutions.
+      if (totalGoodSol)	nGood++;
       
     } // vbOK
     
     islot(spw)++;
     
   } // chunks
-  
-  // Inform logger/history
-  logSink() << "Done."
+
+
+  logSink() << "  Found " << nGood << " good " 
+	    << svc_p->typeName() << " solutions." 
 	    << LogIO::POST;
   
   // Store whole of result in a caltable
@@ -1030,7 +1049,7 @@ Vector<Double> Calibrater::modelfit(const Int& niter,
   cout << " vary  = " << vary << endl;
   cout << " file  = " << file << endl;
  */
-  logSink() << LogOrigin("Calibrater","modelfit") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","modelfit") << LogIO::NORMAL;
   
   try {
     if(!ok()) throw(AipsError("Calibrater not ok()"));
@@ -1129,8 +1148,6 @@ void Calibrater::fluxscale(const String& infile,
 
   // TBD: write inputs to MSHistory
   logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
-
-  logSink() << "Beginning fluxscale." << LogIO::POST;
 
   try {
     // If infile is Calibration table
@@ -1303,7 +1320,7 @@ void Calibrater::accumulate(const String& intab,
 
   //  throw(AipsError("Method 'accumulate' is temporarily disabled."));
   
-  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
 
   logSink() << "Beginning accumulate." << LogIO::POST;
 
@@ -1582,7 +1599,7 @@ Bool Calibrater::calWt() {
 
 Bool Calibrater::ok() {
 
-  logSink() << LogOrigin("Calibrater","ok") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","ok") << LogIO::NORMAL;
   if(vs_p && ms_p && mssel_p && ve_p) {
     return True;
   }

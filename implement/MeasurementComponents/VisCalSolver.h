@@ -137,6 +137,9 @@ protected:
   // Initialize solving data
   void initSolve();
 
+  // Obtain trial residuals w.r.t svc's current pars
+  void residualate();
+
   // Differentiate the svb w.r.t svc's pars
   void differentiate();
 
@@ -151,6 +154,9 @@ protected:
   void revert();
   void solveGradHess();
   void updatePar();
+
+  // Optimize the step parabolically
+  void optStepSize();
 
   void printPar(const Int& iter);
 
@@ -204,6 +210,9 @@ private:
 
   // LM factor
   Double lambda_;
+
+  // Step optimization toggle
+  Bool optstep_;
 
   // Diagnostic print level
   Int prtlev_;
