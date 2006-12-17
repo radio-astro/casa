@@ -210,6 +210,12 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   if (prtlev()>3) cout << " VC::corrupt()" << endl;
 
+
+  // Ensure weight calibration off internally for corrupt
+  //   (corruption doesn't re-scale the data!)
+  Bool userCalWt=calWt();
+  calWt()=False;
+
   // Prepare output Cube<Complex> for its own in-place apply:
   //  (this is a no-op if referencing same storage)
   Mout = vb.modelVisCube();
@@ -220,6 +226,9 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   // Call generic row-by-row apply, with inversion turned OFF
   applyCal(vb,Mout);
+
+  // Restore user's calWt()
+  calWt()=userCalWt;
 
 }
 
@@ -285,6 +294,9 @@ void VisCal::syncCal(VisCal& vc) {
   
   if (prtlev()>4) cout << "   VC::syncCal(vc)" << endl;
 
+  //  cout << "    VisCal::syncCal(VisCal): " << currCPar().data() 
+  //       << endl;
+
   // Set current meta date from the VisCal
   syncMeta(vc);
 
@@ -293,6 +305,9 @@ void VisCal::syncCal(VisCal& vc) {
 
   // Procede with generalized sync of calibration
   syncCal(False);
+
+  //  cout << "    VisCal::syncCal(VisCal): " << currCPar().data() 
+  //       << endl;
 
 }
 
@@ -426,17 +441,27 @@ void VisCal::checkCurrCal() {
 
 void VisCal::syncCal(const Bool& doInv) {
 
-  if (prtlev()>4) cout << "    VC::syncCal()" << endl;
+  if (prtlev()>4) cout << "    VC::syncCal(doInv)" << endl;
+
+  //  cout << "     VisCal::syncCal(doInv): " << currCPar().data() 
+  //       << endl;
 
   // Synchronize the parameters
   syncPar();
-  
+
+  //  cout << "     VisCal::syncCal(doInv): " << currCPar().data() 
+  //       << endl;
+
   if (!PValid()) 
     // TBD:  Improve this message (with some meta data)
     throw(AipsError("Could not find any calibration parameters."));
 
   // Synchronize the matrices
   syncCalMat(doInv);
+
+  //  cout << "     VisCal::syncCal(doInv): " << currCPar().data()
+  //       << endl;
+
 }
 
 void VisCal::syncPar() {
@@ -1044,8 +1069,18 @@ void VisJones::syncCalMat(const Bool& doInv) {
   if (prtlev()>5) cout << "     VJ::syncCalMat()"
 		       << " (JValid()=" << JValid() << ")" << endl;
 
+  //  cout << "      VisCal::syncCalMat(doInv): " << currCPar().data() <<" "<< currJElem().data()
+  //       << endl;
+
   // If necessary, synchronize the Jones matrices
   if (!JValid()) syncJones(doInv);
+
+  //  cout << "      VisCal::syncCalMat(doInv): " << currCPar().data() <<" "<< currJElem().data()
+  //       << endl;
+
+  // Be sure sync'd matrices at their origin 
+  J1().origin();
+  J2().origin();
 
   // If requested and necessary, synchronize the Mueller matrices
   //   (NEVER invert Muellers, as Jones already have been)
@@ -1060,13 +1095,18 @@ void VisJones::syncJones(const Bool& doInv) {
 
   // If Jones pars are just the matrix elements:
   if (trivialJonesElem()) {
+    
     // Matrix Elem cache references par cache
     currJElem().reference(currCPar());
     currJElemOK().reference(currParOK());
 
     // EXCEPT, ensure uniqueness if taking the inverse
     //   (this makes a copy, can we avoid?)
-    if (doInv) currJElem().unique();
+    if (doInv) {
+      //      cout << "  Unique: " << currJElem().data() << "-->";
+      currJElem().unique();
+      //      cout << currJElem().data() << endl;
+    }
   }
   else {
 
@@ -1211,7 +1251,7 @@ void VisJones::createJones() {
       J2().type() != jtype)
     delete J2_[currSpw()];
   
-  // If needed, construct the correct Mueller
+  // If needed, construct the correct Jones
   if (!J1_[currSpw()])
     J1_[currSpw()] = casa::createJones(jtype);
 
@@ -1254,7 +1294,6 @@ void VisJones::syncWtScale() {
   nz=Float(1.0)/nz;
 
   //  cout << "currWtScale() = " << currWtScale() << endl;
-
 
 }
 
