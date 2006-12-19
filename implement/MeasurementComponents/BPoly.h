@@ -82,8 +82,10 @@ public:
   virtual Type type() { return VisCal::B; };
 
   // Return type name as string
-  virtual String typeName()     { return "B Jones Poly"; };
+  virtual String typeName()     { return "BPOLY"; };
   virtual String longTypeName() { return "B Jones Poly (bandpass)"; };
+
+  virtual Bool standardSolve() { return False; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -97,7 +99,7 @@ public:
   virtual void setApply(const Record& applypar);
 
   // Solve
-  virtual Bool solve (VisEquation& ve);
+  virtual void selfSolve (VisSet& vs, VisEquation& ve);
 
 
 protected:

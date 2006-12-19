@@ -210,7 +210,11 @@ void VisEquation::collapse(VisBuffer& vb) {
     vb.modelVisCube()
   */
 
-
+  // Ensure required columns are present!
+  vb.modelVisCube();
+  vb.visCube();
+  vb.weightMat();
+  
   // Re-calculate weights from sigma column
   // TBD: somehow avoid is not necessary?
   vb.resetWeightMat();

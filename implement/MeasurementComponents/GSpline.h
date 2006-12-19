@@ -85,7 +85,7 @@ public:
   virtual Type type() { return VisCal::G; };
 
   // Return type name as a string
-  virtual String typeName()     { return "G Jones SPLINE"; };
+  virtual String typeName()     { return "GSPLINE"; };
   virtual String longTypeName() { return "G Jones SPLINE (elec. gain)"; };
 
 

@@ -220,8 +220,12 @@ void Calibrater::setdata(const String& mode,
     // Set data selection variables
     dataMode_p=mode;
     dataNchan_p=nchan;
+    if (dataNchan_p<0) dataNchan_p=0; 
     dataStart_p=start;
+    if (dataStart_p<0) dataNchan_p=0; 
     dataStep_p=step;
+    if (dataStep_p<1) dataNchan_p=1; 
+
     mDataStart_p=mStart;
     mDataStep_p=mStep;
 
@@ -454,6 +458,7 @@ Bool Calibrater::setapply (const String& type,
 
     // Add a new VisCal to the apply list
     vc = createVisCal(upType,*vs_p);  
+
     vc->setApply(applypar);       
 
       logSink() << LogIO::NORMAL << ".   "
@@ -954,6 +959,8 @@ Bool Calibrater::standardSolve() {
     //  with calibration and averaging
     for (vi.origin(); vi.more(); vi++) {
 
+      // This forces the data/model/wt I/O, and applies
+      //   any prior calibrations
       ve_p->collapse(vb);
       
       // If permitted/required by solvable component, normalize

@@ -137,9 +137,6 @@ void BJonesPoly::setSolve(const Record& solvepar)
 //    maskedgeFrac_p    Float              Fractional edge mask
 //
 
-
-  cout << "BJonesPoly::setSolve" << endl;
-
   // Call parent
   SolvableVisCal::setSolve(solvepar);
 
@@ -183,7 +180,7 @@ void BJonesPoly::setApply(const Record& applypar)
   // NB: this requires setdata prior to setapply!
   nChanParList()=vs_p->numberChan();
   startChanList()=0;
-    
+
   // Fill the bandpass correction cache from the applied cal. table
   load(calTableName());
 
@@ -199,7 +196,7 @@ void BJonesPoly::setApply(const Record& applypar)
 //  Gildas routines and grids each spectrum.  It also does more sanity
 //  checking, logging, and produces a nicer plot.
 
-Bool BJonesPoly::solve (VisEquation& ve)
+void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
 {
 // Solver for the polynomial bandpass solution
 // Input:
@@ -214,6 +211,7 @@ Bool BJonesPoly::solve (VisEquation& ve)
 //   1. Make pointers private, make delete function and use it 
 //   2. Use antenna names
 //
+
 
   LogIO os (LogOrigin("BJonesPoly", "solve()", WHERE));
 
@@ -238,8 +236,8 @@ Bool BJonesPoly::solve (VisEquation& ve)
   columns[1]=MS::FIELD_ID;         // TBD: problematic for multi-field?
   columns[2]=MS::DATA_DESC_ID;
   columns[3]=MS::TIME;
-  vs_p->resetVisIter(columns,interval());
-  VisIter& vi(vs_p->iter());
+  vs.resetVisIter(columns,interval());
+  VisIter& vi(vs.iter());
   VisBuffer vb(vi);
 
   // Initialize the baseline index
@@ -264,7 +262,7 @@ Bool BJonesPoly::solve (VisEquation& ve)
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     vi.origin();
     Int spwid=vi.spectralWindow();
-    numFreqChan(spwid) = vs_p->numberChan()(spwid);
+    numFreqChan(spwid) = vs.numberChan()(spwid);
     freq[spwid] = new Vector<Double>;
     (*freq[spwid])=vb.frequency();
     Double df2=abs((*freq[spwid])(1)-(*freq[spwid])(0))/2.0;
@@ -338,7 +336,7 @@ Bool BJonesPoly::solve (VisEquation& ve)
     ok=False;
   }
   // If either degree vs nGrid test failed, quit here
-  if (!ok) return False;
+  if (!ok) throw(AipsError("Invalid polynomial degree specification"));
 
   // Report spectral information
   os << LogIO::NORMAL 
@@ -375,22 +373,12 @@ Bool BJonesPoly::solve (VisEquation& ve)
   PtrBlock<Vector<Complex>*> normVis(nPH,NULL);
   PtrBlock<Vector<Double>*> normWeight(nPH,NULL);
 
-  cout << "Memory (pre-accum new)  = " 
-       << Memory::assignedMemoryInBytes() << " "
-       << Memory::allocatedMemoryInBytes() << " "
-       << endl;
-
   for (Int i=0;i<nPH;++i) {
     accumVis[i] = new Matrix<Complex>(nFreqGrid, nBln()); (*accumVis[i])=Complex(0.0,0.0);
     accumWeight[i] = new Matrix<Double>(nFreqGrid, nBln()); (*accumWeight[i])=0.0;
     normVis[i] = new Vector<Complex>(nBln()); (*normVis[i])=Complex(0.0,0.0);
     normWeight[i] = new Vector<Double>(nBln()); (*normWeight[i])=0.0;
   }
-
-  cout << "Memory (post-accum new) = " 
-       << Memory::assignedMemoryInBytes() << " "
-       << Memory::allocatedMemoryInBytes() << " "
-       << endl;
 
   Vector<Int> indexSpw;
 
@@ -408,7 +396,7 @@ Bool BJonesPoly::solve (VisEquation& ve)
     // and number for frequency channels
 
     Int spwid = vi.spectralWindow();
-    Int nChan = vs_p->numberChan()(spwid);
+    Int nChan = vs.numberChan()(spwid);
     Int nCorr = vb.corrType().nelements();
     freqGroup = freqGrpName(spwid);
     
@@ -436,14 +424,14 @@ Bool BJonesPoly::solve (VisEquation& ve)
     //  with calibration and averaging
     for (vi.origin(); vi.more(); vi++) {
       
-      // TBD: fix the weights here?
-      
+      // This forces data/model/wt I/O, and
+      //   applies any prior calibrations
       ve.collapse(vb);
-      
+
       // If permitted/required by solvable component, normalize
-      if (normalizable())
+      if (normalizable()) 
 	vb.normalize();
-      
+
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
     }
@@ -517,14 +505,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
     };
   }; // for (chunk...) iteration
 
-
-  cout << "Memory (post-accum)  = " 
-       << Memory::assignedMemoryInBytes() << " "
-       << Memory::allocatedMemoryInBytes() << " "
-       << endl;
-
-
-
   // Delete freq PtrBlock
   for (Int ispw=0;ispw<nSpw();ispw++) {
     if (freq[ispw]) { delete freq[ispw]; freq[ispw]=0; }
@@ -564,20 +544,9 @@ Bool BJonesPoly::solve (VisEquation& ve)
 
   for (Int iph=0;iph<nPH;++iph) {
 
-    cout << "Memory (pre-total new)  = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
     totalAmp[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalAmp[iph])=0.0;
     totalPhase[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalPhase[iph])=0.0;
     totalWeight[iph] = new Matrix<Double>(nFreqGrid, nGoodBasl); (*totalWeight[iph])=0.0;
-
-    cout << "Memory (post-total new) = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
 
     for (Int ibl=0;ibl<nGoodBasl;ibl++) {
       ant1num(ibl)=antnum(ant1idx(ibl));
@@ -608,11 +577,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
 
     }
 
-    cout << "Memory (pre-accum delete)  = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
     if ( accumVis[iph] )    delete accumVis[iph];
     if ( accumWeight[iph] ) delete accumWeight[iph];
     if ( normVis[iph] )     delete normVis[iph];
@@ -621,13 +585,7 @@ Bool BJonesPoly::solve (VisEquation& ve)
     accumWeight[iph]=NULL;
     normVis[iph]=NULL;
     normWeight[iph]=NULL;
-    
-    cout << "Memory (post-accum delete) = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
-    
+        
     // GILDAS solver uses one-relative antenna numbers
     Int refantenna = refant() + 1;
     
@@ -642,11 +600,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
     Vector<Double> rmsAmpFit2(nGoodBasl,0.0);
     Matrix<Double> ampCoeff2(nGoodAnt, degree, 1.0);
    
-    cout << "Memory (pre-Ampsolve)  = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
     {
       // Create work arrays
       Vector<Double> wk1(degree);
@@ -672,12 +625,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
 	      ampCoeff2.getStorage(dum));
     }
 
-    cout << "Memory (post-Ampsolve) = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
-    
     if (totalAmp[iph]) delete totalAmp[iph];
     totalAmp[iph]=NULL;
 
@@ -697,11 +644,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
     Vector<Double> rmsPhaseFit2(nGoodBasl,0.0);
     Matrix<Double> phaseCoeff2(nGoodAnt, degree, 123.0);
     
-    cout << "Memory (pre-Phasesolve)  = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
-
     {
       // Create work arrays
       Vector<Double> wk6(degree);
@@ -725,11 +667,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
 	      rmsPhaseFit2.getStorage(dum),
 	      phaseCoeff2.getStorage(dum));
     }
-
-    cout << "Memory (post-Phasesolve) = " 
-	 << Memory::assignedMemoryInBytes() << " "
-	 << Memory::allocatedMemoryInBytes() << " "
-	 << endl;
 
     if (totalPhase[iph]) delete totalPhase[iph];
     if (totalWeight[iph]) delete totalWeight[iph];
@@ -761,9 +698,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
     //	     rmsAmpFit2, ampCoeff, rmsPhaseFit2, phaseCoeff);
     
   } // iph
-
-
-  cout << "Done solving." << endl;
 
   Int nChanTotal=nFreqGrid;
   Double meanfreq=mean(totalFreq);
@@ -854,7 +788,6 @@ Bool BJonesPoly::solve (VisEquation& ve)
   updateCalTable (freqGroup, antId, polyType, scaleFactor, validDomain,
 		  ampCoeff, phaseCoeff, phaseUnits, refAmp, refFreq, refAnt);
   
-  return True;
 };
 
 
@@ -909,9 +842,6 @@ void BJonesPoly::updateCalTable (const String& freqGrpName,
 // Input from private data:
 //    solveTable_p    String                    Output calibration table name
 //
-
-
-  cout << "updateCalTable" << endl;
 
   LogIO os (LogOrigin("BJonesPoly", "updateCalTable()", WHERE));
 
@@ -1082,6 +1012,7 @@ void BJonesPoly::load (const String& applyTable)
     Array<Double> ampCoeffArray, phaseCoeffArray;
     col.polyCoeffAmp().get(row, ampCoeffArray);
     col.polyCoeffPhase().get(row, phaseCoeffArray);
+
     IPosition ampPos = ampCoeffArray.shape();
     ampPos = 0;
     for (Int k=0; k < 2*nAmp; k++) {
@@ -1096,10 +1027,6 @@ void BJonesPoly::load (const String& applyTable)
       phaseCoeff(k%nPhase,k/nPhase) = phaseCoeffArray(phasePos);
     };
 
-    if (row==0) {
-      cout << "ampCoeff   = " << ampCoeff << endl;
-      cout << "phaseCoeff = " << phaseCoeff << endl;
-    }
     // Loop over all spectral window id.'s in this frequency group
     Vector<Int> spwIds = spwIdsInGroup(freqGrpName);
 
@@ -1120,7 +1047,7 @@ void BJonesPoly::load (const String& applyTable)
 
 	Vector<Double> ac(ampCoeff.column(ipol));
 	Vector<Double> pc(phaseCoeff.column(ipol));
-
+	
 	// Only do non-triv calc if coeffs are non-triv
 	if (anyNE(ac,Double(0.0)) ||
 	    anyNE(pc,Double(0.0)) ) {
@@ -1139,10 +1066,11 @@ void BJonesPoly::load (const String& applyTable)
 	      phaseval = getChebVal(pc, x1, x2, freq(chan));
 	    }
 	    currCPar()(ipos) = factor *
-	      exp(ampval) * Complex(cos(phaseval),sin(phaseval));
+	      Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
+	    // Set flag for valid cache value 
+	    currParOK()(iposOK) = True;
 	  }
-	  // Set flag for valid cache value 
-	  currParOK()(iposOK) = True;
+
 	}
 	else 
 	  currCPar()(ipos) = Complex(1.0);
