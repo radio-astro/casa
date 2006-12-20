@@ -1649,9 +1649,14 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
     // Check availability of transfer fields
 
-    // Use implicit transfer field list, or check for missing tran fields
-    if (nTran==1 && tranField(0)<0) {
+    // If user specified no transfer fields, use implicit 
+    //  transfer field list, ELSE check for missing tran fields
+    //  among those they specified
+    if (nTran==0) {
       tranField.reference(implTranField);
+      logSink() << LogIO::NORMAL
+		<< " Assuming all non-reference fields are transfer fields."
+		<< LogIO::POST;
     } else {
       if ( !(nTran==nImplTran &&
              allEQ(tranField,implTranField)) ) {
