@@ -719,10 +719,13 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
   Matrix<Double> validDomain(nAnt(), 2);
   validDomain.column(0) = loFreq;
   validDomain.column(1) = hiFreq;
+  // TBD: 
+  //  Double edgefreq(maskedge_p*(hiFreq-loFreq));
+  //  validDomain.column(0) = loFreq + edgefreq;
+  //  validDomain.column(1) = hiFreq - edgefreq;
   
   // Normalize the output calibration solutions if required
   Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
-
 
   if (bpnorm_p) {
     os << LogIO::NORMAL 
@@ -977,7 +980,7 @@ void BJonesPoly::load (const String& applyTable)
   for (Int ispw=0; ispw<nSpw(); ispw++) {
     currSpw()=ispw;
     currCPar().resize(nPar(),nChanPar(),nAnt());
-    currCPar()=Complex(0.0);
+    currCPar()=Complex(1.0);
     currParOK().resize(nChanPar(),nAnt());
     currParOK()=False;
     invalidateP();
@@ -1064,13 +1067,12 @@ void BJonesPoly::load (const String& applyTable)
 	    if (freq(chan) >=x1 && freq(chan)<= x2) {
 	      ampval = getChebVal(ac, x1, x2, freq(chan));
 	      phaseval = getChebVal(pc, x1, x2, freq(chan));
+	      currCPar()(ipos) = factor *
+		Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
+	      // Set flag for valid cache value 
+	      currParOK()(iposOK) = True;
 	    }
-	    currCPar()(ipos) = factor *
-	      Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
-	    // Set flag for valid cache value 
-	    currParOK()(iposOK) = True;
-	  }
-
+	  }	   
 	}
 	else 
 	  currCPar()(ipos) = Complex(1.0);

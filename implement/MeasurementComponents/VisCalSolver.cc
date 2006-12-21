@@ -103,100 +103,106 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   // Initialize everything 
   initSolve();
 
-  // CHECK DATA FOR SOLVABILITY (sumwt>0, etc.)
-  //  TBD
+  // Verify VisBuffer validity for solving
+  //   (this sets parOK() on per-antenna basis (for focusChan)
+  //    based on data weights and baseline participation)
+  Bool oktosolve = svc_->verifyForSolve(*svb_);
 
-
-  if (prtlev()>1) cout << "First guess:" << endl
-		       << "amp = " << amplitude(par()) << endl
-		       << "pha = " << phase(par()) 
-		       << endl;
-
-  // Iterate solution
-  Int iter(0);
-  Bool done(False);
-  while (!done) {
-
-    if (prtlev()>2) cout << " Beginning iteration " << iter 
-			 << "---------------------------------" << endl;
-
-    // Differentiate the VB and get current Chi2
-    differentiate();
-    chiSquare();
-    dChiSq() = chiSq()-lastChiSq();
-
-    // Continuue if we haven't converged
-    if (!converged()) {
+  if (oktosolve) {
+    
+    if (prtlev()>1) cout << "First guess:" << endl
+			 << "amp = " << amplitude(par()) << endl
+			 << "pha = " << phase(par()) 
+			 << endl;
+    
+    // Iterate solution
+    Int iter(0);
+    Bool done(False);
+    while (!done) {
       
-      if (dChiSq()<0.0) {
-	// last step was good...
-	lastChiSq()=chiSq();
-
-	// so accumulate new grad/hess...
-	accGradHess();
-
-	//...and adjust lambda downward
-	//	lambda()/=2.0;
-	//	lambda()=0.8;
-	lambda()=1.0;
+      if (prtlev()>2) cout << " Beginning iteration " << iter 
+			   << "---------------------------------" << endl;
+      
+      // Differentiate the VB and get current Chi2
+      differentiate();
+      chiSquare();
+      dChiSq() = chiSq()-lastChiSq();
+      
+      // Continuue if we haven't converged
+      if (!converged()) {
+	
+	if (dChiSq()<0.0) {
+	  // last step was good...
+	  lastChiSq()=chiSq();
+	  
+	  // so accumulate new grad/hess...
+	  accGradHess();
+	  
+	  //...and adjust lambda downward
+	  //	lambda()/=2.0;
+	  //	lambda()=0.8;
+	  lambda()=1.0;
+	}
+	else {
+	  // last step was bad, revert to previous 
+	  revert();
+	  //...with a larger lambda
+	  //	lambda()*=4.0;
+	  lambda()=1.0;
+	}
+	
+	// Solve for the parameter step
+	solveGradHess();
+	
+	// Remember curr pars
+	lastPar()=par();
+	
+	// Refine the step size by exploring chi2 in the
+	//  gradient direction
+	if (optstep_) //  && cvrgcount_>=3)
+	  optStepSize();
+	
+	// Update current parameters (saves a copy of them)
+	updatePar();
+	
       }
       else {
-	// last step was bad, revert to previous 
-	revert();
-	//...with a larger lambda
-	//	lambda()*=4.0;
-	lambda()=1.0;
+	// Convergence means we're done!
+	done=True;
+	
+	// Accumulate final hessian for error estimation
+	//	accGradHess();
+	
+	//	cout << "hess() = " << hess() << endl;
+
+	if (prtlev()>0) {
+	  cout << "Iterations =" << iter << endl;
+	  //	cout << "par()=" << par() << endl;
+	}
+	
+	// Return, signaling success
+	return True;
+	
       }
       
-      // Solve for the parameter step
-      solveGradHess();
-
-      // Remember curr pars
-      lastPar()=par();
-
-      // Refine the step size by exploring chi2 in the
-      //  gradient direction
-      if (optstep_) //  && cvrgcount_>=3)
-	optStepSize();
-
-      // Update current parameters (saves a copy of them)
-      updatePar();
-      
-    }
-    else {
-      // Convergence means we're done!
-      done=True;
-
-      // Accumulate final hessian for error estimation
-      //accGradHess();
-
-      if (prtlev()>0) {
-	cout << "Iterations =" << iter << endl;
-	//	cout << "par()=" << par() << endl;
+      // Escape iteration loop via iteration limit
+      if (iter==maxIter()) {
+	cout << "Reached iteration limit: " << iter << " iterations." << endl;
+	done=True;
       }
-
-      // Return, signaling success
-      return True;
-
+      
+      // Advance iteration counter
+      iter++;
     }
-
-    // Escape iteration loop via iteration limit
-    if (iter==maxIter()) {
-      cout << "Reached iteration limit: " << iter << " iterations." << endl;
-      done=True;
-    }
-
-    // Advance iteration counter
-    iter++;
+    
   }
-
-  // If we get here, something failed
+  
   return False;
-
-}
-
-void VisCalSolver::initSolve() {
-
+    
+  }
+  
+  void VisCalSolver::initSolve() {
+    
   if (prtlev()>2) cout << " VCS::initSolve()" << endl;
 
   // Get total number of parameters from svc info

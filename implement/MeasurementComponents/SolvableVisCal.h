@@ -142,6 +142,9 @@ public:
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
 
+  // Verify VisBuffer data sufficient for solving (wts, etc.)
+  virtual Bool verifyForSolve(VisBuffer& vb);
+  
   // Self-solving mechanism
   virtual void selfSolve(VisSet& vs, VisEquation& ve);
 

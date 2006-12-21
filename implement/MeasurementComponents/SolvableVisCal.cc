@@ -598,6 +598,51 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
 }
 
+// Verify VisBuffer data sufficient for solving (wts, etc.)
+Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
+
+  // We will count baselines and weights per ant
+  //   and set solveParOK accordingly
+  Vector<Int> blperant(nAnt(),0);
+  Vector<Double> wtperant(nAnt(),0.0);
+
+  // TBD: optimize indexing with pointers in the following
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    Int a1=vb.antenna1()(irow);
+    Int a2=vb.antenna2()(irow);
+    if (!vb.flagRow()(irow) && a1!=a2) {
+
+      if (!vb.flag()(focusChan(),irow)) {
+	
+	blperant(a1)+=1;
+	blperant(a2)+=1;
+	
+	wtperant(a1)+=Double(sum(vb.weightMat().column(irow)));
+	wtperant(a2)+=Double(sum(vb.weightMat().column(irow)));
+	
+      }
+    }
+  }
+
+  //  cout << "blperant = " << blperant << endl;
+  //  cout << "wtperant = " << wtperant << endl;
+
+  Int nAntForSolve(0);
+  solveParOK() = False;
+  for (Int iant=0;iant<nAnt();++iant) {
+    if (blperant(iant)>3 &&
+	wtperant(iant)>0.0) {
+      nAntForSolve+=1;
+      solveParOK().column(iant) = True;
+    }
+  }
+
+  //  cout << "solveParOK() = " << solveParOK() << endl;
+
+  return (nAntForSolve>3);
+
+}
+
 void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
 
   if (standardSolve())
@@ -708,7 +753,7 @@ void SolvableVisCal::keep(const Int& slot) {
     // An available valid slot
 
    
-    //    cout << "Result: solvePar() = " << solvePar() << endl;
+    //    cout << "Result: solvePar() = " << abs(solvePar()) << endl;
 
     //    cout << "   Amp: " << amplitude(solvePar()) << endl;
     //    cout << " Phase: " << phase(solvePar()/solvePar()(0,0,0))*180.0/C::pi << endl;
@@ -1787,6 +1832,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     // normalize mgn
     for (Int iFld=0; iFld<nFld; iFld++) {
 
+      //      cout << "iFld = " << iFld << " " << ANTOK[iFld]->column(0) << endl;
+
       // Have data for this field?
       if (ANTOK[iFld]!=NULL) {
 
@@ -1867,6 +1914,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
           Double sfrat2=0.0;
           Int sfrn=0;
 
+	  Int nAntUsed(0);
           for (Int iAnt=0; iAnt<nElem(); iAnt++) {
 
             // this ant OK for this tran field?
@@ -1900,6 +1948,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
               // If ref field accumulation ok for this ant, accumulate
               if (refOK) {
+		nAntUsed+=1;
                 sftran   += (mgnwtT(iAnt,iSpw)*mgnormT(iAnt,iSpw));
                 sftranwt += mgnwtT(iAnt,iSpw);
                 if (mgnvarT(iAnt,iSpw)>0.0) {
@@ -1964,14 +2013,14 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
           */
             // Report flux densities:
 	    logSink() << " Flux density for " << fldNames(tranidx)
-		      << " in SpW=" << iSpw+1;
+		      << " in SpW=" << iSpw;
             if (refSpw!=iSpw) 
-	      logSink() << " (ref SpW=" << refSpw+1 << ")";
+	      logSink() << " (ref SpW=" << refSpw << ")";
 
 	    logSink() << " is: " << fluxScaleFactor(iSpw,tranidx)
 		      << " +/- " << fluxScaleError(iSpw,tranidx)
 		      << " (SNR = " << fluxScaleFactor(iSpw,tranidx)/fluxScaleError(iSpw,tranidx)
-		      << ")"
+		      << ", nAnt= " << nAntUsed << ")"
 		      << LogIO::POST;
 
             // form scale factor from mean ratio
