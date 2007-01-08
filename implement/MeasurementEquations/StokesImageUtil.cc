@@ -422,10 +422,18 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
     
     px=psfposmax(0);
     py=psfposmax(1);
+    
+
+
     bamp=lpsf(px,py);
 
     ++psfli;
     --nchan;
+  }
+
+  //check if peak is outside inner quarter
+  if(px < nx/4.0 || px > 3.0*nx/4.0 || py < ny/4.0 || py > 3.0*ny/4.0) {
+    throw(AipsError("Peak of psf is outside the inner quarter of defined image"));
   }
 
   LogIO os(LogOrigin("StokesImageUtil", "FitGaussianPSF()",WHERE));

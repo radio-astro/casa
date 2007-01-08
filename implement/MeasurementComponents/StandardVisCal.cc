@@ -231,6 +231,7 @@ void TJones::guessPar(VisBuffer& vb) {
   solvePar()*=Complex(ampave);
   //  solvePar()/=Complex(ampave);
   solvePar()(0,0,guessant) = Complex(ampave);
+  solvePar()(LogicalArray(amplitude(solvePar())==0.0f)) = Complex(ampave);
   solveParOK()=True;
 
   //  solvePar()*=Complex(0.9);
@@ -374,6 +375,7 @@ void GJones::guessPar(VisBuffer& vb) {
     //  solvePar()*=Complex(ampave);
     solvePar()/=Complex(ampave);
     solvePar()(0,0,guessant)=solvePar()(1,0,guessant)=Complex(ampave);
+    solvePar()(LogicalArray(amplitude(solvePar())==0.0f)) = Complex(ampave);
   }
   else
     solvePar()=Complex(0.3);
@@ -384,8 +386,8 @@ void GJones::guessPar(VisBuffer& vb) {
   if (nDataCorr == 1)
     solvePar()(IPosition(3,1,0,0),IPosition(3,1,0,nAnt()-1))=Complex(0.0);
 
-  //  cout << "post-guess:" << endl;
-  //  cout << "solvePar()   = " << solvePar() << endl;
+  //  cout << "Guess:" << endl;
+  //  cout << "amplitude(solvePar())   = " << amplitude(solvePar()) << endl;
   //  cout << "phases       = " << phase(solvePar())*180.0/C::pi << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
 

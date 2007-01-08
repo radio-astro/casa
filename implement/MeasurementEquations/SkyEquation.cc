@@ -162,7 +162,6 @@ void SkyEquation::predict(Bool incremental) {
   VisIter& vi=vs_->iter();
   checkVisIterNumRows(vi);
   VisBuffer vb(vi);
-  
 
   // Reset the visibilities only if this is not an incremental
   // change to the model
@@ -729,11 +728,18 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   LatticeExprNode maxPSF=max(psf);
   Float maxpsf=maxPSF.getFloat();
   if(abs(maxpsf-1.0) > 1e-3) {
-    os << "Maximum of approximate PSF for field " << model+1 << " = "
+    os << "Maximum of approximate PSF for field " << model << " = "
        << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
   }
-  LatticeExpr<Float> len(psf/maxpsf);
-  psf.copyData(len);
+  if(maxpsf > 0.0 ){
+    LatticeExpr<Float> len(psf/maxpsf);
+    psf.copyData(len);
+ 
+  }
+  else{
+     throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF lesser than 0 !"));
+
+  }
  
 
   isPSFWork_p=False; // resseting this flag so that subsequent calculation uses

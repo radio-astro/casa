@@ -103,6 +103,8 @@ class RecordInterface;
 //    wsrtPB.applyPB(in, out, pointingDir, parallacticAngle, BeamSquint::GOFIGURE, 
 //                   True, 0.02); // divide by primary beam
 //    wsrtPB.applyVP(in, out, pointingDir);   // multiply by voltage pattern
+// </srcblock>
+// </example>
 // 
 // </synopsis> 
 //

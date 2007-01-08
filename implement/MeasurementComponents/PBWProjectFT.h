@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //   <li> <linkto class=FTMachine>FTMachine</linkto> module
   //   <li> <linkto class=SkyEquation>SkyEquation</linkto> module
   //   <li> <linkto class=VisBuffer>VisBuffer</linkto> module
-  //   <li> <linto class=EPJones>EPJones</linkto> module
+  //   <li> <linkto class=EPJones>EPJones</linkto> module
   // </prerequisite>
   //
   // <etymology> 

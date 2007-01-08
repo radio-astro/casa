@@ -601,50 +601,88 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 // Verify VisBuffer data sufficient for solving (wts, etc.)
 Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
 
+  //  cout << "verifyForSolve..." << endl;
+
+  Int nAntForSolveFinal(-1);
+  Int nAntForSolve(0);
+
   // We will count baselines and weights per ant
   //   and set solveParOK accordingly
   Vector<Int> blperant(nAnt(),0);
   Vector<Double> wtperant(nAnt(),0.0);
+  Vector<Bool> antOK(nAnt(),False);
+    
 
-  // TBD: optimize indexing with pointers in the following
-  for (Int irow=0;irow<vb.nRow();++irow) {
-    Int a1=vb.antenna1()(irow);
-    Int a2=vb.antenna2()(irow);
-    if (!vb.flagRow()(irow) && a1!=a2) {
+  while (nAntForSolve!=nAntForSolveFinal) {
 
-      if (!vb.flag()(focusChan(),irow)) {
+    nAntForSolveFinal=nAntForSolve;
+    nAntForSolve=0;
+
+
+    // TBD: optimize indexing with pointers in the following
+    blperant=0;
+    wtperant=0.0;
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      Int a1=vb.antenna1()(irow);
+      Int a2=vb.antenna2()(irow);
+      if (!vb.flagRow()(irow) && a1!=a2) {
 	
-	blperant(a1)+=1;
-	blperant(a2)+=1;
-	
-	wtperant(a1)+=Double(sum(vb.weightMat().column(irow)));
-	wtperant(a2)+=Double(sum(vb.weightMat().column(irow)));
-	
+	if (!vb.flag()(focusChan(),irow)) {
+	  
+	  blperant(a1)+=1;
+	  blperant(a2)+=1;
+	  
+	  wtperant(a1)+=Double(sum(vb.weightMat().column(irow)));
+	  wtperant(a2)+=Double(sum(vb.weightMat().column(irow)));
+	  
+	}
       }
     }
-  }
-
-  //  cout << "blperant = " << blperant << endl;
-  //  cout << "wtperant = " << wtperant << endl;
-
-  Int nAntForSolve(0);
-  solveParOK() = False;
-  for (Int iant=0;iant<nAnt();++iant) {
-    if (blperant(iant)>3 &&
-	wtperant(iant)>0.0) {
-      nAntForSolve+=1;
-      solveParOK().column(iant) = True;
+    
+    antOK=False;
+    for (Int iant=0;iant<nAnt();++iant) {
+      if (blperant(iant)>3 &&
+	  wtperant(iant)>0.0) {
+	// This antenna is good, keep it
+	nAntForSolve+=1;
+	antOK(iant)=True;
+      }
+      else {
+	// This antenna under-represented; flag it
+	vb.flagRow()(vb.antenna1()==iant)=True;
+	vb.flagRow()(vb.antenna2()==iant)=True;
+      }
     }
+
+    //    cout << "blperant     = " << blperant << endl;
+    //  cout << "wtperant = " << wtperant << endl;
+    //    cout << "nAntForSolve = " << nAntForSolve << " " << antOK << endl;
+
   }
 
+  // We've converged on the correct good antenna count
+  nAntForSolveFinal=nAntForSolve;
+
+  // Set a priori solution flags  
+  solveParOK() = False;
+  for (Int iant=0;iant<nAnt();++iant)
+    if (antOK(iant))
+      // This ant ok
+      solveParOK().column(iant) = True;
+    else
+      // This ant not ok, set soln to zero
+      solvePar().xyPlane(iant)=0.0;
+
+  //  cout << "antOK = " << antOK << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
+  //  cout << "amp(solvePar()) = " << amplitude(solvePar()) << endl;
 
   return (nAntForSolve>3);
-
+    
 }
 
 void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
-
+    
   if (standardSolve())
     throw(AipsError("Spurious call to selfSolve()."));
   else

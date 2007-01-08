@@ -70,16 +70,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   // FTMachines uses pre-computed convolution functions for gridding
   // (FTMachine::put()) and prediction (FTMachine::get()).  For
-  // <linkto class=PBWProjectFT>PBWProjectFT<\linkto>, the convolution
+  // <linkto class=PBWProjectFT>PBWProjectFT</linkto>, the convolution
   // function computation is expensive.  Once computed, it is
   // efficient to cache these functions as a function of Parallactic
   // Angle and the value of the w-term (if significant). 
   //
   // ConvFuncDiskCache class provides interface to the disk cache and
-  // is used in <linkto class=PBWProjectFT>PBWProjectFT<\linkto> to
+  // is used in <linkto class=PBWProjectFT>PBWProjectFT</linkto> to
   // search and load convolution functions from the disk.  If a new
   // convolution function is computed in <linkto
-  // class=PBWProjectFT>PBWProjectFT<\linkto>, the disk cache is
+  // class=PBWProjectFT>PBWProjectFT</linkto>, the disk cache is
   // updated using the services of this class as well.
   //
   // </synopsis> 
