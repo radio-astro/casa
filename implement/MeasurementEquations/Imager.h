@@ -282,6 +282,11 @@ class Imager
   Bool boxmask(const String& mask, const Vector<Int>& blc,
 	       const Vector<Int>& trc, const Float value);
 
+  //Make a region either from record or array of blc trc 
+  //(Matrix(nboxes,4)) into a mask image
+  //value is the value of the mask pixels
+  Bool regionmask(const String& maskimage, Record* imageRegRec, 
+		  Matrix<Quantity>& blctrcs, const Float& value=1.0);
   // Clip on Stokes I
   Bool clipimage(const String& image, const Quantity& threshold);
 

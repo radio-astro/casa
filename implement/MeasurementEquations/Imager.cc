@@ -120,15 +120,18 @@
 #include <synthesis/DataSampling/PixonProcessor.h>
 
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
 #include <lattices/Lattices/LatticeExpr.h> 
 #include <lattices/Lattices/LCBox.h> 
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/ImageRegrid.h>
+#include <images/Images/ImageRegion.h>
+#include <images/Images/RegionManager.h>
+#include <images/Images/WCBox.h>
+#include <images/Images/WCUnion.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
-
-
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
@@ -2364,8 +2367,8 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
     IPosition iinc(iblc.nelements(), 1);
     LCBox::verify(iblc, itrc, iinc, maskImage.shape());
     
-    os << "Setting '" << mask << "' blc=" << iblc+1 <<
-      " trc=" << itrc+1 << " to " << value << LogIO::POST;
+    os << "Setting '" << mask << "' blc=" << iblc <<
+      " trc=" << itrc << " to " << value << LogIO::POST;
     
     StokesImageUtil::BoxMask(maskImage, iblc, itrc, value);
     
@@ -2381,6 +2384,75 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
   } 
   return True;
 }
+
+Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
+
+  //This function does not modify ms(s) so no need of lock 
+  LogIO os(LogOrigin("imager", "regionmask()", WHERE));
+  if(!Table::isWritable(maskimage)) {
+    make(maskimage);
+  }
+  PagedImage<Float> maskImage(maskimage);
+  CoordinateSystem cSys=maskImage.coordinates();
+  maskImage.table().markForDelete();
+  ImageRegion *boxregions=0;
+  RegionManager regMan;
+  regMan.setcoordsys(cSys);
+  Vector<Quantum<Double> > blc(2);
+  Vector<Quantum<Double> > trc(2);
+  if(blctrcs.nelements() !=0){
+    if(blctrcs.shape()(1) != 4)
+      throw(AipsError("Need a list of 4 elements to define a box"));
+    Int nrow=blctrcs.shape()(0);
+    Vector<Int> absRel(2, RegionType::Abs); 
+    PtrBlock<const WCRegion *> lesbox(nrow);
+    for (Int k=0; k < nrow; ++k){
+      blc(0) = blctrcs(k,0);
+      blc(1) = blctrcs(k,1);
+      trc(0) = blctrcs(k,2);
+      trc(1) = blctrcs(k,3); 
+      lesbox[k]= new WCBox (blc, trc, cSys, absRel);
+    }
+    boxregions=regMan.doUnion(lesbox);
+    for (Int k=0; k < nrow; ++k){
+      delete lesbox[k];
+    }
+  }
+  ImageRegion* recordRegion=0;
+  if(imageRegRec !=0){
+    TableRecord rec1;
+    rec1.assign(*imageRegRec);
+    recordRegion=ImageRegion::fromRecord(rec1,"");    
+  }
+  ImageRegion *unionReg;
+  if(boxregions!=0 && recordRegion!=0){
+    unionReg=regMan.doUnion(*boxregions, *recordRegion);
+    delete boxregions;
+    delete recordRegion;
+  }
+  else if(boxregions !=0){
+    unionReg=boxregions;
+  }
+  else if(recordRegion !=0){
+    unionReg=recordRegion;
+  }
+  else{
+    throw(AipsError("No valid regions found"));
+
+  }
+
+ 
+  SubImage<Float> partToMask(maskImage, *unionReg, True);
+  LatticeRegion latReg=unionReg->toLatticeRegion(cSys, maskImage.shape());
+  ArrayLattice<Bool> pixmask(latReg.get());
+  LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
+  partToMask.copyData(myexpr);
+
+  maskImage.table().unmarkForDelete();
+  return True;
+
+}
+
 
 Bool Imager::clipimage(const String& image, const Quantity& threshold)
 {
@@ -2740,7 +2812,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	    uInt nmessages = msHis.time().nrow();
 	    for (uInt i=0; i < nmessages; ++i) {
 	      oos << frmtTime(((msHis.time()).getColumn())(i))
-		  << "|" << ((msHis.origin()).getColumn())(i);
+		  << "  HISTORY " << ((msHis.origin()).getColumn())(i);
 	      try {
 		oos << " " << (msHis.cliCommand())(i) << " ";
 	      } catch ( AipsError x ) {
@@ -4466,7 +4538,7 @@ Bool Imager::clean(const String& algorithm,
 	  Vector<Double> time = ((msHis.time()).getColumn());
 	  String tmp=frmtTime(time(i));
 	  oos << tmp
-	      << "|" << ((msHis.origin()).getColumn())(i);
+	      << "  HISTORY " << ((msHis.origin()).getColumn())(i);
 	  try {
 	    oos << " " << (msHis.cliCommand())(i) << " ";
 	  } catch ( AipsError x ) {
@@ -4725,7 +4797,7 @@ Bool Imager::mem(const String& algorithm,
 	uInt nmessages = msHis.time().nrow();
 	for (uInt i=0; i < nmessages; ++i) {
 	  oos << frmtTime(((msHis.time()).getColumn())(i))
-	      << "|" << ((msHis.origin()).getColumn())(i);
+	      << "  HISTORY " << ((msHis.origin()).getColumn())(i);
 	  try {
 	    oos << " " << (msHis.cliCommand())(i) << " ";
 	  } catch ( AipsError x ) {
@@ -7476,7 +7548,7 @@ void Imager::makeVisSet(MeasurementSet& ms,
 
 void Imager::writeHistory(LogIO& os){
 
-  LogIO oslocal(LogOrigin("Imager", "writeHistory", WHERE));
+  LogIO oslocal(LogOrigin("Imager", "writeHistory"));
   try{
 
     os.postLocally();
@@ -7489,7 +7561,7 @@ void Imager::writeHistory(LogIO& os){
 
 void Imager::writeCommand(LogIO& os){
 
-  LogIO oslocal(LogOrigin("Imager", "writeHistory", WHERE));
+  LogIO oslocal(LogOrigin("Imager", "writeCommand"));
   try{
     os.postLocally();
     hist_p->cliCommand(os);
@@ -7635,7 +7707,10 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
 
 String Imager::frmtTime(const Double time) {
   MVTime mvtime(Quantity(time, "s"));
-  return mvtime.string(MVTime::DMY,6);
+  Time t=mvtime.getTime();
+  ostringstream os;
+  os << t;
+  return os.str();
 }
 
 Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
