@@ -54,6 +54,9 @@ public:
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
   enum Type{Test=0,M,K,B,G,J,D,C,P,E,T,F};
 
+  // Enumeration of parameter types (Complex, Real, or Both)
+  enum ParType{Co,Re,CoRe};
+
   VisCal(VisSet& vs);
   
   VisCal(const Int& nAnt);
@@ -67,6 +70,9 @@ public:
   // Return type name as string
   virtual String typeName()     { return "Unknown VisCal"; };
   virtual String longTypeName() { return "Unknown VisCal"; };
+
+  // Return the parameter type (nominally complex)
+  virtual ParType parType() { return VisCal::Co; };
 
   // Number of pars per ant/bln
   //    (Must be implemented in specializations!)

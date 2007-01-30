@@ -131,11 +131,12 @@ public:
 	       const Vector<Int>& startChanDat,
 	       const Vector<Int>& nSlot);
 
-  // Hazard a guess at the parameters (solvePar) given the data
+  // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb)=0;
 
   // Access to current solution parameters and matrices
-  inline virtual Cube<Complex>& solvePar()   {return (*solvePar_[currSpw()]);};
+  inline virtual Cube<Complex>& solveCPar()  {return (*solveCPar_[currSpw()]);};
+  inline virtual Cube<Float>&   solveRPar()  {return (*solveRPar_[currSpw()]);};
   inline virtual Matrix<Bool>&  solveParOK() {return (*solveParOK_[currSpw()]);};
 
   // Synchronize the meta data with a solvable VisBuffer
@@ -166,7 +167,7 @@ public:
 		      const Double& smtime);
 
   // File the current solved solution into a slot in the CalSet
-  void keep(const Int& slot);
+  virtual void keep(const Int& slot);
 
   virtual void fluxscale(const Vector<Int>& refFieldIn,
 			 const Vector<Int>& tranFieldIn,
@@ -279,8 +280,9 @@ private:
 
 
   // Current parameters
-  PtrBlock<Cube<Complex>*>    solvePar_;        // [nSpw](nPar,1,{1|nElem})
-  PtrBlock<Matrix<Bool>*>     solveParOK_;      // [nSpw](1,{1|nElm})
+  PtrBlock<Cube<Complex>*>  solveCPar_;       // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Cube<Float>*>    solveRPar_;       // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Matrix<Bool>*>   solveParOK_;      // [nSpw](1,{1|nElm})
 
   // LogIO
   LogIO logsink_p;

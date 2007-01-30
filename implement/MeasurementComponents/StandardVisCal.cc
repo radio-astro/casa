@@ -187,7 +187,7 @@ void TJones::guessPar(VisBuffer& vb) {
   Cube<Complex>& V(vb.visCube());
   Float amp(0.0),ampave(0.0);
   Int namp(0);
-  solvePar()=Complex(0.0);
+  solveCPar()=Complex(0.0);
   for (Int irow=1;irow<vb.nRow();++irow) {
 
     if (rowok(irow)) {
@@ -202,11 +202,11 @@ void TJones::guessPar(VisBuffer& vb) {
 	  amp=abs(Vi);
 	  if (amp>0.0f) {
 	    if (a1 == guessant)
-	      solvePar()(0,0,a2)+=(conj(Vi)/amp/Float(nCorr));
-	    //	      solvePar()(0,0,a2)+=(conj(Vi)/Float(nCorr));
+	      solveCPar()(0,0,a2)+=(conj(Vi)/amp/Float(nCorr));
+	    //	      solveCPar()(0,0,a2)+=(conj(Vi)/Float(nCorr));
 	    else
-	      solvePar()(0,0,a1)+=((Vi)/amp/Float(nCorr));
-	    //	      solvePar()(0,0,a1)+=((Vi)/Float(nCorr));
+	      solveCPar()(0,0,a1)+=((Vi)/amp/Float(nCorr));
+	    //	      solveCPar()(0,0,a1)+=((Vi)/Float(nCorr));
 	    
 	    ampave+=amp;
 	    namp++;
@@ -218,7 +218,7 @@ void TJones::guessPar(VisBuffer& vb) {
   } // irow
 
   //  cout << "Guess:" << endl
-  //   << "amp = " << amplitude(solvePar())
+  //   << "amp = " << amplitude(solveCPar())
   //     << endl;
  
 
@@ -228,17 +228,17 @@ void TJones::guessPar(VisBuffer& vb) {
 
   //  cout << "ampave = " << ampave << endl;
 
-  solvePar()*=Complex(ampave);
-  //  solvePar()/=Complex(ampave);
-  solvePar()(0,0,guessant) = Complex(ampave);
-  solvePar()(LogicalArray(amplitude(solvePar())==0.0f)) = Complex(ampave);
+  solveCPar()*=Complex(ampave);
+  //  solveCPar()/=Complex(ampave);
+  solveCPar()(0,0,guessant) = Complex(ampave);
+  solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
   solveParOK()=True;
 
-  //  solvePar()*=Complex(0.9);
+  //  solveCPar()*=Complex(0.9);
 
   //  cout << "Guess:" << endl
-  //       << "amp = " << amplitude(solvePar())
-  //       << "phase = " << phase(solvePar())
+  //       << "amp = " << amplitude(solveCPar())
+  //       << "phase = " << phase(solveCPar())
   //       << endl;
 
 }
@@ -338,7 +338,7 @@ void GJones::guessPar(VisBuffer& vb) {
   Cube<Complex>& V(vb.visCube());
   Float amp(0.0),ampave(0.0);
   Int namp(0);
-  solvePar()=Complex(0.0);
+  solveCPar()=Complex(0.0);
   for (Int irow=1;irow<vb.nRow();++irow) {
 
     if (rowok(irow)) {
@@ -352,12 +352,12 @@ void GJones::guessPar(VisBuffer& vb) {
 	  Complex& Vi(V(corridx(icorr),0,irow));
 	  amp=abs(Vi);
 	  if (amp>0.0f) {
-	    //	solvePar()(icorr,0,irow)=(conj(Vi)/amp);
+	    //	solveCPar()(icorr,0,irow)=(conj(Vi)/amp);
 
 	    if (a1 == guessant)
-	      solvePar()(icorr,0,a2)=conj(Vi);
+	      solveCPar()(icorr,0,a2)=conj(Vi);
 	    else
-	      solvePar()(icorr,0,a1)=(Vi);
+	      solveCPar()(icorr,0,a1)=(Vi);
 	      
 	    ampave+=amp;
 	    namp++;
@@ -372,23 +372,23 @@ void GJones::guessPar(VisBuffer& vb) {
   if (namp>0) {
     ampave/=Float(namp);
     ampave=sqrt(ampave);
-    //  solvePar()*=Complex(ampave);
-    solvePar()/=Complex(ampave);
-    solvePar()(0,0,guessant)=solvePar()(1,0,guessant)=Complex(ampave);
-    solvePar()(LogicalArray(amplitude(solvePar())==0.0f)) = Complex(ampave);
+    //  solveCPar()*=Complex(ampave);
+    solveCPar()/=Complex(ampave);
+    solveCPar()(0,0,guessant)=solveCPar()(1,0,guessant)=Complex(ampave);
+    solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
   }
   else
-    solvePar()=Complex(0.3);
+    solveCPar()=Complex(0.3);
 
   solveParOK()=True;
 
   //For scalar data, Set "other" pol soln to zero
   if (nDataCorr == 1)
-    solvePar()(IPosition(3,1,0,0),IPosition(3,1,0,nAnt()-1))=Complex(0.0);
+    solveCPar()(IPosition(3,1,0,0),IPosition(3,1,0,nAnt()-1))=Complex(0.0);
 
   //  cout << "Guess:" << endl;
-  //  cout << "amplitude(solvePar())   = " << amplitude(solvePar()) << endl;
-  //  cout << "phases       = " << phase(solvePar())*180.0/C::pi << endl;
+  //  cout << "amplitude(solveCPar())   = " << amplitude(solveCPar()) << endl;
+  //  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
 
 }
@@ -493,7 +493,7 @@ void DJones::guessPar(VisBuffer& vb) {
   if (prtlev()>4) cout << "   D::guessPar(vb)" << endl;
 
   // First guess is zero D-terms
-  solvePar()=0.0;
+  solveCPar()=0.0;
   solveParOK()=True;
 }
 
@@ -605,14 +605,14 @@ void JJones::guessPar(VisBuffer& vb) {
   Cube<Complex>& V(vb.visCube());
   Float amp(0.0),ampave(0.0);
   Int namp(0);
-  solvePar()=Complex(0.0);
+  solveCPar()=Complex(0.0);
   for (Int irow=1;irow<nAnt();++irow) {
 
     for (Int icorr=0;icorr<nCorr;icorr++) {
       Complex& Vi(V(corridx(icorr),0,irow));
       amp=abs(Vi);
       if (amp>0.0f) {
-	solvePar()(3*icorr,0,irow)=(conj(Vi)/amp);
+	solveCPar()(3*icorr,0,irow)=(conj(Vi)/amp);
 	ampave+=amp;
 	namp++;
 	cout << "          " << abs(Vi) << " " << arg(Vi)*180.0/C::pi << endl;
@@ -624,12 +624,12 @@ void JJones::guessPar(VisBuffer& vb) {
   // Scale them by the mean amplitude
   ampave/=Float(namp);
   ampave=sqrt(ampave);
-  solvePar()*=Complex(ampave);
+  solveCPar()*=Complex(ampave);
   solveParOK()=True;
 
   cout << "post-guess:" << endl;
-  cout << "solvePar()   = " << solvePar() << endl;
-  cout << "phases       = " << phase(solvePar())*180.0/C::pi << endl;
+  cout << "solveCPar()   = " << solveCPar() << endl;
+  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
   cout << "solveParOK() = " << solveParOK() << endl;
 
 }
@@ -729,15 +729,15 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
     // Extract meta data from visBuffer
     syncSolveMeta(svb,vi.fieldId());
 
-    // Fill solvePar() with 1, nominally, and flagged
-    solvePar()=Complex(1.0);
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
     solveParOK()=False;
 
     if (svb.nRow()>0) {
 
       // Insist that channel,row shapes match
       IPosition visshape(svb.visCube().shape());
-      AlwaysAssert(solvePar().shape().getLast(2)==visshape.getLast(2),AipsError);
+      AlwaysAssert(solveCPar().shape().getLast(2)==visshape.getLast(2),AipsError);
       
       // Zero flagged data
       IPosition vblc(3,0,0,0);
@@ -748,9 +748,9 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag()=0.0);
       }
       
-      // Form correct slice of solvePar() to fill
+      // Form correct slice of solveCPar() to fill
       IPosition blc(3,0,0,0);
-      IPosition trc(solvePar().shape()); trc-=1;
+      IPosition trc(solveCPar().shape()); trc-=1;
       IPosition str(3,1,1,1);
       switch (nCorr) {
       case 1: {
@@ -767,13 +767,13 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 	break;
       }
       
-      //    cout << "solvePar().shape() = " << solvePar().shape() << endl;
+      //    cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
       
-      //    cout << "solvePar()(blc,trc,str).shape() = " << solvePar()(blc,trc,str).shape() << endl;
+      //    cout << "solveCPar()(blc,trc,str).shape() = " << solveCPar()(blc,trc,str).shape() << endl;
       //    cout << "svb.visCube().shape() = " << svb.visCube().shape() << endl;
       
       // copy data to solution
-      solvePar()(blc,trc,str)   = svb.visCube();
+      solveCPar()(blc,trc,str)   = svb.visCube();
       solveParOK()(blc.getLast(2),trc.getLast(2)) = !svb.flag();
       
     }
@@ -799,10 +799,10 @@ void MMueller::keep(const Int& slot) {
     // An available valid slot
 
    
-    //    cout << "Result: solvePar() = " << solvePar() << endl;
+    //    cout << "Result: solveCPar() = " << solveCPar() << endl;
 
-    //    cout << "   Amp: " << amplitude(solvePar()) << endl;
-    //    cout << " Phase: " << phase(solvePar()/solvePar()(0,0,0))*180.0/C::pi << endl;
+    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
+    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
 
     //    cout << "Result: solveParOK() = " << solveParOK() << endl;
 
@@ -823,7 +823,7 @@ void MMueller::keep(const Int& slot) {
 
     IPosition blc4(4,0,       0,           0,        slot);
     IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
-    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solvePar();
+    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
 
     IPosition blc3(3,0,           0,        slot);
     IPosition trc3(3,nChanPar()-1,nElem()-1,slot);

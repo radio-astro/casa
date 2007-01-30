@@ -805,6 +805,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	return False;
       }
       Vector<Double> freqs;
+      if(imageStep_p==0)
+	imageStep_p=1;
       Int nsubchans=
 	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p);
       if(imageNchan_p>nsubchans) imageNchan_p=nsubchans;
@@ -6794,7 +6796,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	return False;
       }
       else {
-	if(!Table::isWritable(image(model))) {
+	if(!Table::isReadable(image(model))) {
 	  if(!assertDefinedImageParameters()) return False;
 	  make(image(model));
 	}

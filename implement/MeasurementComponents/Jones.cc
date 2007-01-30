@@ -157,8 +157,10 @@ Bool JonesDiag::invert() {
     if (abs(*ji_)>0.0)
       (*ji_)=cOne_/(*ji_);
     else {
-      zero();
-      return False;
+      //      zero();
+      //      return False;
+      // for now just use zero here
+      (*ji_)=Complex(0.0);
     }
 
   // All OK if we reach here

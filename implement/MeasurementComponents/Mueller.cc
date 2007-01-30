@@ -129,8 +129,10 @@ Bool MuellerDiag::invert() {
     if (abs(*mi_)>0.0)
       (*mi_) = cOne_/(*mi_);
     else {
-      zero();
-      return False;
+      //      zero();
+      //      return False;
+      // for now just use zero
+      (*mi_)=Complex(0.0);
     }
 
   // All ok if we reach here

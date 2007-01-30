@@ -138,9 +138,22 @@ void VisCal::setApply() {
   // Establish non-trivial paramter arrays
   for (Int ispw=0;ispw<nSpw();ispw++) {
     currSpw()=ispw;
-    currCPar().resize(nPar(),nChanPar(),nElem());
+
+    switch (parType()) {
+    case VisCal::Co: {
+      currCPar().resize(nPar(),nChanPar(),nElem());
+      currCPar()=Complex(1.0);
+      break;
+    } 
+    case VisCal::Re: {
+      currRPar().resize(nPar(),nChanPar(),nElem());
+      currRPar()=1.0;
+      break;
+    }
+    default:
+      throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
+    }
     currParOK().resize(nChanPar(),nElem());
-    currCPar()=Complex(1.0);
     currParOK()=True;
   }
 
@@ -263,6 +276,8 @@ void VisCal::state() {
   cout << "  PValid() = " << PValid() << endl;
   cout << "  currCPar().shape() = " << currCPar().shape()
        << " (" << currCPar().data() << ")" << endl;
+  cout << "  currRPar().shape() = " << currRPar().shape()
+       << " (" << currRPar().data() << ")" << endl;
   cout << "  currParOK().shape() = " << currParOK().shape()
        << " (" << currParOK().data() << ") "
        << " (ntrue=" << ntrue(currParOK()) << ")" << endl;
@@ -479,14 +494,22 @@ void VisCal::calcPar() {
   if (prtlev()>6) cout << "      VC::calcPar()" << endl;
 
   // Ensure we have some parameters
-  if (currCPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
-      currParOK().shape()!=IPosition(2,nChanPar(),nElem()) ) {
+  if (parType()==VisCal::Co && (currCPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
+				currParOK().shape()!=IPosition(2,nChanPar(),nElem())) ) {
     cout << "currCPar()   = " << currCPar() << endl;
     cout << "currParOK() = " << currParOK() << endl;
-    throw(AipsError("No parameters available!"));
+    throw(AipsError("No (complex) parameters available!"));
   }
+  else if (parType()==VisCal::Re && (currRPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
+				     currParOK().shape()!=IPosition(2,nChanPar(),nElem())) ) {
+    cout << "currRPar()   = " << currRPar() << endl;
+    cout << "currParOK() = " << currParOK() << endl;
+    throw(AipsError("No (real) parameters available!"));
+  }
+  else if (parType()==VisCal::CoRe)
+    throw(AipsError("We can't handle combined Real and Complex parameters yet."));
   else
-    // Parameters are available, so signal validation
+    // Parameters appear to be available, so signal validation
     validateP();
   
   // Force subsequent matrix calculation
@@ -1195,17 +1218,6 @@ void VisJones::calcOneJones(Vector<Complex>& mat, const Vector<Complex>& par ) {
 void VisJones::invJones() {
 
   if (prtlev()>6) cout << "       VJ::invJones()" << endl;
-
-  // TBD: handle this better! (e.g., in solve?)
-  // Handle missing pol issues
-  if (trivialJonesElem() && V().type()==1 && nPar()>1) {
-    //    cout << "Handling zeros." << trivialJonesElem() << " "
-    //	 << V().type() << " " << nPar() << endl;
-    currJElem()(amplitude(currJElem())==0.0f)=Complex(1.0);
-  }
-  //  else 
-  //    cout << "Not handling zeros: " << trivialJonesElem() << " "
-  //	 << V().type() << " " << nPar() << endl;
 
   J1().sync(currJElem()(0,0,0));
   Bool *jeOk = &currJElemOK()(0,0);

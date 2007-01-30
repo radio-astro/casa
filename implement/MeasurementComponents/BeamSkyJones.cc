@@ -208,7 +208,7 @@ Bool BeamSkyJones::directionsCloseEnough(const MDirection &dir1,
       sep=dir1.getValue().separation(MDirection::Convert(dir2.getRef(),
               dir1.getRef())(dir2).getValue());
   else sep=dir1.getValue().separation(dir2.getValue());
-  return sep<skyPositionThreshold_p;
+  return (fabs(sep-skyPositionThreshold_p) < Double(1.0e-10));
 }
 
 // Does this BeamSkyJones change during this buffer, starting from
@@ -280,6 +280,7 @@ void BeamSkyJones::update(const VisBuffer& vb, Int row)
       !directionsCloseEnough(pointingDirection1_p,pointingDirection2_p)) {
         // the case is inhomogeneous: pointing directions are slightly
 	// different at different antennae
+
 	LogIO os;
 	os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
 	   << "The pointing directions differ for different stations."
@@ -303,17 +304,17 @@ void BeamSkyJones::update(const VisBuffer& vb, Int row)
   Float feed2_pa=vb.feed2_pa()[row];  
 
   if (lastUpdateIndex1_p == lastUpdateIndex2_p &&
-      abs(feed1_pa-feed2_pa)>parallacticAngleIncrement_p) {
-         // the array is not compact: position angles are significantly
-	 // different at different antennae
-	 LogIO os;
-	 os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
-	    << "The array is not compact, position angles differ for different stations."
-	    << LogIO::POST << LogIO::WARN << LogOrigin("BeamSkyJones","update")
-	    << "Primary beams are not correctly handled if they are asymmetric. Continuing anyway."<<LogIO::POST;
-	 // we could, in principle, clone a PBMath object for one of the
-	 // antennae and rebuild lastParallacticAngles_p.
-	 // For now, the value for the second antenna will be used
+      abs(abs(feed1_pa-feed2_pa)-parallacticAngleIncrement_p)> 1e-5 ) {
+      // the array is not compact: position angles are significantly
+      // different at different antennae
+      LogIO os;
+    os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
+       << "The array is not compact, position angles differ for different stations."
+       << LogIO::POST << LogIO::WARN << LogOrigin("BeamSkyJones","update")
+       << "Primary beams are not correctly handled if they are asymmetric. Continuing anyway."<<LogIO::POST;
+    // we could, in principle, clone a PBMath object for one of the
+    // antennae and rebuild lastParallacticAngles_p.
+    // For now, the value for the second antenna will be used
       }
   if (lastUpdateIndex1_p!=-1)
       lastParallacticAngles_p[lastUpdateIndex1_p]=feed1_pa;

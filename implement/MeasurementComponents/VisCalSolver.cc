@@ -223,8 +223,8 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   //   (only if shape is correct)
   //  TBD:  Do solveParOK flag too?
 
-  if (svc().solvePar().nelements()==uInt(nTotalPar())) {
-    par().reference(svc().solvePar().reform(IPosition(1,nTotalPar())));
+  if (svc().solveCPar().nelements()==uInt(nTotalPar())) {
+    par().reference(svc().solveCPar().reform(IPosition(1,nTotalPar())));
     parOK().reference(svc().solveParOK().reform(IPosition(1,nTotalPar()/svc().nPar())));
   }
   else

@@ -69,7 +69,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   dataInterval_(0.0),
   fitWt_(0.0),
   fit_(0.0),
-  solvePar_(vs.numberSpw(),NULL),
+  solveCPar_(vs.numberSpw(),NULL),
+  solveRPar_(vs.numberSpw(),NULL),
   solveParOK_(vs.numberSpw(),NULL)
 {
 
@@ -96,7 +97,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   dataInterval_(0.0),
   fitWt_(0.0),
   fit_(0.0),
-  solvePar_(1,NULL),
+  solveCPar_(1,NULL),
+  solveRPar_(1,NULL),
   solveParOK_(1,NULL)
 {  
 
@@ -671,11 +673,13 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
       solveParOK().column(iant) = True;
     else
       // This ant not ok, set soln to zero
-      solvePar().xyPlane(iant)=0.0;
-
+      if (parType()==VisCal::Co)
+	solveCPar().xyPlane(iant)=0.0;
+      else if (parType()==VisCal::Re)
+	solveRPar().xyPlane(iant)=0.0;
   //  cout << "antOK = " << antOK << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
-  //  cout << "amp(solvePar()) = " << amplitude(solvePar()) << endl;
+  //  cout << "amp(solveCPar()) = " << amplitude(solveCPar()) << endl;
 
   return (nAntForSolve>3);
     
@@ -737,9 +741,10 @@ void SolvableVisCal::syncSolvePar() {
 
   if (prtlev()>5) cout << "      SVC::syncSolvePar()" << endl;
 
-  // In solve context, reference solvePar(), etc.
-  AlwaysAssert((solvePar().nelements()>0),AipsError);
-  currCPar().reference(solvePar());
+  // In solve context, reference solveCPar(), etc.
+  AlwaysAssert((solveCPar().nelements()>0 || solveRPar().nelements()>0),AipsError);
+  currCPar().reference(solveCPar());
+  currRPar().reference(solveRPar());
   currParOK().reference(solveParOK());
   validateP();
 
@@ -791,10 +796,10 @@ void SolvableVisCal::keep(const Int& slot) {
     // An available valid slot
 
    
-    //    cout << "Result: solvePar() = " << abs(solvePar()) << endl;
+    //    cout << "Result: solveCPar() = " << abs(solveCPar()) << endl;
 
-    //    cout << "   Amp: " << amplitude(solvePar()) << endl;
-    //    cout << " Phase: " << phase(solvePar()/solvePar()(0,0,0))*180.0/C::pi << endl;
+    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
+    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
 
     //    cout << "Result: solveParOK() = " << solveParOK() << endl;
 
@@ -815,7 +820,10 @@ void SolvableVisCal::keep(const Int& slot) {
 
     IPosition blc4(4,0,       focusChan(),0,        slot);
     IPosition trc4(4,nPar()-1,focusChan(),nElem()-1,slot);
-    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solvePar();
+    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
+
+    // TBD:  Handle solveRPar here!
+
 
     IPosition blc3(3,focusChan(),0,        slot);
     IPosition trc3(3,focusChan(),nElem()-1,slot);
@@ -880,8 +888,10 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
   cout << "  spwMap() = " << spwMap() << endl;
   cout << "  refant() = " << refant() << endl;
   
-  cout << "  solvePar().shape()   = " << solvePar().shape() 
-       << " (" << solvePar().data() << ")" << endl;
+  cout << "  solveCPar().shape()   = " << solveCPar().shape() 
+       << " (" << solveCPar().data() << ")" << endl;
+  cout << "  solveRPar().shape()   = " << solveRPar().shape() 
+       << " (" << solveRPar().data() << ")" << endl;
   cout << "  solveParOK().shape() = " << solveParOK().shape()
        << " (" << solveParOK().data() << ") "
        << " (ntrue=" << ntrue(solveParOK()) << ")" << endl;
@@ -896,7 +906,8 @@ void SolvableVisCal::initSVC() {
   if (prtlev()>2) cout << " SVC::initSVC()" << endl;
 
   for (Int ispw=0;ispw<nSpw(); ispw++) {
-    solvePar_[ispw] = new Cube<Complex>();
+    solveCPar_[ispw] = new Cube<Complex>();
+    solveRPar_[ispw] = new Cube<Float>();
     solveParOK_[ispw] = new Matrix<Bool>();
   }
 
@@ -907,10 +918,12 @@ void SolvableVisCal::deleteSVC() {
   if (prtlev()>2) cout << " SVC::deleteSVC()" << endl;
 
   for (Int ispw=0; ispw<nSpw(); ispw++) {
-    if (solvePar_[ispw])     delete solvePar_[ispw];
-    if (solveParOK_[ispw])   delete solveParOK_[ispw];
+    if (solveCPar_[ispw])  delete solveCPar_[ispw];
+    if (solveRPar_[ispw])  delete solveRPar_[ispw];
+    if (solveParOK_[ispw]) delete solveParOK_[ispw];
   }
-  solvePar_=NULL;
+  solveCPar_=NULL;
+  solveRPar_=NULL;
   solveParOK_=NULL;
 }
 
@@ -972,10 +985,12 @@ void SolvableVisMueller::initSolvePar() {
     currSpw()=ispw;
 
     // TBD: Consider per-baseline solving (3rd=1)
-    solvePar().resize(nPar(),nChanPar(),nBln());
+    solveCPar().resize(nPar(),nChanPar(),nBln());
     solveParOK().resize(nChanPar(),nBln());
+
+    // TBD: solveRPar()?
     
-    solvePar()=Complex(1.0);
+    solveCPar()=Complex(1.0);
     solveParOK()=True;
 
   }
@@ -1029,14 +1044,14 @@ void SolvableVisMueller::calcAllDiffMueller() {
   //  do  calc if OK
 
   // Sanity check on parameter channel axis
-  AlwaysAssert((solvePar().shape()(1)==1),AipsError);
+  AlwaysAssert((solveCPar().shape()(1)==1),AipsError);
 
   // Referencing arrays, per baseline
   Matrix<Complex> oneDM;       //  (nElem,nPar)
   Vector<Complex> onePar;      //  (nPar)
 
   ArrayIterator<Complex> dMiter(diffMElem(),2);
-  ArrayIterator<Complex> Piter(solvePar(),1);
+  ArrayIterator<Complex> Piter(solveCPar(),1);
   
   for (Int ibln=0; ibln<nCalMat(); ++ibln) {
 
@@ -1173,7 +1188,9 @@ void SolvableVisJones::reReference() {
 
     // Determine multiplicative complex phase
     Matrix<Complex> refgain;
-    refgain=solvePar().xyPlane(refant());
+    refgain=solveCPar().xyPlane(refant());
+
+    //    cout << "refgain add:  " << refgain.data() << " " << solveCPar().xyPlane(refant()).data() << endl;
 
     Float amp(1.0);
     Complex* rg=refgain.data();
@@ -1181,16 +1198,22 @@ void SolvableVisJones::reReference() {
     //    for (Int ich=0;ich<nChanPar();++ich) {
       for (Int ip=0;ip<nPar();++ip,++rg) {
 	amp=abs(*rg);
-	if (amp>0.0)
+	if (amp>0.0) {
 	  *rg/=amp;
-	*rg=conj(*rg);
+	  *rg=conj(*rg);
+	}
+	else
+	  *rg=Complex(1.0);
       }
       //    }
+
+      //      cout << "amp(refgain) = " << amplitude(refgain) << endl;
+
 
     // Apply complex phase to each ant
     Matrix<Complex> antgain;
     for (Int ia=0;ia<nAnt();++ia) {
-      antgain.reference(solvePar().xyPlane(ia));
+      antgain.reference(solveCPar().xyPlane(ia));
       antgain*=refgain;
     }
   }
@@ -1456,10 +1479,22 @@ void SolvableVisJones::initSolvePar() {
 
     currSpw()=ispw;
 
-    solvePar().resize(nPar(),1,nAnt());
-    solveParOK().resize(1,nAnt());
+    switch (parType()) {
+    case VisCal::Co: {
+      solveCPar().resize(nPar(),1,nAnt());
+      solveCPar()=Complex(1.0);
+      break;
+    }
+    case VisCal::Re: {
+      solveRPar().resize(nPar(),1,nAnt());
+      solveRPar()=0.0;
+      break;
+    }
+    default:
+      throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
+    }
 
-    solvePar()=Complex(1.0);
+    solveParOK().resize(1,nAnt());
     solveParOK()=True;
 
   }
