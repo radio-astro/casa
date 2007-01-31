@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImagerProxy.h,v 1.1 2007/01/29 04:18:28 mmarquar Exp $
+//# $Id: ImagerProxy.h,v 1.2 2007/01/31 02:18:09 mmarquar Exp $
 #ifndef SYNTHESIS_IMAGERPROXY_H
 #define SYNTHESIS_IMAGERPROXY_H
 
 #include <casa/aips.h>
-
+#include <casa/BasicSL/String.h>
 //# Forward declarations
 namespace casa { //# NAMESPACE CASA - BEGIN
-  class String;
+  //  class String;
   class Record;
   class Imager;
   template<class T> class Vector;
