@@ -775,7 +775,7 @@ Bool Calibrater::unsetapply(const Int& which) {
     }
     
     // Maintain size/sort of apply list
-    ve_p->setapply(vc_p);
+    if(ve_p)ve_p->setapply(vc_p);
 
     return True;
   } catch (AipsError x) {
@@ -797,7 +797,7 @@ Bool Calibrater::unsetsolve() {
     if (svc_p) delete svc_p;
     svc_p=NULL;
     
-    ve_p->setsolve(*svc_p);
+    if(ve_p && svc_p)ve_p->setsolve(*svc_p);
 
     return True;
 
