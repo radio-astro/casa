@@ -315,8 +315,10 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
   Bool found=False;
   Int trial=0;
   for (trial=convSize/2-2;trial>0;trial--) {
-    if(abs(convFunc(convSize/2,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+    //Searching down a diagonal
+    if(abs(convFunc(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
       found=True;
+      trial=Int(sqrt(2.0*Float(trial*trial)));
       break;
     }
   }
