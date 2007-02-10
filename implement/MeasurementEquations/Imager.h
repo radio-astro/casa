@@ -306,7 +306,7 @@ class Imager
 	       const Vector<String>& image);
 
   // Approximate PSF
-  Bool approximatepsf(const Vector<String>& model, const Vector<String>& psf);
+  Bool approximatepsf(const String& psf);
 
   // Smooth
   Bool smooth(const Vector<String>& model, 

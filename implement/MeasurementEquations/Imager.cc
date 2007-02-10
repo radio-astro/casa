@@ -411,11 +411,11 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress)
     // Check for DATA or FLOAT_DATA column
     if(!ms_p->tableDesc().isColumn("DATA") && 
        !ms_p->tableDesc().isColumn("FLOAT_DATA")) {
-      os << LogIO::SEVERE
-	 << "Missing DATA or FLOAT_DATA column: imager cannot be run"
-	 << LogIO::POST;
       ms_p->unlock();
       delete ms_p; ms_p=0;
+      os << LogIO::SEVERE
+	 << "Missing DATA or FLOAT_DATA column: imager cannot be run"
+	 << LogIO::EXCEPTION;
       return False;
     }
     
@@ -465,7 +465,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress)
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::POST;
+    os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::EXCEPTION;
 
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Imager::open",21);
@@ -532,7 +532,8 @@ String Imager::imageName()
     return name;
   } catch (AipsError x) {
     unlock();
-    os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::POST; return "";
+    os << LogIO::SEVERE << "Caught Exception: "<< x.getMesg() << LogIO::EXCEPTION; 
+    return "";
   } 
   return String("imagerImage");
 }
@@ -701,7 +702,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	this->unlock();
 	os << LogIO::SEVERE 
 	   << "setdata has to be in 'channel' or 'none' mode for 'mfs' imaging to work"
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
       return False;
       }
  
@@ -728,7 +729,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
 	return False;
       }
       Double restFreq=mfImageStart_p.get("Hz").getValue();
@@ -789,7 +790,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	       << LogIO::POST;
 	    os << LogIO::WARN 
 	       <<"Will be using the restFreq defined in spectralwindow "
-	       << spectralwindowids_p(0)+1 << LogIO::POST;
+	       << spectralwindowids_p(0) << LogIO::POST;
 	  }
 	  
 	}	
@@ -801,7 +802,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
 	return False;
       }
       Vector<Double> freqs;
@@ -850,7 +851,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
 	return False;
       }
       {
@@ -906,7 +907,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
 	return False;
       }
       {
@@ -950,7 +951,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     else {
       this->unlock();
       os << LogIO::SEVERE << "Unknown mode " << imageMode_p
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
       return False;
     }
         
@@ -1025,7 +1026,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   default:
     this->unlock();
     os << LogIO::SEVERE << "Illegal number of Stokes parameters: " << npol_p
-       << LogIO::POST;
+       << LogIO::EXCEPTION;
     return False;
   };
   
@@ -1074,9 +1075,9 @@ Bool Imager::summary()
     this->unlock();
     return True;
   } catch (AipsError x) {
-    los << LogIO::SEVERE << "Caught Exception: " << x.getMesg()
-	<< LogIO::POST;
     this->unlock();
+    los << LogIO::SEVERE << "Caught Exception: " << x.getMesg()
+	<< LogIO::EXCEPTION;
     return False;
   } 
   
@@ -1117,7 +1118,7 @@ String Imager::state()
       }
       else {
 	os << "  doshift is False: Image phase center will be that of field "
-	   << fieldid_p+1 << " :" << endl;
+	   << fieldid_p << " :" << endl;
       }
       
       if(shiftx_p.get().getValue()!=0.0||shifty_p.get().getValue()!=0.0) {
@@ -1141,7 +1142,7 @@ String Imager::state()
       if(imageMode_p=="MFS") {
 	os << "  Image mode is mfs: Image will be frequency synthesised from spectral windows : ";
 	for (uInt i=0;i<spectralwindowids_p.nelements();++i) {
-	  os << spectralwindowids_p(i)+1 << " ";
+	  os << spectralwindowids_p(i) << " ";
 	}
 	os << endl;
       }
@@ -1174,13 +1175,13 @@ String Imager::state()
       if(dataspectralwindowids_p.nelements()>0) {
 	os << " spectral windows : ";
 	for (uInt i=0;i<dataspectralwindowids_p.nelements();++i) {
-	  os << dataspectralwindowids_p(i)+1 << " ";
+	  os << dataspectralwindowids_p(i) << " ";
 	}
       }
       if(datafieldids_p.nelements()>0) {
 	os << "  Data selected includes fields : ";
 	for (uInt i=0;i<datafieldids_p.nelements();++i) {
-	  os << datafieldids_p(i)+1 << " ";
+	  os << datafieldids_p(i) << " ";
 	}
       }
       os << endl;
@@ -1216,9 +1217,10 @@ String Imager::state()
     
     this->unlock();
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << endl;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
+
   } 
   return String(os);
 }
@@ -1364,14 +1366,14 @@ Bool Imager::setimage(const Int nx, const Int ny,
     }
     else {
       this->unlock();
-      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
-	 << LogIO::POST;
 
       
 
 #ifdef PABLO_IO
       traceEvent(1,"Exiting Imager::setimage",25);
 #endif
+      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
+	 << LogIO::EXCEPTION;
 
       return False;
     };
@@ -1418,14 +1420,14 @@ Bool Imager::setimage(const Int nx, const Int ny,
 
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
+    
     this->unlock();
 
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Imager::setimage",25);
 #endif
-
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
 
@@ -1569,14 +1571,14 @@ Bool Imager::defineImage(const Int nx, const Int ny,
     }
     else {
       this->unlock();
-      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
-	 << LogIO::POST;
-      
+     
 
 #ifdef PABLO_IO
       traceEvent(1,"Exiting Imager::setimage",25);
 #endif
-
+      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
+	 << LogIO::EXCEPTION;
+      
       return False;
     };
 
@@ -1603,9 +1605,9 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   return True;
@@ -1812,9 +1814,9 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   
@@ -1874,7 +1876,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
   if(!ms_p) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
-       << LogIO::POST;
+       << LogIO::EXCEPTION;
     return False;
   }
 
@@ -1951,7 +1953,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	// datafieldid_p=thisSelection.getFieldIndices(*ms_p);
 	os << LogIO::SEVERE 
 	   << "Imager is not yet supporting the use of MSSelection syntax for field names" 
-	   << LogIO::POST; 
+	   << LogIO::EXCEPTION; 
 	return False;
       }
       if(datadescids_p.nelements() > 0){
@@ -2084,15 +2086,16 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     destroySkyEquation();
     if(!valid()){ 
       this->unlock();
-      os << LogIO::SEVERE << "Check your data selection or Measurement set " << LogIO::POST;
+      os << LogIO::SEVERE << "Check your data selection or Measurement set " << LogIO::EXCEPTION;
       return False;
     }
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
+   
     return False;
   } 
   return True;
@@ -2310,7 +2313,7 @@ Bool Imager::mask(const String& mask, const String& image,
     this->lock();
     if(image=="") {
       this->unlock();
-      os << LogIO::SEVERE << "Need name for template image" << LogIO::POST;
+      os << LogIO::SEVERE << "Need name for template image" << LogIO::EXCEPTION;
       return False;
     }
     String maskName(mask);
@@ -2332,9 +2335,9 @@ Bool Imager::mask(const String& mask, const String& image,
     this->lock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   this->unlock();
@@ -2353,7 +2356,7 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
     if(!assertDefinedImageParameters()) return False;
     
     if(mask=="") {
-      os << LogIO::SEVERE << "Need name for mask image" << LogIO::POST;
+      os << LogIO::SEVERE << "Need name for mask image" << LogIO::EXCEPTION;
       return False;
     }
     if(!Table::isWritable(mask)) {
@@ -2379,9 +2382,9 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   return True;
@@ -2469,7 +2472,7 @@ Bool Imager::clipimage(const String& image, const Quantity& threshold)
     
     if(image=="") {
       this->unlock();
-      os << LogIO::SEVERE << "Need name for image" << LogIO::POST;
+      os << LogIO::SEVERE << "Need name for image" << LogIO::EXCEPTION;
       return False;
     }
     PagedImage<Float> imageImage(image);
@@ -2480,9 +2483,9 @@ Bool Imager::clipimage(const String& image, const Quantity& threshold)
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   
@@ -2507,7 +2510,8 @@ Bool Imager::feather(const String& image, const String& highRes,
       if ( ! doVP_p ) {
 	this->unlock();
 	os << LogIO::SEVERE << 
-	  "Must invoke setvp() first in order to apply the primary beam" << LogIO::POST;
+	  "Must invoke setvp() first in order to apply the primary beam" 
+	   << LogIO::EXCEPTION;
 	return False;
       }
       
@@ -2522,7 +2526,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	  this->unlock();
 	  os << LogIO::SEVERE << 
 	    "High res. image and low res. image donot have same number of axes" 
-	     << LogIO::POST;
+	     << LogIO::EXCEPTION;
 	  return False;
 	  
 	}
@@ -2577,7 +2581,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	    os << LogIO::SEVERE << "No telescope imbedded in low res image" 
 	       << LogIO::POST;
 	    os << LogIO::SEVERE << "Create a PB description with the vpmanager"
-	       << LogIO::POST;
+	       << LogIO::EXCEPTION;
 	    return False;
 	  }
 	  Quantity qFreq;
@@ -2605,7 +2609,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	  if (whichPB  == PBMath::UNKNOWN) {
 	    this->unlock();
 	    os << LogIO::SEVERE << "Unknown telescope for PB type: " 
-	       << myTelescope << LogIO::POST;
+	       << myTelescope << LogIO::EXCEPTION;
 	    return False;
 	  }
 	  myPBp = new PBMath(whichPB);
@@ -2851,7 +2855,7 @@ Bool Imager::feather(const String& image, const String& highRes,
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
+       << LogIO::EXCEPTION;
     return False;
   } 
   
@@ -2886,13 +2890,13 @@ Bool Imager::pb(const String& inimage,
     if ( ! doVP_p ) {
       this->unlock();
       os << LogIO::SEVERE << 
-	"Must invoke setvp() first in order to apply the primary beam" << LogIO::POST;
+	"Must invoke setvp() first in order to apply the primary beam" << LogIO::EXCEPTION;
       return False;
     }
     
     if (pborvp == "vp") {
       this->unlock();
-      os << LogIO::SEVERE << "VP application is not yet implemented in DOimager" << LogIO::POST;
+      os << LogIO::SEVERE << "VP application is not yet implemented in DOimager" << LogIO::EXCEPTION;
       return False;
     }
 
@@ -2902,7 +2906,8 @@ Bool Imager::pb(const String& inimage,
       os << "function pb will correct for " << pborvp << LogIO::POST;
     } else {
       this->unlock();
-      os << LogIO::SEVERE << "Unknown pb operation " << operation << LogIO::POST;
+      os << LogIO::SEVERE << "Unknown pb operation " << operation 
+	 << LogIO::EXCEPTION;
       return False;
     }
     
@@ -2912,7 +2917,7 @@ Bool Imager::pb(const String& inimage,
       if(!Table::isReadable(incomps)) {
 	this->unlock();
 	os << LogIO::SEVERE << "ComponentList " << incomps
-	   << " not readable" << LogIO::POST;
+	   << " not readable" << LogIO::EXCEPTION;
 	return False;
       }
       inComps_pointer = new ComponentList(incomps);
@@ -2921,7 +2926,8 @@ Bool Imager::pb(const String& inimage,
     if (inimage !="") {
       if(!Table::isReadable(inimage)) {
 	this->unlock();
-	os << LogIO::SEVERE << "Image " << inimage << " not readable" << LogIO::POST;
+	os << LogIO::SEVERE << "Image " << inimage << " not readable" 
+	   << LogIO::EXCEPTION;
 	return False;
       }
       inImage_pointer = new PagedImage<Float>( inimage );
@@ -2940,7 +2946,7 @@ Bool Imager::pb(const String& inimage,
 	 << LogIO::POST;
       os << LogIO::SEVERE << 
 	"Either specify the PB/VP via a vptable or supply an image as well" 
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
 	return False;
     } else if (doDefaultVP_p && inImage_pointer!=0) {
       // look up the telescope in ObsInfo
@@ -2948,7 +2954,8 @@ Bool Imager::pb(const String& inimage,
       String myTelescope = oi.telescope();
       if (myTelescope == "") {
 	this->unlock();
-	os << LogIO::SEVERE << "No telescope imbedded in image" << LogIO::POST;
+	os << LogIO::SEVERE << "No telescope imbedded in image" 
+	   << LogIO::EXCEPTION;
 	return False;
       }
       {
@@ -2972,7 +2979,8 @@ Bool Imager::pb(const String& inimage,
       PBMath::whichCommonPBtoUse (myTelescope, qFreq, band, whichPB, pbName);
       if (whichPB  == PBMath::UNKNOWN) {
 	this->unlock();
-	os << LogIO::SEVERE << "Unknown telescope for PB type: " << myTelescope << LogIO::POST;
+	os << LogIO::SEVERE << "Unknown telescope for PB type: " 
+	   << myTelescope << LogIO::EXCEPTION;
 	return False;
       }
       myPBp = new PBMath(whichPB);
@@ -3011,7 +3019,7 @@ Bool Imager::pb(const String& inimage,
 	this->unlock();
 	os << LogIO::SEVERE << 
 	  "No input image was given for the componentList to get the frequency from" 
-	   << LogIO::POST;
+	   << LogIO::EXCEPTION;
 	return False;
       }
       Int ncomponents = inComps_pointer->nelements();
@@ -3033,14 +3041,14 @@ Bool Imager::pb(const String& inimage,
     if (outComps_pointer) delete outComps_pointer; 
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     if (myPBp) delete myPBp;
     if (inImage_pointer) delete inImage_pointer;
     if (outImage_pointer) delete outImage_pointer; 
     if (inComps_pointer) delete inComps_pointer; 
     if (outComps_pointer) delete outComps_pointer; 
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   }
   return True;
@@ -3338,9 +3346,9 @@ Bool Imager::weight(const String& type, const String& rmode,
       VisSetUtil::WeightRadial(*vs_p, sumwt);
     }
     else {
-      os << LogIO::SEVERE << "Unknown weighting " << type
-         << LogIO::POST;    
       this->unlock();
+      os << LogIO::SEVERE << "Unknown weighting " << type
+         << LogIO::EXCEPTION;    
       return False;
     }
     
@@ -3348,8 +3356,9 @@ Bool Imager::weight(const String& type, const String& rmode,
       os << "Sum of weights = " << sumwt << LogIO::POST;
     }
     else {
-      os << LogIO::SEVERE << "Sum of weights is not positive" << LogIO::POST;
       this->unlock();
+      os << LogIO::SEVERE << "Sum of weights is not positive" 
+	 << LogIO::EXCEPTION;
       return False;
     }
     
@@ -3360,9 +3369,9 @@ Bool Imager::weight(const String& type, const String& rmode,
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
     return False;
   } 
   
@@ -3399,7 +3408,7 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     else {
       os << LogIO::SEVERE
 	 << "Sum of weights is zero: perhaps you need to weight the data"
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
     }
     
     // Beam is no longer valid
@@ -3409,9 +3418,8 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    throw(x);
     return False;
   } 
   
@@ -3441,7 +3449,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
     else {
       os << LogIO::SEVERE << "Invalid uvmin and uvmax: "
 	 << auvmin << ", " << auvmax
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
       return False;
     }
     Vector<Double> freq;
@@ -3542,8 +3550,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
      return True;    
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
+    throw(x);
     return False;
   } 
   return True;
@@ -3572,9 +3579,8 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
     this->unlock();
     return True;
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
     this->unlock();
+    throw(x);
     return False;
   } 
   return True;
@@ -3682,7 +3688,8 @@ Bool Imager::makeimage(const String& type, const String& image,
       if ( ! doVP_p ) {
 	this->unlock();
 	os << LogIO::SEVERE << 
-	  "Must invoke setvp() first in order to make its image" << LogIO::POST;
+	  "Must invoke setvp() first in order to make its image" 
+	   << LogIO::EXCEPTION;
 	return False;
       }
       CoordinateSystem coordsys;
@@ -3709,7 +3716,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
     else {
       this->unlock();
-      os << LogIO::SEVERE << "Unknown image type " << type << LogIO::POST;
+      os << LogIO::SEVERE << "Unknown image type " << type << LogIO::EXCEPTION;
 
 #ifdef PABLO_IO
       traceEvent(1,"Exiting Imager::makeimage",22);
@@ -3814,13 +3821,11 @@ Bool Imager::makeimage(const String& type, const String& image,
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
-
+   
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Imager::makeimage",22);
 #endif
-
+    throw(x);
     return False;
   } 
   this->unlock();
@@ -3849,7 +3854,7 @@ Bool Imager::restore(const Vector<String>& model,
     if(image.nelements()>model.nelements()) {
       this->unlock();
       os << LogIO::SEVERE << "Cannot specify more output images than models"
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
       return False;
     }
     else {
@@ -3873,7 +3878,7 @@ Bool Imager::restore(const Vector<String>& model,
 	if(imageNames(thismodel)=="") {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Illegal name for output image "
-	     << imageNames(thismodel) << LogIO::POST;
+	     << imageNames(thismodel) << LogIO::EXCEPTION;
 	  return False;
 	}
 	if(!clone(model(thismodel), imageNames(thismodel))) return False;
@@ -3894,7 +3899,7 @@ Bool Imager::restore(const Vector<String>& model,
 	if(residualNames(thismodel)=="") {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Illegal name for output residual "
-	     << residualNames(thismodel) << LogIO::POST;
+	     << residualNames(thismodel) << LogIO::EXCEPTION;
 	  return False;
 	}
 	if(!clone(model(thismodel), residualNames(thismodel))) return False;
@@ -3928,8 +3933,7 @@ Bool Imager::restore(const Vector<String>& model,
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
+    throw(x);
     return False;
   } 
   this->unlock();
@@ -3966,7 +3970,7 @@ Bool Imager::residual(const Vector<String>& model,
     if(image.nelements()>theModels.nelements()) {
       this->unlock();
       os << LogIO::SEVERE << "Cannot specify more output images than models"
-	 << LogIO::POST;
+	 << LogIO::EXCEPTION;
       return False;
     }
     else {
@@ -3989,7 +3993,7 @@ Bool Imager::residual(const Vector<String>& model,
       if(imageNames(thismodel)=="") {
 	this->unlock();
 	os << LogIO::SEVERE << "Illegal name for output image "
-	   << imageNames(thismodel) << LogIO::POST;
+	   << imageNames(thismodel) << LogIO::EXCEPTION;
 	return False;
       }
       if(!clone(theModels(thismodel), imageNames(thismodel))) return False;
@@ -4007,7 +4011,7 @@ Bool Imager::residual(const Vector<String>& model,
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    throw(x);
     return False;
   } 
   this->unlock();
@@ -4015,8 +4019,7 @@ Bool Imager::residual(const Vector<String>& model,
 }
 
 // Residual
-Bool Imager::approximatepsf(const Vector<String>& model,
-			     const Vector<String>& psf)
+Bool Imager::approximatepsf(const String& psf)
 {
   
   if(!valid()) return False;
@@ -4027,56 +4030,40 @@ Bool Imager::approximatepsf(const Vector<String>& model,
     if(!assertDefinedImageParameters()) return False;
     os << "Calculating approximate PSFs using full sky equation" << LogIO::POST;
     
-    if(psf.nelements()>model.nelements()) {
+ 
+    if(psf==""){
       this->unlock();
-      os << LogIO::SEVERE << "Cannot specify more output psfs than models"
-	 << LogIO::POST;
+      os << LogIO::SEVERE << "Illegal name for output psf "
+	 << psf << LogIO::EXCEPTION;
       return False;
-    }
-    else {
-      os << "Finding PSFs for " << model.nelements()
-	 << " models" << LogIO::POST;
-    }
+    } 
+    removeTable(psf);
+    make(psf);
     
-    Vector<String> psfNames(psf);
-    if(psf.nelements()<model.nelements()) {
-      psfNames.resize(model.nelements());
-      for(Int i=Int(psf.nelements());i<Int(model.nelements());++i) {
-	psfNames(i)="";
-      }
-    }
-
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      if(psfNames(thismodel)=="")
-	psfNames(thismodel)=model(thismodel)+".psf";
-      removeTable(psfNames(thismodel));
-      if(psfNames(thismodel)=="") {
-	this->unlock();
-	os << LogIO::SEVERE << "Illegal name for output psf "
-	   << psfNames(thismodel) << LogIO::POST;
-	return False;
-      }
-      if(!clone(model(thismodel), psfNames(thismodel))) return False;
-    }
-    
+    Vector<String>onepsf(1,psf);
+    // Previous SkyEquation if they exist is not useful
+    destroySkyEquation();
     //    if (!se_p)
-      if(!createSkyEquation(model)) return False;
+    // As we are not going to make any use of a useful model and to economize 
+    // temporary image...using the psf itself as model...
+    // need to change this if you donot destroy the skyequation after you're done.
+    if(!createSkyEquation(onepsf)) return False;
     
     sm_p->makeApproxPSFs(*se_p);
+    
 
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      PagedImage<Float> psf(psfNames(thismodel));
-      psf.copyData(sm_p->PSF(thismodel));
-      Quantity mbmaj, mbmin, mbpa;
-      StokesImageUtil::FitGaussianPSF(psf, mbmaj, mbmin, mbpa);
-      LatticeExprNode sumPSF = sum(psf);
-      Float volume=sumPSF.getFloat();
-      os << "Approximate PSF for model " << thismodel+1 << ": size "
-	 << mbmaj.get("arcsec").getValue() << " by "
-	 << mbmin.get("arcsec").getValue() << " (arcsec) at pa " 
-	 << mbpa.get("deg").getValue() << " (deg)" << endl
-	 << "and volume = " << volume << " pixels " << LogIO::POST;
-    }
+    PagedImage<Float> elpsf(psf);
+    elpsf.copyData(sm_p->PSF(0));
+    Quantity mbmaj, mbmin, mbpa;
+    StokesImageUtil::FitGaussianPSF(elpsf, mbmaj, mbmin, mbpa);
+    LatticeExprNode sumPSF = sum(elpsf);
+    Float volume=sumPSF.getFloat();
+    os << "Approximate PSF  "  << ": size "
+       << mbmaj.get("arcsec").getValue() << " by "
+       << mbmin.get("arcsec").getValue() << " (arcsec) at pa " 
+       << mbpa.get("deg").getValue() << " (deg)" << endl
+       << "and volume = " << volume << " pixels " << LogIO::POST;
+    
     
     destroySkyEquation();
     
@@ -4084,7 +4071,7 @@ Bool Imager::approximatepsf(const Vector<String>& model,
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    throw(x);
     return False;
   } 
   this->unlock();
@@ -4109,7 +4096,7 @@ Bool Imager::smooth(const Vector<String>& model,
       for ( uInt thismodel=0;thismodel<model.nelements(); ++thismodel) {
 	if(model(thismodel)=="") {
 	  this->unlock();
-	  os << LogIO::SEVERE << "Need a name for model " << thismodel+1 << LogIO::POST;
+	  os << LogIO::SEVERE << "Need a name for model " << thismodel << LogIO::POST;
 	  return False;
 	}
       }
@@ -4224,7 +4211,7 @@ Bool Imager::clean(const String& algorithm,
 	if(model(thismodel)=="") {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Need a name for model "
-	     << thismodel+1 << LogIO::POST;
+	     << thismodel << LogIO::POST;
 
 #ifdef PABLO_IO
 	  traceEvent(1,"Exiting Imager::clean",21);
@@ -4639,7 +4626,7 @@ Bool Imager::mem(const String& algorithm,
 	if(model(thismodel)=="") {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Need a name for model "
-	     << thismodel+1 << LogIO::POST;
+	     << thismodel << LogIO::POST;
 	  return False;
 	}
       }
@@ -5011,7 +4998,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	}
 	else {
           os << LogIO::SEVERE << "No residual image for model "
-	     << thismodel+1 << ", cannot restore image" << LogIO::POST;
+	     << thismodel << ", cannot restore image" << LogIO::POST;
 	}
 
 	ImageInfo ii = restored.imageInfo();
@@ -5359,7 +5346,7 @@ Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
 	  os.output().width(12);
 	  os << fieldName << "  spwid=";
 	  os.output().width(3);
-	  os << (spwid+1) << "  ";
+	  os << (spwid) << "  ";
 	  os.output().width(0);
 	  os.output().precision(4);
 	  os << "[I=" << fluxUsed(0) << ", ";
@@ -6792,7 +6779,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     for (Int model=0;model<Int(nmodels_p);++model) {
       if(image(model)=="") {
 	os << LogIO::SEVERE << "Need a name for model "
-	   << model+1 << LogIO::POST;
+	   << model << LogIO::POST;
 	return False;
       }
       else {
@@ -6818,11 +6805,11 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	}
       }
       if((sm_p->add(*images_p[model], numOfXFR))!=model) {
-	os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
+	os << LogIO::SEVERE << "Error adding model " << model << LogIO::POST;
 	return False;
       }
       if(Int(fixed.nelements())>model&&fixed(model)) {
-        os << "Model " << model+1 << " will be held fixed" << LogIO::POST;
+        os << "Model " << model << " will be held fixed" << LogIO::POST;
 	sm_p->fix(model);
       }      
       fluxMasks_p[model]=0;
@@ -6830,7 +6817,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	fluxMasks_p[model]=new PagedImage<Float>(fluxMask(model));
 	AlwaysAssert(fluxMasks_p[model], AipsError);
         if(!sm_p->addFluxMask(model, *fluxMasks_p[model])) {
-	  os << LogIO::SEVERE << "Error adding flux mask " << model+1
+	  os << LogIO::SEVERE << "Error adding flux mask " << model
 	     << " : " << fluxMask(model) << LogIO::POST;
 	  return False;
 	}
@@ -7009,7 +6996,7 @@ Bool Imager::addMasksToSkyEquation(const Vector<String>& mask){
 	masks_p[model]=new PagedImage<Float>(mask(model));
 	AlwaysAssert(masks_p[model], AipsError);
         if(!sm_p->addMask(model, *masks_p[model])) {
-	  os << LogIO::SEVERE << "Error adding mask " << model+1
+	  os << LogIO::SEVERE << "Error adding mask " << model
 	     << " : " << mask(model) << LogIO::POST;
 	  return False;
 	}
@@ -7028,8 +7015,9 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
   try {
     
     if(!Table::isReadable(sdImage)){
-      os << LogIO::SEVERE << "Single Dish" << sdImage 
-	 << "  image is not readable" << LogIO::POST;
+      os  << "Single Dish " << sdImage 
+	 << "  image is not readable" << LogIO::EXCEPTION;
+      
       return False;
     }
 
@@ -7384,7 +7372,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  Int spwid=spectralwindowids(i);
 	  if(dataStart[i]<0) {
 	    os << LogIO::SEVERE << "Illegal start pixel = " 
-	       << dataStart[i] + 1 << " for spw " << spwid+1
+	       << dataStart[i] + 1 << " for spw " << spwid
 	       << LogIO::POST;
 	    return False;
 	  }
@@ -7394,14 +7382,14 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  Int end = Int(dataStart[i]) + Int(nch) * Int(dataStep[i]);
 	  if(end < 1 || end > vs.numberChan()(spwid)) {
 	    os << LogIO::SEVERE << "Illegal step pixel = " << dataStep[i]
-	       << " for spw " << spwid+1
+	       << " for spw " << spwid
 	       << LogIO::POST;
 	    return False;
 	  }
 	  os << "Selecting "<< nch
 	     << " channels, starting at visibility channel "
 	     << dataStart[i] + 1 << " stepped by "
-	     << dataStep[i] << " for spw " << spwid+1 << LogIO::POST;
+	     << dataStep[i] << " for spw " << spwid << LogIO::POST;
 	  vs.iter().selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;

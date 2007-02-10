@@ -199,9 +199,9 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   
   return False;
     
-  }
+}
   
-  void VisCalSolver::initSolve() {
+void VisCalSolver::initSolve() {
     
   if (prtlev()>2) cout << " VCS::initSolve()" << endl;
 
@@ -221,7 +221,6 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 
   // Link up svc's internal pars with local reference
   //   (only if shape is correct)
-  //  TBD:  Do solveParOK flag too?
 
   if (svc().solveCPar().nelements()==uInt(nTotalPar())) {
     par().reference(svc().solveCPar().reform(IPosition(1,nTotalPar())));
@@ -289,6 +288,8 @@ void VisCalSolver::chiSquare() {
 
   // TBD: per-ant/bln chiSq?
 
+  //  cout << "VCS::chiSquare: svc().focusChan() = " << svc().focusChan() << endl;
+
   chiSq()=0.0;
   chiSqV()=0.0;
   sumWt()=0.0;
@@ -313,7 +314,7 @@ void VisCalSolver::chiSquare() {
       // This row's wt(corr), flag(chan)
       wt = wtMat.array().data(); 
       //      wt[1]=wt[2]=0.0;
-      fl = flag.array().data(); //  TBD: + svb().focusChan();
+      fl = flag.array().data() + svc().focusChan();
       // Register R for this row, 0th channel
       for (Int ich=0;ich<nChan;++ich) {
 	if (!*fl) { 
@@ -456,6 +457,9 @@ void VisCalSolver::accGradHess() {
   Double *H1;
   Double *H2;
 
+  //  cout << "flag.array().data() = " << flag.array().data() << endl;
+  //  cout << "svc().focusChan()   = " << svc().focusChan() << endl;
+
   for (Int irow=0;irow<nRow;++irow) { 
     if (!*flR) {
       // Register grad, hess for ants in this baseline
@@ -467,7 +471,7 @@ void VisCalSolver::accGradHess() {
       H2 = hess().data() + p2;
       // This row's wt(corr), flag(chan)
       wt = wtMat.array().data(); 
-      fl = flag.array().data(); //  TBD: + svb().focusChan();
+      fl = flag.array().data() + svc().focusChan();
       for (Int ich=0;ich<nChan;++ich) {
 	if (!*fl) { 
 	  // Register R,dR for this channel, row
@@ -707,17 +711,25 @@ void VisCalSolver::optStepSize() {
   Double optfactor;
   optfactor=Double(step)*(1.5-(x2(2)-x2(1))/(x2(0)-2*x2(1)+x2(2)));
 
- /*
+
+  
+  /*
   cout << "Optimization: " 
        << step << " " 
        << optfactor << " "
-       << x2 << endl;
- */
+       << x2 << " "
+       << "(" << min(amplitude(lastPar())) << ") "
+       << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi << " ";
+  */
 
   par()=lastPar();
   
   // Adjust step by the optfactor
   dpar()*=Complex(optfactor);
+
+
+  //  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi
+  //       << endl;
 
 }
 
