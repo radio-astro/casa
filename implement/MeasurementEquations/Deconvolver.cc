@@ -193,10 +193,11 @@ Deconvolver::~Deconvolver()
     delete dirty_p;
   }
   dirty_p = 0;
-  if (pgplotter_p) {
-    delete pgplotter_p;
-  }
-  pgplotter_p = 0;
+  // The PGPLotter has to be managed from the code that call setPGPlotter it
+  //  if (pgplotter_p) {
+  //   delete pgplotter_p;
+  //  }
+  // pgplotter_p = 0;
 }
 
 Bool Deconvolver::open(const String& dirty, const String& psf)

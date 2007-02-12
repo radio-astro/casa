@@ -4542,7 +4542,7 @@ Bool Imager::clean(const String& algorithm,
   
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	PagedImage<Float> restoredImage(image(thismodel),
-					TableLock(TableLock::UserLocking));
+					TableLock(TableLock::AutoNoReadLocking));
 	LoggerHolder& log = restoredImage.logger();
 	log.append(imagelog);
 	log.flush();
@@ -4973,8 +4973,9 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
   }
 
 
-  if(nx_p*ny_p > 7000*7000){
+  if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT") ){
     // very large for convolution ...destroy Skyequations to release memory
+    // need to fix the convolution to be leaner
     destroySkyEquation();
 
   }
@@ -4995,6 +4996,13 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	if(residIm.name() != "") {
 	  LatticeExpr<Float> le(restored+(residIm)); 
 	  restored.copyData(le);
+	  //should be able to do that only on testing dofluxscale
+          // ftmachines or sm_p should tell us that
+	  if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
+	    LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < 0.1, 0.0, 
+				      (restored/(sm_p->fluxScale(thismodel)))));
+	    restored.copyData(le);
+	  }
 	}
 	else {
           os << LogIO::SEVERE << "No residual image for model "
