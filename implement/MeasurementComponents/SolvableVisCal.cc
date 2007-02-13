@@ -174,11 +174,25 @@ void SolvableVisCal::setApply(const Record& apply) {
   if (apply.isDefined("interp"))
     tInterpType()=apply.asString("interp");
 
-  // TBD: move spw to VisCal version?
+  // TBD: move spwmap to VisCal version?
+
+  indgen(spwMap());
   if (apply.isDefined("spwmap")) {
     Vector<Int> spwmap(apply.asArrayInt("spwmap"));
-    spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
+    if (allGE(spwmap,0)) {
+      // User has specified a valid spwmap
+      if (spwmap.nelements()==1)
+	spwMap()=spwmap(0);
+      else
+	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
+      // TBD: Report non-trivial spwmap to logger.
+
+      cout << "spwMap() = " << spwMap() << endl;
+    }
   }
+
+  AlwaysAssert(allGE(spwMap(),0),AipsError);
+
 
   // TBD: move interval to VisCal version?
   if (apply.isDefined("t"))
@@ -201,8 +215,10 @@ void SolvableVisCal::setApply(const Record& apply) {
   //  cout << "cs().nChan().shape()   = " << cs().nChan().shape() << endl;
   //  cout << "cs().nChan()           = " << cs().nChan() << endl;
 
-  nChanParList() = cs().nChan();
-  startChanList() = cs().startChan();
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    nChanParList()(ispw) = cs().nChan()(spwMap()(ispw));
+    startChanList()(ispw) = cs().startChan()(spwMap()(ispw));
+  }
 
   //  cout << "nChanParList().shape() = " << nChanParList().shape() << endl;
   //  cout << "nChanParList()         = " << nChanParList() << endl;

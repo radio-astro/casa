@@ -310,7 +310,7 @@ void GJones::guessPar(VisBuffer& vb) {
 
 
   // Find out which ants are available
-  Vector<Bool> antok(nAnt(),False);
+  Vector<Int> antok(nAnt(),0);
   Vector<Bool> rowok(vb.nRow(),False);
   for (Int irow=0;irow<vb.nRow();++irow) {
     // Is this row ok
@@ -318,20 +318,25 @@ void GJones::guessPar(VisBuffer& vb) {
 		  vb.antenna1()(irow)!=vb.antenna2()(irow) &&
 		  nfalse(vb.flag().column(irow))> 0 );
     if (rowok(irow)) {
-      antok(vb.antenna1()(irow))=True;
-      antok(vb.antenna2()(irow))=True;
+      antok(vb.antenna1()(irow))++;
+      antok(vb.antenna2()(irow))++;
     }
   }
 
   // Assume refant is the target ant, for starters
-  Int guessant(refant());
+  //  Int guessant(refant());
+  Int guessant(-1);
 
   // If no refant specified, or no data for refant
   //   base first guess on first good ant
-  if (guessant<0 || !antok(guessant)) {
+  if (guessant<0 || antok(guessant)<1) {
     guessant=0;
-    while (!antok(guessant++));
+    while (antok(guessant)<1) guessant++;
   }
+
+  //  cout << "antok = " << antok << endl;
+
+  //  cout << "guessant = " << guessant << "  (" << currSpw() << ")" << endl;
 
   AlwaysAssert(guessant>-1,AipsError);
 
@@ -745,7 +750,7 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
       Int nCorr(visshape(0));
       for (Int i=0;i<nCorr;++i) {
 	vblc(0)=vtrc(0)=i;
-	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag()=0.0);
+	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=0.0;
       }
       
       // Form correct slice of solveCPar() to fill

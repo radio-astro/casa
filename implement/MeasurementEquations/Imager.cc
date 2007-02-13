@@ -1909,24 +1909,22 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
     
-    if (fieldids.nelements() > 1) {
-      os << "Multiple fields specified via fieldids" << LogIO::POST;
-      multiFields_p = True;
-    }
     
-    // Invalid spwids then lets select all
-    if(datadescids_p.nelements()==0){
-      Int nspwinms=ms_p->spectralWindow().nrow();
-      dataspectralwindowids_p.resize(nspwinms);
-      indgen(dataspectralwindowids_p);
-    }
+    
+    
 
     // Map the selected spectral window ids to data description ids
     MSDataDescIndex msDatIndex(ms_p->dataDescription());
     datadescids_p.resize(0);
     datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
      
-
+    // Invalid spwids then lets select all
+    if(datadescids_p.nelements()==0){
+      Int nspwinms=ms_p->spectralWindow().nrow();
+      dataspectralwindowids_p.resize(nspwinms);
+      indgen(dataspectralwindowids_p);
+      datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
+    }
     // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
     // MS. 
@@ -1948,13 +1946,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	os << "Selecting on field ids" << LogIO::POST;
       }
       if(fieldnames != ""){
-	// In fact here should set the field expression and then
-	// have a method to get the ids back...such 
-	// datafieldid_p=thisSelection.getFieldIndices(*ms_p);
-	os << LogIO::SEVERE 
-	   << "Imager is not yet supporting the use of MSSelection syntax for field names" 
-	   << LogIO::EXCEPTION; 
-	return False;
+	thisSelection.setFieldExpr(fieldnames);
+	os << "Selecting on field names " << fieldnames << LogIO::POST;
       }
       if(datadescids_p.nelements() > 0){
 	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
@@ -1972,16 +1965,23 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	
       }            
       if(timerng != ""){
-	Vector<String>timerange(1, timerng);
-	thisSelection.setTimeExpr(MSSelection::nameExprStr(timerange));
+	//	Vector<String>timerange(1, timerng);
+	thisSelection.setTimeExpr(timerng);
 	os << "Selecting on time range" << LogIO::POST;	
       }
       //***************
 
       TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
-    
-
-      
+     
+      if(exprNode.isNull())
+	throw(AipsError("Selection led to a null exprnode...review ms and selection parameters"));
+      datafieldids_p.resize(0);
+      datafieldids_p=thisSelection.getFieldList();
+  
+      if (datafieldids_p.nelements() > 1) {
+      os << "Multiple fields specified via fieldids" << LogIO::POST;
+      multiFields_p = True;
+    }
       ////////REPLACING THE OLD SELECTION will remove this if above is  
       ///////  working we;;
       // Now we make a condition to do the old FIELD_ID, SPECTRAL_WINDOW_ID
@@ -2093,8 +2093,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     return True;
   } catch (AipsError x) {
     this->unlock();
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::EXCEPTION;
+    throw(x);
    
     return False;
   } 

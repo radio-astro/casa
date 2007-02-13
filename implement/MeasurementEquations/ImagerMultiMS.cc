@@ -189,13 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Selecting on field ids" << LogIO::POST;
       }
       if(fieldnames != ""){
-	// In fact here should set the field expression and then
-	// have a method to get the ids back...such 
-	// datafieldid_p=thisSelection.getFieldIndices(*ms_p);
-	os << LogIO::SEVERE 
-	   << "Imager is not yet supporting the use of MSSelection syntax for field names" 
-	   << LogIO::POST; 
-	return False;
+	thisSelection.setFieldExpr(fieldnames);
       }
       if(datadescids_p.nelements() > 0){
 	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
@@ -220,6 +214,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //***************
 
       TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+      if(exprNode.isNull())
+	throw(AipsError("Selection led to a null exprnode...review ms and selection parameters"));
+      datafieldids_p.resize();
+      datafieldids_p=thisSelection.getFieldList();
+      if((numMS_p > 1) || datafieldids_p.nelements() > 1)
+	multiFields_p= True;
       // Now remake the selected ms
       mssel_p = new MeasurementSet(sorted(exprNode));
       AlwaysAssert(mssel_p, AipsError);
@@ -233,9 +233,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blockStart_p.resize(numMS_p, True);
 	blockStep_p.resize(numMS_p, True);
 	blockSpw_p.resize(numMS_p, True);
+	mssel_p=new MeasurementSet(sorted);	
 	os << "Selection is empty: you may want to review this MSs selection"
 	   << LogIO::EXCEPTION;
-	mssel_p=new MeasurementSet(sorted);
       }
       else {
 	mssel_p->flush();
