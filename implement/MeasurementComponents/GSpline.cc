@@ -146,6 +146,11 @@ void GJonesSpline::setSolve(const Record& solvepar)
   // Total solution interval is always all selecte data (for now)
   interval()=DBL_MAX;
 
+  // Override nominal preavg handling
+  //  (avoids interpretting -1 as pre-avg up to full interval)
+  if (solvepar.isDefined("preavg")) 
+    preavg() = solvepar.asDouble("preavg");
+
   // Spline-specific pars:
   if (solvepar.isDefined("splinetime")) 
     splinetime_p = solvepar.asDouble("splinetime");
