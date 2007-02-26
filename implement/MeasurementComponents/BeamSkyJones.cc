@@ -164,7 +164,8 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   
   updatePBMathIndices(vb,row); // lastUpdateIndex?_p are now valid
 
-  if (!hasBeenApplied) return True; // we shouldn't have such a flag in
+  //Unnecessary ...i believe and causes issues with PSF making
+  //if (!hasBeenApplied) return True; // we shouldn't have such a flag in
                  // a well designed code
 
   if (!lastParallacticAngles_p.nelements() && myPBMaths_p.nelements())
@@ -208,7 +209,7 @@ Bool BeamSkyJones::directionsCloseEnough(const MDirection &dir1,
       sep=dir1.getValue().separation(MDirection::Convert(dir2.getRef(),
               dir1.getRef())(dir2).getValue());
   else sep=dir1.getValue().separation(dir2.getValue());
-  return (fabs(sep-skyPositionThreshold_p) < Double(1.0e-10));
+  return (fabs(sep)<skyPositionThreshold_p);
 }
 
 // Does this BeamSkyJones change during this buffer, starting from
