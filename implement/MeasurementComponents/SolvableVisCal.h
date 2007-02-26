@@ -137,7 +137,7 @@ public:
   // Access to current solution parameters and matrices
   inline virtual Cube<Complex>& solveCPar()  {return (*solveCPar_[currSpw()]);};
   inline virtual Cube<Float>&   solveRPar()  {return (*solveRPar_[currSpw()]);};
-  inline virtual Matrix<Bool>&  solveParOK() {return (*solveParOK_[currSpw()]);};
+  inline virtual Cube<Bool>&  solveParOK()   {return (*solveParOK_[currSpw()]);};
 
   // Synchronize the meta data with a solvable VisBuffer
   //   (returns False if VisBuffer has no valid data)
@@ -280,9 +280,9 @@ private:
 
 
   // Current parameters
-  PtrBlock<Cube<Complex>*>  solveCPar_;       // [nSpw](nPar,1,{1|nElem})
-  PtrBlock<Cube<Float>*>    solveRPar_;       // [nSpw](nPar,1,{1|nElem})
-  PtrBlock<Matrix<Bool>*>   solveParOK_;      // [nSpw](1,{1|nElm})
+  PtrBlock<Cube<Complex>*> solveCPar_;  // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Cube<Float>*>   solveRPar_;  // [nSpw](nPar,1,{1|nElem})
+  PtrBlock<Cube<Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
 
   // LogIO
   LogIO logsink_p;

@@ -141,7 +141,7 @@ void EGainCurve::setApply(const Record& applypar) {
       }
 
       currRPar().resize(nPar(),1,nAnt());
-      currParOK().resize(1,nAnt());
+      currParOK().resize(nPar(),1,nAnt());
       currParOK()=True;
 
       ArrayIterator<Float> piter(currRPar(),1);
@@ -200,7 +200,6 @@ void EGainCurve::calcPar() {
 
   // NB: z.a. calc here because it is needed only 
   //   if we have a new timestamp...
-  //  (opacity parameter is already ok)
 
   za().resize(nAnt());
   Vector<MDirection> antazel(vb().azel(currTime()));
@@ -220,16 +219,17 @@ void EGainCurve::calcAllJones() {
 
   // Nominally no gain curve effect
   currJElem()=Complex(1.0);
+  currJElemOK()=False;
 
   Complex* J=currJElem().data();
+  Bool*    JOk=currJElemOK().data();
   Float*  c=currRPar().data();
-  Bool*   opok=currParOK().data();
   Double* a=za().data();
 
   Double loss, ang;
-  for (Int iant=0; iant<nAnt(); ++iant,++opok,++a)
-    if ((*opok) && (*a)<C::pi_2) 
-      for (Int ipol=0;ipol<2;++ipol,++J) {
+  for (Int iant=0; iant<nAnt(); ++iant,++a)
+    if ((*a)<C::pi_2) 
+      for (Int ipol=0;ipol<2;++ipol,++J,++JOk) {
 	loss=Double(*c);
 	++c;
 	ang=1.0;
@@ -238,6 +238,7 @@ void EGainCurve::calcAllJones() {
 	  loss+=((*c)*ang);
 	}
 	(*J) = Complex(loss);
+	(*JOk) = True;
       }
   
 }

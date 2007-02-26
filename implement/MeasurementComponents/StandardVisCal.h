@@ -74,7 +74,8 @@ protected:
   virtual void calcPar();
 
   // Calculate a single PJones matrix 
-  virtual void calcOneJones(Vector<Complex>& mat, const Vector<Complex>& par );
+  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
+			    const Vector<Complex>& par, const Vector<Bool>& pOk );
 
 private:
 
@@ -267,8 +268,8 @@ protected:
   virtual Bool trivialDJ() { return True; };
 
   // Non-trivial Jones matrix calculation
-  virtual void calcOneJones(Vector<Complex>& mat, 
-			    const Vector<Complex>& par);
+  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
+			    const Vector<Complex>& par, const Vector<Bool>& pOk);
 
   // Initialize trivial dJs
   virtual void initTrivDJ();

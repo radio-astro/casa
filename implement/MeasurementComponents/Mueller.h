@@ -54,25 +54,27 @@ public:
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { m0_=&mat; origin(); };
+  inline void sync(Complex& mat, Bool& ok) { m0_=&mat; ok0_=&ok; origin(); };
   
   // Reset to origin
-  inline void origin() {m_=m0_;};
+  inline void origin() {m_=m0_;ok_=ok0_;};
   
   // Increment to next vector (according to type)
-  inline void operator++()    { m_+=type(); };
-  inline void operator++(int) { m_+=type(); };
+  inline void operator++()    { m_+=type(); if (ok_) ok_+=type();};
+  inline void operator++(int) { m_+=type(); if (ok_) ok_+=type();};
 
   // Advance step matrices forward (according to type)
-  inline void advance(const Int& step)    { m_+=(step*type()); };
+  inline void advance(const Int& step) { m_+=(step*type()); if (ok_) ok_+=(step*type());};
 
   // Formation from Jones matrix outer product: General version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
 
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multiply onto a VisVector: General version
   virtual void apply(VisVector& v);
+  virtual void apply(VisVector& v, Bool& vflag);
 
   // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
   virtual void apply(VisVector& out, const VisVector& in);
@@ -87,9 +89,11 @@ protected:
 
   // Pointer to origin
   Complex *m0_;
-  
+  Bool *ok0_;
+
   // Moving pointer
   Complex *m_, *mi_;
+  Bool *ok_, *oki_;
 
   // Complex unity (for use in invert methods)
   const Complex cOne_;
@@ -123,10 +127,11 @@ public:
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
   
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multiply onto a VisVector: optimized Diagonal version
   virtual void apply(VisVector& v);
+  virtual void apply(VisVector& v, Bool& vflag);
   using Mueller::apply;
 
 protected:
@@ -158,10 +163,11 @@ public:
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
   
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multiply onto a VisVector: optimized Diag2 version
   virtual void apply(VisVector& v);
+  virtual void apply(VisVector& v, Bool& vflag);
   using MuellerDiag::apply;
 
 protected:
@@ -194,10 +200,11 @@ public:
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
 
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multiply onto a VisVector: optimized Scalar version
   virtual void apply(VisVector& v);
+  virtual void apply(VisVector& v, Bool& vflag);
   using MuellerDiag::apply;
 
 protected:

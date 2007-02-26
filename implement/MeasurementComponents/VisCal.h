@@ -169,7 +169,7 @@ protected:
   // Access to current solution parameters and matrices
   inline virtual Cube<Complex>& currCPar()  {return (*currCPar_[currSpw()]);};
   inline virtual Cube<Float>&   currRPar()  {return (*currRPar_[currSpw()]);};
-  inline virtual Matrix<Bool>&  currParOK() {return (*currParOK_[currSpw()]);};
+  inline virtual Cube<Bool>&    currParOK() {return (*currParOK_[currSpw()]);};
 
   // Validation of calibration parameters
   inline void invalidateP() {PValid_(currSpw())=False;};
@@ -271,7 +271,7 @@ private:
   // Current parameters
   PtrBlock<Cube<Complex>*>  currCPar_;   // [nSpw](nPar,nChanPar,nElm)
   PtrBlock<Cube<Float>*>    currRPar_;   // [nSpw](nPar,nChanPar,nElm)
-  PtrBlock<Matrix<Bool>*>   currParOK_;  // [nSpw](nChanPar,nElm)
+  PtrBlock<Cube<Bool>*>     currParOK_;  // [nSpw](nPar,nChanPar,nElm)
 
   // Paremeter validity
   Vector<Bool> PValid_;
@@ -331,8 +331,8 @@ protected:
   inline Mueller& M()   { return (*M_[currSpw()]); };
 
   // Access to current matrices
-  inline Cube<Complex>& currMElem()         {return (*currMElem_[currSpw()]);};
-  inline Matrix<Bool>& currMElemOK()        {return (*currMElemOK_[currSpw()]);};
+  inline Cube<Complex>& currMElem()   {return (*currMElem_[currSpw()]);};
+  inline Cube<Bool>&    currMElemOK() {return (*currMElemOK_[currSpw()]);};
 
   // Invalidate cal matrices generically (at this level, just Mueller)
   inline virtual void invalidateCalMat() { invalidateM(); };
@@ -355,7 +355,8 @@ protected:
   virtual void calcAllMueller();
 
   // Calculate a single Mueller matrix by some means
-  virtual void calcOneMueller(Vector<Complex>& mat, const Vector<Complex>& par);
+  virtual void calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
+			      const Vector<Complex>& par, const Vector<Bool>& pOk);
 
   // Invert Mueller matrices
   virtual void invMueller();
@@ -388,8 +389,8 @@ private:
   PtrBlock<Mueller*> M_;                
 
   // Current Mueller matrix elements
-  PtrBlock<Cube<Complex>*>    currMElem_;    // [nSpw](nChanMat,nBln)
-  PtrBlock<Matrix<Bool>*>     currMElemOK_;  // [nSpw](nChanMat,nBln)
+  PtrBlock<Cube<Complex>*> currMElem_;    // [nSpw]([1,2,4,16],nChanMat,nBln)
+  PtrBlock<Cube<Bool>*>    currMElemOK_;  // [nSpw]([1,2,4,16],nChanMat,nBln)
 
   // Mueller validity
   Vector<Bool> MValid_;
@@ -454,8 +455,8 @@ protected:
   inline Jones& J2() { return *J2_[currSpw()]; };
 
   // Access to Jones matrix element array
-  inline Cube<Complex>& currJElem()  {return (*currJElem_[currSpw()]);};
-  inline Matrix<Bool>& currJElemOK() {return (*currJElemOK_[currSpw()]);};
+  inline Cube<Complex>& currJElem() {return (*currJElem_[currSpw()]);};
+  inline Cube<Bool>& currJElemOK()  {return (*currJElemOK_[currSpw()]);};
 
   // Invalidate cal matrices generically (at this level, both Mueller and Jones)
   inline virtual void invalidateCalMat() { invalidateM(); invalidateJ(); };
@@ -482,7 +483,8 @@ protected:
   virtual void calcAllJones();
 
   // Calculate a single Jones matrix by some means from parameters
-  virtual void calcOneJones(Vector<Complex>& mat, const Vector<Complex>& par );
+  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
+			    const Vector<Complex>& par, const Vector<Bool>& pOk );
 
   // Invert Jones matrices
   virtual void invJones();
@@ -512,8 +514,8 @@ private:
   PtrBlock<Jones*> J2_;
 
   // Current Jones matrix-element arrays
-  PtrBlock<Cube<Complex>*>    currJElem_;      // [nSpw](nJElem,nChanMat,nAnt)
-  PtrBlock<Matrix<Bool>*>     currJElemOK_;    // [nSpw](nChanMat,nAnt)
+  PtrBlock<Cube<Complex>*> currJElem_;    // [nSpw](nJElem,nChanMat,nAnt)
+  PtrBlock<Cube<Bool>*>    currJElemOK_;  // [nSpw](nJElem,nChanMat,nAnt)
 
   // Jones validity, per spw
   Vector<Bool> JValid_;

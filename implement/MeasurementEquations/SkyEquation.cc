@@ -29,6 +29,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/SubImage.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 
@@ -275,26 +276,26 @@ void SkyEquation::gradientsChiSquared(const Matrix<Bool>& required,
 void SkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel) {
   AlwaysAssert(ok(),AipsError);
 
-  Bool forceFull=False;
+  Bool forceFull=True;
   // for these 2 gridders force incremental
   if((ft_->name() == "MosaicFT") || (ft_->name() == "WProjectFT") )
-     forceFull=True;
+    forceFull=True;
 
-   if( (sm_->numberOfModels() != 1) || !ft_->isFourier() || !incremental 
-       || forceFull){
-     if(commitModel || !noModelCol_p){
-       ft_->setNoPadding(False);
-       fullGradientsChiSquared(incremental);
-     }
-     else{
-       // For now use corrected_data...
-       ft_->setNoPadding(True);
-       fullGradientsChiSquared(incremental, True);
-     }
-   }
-   else {
-     incrementGradientsChiSquared();
-   }
+  if( (sm_->numberOfModels() != 1) || !ft_->isFourier() || !incremental 
+      || forceFull){
+    if(commitModel || !noModelCol_p){
+      ft_->setNoPadding(False);
+      fullGradientsChiSquared(incremental);
+    }
+    else{
+      // For now use corrected_data...
+      ft_->setNoPadding(True);
+      fullGradientsChiSquared(incremental, True);
+    }
+  }
+  else {
+    incrementGradientsChiSquared();
+  }
 }
 //----------------------------------------------------------------------
 void SkyEquation::fullGradientsChiSquared(Bool incremental) {
@@ -724,7 +725,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   LatticeExpr<Float> le(iif(sm_->ggS(model)>(0.0),
   			    (sm_->gS(model)/sm_->ggS(model)), 0.0));
   psf.copyData(le);
-  
+
   LatticeExprNode maxPSF=max(psf);
   Float maxpsf=maxPSF.getFloat();
   if(abs(maxpsf-1.0) > 1e-3) {
@@ -1459,19 +1460,20 @@ Bool SkyEquation::ok() {
 
 void SkyEquation::scaleImage(Int model)
 {
-  if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
-    LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
-    sm_->image(model).copyData(latticeExpr);
-  }
+    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
+      sm_->image(model).copyData(latticeExpr);
+    }  
 };
 
 void SkyEquation::unScaleImage(Int model)
 {
-  if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
-    sm_->image(model).copyData( (LatticeExpr<Float>)
-				(iif(sm_->fluxScale(model) <= (0.0), 0.0,
-				     ((sm_->image(model))/(sm_->fluxScale(model))) )) );
-  }
+
+    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+      sm_->image(model).copyData( (LatticeExpr<Float>)
+				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
+				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
+    }
 };
 
 void SkyEquation::scaleImage(Int model, Bool incremental)
@@ -1494,19 +1496,21 @@ void SkyEquation::unScaleImage(Int model, Bool incremental)
 
 void SkyEquation::scaleDeltaImage(Int model)
 {
-  if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
-    LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
-    sm_->deltaImage(model).copyData(latticeExpr);
-  }
+    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+      LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
+      sm_->deltaImage(model).copyData(latticeExpr);
+    }
+  
 };
 
 void SkyEquation::unScaleDeltaImage(Int model)
 {
-  if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
     sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
 				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 				      ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
-  }
+    }
+  
 };
 
 void SkyEquation::fixImageScale()
@@ -1563,15 +1567,42 @@ void SkyEquation::fixImageScale()
 
 	if(ft_->name() != "MosaicFT"){
 	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 1.0 );
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+				    (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
+					 sm_->ggS(model)) ));
 	}
 	else{
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) (iif(sm_->ggS(model) < (ggSMin2), 1.0, (sm_->ggS(model)/ggSMax))));
-	}
-	sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				  (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
-	ggSMax) 
-				   ));
-		
+	  Int nXX=sm_->ggS(model).shape()(0);
+	  Int nYY=sm_->ggS(model).shape()(1);
+	  Int npola= sm_->ggS(model).shape()(2);
+	  Int nchana= sm_->ggS(model).shape()(3);
+	  IPosition blc(4,nXX, nYY, npola, nchana);
+	  IPosition trc(4, nXX, nYY, npola, nchana);
+	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
+	  //Those damn weights per plane can be wildly different so 
+	  //deal with it properly here
+	  for (Int j=0; j < npola; ++j){
+	    for (Int k=0; k < nchana ; ++k){
+	      blc(2)=j; trc(2)=j;
+	      blc(3)=k; trc(3)=k;
+	      Slicer sl(blc, trc, Slicer::endIsLast);
+	      SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
+	      SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
+	      Float planeMax;
+	      LatticeExprNode LEN = max( ggSSub );
+	      planeMax =  LEN.getFloat();
+	      if(planeMax !=0){
+		fscalesub.copyData( (LatticeExpr<Float>) 
+				    (iif(ggSSub < (ggSMin2), 
+					 1.0, (ggSSub/planeMax))));
+		ggSSub.copyData( (LatticeExpr<Float>) 
+				 (iif(ggSSub < (ggSMin2), 0.0, 
+				      planeMax) ));
+
+	      }
+	    }
+	  }
+	}	
       }
     }
   }

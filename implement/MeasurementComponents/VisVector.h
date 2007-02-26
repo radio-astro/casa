@@ -91,6 +91,8 @@ public:
   void polznMap();
   void polznUnMap();
 
+  inline void zero() { for (Int i=0;i<vistype_;i++) v_[i]=Complex(0.0); };
+
   // Print it out
   friend ostream& operator<<(ostream& os, const VisVector& vec);
 

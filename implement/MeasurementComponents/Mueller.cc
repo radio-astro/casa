@@ -40,23 +40,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Constructor
 Mueller::Mueller() : 
   m0_(NULL), 
+  ok0_(NULL),
   m_(NULL), 
   mi_(NULL), 
+  ok_(NULL),
+  oki_(NULL),
   cOne_(1.0), 
   vtmp_(VisVector::Four,True)
 {}
 
 // Formation from Jones matrix outer product: General version
 void Mueller::fromJones(const Jones& jones1, const Jones& jones2) {
+
+  if (!ok_ || !jones1.ok_ || !jones2.ok_)
+    throw(AipsError("Illegal use of Mueller::fromJones."));
+
   mi_=m_;
+  oki_=ok_;
   Int i,j,io2,jo2,im2,jm2;
   for (i=0;i<4;++i) {
     io2=(i/2)*2;
     im2=(i%2)*2;
-    for (j=0;j<4;++j,++mi_){
+    for (j=0;j<4;++j,++mi_,++oki_){
       jo2=(j/2);
       jm2=(j%2);
-      (*mi_) = jones1.j_[io2+jo2]*conj(jones2.j_[im2+jm2]);
+      (*mi_)  = jones1.j_[io2+jo2]*conj(jones2.j_[im2+jm2]);
+      (*oki_) = (jones1.ok_[io2+jo2] && jones2.ok_[im2+jm2]);
     }
   }
 }
@@ -93,11 +102,17 @@ void Mueller::apply(VisVector& v) {
   }  
 }
 
-Bool Mueller::invert() {
+void Mueller::apply(VisVector& v, Bool& vflag) {
+
+  throw(AipsError("Mueller::apply(v,vflag) (general) NYI."));
+
+}
+
+
+void Mueller::invert() {
 
   throw(AipsError("Invalid attempt to directly invert a general Mueller."));
-  
-  return False;
+
 }
 
 // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
@@ -117,26 +132,31 @@ MuellerDiag::MuellerDiag() : Mueller() {}
 
 // Formation from Jones matrix outer product: optimized Diagonal version
 void MuellerDiag::fromJones(const Jones& jones1, const Jones& jones2) {
+
+  if (!ok_ || !jones1.ok_ || !jones2.ok_)
+    throw(AipsError("Illegal use of MuellerDiag::fromJones."));
+
   mi_=m_;
+  oki_=ok_;
   for (Int i=0;i<4;++i,++mi_) {
-    (*mi_) = jones1.j_[i/2]*conj(jones2.j_[i%2]);
+    (*mi_)  = jones1.j_[i/2]*conj(jones2.j_[i%2]);
+    (*oki_) = (jones1.ok_[i/2]&&jones2.ok_[i%2]);
   }
 }
 
-Bool MuellerDiag::invert() {
+void MuellerDiag::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag::invert."));
+
   mi_=m_;
-  for (Int i=0;i<4;++i,++mi_) 
-    if (abs(*mi_)>0.0)
+  oki_=ok_;
+  for (Int i=0;i<4;++i,++mi_,++oki_) 
+    if ((*oki_) && abs(*mi_)>0.0)
       (*mi_) = cOne_/(*mi_);
     else {
-      //      zero();
-      //      return False;
-      // for now just use zero
       (*mi_)=Complex(0.0);
+      (*oki_)=False;
     }
-
-  // All ok if we reach here
-  return True;
   
 }
 
@@ -166,6 +186,26 @@ void MuellerDiag::apply(VisVector& v) {
   }
 }
 
+void MuellerDiag::apply(VisVector& v, Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag::apply(v,vflag)."));
+
+  switch (v.type()) {
+  // For scalar data, we only pay attention to first flag
+  case VisVector::One: {
+    vflag|=(!ok_[0]);
+    break;
+  }
+  default: {
+    vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+    break;
+  }
+  }
+  if (!vflag) apply(v);
+  else v.zero();
+
+}
+
 void MuellerDiag::zero() {
   mi_=m_;
   for (Int i=0;i<4;++i,++mi_)
@@ -177,24 +217,31 @@ MuellerDiag2::MuellerDiag2() : MuellerDiag() {}
  
 // Formation from Jones matrix outer product: optimized Diag2 version
 void MuellerDiag2::fromJones(const Jones& jones1, const Jones& jones2) {
+
+  if (!ok_ || !jones1.ok_ || !jones2.ok_)
+    throw(AipsError("Illegal use of MuellerDiag2::fromJones."));
+
   mi_=m_;
-  for (Int i=0;i<2;++i,++mi_) {
+  oki_=ok_;
+  for (Int i=0;i<2;++i,++mi_,++oki_) {
     (*mi_) = jones1.j_[i]*conj(jones2.j_[i]);
+    (*oki_) = (jones1.ok_[i]&&jones2.ok_[i]);
   }
 }
 
-Bool MuellerDiag2::invert() {
+void MuellerDiag2::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag2::invert."));
+
   mi_=m_;
-  for (Int i=0;i<2;++i,++mi_) 
-    if (abs(*mi_)>0.0)
+  oki_=ok_;
+  for (Int i=0;i<2;++i,++mi_,++oki_) 
+    if ((*oki_)&& abs(*mi_)>0.0)
       (*mi_) = cOne_/(*mi_);
     else {
-      zero();
-      return False;
+      (*mi_) = Complex(0.0);
+      (*oki_) = False;
     }
-
-  // All ok if we reach here
-  return True;
   
 }
 
@@ -222,6 +269,27 @@ void MuellerDiag2::apply(VisVector& v) {
  
 }
 
+void MuellerDiag2::apply(VisVector& v, Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag2::apply(v,vflag)."));
+
+  switch (v.type()) {
+  // For scalar data, pay attention only to first flag
+  case VisVector::One: {
+    vflag|=(!ok_[0]);
+    break;
+  }
+  //...otherwise insist all is ok
+  default: {
+    vflag|=(!(ok_[0]&&ok_[1]));
+    break;
+  }
+  }
+  if (!vflag) apply(v);
+  else v.zero();
+
+}
+
 void MuellerDiag2::zero() {
   mi_=m_;
   for (Int i=0;i<2;++i,++mi_)
@@ -233,28 +301,43 @@ MuellerScal::MuellerScal() : MuellerDiag() {}
 
 // Formation from Jones matrix outer product: optimized Scalar version
 void MuellerScal::fromJones(const Jones& jones1, const Jones& jones2) {
+
+  if (!ok_ || !jones1.ok_ || !jones2.ok_)
+    throw(AipsError("Illegal use of MuellerScal::fromJones."));
+
   (*m_) = (*jones1.j_)*conj(*jones2.j_);
+  (*ok_) = ((*jones1.ok_)&&(*jones2.ok_));
 }
 
-Bool MuellerScal::invert() {
-  if (abs(*m_)>0.0)
+void MuellerScal::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerScal::invert."));
+
+  if ((*ok_) && abs(*m_)>0.0)
     (*m_) = cOne_/(*m_);
   else {
     zero();
-    return False;
+    (*ok_)=False;
   }
-
-  // All ok if we reach here
-  return True;
 
 }
 
 // In-place multiply onto a VisVector: optimized Scalar version
 void MuellerScal::apply(VisVector& v) {
-
   // Apply single value to all vector elements
   for (Int i=0;i<v.vistype_;i++) v.v_[i]*=(*m_);
 }
+
+void MuellerScal::apply(VisVector& v, Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerScal::apply(v,vflag)."));
+
+  vflag|=(!*ok_);
+  if (!vflag) apply(v);
+  else v.zero();
+
+}
+
 
 void MuellerScal::zero() {
     *m_=0.0;

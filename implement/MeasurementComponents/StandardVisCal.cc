@@ -73,7 +73,7 @@ void PJones::calcPar() {
 
   // Initialize parameter arrays
   currCPar().resize(1,1,nAnt());
-  currParOK().resize(1,nAnt());
+  currParOK().resize(1,1,nAnt());
   currParOK()=True;
 
   // Fill currCPar() with exp(i*pa)
@@ -91,16 +91,19 @@ void PJones::calcPar() {
 }
 
 // Calculate a single Jones matrix by some means from parameters
-void PJones::calcOneJones(Vector<Complex>& mat, const Vector<Complex>& par ) {
+void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
+			  const Vector<Complex>& par, const Vector<Bool>& pOk ) {
 
   if (prtlev()>10) cout << "       P::calcOneJones()" << endl;
 
   //  TBD: handle linears too
 
   // Circular version:
-  mat(0)=par(0);
-  mat(1)=conj(par(0));
-
+  if (pOk(0)) {
+    mat(0)=par(0);
+    mat(1)=conj(par(0));
+    mOk=True;
+  }
 }
 
 
@@ -305,6 +308,9 @@ void GJones::guessPar(VisBuffer& vb) {
     corridx(1)=3;
   }
 
+  Int guesschan(vb.visCube().shape()(1)-1);
+
+  //  cout << "guesschan = " << guesschan << endl;
   //  cout << "nCorr = " << nCorr << endl;
   //  cout << "corridx = " << corridx << endl;
 
@@ -324,8 +330,8 @@ void GJones::guessPar(VisBuffer& vb) {
   }
 
   // Assume refant is the target ant, for starters
-  //  Int guessant(refant());
-  Int guessant(-1);
+  Int guessant(refant());
+  //  Int guessant(-1);
 
   // If no refant specified, or no data for refant
   //   base first guess on first good ant
@@ -346,19 +352,22 @@ void GJones::guessPar(VisBuffer& vb) {
   solveCPar()=Complex(0.0);
   for (Int irow=1;irow<vb.nRow();++irow) {
 
-    if (rowok(irow)) {
+    if (rowok(irow) && !vb.flag()(guesschan,irow)) {
       Int a1=vb.antenna1()(irow);
       Int a2=vb.antenna2()(irow);
 
       // If this row contains the guessant
       if (a1 == guessant || a2==guessant) {
 
+	//	cout << a1 << " " << a2 << " " 
+	//	     << vb.visCube().xyPlane(irow).column(guesschan) << " "
+	//	     << amplitude(vb.visCube().xyPlane(irow).column(guesschan)) << " "
+	//	     << endl;
+
 	for (Int icorr=0;icorr<nCorr;icorr++) {
-	  Complex& Vi(V(corridx(icorr),0,irow));
+	  Complex& Vi(V(corridx(icorr),guesschan,irow));
 	  amp=abs(Vi);
 	  if (amp>0.0f) {
-	    //	solveCPar()(icorr,0,irow)=(conj(Vi)/amp);
-
 	    if (a1 == guessant)
 	      solveCPar()(icorr,0,a2)=conj(Vi);
 	    else
@@ -480,16 +489,27 @@ void DJones::setSolve(const Record& solvepar) {
 }
 
 
-void DJones::calcOneJones(Vector<Complex>& mat, 
-			  const Vector<Complex>& par) {
+void DJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
+			  const Vector<Complex>& par, const Vector<Bool>& pOk) {
 
   if (prtlev()>10) cout << "   D::calcOneJones(vb)" << endl;
 
-  // On-diag = 1
-  mat(0)=mat(3)=Complex(1.0);
-  // Off-diag = par
-  mat(1)=par(0);
-  mat(2)=par(1);
+  // Only if both pars are good, form matrix
+  if (allEQ(pOk,True)) {
+
+    // On-diag = 1
+    mat(0)=mat(3)=Complex(1.0);
+    // Off-diag = par
+    mat(1)=par(0);
+    mat(2)=par(1);
+
+    mOk=True;
+
+  }
+  else {
+    mat=Complex(0.0);
+    mOk=False;
+  }
 
 }
 
@@ -779,7 +799,7 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
       
       // copy data to solution
       solveCPar()(blc,trc,str)   = svb.visCube();
-      solveParOK()(blc.getLast(2),trc.getLast(2)) = !svb.flag();
+      solveParOK()(blc,trc) = !svb.flag();
       
     }
 
@@ -829,17 +849,9 @@ void MMueller::keep(const Int& slot) {
     IPosition blc4(4,0,       0,           0,        slot);
     IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
     cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
+    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
 
-    IPosition blc3(3,0,           0,        slot);
-    IPosition trc3(3,nChanPar()-1,nElem()-1,slot);
-    cs().parOK(currSpw())(blc3,trc3).nonDegenerate(2)= solveParOK();
-
-    Vector<Bool> iSOK(cs().iSolutionOK(currSpw()).column(slot));
-    Vector<Bool> sPOK(solveParOK().row(0));
-    iSOK = (iSOK || sPOK );
-
-    Bool& sOK(cs().solutionOK(currSpw())(slot));
-    sOK = (sOK || anyEQ(solveParOK(),True));
+    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
   }
   else
@@ -909,7 +921,7 @@ void TOpac::setApply(const Record& applypar) {
     currSpw()=ispw;
     currRPar().resize(1,1,nAnt());
     currRPar()=opacity_;
-    currParOK().resize(1,nAnt());
+    currParOK().resize(1,1,nAnt());
     currParOK()=True;
   }
   currSpw()=oldspw;
@@ -960,6 +972,7 @@ void TOpac::calcAllJones() {
 
   // Nominally no opacity
   currJElem()=Complex(1.0);
+  currJElemOK()=currParOK();
 
   Complex* J=currJElem().data();
   Float*  op=currRPar().data();

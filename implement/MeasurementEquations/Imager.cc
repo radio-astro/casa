@@ -43,6 +43,7 @@
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Containers/Record.h>
+#include <tables/Tables/RefRows.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableParse.h>
@@ -2803,6 +2804,7 @@ Bool Imager::feather(const String& image, const String& highRes,
       StokesImageUtil::To(featherImage, cimagehigh);
       ImageUtilities::copyMiscellaneous(featherImage, high);
 
+      try{
       { // write data processing history into image logtable
 	LoggerHolder imagelog (False);
 	LogSink& sink = imagelog.sink();
@@ -2816,14 +2818,9 @@ Bool Imager::feather(const String& image, const String& highRes,
 	    ostringstream oos;
 	    uInt nmessages = msHis.time().nrow();
 	    for (uInt i=0; i < nmessages; ++i) {
-	      oos << frmtTime(((msHis.time()).getColumn())(i))
-		  << "  HISTORY " << ((msHis.origin()).getColumn())(i);
-	      try {
-		oos << " " << (msHis.cliCommand())(i) << " ";
-	      } catch ( AipsError x ) {
-		oos << " ";
-	      }
-	      oos << ((msHis.message()).getColumn())(i)
+	      oos << frmtTime((msHis.time())(i))
+		  << "  HISTORY " << (msHis.origin())(i);
+	      oos << (msHis.message())(i)
 		  << endl;
 	    }
 	    String historyline(oos);
@@ -2846,7 +2843,17 @@ Bool Imager::feather(const String& image, const String& highRes,
 	log.append(lh);
 	log.flush();
       }
+      }catch(exception& x){
+
+	os << LogIO::WARN << "Caught exception: " << x.what()
+       << LogIO::POST;
+	os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	   <<LogIO::POST; 
+	//continue and wrap up
+
+      }
     }
+  
     if(noStokes){
       Table::deleteTable(outHighRes);
       Table::deleteTable(outLowRes);
@@ -4510,35 +4517,32 @@ Bool Imager::clean(const String& algorithm,
       }
     }
     this->writeHistory(os);
-
+    try{
     { // write data processing history into image logtable
       LoggerHolder imagelog (False);
       LogSink& sink = imagelog.sink();
       LogOrigin lor( String("imager"), String("clean()") );
       LogMessage msg(lor);
       sink.postLocally(msg);
-
+      
       ROMSHistoryColumns msHis(ms_p->history());
       if (msHis.nrow()>0) {
 	ostringstream oos;
 	uInt nmessages = msHis.time().nrow();
+	Vector<Double> time = ((msHis.time()).getColumn());
 	for (uInt i=0; i < nmessages; ++i) {
-	  Vector<Double> time = ((msHis.time()).getColumn());
 	  String tmp=frmtTime(time(i));
 	  oos << tmp
-	      << "  HISTORY " << ((msHis.origin()).getColumn())(i);
-	  try {
-	    oos << " " << (msHis.cliCommand())(i) << " ";
-	  } catch ( AipsError x ) {
-	    oos << " ";
-	  }
-	  oos << ((msHis.message()).getColumn())(i)
+	      << "  HISTORY " << (msHis.origin())(i);
+	  
+	  oos << " " << (msHis.cliCommand())(i) << " ";
+	  oos << (msHis.message())(i)
 	      << endl;
 	}
 	String historyline(oos);
 	sink.postLocally(msg.message(historyline));
       }
-  
+      
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	PagedImage<Float> restoredImage(image(thismodel),
 					TableLock(TableLock::AutoNoReadLocking));
@@ -4546,8 +4550,18 @@ Bool Imager::clean(const String& algorithm,
 	log.append(imagelog);
 	log.flush();
       }
+      
     }
-
+    }catch(exception& x){
+      
+      os << LogIO::WARN << "Caught exception: " << x.what()
+	 << LogIO::POST;
+      os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	 <<LogIO::POST; 
+      //continue and wrap up this function
+      
+    }
+    
     this->unlock();
 
 #ifdef PABLO_IO
@@ -4556,7 +4570,7 @@ Bool Imager::clean(const String& algorithm,
 
     return converged;
   } 
-  catch (const AipsError &x) { 
+  catch (exception &x) { 
     for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	 if (images_p[thismodel]) {
              images_p[thismodel]->table().relinquishAutoLocks(True);
@@ -4568,7 +4582,7 @@ Bool Imager::clean(const String& algorithm,
 	 }
     }
     this->unlock();
-    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    throw(AipsError(x.what()));
 
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Imager::clean",21);
@@ -4772,46 +4786,53 @@ Bool Imager::mem(const String& algorithm,
     writeFluxScales(fluxscale_p);
     destroySkyEquation();  
     this->writeHistory(os);
-    { // write data processing history into image logtable
-      LoggerHolder imagelog (False);
-      LogSink& sink = imagelog.sink();
-      LogOrigin lor( String("imager"), String("mem()") );
-      LogMessage msg(lor);
-      sink.postLocally(msg);
-
-      ROMSHistoryColumns msHis(ms_p->history());
-      if (msHis.nrow()>0) {
-	ostringstream oos;
-	uInt nmessages = msHis.time().nrow();
-	for (uInt i=0; i < nmessages; ++i) {
-	  oos << frmtTime(((msHis.time()).getColumn())(i))
-	      << "  HISTORY " << ((msHis.origin()).getColumn())(i);
-	  try {
+    try{
+      { // write data processing history into image logtable
+	LoggerHolder imagelog (False);
+	LogSink& sink = imagelog.sink();
+	LogOrigin lor( String("imager"), String("mem()") );
+	LogMessage msg(lor);
+	sink.postLocally(msg);
+	
+	ROMSHistoryColumns msHis(ms_p->history());
+	if (msHis.nrow()>0) {
+	  ostringstream oos;
+	  uInt nmessages = msHis.time().nrow();
+	  for (uInt i=0; i < nmessages; ++i) {
+	    oos << frmtTime((msHis.time())(i))
+		<< "  HISTORY " << (msHis.origin())(i);
 	    oos << " " << (msHis.cliCommand())(i) << " ";
-	  } catch ( AipsError x ) {
-	    oos << " ";
+	    oos << (msHis.message())(i)
+		<< endl;
 	  }
-	  oos << ((msHis.message()).getColumn())(i)
-	      << endl;
+	  String historyline(oos);
+	  sink.postLocally(msg.message(historyline));
 	}
-	String historyline(oos);
-	sink.postLocally(msg.message(historyline));
+	
+	for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+	  PagedImage<Float> restoredImage(image(thismodel),
+					  TableLock(TableLock::UserLocking));
+	  LoggerHolder& log = restoredImage.logger();
+	  log.append(imagelog);
+	  log.flush();
+	}
       }
-  
-      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	PagedImage<Float> restoredImage(image(thismodel),
-					TableLock(TableLock::UserLocking));
-	LoggerHolder& log = restoredImage.logger();
-	log.append(imagelog);
-	log.flush();
+    }catch(exception& x){
+      
+	os << LogIO::WARN << "Caught exception: " << x.what()
+       << LogIO::POST;
+	os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted; you may consider deleting all the rows from this table"
+	   <<LogIO::POST; 
+	//continue and wrap up this function as normal
+
       }
-    }
+    
     this->unlock();
 
     return True;
-  } catch (AipsError x) {
+  } catch (exception& x) {
     this->unlock();
-    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    throw(AipsError(x.what()));
 
     return False;
   } 
@@ -4958,66 +4979,72 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 {
 
   LogIO os(LogOrigin("imager", "restoreImages()", WHERE));
-  
-  // It's important that we use the congruent images in both
-  // cases. This means that we must use the residual image as
-  // passed to the SkyModel and not the one returned. This 
-  // distinction is important only (currently) for WFCleanImageSkyModel
-  // which has a different representation for the image internally.
-  Vector<String> residualNames(images_p.nelements());
-  Vector<String> modelNames(images_p.nelements());
-  for(uInt k=0; k < modelNames.nelements() ; ++k){
-    residualNames[k]=residuals_p[k]->name();
-    modelNames[k]=images_p[k]->name();
-  }
-
-
-  if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT") ){
-    // very large for convolution ...destroy Skyequations to release memory
-    // need to fix the convolution to be leaner
-    destroySkyEquation();
-
-  }
- if(restoredNames.nelements()>0) {
-    for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
-	 ++thismodel) {
-      if(restoredNames(thismodel)!="") {
-	PagedImage<Float> modelIm(modelNames[thismodel]);
-	PagedImage<Float> residIm(residualNames[thismodel]);
-	PagedImage<Float> restored(modelIm.shape(),
-				   modelIm.coordinates(),
-				   restoredNames(thismodel));
-	restored.table().markForDelete();
-	restored.copyData(modelIm);
-	StokesImageUtil::Convolve(restored, bmaj_p, bmin_p, bpa_p);
-
-	// We can work only if the residual image was defined.
-	if(residIm.name() != "") {
-	  LatticeExpr<Float> le(restored+(residIm)); 
-	  restored.copyData(le);
-	  //should be able to do that only on testing dofluxscale
-          // ftmachines or sm_p should tell us that
-	  if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
-	    LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < 0.1, 0.0, 
-				      (restored/(sm_p->fluxScale(thismodel)))));
-	    restored.copyData(le);
-	  }
-	}
-	else {
-          os << LogIO::SEVERE << "No residual image for model "
-	     << thismodel << ", cannot restore image" << LogIO::POST;
-	}
-
-	ImageInfo ii = restored.imageInfo();
-	ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
-	restored.setImageInfo(ii);
-	restored.setUnits(Unit("Jy/beam"));
-	restored.table().unmarkForDelete();
-      }
+  try{
+    // It's important that we use the congruent images in both
+    // cases. This means that we must use the residual image as
+    // passed to the SkyModel and not the one returned. This 
+    // distinction is important only (currently) for WFCleanImageSkyModel
+    // which has a different representation for the image internally.
+    Vector<String> residualNames(images_p.nelements());
+    Vector<String> modelNames(images_p.nelements());
+    for(uInt k=0; k < modelNames.nelements() ; ++k){
+      residualNames[k]=residuals_p[k]->name();
+      modelNames[k]=images_p[k]->name();
     }
+
+
+    if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT")){
+      // very large for convolution ...destroy Skyequations to release memory
+      // need to fix the convolution to be leaner
+      destroySkyEquation();
+
+    }
+    if(restoredNames.nelements()>0) {
+      for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
+	   ++thismodel) {
+	if(restoredNames(thismodel)!="") {
+	  PagedImage<Float> modelIm(modelNames[thismodel]);
+	  PagedImage<Float> residIm(residualNames[thismodel]);
+	  PagedImage<Float> restored(modelIm.shape(),
+				     modelIm.coordinates(),
+				     restoredNames(thismodel));
+	  restored.table().markForDelete();
+	  restored.copyData(modelIm);
+	  StokesImageUtil::Convolve(restored, bmaj_p, bmin_p, bpa_p);
+
+	  // We can work only if the residual image was defined.
+	  if(residIm.name() != "") {
+	    LatticeExpr<Float> le(restored+(residIm)); 
+	    restored.copyData(le);
+	    //should be able to do that only on testing dofluxscale
+	    // ftmachines or sm_p should tell us that
+	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
+	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < 0.1, 0.0, 
+					(restored/(sm_p->fluxScale(thismodel)))));
+	      restored.copyData(le);
+	    }
+	  }
+	  else {
+	    os << LogIO::SEVERE << "No residual image for model "
+	       << thismodel << ", cannot restore image" << LogIO::POST;
+	  }
+
+	  ImageInfo ii = restored.imageInfo();
+	  ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
+	  restored.setImageInfo(ii);
+	  restored.setUnits(Unit("Jy/beam"));
+	  restored.table().unmarkForDelete();
+	}
+      }
     
+    }
+    return True;
+
   }
-  return True;
+  catch (exception &x) { 
+    os << LogIO::SEVERE << "Exception: " << x.what() << LogIO::POST;
+    return False;
+  }
 }
 
 Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
@@ -6896,6 +6923,9 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     } 
   }
   //os.localSink().flush();
+  //For now force none sault weighting with mosaic ft machine
+  if(ft_p->name()=="MosaicFT")
+    scaleType_p="NONE";
   se_p->setImagePlaneWeighting(scaleType_p, minPB_p, constPB_p);
 
   AlwaysAssert(se_p, AipsError);

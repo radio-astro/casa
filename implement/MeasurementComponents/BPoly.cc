@@ -981,21 +981,19 @@ void BJonesPoly::load (const String& applyTable)
     currSpw()=ispw;
     currCPar().resize(nPar(),nChanPar(),nAnt());
     currCPar()=Complex(1.0);
-    currParOK().resize(nChanPar(),nAnt());
+    currParOK().resize(nPar(),nChanPar(),nAnt());
     currParOK()=False;
     invalidateP();
     invalidateCalMat();      
   }
 
   IPosition ipos(3,0,0,0);
-  IPosition iposOK(2,0,0);
 
   for (Int row=0; row < nrows; row++) {
 
     // Antenna id.
     Int antennaId = col.antenna1().asInt(row);
     ipos(2)=antennaId;
-    iposOK(1)=antennaId;
 
     // Frequency group name
     String freqGrpName = col.freqGrpName().asString(row);
@@ -1060,7 +1058,6 @@ void BJonesPoly::load (const String& applyTable)
 	  // Loop over frequency channel
 	  for (Int chan=0; chan < nChanPar(); chan++) {
 	    ipos(1)=chan;
-	    iposOK(0)=chan;
 	    
 	    Double ampval(1.0),phaseval(0.0);
 	    // only if in domain, calculate Cheby
@@ -1070,7 +1067,7 @@ void BJonesPoly::load (const String& applyTable)
 	      currCPar()(ipos) = factor *
 		Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
 	      // Set flag for valid cache value 
-	      currParOK()(iposOK) = True;
+	      currParOK()(ipos) = True;
 	    }
 	  }	   
 	}

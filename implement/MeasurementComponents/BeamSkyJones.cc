@@ -308,14 +308,15 @@ void BeamSkyJones::update(const VisBuffer& vb, Int row)
       // the array is not compact: position angles are significantly
       // different at different antennae
       LogIO os;
-    os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
-       << "The array is not compact, position angles differ for different stations."
-       << LogIO::POST << LogIO::WARN << LogOrigin("BeamSkyJones","update")
-       << "Primary beams are not correctly handled if they are asymmetric. Continuing anyway."<<LogIO::POST;
+      //Commenting out this message...more pest than  useful to have it at this low level
+      //    os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
+      //       << "The array is not compact, position angles differ for different stations."
+      //     << LogIO::POST << LogIO::WARN << LogOrigin("BeamSkyJones","update")
+      //      << "Primary beams are not correctly handled if they are asymmetric. Continuing anyway."<<LogIO::POST;
     // we could, in principle, clone a PBMath object for one of the
     // antennae and rebuild lastParallacticAngles_p.
     // For now, the value for the second antenna will be used
-      }
+  }
   if (lastUpdateIndex1_p!=-1)
       lastParallacticAngles_p[lastUpdateIndex1_p]=feed1_pa;
   if (lastUpdateIndex2_p!=-1)

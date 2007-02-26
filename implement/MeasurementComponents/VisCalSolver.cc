@@ -164,7 +164,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	
 	// Update current parameters (saves a copy of them)
 	updatePar();
-	
+
       }
       else {
 	// Convergence means we're done!
@@ -179,7 +179,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	  cout << "Iterations =" << iter << endl;
 	  //	cout << "par()=" << par() << endl;
 	}
-	
+
 	// Return, signaling success
 	return True;
 	
@@ -224,7 +224,7 @@ void VisCalSolver::initSolve() {
 
   if (svc().solveCPar().nelements()==uInt(nTotalPar())) {
     par().reference(svc().solveCPar().reform(IPosition(1,nTotalPar())));
-    parOK().reference(svc().solveParOK().reform(IPosition(1,nTotalPar()/svc().nPar())));
+    parOK().reference(svc().solveParOK().reform(IPosition(1,nTotalPar())));
   }
   else
     throw(AipsError("Solver and SVC cannot synchronize parameters."));
@@ -602,7 +602,6 @@ void VisCalSolver::solveGradHess() {
 
   // TBD: explicit option to avoid lmfact?
   // TBD: pointer (or MaskedArray?) optimization?
-  // TBD: set parOK?
 
   Double lmfact(1.0+lambda());
 
@@ -610,22 +609,20 @@ void VisCalSolver::solveGradHess() {
 
   dpar()=Complex(0.0);
   for (Int ipar=0; ipar<nTotalPar(); ipar++) {
-    if (hess()(ipar)!=0.0) {
+    if (parOK()(ipar) && hess()(ipar)!=0.0) {
       // good hess for this par:
       dpar()(ipar) = grad()(ipar)/hess()(ipar);
       dpar()(ipar)/=lmfact;
     }
-    else
+    else {
       dpar()(ipar)=0.0; 
-    //      cout << "aha: " << ipar << " " << ipar/svc().nPar() << endl;
-    //      parOK()(ipar/svc().nPar())=False;
+      parOK()(ipar)=False;
+    }
   }
 
   // Negate (so updatePar() can _add_)
   dpar()*=Complex(-1.0f);
 
-  
-  //  cout << "dpar() = " << dpar() << endl;
 }
 
 void VisCalSolver::updatePar() {
@@ -636,7 +633,7 @@ void VisCalSolver::updatePar() {
 
   //  if (prtlev()>4) cout << "        dpar=" << dpar() << endl;
 
-  // Subtract dpar from par
+  // Add dpar to par
   par()+=dpar();
 
   if (prtlev()>4) 
@@ -704,28 +701,29 @@ void VisCalSolver::optStepSize() {
 
   }
 
-
-
   // At this point   x2(0) > x2(1) < x2(2), so 
   //   calculate (quadratic) step optimization factor
-  Double optfactor;
-  optfactor=Double(step)*(1.5-(x2(2)-x2(1))/(x2(0)-2*x2(1)+x2(2)));
-
-
+  Double optfactor(0.0);
+  Double optn(x2(2)-x2(1));
+  Double optd(x2(0)-2*x2(1)+x2(2));
+	      
+  if (abs(optd)>0.0)
+    optfactor=Double(step)*(1.5-optn/optd);
   
-  /*
+ /*
   cout << "Optimization: " 
        << step << " " 
        << optfactor << " "
        << x2 << " "
        << "(" << min(amplitude(lastPar())) << ") "
        << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi << " ";
-  */
+ */  
 
   par()=lastPar();
   
   // Adjust step by the optfactor
-  dpar()*=Complex(optfactor);
+  if (optfactor>0.0)
+    dpar()*=Complex(optfactor);
 
 
   //  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi

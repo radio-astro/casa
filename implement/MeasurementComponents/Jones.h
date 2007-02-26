@@ -54,28 +54,31 @@ public:
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { j0_=&mat; origin(); };
+  inline void sync(Complex& mat, Bool& ok) { j0_=&mat; ok0_=&ok; origin(); };
   
   // Reset to origin
-  inline void origin() {j_=j0_;};
+  inline void origin() {j_=j0_; ok_=ok0_;};
   
   // Increment to next matrix (according to type)
-  inline void operator++()    { j_+=type(); };
-  inline void operator++(int) { j_+=type(); };
+  inline void operator++()    { j_+=type(); if (ok_) ok_+=type();};
+  inline void operator++(int) { j_+=type(); if (ok_) ok_+=type();};
 
   // Advance step matrices forward (according to type)
-  inline void advance(const Int& step) { j_+=(step*type()); };
+  inline void advance(const Int& step) { j_+=(step*type()); if (ok_) ok_+=(step*type());};
 
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
 
   // Apply rightward to a VisVector
   virtual void applyRight(VisVector& v) const;
+  virtual void applyRight(VisVector& v, Bool& vflag) const;
 
   // Apply leftward (transposed) to a VisVector 
   virtual void applyLeft(VisVector& v) const;
+  virtual void applyLeft(VisVector& v, Bool& vflag) const;
 
   // print it out
   friend ostream& operator<<(ostream& os, const Jones& mat);
@@ -96,9 +99,11 @@ protected:
 
   // Pointer to origin
   Complex *j0_;
+  Bool *ok0_;
   
   // Moving pointer
   Complex *j_, *ji_;
+  Bool *ok_, *oki_;
 
   // Complex unity
   const Complex cOne_;
@@ -127,16 +132,18 @@ public:
   inline virtual JonesType type() const { return Jones::Diagonal; };
 
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
 
   // Apply rightward to a VisVector
   virtual void applyRight(VisVector& v) const;
+  virtual void applyRight(VisVector& v, Bool& vflag) const;
 
   // Apply leftward (transposed) to a VisVector
   virtual void applyLeft(VisVector& v) const;
+  virtual void applyLeft(VisVector& v, Bool& vflag) const;
 
   // Give access to Mueller formation methods
   friend class MuellerDiag;
@@ -169,16 +176,18 @@ public:
   inline virtual JonesType type() const { return Jones::Scalar; };
 
   // In-place invert
-  virtual Bool invert();
+  virtual void invert();
 
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
 
   // Apply rightward to a VisVector
   virtual void applyRight(VisVector& v) const;
+  virtual void applyRight(VisVector& v, Bool& vflag) const;
 
   // Apply leftward (transposed) to a VisVector
   virtual void applyLeft(VisVector& v) const;
+  virtual void applyLeft(VisVector& v, Bool& vflag) const;
 
   // Give access to Mueller formation methods
   friend class MuellerScal;
@@ -203,6 +212,7 @@ Jones* createJones(const Jones::JonesType& jtype);
 
 // Apply a pair of Jones to a VisVector:
 void apply(const Jones& j1, VisVector& v, const Jones& j2);
+void apply(const Jones& j1, VisVector& v, const Jones& j2, Bool& vflag);
 
 // Return enum from integer
 Jones::JonesType jonesType(const Int& n);

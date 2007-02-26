@@ -39,29 +39,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Constructor
 Jones::Jones() : 
   j0_(NULL), 
+  ok0_(NULL),
   j_(NULL), 
   ji_(NULL),
+  ok_(NULL),
+  oki_(NULL),
   cOne_(1.0),
   vtmp_(VisVector::Four,True)
 {}
 
 // In place invert
-Bool Jones::invert() {
-  Complex det,tmp;
-  tmp=j_[0];
-  det=j_[0]*j_[3]-j_[1]*j_[2];
-  if (abs(det)>0.0) {
-    j_[0]=j_[3]/det;
-    j_[1]=-j_[1]/det;
-    j_[2]=-j_[2]/det;
-    j_[3]=tmp/det;
-  } else {
+void Jones::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of Jones::invert()"));
+
+  if (ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]) {
+    Complex det,tmp;
+    tmp=j_[0];
+    det=j_[0]*j_[3]-j_[1]*j_[2];
+    if (abs(det)>0.0) {
+      j_[0]=j_[3]/det;
+      j_[1]=-j_[1]/det;
+      j_[2]=-j_[2]/det;
+      j_[3]=tmp/det;
+    } else {
+      zero();
+      ok_[0]=ok_[1]=ok_[2]=ok_[3]=False;
+    }
+  }
+  else {
+    ok_[0]=ok_[1]=ok_[2]=ok_[3]=False;
     zero();
-    return False;
   }
 
-  // All ok if we reach here
-  return True;
 }
 
 // In-place multipication with another Jones
@@ -106,6 +116,16 @@ void Jones::applyRight(VisVector& v) const {
   }
 }
 
+// Apply rightward to a VisVector
+void Jones::applyRight(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of Jones::applyRight(v,vflag)"));
+
+  vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+  if (!vflag) applyRight(v);
+  else v.zero();
+  
+}
 
 // Apply leftward (transposed) to a VisVector 
 void Jones::applyLeft(VisVector& v) const {
@@ -141,6 +161,17 @@ void Jones::applyLeft(VisVector& v) const {
   }
 }
 
+// Apply leftward to a VisVector
+void Jones::applyLeft(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of Jones::applyLeft(v,vflag)"));
+
+  vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+  if (!vflag) applyLeft(v);
+  else v.zero();
+
+}
+
 void Jones::zero() {
   ji_=j_;
   for (Int i=0;i<4;++i,++ji_)
@@ -151,38 +182,41 @@ void Jones::zero() {
 JonesDiag::JonesDiag() : Jones() {}
 
 // In place invert
-Bool JonesDiag::invert() {
+void JonesDiag::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesDiag::invert()"));
+
   ji_=j_;
-  for (Int i=0;i<2;++i,++ji_)
-    if (abs(*ji_)>0.0)
+  oki_=ok_;
+  for (Int i=0;i<2;++i,++ji_,++oki_)
+    if ((*oki_) && abs(*ji_)>0.0)
       (*ji_)=cOne_/(*ji_);
     else {
-      //      zero();
-      //      return False;
-      // for now just use zero here
       (*ji_)=Complex(0.0);
+      (*oki_)=False;
     }
 
-  // All OK if we reach here
-  return True;
-  
 }
 
 // In-place multipication with another Jones
 void JonesDiag::operator*=(const Jones& other) {
 
+  if (!ok_) throw(AipsError("Illegal use of JonesDiag::operator*=()"));
+
   switch(other.type()) {
   case Jones::General: 
     throw(AipsError("Can't multiply Diagonal by General Jones matrix."));
     break;
-  case Jones::Diagonal:
-    j_[0]*=other.j_[0];
-    j_[1]*=other.j_[1];
+  case Jones::Diagonal: {
+    if (ok_[0]&=other.ok_[0]) j_[0]*=other.j_[0];
+    if (ok_[1]&=other.ok_[1]) j_[1]*=other.j_[1];
     break;
-  case Jones::Scalar:
-    j_[0]*=other.j_[0];
-    j_[1]*=other.j_[0];
+  }
+  case Jones::Scalar: {
+    if (ok_[0]&=other.ok_[0]) j_[0]*=other.j_[0];
+    if (ok_[1]&=other.ok_[0]) j_[1]*=other.j_[0];
     break;
+  }
   }
 }
 
@@ -211,6 +245,24 @@ void JonesDiag::applyRight(VisVector& v) const {
   }    
 }
 
+void JonesDiag::applyRight(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyRight(v,vflag)"));
+
+  switch(v.type()) {
+  // For scalar data, we only pay attention to the first flag
+  case VisVector::One: 
+    vflag|=(!ok_[0]);
+    break;
+  // ...otherwise, we flag outright
+  default:
+    vflag|=(!(ok_[0]&&ok_[1]));
+    break;
+  }
+  if (!vflag) applyRight(v);
+  else v.zero();
+
+}
 
 // Apply leftward (transposed) to a VisVector 
 void JonesDiag::applyLeft(VisVector& v) const {
@@ -240,6 +292,24 @@ void JonesDiag::applyLeft(VisVector& v) const {
   }    
 }
 
+void JonesDiag::applyLeft(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyLeft(v,vflag)"));
+
+  switch(v.type()) {
+  // For scalar data, we only pay attention to the first flag
+  case VisVector::One: 
+    vflag|=(!ok_[0]);
+    break;
+  // ...otherwise, we flag outright
+  default:
+    vflag|=(!(ok_[0]&&ok_[1]));
+    break;
+  }
+  if (!vflag) applyLeft(v);
+  else v.zero();
+}
+
 void JonesDiag::zero() {
   ji_=j_;
   for (Int i=0;i<2;++i,++ji_)
@@ -251,21 +321,23 @@ void JonesDiag::zero() {
 JonesScal::JonesScal() : JonesDiag() {}
 
 // In place invert
-Bool JonesScal::invert() {
-  if (abs(*j_)>0.0)
+void JonesScal::invert() {
+  
+  if (!ok_) throw(AipsError("Illegal use of JonesScal::invert()"));
+
+  if ((*ok_) && abs(*j_)>0.0)
     (*j_)=cOne_/(*j_);
   else {
-    zero();
-    return False;
+    (*j_)=Complex(0.0);
+    (*ok_)=False;
   }
-  
-  // All ok if we reach here
-  return True;
 
 }
 
 // In-place multipication with another Jones
 void JonesScal::operator*=(const Jones& other) {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesScal::operator*="));
 
   switch(other.type()) {
   case Jones::General: 
@@ -274,9 +346,10 @@ void JonesScal::operator*=(const Jones& other) {
   case Jones::Diagonal:
     throw(AipsError("Can't multiply Scalar Jones by Diagonal Jones matrix."));
     break;
-  case Jones::Scalar:
-    (*j_)*=(*other.j_);
+  case Jones::Scalar: {
+    if ((*ok_)&=(*other.ok_)) (*j_)*=(*other.j_);
     break;
+  }
   }
 }
 
@@ -287,12 +360,30 @@ void JonesScal::applyRight(VisVector& v) const {
     v.v_[i] *= (*j_);
 }
 
+void JonesScal::applyRight(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesScal::applyRight(v,vflag)"));
+
+  vflag|=(!*ok_);
+  if (!vflag) applyRight(v);
+  else v.zero();
+}
+
 // Apply leftward (transposed) to a VisVector 
 void JonesScal::applyLeft(VisVector& v) const {
   Complex c;
   c=conj(*j_);
   for (Int i=0;i<v.vistype_;++i) 
     v.v_[i] *= c;
+}
+
+void JonesScal::applyLeft(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesScal::applyLeft(v,vflag)"));
+
+  vflag|=(!*ok_);
+  if (!vflag) applyLeft(v);
+  else v.zero();
 }
 
 void JonesScal::zero() {
@@ -324,6 +415,14 @@ void apply(const Jones& j1, VisVector& v, const Jones& j2) {
   // Apply Jones matrix from right, then left
   j1.applyRight(v);
   j2.applyLeft(v);
+
+}
+
+void apply(const Jones& j1, VisVector& v, const Jones& j2, Bool& vflag) {
+
+  // Apply Jones matrix from right, then left
+  j1.applyRight(v,vflag);
+  j2.applyLeft(v,vflag);
 
 }
 

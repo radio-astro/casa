@@ -386,7 +386,6 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
     // Set parOK,etc. to true
     for (Int ispw=0;ispw<nSpw();ispw++) {
       cs().parOK(ispw)=True;
-      cs().iSolutionOK(ispw)=True;
       cs().solutionOK(ispw)=True;
     }
 
@@ -630,7 +629,6 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
   Vector<Double> wtperant(nAnt(),0.0);
   Vector<Bool> antOK(nAnt(),False);
     
-
   while (nAntForSolve!=nAntForSolveFinal) {
 
     nAntForSolveFinal=nAntForSolve;
@@ -640,6 +638,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     // TBD: optimize indexing with pointers in the following
     blperant=0;
     wtperant=0.0;
+
     for (Int irow=0;irow<vb.nRow();++irow) {
       Int a1=vb.antenna1()(irow);
       Int a2=vb.antenna2()(irow);
@@ -667,8 +666,10 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
       }
       else {
 	// This antenna under-represented; flag it
-	vb.flagRow()(vb.antenna1()==iant)=True;
-	vb.flagRow()(vb.antenna2()==iant)=True;
+	vb.flag().row(focusChan())(vb.antenna1()==iant)=True;
+	vb.flag().row(focusChan())(vb.antenna2()==iant)=True;
+	//	vb.flagRow()(vb.antenna1()==iant)=True;
+	//	vb.flagRow()(vb.antenna2()==iant)=True;
       }
     }
 
@@ -686,13 +687,13 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
   for (Int iant=0;iant<nAnt();++iant)
     if (antOK(iant))
       // This ant ok
-      solveParOK().column(iant) = True;
+      solveParOK().xyPlane(iant) = True;
     else
       // This ant not ok, set soln to zero
       if (parType()==VisCal::Co)
-	solveCPar().xyPlane(iant)=0.0;
+      	solveCPar().xyPlane(iant)=1.0;
       else if (parType()==VisCal::Re)
-	solveRPar().xyPlane(iant)=0.0;
+      	solveRPar().xyPlane(iant)=0.0;
   //  cout << "antOK = " << antOK << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
   //  cout << "amp(solveCPar()) = " << amplitude(solveCPar()) << endl;
@@ -731,7 +732,7 @@ void SolvableVisCal::syncPar(const Int& spw, const Int& slot) {
   IPosition trc(4,cs().nPar()-1,cs().nChan(spw)-1,cs().nElem()-1,slot);
 
   currCPar().reference(cs().par(spw)(blc,trc).nonDegenerate(3));;
-  currParOK().reference(cs().parOK(spw)(blc.getLast(3),trc.getLast(3)).nonDegenerate(2));
+  currParOK().reference(cs().parOK(spw)(blc,trc).nonDegenerate(3));
 
   validateP();
   invalidateCalMat();
@@ -790,9 +791,10 @@ void SolvableVisCal::calcPar() {
     
     // Reference result
     currCPar().reference(ci().result());
-    // TBD:    currParOK().reference(ci().resultOK());
+    currParOK().reference(ci().resultOK());
+
     // For now, assume all OK
-    currParOK().resize(nChanPar(),nElem()); currParOK()=True;
+    //    currParOK().resize(nPar(),nChanPar(),nElem()); currParOK()=True;
 
     // In case we need solution timestamp
     refTime() = ci().slotTime();
@@ -810,14 +812,6 @@ void SolvableVisCal::keep(const Int& slot) {
 
   if (slot<cs().nTime(currSpw())) {
     // An available valid slot
-
-   
-    //    cout << "Result: solveCPar() = " << abs(solveCPar()) << endl;
-
-    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
-    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
-
-    //    cout << "Result: solveParOK() = " << solveParOK() << endl;
 
     cs().fieldId(currSpw())(slot)=currField();
     cs().time(currSpw())(slot)=refTime();
@@ -840,17 +834,9 @@ void SolvableVisCal::keep(const Int& slot) {
 
     // TBD:  Handle solveRPar here!
 
+    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
 
-    IPosition blc3(3,focusChan(),0,        slot);
-    IPosition trc3(3,focusChan(),nElem()-1,slot);
-    cs().parOK(currSpw())(blc3,trc3).nonDegenerate(2)= solveParOK();
-
-    Vector<Bool> iSOK(cs().iSolutionOK(currSpw()).column(slot));
-    Vector<Bool> sPOK(solveParOK().row(0));
-    iSOK = (iSOK || sPOK );
-
-    Bool& sOK(cs().solutionOK(currSpw())(slot));
-    sOK = (sOK || anyEQ(solveParOK(),True));
+    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
   }
   else
@@ -924,7 +910,7 @@ void SolvableVisCal::initSVC() {
   for (Int ispw=0;ispw<nSpw(); ispw++) {
     solveCPar_[ispw] = new Cube<Complex>();
     solveRPar_[ispw] = new Cube<Float>();
-    solveParOK_[ispw] = new Matrix<Bool>();
+    solveParOK_[ispw] = new Cube<Bool>();
   }
 
 }
@@ -1002,7 +988,7 @@ void SolvableVisMueller::initSolvePar() {
 
     // TBD: Consider per-baseline solving (3rd=1)
     solveCPar().resize(nPar(),nChanPar(),nBln());
-    solveParOK().resize(nChanPar(),nBln());
+    solveParOK().resize(nPar(),nChanPar(),nBln());
 
     // TBD: solveRPar()?
     
@@ -1319,8 +1305,6 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   Int*    a2=    vb.antenna2().data();
   Bool*   flagR= vb.flagRow().data();
   Bool*   flag=  Vflg.data();            // via local reference
-  Bool*   J1Ok;
-  Bool*   J2Ok;
   
   // TBD: set weights according to flags??
 
@@ -1342,10 +1326,8 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
       }
 
       // Synchronize Jones renderers for the ants on this baseline
-      J1Ok = &currJElemOK()(0,*a1);
-      J2Ok = &currJElemOK()(0,*a2);
-      J1().sync(currJElem()(0,0,*a1));
-      J2().sync(currJElem()(0,0,*a2));
+      J1().sync(currJElem()(0,0,*a1),currJElemOK()(0,0,*a1));
+      J2().sync(currJElem()(0,0,*a2),currJElemOK()(0,0,*a2));
 
       // Synchronize differentiated Jones renderers for this baseline
       if (trivialDJ()) {
@@ -1361,18 +1343,24 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
 	     cVm++, J1()++, J2()++) {
 	     
 	// if channel unflagged an cal ok
-	if (!*flag && (*J1Ok && *J2Ok) ) {  
+	//	if (!*flag && (*J1Ok && *J2Ok) ) {  
+	if (!*flag) { 
 	  
 	  // Partial applies for repeated use below
 	  VJ2=cVm;                    
-	  J2().applyLeft(VJ2);      // VJ2 = Vm*J2  
+	  J2().applyLeft(VJ2,*flag);      // VJ2 = Vm*J2, used below
 
-	  J1().applyRight(cVm);     
-	  J1V=cVm;                  // J1V = J1*Vm
+	  J1().applyRight(cVm,*flag);     
+	  J1V=cVm;                        // J1V = J1*Vm, used below
 
 	  // Finish trial corruption
-	  J2().applyLeft(cVm);      // cVm = (J1*Vm)*J2
-	  
+	  J2().applyLeft(cVm,*flag);      // cVm = (J1*Vm)*J2
+
+	}
+
+	// Only continue with diff-ing, if we aren't flagged yet
+	if (!*flag) {
+
 	  // Differentiation per par
 	  for (Int ip=0;ip<nPar();ip++,
 		 dV1++,dJ1()++,
@@ -1387,6 +1375,9 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
 	  
 	} // (!*flag)
 	else {
+	  // set trial corruption to zero
+	  cVm.zero();
+	  
 	  // Advance all par-dep pointers over flagged channel
 	  dV1.advance(nPar());
 	  dV2.advance(nPar());
@@ -1462,23 +1453,20 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 	AlwaysAssert((nChanMat()==svj->nChanMat()),AipsError);
 
         // Do the multiplication each ant, chan
-	Bool *jeOk = &currJElemOK()(0,0);
-	Bool *svjOk = &(svj->currJElemOK()(0,0));
         for (Int iant=0; iant<nAnt(); iant++) {
           for (Int ichan=0; ichan<nChanMat(); ichan++) {
-
-	    *jeOk = *jeOk && *svjOk;
-	    if (*jeOk) 
-	      J1()*=(svj->J1());
-
+	    J1()*=(svj->J1());
 	    J1()++;
-	    jeOk++;
 	    svj->J1()++;
-	    svjOk++;
           } // ichan
-	  cs().iSolutionOK(currSpw()).column(islot)(iant)=anyEQ(currJElemOK().column(iant),True);
         } // iant
-	cs().solutionOK(currSpw())(islot)=anyEQ(cs().iSolutionOK(currSpw()).column(islot),True);
+	IPosition blc(4,0,0,0,islot);
+	IPosition trc(cs().parOK(currSpw()).shape());
+	trc-=1;
+	trc(3)=islot;
+	cout << "New cs().parOK() = " << cs().parOK(currSpw())(blc,trc) << endl;
+	cs().solutionOK(currSpw())(islot)=
+	  anyEQ(cs().parOK(currSpw())(blc,trc),True);
       } // fldok
     } // islot
   } // ispw
@@ -1510,7 +1498,7 @@ void SolvableVisJones::initSolvePar() {
       throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
     }
 
-    solveParOK().resize(1,nAnt());
+    solveParOK().resize(nPar(),1,nAnt());
     solveParOK()=True;
 
   }
@@ -1895,20 +1883,18 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
           Matrix<Int>    mgnn;    mgnn.reference(*(MGNN[iFld]));
 
           for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-            if (cs().iSolutionOK(iSpw)(iAnt,islot)) {
-              // a good solution, so accumulate
-              antOK(iAnt,iSpw)=True;
-              Double wt=cs().iFitwt(iSpw)(iAnt,islot);
-
-              for (Int ipar=0; ipar<nPar(); ipar++) {
-                IPosition ip(4,ipar,0,iAnt,islot);
-                Double gn=norm( cs().par(iSpw)(ip) );
-                mgnorm(iAnt,iSpw) += (wt*gn);
-                mgnorm2(iAnt,iSpw)+= (wt*gn*gn);
-                mgnn(iAnt,iSpw)++;
-                mgnwt(iAnt,iSpw)+=wt;
-              }
-
+	    Double wt=cs().iFitwt(iSpw)(iAnt,islot);
+	    
+	    for (Int ipar=0; ipar<nPar(); ipar++) {
+	      IPosition ip(4,ipar,0,iAnt,islot);
+	      if (cs().parOK(iSpw)(ip)) {
+		antOK(iAnt,iSpw)=True;
+		Double gn=norm( cs().par(iSpw)(ip) );
+		mgnorm(iAnt,iSpw) += (wt*gn);
+		mgnorm2(iAnt,iSpw)+= (wt*gn*gn);
+		mgnn(iAnt,iSpw)++;
+		mgnwt(iAnt,iSpw)+=wt;
+	      }
             }
           }
         }
@@ -2151,12 +2137,10 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
           // If this is a tran fld and gainScaleFactor ok
           if (scaleOK(iSpw,iFld)) {
             for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-              if (cs().iSolutionOK(iSpw)(iAnt,islot)) {
-                // a good solution, so apply scaling to all pars
-                for (Int ipar=0; ipar<nPar(); ipar++) {
-                  IPosition ip(4,ipar,0,iAnt,islot);
+	      for (Int ipar=0; ipar<nPar(); ipar++) {
+		IPosition ip(4,ipar,0,iAnt,islot);
+		if (cs().parOK(iSpw)(ip))
                   cs().par(iSpw)(ip)*=gainScaleFactor(iSpw,iFld);
-                }
               }
             }
           }

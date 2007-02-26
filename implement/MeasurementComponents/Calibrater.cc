@@ -941,8 +941,6 @@ Bool Calibrater::standardSolve() {
   logSink() << "Solving for " << svc_p->typeName()
 	    << LogIO::POST;
   
-  //    MSHistoryHandler::addMessage(*ms_p, "Solving for T", "calibrater", type, "calibrater::solve()");
-  
   // Arrange for iteration over data
   Block<Int> columns;
   if (svc_p->interval()==0.0) {
@@ -964,7 +962,7 @@ Bool Calibrater::standardSolve() {
   vs_p->resetVisIter(columns,svc_p->interval());
   VisIter& vi(vs_p->iter());
   VisBuffer vb(vi);
-  
+
   // Initialize the svc according to current VisSet
   //  (this counts intervals, sizes CalSet)
   svc_p->initSolve(*vs_p);
@@ -975,9 +973,6 @@ Bool Calibrater::standardSolve() {
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     
     Int spw(vi.spectralWindow());
-    
-    //      cout << "Spw=" << spw << " slot=" << islot(spw) << " field=" 
-    //           << vi.fieldId() << " " << MVTime(vb.time()(0)/86400.0) << " -------------------" << endl;
     
     // Arrange to accumulate 
     VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
@@ -1001,7 +996,8 @@ Bool Calibrater::standardSolve() {
     
     // The VisBuffer to solve with
     VisBuffer& svb(vba.aveVisBuff()); 
-    
+
+
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
     //  (this sets currSpw() in the SVC)
@@ -1011,28 +1007,22 @@ Bool Calibrater::standardSolve() {
     if (vbOk) {
 
       svc_p->guessPar(svb);
-      //svc_p->solvePar()=0.3;
+      //svc_p->solveCPar()=Complex(0.3);
       //svc_p->solveParOK()=True;
     
-    //      cout << " guess: " << amplitude(svc_p->solvePar().reform(IPosition(1,svc_p->solvePar().nelements()))) << endl;
-    
-
-
       // Solve for each parameter channel (in curr Spw)
       
       // (NB: force const version of nChanPar()  [why?])
       //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
       Bool totalGoodSol(False);
       for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
-	
+
 	// If pars chan-dep, SVC mechanisms for only one channel at a time
 	svc_p->focusChan()=ich;
-	
+
 	// Pass VE, SVC, VB to solver
 	Bool goodSoln=vcs.solve(*ve_p,*svc_p,svb);
-	
-	// TBD:  refant?
-	
+
 	// If good... 
 	if (goodSoln) {
 	  totalGoodSol=True;

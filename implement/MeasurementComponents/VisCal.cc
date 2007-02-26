@@ -153,7 +153,7 @@ void VisCal::setApply() {
     default:
       throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
     }
-    currParOK().resize(nChanPar(),nElem());
+    currParOK().resize(nPar(),nChanPar(),nElem());
     currParOK()=True;
   }
 
@@ -495,13 +495,13 @@ void VisCal::calcPar() {
 
   // Ensure we have some parameters
   if (parType()==VisCal::Co && (currCPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
-				currParOK().shape()!=IPosition(2,nChanPar(),nElem())) ) {
+				currParOK().shape()!=IPosition(3,nPar(),nChanPar(),nElem())) ) {
     cout << "currCPar()   = " << currCPar() << endl;
     cout << "currParOK() = " << currParOK() << endl;
     throw(AipsError("No (complex) parameters available!"));
   }
   else if (parType()==VisCal::Re && (currRPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
-				     currParOK().shape()!=IPosition(2,nChanPar(),nElem())) ) {
+				     currParOK().shape()!=IPosition(3,nPar(),nChanPar(),nElem())) ) {
     cout << "currRPar()   = " << currRPar() << endl;
     cout << "currParOK() = " << currParOK() << endl;
     throw(AipsError("No (real) parameters available!"));
@@ -532,7 +532,7 @@ void VisCal::initVisCal() {
   for (Int ispw=0;ispw<nSpw(); ispw++) {
     currCPar_[ispw] = new Cube<Complex>();
     currRPar_[ispw] = new Cube<Float>();
-    currParOK_[ispw] = new Matrix<Bool>();
+    currParOK_[ispw] = new Cube<Bool>();
     V_[ispw] = new VisVector(VisVector::Four);
     currWtScale_[ispw] = new Matrix<Float>();
   }
@@ -546,7 +546,7 @@ void VisCal::deleteVisCal() {
   for (Int ispw=0; ispw<nSpw(); ispw++) {
     if (currCPar_[ispw])     delete currCPar_[ispw];
     if (currRPar_[ispw])     delete currRPar_[ispw];
-    if (currParOK_[ispw])   delete currParOK_[ispw];
+    if (currParOK_[ispw])    delete currParOK_[ispw];
     if (V_[ispw]) delete V_[ispw];
     if (currWtScale_[ispw]) delete currWtScale_[ispw];
   }
@@ -632,7 +632,6 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
   Bool* flag=&vb.flag()(0,0);
   Int* a1=&vb.antenna1()(0);
   Int* a2=&vb.antenna2()(0);
-  Bool* MOk;
 
   // Access to weights
   ArrayIterator<Float> wt(vb.weightMat(),1);
@@ -661,8 +660,7 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       }
     
       // Solution and data array registration
-      MOk = &(currMElemOK()(solCh0,ibln));
-      M().sync(currMElem()(0,solCh0,ibln));
+      M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
       V().sync(Vout(0,0,row));
 
       wtvec.reference(wt.array());
@@ -670,17 +668,14 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
 
 	// data and solution ok, do the apply
-	if (!*flag && *MOk)
-	  M().apply(V());
-	else 
-	  *flag=True;
+	if (!*flag)
+	  M().apply(V(),*flag);
 
 	// inc soln ch axis if freq-dependent (and next dataChan within soln)
 	if (freqDepMat() && 
 	    ( *dataChan+1>startChan() &&
 	      (*dataChan+1)<(startChan()+nChanMat() ) ) ) {
 	  M()++; 
-	  MOk++;
 	}
 
       } // chn
@@ -726,9 +721,10 @@ void VisMueller::syncMueller(const Bool& doInv) {
     currMElem().resize(muellerType(),nChanMat(),nCalMat());
     currMElem().unique();    // Ensure uniqueness!
 
-    // Nominally, the matrix-element's OK follows the parameters' OK
-    //  (these may be revised downstream)
-    currMElemOK().reference(currParOK());
+    // OK is the shape of the M matrix itself
+    currMElemOK().resize(muellerType(),nChanMat(),nCalMat());
+    currMElemOK().unique();
+    currMElemOK()=False;
     
     // The matrix state is invalid until we actually calculate them
     invalidateM();
@@ -758,10 +754,14 @@ void VisMueller::calcAllMueller() {
   //  do Mueller calc if OK
 
   Vector<Complex> oneMueller;
+  Vector<Bool> oneMOK;
   Vector<Complex> onePar;
+  Vector<Bool> onePOK;
 
   ArrayIterator<Complex> Miter(currMElem(),1);
+  ArrayIterator<Bool>    MOKiter(currMElemOK(),1);
   ArrayIterator<Complex> Piter(currCPar(),1);
+  ArrayIterator<Bool>    POKiter(currParOK(),1);
   
   // All required baselines
   for (Int ibln=0; ibln<nCalMat(); ibln++) {
@@ -771,29 +771,35 @@ void VisMueller::calcAllMueller() {
     for (Int ich=0; ich<nChanMat(); ich++) {
 
       oneMueller.reference(Miter.array());
+      oneMOK.reference(MOKiter.array());
       onePar.reference(Piter.array());
+      onePOK.reference(POKiter.array());
       
       // TBD  What if calcOneMueller needs freq value info?
       
-      if (currParOK()(ich,ibln)) 
-	// Calculate the Mueller matrix
-	calcOneMueller(oneMueller,onePar);
+      calcOneMueller(oneMueller,oneMOK,onePar,onePOK);
       
       // Advance iterators, as required
       Miter.next();
-      if (freqDepPar()) Piter.next();
+      MOKiter.next();
+      if (freqDepPar()) {
+	Piter.next();
+	POKiter.next();
+      }
 
     }
 
     // Step to next baseline's pars if we didn't in channel loop
-    //  (if freqDepPar()=True, pars are constant with channel)
-    if (!freqDepPar()) Piter.next();
+    if (!freqDepPar()) {
+      Piter.next();
+      POKiter.next();
+    }
   }
 
 }
 
-void VisMueller::calcOneMueller(Vector<Complex>& mat, 
-				const Vector<Complex>& par) {
+void VisMueller::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
+				const Vector<Complex>& par, const Vector<Bool>& pOk) {
 
   if (prtlev()>10) cout << "        VM::calcOneMueller()" << endl;
 
@@ -814,14 +820,12 @@ void VisMueller::invMueller() {
 
   if (prtlev()>6) cout << "       VM::invMueller()" << endl;
 
-  M().sync(currMElem()(0,0,0));
-  Bool *meOk = &currMElemOK()(0,0);
+  M().sync(currMElem()(0,0,0),currMElemOK()(0,0,0));
   for (Int ibln=0;ibln<nCalMat();ibln++) 
-    for (Int ichan=0; ichan<nChanMat(); ++ichan, M()++,++meOk) 
+    for (Int ichan=0; ichan<nChanMat(); ++ichan, M()++) 
       // If matrix elements look ok so far, attempt to invert
       //  (if invert fails, matrix is zeroed and meOk is set accordingly)
-      if (*meOk)
-	(*meOk) = M().invert();
+      M().invert();
 
 }
 
@@ -841,7 +845,7 @@ void VisMueller::createMueller() {
 
 
   // Nominal synchronization is with currMElem()(0,0,0);
-  M().sync(currMElem()(0,0,0));
+  M().sync(currMElem()(0,0,0),currMElemOK()(0,0,0));
       
 }
 
@@ -901,7 +905,7 @@ void VisMueller::initVisMueller() {
 
   for (Int ispw=0;ispw<nSpw(); ispw++) {
     currMElem_[ispw] = new Cube<Complex>();
-    currMElemOK_[ispw] = new Matrix<Bool>();
+    currMElemOK_[ispw] = new Cube<Bool>();
   }
 }
 
@@ -1012,8 +1016,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
     Bool* flag=&vb.flag()(0,0);
     Int* a1=&vb.antenna1()(0);
     Int* a2=&vb.antenna2()(0);
-    Bool* J1Ok;
-    Bool* J2Ok;
   
     ArrayIterator<Float> wt(vb.weightMat(),1);
     Vector<Float> wtvec;
@@ -1039,10 +1041,8 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	}
 
 	// Solution and data array registration
-	J1Ok = &(currJElemOK()(solCh0,*a1));
-	J2Ok = &(currJElemOK()(solCh0,*a2));
-	J1().sync(currJElem()(0,solCh0,*a1));
-	J2().sync(currJElem()(0,solCh0,*a2));
+	J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
+	J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
 	V().sync(Vout(0,0,row));
 
 	wtvec.reference(wt.array());
@@ -1050,14 +1050,10 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
 	  
 	  // if this data channel unflagged
-	  if (!*flag)
-	    // if solutions ok
-	    if (*J1Ok && *J2Ok) {  
-	      J1().applyRight(V());
-	      J2().applyLeft(V());
-	    }
-	    else 
-	      *flag=True;
+	  if (!*flag) {
+	    J1().applyRight(V(),*flag);
+	    J2().applyLeft(V(),*flag);
+	  }
 	  
 	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
 	  if (freqDepMat() && 
@@ -1065,8 +1061,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 		(*dataChan+1)<(startChan()+nChanMat() ) ) ) {
 	    J1()++; 
 	    J2()++; 
-	    J1Ok++;
-	    J2Ok++;
 	  }
 	  
 	} // chn
@@ -1137,9 +1131,10 @@ void VisJones::syncJones(const Bool& doInv) {
     currJElem().resize(jonesType(),nChanMat(),nAnt());
     currJElem().unique();    // Ensure uniqueness!
 
-    // Nominally, the matrix-element's OK follows the parameters' OK
-    //  (these may be revised downstream)
-    currJElemOK().reference(currParOK());
+    // OK matches size of the J matrix itself
+    currJElemOK().resize(jonesType(),nChanMat(),nAnt());
+    currJElem().unique();    // Ensure uniqueness!
+    currJElem()=False;
 
     // The matrix state is invalid until we actually calculate them
     invalidateJ();
@@ -1169,13 +1164,17 @@ void VisJones::calcAllJones() {
   if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
 
   // Should handle OK flags in this method, and only
-  //  do Mueller calc if OK
+  //  do Jones calc if OK
 
   Vector<Complex> oneJones;
+  Vector<Bool> oneJOK;
   Vector<Complex> onePar;
+  Vector<Bool> onePOK;
 
   ArrayIterator<Complex> Jiter(currJElem(),1);
+  ArrayIterator<Bool>    JOKiter(currJElemOK(),1);
   ArrayIterator<Complex> Piter(currCPar(),1);
+  ArrayIterator<Bool>    POKiter(currParOK(),1);
   
   for (Int iant=0; iant<nAnt(); iant++) {
 
@@ -1184,24 +1183,32 @@ void VisJones::calcAllJones() {
     for (Int ich=0; ich<nChanMat(); ich++) {
       
       oneJones.reference(Jiter.array());
+      oneJOK.reference(JOKiter.array());
       onePar.reference(Piter.array());
+      onePOK.reference(POKiter.array());
 
-      if (currParOK()(ich,iant)) 
-	// Calculate the Jones matrix
-	calcOneJones(oneJones,onePar);
+      // Calculate the Jones matrix
+      calcOneJones(oneJones,oneJOK,onePar,onePOK);
       
       // Advance iterators
       Jiter.next();
-      if (freqDepPar()) Piter.next();
+      JOKiter.next();
+      if (freqDepPar()) {
+	Piter.next();
+	POKiter.next();
+      }
 
     }
     // Step to next antenns's pars if we didn't in channel loop
-    //  (if freqDepPar()=True, pars are constant with channel)
-    if (!freqDepPar()) Piter.next();
+    if (!freqDepPar()) {
+      Piter.next();
+      POKiter.next();
+    }
   }
 }
 
-void VisJones::calcOneJones(Vector<Complex>& mat, const Vector<Complex>& par ) {
+void VisJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
+			    const Vector<Complex>& par, const Vector<Bool>& pOk ) {
 
   if (prtlev()>10) cout << "        VJ::calcOneJones()" << endl;
 
@@ -1219,15 +1226,12 @@ void VisJones::invJones() {
 
   if (prtlev()>6) cout << "       VJ::invJones()" << endl;
 
-  J1().sync(currJElem()(0,0,0));
-  Bool *jeOk = &currJElemOK()(0,0);
+  J1().sync(currJElem()(0,0,0),currJElemOK()(0,0,0));
   for (Int iant=0;iant<nAnt();iant++) 
-    for (Int ichan=0; ichan<nChanMat();++ichan,J1()++,++jeOk) 
+    for (Int ichan=0; ichan<nChanMat();++ichan,J1()++) 
       // If matrix elements look ok so far, attempt to invert
       //  (if invert fails, currJElemOK will be set accordingly)
-      
-      if (*jeOk) 
-	(*jeOk) = J1().invert();
+      J1().invert();
 
 }
 
@@ -1237,10 +1241,9 @@ void VisJones::calcAllMueller() {
 
   M().sync(currMElem()(0,0,0));
   for (Int a1=0;a1<nAnt();++a1) {
-    J1().sync(currJElem()(0,0,a1));
+    J1().sync(currJElem()(0,0,a1),currJElemOK()(0,0,a1));
     for (Int a2=a1;a2<nAnt();++a2) {
-      J2().sync(currJElem()(0,0,a2));
-
+      J2().sync(currJElem()(0,0,a2),currJElemOK()(0,0,a2));
       for (Int ich=0;ich<nChanMat();ich++,J1()++,J2()++,M()++)
 	M().fromJones(J1(),J2());
     }
@@ -1272,8 +1275,8 @@ void VisJones::createJones() {
       
 
   // Nominal synchronization is with currJElem()(0,0,0):
-  J1().sync(currJElem()(0,0,0));
-  J2().sync(currJElem()(0,0,0));
+  J1().sync(currJElem()(0,0,0),currJElemOK()(0,0,0));
+  J2().sync(currJElem()(0,0,0),currJElemOK()(0,0,0));
 
 }
 
@@ -1356,7 +1359,7 @@ void VisJones::initVisJones() {
 
   for (Int ispw=0;ispw<nSpw(); ispw++) {
     currJElem_[ispw] = new Cube<Complex>();
-    currJElemOK_[ispw] = new Matrix<Bool>();
+    currJElemOK_[ispw] = new Cube<Bool>();
   }
 }
 

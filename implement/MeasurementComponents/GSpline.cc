@@ -777,7 +777,7 @@ void GJonesSpline::calcPar() {
   //  cout << "vbFreqHz = " << vbFreqHz << endl;
 
   currCPar().resize(nPar(),1,nAnt());
-  currParOK().resize(1,nAnt());
+  currParOK().resize(nPar(),1,nAnt());
   currParOK()=False;
 
   // Compute them, per antenna
@@ -899,10 +899,11 @@ void GJonesSpline::calcPar() {
       //      cout << "phaseVal = " << phaseVal << endl;
       
       // Fill the (matrix element) parameters
-      for (Int i=0;i<2;++i) 
+      for (Int i=0;i<2;++i) {
 	currCPar()(i,0,iant) = gain * ampVal(i) * Complex(cos(phaseVal(i)), 
 							  sin(phaseVal(i)) );
-      currParOK()(0,iant) = True;
+	currParOK()(i,0,iant) = True;
+      }
       
     };
   };
