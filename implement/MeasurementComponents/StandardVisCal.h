@@ -390,7 +390,7 @@ public:
   virtual String longTypeName() { return "M Mueller (baseline-based)"; };
 
   // Type of Jones matrix according to nPar()
-  virtual Mueller::MuellerType muellerType() { return Mueller::Diagonal; };
+  virtual Mueller::MuellerType muellerType() { return Mueller::Diag2; };
 
   // M solves for itself
   virtual Bool standardSolve() { return False; };
@@ -403,8 +403,8 @@ public:
 
 protected:
 
-  // G has two trivial Complex parameters
-  virtual Int nPar() { return 4; };
+  // M currently has just 2 complex parameters, i.e., both parallel hands
+  virtual Int nPar() { return 2; };
 
   // Jones matrix elements are trivial
   virtual Bool trivialMuellerElem() { return True; };

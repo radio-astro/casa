@@ -709,12 +709,23 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 
   // Arrange for iteration over data
   Block<Int> columns;
-  // avoid scan iteration
-  columns.resize(4);
-  columns[0]=MS::ARRAY_ID;
-  columns[1]=MS::FIELD_ID;
-  columns[2]=MS::DATA_DESC_ID;
-  columns[3]=MS::TIME;
+  if (interval()==0.0) {
+    // include scan iteration
+    // avoid scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+  } else {
+    // avoid scan iteration
+    columns.resize(4);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::FIELD_ID;
+    columns[2]=MS::DATA_DESC_ID;
+    columns[3]=MS::TIME;
+  }
   vs.resetVisIter(columns,interval());
 
   // Initial the solve (sets shapes)
@@ -770,39 +781,55 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
       Int nCorr(visshape(0));
       for (Int i=0;i<nCorr;++i) {
 	vblc(0)=vtrc(0)=i;
-	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=0.0;
+	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=Complex(1.0);
       }
       
-      // Form correct slice of solveCPar() to fill
-      IPosition blc(3,0,0,0);
-      IPosition trc(solveCPar().shape()); trc-=1;
-      IPosition str(3,1,1,1);
+      // Form correct slice of visCube to copy to solveCPar
+      IPosition vcblc(3,0,0,0);
+      IPosition vctrc(svb.visCube().shape()); vctrc-=1;
+      IPosition vcstr(3,1,1,1);
+
+      IPosition spblc(3,0,0,0);
+      IPosition sptrc(solveCPar().shape()); sptrc-=1;
+
+      IPosition flshape(svb.flag().shape());
+      
       switch (nCorr) {
       case 1: {
 	// fill 1st par only
-	trc(0)=0;   
+	spblc(0)=sptrc(0)=0; 
+	solveCPar()(spblc,sptrc)=svb.visCube();
+	// first pol flags
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
 	break;
       }
       case 2: {
-	// fill 1st & 3rd pars only 
-	str(0)=3;   
+	// shapes match
+	solveCPar()=svb.visCube();
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
+	break;
+      }
+      case 4: {
+	// Slice visCube with stride
+	vcstr(0)=3;
+	solveCPar()=svb.visCube()(vcblc,vctrc,vcstr);
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
 	break;
       }
       default:
+	throw(AipsError("Problem in MMueller::selfSolve."));
 	break;
       }
       
-      //    cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
-      
-      //    cout << "solveCPar()(blc,trc,str).shape() = " << solveCPar()(blc,trc,str).shape() << endl;
-      //    cout << "svb.visCube().shape() = " << svb.visCube().shape() << endl;
-      
-      // copy data to solution
-      solveCPar()(blc,trc,str)   = svb.visCube();
-      solveParOK()(blc,trc) = !svb.flag();
-      
     }
-
 
     keep(islot(spw));
 
@@ -855,7 +882,7 @@ void MMueller::keep(const Int& slot) {
 
   }
   else
-    throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));
+    throw(AipsError("MMueller::keep: Attempt to store solution in non-existent CalSet slot"));
 
 }
 
