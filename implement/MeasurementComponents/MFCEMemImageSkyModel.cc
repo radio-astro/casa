@@ -382,7 +382,11 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 	  }
 	}
       }
+      // For now if it has converged withing 20% of maxiter we'll stop
 
+      if((maxIterations+Int(numberIterations()/20)) >=numberIterations())
+	 stop=True;
+      //===
       if(maxIterations<numberIterations()&&ask) {
 	Vector<String> choices(3);
 	choices(0)="Continue";

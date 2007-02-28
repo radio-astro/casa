@@ -5019,8 +5019,8 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
 	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
-	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < 0.1, 0.0, 
-					(restored/(sm_p->fluxScale(thismodel)))));
+	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p, 
+					0.0,(restored/(sm_p->fluxScale(thismodel)))));
 	      restored.copyData(le);
 	    }
 	  }
