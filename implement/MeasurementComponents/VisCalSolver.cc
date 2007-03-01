@@ -633,8 +633,9 @@ void VisCalSolver::updatePar() {
 
   //  if (prtlev()>4) cout << "        dpar=" << dpar() << endl;
 
-  // Add dpar to par
-  par()+=dpar();
+  // Tell svc to update the par 
+  //   (permits svc() to condition the current solutions)
+  svc().updatePar(dpar());
 
   if (prtlev()>4) 
     cout << "        new =" << endl

@@ -615,6 +615,49 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
 }
 
+void SolvableVisCal::makePhaseOnly(VisBuffer& vb) {
+
+  if (phaseOnly()) {
+    Int nCorr(vb.corrType().nelements());
+    Float amp(0.0);
+    Vector<Float> ampCorr(nCorr);
+    Bool *flR=vb.flagRow().data();
+    Bool *fl =vb.flag().data();
+    Vector<Int> n(nCorr,0);
+    for (Int irow=0;irow<vb.nRow();++irow,++flR) {
+      if (!vb.flagRow()(irow)) {
+	ampCorr=0.0f;
+	n=0;
+	for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
+	  if (!vb.flag()(ich,irow)) {
+	    for (Int icorr=0;icorr<nCorr;icorr++) {
+	      amp=abs(vb.visCube()(icorr,ich,irow));
+	      if (amp>0.0f) {
+		vb.visCube()(icorr,ich,irow)/=amp;
+		ampCorr(icorr)+=amp;
+		n(icorr)++;
+	      }
+	    } // icorr
+	  } // !*fl
+	} // ich
+	// Make appropriate weight adjustment
+	for (Int icorr=0;icorr<nCorr;icorr++)
+	  if (n(icorr)>0)
+	    // weights adjusted by square of the mean(amp)
+	    vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
+	  else
+	    // weights now zero
+	    vb.weightMat()(icorr,irow)=0.0f;
+      } // !*flR
+    } // irow
+
+  } // phaseOnly
+
+  //  cout << "amp(vb.visCube())=" << amplitude(vb.visCube().reform(IPosition(1,vb.visCube().nelements()))) << endl;
+
+
+}
+
 // Verify VisBuffer data sufficient for solving (wts, etc.)
 Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
 
@@ -709,6 +752,34 @@ void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
   else
     throw(AipsError("Attempt to call un-implemented selfSolve()"));
 
+}
+
+
+void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
+
+  AlwaysAssert((solveCPar().nelements()==dpar.nelements()),AipsError);
+
+  Cube<Complex> dparcube(dpar.reform(solveCPar().shape()));
+
+  // zero flagged increments
+  dparcube(!solveParOK())=Complex(0.0);
+  
+  // Add the increment
+  solveCPar()+=dparcube;
+
+  // Ensure phaseonly-ness, if necessary
+  if (phaseOnly()) {
+    Float amp(0.0);
+    for (Int iant=0;iant<nAnt();++iant) {
+      for (Int ipar=0;ipar<nPar();++ipar) {
+	if (solveParOK()(ipar,0,iant)) {
+	  amp=abs(solveCPar()(ipar,0,iant));
+	  if (amp>0.0)
+	    solveCPar()(ipar,0,iant)/=amp;
+	}
+      }
+    }
+  }
 }
 
 void SolvableVisCal::smooth(Vector<Int>& fields,
@@ -1179,7 +1250,6 @@ SolvableVisJones::~SolvableVisJones() {
 
 }
 
-
 void SolvableVisJones::reReference() {
 
   // TBD: Handle single-poln referencing
@@ -1224,7 +1294,6 @@ void SolvableVisJones::reReference() {
 
 
 }
-
 
 void SolvableVisJones::differentiate(VisBuffer& vb,
 				     Cube<Complex>& Vout, 

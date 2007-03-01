@@ -988,7 +988,7 @@ Bool Calibrater::standardSolve() {
       // If permitted/required by solvable component, normalize
       if (svc_p->normalizable()) 
 	vb.normalize();
-      
+
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
     }
@@ -997,6 +997,7 @@ Bool Calibrater::standardSolve() {
     // The VisBuffer to solve with
     VisBuffer& svb(vba.aveVisBuff()); 
 
+    svc_p->makePhaseOnly(svb);
 
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
@@ -1029,6 +1030,7 @@ Bool Calibrater::standardSolve() {
 	  // ...consider referencing to refant...
 	  if (svc_p->refant()>-1)
 	    svc_p->reReference();
+
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(islot(spw));
 	}

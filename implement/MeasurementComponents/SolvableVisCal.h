@@ -84,6 +84,9 @@ public:
   //   (if so, permits pre-solve time-averaging)
   virtual Bool normalizable()=0;
 
+  // Report phase only
+  virtual Bool phaseOnly() { return mode().contains("phaseonly"); };
+
   // Is this type capable of accumulation?  (nominally no)
   virtual Bool accumulatable() { return False; };
 
@@ -143,6 +146,9 @@ public:
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
 
+  // Make vb phase-only
+  virtual void makePhaseOnly(VisBuffer& vb);
+
   // Verify VisBuffer data sufficient for solving (wts, etc.)
   virtual Bool verifyForSolve(VisBuffer& vb);
   
@@ -154,6 +160,9 @@ public:
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
 			     Matrix<Bool>& Vflg)=0;
+
+  // Update solve parameters incrementally (additive)
+  virtual void updatePar(const Vector<Complex> dpar);
 
   // Apply refant (implemented in SVJ)
   virtual void reReference()=0;
