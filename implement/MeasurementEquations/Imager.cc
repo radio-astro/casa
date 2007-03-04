@@ -64,6 +64,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
+#include <images/Images/ImageAnalysis.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/VisSet.h>
@@ -2425,6 +2426,7 @@ Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Qua
   }
   ImageRegion* recordRegion=0;
   if(imageRegRec !=0){
+    ImageAnalysis::tweakedRegionRecord(imageRegRec);
     TableRecord rec1;
     rec1.assign(*imageRegRec);
     recordRegion=ImageRegion::fromRecord(rec1,"");    
