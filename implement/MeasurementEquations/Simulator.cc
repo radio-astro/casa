@@ -25,8 +25,11 @@
 //#
 //# $Id: Simulator.cc,v 1.1.2.4 2006/10/06 21:03:19 kgolap Exp $
 
+#include <stdexcept>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Exceptions/Error.h>
+#include <casa/iostream.h>
 
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
@@ -921,7 +924,7 @@ Bool Simulator::setnoise(const String& mode,
   LogIO os(LogOrigin("Simulator", "setnoise()", WHERE));
   try {
     
-    os << "In DOsim::setnoise() " << endl;
+    os << "In Simulator::setnoise() " << endl;
     noisemode_p = mode;
 
     if(mode=="table") {
@@ -1102,9 +1105,9 @@ Bool Simulator::corrupt() {
 
   try {
     
-    throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
+    //   throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
 
- /*
+
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
     makeVisSet();
@@ -1112,6 +1115,9 @@ Bool Simulator::corrupt() {
     VisIter& vi=vs_p->iter();
     VisBuffer vb(vi);
     
+
+    //Need to make all these VisCal then apply them
+    /*
     // -----------------------------------------------------------
     // Make and initialize the Measurement Equations i.e. Vis and 
     // Sky Equations
@@ -1127,16 +1133,35 @@ Bool Simulator::corrupt() {
     // Corruption applies the gains and errors to the OBSERVED column,
     // and puts the result in BOTH the OBSERVED and CORRECTED columns
     ve.corrupt();      
+    */
+    //For now add the noise independently after doing all the other corruptions
     
+    if(ac_p != NULL){
+      os << LogIO::NORMAL << "Will do only noise corruption for now " 
+	 << LogIO::POST;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	for (vi.origin(); vi.more(); vi++) {
+	  ac_p->apply(vb);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
+	}
+      }
+    }
+    else{
+      os << LogIO::WARN << "No corruption done." 
+	 << LogIO::POST;
+    }
+    ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
- */
 
 
-  } catch (AipsError x) {
+
+  } catch (std::exception& x) {
+    ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    throw(AipsError(x.what()));
     return False;
   } 
   return True;

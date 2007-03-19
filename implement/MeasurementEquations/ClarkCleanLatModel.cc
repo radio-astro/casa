@@ -405,11 +405,10 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
     // quantisation of the flux levels in the histogram, and the imposition
     // of an external fluxlevel.
     numPix = activePixels.nComp();
-    if (activePixels.nComp() > 0) {
+    if (numPix > 0) {
 //       itsLog <<"Major cycle has "<< numPix << " active residuals, "
 // 	     << "a Fluxlimit of " << max(fluxLimit,threshold()) << endl;
       // Start of minor cycles
-
 
       numMinorIterations = min(itsMaxNumberMinorIterations,
 			       numIt-numIterations);
@@ -451,16 +450,27 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
       // Count the number of major cycles
       numMajorCycles++;
     }
-    else
+    else{
       itsLog << LogIO::WARN 
 	     << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
-	     << " and a maximum Residual of " << maxRes << endl;
-    
+	     << " and a maximum Residual of " << maxRes << LogIO::POST;
+      if(itsWarnFlag){
+	userHalt=True;
+	itsLog << LogIO::WARN 
+	       << "Bailing out prior to reaching threshold as residual value is   not converging " 
+	       << LogIO::POST;
+      }
+      else{
+	//lets try to increase the depth  a little bit
+	factor=factor*1.2;
+      }
+      
 //    userHalt = stopnow();
 // The above is commented off as users do not seem to find this 
 // useful. If nobody ask for it again the function stopnow() 
 // along with userHalt will be obliterated before the release 
-
+    }
+    
   }
 
   // Is this a problem?
@@ -745,6 +755,7 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
     }
   }
 
+  cout << "maxres " << Vector<Float>(maxRes) << " absRes " << absRes << endl;
   itsMaxRes= absRes;
   // Now copy the clean components into the image. 
   updateModel(cleanComponents);
@@ -802,13 +813,17 @@ cacheActivePixels(CCList & activePixels,
     if (itsSoftMaskPtr != 0) {
       maskPtr = maskIter.cursor().getStorage(maskCopy);
     }
+
     Int nUsedPix = getbig(activePixels.freeFluxPtr(), 
 			  activePixels.freePositionPtr(), 
 			  activePixels.freeComp(), fluxLimit, 
 			  residualPtr, maskPtr, npol, tx, ty);
 
     uInt lastLen=activePixels.nComp();
+
     const uInt reqLen = nUsedPix + activePixels.nComp();
+
+
     if (reqLen > activePixels.maxComp()) {
       // Need to resize the Pixel lists
       activePixels.resize(reqLen);
