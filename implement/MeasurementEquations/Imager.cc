@@ -812,7 +812,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	imageStep_p=1;
       Int nsubchans=
 	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p);
-      if(imageNchan_p>nsubchans) imageNchan_p=nsubchans;
+      if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
+
       os << "Image spectral coordinate: "<< imageNchan_p
 	   << " channels, starting at visibility channel "
 	 << imageStart_p+1 << " stepped by "
@@ -834,6 +835,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       else if(imageNchan_p==1) {
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
+
       mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0), finc,
 					  refChan, restFreq);
       os <<  "Frequency = "
@@ -4551,6 +4553,7 @@ Bool Imager::clean(const String& algorithm,
 	LoggerHolder& log = restoredImage.logger();
 	log.append(imagelog);
 	log.flush();
+	restoredImage.table().relinquishAutoLocks();
       }
       
     }

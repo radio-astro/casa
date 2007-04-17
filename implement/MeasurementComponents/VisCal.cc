@@ -57,6 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 
 VisCal::VisCal(VisSet& vs) :
+  msName_(vs.msName()),
   nSpw_(vs.numberSpw()),
   nAnt_(vs.numberAnt()),
   nBln_(0),
@@ -89,6 +90,7 @@ VisCal::VisCal(VisSet& vs) :
 }
 
 VisCal::VisCal(const Int& nAnt) :
+  msName_(""),
   nSpw_(1),
   nAnt_(nAnt),
   nBln_(0),
@@ -286,6 +288,16 @@ void VisCal::state() {
 
 }
 
+void VisCal::currMetaNote() {
+
+  cout << "   ("
+       << "time=" << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+       << " field=" << currField()
+       << " spw=" << currSpw()
+       << ")"
+       << endl;
+
+}
 
 // VisCal PROTECTED:
   

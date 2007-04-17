@@ -34,6 +34,8 @@
 #include <casa/Arrays/ArrayUtil.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSFieldIndex.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
@@ -207,6 +209,7 @@ Bool Calibrater::initCalSet(const Int& calSet)
   }
 }
 
+// Select data
 void Calibrater::setdata(const String& mode, 
 			 const Int& nchan, const Int& start, const Int& step,
 			 const MRadialVelocity& mStart,
@@ -232,18 +235,6 @@ void Calibrater::setdata(const String& mode,
     
     logSink() << "Selecting data" << LogIO::POST;
     
-    // Set data selection variables
-    dataMode_p=mode;
-    dataNchan_p=nchan;
-    if (dataNchan_p<0) dataNchan_p=0; 
-    dataStart_p=start;
-    if (dataStart_p<0) dataNchan_p=0; 
-    dataStep_p=step;
-    if (dataStep_p<1) dataNchan_p=1; 
-
-    mDataStart_p=mStart;
-    mDataStep_p=mStep;
-
     // Apply selection to the original MeasurementSet
     logSink() << "Performing selection on MeasurementSet" << LogIO::POST;
 
@@ -281,6 +272,7 @@ void Calibrater::setdata(const String& mode,
       String parseString="select from $1 where " + msSelect;
       mssel_p=new MeasurementSet(tableCommand(parseString,sorted));
       AlwaysAssert(mssel_p, AipsError);
+
       // Rename the selected MS as */SELECTED_TABLE
       mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
       nullSelect=(mssel_p->nrow()==0);
@@ -305,6 +297,7 @@ void Calibrater::setdata(const String& mode,
       mssel_p->flush();
     }
 
+
     if(mssel_p->nrow()!=ms_p->nrow()) {
       logSink() << "By selection " << ms_p->nrow() << 
 	" rows are reduced to " << mssel_p->nrow() << LogIO::POST;
@@ -319,86 +312,11 @@ void Calibrater::setdata(const String& mode,
     Matrix<Int> noselection;
     vs_p = new VisSet(*mssel_p,sort,noselection);
     AlwaysAssert(vs_p, AipsError);
+
+
+    // Now do channel selection
+    selectChannel(mode,nchan,start,step,mStart,mStep);
     
-
-    // Select on frequency channel
-    if(dataMode_p=="channel") {
-      // *** this bit here is temporary till we unifomize data selection
-      //Getting the selected SPWs
-      ROMSMainColumns msc(*mssel_p);
-      Vector<Int> dataDescID = msc.dataDescId().getColumn();
-      Bool dum;
-      Sort sort( dataDescID.getStorage(dum),sizeof(Int) );
-      sort.sortKey((uInt)0,TpInt);
-      Vector<uInt> index,uniq;
-      sort.sort(index,dataDescID.nelements());
-      uInt nSpw = sort.unique(uniq,index);
-
-      Vector<Int> selectedSpw(nSpw);
-      Vector<Int> nChan(nSpw);
-      for (uInt k=0; k < nSpw; ++k){
-	selectedSpw[k]=dataDescID[index[uniq[k]]];
-	nChan[k]=vs_p->numberChan()(selectedSpw[k]);
-
-      }
-      //********
-      if(dataNchan_p==0) dataNchan_p=vs_p->numberChan()(selectedSpw[0]);
-      if(dataStart_p<0) {
-	logSink() << LogIO::SEVERE << "Illegal start pixel = " 
-		  << dataStart_p + 1 << LogIO::POST;
-      }
-      Int end = Int(dataStart_p) + Int(dataNchan_p) * Int(dataStep_p);
-      for (uInt k=0; k < selectedSpw.nelements() ; ++k){
-	if(end < 1 || end > nChan[k]) {
-	  logSink() << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p
-		    << " in Spw " << selectedSpw[k]+1 
-		    << LogIO::POST;
-	}
-	   logSink() << "Selecting "<< dataNchan_p
-		     << " channels, starting at visibility channel "
-		     << dataStart_p + 1 << " stepped by "
-		     << dataStep_p << " in Spw " << selectedSpw[k]+1 << LogIO::POST;
-
-	// Set frequency channel selection for all spectral window id's
-	Int nch;
-	//Vector<Int> nChan=vs_p->numberChan();
-	//Int nSpw=vs_p->numberSpw();
-	if (dataNchan_p==0) {
-	  nch=nChan(k);
-	}else {
-	  nch=dataNchan_p;
-	};
-	vs_p->selectChannel(1,dataStart_p,nch,dataStep_p,selectedSpw[k]);
-	   	   
-      }
-    }
-    // Select on velocity
-    else if (dataMode_p=="velocity") {
-      MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
-      logSink() << "Selecting "<< dataNchan_p
-	 << " channels, starting at radio velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
-				  vType, MDoppler::RADIO);
-    }
-
-    // Select on optical velocity
-    else if (dataMode_p=="opticalvelocity") {
-      MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
-      logSink() << "Selecting "<< dataNchan_p
-	 << " channels, starting at optical velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
-				  vType, MDoppler::OPTICAL);
-    }
 
   } catch (AipsError x) {
     // Re-initialize with the existing MS
@@ -409,6 +327,156 @@ void Calibrater::setdata(const String& mode,
     throw(AipsError("Error in Calibrater::setdata()"));
   } 
 };
+
+
+// Select data (using MSSelection syntax)
+void Calibrater::selectvis(const String& time,
+			   const String& spw,
+			   const String& scan,
+			   const String& field,
+			   const String& baseline,
+			   const String& uvrange,
+			   const String& chanmode,
+			   const Int& nchan,
+			   const Int& start, 
+			   const Int& step,
+			   const MRadialVelocity& mStart,
+			   const MRadialVelocity& mStep,
+			   const String& msSelect)
+{
+// Define primary measurement set selection criteria
+// Inputs:
+//    time
+//    spw
+//    scan
+//    field
+//    baseline
+//    uvrange
+//    chanmode     const String&            Frequency/velocity selection mode
+//                                          ("channel", "velocity" or 
+//                                           "opticalvelocity")
+//    nchan        const Int&               No of channels to select
+//    start        const Int&               Start channel to select
+//    step         const Int&               Channel increment
+//    mStart       const MRadialVelocity&   Start radial vel. to select
+//    mStep        const MRadialVelocity&   Radial velocity increment
+//    msSelect     const String&            MS selection string (TAQL)
+// Output to private data:
+//
+  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL;
+  
+  try {
+
+ /*   
+    cout << "time     = " << time << " " << time.length() <<endl;
+    cout << "spw      = " << spw << " " << spw.length() <<endl;
+    cout << "scan     = " << scan << " " << scan.length() <<endl;
+    cout << "field    = " << field << " " << field.length() <<endl;
+    cout << "baseline = " << baseline << " " << baseline.length() << endl;
+    cout << "uvrange  = " << uvrange << " " << uvrange.length() << endl;
+ */
+
+    logSink() << "Selecting data" << LogIO::POST;
+    
+    // Apply selection to the original MeasurementSet
+    logSink() << "Performing selection on MeasurementSet" << LogIO::POST;
+    
+    // Delete VisSet and selected MS
+    if (vs_p) {
+      delete vs_p;
+      vs_p=0;
+    };
+    if (mssel_p) {
+      delete mssel_p;
+      mssel_p=0;
+    };
+    
+    // Force a re-sort of the MS
+    if (ms_p->keywordSet().isDefined("SORTED_TABLE")) {
+      ms_p->rwKeywordSet().removeField("SORTED_TABLE");
+    };
+    if (ms_p->keywordSet().isDefined("SORT_COLUMNS")) {
+      ms_p->rwKeywordSet().removeField("SORT_COLUMNS");
+    };
+    
+    // Re-make the sorted table as necessary
+    if (!ms_p->keywordSet().isDefined("SORTED_TABLE")) {
+      Block<int> sort(0);
+      Matrix<Int> noselection;
+      VisSet vs(*ms_p,sort,noselection);
+    }
+    Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
+    
+
+    Bool nontrivsel=False;
+
+    // Assume no selection, for starters
+    mssel_p = new MeasurementSet(sorted);
+
+    // Apply user-supplied selection
+    nontrivsel= mssSetData(MeasurementSet(sorted),
+			   *mssel_p,msname_p+"/SELECTED_TABLE",
+			   time,baseline,
+			   field,spw,
+			   uvrange,msSelect,
+			   "",scan);
+
+    // If non-trivial MSSelection invoked and nrow reduced:
+    if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {
+
+      // Escape if no rows selected
+      if (mssel_p->nrow()==0) 
+	throw(AipsError("Specified selection selects zero rows!"));
+
+      // ...otherwise report how many rows are selected
+      logSink() << "By selection " << ms_p->nrow() 
+		<< " rows are reduced to " << mssel_p->nrow() 
+		<< LogIO::POST;
+    }
+    else {
+      // Selection did nothing:
+      logSink() << "Selection did not drop any rows" << LogIO::POST;
+    }
+
+    // Now, re-create the associated VisSet
+    if(vs_p) delete vs_p; vs_p=0;
+    Block<int> sort(0);
+    Matrix<Int> noselection;
+    vs_p = new VisSet(*mssel_p,sort,noselection);
+    AlwaysAssert(vs_p, AipsError);
+
+    // Now do channel selection
+    selectChannel(chanmode,nchan,start,step,mStart,mStep);
+
+ /*
+    Vector<Int> a1, a2;
+    vs_p->iter().originChunks();
+    vs_p->iter().origin();
+    vs_p->iter().antenna1(a1);
+    vs_p->iter().antenna2(a2);
+    cout << "a1 = " << a1 << endl;
+    cout << "a2 = " << a2 << endl;
+ */    
+    
+  }
+  catch (MSSelectionError& x) {
+    // Re-initialize with the existing MS
+    logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
+	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	      << LogIO::POST;
+    initialize(*ms_p,False);
+    throw(AipsError("Error in data selection specification."));
+  } 
+  catch (AipsError x) {
+    // Re-initialize with the existing MS
+    logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
+	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	      << LogIO::POST;
+    initialize(*ms_p,False);
+    throw(AipsError("Error in Calibrater::selectvis()"));
+  } 
+};
+
 
 
 
@@ -441,6 +509,54 @@ Bool Calibrater::setapply(const String& type,
   applypar.define ("table", table);
   applypar.define ("interp", interp);
   applypar.define ("select", select);
+  applypar.define ("calwt",calwt);
+  applypar.define ("spwmap",spwmap);
+  applypar.define ("opacity", opacity);
+  
+  String upType=type;
+  upType.upcase();
+  if (upType=="")
+    // Get type from table
+    upType = calTableType(table);
+
+  return setapply(upType,applypar);
+
+}
+
+Bool Calibrater::setapply(const String& type, 
+			  const Double& t,
+			  const String& table,
+			  const String& spw,
+			  const String& field,
+			  const String& interp,
+			  const Bool& calwt,
+			  const Vector<Int>& spwmap,
+			  const Float& opacity) 
+{
+  //                           const Vector<Int>& rawspw)
+
+  logSink() << LogOrigin("Calibrater", "setapply") << LogIO::NORMAL;
+ 
+  // Set record format for calibration table application information
+  RecordDesc applyparDesc;
+  applyparDesc.addField ("t", TpDouble);
+  applyparDesc.addField ("table", TpString);
+  applyparDesc.addField ("interp", TpString);
+  applyparDesc.addField ("spw", TpArrayInt);
+  applyparDesc.addField ("field", TpArrayInt);
+  applyparDesc.addField ("calwt",TpBool);
+  applyparDesc.addField ("spwmap",TpArrayInt);
+  applyparDesc.addField ("opacity",TpFloat);
+  
+  
+
+  // Create record with the requisite field values
+  Record applypar(applyparDesc);
+  applypar.define ("t", t);
+  applypar.define ("table", table);
+  applypar.define ("interp", interp);
+  applypar.define ("spw",getSpwIdx(spw));
+  applypar.define ("field",getFieldIdx(field));
   applypar.define ("calwt",calwt);
   applypar.define ("spwmap",spwmap);
   applypar.define ("opacity", opacity);
@@ -549,6 +665,39 @@ Bool Calibrater::setsolve (const String& type,
 
 }
 
+Bool Calibrater::setsolve (const String& type, 
+			   const Double& t,
+			   const String& table,
+                           const Bool& append,
+                           const Double& preavg, 
+			   const Bool& phaseonly,
+                           const String& refant)
+{
+  
+  logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
+  
+  // Create a record description containing the solver parameters
+  RecordDesc solveparDesc;
+  solveparDesc.addField ("t", TpDouble);
+  solveparDesc.addField ("preavg", TpDouble);
+  solveparDesc.addField ("phaseonly", TpBool);
+  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("table", TpString);
+  solveparDesc.addField ("append", TpBool);
+  
+  // Create a solver record with the requisite field values
+  Record solvepar(solveparDesc);
+  solvepar.define ("t", t);
+  solvepar.define ("preavg", preavg);
+  solvepar.define ("phaseonly", phaseonly);
+  solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("table", table);
+  solvepar.define ("append", append);
+  
+  return setsolve(type,solvepar);
+
+}
+
 Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Bool& append,
 				  const Vector<Int>& degree,
@@ -599,6 +748,56 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 
 }
 
+Bool Calibrater::setsolvebandpoly(const String& table,
+				  const Bool& append,
+				  const Vector<Int>& degree,
+				  const Bool& visnorm,
+				  const Bool& bpnorm,
+				  const Int& maskcenter,
+				  const Float& maskedge,
+				  const String& refant) {
+
+  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL;
+
+  // TBD: support solution interval!
+
+    // Create a record description containing the solver parameters
+    RecordDesc solveparDesc;
+    solveparDesc.addField ("table", TpString);
+    solveparDesc.addField ("append", TpBool);
+    solveparDesc.addField ("t", TpDouble);
+    solveparDesc.addField ("degree", TpArrayInt);
+    solveparDesc.addField ("visnorm", TpBool);
+    solveparDesc.addField ("bpnorm", TpBool);
+    solveparDesc.addField ("maskcenter", TpInt);
+    solveparDesc.addField ("maskedge", TpFloat);
+    solveparDesc.addField ("refant", TpInt);
+
+    //    solveparDesc.addField ("preavg", TpDouble);
+    //    solveparDesc.addField ("phaseonly", TpBool);
+    
+    // Create a solver record with the requisite field values
+    Record solvepar(solveparDesc);
+    solvepar.define ("table", table);
+    solvepar.define ("append", append);
+    solvepar.define ("t",DBL_MAX);        // no time-dep, for the moment
+    solvepar.define ("degree", degree);
+    solvepar.define ("visnorm", visnorm);
+    solvepar.define ("bpnorm", bpnorm);
+    solvepar.define ("maskcenter", maskcenter);
+    solvepar.define ("maskedge", maskedge);
+    solvepar.define ("refant", getRefantIdx(refant));
+
+
+    //    solvepar.define ("t", t);
+    //    solvepar.define ("preavg", preavg);
+    //    solvepar.define ("phaseonly", phaseonly);
+
+
+    return setsolve("BPOLY",solvepar);
+
+}
+
 Bool Calibrater::setsolvegainspline(const String& table,
 				    const Bool& append,
 				    const String& mode,
@@ -631,6 +830,45 @@ Bool Calibrater::setsolvegainspline(const String& table,
   solvepar.define ("splinetime",splinetime);
   solvepar.define ("preavg", preavg);
   solvepar.define ("refant", refant);
+  solvepar.define ("numpoint",numpoint);
+  solvepar.define ("phasewrap",phasewrap);
+  
+  return setsolve("GSPLINE",solvepar);
+  
+}
+
+Bool Calibrater::setsolvegainspline(const String& table,
+				    const Bool&   append,
+				    const String& mode,
+				    const Double& splinetime,
+				    const Double& preavg,
+				    const Int&    numpoint,
+				    const Double& phasewrap,
+				    const String& refant) {
+  
+  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL;
+
+  // Create a record description containing the solver parameters
+  RecordDesc solveparDesc;
+  solveparDesc.addField ("table", TpString);
+  solveparDesc.addField ("append", TpBool);
+  solveparDesc.addField ("mode", TpString);
+  solveparDesc.addField ("splinetime", TpDouble);
+  solveparDesc.addField ("preavg", TpDouble);
+  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("numpoint", TpInt);
+  solveparDesc.addField ("phasewrap", TpDouble);
+  
+  // Create a solver record with the requisite field values
+  Record solvepar(solveparDesc);
+  solvepar.define ("table", table);
+  solvepar.define ("append", append);
+  String upMode=mode;
+  upMode.upcase();
+  solvepar.define ("mode", upMode);
+  solvepar.define ("splinetime",splinetime);
+  solvepar.define ("preavg", preavg);
+  solvepar.define ("refant", getRefantIdx(refant));
   solvepar.define ("numpoint",numpoint);
   solvepar.define ("phasewrap",phasewrap);
   
@@ -1034,6 +1272,9 @@ Bool Calibrater::standardSolve() {
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(islot(spw));
 	}
+	else 
+	  // report where this failure occured
+	  svc_p->currMetaNote();
 	
       } // parameter channels
 
@@ -1167,6 +1408,35 @@ void Calibrater::fluxscale(const String& infile,
 
 }
 
+void Calibrater::fluxscale(const String& infile, 
+			   const String& outfile,
+			   const String& refFields, 
+			   const Vector<Int>& refSpwMap, 
+			   const String& tranFields,
+			   const Bool& append,
+			   Matrix<Double>& fluxScaleFactor) {
+
+  // TBD:  Permit more flexible matching on specified field names
+  //  (Currently, exact matches are required.)
+
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
+
+  // Convert refFields/transFields to index lists
+  Vector<Int> refidx(0);
+  Vector<Int> tranidx(0);
+
+  if (refFields.length()>0)
+    refidx=getFieldIdx(refFields);
+  else
+    throw(AipsError("A reference field must be specified!"));
+
+  if (tranFields.length()>0)
+    tranidx=getFieldIdx(tranFields);
+
+  // Call Vector<Int> version:
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,fluxScaleFactor);
+
+}
 
 void Calibrater::fluxscale(const String& infile, 
 			   const String& outfile,
@@ -1347,6 +1617,33 @@ void Calibrater::accumulate(const String& intab,
 void Calibrater::accumulate(const String& intab,
 			    const String& incrtab,
 			    const String& outtab,
+			    const String& fields,
+			    const String& calFields,
+			    const String& interp,
+			    const Double& t,
+			    const Vector<Int>& spwmap) {
+
+  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+
+  // Convert refFields/transFields to index lists
+  // These are empty vectors by default
+  Vector<Int> fldidx(0);
+  Vector<Int> cfldidx(0);
+
+  if (fields.length()>0)
+    fldidx=getFieldIdx(fields);
+
+  if (calFields.length()>0)
+    cfldidx=getFieldIdx(calFields);
+
+  // Call Vector<Int> version
+  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
+
+}
+
+void Calibrater::accumulate(const String& intab,
+			    const String& incrtab,
+			    const String& outtab,
 			    const Vector<Int>& fields,
 			    const Vector<Int>& calFields,
 			    const String& interp,
@@ -1400,7 +1697,7 @@ void Calibrater::accumulate(const String& intab,
     // If creating a new cumulative table, it must span the whole dataset,
     //   so reset data selection to whole MS, and setup iterator
     if (t>0.0) {
-      setdata();
+      setdata("none",0);
       Block<Int> columns;
       columns.resize(4);
       columns[0]=MS::ARRAY_ID;
@@ -1618,6 +1915,237 @@ Bool Calibrater::smooth(const String& infile,
     return False;
   }
   return False;
+}
+
+Bool Calibrater::smooth(const String& infile, 
+			String& outfile,  // const Bool& append,
+                        const String& smoothtype,
+			const Double& smoothtime,
+                        const String& fields)
+{
+
+  //  throw(AipsError("Method 'smooth' is temporarily disabled."));
+  
+  // TBD: support append?
+  // TBD: spw selection?
+
+  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
+
+  logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
+
+
+  // A pointer to an SVC
+  SolvableVisCal *svc(NULL);
+
+  try {
+    
+    // Handle no in file 
+    if (infile=="")
+      throw(AipsError("Please specify an input calibration table."));
+
+    // Handle bad smoothtype
+    if (smoothtype!="mean" && smoothtype!="median")
+      throw(AipsError("Unrecognized smooth type!"));
+
+    // Handle bad smoothtime
+    if (smoothtime<=0)
+      throw(AipsError("Please specify a strictly positive smoothtime."));
+
+    // Handle no outfile
+    if (outfile=="") {
+      outfile=infile;
+      logSink() << "Will overwrite input file with smoothing result." 
+		<< LogIO::POST;
+    }
+
+
+    svc = createSolvableVisCal(calTableType(infile),*vs_p);
+    
+    if (svc->smoothable()) {
+      
+      // Fill calibration table using setApply
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      svc->setApply(applypar);
+
+      // Convert refFields/transFields to index lists
+      Vector<Int> fldidx(0);
+      if (fields.length()>0)
+	fldidx=getFieldIdx(fields);
+
+      // Delegate to SVC
+      svc->smooth(fldidx,smoothtype,smoothtime);
+      
+      // Store the result on disk
+      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
+      //else 
+      logSink() << "Storing result in " << outfile << LogIO::POST;
+      
+      
+      if (outfile != "") 
+	svc->calTableName()=outfile;
+      svc->store();
+
+      //TBD:      svc->store(outfile,append);
+      
+      // Clean up
+      if (svc) delete svc; svc=NULL;
+      
+      // Apparently, it worked
+      return True;
+
+    }
+    else
+      throw(AipsError("This type does not support smoothing."));
+
+  } catch (AipsError x) {
+   
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    // Clean up
+    if (svc) delete svc; svc=NULL;
+
+    throw(AipsError("Error in Calibrater::smooth."));
+
+    return False;
+  }
+  return False;
+}
+
+
+// Select on channel in the VisSet
+void Calibrater::selectChannel(const String& mode, 
+			       const Int& nchan, 
+			       const Int& start, const Int& step,
+			       const MRadialVelocity& mStart,
+			       const MRadialVelocity& mStep) {
+  
+  // Set data selection variables
+  dataMode_p=mode;
+  dataNchan_p=nchan;
+  if (dataNchan_p<0) dataNchan_p=0; 
+  dataStart_p=start;
+  if (dataStart_p<0) dataNchan_p=0; 
+  dataStep_p=step;
+  if (dataStep_p<1) dataNchan_p=1; 
+  
+  mDataStart_p=mStart;
+  mDataStep_p=mStep;
+  
+  // Select on frequency channel
+  if(dataMode_p=="channel") {
+    // *** this bit here is temporary till we unifomize data selection
+    //Getting the selected SPWs
+    ROMSMainColumns msc(*mssel_p);
+    Vector<Int> dataDescID = msc.dataDescId().getColumn();
+    Bool dum;
+    Sort sort( dataDescID.getStorage(dum),sizeof(Int) );
+    sort.sortKey((uInt)0,TpInt);
+    Vector<uInt> index,uniq;
+    sort.sort(index,dataDescID.nelements());
+    uInt nSpw = sort.unique(uniq,index);
+    
+    Vector<Int> selectedSpw(nSpw);
+    Vector<Int> nChan(nSpw);
+    for (uInt k=0; k < nSpw; ++k) {
+      selectedSpw[k]=dataDescID[index[uniq[k]]];
+      nChan[k]=vs_p->numberChan()(selectedSpw[k]);
+      
+    }
+    if(dataNchan_p==0) dataNchan_p=vs_p->numberChan()(selectedSpw[0]);
+    if(dataStart_p<0) {
+      logSink() << LogIO::SEVERE << "Illegal start pixel = " 
+		<< dataStart_p + 1 << LogIO::POST;
+    }
+    Int end = Int(dataStart_p) + Int(dataNchan_p) * Int(dataStep_p);
+    for (uInt k=0; k < selectedSpw.nelements() ; ++k){
+      if(end < 1 || end > nChan[k]) {
+	logSink() << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p
+		  << " in Spw " << selectedSpw[k]+1 
+		  << LogIO::POST;
+      }
+      logSink() << "Selecting "<< dataNchan_p
+		<< " channels, starting at visibility channel "
+		<< dataStart_p + 1 << " stepped by "
+		<< dataStep_p << " in Spw " << selectedSpw[k]+1 << LogIO::POST;
+      
+      // Set frequency channel selection for all spectral window id's
+      Int nch;
+      //Vector<Int> nChan=vs_p->numberChan();
+      //Int nSpw=vs_p->numberSpw();
+      if (dataNchan_p==0) {
+	nch=nChan(k);
+      }else {
+	nch=dataNchan_p;
+      };
+      vs_p->selectChannel(1,dataStart_p,nch,dataStep_p,selectedSpw[k]);
+      
+    }
+  }
+  // Select on velocity
+  else if (dataMode_p=="velocity") {
+    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
+    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
+    MRadialVelocity::Types
+      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
+    logSink() << "Selecting "<< dataNchan_p
+	      << " channels, starting at radio velocity " << mvStart
+	      << " stepped by " << mvStep << ", reference frame is "
+	      << MRadialVelocity::showType(vType) << LogIO::POST;
+    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
+				vType, MDoppler::RADIO);
+  }
+  
+  // Select on optical velocity
+  else if (dataMode_p=="opticalvelocity") {
+    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
+    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
+    MRadialVelocity::Types
+      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
+    logSink() << "Selecting "<< dataNchan_p
+	      << " channels, starting at optical velocity " << mvStart
+	      << " stepped by " << mvStep << ", reference frame is "
+	      << MRadialVelocity::showType(vType) << LogIO::POST;
+    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
+				vType, MDoppler::OPTICAL);
+  }
+  
+  
+}
+
+
+// Interpret refant *index*
+Int Calibrater::getRefantIdx(const String& refant) {
+  Int irefant(-1);
+  if (refant.length()!=0) {
+    MSSelection msselect;
+    msselect.setAntennaExpr(refant);
+    Vector<Int> ant1list=msselect.getAntenna1List(mssel_p);
+    irefant= max(ant1list);  // is this right?
+  }
+  return irefant;
+}
+
+// Interpret field indices (MSSelection)
+Vector<Int> Calibrater::getFieldIdx(const String& fields) {
+
+  MSSelection mssel;
+  mssel.setFieldExpr(fields);
+  return mssel.getFieldList(mssel_p);
+
+}
+
+// Interpret spw indices (MSSelection)
+Vector<Int> Calibrater::getSpwIdx(const String& spws) {
+
+  MSSelection mssel;
+  mssel.setSpwExpr(spws);
+  return mssel.getSpwList(mssel_p);
+
 }
 
 // Query apply types if we are calibrating the weights

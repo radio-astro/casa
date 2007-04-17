@@ -38,7 +38,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
 #include <casa/Utilities/GenSort.h>
-
+#include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <casa/sstream.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -166,6 +166,35 @@ void SolvableVisCal::setApply(const Record& apply) {
   if (apply.isDefined("select"))
     calTableSelect()=apply.asString("select");
 
+  else {
+    
+    calTableSelect()="";
+    //    String spwsel("");
+    //    if (apply.isDefined("spw")) {
+    //      ostringstream os;
+    //      os << Vector<Int>(apply.asArrayInt("spw"));
+    //      spwsel = os.str();
+    //    }
+    //    cout << "spwsel = " << spwsel << endl;
+
+    String fldsel("");
+    if (apply.isDefined("field")) {
+      ostringstream os;
+      os << Vector<Int>(apply.asArrayInt("field"));
+      if (os.str()!="[]")
+	fldsel = os.str();
+    }
+    //    cout << "fldsel = " << fldsel << endl;
+
+    if (fldsel.length()>0) {
+      ostringstream os;
+      os << "(FIELD_ID IN " << fldsel << ")";
+      calTableSelect() = os.str();
+    }
+    //   cout << "calTableSelect() = " << calTableSelect() << endl;
+  }
+  
+ 
   // Does this belong here?
   if (apply.isDefined("append"))
     append()=apply.asBool("append");
@@ -320,6 +349,14 @@ void SolvableVisCal::setSolve(const Record& solve)
 
 String SolvableVisCal::solveinfo() {
 
+  // Get the refant name from the MS
+  String refantName("none");
+  if (refant()>-1) {
+    MeasurementSet ms(msName());
+    MSAntennaColumns mscol(ms.antenna());
+    refantName=mscol.name()(refant());
+  }
+
   ostringstream o;
   o << boolalpha
     << typeName()
@@ -327,7 +364,7 @@ String SolvableVisCal::solveinfo() {
     << " append="     << append()
     << " t="          << interval()
     //    << " preavg="     << preavg()
-    << " refant="     << refant()
+    << " refant="     << "'" << refantName << "'(id=" << refant() << ")"
     << " phaseonly="  << mode().contains("phaseonly");
 
   return String(o);
@@ -925,8 +962,8 @@ void SolvableVisCal::store() {
   else
     logSink() << "Writing solutions to table: " << calTableName()
 	      << LogIO::POST;
-    
-  cs().store(calTableName(),typeName(),append());
+
+  cs().store(calTableName(),typeName(),msName(),append());
 
 }
 
@@ -970,6 +1007,19 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
        << " (ntrue=" << ntrue(solveParOK()) << ")" << endl;
 
   cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
+
+}
+
+
+void SolvableVisCal::currMetaNote() {
+
+  cout << "   ("
+       << "time=" << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+       << " field=" << currField()
+       << " spw=" << currSpw()
+       << " chan=" << focusChan()
+       << ")"
+       << endl;
 
 }
 

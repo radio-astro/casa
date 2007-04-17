@@ -755,7 +755,6 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
     }
   }
 
-  cout << "maxres " << Vector<Float>(maxRes) << " absRes " << absRes << endl;
   itsMaxRes= absRes;
   // Now copy the clean components into the image. 
   updateModel(cleanComponents);

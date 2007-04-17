@@ -191,6 +191,8 @@ public:
   // Report state:
   inline virtual void state() { stateSVC(True); };
 
+  virtual void currMetaNote();
+
 protected:
 
   // Set to-be-solved-for flag

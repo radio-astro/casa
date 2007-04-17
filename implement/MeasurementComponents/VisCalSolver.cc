@@ -196,7 +196,10 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
     }
     
   }
-  
+  else {
+    cout << "Insufficient unflagged antennas to proceed with this solve." << endl;
+  }
+
   return False;
     
 }

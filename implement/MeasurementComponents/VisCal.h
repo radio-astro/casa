@@ -121,6 +121,8 @@ public:
   // Report the state
   virtual void state();
 
+  virtual void currMetaNote();
+
   // Set the print level
   inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
 
@@ -128,6 +130,8 @@ protected:
 
   // Set applied state flag
   inline void setApplied(const Bool& flag) {applied_=flag;};
+
+  inline String& msName() { return msName_; };
 
   // General Shape Info 
   inline Int& nSpw() { return nSpw_; };
@@ -231,6 +235,9 @@ private:
 
   // Delete pointers
   void deleteVisCal();
+
+  // Associated MS name
+  String msName_;
   
   // Number of Spectral windows
   Int nSpw_;

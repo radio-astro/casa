@@ -182,6 +182,7 @@ void SDGrid::init() {
   else {
     isTiled=False;
   }
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -304,7 +305,27 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 	MVTime(vb.time()(row)/86400.0);
       logIO_p << String(o) << LogIO::EXCEPTION;
     }
-    worldPosMeas=act_mspc.directionMeas(pointIndex);
+    MEpoch epoch(Quantity(vb.time()(row), "s"));
+    if(!pointingToImage) {
+      mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
+
+      worldPosMeas=act_mspc.directionMeas(pointIndex);
+      // Make a machine to convert from the worldPosMeas to the output
+      // Direction Measure type for the relevant frame
+      MDirection::Ref outRef(dc.directionType(), mFrame_p);
+      pointingToImage = new MDirection::Convert(worldPosMeas, outRef);
+      
+      if(!pointingToImage) {
+	logIO_p << "Cannot make direction conversion machine" << LogIO::EXCEPTION;
+      }
+    }
+    else {
+      mFrame_p.resetEpoch(epoch);
+      mFrame_p.resetPosition(FTMachine::mLocation_p);
+    }
+    worldPosMeas=(*pointingToImage)(act_mspc.directionMeas(pointIndex));
+    delete pointingToImage;
+    pointingToImage=0;
   }
   directionCoord=coords.directionCoordinate(directionIndex);
   dc.setReferenceValue(worldPosMeas.getAngle().getValue());
@@ -325,15 +346,14 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
   sj_p->apply(onedPB, onedPB, vb, 0);
   IPosition pbSlice(4, convSize, 1, 1, 1);
   Vector<Float> tempConvFunc=real(onedPB.getSlice(start, pbSlice, True));
-
   // Find number of significant points
   uInt cfLen=0;
-  for(uInt i=0;i<tempConvFunc.nelements();i++) {
-    if(tempConvFunc(i)<1e-4) break;
-    cfLen++;
+  for(uInt i=0;i<tempConvFunc.nelements();++i) {
+    if(tempConvFunc(i)<1e-3) break;
+    ++cfLen;
   }
   if(cfLen<1) {
-    logIO() << LogIO::DEBUGGING
+    logIO() << LogIO::SEVERE
 	    << "Possible problem in primary beam calculation: no points in gridding function"
 	    << " - no points to be gridded on this image?" << LogIO::POST;
     cfLen=1;
@@ -375,13 +395,14 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
   Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
   AlwaysAssert(directionIndex>=0, AipsError);
   directionCoord=coords.directionCoordinate(directionIndex);
-
+  cout << "cachesize " << cachesize << " prod " << image->shape().product() << endl;
   if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
   }
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -464,13 +485,13 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-
   if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
   }
+  isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);

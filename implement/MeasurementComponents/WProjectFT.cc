@@ -539,6 +539,7 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
     isTiled=False;
   }
 
+  isTiled=False;
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
