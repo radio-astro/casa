@@ -150,7 +150,9 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/FluxStandard.h>
-
+// Dependence on display
+#include <display/QtViewer/QtClean.qo.h>
+#include <display/Display/StandAloneDisplayApp.h>
 
 #include <casa/OS/HostInfo.h>
 #include <casa/System/PGPlotter.h>
@@ -1838,7 +1840,9 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const String& msSelect, const String& timerng,
 			  const String& fieldnames, 
 			  const Vector<Int>& antIndex,
-			  const String& antnames)
+			  const String& antnames,
+			  const String& spwstring,
+			  const String& uvdist, const String& scan)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1859,7 +1863,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
 		   fieldids, msSelect, timerng, fieldnames, antIndex, 
-		   antnames);
+		   antnames, spwstring, uvdist, scan);
 
 }
 
@@ -1872,7 +1876,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const Vector<Int>& fieldids,
 		     const String& msSelect, const String& timerng,
 		     const String& fieldnames, const Vector<Int>& antIndex,
-		     const String& antnames )
+		     const String& antnames, const String& spwstring,
+		     const String& uvdist, const String& scan)
   
 {
   logSink_p.clearLocally();
@@ -1916,163 +1921,144 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     
     
-
+    os << "Performing selection on MeasurementSet" << LogIO::POST;
+    if(vs_p) delete vs_p; vs_p=0;
+    if(mssel_p) delete mssel_p; mssel_p=0;
+    
+    // check that sorted table exists (it should), if not, make it now.
+    this->makeVisSet(*ms_p);
+    
+    MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
+    
+    
+    //Some MSSelection 
+    MSSelection thisSelection;
+    if(datafieldids_p.nelements() > 0){
+      thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
+      os << "Selecting on field ids" << LogIO::POST;
+    }
+    if(fieldnames != ""){
+      thisSelection.setFieldExpr(fieldnames);
+      os << "Selecting on field names " << fieldnames << LogIO::POST;
+    }
+    if(dataspectralwindowids_p.nelements() > 0){
+      thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
+      os << "Selecting on spectral windows" << LogIO::POST;
+    }
+    else if(spwstring != ""){
+      os << "Selecting on spectral windows expression "<< spwstring << LogIO::POST;
+      thisSelection.setSpwExpr(spwstring);
+    }
+    if(antIndex.nelements() >0){
+      thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
+      os << "Selecting on antenna ids" << LogIO::POST;	
+    }
+    if(antnames != ""){
+      Vector<String>antNames(1, antnames);
+      //       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antNames));
+      thisSelection.setAntennaExpr(antnames);
+      os << "Selecting on antenna names" << LogIO::POST;
+      
+    }            
+    if(timerng != ""){
+      //	Vector<String>timerange(1, timerng);
+	thisSelection.setTimeExpr(timerng);
+	os << "Selecting on time range" << LogIO::POST;	
+    }
+    if(uvdist != ""){
+	thisSelection.setUvDistExpr(uvdist);
+    }
+    if(scan != ""){
+      thisSelection.setScanExpr(scan);
+    }
+    //***************
+    
+    TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+    
+    if(exprNode.isNull())
+      throw(AipsError("Selection failed...review ms and selection parameters"));
+    datafieldids_p.resize(0);
+    datafieldids_p=thisSelection.getFieldList();
+    //Now lets see what was selected as spw and match it with datadesc
+    dataspectralwindowids_p.resize();
+    dataspectralwindowids_p=thisSelection.getSpwList();
     // Map the selected spectral window ids to data description ids
-    MSDataDescIndex msDatIndex(ms_p->dataDescription());
-    datadescids_p.resize(0);
-    datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
-     
-    // Invalid spwids then lets select all
-    if(datadescids_p.nelements()==0){
+    if(dataspectralwindowids_p.nelements()==0){
       Int nspwinms=ms_p->spectralWindow().nrow();
       dataspectralwindowids_p.resize(nspwinms);
       indgen(dataspectralwindowids_p);
-      datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
     }
-    // If a selection has been made then close the current MS
-    // and attach to a new selected MS. We do this on the original
-    // MS. 
-    //if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
-      os << "Performing selection on MeasurementSet" << LogIO::POST;
-      if(vs_p) delete vs_p; vs_p=0;
-      if(mssel_p) delete mssel_p; mssel_p=0;
-      
-      // check that sorted table exists (it should), if not, make it now.
-      this->makeVisSet(*ms_p);
-      
-      MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
-      
-      
-      //Some MSSelection 
-      MSSelection thisSelection;
-      if(datafieldids_p.nelements() > 0){
-	thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
-	os << "Selecting on field ids" << LogIO::POST;
-      }
-      if(fieldnames != ""){
-	thisSelection.setFieldExpr(fieldnames);
-	os << "Selecting on field names " << fieldnames << LogIO::POST;
-      }
-      if(datadescids_p.nelements() > 0){
-	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
-	os << "Selecting on spectral windows" << LogIO::POST;
-      }
-      if(antIndex.nelements() >0){
-	thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
-	os << "Selecting on antenna ids" << LogIO::POST;	
-      }
-      if(antnames != ""){
-	Vector<String>antNames(1, antnames);
-	//       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antNames));
-	thisSelection.setAntennaExpr(antnames);
-	os << "Selecting on antenna names" << LogIO::POST;
-	
-      }            
-      if(timerng != ""){
-	//	Vector<String>timerange(1, timerng);
-	thisSelection.setTimeExpr(timerng);
-	os << "Selecting on time range" << LogIO::POST;	
-      }
-      //***************
-
-      TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
-     
-      if(exprNode.isNull())
-	throw(AipsError("Selection led to a null exprnode...review ms and selection parameters"));
-      datafieldids_p.resize(0);
-      datafieldids_p=thisSelection.getFieldList();
-  
-      if (datafieldids_p.nelements() > 1) {
+    MSDataDescIndex msDatIndex(ms_p->dataDescription());
+    datadescids_p.resize(0);
+    datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
+    
+    if (datafieldids_p.nelements() > 1) {
       os << "Multiple fields specified via fieldids" << LogIO::POST;
       multiFields_p = True;
     }
-      ////////REPLACING THE OLD SELECTION will remove this if above is  
-      ///////  working we;;
-      // Now we make a condition to do the old FIELD_ID, SPECTRAL_WINDOW_ID
-      // selection
       
-      /*      TableExprNode condition;
-      String colf=MS::columnName(MS::FIELD_ID);
-      String cols=MS::columnName(MS::DATA_DESC_ID);
-      if(datafieldids_p.nelements()>0&&datadescids_p.nelements()>0){
-	condition=sorted.col(colf).in(datafieldids_p)&&
-	  sorted.col(cols).in(datadescids_p);
-        os << "Selecting on field and spectral window ids" << LogIO::POST;
-      }
-      else if(datadescids_p.nelements()>0) {
-	condition=sorted.col(cols).in(datadescids_p);
-        os << "Selecting on spectral window id" << LogIO::POST;
-      }
-      else if(datafieldids_p.nelements()>0) {
-	condition=sorted.col(colf).in(datafieldids_p);
-        os << "Selecting on field id" << LogIO::POST;
-      }
-      
-      // Now remake the selected ms
-      mssel_p = new MeasurementSet(sorted(condition));
-      */
-      mssel_p = new MeasurementSet(sorted(exprNode));
-      AlwaysAssert(mssel_p, AipsError);
-      mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
-      if(mssel_p->nrow()==0) {
-	delete mssel_p; mssel_p=0;
-	os << LogIO::WARN
-	   << "Selection is empty: reverting to sorted MeasurementSet"
-	   << LogIO::POST;
-	mssel_p=new MeasurementSet(sorted);
-	nullSelect_p=True;
-      }
-      else {
-	mssel_p->flush();
-	nullSelect_p=False;
-      }
-      if (nullSelect_p) {
-	Table mytab(msname_p+"/FIELD", Table::Old);
-	if (mytab.nrow() > 1) {
-	  os << "Multiple fields selected" << LogIO::POST;
-	   multiFields_p = True;
-	} else {
-	  os << "Single field selected" << LogIO::POST;
-	   multiFields_p = False;
-	}
-      }
-
-      Int len = msSelect.length();
-      Int nspace = msSelect.freq (' ');
-      Bool nullSelect=(msSelect.empty() || nspace==len);
-      if (!nullSelect) {
-	MeasurementSet* mssel_p2;
-	// Apply the TAQL selection string, to remake the selected MS
-	String parseString="select from $1 where " + msSelect;
-	mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
-	AlwaysAssert(mssel_p2, AipsError);
-	// Rename the selected MS as */SELECTED_TABLE2
-	mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
-	if (mssel_p2->nrow()==0) {
-	  os << LogIO::WARN
-	     << "Selection string results in empty MS: "
-	     << "reverting to sorted MeasurementSet"
-	     << LogIO::POST;
-	  delete mssel_p2;
-	} else {
-	  if (mssel_p) {
-	    delete mssel_p; 
-	    mssel_p=mssel_p2;
-	    mssel_p->flush();
-	  }
-	}
+    mssel_p = new MeasurementSet(sorted(exprNode));
+    AlwaysAssert(mssel_p, AipsError);
+    mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
+    if(mssel_p->nrow()==0) {
+      delete mssel_p; mssel_p=0;
+      os << LogIO::WARN
+	 << "Selection is empty: reverting to sorted MeasurementSet"
+	 << LogIO::POST;
+      mssel_p=new MeasurementSet(sorted);
+      nullSelect_p=True;
+    }
+    else {
+      mssel_p->flush();
+      nullSelect_p=False;
+    }
+    if (nullSelect_p) {
+      Table mytab(msname_p+"/FIELD", Table::Old);
+      if (mytab.nrow() > 1) {
+	os << "Multiple fields selected" << LogIO::POST;
+	multiFields_p = True;
       } else {
-	os << "No selection string given" << LogIO::POST;
+	os << "Single field selected" << LogIO::POST;
+	multiFields_p = False;
       }
+    }
 
-      if(mssel_p->nrow()!=ms_p->nrow()) {
-	os << "By selection " << ms_p->nrow() << " rows are reduced to "
-	   << mssel_p->nrow() << LogIO::POST;
+    Int len = msSelect.length();
+    Int nspace = msSelect.freq (' ');
+    Bool nullSelect=(msSelect.empty() || nspace==len);
+    if (!nullSelect) {
+      MeasurementSet* mssel_p2;
+      // Apply the TAQL selection string, to remake the selected MS
+      String parseString="select from $1 where " + msSelect;
+      mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
+      AlwaysAssert(mssel_p2, AipsError);
+      // Rename the selected MS as */SELECTED_TABLE2
+      mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
+      if (mssel_p2->nrow()==0) {
+	os << LogIO::WARN
+	   << "Selection string results in empty MS: "
+	   << "reverting to sorted MeasurementSet"
+	   << LogIO::POST;
+	delete mssel_p2;
+      } else {
+	if (mssel_p) {
+	  delete mssel_p; 
+	  mssel_p=mssel_p2;
+	  mssel_p->flush();
+	}
       }
-      else {
-	os << "Selection did not drop any rows" << LogIO::POST;
-      }
-      //    }
+    } else {
+      os << "No selection string given" << LogIO::POST;
+    }
+    
+    if(mssel_p->nrow()!=ms_p->nrow()) {
+      os << "By selection " << ms_p->nrow() << " rows are reduced to "
+	 << mssel_p->nrow() << LogIO::POST;
+    }
+    else {
+      os << "Selection did not drop any rows" << LogIO::POST;
+    }
+    //    }
     
     // Now create the VisSet
     this->makeVisSet(vs_p, *mssel_p); 
@@ -2080,7 +2066,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     // Now we do a selection to cut down the amount of information
     // passed around.
-
+    
     this->selectDataChannel(*vs_p, dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
 			    mDataStart_p, mDataStep_p);
@@ -5416,7 +5402,7 @@ Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
 Bool Imager::clone(const String& imageName, const String& newImageName)
 {
   if(!valid()) return False;
-  if(!assertDefinedImageParameters()) return False;
+  // This is not needed if(!assertDefinedImageParameters()) return False;
   LogIO os(LogOrigin("imager", "clone()", WHERE));
   try {
     PagedImage<Float> oldImage(imageName);
@@ -6481,20 +6467,6 @@ Bool Imager::createFTMachine()
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
   }
-  else if (ftmachine_p == "wproject"){
-    os << "Performing w-plane projection"
-       << LogIO::POST;
-    if(wprojPlanes_p<64) {
-      os << LogIO::WARN
-	 << "No of WProjection planes set too low for W projection - recommend at least 128"
-	 << LogIO::POST;
-    }
-    ft_p = new WProjectFT(*ms_p, wprojPlanes_p, phaseCenter_p, mLocation_p,
-			  cache_p/2, tile_p, True, padding_p);
-    AlwaysAssert(ft_p, AipsError);
-    cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
-  }
   //
   // Make WProject FT machine (for non co-planar imaging)
   //
@@ -6506,7 +6478,7 @@ Bool Imager::createFTMachine()
 	 << "No of WProjection planes set too low for W projection - recommend at least 128"
 	 << LogIO::POST;
     }
-    ft_p = new WProjectFT(*ms_p, wprojPlanes_p, phaseCenter_p, mLocation_p,
+    ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
 			  cache_p/2, tile_p, True, padding_p);
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
@@ -7765,6 +7737,30 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
     return True;
   return False;
 }
+Bool Imager::interactivemask(const String& image, const String& mask){
 
+  LogIO os(LogOrigin("Imager", "interactivemask()", WHERE));
+   if(Table::isReadable(mask)) {
+    if (! Table::isWritable(mask)) {
+      os << "Mask image is not modifiable " << LogIO::WARN << LogIO::POST;
+      return False;
+    }
+    //we should regrid here is image and mask do not match
+   }
+   else{
+     clone(image, mask);
+   }
+   QtApp::init();
+   QtClean vwrCln(image, mask); 
+   //  if(!vwrCln.loadImage(image, mask)){
+   if(!vwrCln.imageLoaded()){
+     os << "Failed to load image and mask in viewer" 
+	<< LogIO::SEVERE << LogIO::POST;
+   return False;
+   
+   }
+   vwrCln.go();
+   return True;
+}
 } //# NAMESPACE CASA - END
 

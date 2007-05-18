@@ -188,7 +188,10 @@ class Imager
                              const String& timerng="",
 			     const String& fieldnames="",
 			     const Vector<Int>& antIndex=Vector<Int>(),
-			     const String& antnames="");
+			     const String& antnames="",
+			     const String& spwstring="",
+			     const String& uvdist="",
+			     const String& scan="");
 
 
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
@@ -201,7 +204,10 @@ class Imager
 	       const String& timerng="",
 	       const String& fieldnames="",
 	       const Vector<Int>& antIndex=Vector<Int>(),
-	       const String& antnames="" );
+	       const String& antnames="",
+	       const String& spwstring="",
+	       const String& uvdist="",
+	       const String& scan="");
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
@@ -438,6 +444,10 @@ class Imager
 
   //Check if can proceed with this object
   Bool valid() const;
+
+
+  //Interactive mask drawing
+  Bool interactivemask(const String& imagename, const String& maskname);
 
 protected:
 

@@ -51,7 +51,10 @@ namespace casa {
 				 const String& timerng="",
 				 const String& fieldnames="",
 				 const Vector<Int>& antIndex=Vector<Int>(),
-				 const String& antnames="");
+				 const String& antnames="",
+				 const String& spwstring="",
+				 const String& uvdist="",
+				 const String& scan="");
 
 
        // Set image construction parameters

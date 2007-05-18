@@ -266,6 +266,14 @@ class Calibrater
 	      const String& fields);
 
 
+  // List a calibration table
+  Bool listCal(const String& infile,
+	       const String& field,
+	       const String& antenna,
+	       const Int& spw,
+	       const Int& chan);
+
+
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
   // CORRECTED_DATA and IMAGING_WEIGHT) is supported.
@@ -305,6 +313,8 @@ class Calibrater
   // Interpret refant index
   Int getRefantIdx(const String& refant);
   
+  Vector<Int> getAntIdx(const String& antenna);
+
   // Interpret field indices (MSSelection)
   Vector<Int> getFieldIdx(const String& fields);
 
@@ -342,6 +352,9 @@ class Calibrater
   String dataMode_p;
   Int dataNchan_p, dataStart_p, dataStep_p;
   MRadialVelocity mDataStart_p, mDataStep_p;
+
+  // Spw avoidance flag
+  Vector<Bool> spwOK_p;
 
   //Spline phase wrapping helper params
   Double phasewrap_p;

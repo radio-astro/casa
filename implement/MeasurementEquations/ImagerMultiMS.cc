@@ -85,7 +85,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& timerng,
 				   const String& fieldnames,
 				   const Vector<Int>& antIndex,
-				   const String& antnames) {
+				   const String& antnames,
+				   const String& spwstring,
+				   const String& uvdist,
+				   const String& scan) {
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);  
 
 
@@ -126,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    Table::Update);
       blockMSSel_p[numMS_p-1]=thisms;
       //breaking reference
-      ms_p=new MeasurementSet();
+      (*ms_p)=MeasurementSet();
       (*ms_p)=thisms;
     }
     
@@ -141,11 +144,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       indgen(dataspectralwindowids_p);
 
     }
-
-    // Map the selected spectral window ids to data description ids
-    MSDataDescIndex msDatIndex(thisms.dataDescription());
-    datadescids_p.resize(0);
-    datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
 
  // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
@@ -162,26 +160,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
       
       
-      // Now we make a condition to do the old FIELD_ID, SPECTRAL_WINDOW_ID
-      // selection
-      /*      TableExprNode condition;
-      String colf=MS::columnName(MS::FIELD_ID);
-      String cols=MS::columnName(MS::DATA_DESC_ID);
-      if(datafieldids_p.nelements()>0&&datadescids_p.nelements()>0){
-	condition=sorted.col(colf).in(datafieldids_p)&&
-	  sorted.col(cols).in(datadescids_p);
-        os << "Selecting on field and spectral window ids" << LogIO::POST;
-      }
-      else if(datadescids_p.nelements()>0) {
-	condition=sorted.col(cols).in(datadescids_p);
-        os << "Selecting on spectral window id" << LogIO::POST;
-      }
-      else if(datafieldids_p.nelements()>0) {
-	condition=sorted.col(colf).in(datafieldids_p);
-        os << "Selecting on field id" << LogIO::POST;
-      }
-      
-      */
       //Some MSSelection 
       MSSelection thisSelection;
       if(datafieldids_p.nelements() > 0){
@@ -191,9 +169,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(fieldnames != ""){
 	thisSelection.setFieldExpr(fieldnames);
       }
-      if(datadescids_p.nelements() > 0){
+      if(dataspectralwindowids_p.nelements() > 0){
 	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
 	os << "Selecting on spectral windows" << LogIO::POST;
+      }
+      else if(spwstring != ""){
+	thisSelection.setSpwExpr(spwstring);
+	os << "Selecting on spectral windows expression "<< spwstring  << LogIO::POST;
       }
       if(antIndex.nelements() >0){
 	thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex) );
@@ -207,19 +189,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
       }            
       if(timerng != ""){
-	Vector<String>timerange(1, timerng);
-	thisSelection.setTimeExpr(MSSelection::nameExprStr(timerange));
+	thisSelection.setTimeExpr(timerng);
 	os << "Selecting on time range" << LogIO::POST;	
+      }
+      if(uvdist != ""){
+	thisSelection.setUvDistExpr(uvdist);
+      }
+      if(scan != ""){
+	thisSelection.setScanExpr(scan);
       }
       //***************
 
       TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
       if(exprNode.isNull())
-	throw(AipsError("Selection led to a null exprnode...review ms and selection parameters"));
+	throw(AipsError("Selection failed...review ms and selection parameters"));
       datafieldids_p.resize();
       datafieldids_p=thisSelection.getFieldList();
       if((numMS_p > 1) || datafieldids_p.nelements() > 1)
 	multiFields_p= True;
+       //Now lets see what was selected as spw and match it with datadesc
+      dataspectralwindowids_p.resize();
+      dataspectralwindowids_p=thisSelection.getSpwList();
+      if(dataspectralwindowids_p.nelements()==0){
+	Int nspwinms=thisms.spectralWindow().nrow();
+	dataspectralwindowids_p.resize(nspwinms);
+	indgen(dataspectralwindowids_p);
+      }
+      // Map the selected spectral window ids to data description ids
+      MSDataDescIndex msDatIndex(thisms.dataDescription());
+      datadescids_p.resize(0);
+      datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
+
+
+
       // Now remake the selected ms
       mssel_p = new MeasurementSet(sorted(exprNode));
       AlwaysAssert(mssel_p, AipsError);

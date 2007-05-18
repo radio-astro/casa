@@ -62,6 +62,7 @@ Calibrater::Calibrater():
   ve_p(0),
   vc_p(),
   svc_p(0),
+  spwOK_p(),
   histLockCounter_p(), 
   hist_p(0)
 {
@@ -576,6 +577,7 @@ Bool Calibrater::setapply (const String& type,
 
   // First try to create the requested VisCal object
   VisCal *vc(NULL);
+
   try {
 
     if(!ok()) 
@@ -593,9 +595,9 @@ Bool Calibrater::setapply (const String& type,
 
     vc->setApply(applypar);       
 
-      logSink() << LogIO::NORMAL << ".   "
-		<< vc->applyinfo()
-		<< LogIO::POST;
+    logSink() << LogIO::NORMAL << ".   "
+	      << vc->applyinfo()
+	      << LogIO::POST;
 
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << x.getMesg() 
@@ -609,7 +611,10 @@ Bool Calibrater::setapply (const String& type,
   // Creation apparently successful, so add to the apply list
   // TBD: consolidate with above?
   try {
-  
+
+    // Maintain spw availability list
+    spwOK_p = spwOK_p && (vc->spwOK());
+
     uInt napp=vc_p.nelements();
     vc_p.resize(napp+1,False,True);      
     vc_p[napp] = vc;
@@ -1001,8 +1006,14 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
   //  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
 
   // Delete the VisCal apply list
-  if (apply) 
+  if (apply && vs_p) {
     unsetapply();
+
+    // spw-availability bookkeeping...    
+    spwOK_p.resize(vs_p->numberSpw());
+    spwOK_p=True;
+
+  }
 
   // Delete the VisCal solve object
   if (solve)
@@ -1094,21 +1105,36 @@ Bool Calibrater::correct() {
     // Pass each timestamp (VisBuffer) to VisEquation for correction
     Bool calwt(calWt());
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-      for (vi.origin(); vi.more(); vi++) {
 
-	// If we are going to update the weights, reset them first
-	// TBD: move this to VisEquation::correct?
-	if (calwt) vb.resetWeightMat();
 
-	ve_p->correct(vb);    // throws exception if nothing to apply
-	vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
-	vi.setFlag(vb.flag());
+      //      Vector<Int> scans;
+      //      vi.scan(scans);
+      //      cout << " scan = " << scans(0)
+      //	   << " spw = " << vi.spectralWindow() 
+      //	   << " fld = " << vi.fieldId() 
+      //	   << endl;
 
-	// Write out weight col, if it has changed
-	if (calwt) vi.setWeightMat(vb.weightMat()); 
+      // Only procede if spw can be calibrated
+      if (spwOK_p(vi.spectralWindow())) {
+
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // If we are going to update the weights, reset them first
+	  // TBD: move this to VisEquation::correct?
+	  if (calwt) vb.resetWeightMat();
+	  
+	  ve_p->correct(vb);    // throws exception if nothing to apply
+	  vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
+	  vi.setFlag(vb.flag());
+	  
+	  // Write out weight col, if it has changed
+	  if (calwt) vi.setWeightMat(vb.weightMat()); 
+	}
       }
-    }
+      //      else 
+      //	cout << "Encountered data spw for which there no calibration." << endl;
 
+    }
     // Flush to disk
     vs_p->flush();
 
@@ -2017,7 +2043,56 @@ Bool Calibrater::smooth(const String& infile,
 }
 
 
-// Select on channel in the VisSet
+  // List a calibration table
+Bool Calibrater::listCal(const String& infile,
+			 const String& field,
+			 const String& antenna,
+			 const Int& spw,
+			 const Int& chan) {
+
+  SolvableVisCal *svc(NULL);
+
+  try {
+    Vector<Int> ufldids=getFieldIdx(field);
+    Vector<Int> uantids=getAntIdx(antenna);
+    
+    // Set record format for calibration table application information
+    RecordDesc applyparDesc;
+    applyparDesc.addField ("table", TpString);
+    
+    // Create record with the requisite field values
+    Record applypar(applyparDesc);
+    applypar.define ("table", infile);
+    
+    // Add a new VisCal to the apply list
+    svc = createSolvableVisCal(calTableType(infile),*vs_p);  
+    
+    svc->setApply(applypar);       
+    
+    svc->listCal(ufldids,uantids,spw,chan);
+
+    if (svc) delete svc; svc=NULL;
+
+    return True;
+    
+  } catch (AipsError x) {
+    
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    // Clean up
+    if (svc) delete svc; svc=NULL;
+    
+    throw(AipsError("Error in Calibrater::listCal."));
+    
+    return False;
+  }
+  return False;
+  
+}
+  
+  // Select on channel in the VisSet
 void Calibrater::selectChannel(const String& mode, 
 			       const Int& nchan, 
 			       const Int& start, const Int& step,
@@ -2128,6 +2203,15 @@ Int Calibrater::getRefantIdx(const String& refant) {
     irefant= max(ant1list);  // is this right?
   }
   return irefant;
+}
+
+// Interpret refant *index*
+Vector<Int> Calibrater::getAntIdx(const String& antenna) {
+
+    MSSelection msselect;
+    msselect.setAntennaExpr(antenna);
+    return msselect.getAntenna1List(mssel_p);
+
 }
 
 // Interpret field indices (MSSelection)

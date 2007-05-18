@@ -77,6 +77,11 @@ public:
   //  (specialize to jive with ant- or bln-basedness, etc.)
   virtual Int nTotalPar()=0;
 
+  // Report if calibration available for specified spw
+  //  (if no CalInterp available, assume True)
+  virtual Vector<Bool> spwOK() { 
+    return cint_ ? ci().spwOK() : Vector<Bool>(nSpw(),True); };
+
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
 
@@ -192,6 +197,9 @@ public:
   inline virtual void state() { stateSVC(True); };
 
   virtual void currMetaNote();
+
+  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
+		       const Int& spw, const Int& chan)=0;
 
 protected:
 
@@ -350,6 +358,9 @@ public:
   // Report state:
   inline virtual void state() { stateSVM(True); };
 
+  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
+		       const Int& spw, const Int& chan) {};
+
 protected:
 
   // Number of Cal Matrices to form on baseline axis
@@ -458,6 +469,9 @@ public:
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
+
+  virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
+		       const Int& spw, const Int& chan);
 
 protected:
  

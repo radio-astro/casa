@@ -94,7 +94,24 @@ WProjectFT::WProjectFT(MeasurementSet& ms,
   msac=new MSAntennaColumns(ms_p->antenna());
   lastIndex_p=0;
 }
-
+WProjectFT::WProjectFT(Int nWPlanes, 
+		       MPosition mLocation, 
+		       Long icachesize, Int itilesize, 
+		       Bool usezero, Float padding)
+  : FTMachine(), padding_p(padding), ms_p(NULL), nWPlanes_p(nWPlanes),
+    imageCache(0), cachesize(icachesize), tilesize(itilesize),
+    gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+    maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
+    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
+    convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
+{
+  convSize=0;
+  savedWScale_p=0.0;
+  tangentSpecified_p=False;
+  mLocation_p=mLocation;
+  lastIndex_p=0;
+  
+}
 WProjectFT::WProjectFT(MeasurementSet& ms, 
 		       Int nWPlanes, MDirection mTangent, 
 		       MPosition mLocation, 
@@ -288,7 +305,7 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
   
   // Set up the convolution function. 
   if(wConvSize>1) {
-    if(wConvSize>256) {
+    /* if(wConvSize>256) {
       convSampling=4;
       convSize=min(nx,ny); 
       Int maxMemoryMB=HostInfo::memoryTotal()/1024; 
@@ -305,11 +322,19 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
       convSize=min(nx,ny);
       convSize=min(convSize,1024);
     }
+    */
+
+    Int maxMemoryMB=HostInfo::memoryTotal()/1024;
+    //nominal  512 wprojplanes above that you may (or not) go swapping
+    Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
+    convSampling=4;
+    convSize=max(nx,ny);
+    convSize=min(convSize,Int(maxConvSizeConsidered/2.0)*2);
     
   }
   else {
     convSampling=1;
-    convSize=min(nx,ny);
+    convSize=max(nx,ny);
   }
   Int maxConvSize=convSize;
   
@@ -323,16 +348,25 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
   Vector<Double> sampling;
   sampling = dc.increment();
   sampling*=Double(convSampling);
-  sampling*=Double(min(nx,ny))/Double(convSize);
+  //sampling*=Double(max(nx,ny))/Double(convSize);
+  sampling[0]*=Double(nx)/Double(convSize);
+  sampling[1]*=Double(ny)/Double(convSize);
   dc.setIncrement(sampling);
   
   Vector<Double> unitVec(2);
   unitVec=convSize/2;
   dc.setReferencePixel(unitVec);
   
-  // Set the reference value to that of the image
-  dc.setReferenceValue(mTangent_p.getAngle().getValue());
-  
+  // Set the reference value to that of the image center for sure.
+  {
+    // dc.setReferenceValue(mTangent_p.getAngle().getValue());
+    MDirection wcenter;  
+    Vector<Double> pcenter(2);
+    pcenter(0) = nx/2;
+    pcenter(1) = ny/2;    
+    directionCoord.toWorld( wcenter, pcenter );
+    dc.setReferenceValue(wcenter.getAngle().getValue());
+  }
   coords.replaceCoordinate(dc, directionIndex);
   //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
   
@@ -432,7 +466,7 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
     Bool found=False;
     Int trial=0;
     for (trial=convSize/2-2;trial>0;trial--) {
-      if(abs(convFunc(0,trial,iw))>1e-3) {
+      if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
 	found=True;
 	break;
       }
@@ -474,7 +508,7 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
     logIO() << "Convolution function integral is not positive"
 	    << LogIO::EXCEPTION;
   }
-  logIO() << "Convolution support = " << convSupport
+  logIO() << "Convolution support = " << convSupport*convSampling
 	  << " pixels in Fourier plane"
 	  << LogIO::POST;
 

@@ -78,6 +78,10 @@ public:
   //    (Must be implemented in specializations!)
   virtual Int nPar()=0;
 
+  // Report calibration availability per spw
+  //  (always True for non-tabular?)
+  virtual Vector<Bool> spwOK() { return Vector<Bool>(nSpw(),True); };
+
   // Frequency-dependent Parameters?  Nominally not.
   virtual Bool freqDepPar() { return False; };
 

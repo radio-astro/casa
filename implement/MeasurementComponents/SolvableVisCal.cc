@@ -39,7 +39,10 @@
 #include <casa/OS/Memory.h>
 #include <casa/Utilities/GenSort.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <casa/sstream.h>
+#include <casa/iostream.h>
+#include <casa/iomanip.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
@@ -215,13 +218,11 @@ void SolvableVisCal::setApply(const Record& apply) {
       else
 	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
       // TBD: Report non-trivial spwmap to logger.
-
-      cout << "spwMap() = " << spwMap() << endl;
+      cout << "Note: spwMap() = " << spwMap() << endl;
     }
   }
 
   AlwaysAssert(allGE(spwMap(),0),AipsError);
-
 
   // TBD: move interval to VisCal version?
   if (apply.isDefined("t"))
@@ -1538,56 +1539,58 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 
   Bool fldok(True);
 
-  // For each spw
   for (Int ispw=0; ispw<nSpw(); ispw++) {
 
-    currSpw()=ispw;
+    // Only update spws which are available in the incr table:
+    if (incr->spwOK()(ispw)) {
 
-    Int nSlot(cs().nTime(ispw));
-
-    // For each slot in this spw
-    for (Int islot=0; islot<nSlot; islot++) {
-
-      Double thistime=cs().time(ispw)(islot);
-      Int thisfield=cs().fieldId(ispw)(islot);
+      currSpw()=ispw;
       
-      // TBD: proper frequency?  (from CalSet?)
-      Vector<Double> thisfreq(nSpw(),0.0);
+      Int nSlot(cs().nTime(ispw));
+      
+      // For each slot in this spw
+      for (Int islot=0; islot<nSlot; islot++) {
+	
+	Double thistime=cs().time(ispw)(islot);
+	Int thisfield=cs().fieldId(ispw)(islot);
+	
+	// TBD: proper frequency?  (from CalSet?)
+	Vector<Double> thisfreq(nSpw(),0.0);
+	
+	// Is current field among those we need to update?
+	fldok = (nfield==0 || anyEQ(fields,thisfield));
 
-      // Is current field among those we need to update?
-      fldok = (nfield==0 || anyEQ(fields,thisfield));
+	if (fldok) {
 
-      if (fldok) {
-
-	// TBD: group following into syncCal(cs)?
-	syncMeta(currSpw(),thistime,thisfield,thisfreq,nChanPar());
-	syncPar(currSpw(),islot);
-	syncCalMat(False);
-
-        // Sync svj with this
-	svj->syncCal(*this);
-
-	// TBD: this should move to syncMeta or somesuch...
-	//   (and be more comprehensive)x
-	AlwaysAssert((nChanMat()==svj->nChanMat()),AipsError);
-
-        // Do the multiplication each ant, chan
-        for (Int iant=0; iant<nAnt(); iant++) {
-          for (Int ichan=0; ichan<nChanMat(); ichan++) {
-	    J1()*=(svj->J1());
-	    J1()++;
-	    svj->J1()++;
-          } // ichan
-        } // iant
-	IPosition blc(4,0,0,0,islot);
-	IPosition trc(cs().parOK(currSpw()).shape());
-	trc-=1;
-	trc(3)=islot;
-	cout << "New cs().parOK() = " << cs().parOK(currSpw())(blc,trc) << endl;
-	cs().solutionOK(currSpw())(islot)=
-	  anyEQ(cs().parOK(currSpw())(blc,trc),True);
-      } // fldok
-    } // islot
+	  // TBD: group following into syncCal(cs)?
+	  syncMeta(currSpw(),thistime,thisfield,thisfreq,nChanPar());
+	  syncPar(currSpw(),islot);
+	  syncCalMat(False);
+	  
+	  // Sync svj with this
+	  svj->syncCal(*this);
+	  
+	  // TBD: this should move to syncMeta or somesuch...
+	  //   (and be more comprehensive)x
+	  AlwaysAssert((nChanMat()==svj->nChanMat()),AipsError);
+	  
+	  // Do the multiplication each ant, chan
+	  for (Int iant=0; iant<nAnt(); iant++) {
+	    for (Int ichan=0; ichan<nChanMat(); ichan++) {
+	      J1()*=(svj->J1());
+	      J1()++;
+	      svj->J1()++;
+	    } // ichan
+	  } // iant
+	  IPosition blc(4,0,0,0,islot);
+	  IPosition trc(cs().parOK(currSpw()).shape());
+	  trc-=1;
+	  trc(3)=islot;
+	  cs().solutionOK(currSpw())(islot)=
+	    anyEQ(cs().parOK(currSpw())(blc,trc),True);
+	} // fldok
+      } // islot
+    } // spwOK
   } // ispw
 }
 
@@ -2321,6 +2324,110 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
 }
 
+void SolvableVisJones::listCal(const Vector<Int> ufldids,
+			       const Vector<Int> uantids,
+			       const Int& spw, 
+			       const Int& chan) {
+
+  // Catch bad spw specification:
+  if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
+    throw(AipsError("Nothing to list for specified spw."));
+
+  MeasurementSet ms(msName());
+  MSAntennaColumns msant(ms.antenna());
+  Vector<String> antname(msant.name().getColumn());
+  MSFieldColumns msfld(ms.field());
+  Vector<String> fldname(msfld.name().getColumn());
+
+
+  Int nchan=cs().par(spw).shape()(1);
+  Complex *g=cs().par(spw).data()+chan;
+  Bool *gok=cs().parOK(spw).data()+chan;
+
+  Vector<String> flagstr(2); 
+  flagstr(0)="F";
+  flagstr(1)=" ";
+
+  cout << endl
+       << "Listing CalTable: " << calTableName()
+       << "   (" << typeName() << ") "
+       << endl
+       << "---------------------------------------------------------------"
+       << endl;
+
+  Int irow(0);
+  for (Int itime=0;itime<cs().nTime(spw);++itime) {
+
+    Int fldid(cs().fieldId(spw)(itime));
+
+    // If no user-specified fields, or fldid is in user's list
+    if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+
+      if (irow%cs().nElem()==0) 
+	cout << endl
+	     << "SpwId = " << spw << ", "
+	     << " channel = " << chan << "."
+	     << endl 
+	     << setiosflags(ios::left)
+	     << setw(21) << "Time"  << " "
+	     << setw(10) << "Field" << " "
+	     << setw(8)  << "Ant"   << "  : "
+	     << setw(6)  << "  Amp " << "  "
+	     << setw(6)  << " Phase" << "    "
+	     << setw(6)  << "  Amp " << "  "
+	     << setw(6)  << " Phase" << "    "
+	     << endl
+	     << "--------------------- ---------- --------"
+	     << "    ---------------   ---------------" 
+	     << endl;
+      
+      String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
+      String fldstr=("'"+fldname(fldid)(0,8)+"'");
+      //    Int fldlen=fldstr.length();
+      for (Int ielem=0;ielem<cs().nElem();++ielem) {
+
+
+	if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
+
+	  cout << setw(21) << timestr << " "
+	       << setw(10) << fldstr << " "
+	       << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
+	  timestr="";
+	  fldstr="";
+	  for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
+	    cout << setiosflags(ios::fixed) << setiosflags(ios::right)
+		 << setprecision(3)
+		 << setw(6)
+		 << abs(*g) << flagstr(Int(*gok)) << " "
+		 << setprecision(1)
+		 << setw(6)
+		 << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
+	  
+	  cout << resetiosflags(ios::right) << endl;
+	  irow++;
+	  g+=(nPar()*(nchan-1));
+	  gok+=(nPar()*(nchan-1));
+	}	
+	else {
+	  g+=(nPar()*nchan);
+	  gok+=(nPar()*nchan);
+	}
+      }
+    }
+    else {
+      g+=(nPar()*nchan*nElem());
+      gok+=(nPar()*nchan*nElem());
+    }
+  }
+
+  cout << endl
+       << "Listed " << irow << " antenna solutions." 
+       << endl << endl;
+
+}
+
+
+
 // Globals
 
 // Return a cal table's type, verifying its existence
@@ -2352,7 +2459,6 @@ String calTableType(const String& tablename) {
   return ti.subType();
 
 }
-
 
 
 } //# NAMESPACE CASA - END

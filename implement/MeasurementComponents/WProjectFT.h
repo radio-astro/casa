@@ -138,7 +138,11 @@ public:
   WProjectFT(MeasurementSet& ms,
 	   Int nFacets, Long cachesize, Int tilesize=16, 
 	   Bool usezero=True);
-
+  //Constructor without tangent direction
+  WProjectFT(Int nFacets, MPosition mLocation,
+	     Long cachesize, Int tilesize=16, 
+	     Bool usezero=True, Float padding=1.0);
+  //Deprecated no longer need ms in constructor
   WProjectFT(MeasurementSet& ms,
 	     Int nFacets, MDirection mTangent, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 

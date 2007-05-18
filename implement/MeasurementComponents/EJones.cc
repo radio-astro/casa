@@ -168,14 +168,14 @@ void EGainCurve::setApply(const Record& applypar) {
       }
 
     } else {
-  /*
+
       { ostringstream o;
-	o<< "Could not find gain curve data for spectral window ="
-	 << ispw << "(ref freq=" << spwfreqs_(ispw) << ")";
-	message.message(o);
-	logSink().post(message);
+	o<< "Could not find gain curve data for Spw="
+	 << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz)";
+
+	throw(AipsError(o.str()));
       }
-  */
+
     }
 
   } // ispw
