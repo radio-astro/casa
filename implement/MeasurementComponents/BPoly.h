@@ -117,7 +117,7 @@ private:
 
   // Private variables containing the solver parameters
   Int degamp_p, degphase_p;
-  Bool visnorm_p, bpnorm_p;
+  Bool visnorm_p;
   Int maskcenter_p;
   Float maskedge_p;
 

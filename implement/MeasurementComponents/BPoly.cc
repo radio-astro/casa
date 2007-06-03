@@ -84,7 +84,6 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
   degamp_p(3),
   degphase_p(3),
   visnorm_p(False),
-  bpnorm_p(True),
   maskcenter_p(1),
   maskedge_p(5.0),
   maskcenterHalf_p(0),
@@ -100,8 +99,6 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
 //    visnorm           const Bool&        True if pre-normalization of the 
 //                                         visibility data over frequency is
 //                                         required before solving.
-//    bpnorm            const Bool&        True if the output bandpass
-//                                         solutions should be normalized.
 //    maskcenter        const Int&         No. of central channels to mask
 //                                         during the solution
 //    maskedge          const Float&       Fraction of spectrum to mask at
@@ -127,8 +124,6 @@ void BJonesPoly::setSolve(const Record& solvepar)
 //    visnorm           const Bool&        True if pre-normalization of the 
 //                                         visibility data over frequency is
 //                                         required before solving.
-//    bpnorm            const Bool&        True if the output bandpass
-//                                         solutions should be normalized.
 //    maskcenter        const Int&         No. of central channels to mask
 //                                         during the solution
 //    maskedge          const Float&       Fraction of spectrum to mask at
@@ -146,7 +141,6 @@ void BJonesPoly::setSolve(const Record& solvepar)
   degamp_p = degree(0);
   degphase_p = degree(1);
   if (solvepar.isDefined("visnorm")) visnorm_p = solvepar.asBool("visnorm");
-  if (solvepar.isDefined("bpnorm")) bpnorm_p = solvepar.asBool("bpnorm");
   if (solvepar.isDefined("maskcenter")) maskcenter_p = 
                                        solvepar.asInt("maskcenter");
   if (solvepar.isDefined("maskedge")) maskedge_p = solvepar.asFloat("maskedge");
@@ -319,7 +313,7 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
   Int nok=ntrue(freqGridOk);
   if (nok < (degamp_p+1) ) {
     os << LogIO::SEVERE 
-       << "Selected spectral window(s) nominaly fill only " << nok << " grid points." 
+       << "Selected spectral window(s) nominally fill only " << nok << " grid points." 
        << LogIO::POST;
     os << LogIO::SEVERE 
        << "Reduce degamp by at least " << degamp_p+1-nok << " and try again." 
@@ -403,7 +397,7 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
     Vector<Int> polidx(2,0);
     polidx(1)=nCorr-1;   // TBD: should be pol-sensitive!
 
-    os << LogIO::NORMAL << "Accumulating spw id = " << (spwid+1)
+    os << LogIO::NORMAL << "Accumulating spw id = " << spwid
        << ", nchan= " << nChan 
        << " (freq group= " << freqGroup << ") for fit."       
        << LogIO::POST;
@@ -727,7 +721,7 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
   // Normalize the output calibration solutions if required
   Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
 
-  if (bpnorm_p) {
+  if (solnorm()) {
     os << LogIO::NORMAL 
        << "Normalizing antenna-based solutions."
        << LogIO::POST;
@@ -1325,7 +1319,7 @@ void BJonesPoly::plotsolve2(const Vector<Double>& x,
 
 
  /*
-      cout << ant1idx(ibl)+1 << "-" << ant2idx(ibl)+1 << "  Means: " 
+      cout << ant1idx(ibl) << "-" << ant2idx(ibl) << "  Means: " 
 	   << mean(amp1) << " "
 	   << mean(amp2) << " "
 	   << mean(pha1) << " "
@@ -1369,7 +1363,7 @@ void BJonesPoly::plotsolve2(const Vector<Double>& x,
       xlab.precision(12);
       xlab << "Frequency in kHz (-" << minfreq/1.0e9 << " GHz)";
       titlelab << "B polynomial for baseline " 
-	       << ant1idx(ibl)+1 << " & " << ant2idx(ibl)+1;
+	       << ant1idx(ibl) << " & " << ant2idx(ibl);
       ampdeg << "degree = " << degamp_p;
       phadeg << "degree = " << degphase_p;
       pharms << "rms = " << phaerr1(0);
@@ -1436,7 +1430,7 @@ void BJonesPoly::plotsolve2(const Vector<Double>& x,
       pg.env(0.0,1.0,0.0,1.0,0,-2);
       pg.sch(2.0);
       ostringstream oos;
-      oos << "No data for baseline " << ant1idx(ibl)+1 << " & " << ant2idx(ibl)+1;
+      oos << "No data for baseline " << ant1idx(ibl) << " & " << ant2idx(ibl);
       pg.ptxt(0.5,0.5,0.0,0.5,oos);
       pg.sch(1.0);
     }

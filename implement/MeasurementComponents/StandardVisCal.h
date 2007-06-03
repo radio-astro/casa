@@ -211,6 +211,8 @@ public:
   //   (this is the ONLY fundamental difference from G)
   virtual Bool freqDepPar() { return True; };
 
+  virtual void normalize();
+
 protected:
 
   // <nothing>

@@ -452,6 +452,27 @@ BJones::~BJones() {
   if (prtlev()>2) cout << "B::~B()" << endl;
 }
 
+void BJones::normalize() {
+
+  logSink() << "Normalizing solutions per spw, pol, ant, time." 
+	    << LogIO::POST;
+
+  // Iteration axes (norm per spw, pol, ant, timestamp)
+  IPosition itax(3,0,2,3);
+  
+  for (Int ispw=0;ispw<nSpw();++ispw)
+    if (cs().nTime(ispw)>0) {
+      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
+      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
+      while (!soliter.pastEnd()) {
+	normSolnArray(soliter.array(),okiter.array(),True);
+	soliter.next();
+	okiter.next();
+      }
+      
+    }
+
+}
 
 // **********************************************************
 //  DJones Implementations

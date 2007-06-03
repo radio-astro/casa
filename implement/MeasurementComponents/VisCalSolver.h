@@ -128,6 +128,7 @@ protected:
   inline Int&              nTotalPar() { return nTotalPar_; };
   inline Vector<Complex>&  par()       { return par_; };
   inline Vector<Bool>&     parOK()     { return parOK_; };
+  inline Vector<Float>&    parErr()    { return parErr_; };
   inline Vector<Complex>&  lastPar()   { return lastPar_; };
   inline Vector<DComplex>& grad()      { return grad_; };
   inline Vector<Double>&   hess()      { return hess_; };
@@ -157,6 +158,9 @@ protected:
 
   // Optimize the step parabolically
   void optStepSize();
+
+  // Get and print par errors
+  void getErrors();
 
   void printPar(const Int& iter);
 
@@ -198,6 +202,7 @@ private:
   // (these are Complex to match the VisCal solvePar)
   Vector<Complex> par_;
   Vector<Bool>    parOK_;
+  Vector<Float>   parErr_;
   Vector<Complex> lastPar_;
 
   // Parameter update

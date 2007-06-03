@@ -665,7 +665,7 @@ Bool Calibrater::setsolve (const String& type,
   solvepar.define ("refant", refant);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
-  
+
   return setsolve(type,solvepar);
 
 }
@@ -676,7 +676,9 @@ Bool Calibrater::setsolve (const String& type,
                            const Bool& append,
                            const Double& preavg, 
 			   const Bool& phaseonly,
-                           const String& refant)
+                           const String& refant,
+			   const Bool& solnorm,
+			   const Float& minsnr)
 {
   
   logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
@@ -689,6 +691,8 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("refant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
+  solveparDesc.addField ("solnorm", TpBool);
+  solveparDesc.addField ("minsnr", TpFloat);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
@@ -698,6 +702,8 @@ Bool Calibrater::setsolve (const String& type,
   solvepar.define ("refant", getRefantIdx(refant));
   solvepar.define ("table", table);
   solvepar.define ("append", append);
+  solvepar.define ("solnorm", solnorm);
+  solvepar.define ("minsnr", minsnr);
   
   return setsolve(type,solvepar);
 
@@ -723,7 +729,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solveparDesc.addField ("t", TpDouble);
     solveparDesc.addField ("degree", TpArrayInt);
     solveparDesc.addField ("visnorm", TpBool);
-    solveparDesc.addField ("bpnorm", TpBool);
+    solveparDesc.addField ("solnorm", TpBool);
     solveparDesc.addField ("maskcenter", TpInt);
     solveparDesc.addField ("maskedge", TpFloat);
     solveparDesc.addField ("refant", TpInt);
@@ -738,7 +744,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solvepar.define ("t",DBL_MAX);        // no time-dep, for the moment
     solvepar.define ("degree", degree);
     solvepar.define ("visnorm", visnorm);
-    solvepar.define ("bpnorm", bpnorm);
+    solvepar.define ("solnorm", bpnorm);
     solvepar.define ("maskcenter", maskcenter);
     solvepar.define ("maskedge", maskedge);
     solvepar.define ("refant", refant);
@@ -757,7 +763,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Bool& append,
 				  const Vector<Int>& degree,
 				  const Bool& visnorm,
-				  const Bool& bpnorm,
+				  const Bool& solnorm,
 				  const Int& maskcenter,
 				  const Float& maskedge,
 				  const String& refant) {
@@ -773,7 +779,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solveparDesc.addField ("t", TpDouble);
     solveparDesc.addField ("degree", TpArrayInt);
     solveparDesc.addField ("visnorm", TpBool);
-    solveparDesc.addField ("bpnorm", TpBool);
+    solveparDesc.addField ("solnorm", TpBool);
     solveparDesc.addField ("maskcenter", TpInt);
     solveparDesc.addField ("maskedge", TpFloat);
     solveparDesc.addField ("refant", TpInt);
@@ -788,7 +794,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solvepar.define ("t",DBL_MAX);        // no time-dep, for the moment
     solvepar.define ("degree", degree);
     solvepar.define ("visnorm", visnorm);
-    solvepar.define ("bpnorm", bpnorm);
+    solvepar.define ("solnorm", solnorm);
     solvepar.define ("maskcenter", maskcenter);
     solvepar.define ("maskedge", maskedge);
     solvepar.define ("refant", getRefantIdx(refant));
@@ -1131,9 +1137,9 @@ Bool Calibrater::correct() {
 	  if (calwt) vi.setWeightMat(vb.weightMat()); 
 	}
       }
-      //      else 
-      //	cout << "Encountered data spw for which there no calibration." << endl;
-
+      else 
+	cout << "Encountered data spw for which there no calibration." << endl;
+      
     }
     // Flush to disk
     vs_p->flush();
@@ -1261,7 +1267,7 @@ Bool Calibrater::standardSolve() {
     // The VisBuffer to solve with
     VisBuffer& svb(vba.aveVisBuff()); 
 
-    svc_p->makePhaseOnly(svb);
+    svc_p->makeDataPhaseOnly(svb);
 
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
@@ -1272,8 +1278,28 @@ Bool Calibrater::standardSolve() {
     if (vbOk) {
 
       svc_p->guessPar(svb);
-      //svc_p->solveCPar()=Complex(0.3);
-      //svc_p->solveParOK()=True;
+      //      cout << "Guess = 0.3" << endl;
+      //      svc_p->solveCPar()=Complex(0.3);
+      //      svc_p->solveParOK()=True;
+
+      if (False) {
+	for (Int irow=0;irow<svb.nRow();++irow) {
+	  if (!svb.flagRow()(irow)) {
+	    cout << irow << " "
+		 << svb.antenna1()(irow) << "-"
+		 << svb.antenna2()(irow) << "  "
+		 << amplitude(svb.visCube()(IPosition(3,0,0,irow),
+					    IPosition(3,3,0,irow)).reform(IPosition(1,4))) << " "
+		 << amplitude(svb.modelVisCube()(IPosition(3,0,0,irow),
+						 IPosition(3,3,0,irow)).reform(IPosition(1,4))) << " "
+		 << svb.weightMat()(IPosition(2,0,irow),
+				    IPosition(2,3,irow)).reform(IPosition(1,4)) << " "
+	      
+	      
+		 << endl;
+	  }
+	}
+      }
     
       // Solve for each parameter channel (in curr Spw)
       
@@ -1314,17 +1340,23 @@ Bool Calibrater::standardSolve() {
   } // chunks
 
 
-  logSink() << "  Found " << nGood << " good " 
-	    << svc_p->typeName() << " solutions." 
+  logSink() << "  Found good " 
+	    << svc_p->typeName() << " solutions in "
+	    << nGood << " slots."
 	    << LogIO::POST;
   
   // Store whole of result in a caltable
   if (nGood==0)
     logSink() << "No output calibration table written."
 	      << LogIO::POST;
-  else
+  else {
+    
+    // Do post-solve tinkering (e.g., phase-only, normalization, etc.)
+    svc_p->postSolveTinker();
+
     // write the table
     svc_p->store();
+  }
 
   return True;
 

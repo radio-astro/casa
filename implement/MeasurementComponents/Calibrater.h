@@ -125,7 +125,9 @@ class Calibrater
 		 const Bool& append,
 		 const Double& preavg, 
 		 const Bool& phaseonly,
-		 const String& refant="");
+		 const String& refant="",
+		 const Bool& solnorm=False,
+		 const Float& minsnr=0.0f);
 
   // Arrange to solve for BPOLY
   Bool setsolvebandpoly(const String& table,
@@ -142,7 +144,7 @@ class Calibrater
 			const Bool& append,
 			const Vector<Int>& degree,
 			const Bool& visnorm,
-			const Bool& bpnorm,
+			const Bool& solnorm,
 			const Int& maskcenter,
 			const Float& maskedge,
 			const String& refant);

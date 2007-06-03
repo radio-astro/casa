@@ -68,13 +68,16 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   refant_(-1),
   solved_(False),
   mode_(""),
+  solnorm_(False),
+  minSNR_(0.0f),
   focusChan_(0),
   dataInterval_(0.0),
   fitWt_(0.0),
   fit_(0.0),
   solveCPar_(vs.numberSpw(),NULL),
   solveRPar_(vs.numberSpw(),NULL),
-  solveParOK_(vs.numberSpw(),NULL)
+  solveParOK_(vs.numberSpw(),NULL),
+  solveParErr_(vs.numberSpw(),NULL)
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -96,13 +99,16 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   refant_(-1),
   solved_(False),
   mode_(""),
+  solnorm_(False),
+  minSNR_(0.0),
   focusChan_(0),
   dataInterval_(0.0),
   fitWt_(0.0),
   fit_(0.0),
   solveCPar_(1,NULL),
   solveRPar_(1,NULL),
-  solveParOK_(1,NULL)
+  solveParOK_(1,NULL),
+  solveParErr_(1,NULL)
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -286,6 +292,8 @@ void SolvableVisCal::setSolve() {
   refant()=-1;
   mode()="<none>";
   calTableName()="<none>";
+  solnorm()=False;
+  minSNR()=0.0f;
 
   // This is the solve context
   setSolved(True);
@@ -321,6 +329,14 @@ void SolvableVisCal::setSolve(const Record& solve)
 
   if (solve.isDefined("append"))
     append()=solve.asBool("append");
+
+  if (solve.isDefined("solnorm"))
+    solnorm()=solve.asBool("solnorm");
+
+  if (solve.isDefined("minsnr"))
+    minSNR()=solve.asFloat("minsnr");
+
+  //  cout << "SVC::setsolve: minSNR() = " << minSNR() << endl;
 
   // TBD: Warn if table exists (and append=F)!
 
@@ -365,9 +381,10 @@ String SolvableVisCal::solveinfo() {
     << " append="     << append()
     << " t="          << interval()
     //    << " preavg="     << preavg()
-    << " refant="     << "'" << refantName << "'(id=" << refant() << ")"
-    << " phaseonly="  << mode().contains("phaseonly");
-
+    << " refant="     << "'" << refantName << "'" // (id=" << refant() << ")"
+    << " minsnr=" << minSNR()
+    << " phaseonly="  << mode().contains("phaseonly")
+    << " solnorm=" << solnorm();
   return String(o);
 
 }
@@ -379,7 +396,7 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 				   const Double& t,
 				   const Int& refAnt) {
 
-  LogMessage message(LogOrigin("SolvableVisJones","setAccumulate"));
+  LogMessage message(LogOrigin("SolvableVisCal","setAccumulate"));
 
   // meta-info
   calTableName()=table;
@@ -653,7 +670,9 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
 }
 
-void SolvableVisCal::makePhaseOnly(VisBuffer& vb) {
+void SolvableVisCal::makeDataPhaseOnly(VisBuffer& vb) {
+
+  // TBD: migrate this to VisEquation?
 
   if (phaseOnly()) {
     Int nCorr(vb.corrType().nelements());
@@ -779,6 +798,12 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
   //  cout << "solveParOK() = " << solveParOK() << endl;
   //  cout << "amp(solveCPar()) = " << amplitude(solveCPar()) << endl;
 
+  if (nAntForSolve<4) cout << "Only " << nAntForSolve 
+			   << "/" << nAnt() 
+			   << " antennas (" 
+			   << floor(100*Float(nAntForSolve/nAnt()))
+			   << "%) available." << endl;
+
   return (nAntForSolve>3);
     
 }
@@ -806,7 +831,10 @@ void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
   solveCPar()+=dparcube;
 
   // Ensure phaseonly-ness, if necessary
-  if (phaseOnly()) {
+  //  if (phaseOnly()) {   
+  //  NB: Disable this, for the moment (07May24); testing a fix for
+  //      a problem Kumar noticed.  See VC::makeSolnPhaseOnly(), etc.
+  if (False) {
     Float amp(0.0);
     for (Int iant=0;iant<nAnt();++iant) {
       for (Int ipar=0;ipar<nPar();++ipar) {
@@ -818,6 +846,48 @@ void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
       }
     }
   }
+}
+
+void SolvableVisCal::applyThresholds() {
+
+  // Only bother if minSNR non-trivial
+  if (minSNR() > 0.0f) {
+
+    Int nOk1(ntrue(solveParOK()));
+    
+    Cube<Float> snr(solveCPar().shape());
+    snr=0.0f;
+    for (Int iant=0;iant<nAnt();++iant)
+      for (Int ipar=0;ipar<nPar();++ipar)
+	if (solveParOK()(ipar,0,iant) &&
+	    solveParErr()(ipar,0,iant)>0.0f) {
+	  snr(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
+	  solveParOK()(ipar,0,iant)=(snr(ipar,0,iant)>minSNR());
+	}
+
+    Int nOk2(ntrue(solveParOK()));
+    Int nFail=nOk1-nOk2;    
+
+    if (False) {
+      // Report some stuff re SNR
+      cout << "SNR      = " << snr << endl;
+      cout << nOk1 << " " << nOk2 << " " << nFail << endl;
+      Float meansnr(0.0f);
+      if (ntrue(solveParOK())>0) {
+	meansnr=mean(snr(solveParOK()));
+	cout << "mean solution SNR = " << meansnr
+	     << " (passing threshold)."
+	     << endl;
+      }
+    }
+
+    if (nFail>0)
+      cout << nFail << " of " << nOk1
+	   << " solutions rejected due to SNR < " << minSNR() 
+	   << " in spw=" << currSpw()
+	   << " at " << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	   << endl;
+  } // minSNR()>0
 }
 
 void SolvableVisCal::smooth(Vector<Int>& fields,
@@ -944,13 +1014,67 @@ void SolvableVisCal::keep(const Int& slot) {
     // TBD:  Handle solveRPar here!
 
     cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-
+    //    cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
     cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
   }
   else
     throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));
 
+}
+
+void SolvableVisCal::postSolveTinker() {
+
+  // Make solutions phaseonly, if requested
+  if (phaseOnly()) makeSolnPhaseOnly();
+  
+  // Re-reference the phase, if requested
+  // TBD.  (i.e., migrate from per-solution mode)
+  // if (refant()>-1) applyRefAnt();
+
+  // Apply normalization
+  if (solnorm()) normalize();
+
+}
+
+// Divide all solutions by their amplitudes to make them "phase-only"
+void SolvableVisCal::makeSolnPhaseOnly() {
+
+  if (cs_) {    
+
+    logSink() << "Enforcing phase-only solutions." 
+	      << LogIO::POST;
+
+    for (Int ispw=0;ispw<nSpw();++ispw) {
+      if (cs().nTime(ispw)>0) {
+	Array<Float> amps(amplitude(cs().par(ispw)));
+	amps(amps==0.0f)=1.0;
+	amps(cs().parOK(ispw))=1.0;
+	cs().par(ispw)/=amps;
+      }
+    }
+  }
+  else 
+    throw(AipsError("Solution normalization not supported."));
+}
+
+void SolvableVisCal::normalize() {
+
+  // Only if we have a CalSet...
+  if (cs_) {
+
+    logSink() << "Normalizing solution amplitudes per spw." 
+	      << LogIO::POST;
+
+    // Normalize each non-trivial spw in the CalSet
+    for (Int ispw=0;ispw<nSpw();++ispw)
+      if (cs().nTime(ispw)>0) 
+	normSolnArray(cs().par(ispw),cs().parOK(ispw),False);
+
+  }
+  else 
+    throw(AipsError("Solution normalization not supported."));
+	
 }
 
 void SolvableVisCal::store() {
@@ -1011,6 +1135,40 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
 
 }
 
+void SolvableVisCal::normSolnArray(Array<Complex>& sol, 
+				   const Array<Bool>& solOK,
+				   const Bool doPhase) {
+
+  // Only do something if 2 or more good solutions
+  if (ntrue(solOK)>1) {
+
+    Complex factor(1.0);
+    
+    Array<Float> amp(amplitude(sol));
+
+    // If desired, determine phase part of the normalization
+    if (doPhase) {
+      // Prepare to divide by amplitudes indiscriminately
+      amp(!solOK)=1.0f;
+      Array<Complex> sol1=sol/amp;
+      sol1(!solOK)=Complex(0.0);
+      factor=sum(sol1);
+      factor/=abs(factor);
+    }
+
+    // Determine amplitude normalization
+    amp(!solOK)=0.0f;
+    factor*=Complex(sum(amp)/Float(ntrue(solOK)));
+    
+    // Apply the normalization factor, if non-zero
+    if (abs(factor) > 0.0)
+      sol/=factor;
+    
+  } // ntrue > 0
+
+}
+
+
 
 void SolvableVisCal::currMetaNote() {
 
@@ -1033,6 +1191,7 @@ void SolvableVisCal::initSVC() {
     solveCPar_[ispw] = new Cube<Complex>();
     solveRPar_[ispw] = new Cube<Float>();
     solveParOK_[ispw] = new Cube<Bool>();
+    solveParErr_[ispw] = new Cube<Float>();
   }
 
 }
@@ -1045,10 +1204,12 @@ void SolvableVisCal::deleteSVC() {
     if (solveCPar_[ispw])  delete solveCPar_[ispw];
     if (solveRPar_[ispw])  delete solveRPar_[ispw];
     if (solveParOK_[ispw]) delete solveParOK_[ispw];
+    if (solveParErr_[ispw]) delete solveParErr_[ispw];
   }
   solveCPar_=NULL;
   solveRPar_=NULL;
   solveParOK_=NULL;
+  solveParErr_=NULL;
 }
 
 void SolvableVisCal::verifyCalTable(const String& caltablename) {
@@ -1064,6 +1225,8 @@ void SolvableVisCal::verifyCalTable(const String& caltablename) {
     throw(AipsError(String(o)));
   }
 }
+
+
 
 
 // **********************************************************
@@ -1111,12 +1274,13 @@ void SolvableVisMueller::initSolvePar() {
     // TBD: Consider per-baseline solving (3rd=1)
     solveCPar().resize(nPar(),nChanPar(),nBln());
     solveParOK().resize(nPar(),nChanPar(),nBln());
+    solveParErr().resize(nPar(),nChanPar(),nBln());
 
     // TBD: solveRPar()?
     
     solveCPar()=Complex(1.0);
     solveParOK()=True;
-
+    solveParErr()=0.0;
   }
   currSpw()=0;
 
@@ -1622,6 +1786,8 @@ void SolvableVisJones::initSolvePar() {
 
     solveParOK().resize(nPar(),1,nAnt());
     solveParOK()=True;
+    solveParErr().resize(nPar(),1,nAnt());
+    solveParErr()=0.0;
 
   }
   currSpw()=0;
@@ -1755,6 +1921,23 @@ void SolvableVisJones::initTrivDJ() {
 
 }
 
+void SolvableVisJones::applyRefAnt() {
+
+  throw(AipsError("SVJ::applyRefAnt: Not implemented yet!"));
+
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    ArrayIterator<Complex> soliter(cs().par(ispw),1);
+    ArrayIterator<Bool> sOKiter(cs().parOK(ispw),1);
+    while (!soliter.pastEnd()) {
+      
+      
+      soliter.next();
+      sOKiter.next();
+    }
+  }
+}
+
+
 void SolvableVisJones::stateSVJ(const Bool& doVC) {
   
   // If requested, report VisCal state
@@ -1775,7 +1958,6 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
 }
-
 
 void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
                                  const Vector<Int>& tranFieldIn,

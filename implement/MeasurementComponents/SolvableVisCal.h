@@ -72,6 +72,8 @@ public:
   inline Int&         refant()         { return refant_; };
   inline String&      mode()           { return mode_; };
   inline Double&      preavg()         { return preavg_; };
+  inline Bool&        solnorm()        { return solnorm_;};
+  inline Float&       minSNR()         { return minSNR_; };
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
@@ -143,16 +145,17 @@ public:
   virtual void guessPar(VisBuffer& vb)=0;
 
   // Access to current solution parameters and matrices
-  inline virtual Cube<Complex>& solveCPar()  {return (*solveCPar_[currSpw()]);};
-  inline virtual Cube<Float>&   solveRPar()  {return (*solveRPar_[currSpw()]);};
-  inline virtual Cube<Bool>&  solveParOK()   {return (*solveParOK_[currSpw()]);};
+  inline virtual Cube<Complex>& solveCPar()   {return (*solveCPar_[currSpw()]);};
+  inline virtual Cube<Float>&   solveRPar()   {return (*solveRPar_[currSpw()]);};
+  inline virtual Cube<Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
+  inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
 
   // Synchronize the meta data with a solvable VisBuffer
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
 
   // Make vb phase-only
-  virtual void makePhaseOnly(VisBuffer& vb);
+  virtual void makeDataPhaseOnly(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
   virtual Bool verifyForSolve(VisBuffer& vb);
@@ -169,6 +172,9 @@ public:
   // Update solve parameters incrementally (additive)
   virtual void updatePar(const Vector<Complex> dpar);
 
+  // Apply solution thresholds
+  virtual void applyThresholds();
+
   // Apply refant (implemented in SVJ)
   virtual void reReference()=0;
 
@@ -183,6 +189,16 @@ public:
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
 
+  // Post solve tinkering
+  virtual void postSolveTinker();
+
+  // Divide all solutions by their amplitudes
+  virtual void makeSolnPhaseOnly();
+
+  // Normalize a solution (generic implementation)
+  virtual void normalize();
+
+  // Determine and apply flux density scaling
   virtual void fluxscale(const Vector<Int>& refFieldIn,
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
@@ -241,6 +257,11 @@ protected:
   // Report the SVC-specific state, w/ option for VC::state()
   virtual void stateSVC(const Bool& doVC);
 
+  // Normalize a (complex) solution array (generic)
+  void normSolnArray(Array<Complex>& sol,
+		     const Array<Bool>& solOK,
+		     const Bool doPhase=False);
+
   // Logger
   LogIO& logSink() { return logsink_p; };
 
@@ -277,9 +298,6 @@ private:
   // Refant
   Int refant_;
 
-  // Preavg interval
-  //  Double preavg_;
-
   // Solved-for flag
   Bool solved_;
 
@@ -288,6 +306,12 @@ private:
 
   // Preavering interval
   Double preavg_;
+
+  // Do solution normalization after a solve
+  Bool solnorm_;
+
+  // SNR threshold
+  Float minSNR_;
 
   // In-focus channel for single-chan solves on multi-chan data
   Int focusChan_;
@@ -302,6 +326,7 @@ private:
   PtrBlock<Cube<Complex>*> solveCPar_;  // [nSpw](nPar,1,{1|nElem})
   PtrBlock<Cube<Float>*>   solveRPar_;  // [nSpw](nPar,1,{1|nElem})
   PtrBlock<Cube<Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
 
   // LogIO
   LogIO logsink_p;
@@ -522,6 +547,9 @@ protected:
 
   // Initialize trivial diff'd Jones
   virtual void initTrivDJ();
+
+  // Apply reference antenna
+  void applyRefAnt();
 
   virtual void stateSVJ(const Bool& doVC);
 

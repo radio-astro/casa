@@ -65,7 +65,7 @@ VisCalSolver::VisCalSolver() :
   lastChiSq_(0.0),dChiSq_(0.0),
   sumWt_(0.0),nWt_(0),
   cvrgcount_(0),
-  par_(), parOK_(), lastPar_(), dpar_(),
+  par_(), parOK_(), parErr_(), lastPar_(), dpar_(),
   grad_(),hess_(),
   lambda_(2.0),
   optstep_(True),
@@ -169,19 +169,23 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
       else {
 	// Convergence means we're done!
 	done=True;
-	
-	// Accumulate final hessian for error estimation
-	//	accGradHess();
-	
-	//	cout << "hess() = " << hess() << endl;
 
 	if (prtlev()>0) {
 	  cout << "Iterations =" << iter << endl;
 	  //	cout << "par()=" << par() << endl;
 	}
 
-	// Return, signaling success
-	return True;
+	// Get parameter errors:
+	//	differentiate();
+	//	chiSquare();
+	accGradHess();
+	getErrors();
+
+	// Apply type-dep thresholds:
+	svc_->applyThresholds();
+
+	// Return, signaling success if at least 1 good solution
+	return (ntrue(parOK())>0);
 	
       }
       
@@ -228,6 +232,7 @@ void VisCalSolver::initSolve() {
   if (svc().solveCPar().nelements()==uInt(nTotalPar())) {
     par().reference(svc().solveCPar().reform(IPosition(1,nTotalPar())));
     parOK().reference(svc().solveParOK().reform(IPosition(1,nTotalPar())));
+    parErr().reference(svc().solveParErr().reform(IPosition(1,nTotalPar())));
   }
   else
     throw(AipsError("Solver and SVC cannot synchronize parameters."));
@@ -296,6 +301,7 @@ void VisCalSolver::chiSquare() {
   chiSq()=0.0;
   chiSqV()=0.0;
   sumWt()=0.0;
+  nWt()=0;
 
   // Shapes for iteration
   IPosition shR(R().shape());
@@ -321,6 +327,7 @@ void VisCalSolver::chiSquare() {
       // Register R for this row, 0th channel
       for (Int ich=0;ich<nChan;++ich) {
 	if (!*fl) { 
+
 	  Rp = Rit.array().data();
 	  for (Int icorr=0;icorr<nCorr;++icorr) {
 
@@ -328,6 +335,8 @@ void VisCalSolver::chiSquare() {
 	    //	    chiSq()+=Double( real((*Rp)*conj(*Rp)) );
 	    chiSqV()(icorr)+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
 	    sumWt()+=Double(*wt);   // for each channel?!
+
+	    if (*wt>0.0) nWt()++;
 	    
 	    //Advance to next corr
 	    ++wt;
@@ -347,8 +356,6 @@ void VisCalSolver::chiSquare() {
     wtMat.next();
   }
 
-  // Do this?
-  chiSq()/=sumWt();
 
 }
 
@@ -461,7 +468,7 @@ void VisCalSolver::accGradHess() {
   Double *H2;
 
   //  cout << "flag.array().data() = " << flag.array().data() << endl;
-  //  cout << "svc().focusChan()   = " << svc().focusChan() << endl;
+  //  cout << "VCS::accGradHess:  svc().focusChan()   = " << svc().focusChan() << endl;
 
   for (Int irow=0;irow<nRow;++irow) { 
     if (!*flR) {
@@ -733,6 +740,41 @@ void VisCalSolver::optStepSize() {
   //  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi
   //       << endl;
 
+}
+
+void VisCalSolver::getErrors() {
+
+  // Number of *REAL* dof
+  Int nDOF=2*(nWt()-ntrue(parOK()));
+  
+  Double k2=chiSq()/Double(nDOF);
+
+  parErr()=0.0;
+  //  Vector<Double> snr(nTotalPar(),0.0);
+  for (Int i=0;i<nTotalPar();++i) 
+    if (hess()(i)>0.0) {
+      parErr()(i)=1.0/sqrt(hess()(i)/k2/2.0);   // 2 is from def of Hess!
+      //      snr(i)=Double(abs(par()(i)))/errs(i);
+    }
+
+
+  if (False) {
+
+    cout << "ChiSq  = " << chiSq() << endl;
+    cout << "ChiSqV = " << chiSqV() << endl;
+    cout << "sumWt  = " << sumWt() << endl;
+    cout << "nWt    = " << nWt()
+	 << "; nTotalPar() = " << nTotalPar() 
+	 << "; nParOK = " << ntrue(parOK())
+	 << "; nDOF = " << nDOF 
+	 << endl;
+    
+    cout << "rChiSq = " << k2 << endl;
+    cout << "max(dpar) = " << max(amplitude(dpar())) << endl;
+    cout << "Amplitudes = " << amplitude(par()) << endl;
+    cout << "Errors = " << mean(parErr()(parOK())) << endl;
+    
+  }
 }
 
 
