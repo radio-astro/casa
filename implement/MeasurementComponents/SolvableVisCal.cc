@@ -1028,10 +1028,6 @@ void SolvableVisCal::postSolveTinker() {
   // Make solutions phaseonly, if requested
   if (phaseOnly()) makeSolnPhaseOnly();
   
-  // Re-reference the phase, if requested
-  // TBD.  (i.e., migrate from per-solution mode)
-  // if (refant()>-1) applyRefAnt();
-
   // Apply normalization
   if (solnorm()) normalize();
 
@@ -1921,23 +1917,6 @@ void SolvableVisJones::initTrivDJ() {
 
 }
 
-void SolvableVisJones::applyRefAnt() {
-
-  throw(AipsError("SVJ::applyRefAnt: Not implemented yet!"));
-
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-    ArrayIterator<Complex> soliter(cs().par(ispw),1);
-    ArrayIterator<Bool> sOKiter(cs().parOK(ispw),1);
-    while (!soliter.pastEnd()) {
-      
-      
-      soliter.next();
-      sOKiter.next();
-    }
-  }
-}
-
-
 void SolvableVisJones::stateSVJ(const Bool& doVC) {
   
   // If requested, report VisCal state
@@ -1957,6 +1936,119 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
 	 << " (" << diffJElem().data() << ")" << endl;
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
+}
+
+void SolvableVisJones::postSolveTinker() {
+
+  // Re-reference the phase, if requested
+  if (refant()>-1) applyRefAnt();
+
+  // Apply more general post-solve stuff
+  SolvableVisCal::postSolveTinker();
+
+}
+
+void SolvableVisJones::applyRefAnt() {
+
+
+  logSink() << "Optimizing phase continuity (even if refant sometimes missing)." 
+	    << LogIO::POST;
+
+  // Use ANTENNA-table-ordered refant list if user's choice bad
+  Vector<Int> refantlist(nAnt()+1);
+  indgen(refantlist);
+  refantlist-=1;
+  refantlist(0)=refant();
+
+  //  cout << "refantlist = " << refantlist  << endl;
+
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+
+    // Only if referencing required....
+    if (cs().nTime(ispw) > 1) {
+    
+      currSpw()=ispw;
+      
+      ArrayIterator<Complex> sol(cs().par(ispw),3);
+      ArrayIterator<Bool> sOk(cs().parOK(ispw),3);
+      
+      Cube<Complex> s0, s1;
+      Cube<Bool> ok0, ok1;
+      
+      // Initial prior solution
+      s0.reference(sol.array());
+      ok0.reference(sOk.array());
+      
+      // First solution to adjust is 2nd one (index=1)
+      sol.next();
+      sOk.next();
+      
+      Complex rph(1.0);
+      Matrix<Complex> globalrph(nPar(),nChanPar(),1.0);
+      Matrix<Bool>globalOK(nPar(),nChanPar(),False);
+      Int islot(0);
+      while (!sol.pastEnd()) {
+	
+	islot++;
+	
+	// The current solution
+	s1.reference(sol.array());
+	ok1.reference(sOk.array());
+	
+	// Reference each channel and par independently (?)
+	for (Int ichan=0;ichan<nChanPar();++ichan) {
+	  for (Int ipar=0;ipar<nPar();++ipar) {
+	    
+	    Int iref=0;
+	    while ( iref<nAnt() &&
+		    (!ok0(ipar,ichan,refantlist(iref)) || 
+		     !ok1(ipar,ichan,refantlist(iref)))   ) iref++;
+	    
+	    // If we didn't exhaust refant possibilities
+	    if (iref<nAnt()) {
+	      
+	      Complex &r0=s0(ipar,ichan,refantlist(iref));
+	      Complex &r1=s1(ipar,ichan,refantlist(iref));
+	      
+	      // If we can calculate a meaningful ref phasor, do it
+	      if (abs(r0)>0.0f && abs(r1)>0.0f) {
+		
+		rph=r1/r0;
+		rph/=abs(rph);
+		
+		// TBD (global refant)
+		// if (!globalOK(ipar,ichan)) {
+		//   globalrph(ipar,ichan)=(r0/abs(r0));
+		//   globalOK(ipar,ichan)=True;
+		// }
+		
+
+	     /*
+		cout << islot << " " << ichan << " " << ipar << " "
+		     << " refant = " << refantlist(iref) << " ph="
+		     << arg(rph)*180.0/C::pi 
+		     << endl;
+	     */
+
+		// Adjust each good ant by this phasor
+		for (Int iant=0;iant<nAnt();++iant) 
+		  if (ok1(ipar,ichan,iant))
+		    s1(ipar,ichan,iant)/=rph;
+		
+	      } // non-zero reference amps
+	    } // refant ok
+	  } // ipar
+	} // ichan
+	
+	// Advance to next solution
+	s0.reference(s1);
+	ok0.reference(ok1);
+	sol.next();
+	sOk.next();
+      } // slots
+    } // nTime>1
+  } // ispw
+
 }
 
 void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,

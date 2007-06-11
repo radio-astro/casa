@@ -5401,7 +5401,7 @@ Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
 
 Bool Imager::clone(const String& imageName, const String& newImageName)
 {
-  if(!valid()) return False;
+  //if(!valid()) return False;
   // This is not needed if(!assertDefinedImageParameters()) return False;
   LogIO os(LogOrigin("imager", "clone()", WHERE));
   try {
@@ -7737,7 +7737,7 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
     return True;
   return False;
 }
-Bool Imager::interactivemask(const String& image, const String& mask){
+Int Imager::interactivemask(const String& image, const String& mask){
 
   LogIO os(LogOrigin("Imager", "interactivemask()", WHERE));
    if(Table::isReadable(mask)) {
@@ -7759,8 +7759,8 @@ Bool Imager::interactivemask(const String& image, const String& mask){
    return False;
    
    }
-   vwrCln.go();
-   return True;
+   Int val=vwrCln.go();
+   return val;
 }
 } //# NAMESPACE CASA - END
 

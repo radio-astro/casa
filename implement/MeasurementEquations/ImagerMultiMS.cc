@@ -129,7 +129,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    Table::Update);
       blockMSSel_p[numMS_p-1]=thisms;
       //breaking reference
-      (*ms_p)=MeasurementSet();
+      if(ms_p == 0)
+	ms_p=new MeasurementSet();
+      else
+	(*ms_p)=MeasurementSet();
       (*ms_p)=thisms;
     }
     

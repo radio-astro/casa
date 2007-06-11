@@ -464,7 +464,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 	//lets try to increase the depth  a little bit
 	factor=factor*1.2;
       }
-      
+      itsWarnFlag=True;
 //    userHalt = stopnow();
 // The above is commented off as users do not seem to find this 
 // useful. If nobody ask for it again the function stopnow() 

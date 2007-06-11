@@ -447,7 +447,7 @@ class Imager
 
 
   //Interactive mask drawing
-  Bool interactivemask(const String& imagename, const String& maskname);
+  Int interactivemask(const String& imagename, const String& maskname);
 
 protected:
 

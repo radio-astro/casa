@@ -189,7 +189,7 @@ public:
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
 
-  // Post solve tinkering
+  // Post solve tinkering (generic version)
   virtual void postSolveTinker();
 
   // Divide all solutions by their amplitudes
@@ -485,6 +485,12 @@ public:
   virtual void accumulate(SolvableVisCal* incr,
 			  const Vector<Int>& fields);
 
+  // Post solve tinkering (Jones version: includes refant application)
+  virtual void postSolveTinker();
+
+  // Apply reference antenna (generic Jones version)
+  virtual void applyRefAnt();
+
   // Fluxscale is implemented here
   void fluxscale(const Vector<Int>& refFieldIn,
 		 const Vector<Int>& tranFieldIn,
@@ -547,9 +553,6 @@ protected:
 
   // Initialize trivial diff'd Jones
   virtual void initTrivDJ();
-
-  // Apply reference antenna
-  void applyRefAnt();
 
   virtual void stateSVJ(const Bool& doVC);
 
