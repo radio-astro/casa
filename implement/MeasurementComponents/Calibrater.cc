@@ -446,19 +446,22 @@ void Calibrater::selectvis(const String& time,
     vs_p = new VisSet(*mssel_p,sort,noselection);
     AlwaysAssert(vs_p, AipsError);
 
-    // Now do channel selection
-    selectChannel(chanmode,nchan,start,step,mStart,mStep);
+    // Attempt to use MSSelection for channel selection
+    //  if user not using the old way
+    if (chanmode=="none") {
+      selectChannel(spw);
+    }
+    else {
+      // Reluctantly use the old-fashioned way
+      logSink() << LogIO::WARN 
+		<< "You have used the old-fashioned mode parameter" << endl
+		<< "for channel selection.  It still works, for now," << endl
+		<< "but this will be eliminated in the near future." << endl
+		<< "Please begin using the new channel selection" << endl
+		<< "syntax in the spw parameter." << LogIO::POST;
+      selectChannel(chanmode,nchan,start,step,mStart,mStep);
+    }
 
- /*
-    Vector<Int> a1, a2;
-    vs_p->iter().originChunks();
-    vs_p->iter().origin();
-    vs_p->iter().antenna1(a1);
-    vs_p->iter().antenna2(a2);
-    cout << "a1 = " << a1 << endl;
-    cout << "a2 = " << a2 << endl;
- */    
-    
   }
   catch (MSSelectionError& x) {
     // Re-initialize with the existing MS
@@ -675,7 +678,7 @@ Bool Calibrater::setsolve (const String& type,
 			   const String& table,
                            const Bool& append,
                            const Double& preavg, 
-			   const Bool& phaseonly,
+			   const String& apmode,
                            const String& refant,
 			   const Bool& solnorm,
 			   const Float& minsnr)
@@ -687,7 +690,7 @@ Bool Calibrater::setsolve (const String& type,
   RecordDesc solveparDesc;
   solveparDesc.addField ("t", TpDouble);
   solveparDesc.addField ("preavg", TpDouble);
-  solveparDesc.addField ("phaseonly", TpBool);
+  solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("refant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
@@ -698,7 +701,9 @@ Bool Calibrater::setsolve (const String& type,
   Record solvepar(solveparDesc);
   solvepar.define ("t", t);
   solvepar.define ("preavg", preavg);
-  solvepar.define ("phaseonly", phaseonly);
+  String upmode=apmode;
+  upmode.upcase();
+  solvepar.define ("apmode", upmode);
   solvepar.define ("refant", getRefantIdx(refant));
   solvepar.define ("table", table);
   solvepar.define ("append", append);
@@ -850,7 +855,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
 
 Bool Calibrater::setsolvegainspline(const String& table,
 				    const Bool&   append,
-				    const String& mode,
+				    const String& apmode,
 				    const Double& splinetime,
 				    const Double& preavg,
 				    const Int&    numpoint,
@@ -863,7 +868,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
   RecordDesc solveparDesc;
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
-  solveparDesc.addField ("mode", TpString);
+  solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("splinetime", TpDouble);
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("refant", TpInt);
@@ -874,9 +879,9 @@ Bool Calibrater::setsolvegainspline(const String& table,
   Record solvepar(solveparDesc);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
-  String upMode=mode;
+  String upMode=apmode;
   upMode.upcase();
-  solvepar.define ("mode", upMode);
+  solvepar.define ("apmode", upMode);
   solvepar.define ("splinetime",splinetime);
   solvepar.define ("preavg", preavg);
   solvepar.define ("refant", getRefantIdx(refant));
@@ -1267,7 +1272,7 @@ Bool Calibrater::standardSolve() {
     // The VisBuffer to solve with
     VisBuffer& svb(vba.aveVisBuff()); 
 
-    svc_p->makeDataPhaseOnly(svb);
+    svc_p->enforceAPonData(svb);
 
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
@@ -2123,8 +2128,88 @@ Bool Calibrater::listCal(const String& infile,
   return False;
   
 }
-  
-  // Select on channel in the VisSet
+
+void Calibrater::selectChannel(const String& spw) {
+
+  MSSelection mssel;
+  mssel.setSpwExpr(spw);
+
+  Matrix<Int> chansel = mssel.getChanList(mssel_p);
+  uInt nselspw=chansel.nrow();
+
+  if (nselspw==0)
+    logSink() << "Frequency selection: Selecting all channels in all spws." 
+	      << LogIO::POST;
+  else {
+
+    logSink() << "Frequency selection: " << LogIO::POST;
+
+    // Trap non-unit step (for now)
+    if (ntrue(chansel.column(3)==1)!=nselspw) {
+      logSink() << LogIO::WARN
+		<< "Calibration does not support non-unit channel stepping; "
+		<< "using step=1."
+		<< LogIO::POST;
+      chansel.column(3)=1;
+    }
+
+    Vector<Bool> spwdone(vs_p->numberSpw(),False);
+    logSink() << LogIO::NORMAL;
+    for (uInt i=0;i<nselspw;++i) {
+      
+      Int& spw=chansel(i,0);
+
+      if (!spwdone(spw)) {
+	
+	spwdone(spw)=True;
+	
+	Int nchan=chansel(i,2)-chansel(i,1)+1;
+	Int& start=chansel(i,1);
+	Int& end=chansel(i,2);
+	Int& step=chansel(i,3);
+	
+	logSink() << ".  Spw " << spw << ":"
+		  << start << "~" << end 
+		  << " (" << nchan << " channels,"
+		  << " step by " << step << ")"
+		  << endl;
+	
+	// Call via VisIter
+	vs_p->iter().selectChannel(1,start,nchan,step,spw);
+
+      }
+      else {
+	logSink() << LogIO::POST;
+	throw(AipsError("Data selection for calibration supports only one channel selection per spw."));
+      }
+    } // i
+
+  } // non-triv spw selection
+  logSink() << LogIO::POST;
+
+
+  // For testing:
+  if (False) {
+
+    VisIter& vi(vs_p->iter());
+    VisBuffer vb(vi);
+    
+    // Pass each timestamp (VisBuffer) to VisEquation for correction
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      vi.origin();
+      //      for (vi.origin(); vi.more(); vi++)
+	cout << vb.spectralWindow() << " "
+	     << vb.nChannel() << " "
+	     << vb.channel() << " "
+	     << vb.visCube().shape()
+	     << endl;
+    }
+  }
+
+
+}
+
+// Select on channel in the VisSet
 void Calibrater::selectChannel(const String& mode, 
 			       const Int& nchan, 
 			       const Int& start, const Int& step,
@@ -2166,19 +2251,19 @@ void Calibrater::selectChannel(const String& mode,
     if(dataNchan_p==0) dataNchan_p=vs_p->numberChan()(selectedSpw[0]);
     if(dataStart_p<0) {
       logSink() << LogIO::SEVERE << "Illegal start pixel = " 
-		<< dataStart_p + 1 << LogIO::POST;
+		<< dataStart_p << LogIO::POST;
     }
     Int end = Int(dataStart_p) + Int(dataNchan_p) * Int(dataStep_p);
     for (uInt k=0; k < selectedSpw.nelements() ; ++k){
       if(end < 1 || end > nChan[k]) {
 	logSink() << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p
-		  << " in Spw " << selectedSpw[k]+1 
+		  << " in Spw " << selectedSpw[k]
 		  << LogIO::POST;
       }
       logSink() << "Selecting "<< dataNchan_p
 		<< " channels, starting at visibility channel "
-		<< dataStart_p + 1 << " stepped by "
-		<< dataStep_p << " in Spw " << selectedSpw[k]+1 << LogIO::POST;
+		<< dataStart_p  << " stepped by "
+		<< dataStep_p << " in Spw " << selectedSpw[k] << LogIO::POST;
       
       // Set frequency channel selection for all spectral window id's
       Int nch;

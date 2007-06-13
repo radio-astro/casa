@@ -70,7 +70,7 @@ public:
   inline String&      fInterpType()    { return fInterpType_; };
   inline Vector<Int>& spwMap()         { return spwMap_; };
   inline Int&         refant()         { return refant_; };
-  inline String&      mode()           { return mode_; };
+  inline String&      apmode()         { return apmode_; };
   inline Double&      preavg()         { return preavg_; };
   inline Bool&        solnorm()        { return solnorm_;};
   inline Float&       minSNR()         { return minSNR_; };
@@ -90,9 +90,6 @@ public:
   // Does normalization by MODEL_DATA commute with this VisCal?
   //   (if so, permits pre-solve time-averaging)
   virtual Bool normalizable()=0;
-
-  // Report phase only
-  virtual Bool phaseOnly() { return mode().contains("phaseonly"); };
 
   // Is this type capable of accumulation?  (nominally no)
   virtual Bool accumulatable() { return False; };
@@ -155,7 +152,7 @@ public:
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
 
   // Make vb phase-only
-  virtual void makeDataPhaseOnly(VisBuffer& vb);
+  virtual void enforceAPonData(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
   virtual Bool verifyForSolve(VisBuffer& vb);
@@ -193,7 +190,7 @@ public:
   virtual void postSolveTinker();
 
   // Divide all solutions by their amplitudes
-  virtual void makeSolnPhaseOnly();
+  virtual void enforceAPonSoln();
 
   // Normalize a solution (generic implementation)
   virtual void normalize();
@@ -302,7 +299,7 @@ private:
   Bool solved_;
 
   // Solving mode
-  String mode_;
+  String apmode_;
 
   // Preavering interval
   Double preavg_;

@@ -67,7 +67,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   spwMap_(vs.numberSpw(),-1),
   refant_(-1),
   solved_(False),
-  mode_(""),
+  apmode_(""),
   solnorm_(False),
   minSNR_(0.0f),
   focusChan_(0),
@@ -98,7 +98,7 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   spwMap_(1,-1),
   refant_(-1),
   solved_(False),
-  mode_(""),
+  apmode_(""),
   solnorm_(False),
   minSNR_(0.0),
   focusChan_(0),
@@ -290,7 +290,7 @@ void SolvableVisCal::setSolve() {
 
   interval()=10.0;
   refant()=-1;
-  mode()="<none>";
+  apmode()="AP";
   calTableName()="<none>";
   solnorm()=False;
   minSNR()=0.0f;
@@ -320,9 +320,10 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("refant"))
     refant()=solve.asInt("refant");
 
-  if (solve.isDefined("phaseonly"))
-    if (solve.asBool("phaseonly"))
-      mode()="phaseonly";
+  if (solve.isDefined("apmode"))
+    apmode()=solve.asString("apmode");
+
+  apmode().upcase();
 
   if (solve.isDefined("table"))
     calTableName()=solve.asString("table");
@@ -383,7 +384,7 @@ String SolvableVisCal::solveinfo() {
     //    << " preavg="     << preavg()
     << " refant="     << "'" << refantName << "'" // (id=" << refant() << ")"
     << " minsnr=" << minSNR()
-    << " phaseonly="  << mode().contains("phaseonly")
+    << " apmode="  << apmode()
     << " solnorm=" << solnorm();
   return String(o);
 
@@ -670,13 +671,14 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
 
 }
 
-void SolvableVisCal::makeDataPhaseOnly(VisBuffer& vb) {
+void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
 
   // TBD: migrate this to VisEquation?
 
-  if (phaseOnly()) {
+  if (apmode()!="AP") {
     Int nCorr(vb.corrType().nelements());
-    Float amp(0.0);
+    Float amp(1.0);
+    Complex cor(1.0);
     Vector<Float> ampCorr(nCorr);
     Bool *flR=vb.flagRow().data();
     Bool *fl =vb.flag().data();
@@ -688,9 +690,19 @@ void SolvableVisCal::makeDataPhaseOnly(VisBuffer& vb) {
 	for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
 	  if (!vb.flag()(ich,irow)) {
 	    for (Int icorr=0;icorr<nCorr;icorr++) {
+	      
 	      amp=abs(vb.visCube()(icorr,ich,irow));
 	      if (amp>0.0f) {
-		vb.visCube()(icorr,ich,irow)/=amp;
+		
+		if (apmode()=="P")
+		  // we will scale by amp to make data phase-only
+		  cor=Complex(amp,0.0);
+		else if (apmode()=="A")
+		  // we will scale by "phase" to make data amp-only
+		  cor=vb.visCube()(icorr,ich,irow)/amp;
+		
+		// Apply the complex scaling and count
+		vb.visCube()(icorr,ich,irow)/=cor;
 		ampCorr(icorr)+=amp;
 		n(icorr)++;
 	      }
@@ -708,7 +720,7 @@ void SolvableVisCal::makeDataPhaseOnly(VisBuffer& vb) {
       } // !*flR
     } // irow
 
-  } // phaseOnly
+  } // phase- or amp-only
 
   //  cout << "amp(vb.visCube())=" << amplitude(vb.visCube().reform(IPosition(1,vb.visCube().nelements()))) << endl;
 
@@ -831,7 +843,7 @@ void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
   solveCPar()+=dparcube;
 
   // Ensure phaseonly-ness, if necessary
-  //  if (phaseOnly()) {   
+  //  if (apmode()=='P') {   
   //  NB: Disable this, for the moment (07May24); testing a fix for
   //      a problem Kumar noticed.  See VC::makeSolnPhaseOnly(), etc.
   if (False) {
@@ -1025,8 +1037,8 @@ void SolvableVisCal::keep(const Int& slot) {
 
 void SolvableVisCal::postSolveTinker() {
 
-  // Make solutions phaseonly, if requested
-  if (phaseOnly()) makeSolnPhaseOnly();
+  // Make solutions phase- or amp-only, if required
+  if (apmode()!="AP") enforceAPonSoln();
   
   // Apply normalization
   if (solnorm()) normalize();
@@ -1034,24 +1046,42 @@ void SolvableVisCal::postSolveTinker() {
 }
 
 // Divide all solutions by their amplitudes to make them "phase-only"
-void SolvableVisCal::makeSolnPhaseOnly() {
+void SolvableVisCal::enforceAPonSoln() {
 
   if (cs_) {    
 
-    logSink() << "Enforcing phase-only solutions." 
+    logSink() << "Enforcing apmode on solutions." 
 	      << LogIO::POST;
 
     for (Int ispw=0;ispw<nSpw();++ispw) {
       if (cs().nTime(ispw)>0) {
 	Array<Float> amps(amplitude(cs().par(ispw)));
-	amps(amps==0.0f)=1.0;
-	amps(cs().parOK(ispw))=1.0;
-	cs().par(ispw)/=amps;
+	// No zeroes:
+	cs().par(ispw)(amps==0.0f)=Complex(1.0);
+	cs().par(ispw)(operator!(LogicalArray(cs().parOK(ispw))))=Complex(1.0);
+	amps(amps==0.0f)=1.0f;
+	amps(!cs().parOK(ispw))=1.0f;
+	//	amps(operator!(LogicalArray(cs().parOK(ispw))))=1.0f;
+
+	Array<Complex> cor(amps.shape());
+	if (apmode()=='P')
+	  // we will scale solns by amp to make them phase-only
+	  convertArray(cor,amps);
+	else if (apmode()=='A') {
+	  // we will scale solns by "phase" to make them amp-only
+	  cor=cs().par(ispw);
+	  cor/=amps;
+	}
+
+	if (ntrue(amplitude(cor)==0.0f)==0)
+	  cs().par(ispw)/=cor;
+	else
+	  throw(AipsError("enforceAPonSoln divide-by-zero error."));
       }
     }
   }
   else 
-    throw(AipsError("Solution normalization not supported."));
+    throw(AipsError("Solution apmode enforcement not supported."));
 }
 
 void SolvableVisCal::normalize() {
@@ -1111,7 +1141,7 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
 
   // Now SVC-specific stuff:
   cout << "  isSolved() = " << isSolved() << endl;
-  cout << "  mode() = " << mode() << endl;
+  cout << "  apmode() = " << apmode() << endl;
   cout << "  calTableName() = " << calTableName() << endl;
   cout << "  calTableSelect() = " << calTableSelect() << endl;
   cout << "  tInterpType() = " << tInterpType() << endl;

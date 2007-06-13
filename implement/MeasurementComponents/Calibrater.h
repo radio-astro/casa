@@ -124,7 +124,7 @@ class Calibrater
 		 const String& table,
 		 const Bool& append,
 		 const Double& preavg, 
-		 const Bool& phaseonly,
+		 const String& apmode="AP",
 		 const String& refant="",
 		 const Bool& solnorm=False,
 		 const Float& minsnr=0.0f);
@@ -305,7 +305,10 @@ class Calibrater
   // Time functions and variables
   String timerString();
   Timer timer_p;
-  
+
+  // Select on channel using MSSelection
+  void selectChannel(const String& spw);
+
   // Select on channel in the VisSet
   void selectChannel(const String& mode, 
 		     const Int& nchan, const Int& start, const Int& step,

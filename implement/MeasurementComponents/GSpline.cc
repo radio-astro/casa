@@ -158,16 +158,12 @@ void GJonesSpline::setSolve(const Record& solvepar)
     numpoint_p   = solvepar.asInt("numpoint");
   if (solvepar.isDefined("phasewrap"))    // deg->rad
     phaseWrap_p  = solvepar.asDouble("phasewrap")*C::pi/180.0;
-  if (solvepar.isDefined("mode"))       
-    mode()  = solvepar.asString("mode");
-
-  mode().upcase();
 
   // Interpret mode for SPLINE case
-  solveAmp_p = (mode().contains("A"));
-  solvePhase_p = (mode().contains("P"));
+  //  (apmode now set in SVC::setsolve)
+  solveAmp_p = (apmode().contains("A"));
+  solvePhase_p = (apmode().contains("P"));
 
-  cout << "mode() = " << mode() << endl;
   cout << "solveAmp_p = " << solveAmp_p << endl;
   cout << "solvePhase_p = " << solvePhase_p << endl;
 
@@ -711,12 +707,12 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
   Vector<Int> fieldIdKeys = fieldIdRange();
   Vector<String> freqGrpName(nAnt(), "");
   Vector<String> polyType(nAnt(), "SPLINE");
-  Vector<String> polyMode(nAnt(), mode());
-  if (mode()=="AP")
+  Vector<String> polyMode(nAnt(), apmode());
+  if (apmode()=="AP")
     polyMode="PHASAMP";
-  if (mode()=="P")
+  if (apmode()=="P")
     polyMode="PHAS";
-  if (mode()=="A")
+  if (apmode()=="A")
     polyMode="AMP";
 
   Vector<Complex> scaleFactor(nAnt(), Complex(1,0));
