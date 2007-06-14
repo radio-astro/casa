@@ -1881,7 +1881,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
   
 {
   logSink_p.clearLocally();
-  LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
+  LogIO os(LogOrigin("imager", "data selection"), logSink_p);
 
   if(!ms_p) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
@@ -1933,6 +1933,11 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     //Some MSSelection 
     MSSelection thisSelection;
+
+    //MSSelection thisSelection (sorted, MSSelection::PARSE_NOW,timerng,antnames,
+    //			       fieldnames, spwstring,uvdist, msSelect,"",
+    //			       scan); 
+
     if(datafieldids_p.nelements() > 0){
       thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
       os << "Selecting on field ids" << LogIO::POST;
@@ -1941,6 +1946,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       thisSelection.setFieldExpr(fieldnames);
       os << "Selecting on field names " << fieldnames << LogIO::POST;
     }
+    
     if(dataspectralwindowids_p.nelements() > 0){
       thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
       os << "Selecting on spectral windows" << LogIO::POST;
@@ -1949,6 +1955,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << "Selecting on spectral windows expression "<< spwstring << LogIO::POST;
       thisSelection.setSpwExpr(spwstring);
     }
+    
     if(antIndex.nelements() >0){
       thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
       os << "Selecting on antenna ids" << LogIO::POST;	
@@ -1959,26 +1966,41 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       thisSelection.setAntennaExpr(antnames);
       os << "Selecting on antenna names" << LogIO::POST;
       
-    }            
+    } 
+               
     if(timerng != ""){
       //	Vector<String>timerange(1, timerng);
 	thisSelection.setTimeExpr(timerng);
 	os << "Selecting on time range" << LogIO::POST;	
     }
+    
+    
     if(uvdist != ""){
 	thisSelection.setUvDistExpr(uvdist);
     }
+    
+    
     if(scan != ""){
       thisSelection.setScanExpr(scan);
     }
+    if(msSelect != ""){
+      thisSelection.setTaQLExpr(msSelect);
+    }
+    
     //***************
     
     TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
-    
-    if(exprNode.isNull())
-      throw(AipsError("Selection failed...review ms and selection parameters"));
-    datafieldids_p.resize(0);
+    //TableExprNode exprNode=thisSelection.getTEN();
+    //if(exprNode.isNull()){
+      //      throw(AipsError("Selection failed...review ms and selection parameters"));
+    //}
+    datafieldids_p.resize();
     datafieldids_p=thisSelection.getFieldList();
+    if(datafieldids_p.nelements()==0){
+      Int nf=ms_p->field().nrow();
+      datafieldids_p.resize(nf);
+      indgen(datafieldids_p);
+    }
     //Now lets see what was selected as spw and match it with datadesc
     dataspectralwindowids_p.resize();
     dataspectralwindowids_p=thisSelection.getSpwList();
@@ -1993,13 +2015,18 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
     
     if (datafieldids_p.nelements() > 1) {
-      os << "Multiple fields specified via fieldids" << LogIO::POST;
+      os << "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
-      
-    mssel_p = new MeasurementSet(sorted(exprNode));
+    
+    if(!(exprNode.isNull())){
+      mssel_p = new MeasurementSet(sorted(exprNode));
+    }
+    else{
+      // Null take all the ms ...setdata() blank means that
+      mssel_p = new MeasurementSet(sorted);
+    }
     AlwaysAssert(mssel_p, AipsError);
-    mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
     if(mssel_p->nrow()==0) {
       delete mssel_p; mssel_p=0;
       os << LogIO::WARN
@@ -2022,6 +2049,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	multiFields_p = False;
       }
     }
+    /* This is not needed 
 
     Int len = msSelect.length();
     Int nspace = msSelect.freq (' ');
@@ -2032,7 +2060,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       String parseString="select from $1 where " + msSelect;
       mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
       AlwaysAssert(mssel_p2, AipsError);
-      // Rename the selected MS as */SELECTED_TABLE2
+      // Rename the selected MS as *SELECTED_TABLE2
       mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
       if (mssel_p2->nrow()==0) {
 	os << LogIO::WARN
@@ -2050,7 +2078,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     } else {
       os << "No selection string given" << LogIO::POST;
     }
-    
+    */
     if(mssel_p->nrow()!=ms_p->nrow()) {
       os << "By selection " << ms_p->nrow() << " rows are reduced to "
 	 << mssel_p->nrow() << LogIO::POST;

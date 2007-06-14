@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
- // If a selection has been made then close the current MS
+    // If a selection has been made then close the current MS
     // and attach to a new selected MS. We do this on the original
     // MS.
     //I don't think i need this if statement
@@ -201,13 +201,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(scan != ""){
 	thisSelection.setScanExpr(scan);
       }
+      if(msSelect != ""){
+	thisSelection.setTaQLExpr(msSelect);
+      }
       //***************
 
       TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
-      if(exprNode.isNull())
-	throw(AipsError("Selection failed...review ms and selection parameters"));
+      //if(exprNode.isNull())
+      //	throw(AipsError("Selection failed...review ms and selection parameters"));
       datafieldids_p.resize();
       datafieldids_p=thisSelection.getFieldList();
+      if(datafieldids_p.nelements()==0){
+	Int nf=ms_p->field().nrow();
+	datafieldids_p.resize(nf);
+	indgen(datafieldids_p);
+      }
       if((numMS_p > 1) || datafieldids_p.nelements() > 1)
 	multiFields_p= True;
        //Now lets see what was selected as spw and match it with datadesc
@@ -218,6 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	dataspectralwindowids_p.resize(nspwinms);
 	indgen(dataspectralwindowids_p);
       }
+
       // Map the selected spectral window ids to data description ids
       MSDataDescIndex msDatIndex(thisms.dataDescription());
       datadescids_p.resize(0);
@@ -226,9 +235,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       // Now remake the selected ms
-      mssel_p = new MeasurementSet(sorted(exprNode));
+      if(!(exprNode.isNull())){
+	mssel_p = new MeasurementSet(sorted(exprNode));
+      }
+      else{
+	// Null take all the ms ...setdata() blank means that
+	mssel_p = new MeasurementSet(sorted);
+      } 
       AlwaysAssert(mssel_p, AipsError);
-      mssel_p->rename(msname+"/SELECTED_IMAGER_TABLE", Table::Scratch);
       if(mssel_p->nrow()==0) {
 	delete mssel_p; mssel_p=0;
 	//Ayeee...lets back out of this one
@@ -246,34 +260,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	mssel_p->flush();
       }
 
-      Int len = msSelect.length();
-      Int nspace = msSelect.freq (' ');
-      Bool nullSelect=(msSelect.empty() || nspace==len);
-      if (!nullSelect) {
-	MeasurementSet* mssel_p2;
-	// Apply the TAQL selection string, to remake the selected MS
-	String parseString="select from $1 where " + msSelect;
-	mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
-	AlwaysAssert(mssel_p2, AipsError);
-	// Rename the selected MS as */SELECTED_TABLE2
-	mssel_p2->rename(msname+"/SELECTED_TABLE2", Table::Scratch); 
-	if (mssel_p2->nrow()==0) {
-	  os << LogIO::WARN
-	     << "Selection string results in empty MS: "
-	     << "reverting to sorted MeasurementSet"
-	     << LogIO::POST;
-	  delete mssel_p2;
-	} else {
-	  if (mssel_p) {
-	    delete mssel_p; 
-	    mssel_p=mssel_p2;
-	    mssel_p->flush();
-	  }
-	}
-      } else {
-	os << "No selection string given" << LogIO::POST;
-      }
-
       if(mssel_p->nrow()!=thisms.nrow()) {
 	os << "By selection " << thisms.nrow() << " rows are reduced to "
 	   << mssel_p->nrow() << LogIO::POST;
@@ -283,17 +269,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //  }
 
-    blockMSSel_p[numMS_p-1]=*mssel_p;
-    //lets make the visSet now
-    Block<Matrix<Int> > noChanSel;
-    noChanSel.resize(numMS_p);
-    Block<Int> sort(0);
-    if(vs_p) delete vs_p; vs_p=0;
-    vs_p= new VisSet(blockMSSel_p, sort, noChanSel);
-    selectDataChannel();
-    dataSet_p=True;
-
-    return dataSet_p;
+      blockMSSel_p[numMS_p-1]=*mssel_p;
+      //lets make the visSet now
+      Block<Matrix<Int> > noChanSel;
+      noChanSel.resize(numMS_p);
+      Block<Int> sort(0);
+      if(vs_p) delete vs_p; vs_p=0;
+      vs_p= new VisSet(blockMSSel_p, sort, noChanSel);
+      selectDataChannel();
+      dataSet_p=True;
+      
+      return dataSet_p;
 
   } //End of setDataPerMS
 
