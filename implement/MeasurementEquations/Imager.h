@@ -398,7 +398,9 @@ class Imager
   // Compute the model visibility using specified source flux densities
   Bool setjy(const Int fieldid, const Int spectralwindowid,
 	     const Vector<Double>& fluxDensity, const String& standard);
-
+  Bool setjy(const Vector<Int>& fieldid, const Vector<Int>& spectralwindowid, 
+	     const String& fieldnames, const String& spwstring, 
+	     const Vector<Double>& fluxDensity, const String& standard);
   // Make an empty image
   Bool make(const String& model);
 

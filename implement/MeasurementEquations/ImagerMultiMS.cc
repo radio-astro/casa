@@ -233,6 +233,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
 
 
+      if(mode=="none"){
+	//check if we can find channel selection in the spw string
+	Matrix<Int> chanselmat=thisSelection.getChanList();
+	if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+	  dataMode_p="channel";
+	  dataStep_p.resize(dataspectralwindowids_p.nelements());
+	  dataStart_p.resize(dataspectralwindowids_p.nelements());
+	  dataNchan_p.resize(dataspectralwindowids_p.nelements());
+	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
+	    dataStep_p[k]=chanselmat.row(k)(3);
+	    if(dataStep_p[k] < 1)
+	      dataStep_p[k]=1;
+	    dataStart_p[k]=chanselmat.row(k)(1);
+	    dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k];
+	    if(dataNchan_p[k]<1)
+	      dataNchan_p[k]=1;	  
+	  }
+	}
+      }
+
+
 
       // Now remake the selected ms
       if(!(exprNode.isNull())){

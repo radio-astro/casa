@@ -818,7 +818,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 
       os << "Image spectral coordinate: "<< imageNchan_p
 	   << " channels, starting at visibility channel "
-	 << imageStart_p+1 << " stepped by "
+	 << imageStart_p << " stepped by "
 	 << imageStep_p << endl;
       freqs.resize(imageNchan_p);
       for (Int chan=0;chan<imageNchan_p;chan++) {
@@ -2018,7 +2018,25 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
-    
+    if(mode=="none"){
+      //check if we can find channel selection in the spw string
+      Matrix<Int> chanselmat=thisSelection.getChanList();
+      if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+	dataMode_p="channel";
+	dataStep_p.resize(dataspectralwindowids_p.nelements());
+	dataStart_p.resize(dataspectralwindowids_p.nelements());
+	dataNchan_p.resize(dataspectralwindowids_p.nelements());
+	for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
+	  dataStep_p[k]=chanselmat.row(k)(3);
+	  if(dataStep_p[k] < 1)
+	    dataStep_p[k]=1;
+	  dataStart_p[k]=chanselmat.row(k)(1);
+	  dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k];
+	  if(dataNchan_p[k]<1)
+	    dataNchan_p[k]=1;	  
+	}
+      }
+    }
     if(!(exprNode.isNull())){
       mssel_p = new MeasurementSet(sorted(exprNode));
     }
@@ -5229,8 +5247,21 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   this->unlock();
   return True;
 }
+Bool Imager::setjy(const Int fieldid, 
+		   const Int spectralwindowid,
+		   const Vector<Double>& fluxDensity, const String& standard)
+{
+  // the old interface to new interface
+  String fieldnames="";
+  String spwstring="";
+  Vector<Int>fldids(1,fieldid);
+  Vector<Int>spwids(1,spectralwindowid);
+  return setjy(fldids, spwids, fieldnames, spwstring, fluxDensity, standard);
 
-Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
+}
+Bool Imager::setjy(const Vector<Int>& fieldid, 
+		   const Vector<Int>& spectralwindowid,
+		   const String& fieldnames, const String& spwstring,
 		   const Vector<Double>& fluxDensity, const String& standard)
 {
   if(!valid()) return False;
@@ -5240,26 +5271,31 @@ Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
 
   String tempCL;
   try {
-    Int startSpwId, endSpwId, startFieldId, endFieldId;
+    Vector<Int> fldids;
+    Vector<Int> spwids;
     Bool precompute=(fluxDensity(0) <= 0);
 
-    // Determine spectral window id. range
-    if (spectralwindowid < 0) {
-      startSpwId=0;
-      endSpwId=vs_p->numberSpw()-1;
-    } else {
-      startSpwId=spectralwindowid;
-      endSpwId=spectralwindowid;
-    };
 
+    Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
+    fldids=selrec.asArrayInt("field");
+    spwids=selrec.asArrayInt("spw");
+
+    if(fldids.nelements() < 1){
+      fldids=fieldid;
+    }
+    if(spwids.nelements() < 1){
+      spwids=spectralwindowid;
+    }
+    // Determine spectral window id. range
+    if ((spwids.nelements()==1 && spwids[0] < 0)||(spwids.nelements()==0)) {
+      spwids.resize(ms_p->spectralWindow().nrow());
+      indgen(spwids);
+    }
     // Determine field id. range
-    if (fieldid < 0) {
-      startFieldId=0;
-      endFieldId=ms_p->field().nrow()-1;
-    } else {
-      startFieldId=fieldid;
-      endFieldId=fieldid;
-    };
+    if ((fldids.nelements()== 1 && fldids[0] < 0) || (fldids.nelements()==0)) {
+      fldids.resize(ms_p->field().nrow());
+      indgen(fldids);
+    } 
 
     // Loop over field id. and spectral window id.
     Vector<Double> fluxUsed(4);
@@ -5269,13 +5305,14 @@ Bool Imager::setjy(const Int fieldid, const Int spectralwindowid,
     MSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
-    for (fldid=startFieldId; fldid<=endFieldId; ++fldid) {
-
+    for (uInt kk=0; kk<fldids.nelements(); ++kk) {
+      fldid=fldids[kk];
       // Extract field name and field center position 
       MDirection position=msc.field().phaseDirMeas(fldid);
       String fieldName=msc.field().name()(fldid);
 
-      for (spwid=startSpwId; spwid<=endSpwId; ++spwid) {
+      for (uInt jj=0; jj< spwids.nelements(); ++jj) {
+	spwid=spwids[jj];
 
 	// Determine spectral window center frequency
 	IPosition ipos(1,0);
@@ -7430,7 +7467,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  }
 	  os << "Selecting "<< nch
 	     << " channels, starting at visibility channel "
-	     << dataStart[i] + 1 << " stepped by "
+	     << dataStart[i]  << " stepped by "
 	     << dataStep[i] << " for spw " << spwid << LogIO::POST;
 	  vs.iter().selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
@@ -7447,7 +7484,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	}
 	os << "Selecting "<< dataNchan[0]
 	   << " channels, starting at visibility channel "
-	 << dataStart[0] + 1 << " stepped by "
+	 << dataStart[0]  << " stepped by "
 	   << dataStep[0] << LogIO::POST;
       }
   }
