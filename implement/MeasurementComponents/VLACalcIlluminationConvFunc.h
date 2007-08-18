@@ -50,7 +50,7 @@ namespace casa{
     VLACalcIlluminationConvFunc(Int n):IlluminationConvFunc(n)    {pbRead_p=False;};
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
-    void VLACalcIlluminationConvFunc::setBandID(Int bandID) {ap.band=(BeamCalcBandCode)bandID;}
+    void setBandID(Int bandID) {ap.band=(BeamCalcBandCode)bandID;}
     void storeImg(String &fileName,ImageInterface<Complex>& img);
     void storeImg(String &fileName,ImageInterface<Float>& img);
     void store(String &fileName);

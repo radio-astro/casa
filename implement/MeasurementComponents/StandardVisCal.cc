@@ -661,7 +661,7 @@ void JJones::guessPar(VisBuffer& vb) {
 	solveCPar()(3*icorr,0,irow)=(conj(Vi)/amp);
 	ampave+=amp;
 	namp++;
-	cout << "          " << abs(Vi) << " " << arg(Vi)*180.0/C::pi << endl;
+	//	cout << "          " << abs(Vi) << " " << arg(Vi)*180.0/C::pi << endl;
       }
     }
 
@@ -673,10 +673,10 @@ void JJones::guessPar(VisBuffer& vb) {
   solveCPar()*=Complex(ampave);
   solveParOK()=True;
 
-  cout << "post-guess:" << endl;
-  cout << "solveCPar()   = " << solveCPar() << endl;
-  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
-  cout << "solveParOK() = " << solveParOK() << endl;
+  //  cout << "post-guess:" << endl;
+  //  cout << "solveCPar()   = " << solveCPar() << endl;
+  //  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
+  //  cout << "solveParOK() = " << solveParOK() << endl;
 
 }
 

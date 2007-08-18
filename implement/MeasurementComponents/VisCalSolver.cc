@@ -103,6 +103,8 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   // Initialize everything 
   initSolve();
 
+  Vector<Float> steplist(maxIter_+2,0.0);
+
   // Verify VisBuffer validity for solving
   //   (this sets parOK() on per-antenna basis (for focusChan)
   //    based on data weights and baseline participation)
@@ -126,12 +128,23 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
       // Differentiate the VB and get current Chi2
       differentiate();
       chiSquare();
+      if (chiSq()==0.0) {
+	//	cout << "CHI2 IS SPURIOUSLY ZERO!*************************************" << endl;
+	//	cout << "R() = " << R() << endl;
+	//	cout << "wtmat = " << svb.weightMat() << endl;
+	//	cout << "flag = " << svb.flag() << endl;
+	//	cout << "sum(wtmat) = " << sum(wtmat) << endl;
+	return False;
+      }
+
       dChiSq() = chiSq()-lastChiSq();
+
+      //      cout << "chi2 = " << chiSq() << " " << dChiSq() << " " << dChiSq()/chiSq() << endl;
       
       // Continuue if we haven't converged
       if (!converged()) {
 	
-	if (dChiSq()<0.0) {
+	if (dChiSq()<=0.0) {
 	  // last step was good...
 	  lastChiSq()=chiSq();
 	  
@@ -144,6 +157,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	  lambda()=1.0;
 	}
 	else {
+	  //	  cout << "reverting..." << chiSq() << " " << dChiSq() << " (" << iter << ")" << endl;
 	  // last step was bad, revert to previous 
 	  revert();
 	  //...with a larger lambda
@@ -165,6 +179,8 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	// Update current parameters (saves a copy of them)
 	updatePar();
 
+	steplist(iter)=max(amplitude(dpar())/amplitude(par()));
+
       }
       else {
 	// Convergence means we're done!
@@ -175,14 +191,17 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	  //	cout << "par()=" << par() << endl;
 	}
 
+
+    /*
+	cout << " good pars=" << ntrue(parOK())
+	     << " iterations=" << iter
+	     << " steps=" << steplist(IPosition(1,0),IPosition(1,iter)) 
+	     << endl;
+    */
+
 	// Get parameter errors:
-	//	differentiate();
-	//	chiSquare();
 	accGradHess();
 	getErrors();
-
-	// Apply type-dep thresholds:
-	svc_->applyThresholds();
 
 	// Return, signaling success if at least 1 good solution
 	return (ntrue(parOK())>0);
@@ -191,7 +210,10 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
       
       // Escape iteration loop via iteration limit
       if (iter==maxIter()) {
-	cout << "Reached iteration limit: " << iter << " iterations." << endl;
+	cout << "Reached iteration limit: " << iter << " iterations.  " << endl;
+	//	cout << " good pars = " << ntrue(parOK())
+	//	     << "  steps = " << steplist
+	//	     << endl;
 	done=True;
       }
       
@@ -201,7 +223,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
     
   }
   else {
-    cout << "Insufficient unflagged antennas to proceed with this solve." << endl;
+    cout << " Insufficient unflagged antennas to proceed with this solve." << endl;
   }
 
   return False;
@@ -331,6 +353,21 @@ void VisCalSolver::chiSquare() {
 	  Rp = Rit.array().data();
 	  for (Int icorr=0;icorr<nCorr;++icorr) {
 
+   /*
+	    if (svb().weightMat()(icorr,irow)>0.0) {
+	      cout << irow << " " << icorr << " "
+		   << svb().weightMat()(icorr,irow) << " "
+		   << *wt << " "
+		   << R()(icorr,0,irow) << " "
+		   << *Rp << " "
+		   << &R()(icorr,0,irow) << " "
+		   << Rp << " "
+		   << Rp-&R()(icorr,0,irow) << "    "
+		   << &R()(0,0,irow)-&R()(3,0,irow) << " "
+		   << Rit.array().shape()
+		   << endl;
+	    }
+   */
 	    chiSq()+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
 	    //	    chiSq()+=Double( real((*Rp)*conj(*Rp)) );
 	    chiSqV()(icorr)+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
@@ -346,10 +383,14 @@ void VisCalSolver::chiSquare() {
 	  wt-=nCorr;
 	}
 	// Advance to next channel
-	++fl;
 	Rit.next();
+	++fl;
       }
     }
+    else 
+      // Advance over flagged row!
+      for (Int ich=0;ich<nChan;++ich) Rit.next();
+    
     // Advance to next row
     ++flR;
     flag.next();
@@ -382,7 +423,8 @@ Bool VisCalSolver::converged() {
       //      if (cvrgcount_==2) lambda()=2.0;
 
       // Four such steps we believe we have converged!
-      if (cvrgcount_>3)
+      //      if (cvrgcount_>3)
+      if (cvrgcount_>5)
 	return True;
     }
 
@@ -721,14 +763,14 @@ void VisCalSolver::optStepSize() {
   if (abs(optd)>0.0)
     optfactor=Double(step)*(1.5-optn/optd);
   
- /*
-  cout << "Optimization: " 
+  /*  
+    cout << "Optimization: " 
        << step << " " 
        << optfactor << " "
        << x2 << " "
        << "(" << min(amplitude(lastPar())) << ") "
        << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi << " ";
- */  
+  */
 
   par()=lastPar();
   
@@ -736,10 +778,10 @@ void VisCalSolver::optStepSize() {
   if (optfactor>0.0)
     dpar()*=Complex(optfactor);
 
-
-  //  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi
-  //       << endl;
-
+  /*
+  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi
+       << endl;
+  */
 }
 
 void VisCalSolver::getErrors() {

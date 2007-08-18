@@ -272,9 +272,7 @@ class Calibrater
   Bool listCal(const String& infile,
 	       const String& field,
 	       const String& antenna,
-	       const Int& spw,
-	       const Int& chan);
-
+	       const String& spw);
 
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
@@ -325,6 +323,9 @@ class Calibrater
 
   // Interpret spw indices (MSSelection)
   Vector<Int> getSpwIdx(const String& spws);
+
+  // Interpret spw indices (MSSelection)
+  Matrix<Int> getChanIdx(const String& spws);
   
   // Query apply types to see if we need to calibrate the weights
   Bool calWt();

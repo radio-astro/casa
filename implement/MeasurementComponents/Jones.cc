@@ -140,16 +140,16 @@ void Jones::applyLeft(VisVector& v) const {
     Complex c;
     c=conj(j_[0]);
     v.v_[0]*=c;
-    v.v_[1]*=c;
-    c=conj(j_[3]);
     v.v_[2]*=c;
+    c=conj(j_[3]);
+    v.v_[1]*=c;
     v.v_[3]*=c;
     
     c=conj(j_[1]);
     vtmp_.v_[0]*=c;
-    vtmp_.v_[1]*=c;
-    c=conj(j_[2]);
     vtmp_.v_[2]*=c;
+    c=conj(j_[2]);
+    vtmp_.v_[1]*=c;
     vtmp_.v_[3]*=c;
   
     for (Int i=0;i<4;++i)
@@ -437,7 +437,7 @@ ostream& operator<<(ostream& os, const Jones& mat) {
     cout << "General Jones: " << endl;
     for (Int i=0;i<2;++i) {
       cout << " [" << *ji++;
-      cout << ", " << *ji << "]";
+      cout << ", " << *ji++ << "]";
       if (i<1) cout << endl;
     }
     break;

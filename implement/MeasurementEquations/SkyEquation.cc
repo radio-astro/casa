@@ -427,7 +427,10 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental,
 
       
       // Initialize 
-      scaleImage(model, incremental);
+
+      ///hmm this scale image is totally useless here as the only the complex
+      //grid is used here
+      //scaleImage(model, incremental);
 
       vi.originChunks();
       vi.origin();
@@ -476,7 +479,8 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental,
   // and sum the statistics for this model
   for (Int model=0; model<sm_->numberOfModels();model++) {
 	 finalizePut(vb_p, model, isCopy);
-	 unScaleImage(model, incremental);
+	 //      see comment on scaleImage ...unnecessary
+	 //	 unScaleImage(model, incremental);
   }
   
   fixImageScale();
@@ -725,7 +729,6 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   LatticeExpr<Float> le(iif(sm_->ggS(model)>(0.0),
   			    (sm_->gS(model)/sm_->ggS(model)), 0.0));
   psf.copyData(le);
-
   LatticeExprNode maxPSF=max(psf);
   Float maxpsf=maxPSF.getFloat();
   if(abs(maxpsf-1.0) > 1e-3) {
@@ -742,6 +745,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
 
   }
  
+
 
   isPSFWork_p=False; // resseting this flag so that subsequent calculation uses
   // the right SkyJones correction;
@@ -1133,6 +1137,7 @@ void SkyEquation::finalizePut(const VisBuffer& vb, Int model) {
   applySkyJonesSquare(vb, -1, sm_->weight(model), sm_->work(model),
 		      sm_->ggS(model));
 
+  
   // 4. Finally, we add the statistics
   sm_->addStatistics(sumwt, chisq);
 }
@@ -1460,20 +1465,37 @@ Bool SkyEquation::ok() {
 
 void SkyEquation::scaleImage(Int model)
 {
-    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+  if ((scaleType_p != "NONE" && sm_->doFluxScale(model)) 
+      //|| (ft_->name() == "MosaicFT") ) {
+      ){
       LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
       sm_->image(model).copyData(latticeExpr);
     }  
+  else if(ft_->name() == "MosaicFT"){
+    
+    sm_->image(model).copyData( (LatticeExpr<Float>)
+				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
+				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
+
+  }
+
 };
 
 void SkyEquation::unScaleImage(Int model)
 {
 
-    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+    if ( (scaleType_p != "NONE" && sm_->doFluxScale(model)) 
+	 ){
       sm_->image(model).copyData( (LatticeExpr<Float>)
 				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
     }
+    else if(ft_->name() == "MosaicFT"){
+     
+      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
+      sm_->image(model).copyData(latticeExpr);
+    }
+
 };
 
 void SkyEquation::scaleImage(Int model, Bool incremental)
@@ -1496,19 +1518,32 @@ void SkyEquation::unScaleImage(Int model, Bool incremental)
 
 void SkyEquation::scaleDeltaImage(Int model)
 {
-    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+    if ((scaleType_p != "NONE" && sm_->doFluxScale(model) ) 
+	){
       LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
       sm_->deltaImage(model).copyData(latticeExpr);
     }
+    else if(ft_->name() == "MosaicFT"){
+      sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
+				       (iif(sm_->fluxScale(model) <= (0.0), 0.0,
+					    ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
+
+    }
+    
   
 };
 
 void SkyEquation::unScaleDeltaImage(Int model)
 {
-    if (scaleType_p != "NONE" && sm_->doFluxScale(model) ) {
+    if ( (scaleType_p != "NONE" && sm_->doFluxScale(model))
+	 ){
     sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
 				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 				      ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
+    }
+    else if(ft_->name() == "MosaicFT"){
+      LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
+      sm_->deltaImage(model).copyData(latticeExpr);
     }
   
 };
@@ -1598,7 +1633,6 @@ void SkyEquation::fixImageScale()
 		ggSSub.copyData( (LatticeExpr<Float>) 
 				 (iif(ggSSub < (ggSMin2), 0.0, 
 				      planeMax) ));
-
 	      }
 	    }
 	  }

@@ -401,9 +401,15 @@ class Imager
   Bool setjy(const Vector<Int>& fieldid, const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
+
+  Bool setjy(const Vector<Int>& fieldid, 
+	     const Vector<Int>& spectralwindowid, 
+	     const String& fieldnames, const String& spwstring, 
+	     const String& model,
+	     const Vector<Double>& fluxDensity, const String& standard);
+
   // Make an empty image
   Bool make(const String& model);
-
 
   // make a model from a SD image. 
   // This model then can be used as initial clean model to include the 

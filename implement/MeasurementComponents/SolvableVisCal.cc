@@ -77,7 +77,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveCPar_(vs.numberSpw(),NULL),
   solveRPar_(vs.numberSpw(),NULL),
   solveParOK_(vs.numberSpw(),NULL),
-  solveParErr_(vs.numberSpw(),NULL)
+  solveParErr_(vs.numberSpw(),NULL),
+  solveParSNR_(vs.numberSpw(),NULL)
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -108,7 +109,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveCPar_(1,NULL),
   solveRPar_(1,NULL),
   solveParOK_(1,NULL),
-  solveParErr_(1,NULL)
+  solveParErr_(1,NULL),
+  solveParSNR_(1,NULL)
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -422,6 +424,9 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
     nChanParList() = cs().nChan();
     startChanList() = cs().startChan();
 
+    // The following should be for trivial types only!    
+    nChanMatList()=nChanParList();
+
   }
 
   // else, we are creating a cumulative table from scratch (the VisSet)
@@ -437,6 +442,9 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
     // Size, inflate CalSet (incl. filling meta data)
     setSolveChannelization(vs);
+    // Override single-channel per solve! (trivial types only)
+    nChanMatList()=nChanParList();
+
     inflate(vs,True);
 
     // Set parOK,etc. to true
@@ -786,7 +794,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     }
 
     //    cout << "blperant     = " << blperant << endl;
-    //  cout << "wtperant = " << wtperant << endl;
+    //    cout << "wtperant = " << wtperant << endl;
     //    cout << "nAntForSolve = " << nAntForSolve << " " << antOK << endl;
 
   }
@@ -814,8 +822,9 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
 			   << "/" << nAnt() 
 			   << " antennas (" 
 			   << floor(100*Float(nAntForSolve/nAnt()))
-			   << "%) available." << endl;
-
+			   << "%) have sufficient baselines at " 
+			   << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+			   << endl;
   return (nAntForSolve>3);
     
 }
@@ -842,6 +851,9 @@ void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
   // Add the increment
   solveCPar()+=dparcube;
 
+  // The matrices are nominally out-of-sync now
+  invalidateCalMat();
+
   // Ensure phaseonly-ness, if necessary
   //  if (apmode()=='P') {   
   //  NB: Disable this, for the moment (07May24); testing a fix for
@@ -860,46 +872,56 @@ void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
   }
 }
 
-void SolvableVisCal::applyThresholds() {
+void SolvableVisCal::formSolveSNR() {
 
-  // Only bother if minSNR non-trivial
-  if (minSNR() > 0.0f) {
+  solveParSNR()=0.0;
 
-    Int nOk1(ntrue(solveParOK()));
-    
-    Cube<Float> snr(solveCPar().shape());
-    snr=0.0f;
-    for (Int iant=0;iant<nAnt();++iant)
-      for (Int ipar=0;ipar<nPar();++ipar)
-	if (solveParOK()(ipar,0,iant) &&
-	    solveParErr()(ipar,0,iant)>0.0f) {
-	  snr(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
-	  solveParOK()(ipar,0,iant)=(snr(ipar,0,iant)>minSNR());
-	}
-
-    Int nOk2(ntrue(solveParOK()));
-    Int nFail=nOk1-nOk2;    
-
-    if (False) {
-      // Report some stuff re SNR
-      cout << "SNR      = " << snr << endl;
-      cout << nOk1 << " " << nOk2 << " " << nFail << endl;
-      Float meansnr(0.0f);
-      if (ntrue(solveParOK())>0) {
-	meansnr=mean(snr(solveParOK()));
-	cout << "mean solution SNR = " << meansnr
-	     << " (passing threshold)."
-	     << endl;
+  for (Int iant=0;iant<nAnt();++iant)
+    for (Int ipar=0;ipar<nPar();++ipar) {
+      if (solveParOK()(ipar,0,iant) &&
+	  solveParErr()(ipar,0,iant)>0.0f) {
+	solveParSNR()(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
       }
+      else
+	// Ensure F if Err<=0  (OK?)
+	solveParOK()(ipar,0,iant)=False;
     }
+}
 
-    if (nFail>0)
-      cout << nFail << " of " << nOk1
-	   << " solutions rejected due to SNR < " << minSNR() 
-	   << " in spw=" << currSpw()
-	   << " at " << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+void SolvableVisCal::applySNRThreshold() {
+
+  Int nOk1(ntrue(solveParOK()));
+  
+  for (Int iant=0;iant<nAnt();++iant)
+    for (Int ipar=0;ipar<nPar();++ipar)
+      if (solveParOK()(ipar,0,iant))
+	solveParOK()(ipar,0,iant)=(solveParSNR()(ipar,0,iant)>minSNR());
+  
+  Int nOk2(ntrue(solveParOK()));
+  Int nFail=nOk1-nOk2;    
+  
+  if (False) {
+    // Report some stuff re SNR
+    cout << endl 
+	 << "Time = " << MVTime(refTime()/C::day).string(MVTime::YMD,7) << endl;
+    cout << "SNR      = " << solveParSNR() << endl;
+    cout << nOk1 << " " << nOk2 << " " << nFail << endl;
+    Float meansnr(0.0f);
+    if (ntrue(solveParOK())>0) {
+      meansnr=mean(solveParSNR()(solveParOK()));
+      cout << "mean solution SNR = " << meansnr
+	   << " (passing threshold)."
 	   << endl;
-  } // minSNR()>0
+    }
+  }
+  
+  if (nFail>0)
+    cout << nFail << " of " << nOk1
+	 << " solutions rejected due to SNR < " << minSNR() 
+	 << " in spw=" << currSpw()
+	 << " at " << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	 << endl;
+  
 }
 
 void SolvableVisCal::smooth(Vector<Int>& fields,
@@ -1026,7 +1048,8 @@ void SolvableVisCal::keep(const Int& slot) {
     // TBD:  Handle solveRPar here!
 
     cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-    //    cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
+    cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
+    cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
     cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
   }
@@ -1035,7 +1058,7 @@ void SolvableVisCal::keep(const Int& slot) {
 
 }
 
-void SolvableVisCal::postSolveTinker() {
+void SolvableVisCal::globalPostSolveTinker() {
 
   // Make solutions phase- or amp-only, if required
   if (apmode()!="AP") enforceAPonSoln();
@@ -1218,6 +1241,7 @@ void SolvableVisCal::initSVC() {
     solveRPar_[ispw] = new Cube<Float>();
     solveParOK_[ispw] = new Cube<Bool>();
     solveParErr_[ispw] = new Cube<Float>();
+    solveParSNR_[ispw] = new Cube<Float>();
   }
 
 }
@@ -1231,11 +1255,13 @@ void SolvableVisCal::deleteSVC() {
     if (solveRPar_[ispw])  delete solveRPar_[ispw];
     if (solveParOK_[ispw]) delete solveParOK_[ispw];
     if (solveParErr_[ispw]) delete solveParErr_[ispw];
+    if (solveParSNR_[ispw]) delete solveParSNR_[ispw];
   }
   solveCPar_=NULL;
   solveRPar_=NULL;
   solveParOK_=NULL;
   solveParErr_=NULL;
+  solveParSNR_=NULL;
 }
 
 void SolvableVisCal::verifyCalTable(const String& caltablename) {
@@ -1301,12 +1327,14 @@ void SolvableVisMueller::initSolvePar() {
     solveCPar().resize(nPar(),nChanPar(),nBln());
     solveParOK().resize(nPar(),nChanPar(),nBln());
     solveParErr().resize(nPar(),nChanPar(),nBln());
+    solveParSNR().resize(nPar(),nChanPar(),nBln());
 
     // TBD: solveRPar()?
     
     solveCPar()=Complex(1.0);
     solveParOK()=True;
     solveParErr()=0.0;
+    solveParSNR()=0.0;
   }
   currSpw()=0;
 
@@ -1760,17 +1788,24 @@ void SolvableVisJones::accumulate(SolvableVisCal* incr,
 	  // Sync svj with this
 	  svj->syncCal(*this);
 	  
-	  // TBD: this should move to syncMeta or somesuch...
-	  //   (and be more comprehensive)x
-	  AlwaysAssert((nChanMat()==svj->nChanMat()),AipsError);
+	  // Relevant channels to update are bounded by
+	  //  channels available in incr table:
+	  Int prestep(svj->startChan());
+	  Int poststep(nChanMat()-prestep-svj->nChanMat());
 	  
+	  AlwaysAssert((prestep<nChanMat()),AipsError);
+	  AlwaysAssert((poststep>-1),AipsError);
+
 	  // Do the multiplication each ant, chan
 	  for (Int iant=0; iant<nAnt(); iant++) {
-	    for (Int ichan=0; ichan<nChanMat(); ichan++) {
+
+	    J1().advance(prestep);
+	    for (Int ichan=0; ichan<svj->nChanMat(); ichan++) {
 	      J1()*=(svj->J1());
 	      J1()++;
 	      svj->J1()++;
 	    } // ichan
+	    J1().advance(poststep);
 	  } // iant
 	  IPosition blc(4,0,0,0,islot);
 	  IPosition trc(cs().parOK(currSpw()).shape());
@@ -1814,6 +1849,8 @@ void SolvableVisJones::initSolvePar() {
     solveParOK()=True;
     solveParErr().resize(nPar(),1,nAnt());
     solveParErr()=0.0;
+    solveParSNR().resize(nPar(),1,nAnt());
+    solveParSNR()=0.0;
 
   }
   currSpw()=0;
@@ -1968,29 +2005,49 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
   }
 }
 
-void SolvableVisJones::postSolveTinker() {
+void SolvableVisJones::globalPostSolveTinker() {
 
   // Re-reference the phase, if requested
   if (refant()>-1) applyRefAnt();
 
   // Apply more general post-solve stuff
-  SolvableVisCal::postSolveTinker();
+  SolvableVisCal::globalPostSolveTinker();
 
 }
 
 void SolvableVisJones::applyRefAnt() {
 
+  // TBD:
+  // 1. Synchronize refant changes on par axis
+  // 2. Implement minimum mean deviation algorithm
 
-  logSink() << "Optimizing phase continuity (even if refant sometimes missing)." 
+  if (refant()<0) 
+    throw(AipsError("No refant specified."));
+
+  // Get the refant name from the nMS
+  String refantName("none");
+  MeasurementSet ms(msName());
+  MSAntennaColumns msantcol(ms.antenna());
+  refantName=msantcol.name()(refant());
+
+  logSink() << "Applying refant: " << refantName
 	    << LogIO::POST;
+  // , optimizing phase continuity even if refant sometimes missing." 
+
+  Bool newway(True);
 
   // Use ANTENNA-table-ordered refant list if user's choice bad
-  Vector<Int> refantlist(nAnt()+1);
+  //  The first two entries in this list are the user's refant,
+  //   and the one that was used on the previous interval.  This
+  //   makes the priorities correct all the time.
+  Vector<Int> refantlist(nAnt()+2);
   indgen(refantlist);
-  refantlist-=1;
-  refantlist(0)=refant();
+  refantlist-=2;
+  refantlist(0)=refantlist(1)=refant();
 
-  //  cout << "refantlist = " << refantlist  << endl;
+  Bool usedaltrefant(False);
+
+  //  cout << "refantlist = " << refantlist << endl;
 
   for (Int ispw=0;ispw<nSpw();++ispw) {
 
@@ -1998,86 +2055,291 @@ void SolvableVisJones::applyRefAnt() {
     if (cs().nTime(ispw) > 1) {
     
       currSpw()=ispw;
-      
-      ArrayIterator<Complex> sol(cs().par(ispw),3);
-      ArrayIterator<Bool> sOk(cs().parOK(ispw),3);
-      
-      Cube<Complex> s0, s1;
-      Cube<Bool> ok0, ok1;
-      
-      // Initial prior solution
-      s0.reference(sol.array());
-      ok0.reference(sOk.array());
-      
-      // First solution to adjust is 2nd one (index=1)
-      sol.next();
-      sOk.next();
-      
-      Complex rph(1.0);
-      Matrix<Complex> globalrph(nPar(),nChanPar(),1.0);
-      Matrix<Bool>globalOK(nPar(),nChanPar(),False);
-      Int islot(0);
-      while (!sol.pastEnd()) {
-	
-	islot++;
-	
-	// The current solution
-	s1.reference(sol.array());
-	ok1.reference(sOk.array());
-	
-	// Reference each channel and par independently (?)
-	for (Int ichan=0;ichan<nChanPar();++ichan) {
-	  for (Int ipar=0;ipar<nPar();++ipar) {
-	    
-	    Int iref=0;
-	    while ( iref<nAnt() &&
-		    (!ok0(ipar,ichan,refantlist(iref)) || 
-		     !ok1(ipar,ichan,refantlist(iref)))   ) iref++;
-	    
-	    // If we didn't exhaust refant possibilities
-	    if (iref<nAnt()) {
-	      
-	      Complex &r0=s0(ipar,ichan,refantlist(iref));
-	      Complex &r1=s1(ipar,ichan,refantlist(iref));
-	      
-	      // If we can calculate a meaningful ref phasor, do it
-	      if (abs(r0)>0.0f && abs(r1)>0.0f) {
-		
-		rph=r1/r0;
-		rph/=abs(rph);
-		
-		// TBD (global refant)
-		// if (!globalOK(ipar,ichan)) {
-		//   globalrph(ipar,ichan)=(r0/abs(r0));
-		//   globalOK(ipar,ichan)=True;
-		// }
-		
 
-	     /*
-		cout << islot << " " << ichan << " " << ipar << " "
-		     << " refant = " << refantlist(iref) << " ph="
-		     << arg(rph)*180.0/C::pi 
-		     << endl;
-	     */
+      // Reference each channel and par independently (?)
+      for (Int ichan=0;ichan<nChanPar();++ichan) {
+	for (Int ipar=0;ipar<nPar();++ipar) {
 
-		// Adjust each good ant by this phasor
+	  if (newway) {
+
+          // Find time-ordered slot index
+	  Vector<uInt> ord;
+	  genSort(ord,cs().time(ispw));
+	  Int nslots(ord.nelements());
+	  //cout << "time ordered slot index = " << ord << endl;
+
+	  Array<Complex> sol(cs().par(ispw));
+	  Array<Bool> sok(cs().parOK(ispw));
+
+          Int islot0(0);
+          Int islot1(0);
+
+          IPosition blc0(4,ipar,ichan,0,ord(islot0));
+          IPosition trc0(4,ipar,ichan,nAnt()-1,ord(islot0));
+          IPosition blc1(4,ipar,ichan,0,ord(islot1));
+          IPosition trc1(4,ipar,ichan,nAnt()-1,ord(islot1));
+
+	  while (islot0<nslots && ntrue(sok(blc0,trc0))<1) {
+	    ++islot0;
+	    blc0(3)=trc0(3)=ord(islot0);
+	  }
+	  islot1=islot0+1;
+
+	  // Only if we found more than one good slot
+	  if (islot1<nslots) {
+
+	    Complex rph(1.0);
+	    Float refantph(0.0);
+	    Int currrefant(-1);
+	    Int lastrefant(-1);
+	    while (islot1<nslots) {
+	      
+	      blc1(3)=trc1(3)=ord(islot1);
+	      
+	      // If current slot has good solutions in it,
+	      //  attempt to reference their phases
+	      if (ntrue(sok(blc1,trc1))>0) {
+		
+		Int iref=0;
+		while ( iref<(nAnt()+2) &&
+			(!sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot0))) ||
+			 !sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot1))))   ) {
+		  ++iref;
+		}
+		
+		if (iref<nAnt()+2) {
+		  // found a refant, use it
+		  
+		  if (iref>0) usedaltrefant=True;
+		  
+		  currrefant=refantlist(iref);
+		  
+		  if (currrefant!=lastrefant) {
+		    cout << "At " 
+			 << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
+			 << " ("
+			 << "Spw=" << ispw 
+			 << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
+			 << ", pol=" << ipar 
+		      //		       << ", islot1=" << ord(islot1)
+			 << ")"
+			 << ", using refant " << msantcol.name()(currrefant)
+			 << " (id=" << currrefant 
+		      //<< " ," << iref << "th priority" 
+			 << ")";
+		    if (iref>0) cout << " (alternate)";
+		    cout << endl;
+		    //		  cout << "refantlist = " << refantlist << endl;
+		  }
+		  
+		  lastrefant=currrefant;
+		  
+		  // 2nd priority refant on next iteration is the one used this iteration
+		  refantlist(1)=currrefant;
+		  
+		  Complex &r0=sol(IPosition(4,ipar,ichan,currrefant,ord(islot0)));
+		  Complex &r1=sol(IPosition(4,ipar,ichan,currrefant,ord(islot1)));
+		  
+		  // If we can calculate a meaningful ref phasor, do it
+		  if (abs(r0)>0.0f && abs(r1)>0.0f) {
+		    
+		    rph=Complex(DComplex(r1)/DComplex(r0));
+		    rph/=abs(rph);
+		    
+		    // Remember first encountered refant phase
+		    if (refantph==0.0 && iref==0) refantph=arg(r0);
+		    
+		    // TBD: attempt to optimize precision...
+		    //DComplex drph=(DComplex(r1)/DComplex(r0));
+		    //drph/=abs(drph);
+		    
+		    // Adjust each good ant by this phasor
+		    for (Int iant=0;iant<nAnt();++iant) 
+		      if (sok(IPosition(4,ipar,ichan,iant,ord(islot1)))) {
+			sol(IPosition(4,ipar,ichan,iant,ord(islot1)))/=rph;
+			
+			// TBD: attempt to optimize precision
+			//DComplex stmp=sol(IPosition(4,ipar,ichan,iant,ord(islot1)));
+			//stmp/=drph;
+			//sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=Complex(stmp);
+		      }
+		    
+		    //		  cout << " --> " << arg(r1)*180.0/C::pi << endl;
+		    
+		  } // non-zero reference amps
+		  else 
+		    // Should be impossible to reach here!
+		    cout << "Bad referencing phasors." << endl;
+		  
+		  
+		} // refant ok
+		else {
+		  // Continuity broken...
+		  logSink() << LogIO::WARN
+			    << " Phase continuity broken at "
+			    << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
+			    << " ("
+			    << "Spw=" << ispw 
+			    << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
+			    << ", pol=" << ipar 
+			    << ")" << endl
+			    << "  due to lack of overlapping antennas with previous interval."
+			    << LogIO::POST;
+		}
+		
+		// Good slot is basis for referencing the next slot
+		islot0=islot1;
+		blc0(3)=trc0(3)=ord(islot0);
+		
+	      }
+	      ++islot1;
+	    }
+	    
+	    // Zero initial refant phase
+	    if (refantph!=0.0) {
+	      //	    cout << "refantph = " << refantph*180.0/C::pi << endl;
+	      rph=Complex(cos(refantph),sin(refantph));
+	      for (Int islot=0;islot<nslots;++islot)
 		for (Int iant=0;iant<nAnt();++iant) 
-		  if (ok1(ipar,ichan,iant))
-		    s1(ipar,ichan,iant)/=rph;
-		
-	      } // non-zero reference amps
-	    } // refant ok
-	  } // ipar
-	} // ichan
+		  if (sok(IPosition(4,ipar,ichan,iant,ord(islot))))
+		    sol(IPosition(4,ipar,ichan,iant,ord(islot)))/=rph;
+	    }
+	    
+	  } // islot0<nslots
+	  }
+	  else {
+
+	  // This is the old way (out of time order)
+
+	  IPosition blc(3,ipar,ichan,0);
+	  IPosition trc(3,ipar,ichan,nAnt()-1);
+
+	  ArrayIterator<Complex> sol(cs().par(ispw),3);
+	  ArrayIterator<Bool> sOk(cs().parOK(ispw),3);
+
+	  Int islot(0);
+	  
+	  // Advance to first slot that has some good solutions
+	  while (ntrue(sOk.array()(blc,trc))<1 &&
+		 !sol.pastEnd()) {
+	    sol.next();
+	    sOk.next();
+	    islot++;
+	  }
+
+	  // Arrays for referencing slices
+	  Cube<Complex> s0, s1;
+	  Cube<Bool> ok0, ok1;
+
+	  // We are at the initial "prior" solution
+	  s0.reference(sol.array());
+	  ok0.reference(sOk.array());
+	  
+	  // Nominally, first solution to adjust is the next one
+	  sol.next();
+	  sOk.next();
+	  islot++;
 	
-	// Advance to next solution
-	s0.reference(s1);
-	ok0.reference(ok1);
-	sol.next();
-	sOk.next();
-      } // slots
+	  Complex rph(1.0);
+	  Int lastiref(-1);
+	  while (!sol.pastEnd()) {
+	
+	    // Do referencing if current slot has any good solutions
+	    if (ntrue(sOk.array()(blc,trc))>0) {
+	      
+	      // The current solution
+	      s1.reference(sol.array());
+	      ok1.reference(sOk.array());
+
+	      // Find first refant this and prev slot have in common
+	      Int iref=0;
+	      while ( iref<(nAnt()+1) &&
+		      (!ok0(ipar,ichan,refantlist(iref)) || 
+		       !ok1(ipar,ichan,refantlist(iref)))  ) iref++;
+
+	      if (iref>nAnt())
+		cout << "No antenna overlap..." << endl;
+	      else {
+		// found a refant, use it
+
+		if (iref!=lastiref)
+		  cout << "Using refant id=" << refantlist(iref) << " at "
+		       << MVTime(cs().time(ispw)(islot)/C::day).string(MVTime::YMD,7) << " "
+		       << "(islot=" << islot 
+		       << ", Spw=" << ispw 
+		       << ", Fld=" << cs().fieldId(ispw)(islot)
+		       << ", ipar=" << ipar 
+		       << ")" << endl;
+
+		lastiref=iref;
+	    
+	      		
+		Complex &r0=s0(ipar,ichan,refantlist(iref));
+		Complex &r1=s1(ipar,ichan,refantlist(iref));
+
+		//		cout << arg(r0)*180.0/C::pi << " "
+		//		     << arg(r1)*180.0/C::pi << " ";
+
+		
+		// If we can calculate a meaningful ref phasor, do it
+		if (abs(r0)>0.0f && abs(r1)>0.0f) {
+		  
+		  rph=r1/r0;
+		  rph/=abs(rph);
+		  
+		  //		  cout << "(" << arg(rph)*180.0/C::pi << ") ";
+
+
+		  /*
+		    cout << islot << " " << ichan << " " << ipar << " "
+		    << " refant = " << refantlist(iref) << " ph="
+		    << arg(rph)*180.0/C::pi 
+		    << endl;
+		  */
+		  
+		  // Adjust each good ant by this phasor
+		  for (Int iant=0;iant<nAnt();++iant) 
+		    if (ok1(ipar,ichan,iant))
+		      s1(ipar,ichan,iant)/=rph;
+
+		  //		  cout << " --> " << arg(r1)*180.0/C::pi << endl;
+
+		} // non-zero reference amps
+		else 
+		  cout << "Bad referencing phasors." << endl;
+
+
+	      } // refant ok
+
+	      // This slot is now basis for referencing the next one 
+	      s0.reference(s1);
+	      ok0.reference(ok1);
+	      
+	    } // a good interval
+
+	    // Advance to next solution
+	    islot++;
+	    sol.next();
+	    sOk.next();
+
+	  } // !pastEnd
+
+	  } // newway
+
+	} // ipar
+      } // ichan
+	
     } // nTime>1
   } // ispw
+
+
+  if (usedaltrefant)
+    logSink() << LogIO::NORMAL
+	      << " NB: An alternate refant was used at least once to maintain" << endl
+	      << "  phase continuity where the user's refant drops out." << endl
+	      << "  This may introduce apparent phase jumps in " << endl
+	      << "  the reference antenna; these are generally harmless."
+	      << LogIO::POST;
 
 }
 
@@ -2254,13 +2516,13 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     if (inRefSpwMap(0)>-1) {
       if (inRefSpwMap.nelements()==1) {
         refSpwMap=inRefSpwMap(0);
-        logSink() << " All spectral windows will be referenced to spw=" << inRefSpwMap(0)+1 
+        logSink() << " All spectral windows will be referenced to spw=" << inRefSpwMap(0) 
 		  << LogIO::POST;
       } else {
         for (Int i=0; i<Int(inRefSpwMap.nelements()); i++) {
           if (inRefSpwMap(i)>-1 && inRefSpwMap(i)!=i) {
             refSpwMap(i)=inRefSpwMap(i);
-	    logSink() << " Spw=" << i+1 << " will be referenced to spw=" << inRefSpwMap(i)+1 
+	    logSink() << " Spw=" << i << " will be referenced to spw=" << inRefSpwMap(i) 
 		      << LogIO::POST;
           }
         }
@@ -2643,10 +2905,17 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   MSFieldColumns msfld(ms.field());
   Vector<String> fldname(msfld.name().getColumn());
 
+  // Do specified channel, nominally
+  Int dochan=chan;
 
   Int nchan=cs().par(spw).shape()(1);
-  Complex *g=cs().par(spw).data()+chan;
-  Bool *gok=cs().parOK(spw).data()+chan;
+
+  if (dochan>(nchan-1)) {
+    dochan=0;
+  }
+
+  Complex *g=cs().par(spw).data()+dochan;
+  Bool *gok=cs().parOK(spw).data()+dochan;
 
   Vector<String> flagstr(2); 
   flagstr(0)="F";
@@ -2670,7 +2939,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
       if (irow%cs().nElem()==0) 
 	cout << endl
 	     << "SpwId = " << spw << ", "
-	     << " channel = " << chan << "."
+	     << " channel = " << dochan << "."
 	     << endl 
 	     << setiosflags(ios::left)
 	     << setw(21) << "Time"  << " "

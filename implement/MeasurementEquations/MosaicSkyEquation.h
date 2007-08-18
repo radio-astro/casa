@@ -202,7 +202,7 @@ public:
   // <group>
   virtual void initializePutXFR(const VisBuffer &vb, Int model, Int numXFR);
   // Just like SkyEquation's, but update nXFR_p
-  virtual void MosaicSkyEquation::finalizePutXFR(const VisBuffer& vb, Int model, Int numXFR);
+  virtual void finalizePutXFR(const VisBuffer& vb, Int model, Int numXFR);
   // Just like SkyEquation's, but update nXFR_p
   virtual void finalizePutConvolve(const VisBuffer& vb, Int Model, Int numXFR);
   // </group>

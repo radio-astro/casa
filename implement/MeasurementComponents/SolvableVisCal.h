@@ -146,6 +146,7 @@ public:
   inline virtual Cube<Float>&   solveRPar()   {return (*solveRPar_[currSpw()]);};
   inline virtual Cube<Bool>&    solveParOK()  {return (*solveParOK_[currSpw()]);};
   inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
+  inline virtual Cube<Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
 
   // Synchronize the meta data with a solvable VisBuffer
   //   (returns False if VisBuffer has no valid data)
@@ -169,8 +170,11 @@ public:
   // Update solve parameters incrementally (additive)
   virtual void updatePar(const Vector<Complex> dpar);
 
-  // Apply solution thresholds
-  virtual void applyThresholds();
+  // Form solution SNR
+  virtual void formSolveSNR();
+
+  // Apply SNR threshold
+  virtual void applySNRThreshold();
 
   // Apply refant (implemented in SVJ)
   virtual void reReference()=0;
@@ -187,7 +191,7 @@ public:
   virtual void keep(const Int& slot);
 
   // Post solve tinkering (generic version)
-  virtual void postSolveTinker();
+  virtual void globalPostSolveTinker();
 
   // Divide all solutions by their amplitudes
   virtual void enforceAPonSoln();
@@ -324,6 +328,7 @@ private:
   PtrBlock<Cube<Float>*>   solveRPar_;  // [nSpw](nPar,1,{1|nElem})
   PtrBlock<Cube<Bool>*>    solveParOK_; // [nSpw](nPar,1,{1|nElm})
   PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
+  PtrBlock<Cube<Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
 
   // LogIO
   LogIO logsink_p;
@@ -483,7 +488,7 @@ public:
 			  const Vector<Int>& fields);
 
   // Post solve tinkering (Jones version: includes refant application)
-  virtual void postSolveTinker();
+  virtual void globalPostSolveTinker();
 
   // Apply reference antenna (generic Jones version)
   virtual void applyRefAnt();

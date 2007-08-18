@@ -1323,8 +1323,11 @@ Bool Calibrater::standardSolve() {
 	if (goodSoln) {
 	  totalGoodSol=True;
 	  // ...consider referencing to refant...
-	  if (svc_p->refant()>-1)
-	    svc_p->reReference();
+	  //	  if (svc_p->refant()>-1)
+	  //	    svc_p->reReference();
+
+	  svc_p->formSolveSNR();
+	  svc_p->applySNRThreshold();
 
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(islot(spw));
@@ -1356,8 +1359,8 @@ Bool Calibrater::standardSolve() {
 	      << LogIO::POST;
   else {
     
-    // Do post-solve tinkering (e.g., phase-only, normalization, etc.)
-    svc_p->postSolveTinker();
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    svc_p->globalPostSolveTinker();
 
     // write the table
     svc_p->store();
@@ -2084,15 +2087,32 @@ Bool Calibrater::smooth(const String& infile,
 Bool Calibrater::listCal(const String& infile,
 			 const String& field,
 			 const String& antenna,
-			 const Int& spw,
-			 const Int& chan) {
+			 const String& spw) {
 
   SolvableVisCal *svc(NULL);
 
   try {
     Vector<Int> ufldids=getFieldIdx(field);
     Vector<Int> uantids=getAntIdx(antenna);
-    
+
+    Vector<Int> uspwids=getSpwIdx(spw);
+    Matrix<Int> uchanids=getChanIdx(spw);
+
+    cout << "uspwids  = " << uspwids << endl;
+    cout << "uchanids = " << uchanids << endl;
+
+
+    // By default, do first spw, first chan
+    if (uspwids.nelements()==0) {
+      uchanids.resize(1,4);
+      uchanids=0;
+    } 
+    else if (uspwids.nelements()>1) 
+      cout << "Only listing spw = " << uchanids(0,0) << endl;
+
+    if (uchanids(0,1)!=uchanids(0,2))
+      cout << "Only listing chan = " << uchanids(0,1) << endl;
+
     // Set record format for calibration table application information
     RecordDesc applyparDesc;
     applyparDesc.addField ("table", TpString);
@@ -2106,7 +2126,7 @@ Bool Calibrater::listCal(const String& infile,
     
     svc->setApply(applypar);       
     
-    svc->listCal(ufldids,uantids,spw,chan);
+    svc->listCal(ufldids,uantids,uchanids(0,0),uchanids(0,1));
 
     if (svc) delete svc; svc=NULL;
 
@@ -2131,10 +2151,8 @@ Bool Calibrater::listCal(const String& infile,
 
 void Calibrater::selectChannel(const String& spw) {
 
-  MSSelection mssel;
-  mssel.setSpwExpr(spw);
 
-  Matrix<Int> chansel = mssel.getChanList(mssel_p);
+  Matrix<Int> chansel = getChanIdx(spw);
   uInt nselspw=chansel.nrow();
 
   if (nselspw==0)
@@ -2174,9 +2192,9 @@ void Calibrater::selectChannel(const String& spw) {
 		  << " step by " << step << ")"
 		  << endl;
 	
-	// Call via VisIter
-	vs_p->iter().selectChannel(1,start,nchan,step,spw);
-
+	// Call via VisSet (avoid call to VisIter::origin)
+	vs_p->selectChannel(1,start,nchan,step,spw,False);
+	
       }
       else {
 	logSink() << LogIO::POST;
@@ -2348,6 +2366,16 @@ Vector<Int> Calibrater::getSpwIdx(const String& spws) {
   return mssel.getSpwList(mssel_p);
 
 }
+
+Matrix<Int> Calibrater::getChanIdx(const String& spw) {
+
+  MSSelection mssel;
+  mssel.setSpwExpr(spw);
+
+  return mssel.getChanList(mssel_p);
+
+}
+
 
 // Query apply types if we are calibrating the weights
 Bool Calibrater::calWt() {

@@ -302,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nint(Double val) {return Int(floor(val+0.5));};
     
     // Make the PB part of the convolution function
-    Int PBWProjectFT::makePBPolnCoords(//const ImageInterface<Complex>& image,
+    Int makePBPolnCoords(//const ImageInterface<Complex>& image,
 				       CoordinateSystem& coord);
     // Locate convolution functions on the disk
     Int locateConvFunction(Int Nw, Int polInUse, const VisBuffer& vb, Float &pa);
