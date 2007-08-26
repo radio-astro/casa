@@ -345,7 +345,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
           if((abs(resmax(model))>cycleThreshold)||
 	     (abs(resmin(model))>cycleThreshold)) {
 
-	    os << "Processing model " << model+1 << LogIO::POST;
+	    os << "Processing model " << model << LogIO::POST;
 
 	    IPosition onePlane(4, nx, ny, 1, 1);
 	    IPosition oneCube(4, nx, ny, npol, 1);
@@ -527,9 +527,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		}
 		os << "Clean used " << iterations[model](chan) << " iterations" 
 		   << " to approach a threshold of " << cycleThreshold
-		   << LogIO::POST;
+		   << LogIO::POST; 
 	      }
 	    }
+	    os << LatticeExprNode(sum(image(model))).getFloat() 
+	       << " Jy is the sum of clean components of model " 
+	       << model << LogIO::POST;
 	  }
 	  else {
 	    os<<"No need to clean model "<<model+1<<" :peak residual below threshold"

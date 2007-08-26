@@ -291,7 +291,9 @@ void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 
  //the uvw rotation is done for common tangent reprojection or if the 
  //image center is different from the phasecenter
-
+  // UVrotation is False only if field never changes
+  if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
+    doUVWRotation_p=True;
   if(doUVWRotation_p || tangentSpecified_p){
     ok();
     
@@ -306,11 +308,13 @@ void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
       if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
       if(tangentSpecified_p) {
 	if(observatory.contains("ATCA") || observatory.contains("WSRT")){
-	  uvwMachine_p=new UVWMachine(mTangent_p, vb.phaseCenter(), mFrame_p,
+	  //Tangent specified is being wrongly used...it should be for a 
+	  //Use the safest way  for now.
+	  uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
 				      True, False);
 	}
 	else{
-	  uvwMachine_p=new UVWMachine(mTangent_p, vb.phaseCenter(), mFrame_p,
+	  uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
 				      False, True);
 	}
       }
@@ -320,7 +324,8 @@ void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 				      True, False);
 	}
 	else{
-	  uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p);
+	  uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
+				      False, True);
 	}
       }
       lastFieldId_p=vb.fieldId();

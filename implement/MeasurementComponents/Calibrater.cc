@@ -1090,7 +1090,7 @@ Bool Calibrater::correct() {
   logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
   
   try {
-    
+
     if (!ok())
       throw(AipsError("Calibrater not prepared for correct!"));
 
@@ -1249,6 +1249,10 @@ Bool Calibrater::standardSolve() {
     
     Int spw(vi.spectralWindow());
     
+    // Abort if we encounter a spw for which a priori cal not available
+    if (!spwOK_p(spw)) 
+      throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
     // Arrange to accumulate 
     VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
     
