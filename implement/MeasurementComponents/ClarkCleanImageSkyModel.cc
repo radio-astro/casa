@@ -178,7 +178,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       LatticeExpr<Float> expr= model_sl + localmodel; 
       model_sl.copyData(expr);
  
-      converged = converged && (cleaner.getMaxResidual() < threshold());
+      converged =  (cleaner.getMaxResidual() < threshold()) || (cleaner.numberIterations()==0);
       //      if (cpp != 0 ) delete cpp; cpp=0;
       //      if (pgp != 0 ) delete pgp; pgp=0;
     }

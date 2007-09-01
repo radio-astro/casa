@@ -325,7 +325,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     Float finalabsmax=maxField(resmax, resmin);
 
     os << "Final maximum residual = " << finalabsmax << LogIO::POST;
-    converged=converged && (finalabsmax < threshold());
+    converged=(finalabsmax < threshold());
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model+1 << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;

@@ -327,7 +327,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       Float residualmax, residualmin;
       minMax(residualmin, residualmax, imageStepli.cursor());
       residualmax=max(residualmax, abs(residualmin));
-      converged = converged && (residualmax < threshold());
+      converged = (residualmax < threshold());
     }
     if (lmask != 0 && isCubeMask)  {
       lmask->resize(1,1);

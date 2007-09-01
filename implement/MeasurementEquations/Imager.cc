@@ -8119,7 +8119,8 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
     return True;
   return False;
 }
-Int Imager::interactivemask(const String& image, const String& mask){
+Int Imager::interactivemask(const String& image, const String& mask, 
+			    Int& niter, Int& ncycles, String& thresh){
 
   LogIO os(LogOrigin("Imager", "interactivemask()", WHERE));
    if(Table::isReadable(mask)) {
@@ -8141,7 +8142,7 @@ Int Imager::interactivemask(const String& image, const String& mask){
    return False;
    
    }
-   Int val=vwrCln.go();
+   Int val=vwrCln.go(niter, ncycles, thresh);
    return val;
 }
 } //# NAMESPACE CASA - END

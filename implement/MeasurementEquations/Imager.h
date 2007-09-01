@@ -455,7 +455,8 @@ class Imager
 
 
   //Interactive mask drawing
-  Int interactivemask(const String& imagename, const String& maskname);
+  Int interactivemask(const String& imagename, const String& maskname, 
+		      Int& niter, Int& ncycles, String& threshold);
 
 protected:
 

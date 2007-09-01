@@ -546,6 +546,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       else {
 	os << "No more clean occured in this major cycle - stopping now" << LogIO::POST;
 	stop=True;
+	converged=True;
       }
     }
     if(0) {
@@ -570,7 +571,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     Float finalabsmax=maxField(resmax, resmin);
     
     os << "Final maximum residual = " << finalabsmax << LogIO::POST;
-    converged=converged && (finalabsmax < 1.05 * threshold());
+    converged=(finalabsmax < 1.05 * threshold());
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model+1 << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
@@ -581,6 +582,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   }
 
   os << LogIO::POST;
+  if(stop)
+    converged=True;
 
   return(converged);
 };
