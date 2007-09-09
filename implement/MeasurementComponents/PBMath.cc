@@ -687,6 +687,9 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   } else if (telescope(0,3)=="ACA") {
     whichPB = PBMath::ACA;
     band = "UNKNOWN";
+  } else if (telescope(0,3)=="SMA"){
+    whichPB = PBMath::SMA;
+    band= "UNKNOWN";
   } else if (telescope(0,4)=="NONE") {
     whichPB = PBMath::NONE;
     band = "UNKNOWN";
@@ -800,6 +803,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::ACA:
     str = "ACA";
     break;
+  case PBMath::SMA:
+    str = "SMA";
+    break;
   case PBMath::NONE:
     str = "NONE";
     break;
@@ -880,6 +886,8 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::ALMASD;
   } else if (str == "ACA") {
     ipb = PBMath::ACA;
+  } else if (str == "SMA"){
+    ipb = PBMath::SMA;
   } else if (str == "NONE") {
     ipb = PBMath::NONE;
   } else {
@@ -1340,6 +1348,20 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
       pb_pointer_p = new PBMath1DAiry( Quantity(6.0,"m"), Quantity(0.5,"m"),
 				       Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
     break;
+  case SMA:
+    //Value provided by Crystal Brogan...
+    //needs updating when proper values are given
+    pb_pointer_p = new PBMath1DGauss( Quantity((56/2.0),"arcsec"),  // half width==> /2
+				      Quantity(112.0, "arcsec"),
+				      Quantity(224.0, "GHz"),
+				      False,
+				      BeamSquint(MDirection(Quantity(0.0, "'"),
+							    Quantity(0.0, "'"),
+							    MDirection::Ref(MDirection::AZEL)),
+						 Quantity(224.0, "GHz")),
+				      False);
+    break;
+ 
   case NONE:
     {
       Vector<Double> coef(1);

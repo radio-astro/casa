@@ -137,11 +137,11 @@ public:
 		 OVRO,
 		 VLA, VLA_INVERSE, VLA_NVSS, VLA_2NULL, 
 		 VLA_4, VLA_P, VLA_L, VLA_C, VLA_X, VLA_U, VLA_K, VLA_Q, 
-		 WSRT, WSRT_LOW, ALMA, ALMASD, ACA, NONE, IRAMPDB, IRAM30M
+		 WSRT, WSRT_LOW, ALMA, ALMASD, ACA, IRAMPDB, IRAM30M, SMA, NONE
   };
 
   enum {
-    NumberOfCommonPB=34
+    NumberOfCommonPB=35
   };
 
   // Default constructor, required for Block<PBMath>
