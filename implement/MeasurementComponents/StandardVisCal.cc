@@ -724,6 +724,15 @@ MMueller::~MMueller() {
   if (prtlev()>2) cout << "M::~M()" << endl;
 }
 
+void MMueller::setApply(const Record& apply) {
+
+  SolvableVisCal::setApply(apply);
+
+  // Force calwt to False for now
+  calWt()=False;
+
+}
+
 void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;

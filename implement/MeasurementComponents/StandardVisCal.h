@@ -394,6 +394,10 @@ public:
   // Type of Jones matrix according to nPar()
   virtual Mueller::MuellerType muellerType() { return Mueller::Diag2; };
 
+  // Local setApply
+  using SolvableVisCal::setApply;
+  virtual void setApply(const Record& apply);
+
   // M solves for itself
   virtual Bool standardSolve() { return False; };
 

@@ -8133,6 +8133,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
    else{
      clone(image, mask);
    }
+   INITIALIZE_PGPLOT
    QtApp::init();
    QtClean vwrCln(image, mask); 
    //  if(!vwrCln.loadImage(image, mask)){
