@@ -1351,8 +1351,8 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
   case SMA:
     //Value provided by Crystal Brogan...
     //needs updating when proper values are given
-    pb_pointer_p = new PBMath1DGauss( Quantity((56/2.0),"arcsec"),  // half width==> /2
-				      Quantity(112.0, "arcsec"),
+    pb_pointer_p = new PBMath1DGauss( Quantity((56.0/2.0),"arcsec"),  // half width==> /2
+				      Quantity(35.0, "arcsec"),
 				      Quantity(224.0, "GHz"),
 				      False,
 				      BeamSquint(MDirection(Quantity(0.0, "'"),

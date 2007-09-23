@@ -186,7 +186,10 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       delete mask_sl;
       mask_sl=0;
     }
+    
   }
+  os << LatticeExprNode(sum(image(0))).getFloat() 
+	       << " Jy is the sum of clean components " << LogIO::POST;
   modified_p=True;
   return(converged);
 };

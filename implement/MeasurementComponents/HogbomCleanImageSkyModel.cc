@@ -334,6 +334,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
     }
 
   }
+   os << LatticeExprNode(sum(image(0))).getFloat() 
+	       << " Jy is the sum of clean components " << LogIO::POST;
   modified_p=True;
   return(converged);
 };

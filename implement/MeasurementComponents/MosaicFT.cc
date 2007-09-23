@@ -125,8 +125,10 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     offsetLoc=other.offsetLoc;
     pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
-    skyCoverage_p=(TempImage<Float> *)other.skyCoverage_p->cloneII();
-    convWeightImage_p=(TempImage<Complex> *)other.convWeightImage_p->cloneII();
+    if(other.skyCoverage_p !=0)
+      skyCoverage_p=(TempImage<Float> *)other.skyCoverage_p->cloneII();
+    if(other.convWeightImage_p !=0)
+      convWeightImage_p=(TempImage<Complex> *)other.convWeightImage_p->cloneII();
     convFunctionMap_p.clear();
   };
   return *this;

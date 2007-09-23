@@ -281,13 +281,15 @@ void BeamSkyJones::update(const VisBuffer& vb, Int row)
       !directionsCloseEnough(pointingDirection1_p,pointingDirection2_p)) {
         // the case is inhomogeneous: pointing directions are slightly
 	// different at different antennae
+    //This check is an overkill for standard arrays...need to find a better one
 
-	LogIO os;
+    /*	LogIO os;
 	os << LogIO::WARN << LogOrigin("BeamSkyJones","update")
 	   << "The pointing directions differ for different stations."
 	   << LogIO::POST << LogIO::WARN << LogOrigin("BeamSkyJones","update")
 	   << "This case is not handled correctly. Continuing anyway."<<LogIO::POST;
 
+    */
 	// we could, in principle, clone a PBMath object for one of the
 	// antennae and rebuild lastDirections_p.
 	// For now, the value for the second antenna will be used
