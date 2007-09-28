@@ -487,7 +487,8 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
   uInt nxc = 0;
   uInt nyc = 0;
   Float amax = 0.0;
-  Float amax2=0.0;
+  Vector<Float> amax2;
+  Int kounter=0;
   Float amin=1e9;
   Float amin2=1e9;
   Bool toggle=False;
@@ -496,14 +497,20 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
       if(arr(IPosition(4, ix, iy, 0, 0)) < amin){
 	amin2=amin;
 	amin=arr(IPosition(4, ix, iy, 0, 0));
-	toggle=True;
-	  
+	if(!toggle){
+	  ++kounter;
+	  amax2.resize(kounter, True);
+	  amax2[kounter-1]=fabs(amin);
+	  toggle=True;
+	}
       }
       if (arr(IPosition(4, ix, iy, 0, 0)) > amax) {
 	nxc = ix;
 	nyc = iy;
 	if(toggle){
-	  amax2=amax;
+	  ++kounter;
+	  amax2.resize(kounter, True);
+	  amax2[kounter-1]=amax;
 	  toggle=False;
 	}
 	amax = arr(IPosition(4, ix, iy, 0, 0));
@@ -531,8 +538,7 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
   Float absMax = max( abs(myMin), myMax );
   return absMax;
   */
-  Float absMax=max(amax2, abs(amin));
-  
+  Float absMax=max(median(amax2), abs(amin));
   return absMax;
 
 };

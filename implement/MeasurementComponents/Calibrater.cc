@@ -416,7 +416,7 @@ void Calibrater::selectvis(const String& time,
 
     // Apply user-supplied selection
     nontrivsel= mssSetData(MeasurementSet(sorted),
-			   *mssel_p,msname_p+"/SELECTED_TABLE",
+			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,

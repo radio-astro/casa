@@ -430,7 +430,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  Int spwid=dataspectralwindowids_p(i);
 	  if(dataStart_p[i]<0) {
 	    os << LogIO::SEVERE << "Illegal start pixel = " 
-	       << dataStart_p[i] + 1 << " for spw " << spwid+1
+	       << dataStart_p[i]  << " for spw " << spwid
 	       << LogIO::POST;
 	    return False;
 	  }
@@ -440,14 +440,14 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  Int end = Int(dataStart_p[i]) + Int(nch) * Int(dataStep_p[i]);
 	  if(end < 1 || end > blockNChan_p[numMS_p-1](i)) {
 	    os << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p[i]
-	       << " for spw " << spwid+1
+	       << " for spw " << spwid
 	       << LogIO::POST;
 	    return False;
 	  }
 	  os << "Selecting "<< nch
 	     << " channels, starting at visibility channel "
-	     << dataStart_p[i] + 1 << " stepped by "
-	     << dataStep_p[i] << " for spw " << spwid+1 << LogIO::POST;
+	     << dataStart_p[i]  << " stepped by "
+	     << dataStep_p[i] << " for spw " << spwid << LogIO::POST;
 	  dataNchan_p[i]=nch;
 	  blockNChan_p[numMS_p-1][i]=nch;
 	  blockStep_p[numMS_p-1][i]=dataStep_p[i];
