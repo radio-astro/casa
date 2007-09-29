@@ -49,6 +49,8 @@
 
 #include <casa/Quanta/MVTime.h>
 
+#include <fstream>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // **********************************************************
@@ -2890,11 +2892,28 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
 }
 
+
 void SolvableVisJones::listCal(const Vector<Int> ufldids,
 			       const Vector<Int> uantids,
 			       const Int& spw, 
-			       const Int& chan) {
-
+			       const Int& chan,
+			       const String& listfile,
+			       const Int& pagerows) {
+/* Function to output calibration table.
+   2007sep26 - jcrossle - Modified 'listCal' to produce prompt after printing
+     'maxScrRows'.  Prompt allows user to (Q)uit, print (A)ll without prompt,
+     or, by default, print 'maxScrRows' more and prompt again (RETURN).  After
+     each prompt, the column headings, time stamp, and field name are 
+     rewritten.
+       Also added additional loop to the output.  First loop
+     uses normal 'cout' (sends output to terminal).  Second loop redirects
+     'cout' to file ".listcal.out" (filename hard coded).  File output receives
+     column headings only once.  No prompts issued while writing to file.
+   2007sep27 - gmoellen - Added user-supplied listfile and pagerows
+     parameters to control if a file is written, and how many rows
+     to write per page.  Remoeved Jared's iout loop, since user can 
+     control this directly now.
+*/
   // Catch bad spw specification:
   if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
     throw(AipsError("Nothing to list for specified spw."));
@@ -2908,97 +2927,150 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   // Do specified channel, nominally
   Int dochan=chan;
 
-  Int nchan=cs().par(spw).shape()(1);
+  const Int nchan=cs().par(spw).shape()(1);
 
   if (dochan>(nchan-1)) {
     dochan=0;
   }
 
-  Complex *g=cs().par(spw).data()+dochan;
-  Bool *gok=cs().parOK(spw).data()+dochan;
-
   Vector<String> flagstr(2); 
   flagstr(0)="F";
   flagstr(1)=" ";
 
+  Complex *g=cs().par(spw).data()+dochan;
+  Bool *gok=cs().parOK(spw).data()+dochan;
+  Int scrRows(0); // screen row counter, reset after continue prompt
+  Int maxScrRows(pagerows); // number of rows to print before prompting
+  Int endOutput = 0; // if true, end output immediately
+  Int irow = 0; // row counter
+  Int prompt = 1; // if true, issue prompt
+  
+  // On second pass through iout loop, redirect cout to file.
+  //   This redirection technique copied from: 
+  //   http://www.velocityreviews.com/forums/t284482-redirect-cout-to-file.html
+  ofstream file;
+  streambuf* sbuf = cout.rdbuf();
+  if(listfile!="") {
+    prompt = 0;
+    
+    // Guard against 
+    File diskfile(listfile);
+    if (diskfile.exists()) {
+      String errmsg = "File: " + listfile + 
+	" already exists; delete it or choose a different name.";
+      throw(AipsError(errmsg));
+    }
+    else
+      cout << "Writing output to file: " << listfile << endl;
+
+    file.open(listfile.data());
+    cout.rdbuf(file.rdbuf());
+  }
+    
   cout << endl
        << "Listing CalTable: " << calTableName()
        << "   (" << typeName() << ") "
        << endl
        << "---------------------------------------------------------------"
        << endl;
-
-  Int irow(0);
-  for (Int itime=0;itime<cs().nTime(spw);++itime) {
-
+  
+  // Begin loop over time
+  for (Int itime=0;itime<cs().nTime(spw);++itime) { 
     Int fldid(cs().fieldId(spw)(itime));
-
-    // If no user-specified fields, or fldid is in user's list
-    if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
-
-      if (irow%cs().nElem()==0) 
-	cout << endl
-	     << "SpwId = " << spw << ", "
-	     << " channel = " << dochan << "."
-	     << endl 
-	     << setiosflags(ios::left)
-	     << setw(21) << "Time"  << " "
-	     << setw(10) << "Field" << " "
-	     << setw(8)  << "Ant"   << "  : "
-	     << setw(6)  << "  Amp " << "  "
-	     << setw(6)  << " Phase" << "    "
-	     << setw(6)  << "  Amp " << "  "
-	     << setw(6)  << " Phase" << "    "
-	     << endl
-	     << "--------------------- ---------- --------"
-	     << "    ---------------   ---------------" 
-	     << endl;
+    // Get date-time string
+    String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
+    // Get field string, with single quotes.
+    String fldstr=("'"+fldname(fldid)(0,8)+"'");
+    //    Int fldlen=fldstr.length();
+    String tmp_timestr = timestr; // tmp_ variables get reset during the loop
+    String tmp_fldstr = fldstr; //
+    
+    // loop over antenna elements
+    //   ielem is incremented at end of else block, below
+    for (Int ielem=0;ielem<cs().nElem();) { 
       
-      String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
-      String fldstr=("'"+fldname(fldid)(0,8)+"'");
-      //    Int fldlen=fldstr.length();
-      for (Int ielem=0;ielem<cs().nElem();++ielem) {
-
-
-	if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
-
-	  cout << setw(21) << timestr << " "
-	       << setw(10) << fldstr << " "
-	       << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
-	  timestr="";
-	  fldstr="";
-	  for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
-	    cout << setiosflags(ios::fixed) << setiosflags(ios::right)
-		 << setprecision(3)
-		 << setw(6)
-		 << abs(*g) << flagstr(Int(*gok)) << " "
-		 << setprecision(1)
-		 << setw(6)
-		 << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
-	  
-	  cout << resetiosflags(ios::right) << endl;
-	  irow++;
-	  g+=(nPar()*(nchan-1));
-	  gok+=(nPar()*(nchan-1));
-	}	
-	else {
-	  g+=(nPar()*nchan);
-	  gok+=(nPar()*nchan);
+      // If no user-specified fields, or fldid is in user's list
+      if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+	
+	// If beginning new screen
+	if (scrRows == 0) {  //(irow%cs().nElem()==0) 
+	  cout << "SpwId = " << spw << ", "
+	       << " channel = " << dochan << "."
+	       << endl 
+	       << setiosflags(ios::left)
+	       << setw(21) << "Time"  << " "
+	       << setw(10) << "Field" << " "
+	       << setw(8)  << "Ant"   << "  : "
+	       << setw(6)  << "  Amp " << "  "
+	       << setw(6)  << " Phase" << "    "
+	       << setw(6)  << "  Amp " << "  "
+	       << setw(6)  << " Phase" << "    "
+	       << endl
+	       << "--------------------- ---------- --------"
+	       << "    ---------------   ---------------" 
+	       << endl;
+	  scrRows+=3;
+	  tmp_timestr = timestr;
+	  tmp_fldstr = fldstr;
 	}
+	// If at end of screen
+	else if ((scrRows == maxScrRows) && (prompt)) {  
+	  string contStr;
+	  scrRows = 0;
+	  cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
+	  getline(cin,contStr);
+	  if ( (contStr.compare(0,1,"q") == 0) or 
+	       (contStr.compare(0,1,"Q") == 0) ) { endOutput=1; }
+	  if ( (contStr.compare(0,1,"a") == 0) or 
+	       (contStr.compare(0,1,"A") == 0) ) { prompt = 0; }
+	}
+	// If in middle of screen, print another row of data
+	else {  
+	  if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
+	    
+	    cout << setw(21) << tmp_timestr << " "
+		 << setw(10) << tmp_fldstr << " "
+		 << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
+	    tmp_timestr="";
+	    tmp_fldstr="";
+	    for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
+	      cout << setiosflags(ios::fixed) << setiosflags(ios::right)
+		   << setprecision(3)
+		   << setw(6)
+		   << abs(*g) << flagstr(Int(*gok)) << " "
+		   << setprecision(1)
+		   << setw(6)
+		   << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
+	    
+	    cout << resetiosflags(ios::right) << endl;
+	    irow++; scrRows++;
+	    g+=(nPar()*(nchan-1));
+	    gok+=(nPar()*(nchan-1));
+	  }	
+	  else {
+	    g+=(nPar()*nchan);
+	    gok+=(nPar()*nchan);
+	  }
+	  ++ielem; // next antenna element
+	} // end else (print row of data)
+      } // end if (fldid)
+      else {
+	g+=(nPar()*nchan*nElem());
+	gok+=(nPar()*nchan*nElem());
       }
-    }
-    else {
-      g+=(nPar()*nchan*nElem());
-      gok+=(nPar()*nchan*nElem());
-    }
-  }
-
+      if (endOutput) {break;} // break out of antenna loop
+    } // end for loop over antenna
+    if (endOutput) {break;} // break out of time loop
+  } // end for loop over time
   cout << endl
        << "Listed " << irow << " antenna solutions." 
        << endl << endl;
 
-}
-
+  // restore cout
+  if(listfile!="")
+    cout.rdbuf(sbuf);
+  
+}// end function listCal
 
 
 // Globals

@@ -2091,7 +2091,9 @@ Bool Calibrater::smooth(const String& infile,
 Bool Calibrater::listCal(const String& infile,
 			 const String& field,
 			 const String& antenna,
-			 const String& spw) {
+			 const String& spw,
+			 const String& listfile,
+			 const Int& pagerows) {
 
   SolvableVisCal *svc(NULL);
 
@@ -2102,8 +2104,8 @@ Bool Calibrater::listCal(const String& infile,
     Vector<Int> uspwids=getSpwIdx(spw);
     Matrix<Int> uchanids=getChanIdx(spw);
 
-    cout << "uspwids  = " << uspwids << endl;
-    cout << "uchanids = " << uchanids << endl;
+    //    cout << "uspwids  = " << uspwids << endl;
+    //    cout << "uchanids = " << uchanids << endl;
 
 
     // By default, do first spw, first chan
@@ -2130,7 +2132,8 @@ Bool Calibrater::listCal(const String& infile,
     
     svc->setApply(applypar);       
     
-    svc->listCal(ufldids,uantids,uchanids(0,0),uchanids(0,1));
+    svc->listCal(ufldids,uantids,uchanids(0,0),uchanids(0,1),
+		 listfile,pagerows);
 
     if (svc) delete svc; svc=NULL;
 

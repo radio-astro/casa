@@ -272,7 +272,9 @@ class Calibrater
   Bool listCal(const String& infile,
 	       const String& field,
 	       const String& antenna,
-	       const String& spw);
+	       const String& spw,
+	       const String& listfile="",
+	       const Int& pagerows=50);
 
   // Initialize the calibrator object from an input MeasurementSet.
   // Optional compression of the calibration columns (MODEL_DATA,
