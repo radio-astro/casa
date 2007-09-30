@@ -216,6 +216,10 @@ void SolvableVisCal::setApply(const Record& apply) {
   if (apply.isDefined("interp"))
     tInterpType()=apply.asString("interp");
 
+  // Protect against non-specific interp
+  if (tInterpType()=="")
+    tInterpType()="linear";
+
   // TBD: move spwmap to VisCal version?
 
   indgen(spwMap());
@@ -280,6 +284,8 @@ String SolvableVisCal::applyinfo() {
   o << typeName()
     << ": table="  << calTableName()
     << " select=" << calTableSelect()
+    << " interp=" << tInterpType()
+    << " spwmap=" << spwMap()
     << boolalpha
     << " calWt=" << calWt();
     //    << " t="      << interval();
