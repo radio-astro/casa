@@ -87,7 +87,10 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
   maskcenter_p(1),
   maskedge_p(5.0),
   maskcenterHalf_p(0),
-  maskedgeFrac_p(0.05)
+  maskedgeFrac_p(0.05),
+  solTimeStamp(0.0),
+  solSpwId(-1),
+  solFldId(-1)
 {
 // Construct from a visibility set
 // Input:
@@ -381,6 +384,9 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
   // accordingly.
   String freqGroup("");
 
+  Double timeref(-1.0);
+  Double timewtsum(0.0);
+
   // Iterate, accumulating the averaged spectrum for each 
   // spectral window sub-band.
   Int chunk;
@@ -428,6 +434,17 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
 
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
+      
+      // Accumulate timestamp
+      if (timeref<0.0) timeref=vb.time()(0);
+      timewtsum+=1.0;
+      solTimeStamp+=(vb.time()(0)-timeref);
+
+      if (solFldId<0)
+	solFldId=vb.fieldId();
+      if (solSpwId<0)
+	solSpwId=vb.spectralWindow();
+
     }
     vba.finalizeAverage();
 
@@ -499,6 +516,14 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
     };
   }; // for (chunk...) iteration
 
+  if (timewtsum>0.0)
+    solTimeStamp/=timewtsum;
+  solTimeStamp+=timeref;
+
+  //  cout << "solFldId     = " << solFldId << endl;
+  //  cout << "solSpwId     = " << solSpwId << endl;
+  //  cout << "solTimeStamp = " << MVTime(solTimeStamp/C::day).string( MVTime::YMD,7) << endl;
+
   // Delete freq PtrBlock
   for (Int ispw=0;ispw<nSpw();ispw++) {
     if (freq[ispw]) { delete freq[ispw]; freq[ispw]=0; }
@@ -564,7 +589,8 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
 	  
   
 	  (*totalAmp[iph])(ichan,ibl)=static_cast<Double>(log(abs((*accumVis[iph])(ichan,ibl))));
-	  (*totalPhase[iph])(ichan,ibl)=static_cast<Double>(arg((*accumVis[iph])(ichan,ibl)));
+	  // Note phase sign convention!
+	  (*totalPhase[iph])(ichan,ibl)=static_cast<Double>(-1.0*arg((*accumVis[iph])(ichan,ibl)));
 	  (*totalWeight[iph])(ichan,ibl)=wt;
 	}
       }
@@ -859,6 +885,10 @@ void BJonesPoly::updateCalTable (const String& freqGrpName,
 		      phaseUnits(k), sideBandRef(k), refFreq(k), refAnt(k));
   };
 
+  buffer.fieldId().set(solFldId);
+  buffer.calDescId().set(0);
+  buffer.timeMeas().set(MEpoch(MVEpoch(solTimeStamp/86400.0)));
+
   // Delete the output calibration table is append not specified
   if (!append() && Table::canDeleteTable(calTableName())) {
     Table::deleteTable(calTableName());
@@ -873,6 +903,12 @@ void BJonesPoly::updateCalTable (const String& freqGrpName,
   if (Table::isWritable(calTableName())) accessMode = Table::Update;
   BJonesPolyTable calTable(calTableName(), accessMode);
   buffer.append(calTable);
+
+  CalDescRecord cdr;
+  cdr.defineSpwId(Vector<Int>(1,solSpwId));
+  cdr.defineMSName(Path(msName()).baseName());
+
+  calTable.putRowDesc(0,cdr);
 
   return;
 }
@@ -1060,6 +1096,7 @@ void BJonesPoly::load (const String& applyTable)
 	      phaseval = getChebVal(pc, x1, x2, freq(chan));
 	      currCPar()(ipos) = factor *
 		Complex(exp(ampval)) * Complex(cos(phaseval),sin(phaseval));
+
 	      // Set flag for valid cache value 
 	      currParOK()(ipos) = True;
 	    }

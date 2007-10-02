@@ -127,6 +127,11 @@ private:
   // Fractional edge mask
   Float maskedgeFrac_p;
 
+  // Some meta info
+  Double solTimeStamp;
+  Int solSpwId;
+  Int solFldId;
+
   // Determine if a given channel is masked
   Bool maskedChannel (const Int& chan, const Int& nChan);
 

@@ -2905,6 +2905,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 			       const Int& chan,
 			       const String& listfile,
 			       const Int& pagerows) {
+
 /* Function to output calibration table.
    2007sep26 - jcrossle - Modified 'listCal' to produce prompt after printing
      'maxScrRows'.  Prompt allows user to (Q)uit, print (A)ll without prompt,
@@ -2919,47 +2920,39 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
      parameters to control if a file is written, and how many rows
      to write per page.  Remoeved Jared's iout loop, since user can 
      control this directly now.
+   2007oct01 - gmoellen - Some fixes:
+     1. Reorganized various loops so that non-trivial field selection 
+     doesn't cause hang, mainly, by moving the ielem++ back to the for
+     statement.
+     2. Added header on each page, even when writing to file
+     3. Other misc. cleanup
 */
   // Catch bad spw specification:
   if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
     throw(AipsError("Nothing to list for specified spw."));
 
-  MeasurementSet ms(msName());
-  MSAntennaColumns msant(ms.antenna());
-  Vector<String> antname(msant.name().getColumn());
-  MSFieldColumns msfld(ms.field());
-  Vector<String> fldname(msfld.name().getColumn());
-
   // Do specified channel, nominally
   Int dochan=chan;
-
   const Int nchan=cs().par(spw).shape()(1);
-
   if (dochan>(nchan-1)) {
     dochan=0;
   }
 
-  Vector<String> flagstr(2); 
-  flagstr(0)="F";
-  flagstr(1)=" ";
-
-  Complex *g=cs().par(spw).data()+dochan;
-  Bool *gok=cs().parOK(spw).data()+dochan;
   Int scrRows(0); // screen row counter, reset after continue prompt
   Int maxScrRows(pagerows); // number of rows to print before prompting
-  Int endOutput = 0; // if true, end output immediately
-  Int irow = 0; // row counter
-  Int prompt = 1; // if true, issue prompt
+  Bool endOutput = False; // if true, end output immediately
+  Int irow = 0; // total row counter
+  Bool prompt = True; // if true, issue prompt
   
-  // On second pass through iout loop, redirect cout to file.
   //   This redirection technique copied from: 
   //   http://www.velocityreviews.com/forums/t284482-redirect-cout-to-file.html
   ofstream file;
   streambuf* sbuf = cout.rdbuf();
   if(listfile!="") {
-    prompt = 0;
+    // non-interactive
+    prompt = False;
     
-    // Guard against 
+    // Guard against trampling existing file
     File diskfile(listfile);
     if (diskfile.exists()) {
       String errmsg = "File: " + listfile + 
@@ -2972,6 +2965,13 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     file.open(listfile.data());
     cout.rdbuf(file.rdbuf());
   }
+
+  // Access to ms for meta info
+  MeasurementSet ms(msName());
+  MSAntennaColumns msant(ms.antenna());
+  Vector<String> antname(msant.name().getColumn());
+  MSFieldColumns msfld(ms.field());
+  Vector<String> fldname(msfld.name().getColumn());
     
   cout << endl
        << "Listing CalTable: " << calTableName()
@@ -2979,93 +2979,112 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
        << endl
        << "---------------------------------------------------------------"
        << endl;
+
+  // labels for flagged solutions
+  Vector<String> flagstr(2); 
+  flagstr(0)="F";
+  flagstr(1)=" ";
+
+  Complex *g=cs().par(spw).data()+dochan;
+  Bool *gok=cs().parOK(spw).data()+dochan;
   
   // Begin loop over time
   for (Int itime=0;itime<cs().nTime(spw);++itime) { 
+
     Int fldid(cs().fieldId(spw)(itime));
-    // Get date-time string
-    String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
-    // Get field string, with single quotes.
-    String fldstr=("'"+fldname(fldid)(0,8)+"'");
-    //    Int fldlen=fldstr.length();
-    String tmp_timestr = timestr; // tmp_ variables get reset during the loop
-    String tmp_fldstr = fldstr; //
-    
-    // loop over antenna elements
-    //   ielem is incremented at end of else block, below
-    for (Int ielem=0;ielem<cs().nElem();) { 
+
+    // If no user-specified fields, or fldid is in user's list
+    if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+
+      // Get date-time string
+      String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
+      // Get field string, with single quotes.
+      String fldstr=("'"+fldname(fldid)(0,8)+"'");
+      //    Int fldlen=fldstr.length();
+      String tmp_timestr = timestr; // tmp_ variables get reset during the loop
+      String tmp_fldstr = fldstr; //
       
-      // If no user-specified fields, or fldid is in user's list
-      if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
-	
-	// If beginning new screen
-	if (scrRows == 0) {  //(irow%cs().nElem()==0) 
-	  cout << "SpwId = " << spw << ", "
-	       << " channel = " << dochan << "."
-	       << endl 
-	       << setiosflags(ios::left)
-	       << setw(21) << "Time"  << " "
-	       << setw(10) << "Field" << " "
-	       << setw(8)  << "Ant"   << "  : "
-	       << setw(6)  << "  Amp " << "  "
-	       << setw(6)  << " Phase" << "    "
-	       << setw(6)  << "  Amp " << "  "
-	       << setw(6)  << " Phase" << "    "
-	       << endl
-	       << "--------------------- ---------- --------"
-	       << "    ---------------   ---------------" 
-	       << endl;
-	  scrRows+=3;
-	  tmp_timestr = timestr;
-	  tmp_fldstr = fldstr;
-	}
-	// If at end of screen
-	else if ((scrRows == maxScrRows) && (prompt)) {  
-	  string contStr;
-	  scrRows = 0;
-	  cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
-	  getline(cin,contStr);
-	  if ( (contStr.compare(0,1,"q") == 0) or 
-	       (contStr.compare(0,1,"Q") == 0) ) { endOutput=1; }
-	  if ( (contStr.compare(0,1,"a") == 0) or 
-	       (contStr.compare(0,1,"A") == 0) ) { prompt = 0; }
-	}
-	// If in middle of screen, print another row of data
-	else {  
-	  if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
-	    
-	    cout << setw(21) << tmp_timestr << " "
-		 << setw(10) << tmp_fldstr << " "
-		 << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
-	    tmp_timestr="";
-	    tmp_fldstr="";
-	    for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
-	      cout << setiosflags(ios::fixed) << setiosflags(ios::right)
-		   << setprecision(3)
-		   << setw(6)
-		   << abs(*g) << flagstr(Int(*gok)) << " "
-		   << setprecision(1)
-		   << setw(6)
-		   << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
-	    
-	    cout << resetiosflags(ios::right) << endl;
-	    irow++; scrRows++;
-	    g+=(nPar()*(nchan-1));
-	    gok+=(nPar()*(nchan-1));
-	  }	
-	  else {
-	    g+=(nPar()*nchan);
-	    gok+=(nPar()*nchan);
+      // loop over antenna elements
+      for (Int ielem=0;ielem<cs().nElem();++ielem) { 
+      
+	// If antenna element is among selected antennas, print it
+	if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
+	  
+	  // If beginning new screen, print the header
+	  if (scrRows == 0) {  //(irow%cs().nElem()==0) 
+	    cout << "SpwId = " << spw << ", "
+		 << " channel = " << dochan << "."
+		 << endl 
+		 << setiosflags(ios::left)
+		 << setw(21) << "Time"  << " "
+		 << setw(10) << "Field" << " "
+		 << setw(8)  << "Ant"   << "  : "
+		 << setw(6)  << "  Amp " << "  "
+		 << setw(6)  << " Phase" << "    "
+		 << setw(6)  << "  Amp " << "  "
+		 << setw(6)  << " Phase" << "    "
+		 << endl
+		 << "--------------------- ---------- --------"
+		 << "    ---------------   ---------------" 
+		 << endl;
+	    scrRows+=1;
+	    tmp_timestr = timestr;
+	    tmp_fldstr = fldstr;
 	  }
-	  ++ielem; // next antenna element
-	} // end else (print row of data)
-      } // end if (fldid)
-      else {
-	g+=(nPar()*nchan*nElem());
-	gok+=(nPar()*nchan*nElem());
-      }
-      if (endOutput) {break;} // break out of antenna loop
-    } // end for loop over antenna
+	  
+	  cout << setw(21) << tmp_timestr << " "
+	       << setw(10) << tmp_fldstr << " "
+	       << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
+	  tmp_timestr="";
+	  tmp_fldstr="";
+	  for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
+	    cout << setiosflags(ios::fixed) << setiosflags(ios::right)
+		 << setprecision(3)
+		 << setw(6)
+		 << abs(*g) << flagstr(Int(*gok)) << " "
+		 << setprecision(1)
+		 << setw(6)
+		 << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
+	  
+	  cout << resetiosflags(ios::right) << endl;
+	  irow++; scrRows++;
+	  g+=(nPar()*(nchan-1));
+	  gok+=(nPar()*(nchan-1));
+
+	  // If at end of screen, signal new page (new header)
+	  if (maxScrRows>0 && (scrRows > maxScrRows) ) {  
+
+	    // signal a new page
+	    scrRows = 0;
+
+	    // query the user, if we are interactive
+	    if (prompt) {
+	      string contStr;
+	      cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
+	      getline(cin,contStr);
+	      if ( (contStr.compare(0,1,"q") == 0) or 
+		   (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
+	      if ( (contStr.compare(0,1,"a") == 0) or 
+		   (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
+	    }
+	  }
+	}
+	else {
+	  // step over current antenna
+	  g+=(nPar()*nchan);
+	  gok+=(nPar()*nchan);
+	}
+
+	if (endOutput) {break;} // break out of ielem loop
+      } // ielem
+
+    } // end if (fldid)
+    else {
+      // step over current field/timestamp
+      g+=(nPar()*nchan*nElem());
+      gok+=(nPar()*nchan*nElem());
+    }
+
     if (endOutput) {break;} // break out of time loop
   } // end for loop over time
   cout << endl
@@ -3075,7 +3094,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   // restore cout
   if(listfile!="")
     cout.rdbuf(sbuf);
-  
+
+
 }// end function listCal
 
 
