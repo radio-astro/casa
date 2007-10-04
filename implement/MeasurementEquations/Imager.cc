@@ -2127,14 +2127,14 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       return False;
     }
     this->unlock();
-    return True;
+    return !nullSelect_p;
   } catch (AipsError x) {
     this->unlock();
     throw(x);
    
     return False;
   } 
-  return True;
+  return !nullSelect_p;
 }
 
 
@@ -5067,7 +5067,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	       << thismodel << ", cannot restore image" << LogIO::POST;
 	  }
 
-	  ImageInfo ii = restored.imageInfo();
+	  ImageInfo ii = modelIm.imageInfo();
 	  ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
 	  restored.setImageInfo(ii);
 	  restored.setUnits(Unit("Jy/beam"));

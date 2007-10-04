@@ -46,12 +46,19 @@ namespace casa {
       // Destructor
       virtual ~VPManager();
       
-      Bool setpbgauss(const String& tel, const String& other, const Bool dopb,
-		      const Quantity& halfwidth, const Quantity maxrad, 
-		      const Quantity& reffreq, const String& isthispb, 
-		      MDirection& squintdir, const Quantity& squintreffreq,
-		      const Bool dosquint, const Quantity& paincrement, 
-		      const Bool usesymmetricbeam, Record& rec);
+      Bool saveastable(const String& tablename);
+
+      Bool summarizevps(const Bool verbose);
+
+
+      Bool setcannedpb(const String& tel, 
+		       const String& other, 
+		       const Bool dopb,
+		       const String& commonpb,
+		       const Bool dosquint, 
+		       const Quantity& paincrement, 
+		       const Bool usesymmetricbeam,
+		       Record& rec);
 
       Bool setpbairy(const String& telescope, const String& othertelescope, 
 		     const Bool dopb, const Quantity& dishdiam, 
@@ -63,12 +70,62 @@ namespace casa {
 		     const Quantity& paincrement, 
 		     const Bool usesymmetricbeam,
 		     Record& rec);
+
+      Bool setpbcospoly(const String& telescope, const String& othertelescope,
+			const Bool dopb, const Vector<Double>& coeff,
+			const Vector<Double>& scale,
+			const Quantity& maxrad,
+			const Quantity& reffreq,
+			const String& isthispb,
+			MDirection& squintdir,
+			const Quantity& squintreffreq, const Bool dosquint,
+			const Quantity& paincrement,
+			const Bool usesymmetricbeam,
+			Record& rec);
+
+      Bool setpbgauss(const String& tel, const String& other, const Bool dopb,
+		      const Quantity& halfwidth, const Quantity maxrad, 
+		      const Quantity& reffreq, const String& isthispb, 
+		      MDirection& squintdir, const Quantity& squintreffreq,
+		      const Bool dosquint, const Quantity& paincrement, 
+		      const Bool usesymmetricbeam, Record& rec);
+
+      Bool setpbinvpoly(const String& telescope, const String& othertelescope,
+			const Bool dopb, const Vector<Double>& coeff,
+			const Quantity& maxrad,
+			const Quantity& reffreq,
+			const String& isthispb,
+			MDirection& squintdir,
+			const Quantity& squintreffreq, const Bool dosquint,
+			const Quantity& paincrement,
+			const Bool usesymmetricbeam,
+			Record& rec);
+
+      Bool setpbnumeric(const String& telescope, const String& othertelescope,
+			const Bool dopb, const Vector<Double>& vect,
+			const Quantity& maxrad,
+			const Quantity& reffreq,
+			const String& isthispb,
+			MDirection& squintdir,
+			const Quantity& squintreffreq, const Bool dosquint,
+			const Quantity& paincrement,
+			const Bool usesymmetricbeam,
+			Record &rec);
+
       Bool setpbimage(const String& telescope, const String& othertelescope, 
 		      const Bool dopb, const String& realimage, 
 		      const String& imagimage, Record& rec);
 
-      Bool saveastable(const String& tablename);
-
+      Bool setpbpoly(const String& telescope, const String& othertelescope,
+		     const Bool dopb, const Vector<Double>& coeff,
+		     const Quantity& maxrad,
+		     const Quantity& reffreq,
+		     const String& isthispb,
+		     MDirection& squintdir,
+		     const Quantity& squintreffreq, const Bool dosquint,
+		     const Quantity& paincrement,
+		     const Bool usesymmetricbeam,
+		     Record &rec);
 
     private:
       Record vplist_p;
