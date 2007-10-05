@@ -91,7 +91,8 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
   cacheTimeValid_p(0),
   calBuffer_p(NULL),
   rawPhaseRemoval_p(False),
-  timeValueMap_p(0)
+  timeValueMap_p(0),
+  solTimeStamp_p(0.0)
 {
 // Construct from a visibility set
 // Input:
@@ -164,10 +165,9 @@ void GJonesSpline::setSolve(const Record& solvepar)
   solveAmp_p = (apmode().contains("A"));
   solvePhase_p = (apmode().contains("P"));
 
-  cout << "solveAmp_p = " << solveAmp_p << endl;
-  cout << "solvePhase_p = " << solvePhase_p << endl;
-
-  cout << "calTableName() = " << calTableName() << endl;
+  //  cout << "solveAmp_p = " << solveAmp_p << endl;
+  //  cout << "solvePhase_p = " << solvePhase_p << endl;
+  //  cout << "calTableName() = " << calTableName() << endl;
 
   // Mark the Jones matrix as being solved for
   setSolved(True);
@@ -232,7 +232,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
   if (prtlev()>2) cout << "GSpline::selfSolve(vs,ve)" << endl;
 
 
-  cout << "Entering GSpline::solve." << endl;
+  //  cout << "Entering GSpline::solve." << endl;
 
 
   LogIO os (LogOrigin("GJonesSpline", "solve()", WHERE));
@@ -330,7 +330,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
     VisBuffAccumulator vba(nAnt(),preavg(),False);
 
     vi.origin();
-    Double t0=86400.0*floor(vb.time()(0)/86400.0);
+    //    Double t0=86400.0*floor(vb.time()(0)/86400.0);
     
     // Collapse each timestamp in this chunk according to VisEq
     //  with calibration and averaging
@@ -522,6 +522,8 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
        << LogIO::POST;
     return;
   };
+
+  solTimeStamp_p = mean(knots);
 
   // Declare work arrays and returned value
   // arrays to be used by the solver
@@ -994,7 +996,6 @@ void GJonesSpline::updateCalTable (const Vector<Int>& fieldIdKeys,
 				   const Vector<Double>& splineKnotsPhase,
 				   const Vector<MFrequency>& refFreq,
 				   const Vector<Int>& refAnt)
-				   
 {
 // Update the output calibration table
 // Input:
@@ -1039,8 +1040,13 @@ void GJonesSpline::updateCalTable (const Vector<Int>& fieldIdKeys,
     };
   };
 
+  //  calBuffer_p->fieldId().set(-1);
+  calBuffer_p->calDescId().set(0);
+  //  cout << "Time = " << MVTime(solTimeStamp_p/C::day).string(MVTime::YMD,7) << endl;
+  calBuffer_p->timeMeas().set(MEpoch(MVEpoch(solTimeStamp_p/86400.0)));
+
   // Delete the output calibration table if it already exists
-  if (Table::canDeleteTable(calTableName())) {
+  if (calTableName()!="" && Table::canDeleteTable(calTableName())) {
     Table::deleteTable(calTableName());
   };
 
@@ -1053,6 +1059,13 @@ void GJonesSpline::updateCalTable (const Vector<Int>& fieldIdKeys,
   if (Table::isWritable(calTableName())) accessMode = Table::Update;
   GJonesSplineTable calTable(calTableName(), accessMode);
   calBuffer_p->append(calTable);
+
+
+  // Add CAL_DESC
+  CalDescRecord cdr;
+  cdr.defineSpwId(Vector<Int>(1,-1));
+  cdr.defineMSName(Path(msName()).baseName());
+  calTable.putRowDesc(0,cdr);
 
   return;
 };

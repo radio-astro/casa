@@ -146,6 +146,9 @@ public:
   SimpleOrderedMap<String, Int> timeValueMap_p;
   Matrix<Double> rawPhase_p;
 
+  // Solution timestamp
+  Double solTimeStamp_p;
+
 
   // Create and fill an empty output calibration buffer
   void newCalBuffer (const Vector<Int>& fieldIdKeys, 
