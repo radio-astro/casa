@@ -2926,6 +2926,10 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
      statement.
      2. Added header on each page, even when writing to file
      3. Other misc. cleanup
+   2007oct10 - gmoellen - Index cal data directly, instead of
+     via a variously incremented pointer.  This simplifies Jared's
+     pending re-formatting work, and also fixes a channel selection
+     bug in listing of B tables.
 */
   // Catch bad spw specification:
   if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
@@ -2984,12 +2988,16 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   Vector<String> flagstr(2); 
   flagstr(0)="F";
   flagstr(1)=" ";
-
-  Complex *g=cs().par(spw).data()+dochan;
-  Bool *gok=cs().parOK(spw).data()+dochan;
   
+  Array<Complex> g;
+  g.reference(cs().par(spw));
+  Array<Bool> gok;
+  gok.reference(cs().parOK(spw));
+  IPosition gidx(4,0,dochan,0,0);
+
   // Begin loop over time
   for (Int itime=0;itime<cs().nTime(spw);++itime) { 
+    gidx(3)=itime;
 
     Int fldid(cs().fieldId(spw)(itime));
 
@@ -3006,7 +3014,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
       
       // loop over antenna elements
       for (Int ielem=0;ielem<cs().nElem();++ielem) { 
-      
+	gidx(2)=ielem;
+
 	// If antenna element is among selected antennas, print it
 	if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
 	  
@@ -3037,19 +3046,19 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	       << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
 	  tmp_timestr="";
 	  tmp_fldstr="";
-	  for (Int ipar=0;ipar<nPar();++ipar,++g,++gok) 
+	  for (Int ipar=0;ipar<nPar();++ipar) {
+	    gidx(0)=ipar;
+
 	    cout << setiosflags(ios::fixed) << setiosflags(ios::right)
 		 << setprecision(3)
 		 << setw(6)
-		 << abs(*g) << flagstr(Int(*gok)) << " "
+		 << abs(g(gidx)) << flagstr(Int(gok(gidx))) << " "
 		 << setprecision(1)
 		 << setw(6)
-		 << arg(*g)*180.0/C::pi << flagstr(*gok) << "   ";
-	  
+		 << arg(g(gidx))*180.0/C::pi << flagstr(Int(gok(gidx))) << "   ";
+	  }
 	  cout << resetiosflags(ios::right) << endl;
 	  irow++; scrRows++;
-	  g+=(nPar()*(nchan-1));
-	  gok+=(nPar()*(nchan-1));
 
 	  // If at end of screen, signal new page (new header)
 	  if (maxScrRows>0 && (scrRows > maxScrRows) ) {  
@@ -3069,21 +3078,11 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	    }
 	  }
 	}
-	else {
-	  // step over current antenna
-	  g+=(nPar()*nchan);
-	  gok+=(nPar()*nchan);
-	}
 
 	if (endOutput) {break;} // break out of ielem loop
       } // ielem
 
     } // end if (fldid)
-    else {
-      // step over current field/timestamp
-      g+=(nPar()*nchan*nElem());
-      gok+=(nPar()*nchan*nElem());
-    }
 
     if (endOutput) {break;} // break out of time loop
   } // end for loop over time
