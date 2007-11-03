@@ -2055,30 +2055,96 @@ void SolvableVisJones::applyRefAnt() {
 
   Bool usedaltrefant(False);
 
-  //  cout << "refantlist = " << refantlist << endl;
-
   for (Int ispw=0;ispw<nSpw();++ispw) {
 
-    // Only if referencing required....
-    if (cs().nTime(ispw) > 1) {
-    
-      currSpw()=ispw;
+    currSpw()=ispw;
 
-      // Reference each channel and par independently (?)
-      for (Int ichan=0;ichan<nChanPar();++ichan) {
-	for (Int ipar=0;ipar<nPar();++ipar) {
+    // TBD: use spwOK here when spwOK is activated in solve context
+    if (cs().nTime(ispw)>0) {
 
-	  if (newway) {
+    // References to ease access to solutions
+    Array<Complex> sol(cs().par(ispw));
+    Array<Bool> sok(cs().parOK(ispw));
 
-          // Find time-ordered slot index
-	  Vector<uInt> ord;
-	  genSort(ord,cs().time(ispw));
-	  Int nslots(ord.nelements());
-	  //cout << "time ordered slot index = " << ord << endl;
+    // Find time-ordered slot index
+    Vector<uInt> ord;
+    genSort(ord,cs().time(ispw));
+    Int nslots(ord.nelements());
 
-	  Array<Complex> sol(cs().par(ispw));
-	  Array<Bool> sok(cs().parOK(ispw));
+    // Reference each channel and par independently (?)
+    for (Int ichan=0;ichan<nChanPar();++ichan) {
+      for (Int ipar=0;ipar<nPar();++ipar) {
+	
+	Int iref=0;
+	Int lastrefant(-1);
+	
+	// Apply refant to first slot
+	if (cs().nTime(ispw)>0) {
+	  
+	  IPosition blc1(4,ipar,ichan,0,ord(0));
+	  IPosition trc1(4,ipar,ichan,nAnt()-1,ord(0));
+	  if (ntrue(sok(blc1,trc1))>0) {
+	    
+	    while ( iref<(nAnt()+2) &&
+		    !sok(IPosition(4,ipar,ichan,refantlist(iref),ord(0))) ) {
+	      ++iref;
+	    }
+	    
+	    if (iref<nAnt()+2) {
+	      // found a refant, use it
+	      
+	      if (iref>0) usedaltrefant=True;
+	      
+	      Int currrefant=refantlist(iref);
 
+	      if (currrefant!=lastrefant) {
+		cout << "At " 
+		     << MVTime(cs().time(ispw)(ord(0))/C::day).string(MVTime::YMD,7) 
+		     << " ("
+		     << "Spw=" << ispw 
+		     << ", Fld=" << cs().fieldId(ispw)(ord(0))
+		     << ", pol=" << ipar 
+		     << ", chan=" << ichan 
+		     << ")"
+		     << ", using refant " << msantcol.name()(currrefant)
+		     << " (id=" << currrefant 
+		     << ")";
+		if (iref>0) cout << " (alternate)";
+		cout << endl;
+	      }  
+
+	      Complex rph=sol(IPosition(4,ipar,ichan,currrefant,ord(0)));
+
+	      // make reference phasor phase-only
+	      Float amp=abs(rph);
+	      if (amp>0.0) {
+		rph/=Complex(amp);
+
+		// Adjust each good ant by this phasor
+		for (Int iant=0;iant<nAnt();++iant) 
+		  if (sok(IPosition(4,ipar,ichan,iant,ord(0)))) 
+		    sol(IPosition(4,ipar,ichan,iant,ord(0)))/=rph;
+	      }
+	      else
+		// This shouldn't happen
+		cout << "Refant has undefined phase (zero amplitude) " << endl;
+
+	      lastrefant=currrefant;
+
+	    }
+	    else {
+	      // unlikely?
+	      cout << "Couldn't find a refant for the first slot in spw = " << currSpw() << endl;
+	    }
+	  }
+	}
+
+	
+	// Only if time-dep referencing required....
+	if (cs().nTime(ispw) > 1) {
+	  
+	if (newway) {
+	    
           Int islot0(0);
           Int islot1(0);
 
@@ -2099,7 +2165,6 @@ void SolvableVisJones::applyRefAnt() {
 	    Complex rph(1.0);
 	    Float refantph(0.0);
 	    Int currrefant(-1);
-	    Int lastrefant(-1);
 	    while (islot1<nslots) {
 	      
 	      blc1(3)=trc1(3)=ord(islot1);
@@ -2108,7 +2173,7 @@ void SolvableVisJones::applyRefAnt() {
 	      //  attempt to reference their phases
 	      if (ntrue(sok(blc1,trc1))>0) {
 		
-		Int iref=0;
+		iref=0;
 		while ( iref<(nAnt()+2) &&
 			(!sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot0))) ||
 			 !sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot1))))   ) {
@@ -2121,7 +2186,7 @@ void SolvableVisJones::applyRefAnt() {
 		  if (iref>0) usedaltrefant=True;
 		  
 		  currrefant=refantlist(iref);
-		  
+  
 		  if (currrefant!=lastrefant) {
 		    cout << "At " 
 			 << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
@@ -2129,11 +2194,10 @@ void SolvableVisJones::applyRefAnt() {
 			 << "Spw=" << ispw 
 			 << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
 			 << ", pol=" << ipar 
-		      //		       << ", islot1=" << ord(islot1)
+			 << ", chan=" << ichan 
 			 << ")"
 			 << ", using refant " << msantcol.name()(currrefant)
 			 << " (id=" << currrefant 
-		      //<< " ," << iref << "th priority" 
 			 << ")";
 		    if (iref>0) cout << " (alternate)";
 		    cout << endl;
@@ -2331,13 +2395,14 @@ void SolvableVisJones::applyRefAnt() {
 	    sOk.next();
 
 	  } // !pastEnd
-
+	  
 	  } // newway
 
-	} // ipar
-      } // ichan
+	} // nTime>1
 	
-    } // nTime>1
+      } // ipar
+    } // ichan
+    }      
   } // ispw
 
 

@@ -682,7 +682,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     for (Int i=0;i<nspw;++i) {
       Int spw=spectralwindowids_p(i);
       Vector<Double> chanFreq=msc.spectralWindow().chanFreq()(spw); 
-      Vector<Double> freqResolution=msc.spectralWindow().resolution()(spw); 
+      Vector<Double> freqResolution=msc.spectralWindow().chanWidth()(spw); 
       
       if(dataMode_p=="none"){
       
@@ -780,7 +780,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       chanFreq(Slice(origsize, newsize-origsize))=msc.spectralWindow().chanFreq()(spw);
       freqResolution.resize(newsize, True);
       freqResolution(Slice(origsize, newsize-origsize))=
-	msc.spectralWindow().resolution()(spw); 
+	msc.spectralWindow().chanWidth()(spw); 
       
 
      
@@ -2884,9 +2884,13 @@ Bool Imager::feather(const String& image, const String& highRes,
 
 	os << LogIO::WARN << "Caught exception: " << x.what()
        << LogIO::POST;
-	os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
-	   <<LogIO::POST; 
+	//os << LogIO::SEVERE << "Can it be that your MS/HISTORY table has gotten corrupted ? \n you may consider deleting all the rows from this table"
+	// <<LogIO::POST; 
 	//continue and wrap up
+
+      }
+      catch(...){
+	os << LogIO::SEVERE << "your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table" << LogIO::POST;
 
       }
     }
@@ -7909,6 +7913,11 @@ void Imager::makeVisSet(VisSet* & vs, MeasurementSet& ms,
 
   Matrix<Int> noselection;
   Double timeInterval=0;
+  sort.resize(4);
+  sort[0] = MS::ARRAY_ID;
+  sort[1] = MS::FIELD_ID;
+  sort[2] = MS::DATA_DESC_ID;
+  sort[3] = MS::TIME;
   vs = new VisSet(ms,sort,noselection,timeInterval,compress);
 
 }
@@ -7928,6 +7937,11 @@ void Imager::makeVisSet(MeasurementSet& ms,
 
   Matrix<Int> noselection;
   Double timeInterval=0;
+  sort.resize(4);
+  sort[0] = MS::ARRAY_ID;
+  sort[1] = MS::FIELD_ID;
+  sort[2] = MS::DATA_DESC_ID;
+  sort[3] = MS::TIME;
   VisSet vs(ms,sort,noselection,timeInterval,compress);
 
 }
@@ -8109,7 +8123,7 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
   }
   else{
     // Look up first rest frequency found (for now)
-     
+
     Int fieldid = (datafieldids_p.nelements()>0 ? datafieldids_p(0) : 
 		   fieldid_p);
     msdoppler.dopplerInfo(restFreq ,spw,fieldid);
