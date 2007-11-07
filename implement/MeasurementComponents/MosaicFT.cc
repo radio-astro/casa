@@ -82,10 +82,10 @@ MosaicFT::MosaicFT(MeasurementSet& ms, SkyJones& sj,
 		   Long icachesize, Int itilesize, 
 		   Bool usezero)
   : FTMachine(), ms_p(&ms), sj_p(&sj),
-    imageCache(0),  cachesize(icachesize), tilesize(itilesize),
+    imageCache(0),  cachesize(icachesize), tilesize(itilesize), gridder(0),
     isTiled(False), arrayLattice(0), lattice(0), weightLattice(0),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),gridder(0), 
+    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), 
     skyCoverage_p(0), convFunctionMap_p(-1), machineName_p("MosaicFT") 
 {
   convSize=0;
@@ -112,6 +112,10 @@ MosaicFT::MosaicFT(const RecordInterface& stateRec)
 MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 {
   if(this!=&other) {
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
     ms_p=other.ms_p;
     sj_p=other.sj_p;
     imageCache=other.imageCache;
@@ -120,16 +124,31 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     isTiled=other.isTiled;
     lattice=other.lattice;
     arrayLattice=other.arrayLattice;
+    weightLattice=other.weightLattice;
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
     pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
+    doneWeightImage_p=other.doneWeightImage_p;
     if(other.skyCoverage_p !=0)
       skyCoverage_p=(TempImage<Float> *)other.skyCoverage_p->cloneII();
+    else
+      skyCoverage_p=0;
     if(other.convWeightImage_p !=0)
       convWeightImage_p=(TempImage<Complex> *)other.convWeightImage_p->cloneII();
+    else
+      convWeightImage_p=0;
     convFunctionMap_p.clear();
+    if(other.gridder==0)
+      gridder=0;
+    else{
+      uvScale=other.uvScale;
+      uvOffset=other.uvOffset;
+      gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
+						     uvScale, uvOffset,
+						     "SF");
+    }
   };
   return *this;
 };

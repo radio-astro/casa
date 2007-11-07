@@ -2097,20 +2097,21 @@ void SolvableVisJones::applyRefAnt() {
 	      
 	      Int currrefant=refantlist(iref);
 
-	      if (currrefant!=lastrefant) {
-		cout << "At " 
-		     << MVTime(cs().time(ispw)(ord(0))/C::day).string(MVTime::YMD,7) 
-		     << " ("
-		     << "Spw=" << ispw 
-		     << ", Fld=" << cs().fieldId(ispw)(ord(0))
-		     << ", pol=" << ipar 
-		     << ", chan=" << ichan 
-		     << ")"
-		     << ", using refant " << msantcol.name()(currrefant)
-		     << " (id=" << currrefant 
-		     << ")";
-		if (iref>0) cout << " (alternate)";
-		cout << endl;
+	      // Only report if using an alternate refant
+	      if (currrefant!=lastrefant && iref>0) {
+		logSink() << LogIO::NORMAL
+			  << "At " 
+			  << MVTime(cs().time(ispw)(ord(0))/C::day).string(MVTime::YMD,7) 
+			  << " ("
+			  << "Spw=" << ispw 
+			  << ", Fld=" << cs().fieldId(ispw)(ord(0))
+			  << ", pol=" << ipar 
+			  << ", chan=" << ichan 
+			  << ")"
+			  << ", using refant " << msantcol.name()(currrefant)
+			  << " (id=" << currrefant 
+			  << ")" << " (alternate)"
+			  << LogIO::POST;
 	      }  
 
 	      Complex rph=sol(IPosition(4,ipar,ichan,currrefant,ord(0)));
@@ -2187,21 +2188,21 @@ void SolvableVisJones::applyRefAnt() {
 		  
 		  currrefant=refantlist(iref);
   
-		  if (currrefant!=lastrefant) {
-		    cout << "At " 
-			 << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
-			 << " ("
-			 << "Spw=" << ispw 
-			 << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
-			 << ", pol=" << ipar 
-			 << ", chan=" << ichan 
-			 << ")"
-			 << ", using refant " << msantcol.name()(currrefant)
-			 << " (id=" << currrefant 
-			 << ")";
-		    if (iref>0) cout << " (alternate)";
-		    cout << endl;
-		    //		  cout << "refantlist = " << refantlist << endl;
+		  // Only report if using an alternate refant
+		  if (currrefant!=lastrefant && iref>0) {
+		    logSink() << LogIO::NORMAL
+			      << "At " 
+			      << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
+			      << " ("
+			      << "Spw=" << ispw 
+			      << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
+			      << ", pol=" << ipar 
+			      << ", chan=" << ichan 
+			      << ")"
+			      << ", using refant " << msantcol.name()(currrefant)
+			      << " (id=" << currrefant 
+			      << ")" << " (alternate)"
+			      << LogIO::POST;
 		  }
 		  
 		  lastrefant=currrefant;
