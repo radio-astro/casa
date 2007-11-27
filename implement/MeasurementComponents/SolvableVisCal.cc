@@ -2099,7 +2099,7 @@ void SolvableVisJones::applyRefAnt() {
 
 	      // Only report if using an alternate refant
 	      if (currrefant!=lastrefant && iref>0) {
-		logSink() << LogIO::NORMAL
+		logSink() 
 			  << "At " 
 			  << MVTime(cs().time(ispw)(ord(0))/C::day).string(MVTime::YMD,7) 
 			  << " ("
@@ -2996,7 +2996,24 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
      via a variously incremented pointer.  This simplifies Jared's
      pending re-formatting work, and also fixes a channel selection
      bug in listing of B tables.
+   2007oct10 - jcrossle - Output format changed, as per efomalont's 
+     suggestions.  Looping is now done over 1st- antenna, 2nd- time,
+     3rd- polarization.  However, multiple antennas are written per row,
+     so "sub-loops" over 'numAntCols' antennas are performed when 
+     necessary. New hard-coded parameter, numAntCols, controls
+     the number of antennas printed per row.
+   2007oct29 - jcrossle - Created local Vector 'pAntids' that holds
+     the antenna ID's that will be written; 'numAnts' holds the number
+     of elements in pAntids.  The for-loop over antennas is now actually
+     a loop over the index of Vector pAntids.  This avoids output problems
+     when the user specifies antenna ID's.
+   2007nov06 - jcrossle - Format corrections.  Discovered that task 
+     parameter antenna takes (exact) antenna names, as a string
+     of comma-separated values; '3,7' does Not equal '03,07' 
+   2007nov14 - gmoellen - Moved MS name listing out of loops so
+     it only appears once.
 */
+
   // Catch bad spw specification:
   if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
     throw(AipsError("Nothing to list for specified spw."));
@@ -3008,10 +3025,18 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     dochan=0;
   }
 
+// /* Query the terminal size. */   // DISABLED
+//   struct winsize mywinsize;
+//   ioctl(1, TIOCGWINSZ, &mywinsize);
+//   // diagnostic message
+//   printf("screen size = rows: %d, columns: %d\n", mywinsize.ws_row, mywinsize.ws_col);
+// /* Set listCal output to correspond to terminal size. */
+//   Int maxScrRows(mywinsize.ws_row); // number of rows to print before prompting
+
+  Int maxScrRows(pagerows);
   Int scrRows(0); // screen row counter, reset after continue prompt
-  Int maxScrRows(pagerows); // number of rows to print before prompting
   Bool endOutput = False; // if true, end output immediately
-  Int irow = 0; // total row counter
+  Int isol = 0; // total solution counter
   Bool prompt = True; // if true, issue prompt
   
   //   This redirection technique copied from: 
@@ -3026,7 +3051,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     File diskfile(listfile);
     if (diskfile.exists()) {
       String errmsg = "File: " + listfile + 
-	" already exists; delete it or choose a different name.";
+      " already exists; delete it or choose a different name.";
       throw(AipsError(errmsg));
     }
     else
@@ -3042,10 +3067,34 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   Vector<String> antname(msant.name().getColumn());
   MSFieldColumns msfld(ms.field());
   Vector<String> fldname(msfld.name().getColumn());
-    
+  
+  // Setup the column widths.  Check width of each string.
+  int timeLength = 10;
+  int maxFldstrLength = 0; 
+  for (Int ielem=0;ielem<cs().nElem(); ielem++) {
+    for (Int itime=0;itime<cs().nTime(spw);++itime) {
+      Int fldid(cs().fieldId(spw)(itime));
+      String fldstr=(fldname(fldid)); 
+      Int fldstrLength = fldstr.length();
+      if (maxFldstrLength < fldstrLength) { maxFldstrLength = fldstrLength; }
+    }
+  }
+  
+  int numAntCols = 4; // Number of antenna columns
+
   cout << endl
        << "Listing CalTable: " << calTableName()
        << "   (" << typeName() << ") "
+       << endl;
+
+  String dateTimeStr0=MVTime(cs().time(spw)(0)/C::day).string(MVTime::YMD,7);
+  String dateStr0=dateTimeStr0.substr(0,10);
+  
+  // Default header info.
+  cout << "MS name = " << msName() << ", "
+       << "Date= " << dateStr0 << ", "
+       << "SpwId= " << spw << ", "
+       << "Channel= " << dochan << "."
        << endl
        << "---------------------------------------------------------------"
        << endl;
@@ -3054,6 +3103,9 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   Vector<String> flagstr(2); 
   flagstr(0)="F";
   flagstr(1)=" ";
+
+  //  Complex *g=cs().par(spw).data()+dochan;
+  //  Bool *gok=cs().parOK(spw).data()+dochan;
   
   Array<Complex> g;
   g.reference(cs().par(spw));
@@ -3061,105 +3113,152 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   gok.reference(cs().parOK(spw));
   IPosition gidx(4,0,dochan,0,0);
 
-  // Begin loop over time
-  for (Int itime=0;itime<cs().nTime(spw);++itime) { 
-    gidx(3)=itime;
+  // Setup a Vector of antenna ID's to ease the process of printing 
+  //  multiple antenna columns per row.
+  Int numAnts; // Hold number of antennas to be output.
+  Vector<Int> pAntids(cs().nElem()); // Vector of antenna ID's.
+  if (uantids.nelements()==0) { // Print all antennas.
+    numAnts = cs().nElem(); 
+    for(int i=0; i<cs().nElem(); pAntids[i]=i++); // Fill pAntids with all antenna ID's.
+  } else { // Use the user-specified antenna ID's.
+    numAnts = uantids.nelements(); 
+    pAntids.resize(numAnts);
+    pAntids = uantids;
+  }
 
-    Int fldid(cs().fieldId(spw)(itime));
+  // loop over antenna elements
+  for (Int ielem=0;ielem<numAnts;ielem=ielem+numAntCols) { 
+    gidx(2)=pAntids(ielem);
 
-    // If no user-specified fields, or fldid is in user's list
-    if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+    Bool header=True; // New antenna, require print header
 
-      // Get date-time string
-      String timestr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
-      // Get field string, with single quotes.
-      String fldstr=("'"+fldname(fldid)(0,8)+"'");
-      //    Int fldlen=fldstr.length();
-      String tmp_timestr = timestr; // tmp_ variables get reset during the loop
-      String tmp_fldstr = fldstr; //
-      
-      // loop over antenna elements
-      for (Int ielem=0;ielem<cs().nElem();++ielem) { 
-	gidx(2)=ielem;
+    // If antenna element is among selected antennas, print it
+    if (uantids.nelements()==0 || anyEQ(uantids,pAntids(ielem))) {
+    
+      // Begin loop over time
+      for (Int itime=0;itime<cs().nTime(spw);++itime) { 
+        gidx(3)=itime;
 
-	// If antenna element is among selected antennas, print it
-	if (uantids.nelements()==0 || anyEQ(uantids,ielem)) {
-	  
-	  // If beginning new screen, print the header
-	  if (scrRows == 0) {  //(irow%cs().nElem()==0) 
-	    cout << "SpwId = " << spw << ", "
-		 << " channel = " << dochan << "."
-		 << endl 
-		 << setiosflags(ios::left)
-		 << setw(21) << "Time"  << " "
-		 << setw(10) << "Field" << " "
-		 << setw(8)  << "Ant"   << "  : "
-		 << setw(6)  << "  Amp " << "  "
-		 << setw(6)  << " Phase" << "    "
-		 << setw(6)  << "  Amp " << "  "
-		 << setw(6)  << " Phase" << "    "
-		 << endl
-		 << "--------------------- ---------- --------"
-		 << "    ---------------   ---------------" 
-		 << endl;
-	    scrRows+=1;
-	    tmp_timestr = timestr;
-	    tmp_fldstr = fldstr;
-	  }
-	  
-	  cout << setw(21) << tmp_timestr << " "
-	       << setw(10) << tmp_fldstr << " "
-	       << setw(8)  << "'"+antname(ielem)+"'" << "  : ";
-	  tmp_timestr="";
-	  tmp_fldstr="";
-	  for (Int ipar=0;ipar<nPar();++ipar) {
-	    gidx(0)=ipar;
+        Int fldid(cs().fieldId(spw)(itime));
 
-	    cout << setiosflags(ios::fixed) << setiosflags(ios::right)
-		 << setprecision(3)
-		 << setw(6)
-		 << abs(g(gidx)) << flagstr(Int(gok(gidx))) << " "
-		 << setprecision(1)
-		 << setw(6)
-		 << arg(g(gidx))*180.0/C::pi << flagstr(Int(gok(gidx))) << "   ";
-	  }
-	  cout << resetiosflags(ios::right) << endl;
-	  irow++; scrRows++;
+        // Get date-time string
+        String dateTimeStr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
+        String dateStr=dateTimeStr.substr(0,10);
+        String timeStr=dateTimeStr.substr(11,10);
+        // Get field string
+        String fldStr=(fldname(fldid));
 
-	  // If at end of screen, signal new page (new header)
-	  if (maxScrRows>0 && (scrRows > maxScrRows) ) {  
+        String tmp_timestr = timeStr; // tmp_ variables get reset during the loop
+        String tmp_fldstr = fldStr; //
 
-	    // signal a new page
-	    scrRows = 0;
+        // If no user-specified fields, or fldid is in user's list
+        if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+         
+          // If beginning new screen, print the header
+          if (scrRows == 0 || header) {  //(irow%cs().nElem()==0) 
+            header=False;
+            string AmpPhaseStr = "  Amp    Phase ";
+            string AmpPhaseDel = "---------------"; // 15 chars long
+            
+            // Begin writing Antenna line (put spaces over the time, field cols)
+            for(int k=0; k<(timeLength+1+maxFldstrLength); k++) { cout<<" "; }
+            // Finish antenna line
+            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
+              cout << "| ";
+              // Center antenna name between polarization columns
+              //  For now, the maximum antenna name length is 8. Could be as
+              //  high as 32-6=24.
+              int antNameLength = ( antname(pAntids(ielem+k)).length() < 8)
+                                  ? antname(pAntids(ielem+k)).length() : 8;
+              float halfspace = ( 32 - 6 - antNameLength ) / 2.0; 
+              // cout << antname(pAntids(ielem+k)).length() << "," << halfspace << "," << int(halfspace) << "," << int(halfspace+0.5);
+              for(int j=1; j<=int(halfspace); j++) { cout<<" "; }
+              cout << "Ant = "
+                   << setw(antNameLength) << antname(pAntids(ielem+k));
+              for(int j=1; j<=int(halfspace+0.5); j++) { cout<<" "; }
+            }
+            cout << endl;
+              
+              // Write time and field headings (only once)
+            cout << setiosflags(ios::left)
+                 << setw(timeLength) << "Time"  << " "
+                 << setw(maxFldstrLength) << "Field";
+              
+            // Write Amp and Phase headings for each antenna column
+            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
+              cout << "| " << AmpPhaseStr << "  " << AmpPhaseStr;
+            }
+            cout << endl;
+            // Write delimiters
+            for(int k=0; k<timeLength; k++) { cout << "-"; } // time col
+            cout << " ";
+            for(int k=0; k<maxFldstrLength; k++) { cout << "-"; } // field col
+            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
+              cout << "| " << AmpPhaseDel << "  " << AmpPhaseDel;
+            }
+            cout << endl;
+            scrRows+=4;
+            // End of header
+          }
+          
+          cout << setw(timeLength) << timeStr << " "
+               << setw(maxFldstrLength) << fldStr;
+          // Set i/o flags for writing data
+          cout << setiosflags(ios::fixed) << setiosflags(ios::right);
 
-	    // query the user, if we are interactive
-	    if (prompt) {
-	      string contStr;
-	      cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
-	      getline(cin,contStr);
-	      if ( (contStr.compare(0,1,"q") == 0) or 
-		   (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
-	      if ( (contStr.compare(0,1,"a") == 0) or 
-		   (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
-	    }
-	  }
-	}
+          // Write data for each antenna column
+          for (Int kelem=ielem; (kelem<ielem+numAntCols) and (kelem<=numAnts-1); 
+               kelem++) {
+            gidx(2)=pAntids(kelem);
+            
+            // Loop over polarization
+            for (Int ipar=0;ipar<nPar();++ipar) {
+              gidx(0)=ipar; 
 
-	if (endOutput) {break;} // break out of ielem loop
-      } // ielem
+              cout << "| "
+		   << setprecision(3) << setw(6) << abs(g(gidx)) 
+		   << flagstr(Int(gok(gidx))) << " "
+		   << setprecision(1) << setw(6) << arg(g(gidx))*180.0/C::pi 
+		   << flagstr(Int(gok(gidx)));
+            }
+          }
 
-    } // end if (fldid)
+          cout << resetiosflags(ios::right) << endl;
+          isol=isol+numAntCols; scrRows++;
 
-    if (endOutput) {break;} // break out of time loop
-  } // end for loop over time
+          // If at end of screen, signal new page (new header)
+          if (maxScrRows>0 && (scrRows >= maxScrRows-1) ) {  
+
+            // signal a new page
+            scrRows = 0;
+
+            // query the user, if we are interactive
+            if (prompt) {
+              string contStr;
+              cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
+              getline(cin,contStr);
+              if ( (contStr.compare(0,1,"q") == 0) or 
+                 (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
+              if ( (contStr.compare(0,1,"a") == 0) or 
+                 (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
+            }
+          }
+        } // end if (field)
+
+        if (endOutput) {break;} // break out of itime loop
+      } // itime
+
+    } // end if (antenna)
+
+    if (endOutput) {break;} // break out of ielem loop
+  } // ielem
   cout << endl
-       << "Listed " << irow << " antenna solutions." 
+       << "Listed " << isol << " antenna solutions." 
        << endl << endl;
 
   // restore cout
   if(listfile!="")
     cout.rdbuf(sbuf);
-
 
 }// end function listCal
 
