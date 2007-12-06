@@ -13,11 +13,39 @@
      template class OrderedPair<Int, Algorithm *> 
 1000 casa/Utilities/CountedPtr.cc 
      = synthesis/MeasurementComponents/PBMathInterface.h 
+     = synthesis/MeasurementComponents/SimplePBConvFunc.h
+     = synthesis/MeasurementComponents/WPConvFunc.h
      template class CountedConstPtr<PBMathInterface> 
      template class CountedPtr<PBMathInterface> 
      template class PtrRep<PBMathInterface> 
      template class SimpleCountedConstPtr<PBMathInterface> 
      template class SimpleCountedPtr<PBMathInterface> 
+     template class PtrRep<SimplePBConvFunc> 
+     template class SimpleCountedConstPtr<SimplePBConvFunc>
+     template class SimpleCountedPtr<SimplePBConvFunc>
+     template class CountedPtr<SimplePBConvFunc>
+     template class PtrRep<WPConvFunc> 
+     template class SimpleCountedConstPtr<WPConvFunc>
+     template class SimpleCountedPtr<WPConvFunc>
+     template class CountedPtr<WPConvFunc>
+1010 casa/Utilities/CountedPtr.cc 
+     = images/Images/TempImage.h 
+     template class SimpleCountedConstPtr<TempImage<Float> >
+     template class SimpleCountedPtr<TempImage<Float> >
+     template class CountedPtr<TempImage<Float> >
+     template class PtrRep<TempImage<Float> >
+1020 casa/Utilities/CountedPtr.cc 
+     = casa/Arrays/Vector.h 
+     = casa/Arrays/Cube.h
+     = casa/BasicSL/Complex.h
+     template class PtrRep<Vector<Int> > 
+     template class SimpleCountedPtr<Vector<Int> >
+     template class SimpleCountedConstPtr<Vector<Int> >
+     template class CountedPtr<Vector<Int> >
+     template class PtrRep<Cube<Complex> > 
+     template class CountedPtr<Cube<Complex> >
+     template class SimpleCountedConstPtr<Cube<Complex> >
+     template class SimpleCountedPtr<Cube<Complex> >
 1000 casa/Utilities/Register.cc casa/Containers/OrderedMap.h 
      = synthesis/Parallel/Algorithm.h 
      template uInt Register(OrderedMapNotice<Int, Algorithm *> const *) 
@@ -41,3 +69,5 @@
 1010 synthesis/MeasurementEquations/ResidualEquation.cc 
      = lattices/Lattices/Lattice.h 
      template class ResidualEquation<Lattice<Float> > 
+1000 synthesis/MeasurementComponents/PixelatedConvFunc.cc
+     template class PixelatedConvFunc<Complex> 
