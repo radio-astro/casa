@@ -13,21 +13,11 @@
      template class OrderedPair<Int, Algorithm *> 
 1000 casa/Utilities/CountedPtr.cc 
      = synthesis/MeasurementComponents/PBMathInterface.h 
-     = synthesis/MeasurementComponents/SimplePBConvFunc.h
-     = synthesis/MeasurementComponents/WPConvFunc.h
      template class CountedConstPtr<PBMathInterface> 
      template class CountedPtr<PBMathInterface> 
      template class PtrRep<PBMathInterface> 
      template class SimpleCountedConstPtr<PBMathInterface> 
      template class SimpleCountedPtr<PBMathInterface> 
-     template class PtrRep<SimplePBConvFunc> 
-     template class SimpleCountedConstPtr<SimplePBConvFunc>
-     template class SimpleCountedPtr<SimplePBConvFunc>
-     template class CountedPtr<SimplePBConvFunc>
-     template class PtrRep<WPConvFunc> 
-     template class SimpleCountedConstPtr<WPConvFunc>
-     template class SimpleCountedPtr<WPConvFunc>
-     template class CountedPtr<WPConvFunc>
 1010 casa/Utilities/CountedPtr.cc 
      = images/Images/TempImage.h 
      template class SimpleCountedConstPtr<TempImage<Float> >
