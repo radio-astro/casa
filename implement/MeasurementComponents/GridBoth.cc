@@ -53,7 +53,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
+GridBoth::GridBoth(SkyJones& sj, Long icachesize,
 		   Int itilesize, 
 		   String sdConvType,
 		   String synConvType,
@@ -65,11 +65,11 @@ GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType,
 			    padding, False);
-  sdMachine_p  = new SDGrid(ms, sj, icachesize, itilesize, sdConvType, -1);
+  sdMachine_p  = new SDGrid(sj, icachesize, itilesize, sdConvType, -1);
   ok();
 }
 
-GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
+GridBoth::GridBoth(SkyJones& sj, Long icachesize,
 		   Int itilesize, 
 		   MPosition mLocation,
 		   String sdConvType,
@@ -82,11 +82,11 @@ GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType, mLocation,
 			    padding, False);
-  sdMachine_p  = new SDGrid(ms, mLocation, sj, icachesize, itilesize, sdConvType, -1);
+  sdMachine_p  = new SDGrid(mLocation, sj, icachesize, itilesize, sdConvType, -1);
   ok();
 }
 
-GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
+GridBoth::GridBoth(SkyJones& sj, Long icachesize,
 		   Int itilesize, 
 		   MPosition mLocation,
 		   MDirection mDirection,
@@ -101,7 +101,7 @@ GridBoth::GridBoth(MeasurementSet &ms, SkyJones& sj, Long icachesize,
 {
   synMachine_p = new GridFT(icachesize, itilesize, synConvType, mLocation,
 			    mDirection, padding, False);
-  sdMachine_p  = new SDGrid(ms, mLocation, sj, icachesize, itilesize, 
+  sdMachine_p  = new SDGrid(mLocation, sj, icachesize, itilesize, 
 			    sdConvType, -1);
   ok();
 }

@@ -1428,15 +1428,15 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       if(ftmachine_p=="sd") {
 	os << "Single dish gridding " << LogIO::POST;
 	if(gridfunction_p=="pb") {
-	  ft_p = new SDGrid(*ams, *gvp_p, cache_p/2, tile_p, gridfunction_p);
+	  ft_p = new SDGrid(*gvp_p, cache_p/2, tile_p, gridfunction_p);
 	}
 	else {
-	  ft_p = new SDGrid(*ams, cache_p/2, tile_p, gridfunction_p);
+	  ft_p = new SDGrid(cache_p/2, tile_p, gridfunction_p);
 	}
       }
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
-	ft_p = new MosaicFT(*ams, *gvp_p, cache_p/2, tile_p, True);
+	ft_p = new MosaicFT(*gvp_p, mLocation_p, cache_p/2, tile_p, True);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
@@ -1444,7 +1444,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	os << "and interferometric gridding with convolution function SF"
 	   << LogIO::POST;
 	
-	ft_p = new GridBoth(*ams, *gvp_p, cache_p/2, tile_p,
+	ft_p = new GridBoth(*gvp_p, cache_p/2, tile_p,
 			    mLocation_p, 
 			    gridfunction_p, "SF", padding_p);
       }
@@ -1462,7 +1462,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	os << "Fourier transforms will use specified common tangent point:" << LogIO::POST;
 	os << formatDirection(sourceDirection_p) << LogIO::POST;
 	//      ft_p = new WProjectFT(*ams, facets_p, cache_p/2, tile_p, False);
-	ft_p = new WProjectFT(*ams, wprojPlanes_p, cache_p/2, tile_p, False);
+	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, False);
       }
       else if (ftmachine_p=="pbwproject") {
 	os << "Fourier transfroms will use specified common tangent point and PBs" 

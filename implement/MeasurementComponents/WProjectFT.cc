@@ -29,6 +29,7 @@
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <measures/Measures/Stokes.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -39,6 +40,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
@@ -78,31 +80,31 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WProjectFT::WProjectFT(MeasurementSet& ms, 
-		   Int nWPlanes, Long icachesize, Int itilesize, 
+WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize, 
 		   Bool usezero)
-  : FTMachine(), padding_p(1.0), ms_p(&ms), nWPlanes_p(nWPlanes),
+  : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
+    pointingToImage(0), usezero_p(usezero),
     convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
 {
   convSize=0;
   tangentSpecified_p=False;
-  mspc=new MSPointingColumns(ms_p->pointing());
-  msac=new MSAntennaColumns(ms_p->antenna());
   lastIndex_p=0;
+
+  wpConvFunc_p=new WPConvFunc();
+
 }
 WProjectFT::WProjectFT(Int nWPlanes, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
 		       Bool usezero, Float padding)
-  : FTMachine(), padding_p(padding), ms_p(NULL), nWPlanes_p(nWPlanes),
+  : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
+    pointingToImage(0), usezero_p(usezero),
     convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
 {
   convSize=0;
@@ -110,18 +112,19 @@ WProjectFT::WProjectFT(Int nWPlanes,
   tangentSpecified_p=False;
   mLocation_p=mLocation;
   lastIndex_p=0;
+  wpConvFunc_p=new WPConvFunc();
   
 }
-WProjectFT::WProjectFT(MeasurementSet& ms, 
+WProjectFT::WProjectFT(
 		       Int nWPlanes, MDirection mTangent, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
 		       Bool usezero, Float padding)
-  : FTMachine(), padding_p(padding), ms_p(&ms), nWPlanes_p(nWPlanes),
+  : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
+    pointingToImage(0), usezero_p(usezero),
     convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
 {
   convSize=0;
@@ -129,10 +132,8 @@ WProjectFT::WProjectFT(MeasurementSet& ms,
   mTangent_p=mTangent;
   tangentSpecified_p=True;
   mLocation_p=mLocation;
-  mspc=new MSPointingColumns(ms_p->pointing());
-  msac=new MSAntennaColumns(ms_p->antenna());
   lastIndex_p=0;
-  
+  wpConvFunc_p=new WPConvFunc();
 }
 
 WProjectFT::WProjectFT(const RecordInterface& stateRec)
@@ -143,15 +144,21 @@ WProjectFT::WProjectFT(const RecordInterface& stateRec)
   if (!fromRecord(error, stateRec)) {
     throw (AipsError("Failed to create WProjectFT: " + error));
   };
-  mspc=new MSPointingColumns(ms_p->pointing());
-  msac=new MSAntennaColumns(ms_p->antenna());
 }
 //---------------------------------------------------------------------- 
 WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 {
   if(this!=&other) {
+    mLocation_p=other.mLocation_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    freqFrameValid_p=other.freqFrameValid_p;
     padding_p=other.padding_p;
-    ms_p=other.ms_p;
     nWPlanes_p=other.nWPlanes_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
@@ -163,11 +170,10 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
-    mspc=other.mspc;
-    msac=other.msac;
     pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
+    wpConvFunc_p=other.wpConvFunc_p;
   };
   return *this;
 };
@@ -228,6 +234,8 @@ void WProjectFT::init() {
   uvOffset(1)=ny/2;
   uvOffset(2)=0;
   
+  
+
   if(gridder) delete gridder; gridder=0;
   gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
 						 uvScale, uvOffset,
@@ -273,275 +281,19 @@ WProjectFT::~WProjectFT() {
 void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 				const VisBuffer& vb) {
   
-  //  if(convSize>0) return;
 
-  if(checkCenterPix(image)) return;
 
-  logIO() << LogOrigin("WProjectFT", "init")  << LogIO::NORMAL;
+
+
+  wpConvFunc_p->findConvFunction(image, vb, wConvSize, uvScale, uvOffset, 
+				 convSampling, 
+				 convFunc, convSize, convSupport, 
+				 savedWScale_p); 
+
+  uvScale(2)=savedWScale_p;
+
   
-  ok();
   
-  if(wConvSize>1) {
-    logIO() << "W projection using " << wConvSize << " planes" << LogIO::POST;
-    Double maxUVW;
-    maxUVW=0.25/abs(image.coordinates().increment()(0));
-    logIO() << "Estimating maximum possible W = " << maxUVW
-	    << " (wavelengths)" << LogIO::POST;
-    
-    Double invLambdaC=vb.frequency()(0)/C::c;
-    logIO() << "Typical wavelength = " << 1.0/invLambdaC
-	    << " (m)" << LogIO::POST;
-    
-    //    uvScale(2)=sqrt(Float(wConvSize-1))/maxUVW;
-    //    uvScale(2)=(Float(wConvSize-1))/maxUVW;
-    uvScale(2)=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
-    savedWScale_p=uvScale(2);
-    logIO() << "Scaling in W (at maximum W) = " << 1.0/uvScale(2)
-	    << " wavelengths per pixel" << LogIO::POST;
-  }
-  
-  // Get the coordinate system
-  CoordinateSystem coords(image.coordinates());
-  
-  // Set up the convolution function. 
-  if(wConvSize>1) {
-    /* if(wConvSize>256) {
-      convSampling=4;
-      convSize=min(nx,ny); 
-      Int maxMemoryMB=HostInfo::memoryTotal()/1024; 
-      if(maxMemoryMB > 4000){
-	convSize=min(convSize,1024);
-      }
-      else{
-	convSize=min(convSize,512);
-      }
-
-    }
-    else {
-      convSampling=4;
-      convSize=min(nx,ny);
-      convSize=min(convSize,1024);
-    }
-    */
-
-    Int maxMemoryMB=HostInfo::memoryTotal()/1024;
-    //nominal  512 wprojplanes above that you may (or not) go swapping
-    Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
-    convSampling=4;
-    convSize=max(nx,ny);
-    convSize=min(convSize,Int(maxConvSizeConsidered/2.0)*2);
-    
-  }
-  else {
-    convSampling=1;
-    convSize=max(nx,ny);
-  }
-  Int maxConvSize=convSize;
-  
-  // Make a two dimensional image to calculate the
-  // primary beam. We want this on a fine grid in the
-  // UV plane 
-  Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-  AlwaysAssert(directionIndex>=0, AipsError);
-  DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
-  directionCoord=coords.directionCoordinate(directionIndex);
-  Vector<Double> sampling;
-  sampling = dc.increment();
-  sampling*=Double(convSampling);
-  //sampling*=Double(max(nx,ny))/Double(convSize);
-  sampling[0]*=Double(nx)/Double(convSize);
-  sampling[1]*=Double(ny)/Double(convSize);
-  dc.setIncrement(sampling);
-  
-  Vector<Double> unitVec(2);
-  unitVec=convSize/2;
-  dc.setReferencePixel(unitVec);
-  
-  // Set the reference value to that of the image center for sure.
-  {
-    // dc.setReferenceValue(mTangent_p.getAngle().getValue());
-    MDirection wcenter;  
-    Vector<Double> pcenter(2);
-    pcenter(0) = nx/2;
-    pcenter(1) = ny/2;    
-    directionCoord.toWorld( wcenter, pcenter );
-    dc.setReferenceValue(wcenter.getAngle().getValue());
-  }
-  coords.replaceCoordinate(dc, directionIndex);
-  //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
-  
-  IPosition pbShape(4, convSize, convSize, 1, 1);
-  TempImage<Complex> twoDPB(pbShape, coords);
-
-  Int inner=convSize/convSampling;
-  ConvolveGridder<Double, Complex>
-    ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
-
-  convFunc.resize(); // break any reference 
-  convFunc.resize(convSize/2-1, convSize/2-1, wConvSize);
-  convFunc.set(0.0);
-
-  IPosition start(4, 0, 0, 0, 0);
-  IPosition pbSlice(4, convSize, convSize, 1, 1);
-  
-  Bool writeResults=False;
-  Int warner=0;
-
-  // Accumulate terms 
-  Matrix<Complex> screen(convSize, convSize);
-  for (Int iw=0;iw<wConvSize;iw++) {
-    // First the w term
-    screen=0.0;
-    if(wConvSize>1) {
-      //      Double twoPiW=2.0*C::pi*sqrt(Double(iw))/uvScale(2);
-      //      Double twoPiW=2.0*C::pi*Double(iw)/uvScale(2);
-      Double twoPiW=2.0*C::pi*Double(iw*iw)/uvScale(2);
-      for (Int iy=-inner/2;iy<inner/2;iy++) {
-	Double m=sampling(1)*Double(iy);
-	Double msq=m*m;
-	for (Int ix=-inner/2;ix<inner/2;ix++) {
-	  Double l=sampling(0)*Double(ix);
-	  Double rsq=l*l+msq;
-	  if(rsq<1.0) {
-	    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-	    screen(ix+convSize/2,iy+convSize/2)=Complex(cos(phase),sin(phase));
-	  }
-	}
-      }
-    }
-    else {
-      screen=1.0;
-    }
-    // spheroidal function
-    Vector<Complex> correction(inner);
-    for (Int iy=-inner/2;iy<inner/2;iy++) {
-      ggridder.correctX1D(correction, iy+inner/2);
-      for (Int ix=-inner/2;ix<inner/2;ix++) {
-	screen(ix+convSize/2,iy+convSize/2)*=correction(ix+inner/2);
-      }
-    }
-    twoDPB.putSlice(screen, IPosition(4, 0));
-    // Write out screen as an image
-    if(writeResults) {
-      ostringstream name;
-      name << "Screen" << iw+1;
-      if(Table::canDeleteTable(name)) Table::deleteTable(name);
-      PagedImage<Float> thisScreen(pbShape, coords, name);
-      LatticeExpr<Float> le(real(twoDPB));
-      thisScreen.copyData(le);
-    }
-
-    // Now FFT and get the result back
-    LatticeFFT::cfft2d(twoDPB);
-
-    // Write out FT of screen as an image
-    if(writeResults) {
-      CoordinateSystem ftCoords(coords);
-      directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
-      AlwaysAssert(directionIndex>=0, AipsError);
-      dc=coords.directionCoordinate(directionIndex);
-      Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
-      Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
-      Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
-      ftCoords.replaceCoordinate(*ftdc, directionIndex);
-      delete ftdc; ftdc=0;
-      ostringstream name;
-      name << "FTScreen" << iw+1;
-      if(Table::canDeleteTable(name)) Table::deleteTable(name);
-      PagedImage<Float> thisScreen(pbShape, ftCoords, name);
-      LatticeExpr<Float> le(real(twoDPB));
-      thisScreen.copyData(le);
-    }
-    IPosition start(4, convSize/2, convSize/2, 0, 0);
-    IPosition pbSlice(4, convSize/2-1, convSize/2-1, 1, 1);
-    convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
-  }
-  convFunc/=max(abs(convFunc));
-
-  // Find the edge of the function by stepping in from the
-  // uv plane edge. We do this for each plane to save time on the
-  // gridding (about a factor of two)
-  convSupport=-1;
-  for (Int iw=0;iw<wConvSize;iw++) {
-    Bool found=False;
-    Int trial=0;
-    for (trial=convSize/2-2;trial>0;trial--) {
-      if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-	found=True;
-	break;
-      }
-    }
-    if(found) {
-      convSupport(iw)=Int(0.5+Float(trial)/Float(convSampling))+1;
-      if(convSupport(iw)*convSampling*2 >= maxConvSize){
-	convSupport(iw)=convSize/2/convSampling-1;
-	++warner;
-      }
-    }
-  }
-  
-  if(convSupport(0)<1) {
-    logIO() << "Convolution function is misbehaved - support seems to be zero"
-	    << LogIO::EXCEPTION;
-  }
-
-  if(warner > 5) {
-    logIO() << LogIO::WARN 
-	    <<"Many of the Convolution functions go beyond " << maxConvSize 
-	    <<" pixels allocated" << LogIO::POST;
-    logIO() << LogIO::WARN
-	    << "You may consider reducing the size of your image or use facets"
-	    << LogIO::POST;
-  }
-  // Normalize such that plane 0 sums to 1 (when jumping in
-  // steps of convSampling)
-  Double pbSum=0.0;
-  for (Int iy=-convSupport(0);iy<=convSupport(0);iy++) {
-    for (Int ix=-convSupport(0);ix<=convSupport(0);ix++) {
-      pbSum+=real(convFunc(abs(ix)*convSampling,abs(iy)*convSampling,0));
-    }
-  }
-  if(pbSum>0.0) {
-    convFunc*=Complex(1.0/pbSum,0.0);
-  }
-  else {
-    logIO() << "Convolution function integral is not positive"
-	    << LogIO::EXCEPTION;
-  }
-  logIO() << "Convolution support = " << convSupport*convSampling
-	  << " pixels in Fourier plane"
-	  << LogIO::POST;
-
-
-  convSupportBlock_p.resize(actualConvIndex_p+1);
-  convSupportBlock_p[actualConvIndex_p]= new Vector<Int>();
-  *convSupportBlock_p[actualConvIndex_p]=convSupport;
-  convFunctions_p.resize(actualConvIndex_p+1);
-  convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
-  Int newConvSize=2*(max(convSupport)+2)*convSampling;
-  
-  if(newConvSize < convSize){
-    IPosition blc(3, 0,0,0);
-    IPosition trc(3, (newConvSize/2-2),
-		  (newConvSize/2-2),
-		  convSupport.shape()(0)-1);
-    *convFunctions_p[actualConvIndex_p]=convFunc(blc,trc);
-    convSize=newConvSize;
-  }
-  else{
-    *convFunctions_p[actualConvIndex_p]=convFunc;
-  }
-  Int maxMemoryMB=HostInfo::memoryTotal()/1024;
-  Int memoryMB;
-  memoryMB = Int(Double(convSize/2-1)*Double(convSize/2-1)*
-		 Double(wConvSize)*8.0/1024.0/1024.0);
-  logIO() << "Memory used in gridding function = "
-	  << memoryMB << " MB from maximum "
-	  << maxMemoryMB << " MB" << LogIO::POST;
-  convFunc.resize();
-  convFunc.reference(*convFunctions_p[actualConvIndex_p]);
-  convSizes_p.resize(actualConvIndex_p+1, True);
-  convSizes_p(actualConvIndex_p)=convSize;
 }
 
 void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
@@ -1009,12 +761,12 @@ void WProjectFT::get(VisBuffer& vb, Int row)
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    vb.modelVisCube()=Complex(0.0,0.0);
+    //vb.modelVisCube()=Complex(0.0,0.0);
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+    //vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
   }
   
   // Get the uvws in a form that Fortran can use
@@ -1175,12 +927,12 @@ void WProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    modelVis.set(Complex(0.0,0.0));
+    //   modelVis.set(Complex(0.0,0.0));
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    modelVis.xyPlane(row)=Complex(0.0,0.0);
+    //  modelVis.xyPlane(row)=Complex(0.0,0.0);
   }
   
   // Get the uvws in a form that Fortran can use

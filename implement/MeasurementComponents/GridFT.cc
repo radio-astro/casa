@@ -135,6 +135,14 @@ GridFT::GridFT(const RecordInterface& stateRec)
 GridFT& GridFT::operator=(const GridFT& other)
 {
   if(this!=&other) {
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    freqFrameValid_p=other.freqFrameValid_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
@@ -927,12 +935,14 @@ void GridFT::get(VisBuffer& vb, Int row)
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    vb.modelVisCube()=Complex(0.0,0.0);
+    //unnecessary zeroing
+    //    vb.modelVisCube()=Complex(0.0,0.0);
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+    //unnecessary zeroing
+    //    vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
   }
 
   // Get the uvws in a form that Fortran can use
@@ -1085,12 +1095,12 @@ void GridFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    modelVis.set(Complex(0.0,0.0));
+    //    modelVis.set(Complex(0.0,0.0));
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    modelVis.xyPlane(row)=Complex(0.0,0.0);
+    //   modelVis.xyPlane(row)=Complex(0.0,0.0);
   }
 
 

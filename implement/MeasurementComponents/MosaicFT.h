@@ -39,7 +39,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
@@ -122,6 +122,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="97/10/01">
 // <ul> Deal with large VLA spectral line case 
 // </todo>
+  class MosaicFT;
+  class SimplePBConvFunc;
+  class MPosition;
+
 
 class MosaicFT : public FTMachine {
 public:
@@ -131,7 +135,7 @@ public:
   // size of the tile used in gridding (cannot be less than
   // 12, 16 works in most cases). 
   // <group>
-  MosaicFT(MeasurementSet& ms, SkyJones& sj,
+  MosaicFT(SkyJones& sj, MPosition mloc,
 	    Long cachesize, Int tilesize=16, 
 	   Bool usezero=True);
   // </group>
@@ -210,7 +214,15 @@ public:
 
   String name();
 
-protected:
+  // Copy convolution function etc to another FT machine
+  // necessary if ft and ift are distinct but can share convfunctions
+
+  void setConvFunc(CountedPtr<SimplePBConvFunc>& pbconvFunc);
+  CountedPtr<SimplePBConvFunc>& getConvFunc();
+
+
+
+protected:        
 
   Int nint(Double val) {return Int(floor(val+0.5));};
 
@@ -220,7 +232,6 @@ protected:
 
   void addBeamCoverage(ImageInterface<Complex>& image);
 
-  MeasurementSet* ms_p;
 
   SkyJones* sj_p;
 
@@ -236,9 +247,6 @@ protected:
   // ends bracket the middle
   Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
 
-  // Check whether the convolution function for this field is already
-  //done
-  Bool checkPBOfField(const VisBuffer& vb);
 
   // Image cache
   LatticeCache<Complex> * imageCache;
@@ -296,7 +304,6 @@ protected:
   Matrix<Complex> weightConvFunc_p;
   Int convSampling;
   Int convSize;
-  PtrBlock<Vector<Int> *> convSizes_p;
   Int convSupport;
   Vector<Int> convSupportPerAnt_p;
 
@@ -309,19 +316,14 @@ protected:
 
   Bool getXYPos(const VisBuffer& vb, Int row);
 
-  //These are cubes for multiple PA
-  //May need a per antenna one if each antenna has its own.
-  PtrBlock < Cube<Complex> *> convFunctions_p;
-  PtrBlock < Cube<Complex> *> convWeights_p;
-
-  TempImage<Float>* skyCoverage_p;
+  CountedPtr<TempImage<Float> >skyCoverage_p;
   TempImage<Complex>* convWeightImage_p;
+  CountedPtr<SimplePBConvFunc> pbConvFunc_p;
  //Later this 
-  PtrBlock < Vector<Int> *> convSupportBlock_p;
-  SimpleOrderedMap <String, Int> convFunctionMap_p;
-  Int actualConvIndex_p;
   String machineName_p;
   Bool doneWeightImage_p;
+  MosaicFT *otherFT_p;
+
 
 };
 

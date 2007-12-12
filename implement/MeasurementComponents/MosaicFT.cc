@@ -39,6 +39,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
+#include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
@@ -78,28 +79,30 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MosaicFT::MosaicFT(MeasurementSet& ms, SkyJones& sj,
+  MosaicFT::MosaicFT(SkyJones& sj, MPosition mloc,
 		   Long icachesize, Int itilesize, 
 		   Bool usezero)
-  : FTMachine(), ms_p(&ms), sj_p(&sj),
+  : FTMachine(), sj_p(&sj),
     imageCache(0),  cachesize(icachesize), tilesize(itilesize), gridder(0),
     isTiled(False), arrayLattice(0), lattice(0), weightLattice(0),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), 
-    skyCoverage_p(0), convFunctionMap_p(-1), machineName_p("MosaicFT") 
+    mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), convSampling(1),
+    skyCoverage_p(0), machineName_p("MosaicFT")
 {
   convSize=0;
   tangentSpecified_p=False;
   lastIndex_p=0;
   doneWeightImage_p=False;
   convWeightImage_p=0;
+  pbConvFunc_p=new SimplePBConvFunc();
     
+  mLocation_p=mloc;
   // We should get rid of the ms dependence in the constructor
   // not used
 }
 
 MosaicFT::MosaicFT(const RecordInterface& stateRec)
-  : FTMachine(), convFunctionMap_p(-1)
+  : FTMachine()
 {
   // Construct from the input state record
   String error;
@@ -112,11 +115,16 @@ MosaicFT::MosaicFT(const RecordInterface& stateRec)
 MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 {
   if(this!=&other) {
+    mLocation_p=other.mLocation_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    freqFrameValid_p=other.freqFrameValid_p;
     nx=other.nx;
     ny=other.ny;
     npol=other.npol;
     nchan=other.nchan;
-    ms_p=other.ms_p;
+    convSampling=other.convSampling;
     sj_p=other.sj_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
@@ -131,15 +139,15 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     pointingToImage=other.pointingToImage;
     usezero_p=other.usezero_p;
     doneWeightImage_p=other.doneWeightImage_p;
-    if(other.skyCoverage_p !=0)
-      skyCoverage_p=(TempImage<Float> *)other.skyCoverage_p->cloneII();
+    pbConvFunc_p=other.pbConvFunc_p;
+    if(!other.skyCoverage_p.null())
+      skyCoverage_p=other.skyCoverage_p;
     else
       skyCoverage_p=0;
     if(other.convWeightImage_p !=0)
       convWeightImage_p=(TempImage<Complex> *)other.convWeightImage_p->cloneII();
     else
       convWeightImage_p=0;
-    convFunctionMap_p.clear();
     if(other.gridder==0)
       gridder=0;
     else{
@@ -154,12 +162,15 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 };
 
 //----------------------------------------------------------------------
-MosaicFT::MosaicFT(const MosaicFT& other): convFunctionMap_p(-1)
+MosaicFT::MosaicFT(const MosaicFT& other)
 {
   operator=(other);
 }
 
 //----------------------------------------------------------------------
+//void MosaicFT::setSharingFT(MosaicFT& otherFT){
+//  otherFT_p=&otherFT;
+//}
 void MosaicFT::init() {
   
   if((image->shape().product())>cachesize) {
@@ -226,206 +237,52 @@ MosaicFT::~MosaicFT() {
   if(arrayLattice) delete arrayLattice; arrayLattice=0;
 }
 
+
+void MosaicFT::setConvFunc(CountedPtr<SimplePBConvFunc>& pbconvFunc){
+
+
+  pbConvFunc_p=pbconvFunc;
+  
+
+}
+
+CountedPtr<SimplePBConvFunc>& MosaicFT::getConvFunc(){
+  return pbConvFunc_p;
+}
+//copy the innards to save on conv function calculation and storage
+/*
+void MosaicFT::copySharedInfo(){
+  convFunctions_p.resize(otherFT_p->convFunctions_p.size());
+  for (uInt k=0; k< otherFT_p->convFunctions_p.size(); ++k){
+    convFunctions_p[k]=otherFT_p->convFunctions_p[k];
+  }
+  convWeights_p.resize(otherFT_p->convWeights_p.size());
+  for (uInt k=0; k< otherFT_p->convWeights_p.size(); ++k)
+    convWeights_p[k]=otherFT_p->convWeights_p[k];
+
+  skyCoverage_p=otherFT_p->skyCoverage_p;
+
+  convSupportBlock_p.resize(otherFT_p->convSupportBlock_p.size());
+  for (uInt k=0; k< otherFT_p->convSupportBlock_p.size(); ++k)
+    convSupportBlock_p[k]=otherFT_p->convSupportBlock_p[k];
+
+  convFunctionMap_p=otherFT_p->convFunctionMap_p;
+
+  convSizes_p.resize(otherFT_p->convSizes_p.size());
+  for (uInt k=0; k< otherFT_p->convSizes_p.size(); ++k)
+    convSizes_p[k]=otherFT_p->convSizes_p[k];
+
+  convSampling=otherFT_p->convSampling;
+
+}
+*/
+
 void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
 				const VisBuffer& vb) {
   
-  //  if(convSize>0) return;
-  if(checkPBOfField(vb)) return;
-
-  logIO() << LogOrigin("MosaicFT", "findConvFunction")  << LogIO::NORMAL;
-  
-  ok();
-  
-  // Get the coordinate system
-  CoordinateSystem coords(iimage.coordinates());
-  
-  // Set up the convolution function. 
   convSampling=1;
-  convSize=nx;
-  
-  // Make a two dimensional image to calculate the
-  // primary beam. We want this on a fine grid in the
-  // UV plane 
-  Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-  AlwaysAssert(directionIndex>=0, AipsError);
-  DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
-  directionCoord=coords.directionCoordinate(directionIndex);
-  Vector<Double> sampling;
-  sampling = dc.increment();
-  sampling*=Double(convSampling);
-  sampling*=Double(nx)/Double(convSize);
-  dc.setIncrement(sampling);
-  
-  Vector<Double> unitVec(2);
-  unitVec=convSize/2;
-  dc.setReferencePixel(unitVec);
-  
-  // Set the reference value to that of the pointing position of the
-  // current buffer since that's what will be applied
-  //####will need to use this when using a much smaller convsize than image.
-  //  getXYPos(vb, 0);
-  // dc.setReferenceValue(worldPosMeas.getAngle().getValue());
-  
-  coords.replaceCoordinate(dc, directionIndex);
-  //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
-  
-  IPosition pbShape(4, convSize, convSize, 1, 1);
-  TempImage<Complex> twoDPB(pbShape, coords);
-
-
-
-  convFunc.resize(convSize, convSize);
-  convFunc=0.0;
-
-  IPosition start(4, 0, 0, 0, 0);
-  IPosition pbSlice(4, convSize, convSize, 1, 1);
-  
-  // Accumulate terms 
-  Matrix<Complex> screen(convSize, convSize);
-  screen=1.0;
-  // Either the SkyJones
-  twoDPB.putSlice(screen, start);
-  sj_p->apply(twoDPB, twoDPB, vb, 0); 
- 
-  //*****Test
-  TempImage<Complex> twoDPB2(pbShape, coords);
-  {
-    TempImage<Float> screen2(pbShape, coords);
-    Matrix<Float> screenoo(convSize, convSize);
-    screenoo.set(1.0);
-    screen2.putSlice(screenoo,start);
-    sj_p->applySquare(screen2, screen2, vb, 0);
-    LatticeExpr<Complex> le(screen2);
-    twoDPB2.copyData(le);
-  }
-  //****************
-  
-  //addBeamCoverage(twoDPB);
-
-
-  Bool writeImages=True;
- 
-  // Now FFT and get the result back
-  LatticeFFT::cfft2d(twoDPB);
-  LatticeFFT::cfft2d(twoDPB2);
-
-    // Write out FT of screen as an image
-  if(0) {
-    CoordinateSystem ftCoords(coords);
-    directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(directionIndex>=0, AipsError);
-    dc=coords.directionCoordinate(directionIndex);
-    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
-    Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
-    Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
-    ftCoords.replaceCoordinate(*ftdc, directionIndex);
-    delete ftdc; ftdc=0;
-    ostringstream os1;
-    os1 << "FTScreen_" << vb.fieldId() ;
-    PagedImage<Float> thisScreen(pbShape, ftCoords, String(os1));
-    LatticeExpr<Float> le(abs(twoDPB));
-    thisScreen.copyData(le);
-  }
-
-  convFunc=twoDPB.get(True);
-  //convFunc/=max(abs(convFunc));
-  Float maxAbsConvFunc=max(amplitude(convFunc));
-  
-  Float minAbsConvFunc=min(amplitude(convFunc));
-  convSupport=-1;
-  Bool found=False;
-  Int trial=0;
-  for (trial=convSize/2-2;trial>0;trial--) {
-    //Searching down a diagonal
-    if(abs(convFunc(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
-      found=True;
-      trial=Int(sqrt(2.0*Float(trial*trial)));
-      break;
-    }
-  }
-  if(!found){
-    if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
-      found=True;
-    // if it drops by more than 2 magnitudes per pixel
-    trial=3;
-  }
-
-  if(found) {
-    convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
-  }
-  else {
-    logIO() << "Convolution function is misbehaved - support seems to be zero"
-	    << LogIO::EXCEPTION;
-  }
-  
-  // Normalize such that plane 0 sums to 1 (when jumping in
-  // steps of convSampling)
-  
-  Double pbSum=0.0;
-  for (Int iy=-convSupport;iy<=convSupport;iy++) {
-    for (Int ix=-convSupport;ix<=convSupport;ix++) {
-      Complex val=convFunc(ix*convSampling+convSize/2,
-			   iy*convSampling+convSize/2);
-      
-      pbSum+=sqrt(real(val)*real(val)+ imag(val)*imag(val));
-    }
-  }
-
-  if(pbSum>0.0) {
-    convFunc*=Complex(1.0/pbSum,0.0);
-  }
-  else {
-    logIO() << "Convolution function integral is not positive"
-	    << LogIO::EXCEPTION;
-  }
-  
-  //##########################################
-  logIO() << "Convolution support = " << convSupport
-	  << " pixels in Fourier plane"
-	  << LogIO::POST;
-
-  convSupportBlock_p.resize(actualConvIndex_p+1);
-  convSizes_p.resize(actualConvIndex_p+1);
-  //Only one beam for now...but later this should be able to
-  // take all the beams for the different antennas.
-  convSupportBlock_p[actualConvIndex_p]= new Vector<Int>(1);
-  convSizes_p[actualConvIndex_p]= new Vector<Int> (1);
-  (*convSupportBlock_p[actualConvIndex_p])[0]=convSupport;
-  convFunctions_p.resize(actualConvIndex_p+1);
-  convWeights_p.resize(actualConvIndex_p+1);
-  convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
-  convWeights_p[actualConvIndex_p]= new Cube<Complex>();
-  Int newConvSize=2*(convSupport+2)*convSampling;
-  //NEED to chop this right ...and in the centre
-  if(newConvSize < convSize){
-    IPosition blc(2, (convSize/2)-(newConvSize/2),
-		  (convSize/2)-(newConvSize/2));
-    IPosition trc(2, (convSize/2)+(newConvSize/2-1),
-		  (convSize/2)+(newConvSize/2-1));
-    convFunctions_p[actualConvIndex_p]->resize(newConvSize, newConvSize, 1);
-    convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc(blc,trc);
-    convSize=newConvSize;
-    convWeights_p[actualConvIndex_p]->resize(newConvSize, newConvSize, 1);
-    convWeights_p[actualConvIndex_p]->xyPlane(0)=twoDPB2.get(True)(blc,trc)*Complex(1.0/pbSum,0.0);
-
-    convFunc.resize();//break any reference
-    weightConvFunc_p.resize();
-    convFunc.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
-    weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
-    (*convSizes_p[actualConvIndex_p])[0]=convSize;
-  }
-  else{
-    convFunctions_p[actualConvIndex_p]->resize(convSize, convSize,1);
-    convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc;
-  }
-
-
-  if(0) {
-    PagedImage<Float> thisScreen(skyCoverage_p->shape(), 
-				 skyCoverage_p->coordinates(), "Screen");
-    thisScreen.copyData(*skyCoverage_p);
-  }
-
+  pbConvFunc_p->findConvFunction(iimage, vb, convSampling,*sj_p, convFunc, weightConvFunc_p, convSize, convSupport);
+ 				 
 }
 
 void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
@@ -862,6 +719,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     doWeightGridding=-1;
    
   if(isTiled) {
+    /*
     Double invLambdaC=vb.frequency()(0)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -894,7 +752,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	IPosition s(flags.shape());
 	// Now pass all the information down to a 
 	// FORTRAN routine to do the work
-	/*	gmosft(uvw.getStorage(del),
+		gmosft(uvw.getStorage(del),
 	       dphase.getStorage(del),
 	       datStorage,
 	       &s(0),
@@ -921,10 +779,11 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	       chanMap.getStorage(del),
 	       polMap.getStorage(del),
 	       sumWeight.getStorage(del));
-	*/
+	
 	//NEED to make a getdataposition for weights too
+	}
       }
-    }
+    */
   }
   else {
     Bool del;
@@ -977,12 +836,12 @@ void MosaicFT::get(VisBuffer& vb, Int row)
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    vb.modelVisCube()=Complex(0.0,0.0);
+    //  vb.modelVisCube()=Complex(0.0,0.0);
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+    //  vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
   }
   
 
@@ -1135,12 +994,12 @@ void MosaicFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    modelVis.set(Complex(0.0,0.0));
+    //  modelVis.set(Complex(0.0,0.0));
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    modelVis.xyPlane(row)=Complex(0.0,0.0);
+    //  modelVis.xyPlane(row)=Complex(0.0,0.0);
   }
   
   // Get the uvws in a form that Fortran can use
@@ -1617,40 +1476,6 @@ Int MosaicFT::getIndex(const ROMSPointingColumns& mspc, const Double& time,
 }
 
 
-Bool MosaicFT::checkPBOfField(const VisBuffer& vb){
-
-
-  Int fieldid=vb.fieldId();
-  Int msid=vb.msId();
-  String mapid=String::toString(msid)+String("_")+String::toString(fieldid);
-  if(convFunctionMap_p.ndefined() == 0){
-    convFunctionMap_p.define(mapid, 0);    
-    actualConvIndex_p=0;
-    return False;
-  }
-   
- if(!convFunctionMap_p.isDefined(mapid)){
-    actualConvIndex_p=convFunctionMap_p.ndefined();
-    convFunctionMap_p.define(mapid, actualConvIndex_p);
-    return False;
-  }
-  else{
-    actualConvIndex_p=convFunctionMap_p(mapid);
-    convFunc.resize(); // break any reference
-    weightConvFunc_p.resize(); 
-    //Here we will need to use the right xyPlane for different PA range.
-    convFunc.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
-    weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
-    //Again this for one time of antenna only later should be fixed for all 
-    // antennas independently
-    convSupport=(*convSupportBlock_p[actualConvIndex_p])[0];
-    convSize=(*convSizes_p[actualConvIndex_p])[0];
-
-  }
- 
- return True;
-
-}
 
 
 void MosaicFT::addBeamCoverage(ImageInterface<Complex>& pbImage){

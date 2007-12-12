@@ -94,6 +94,7 @@
 #include <synthesis/MeasurementEquations/MosaicSkyEquation.h>
 #include <synthesis/MeasurementEquations/WFSkyEquation.h>
 #include <synthesis/MeasurementEquations/WBSkyEquation.h>
+#include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
@@ -4545,7 +4546,8 @@ Bool Imager::clean(const String& algorithm,
        << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
     if(algorithm=="clark" || algorithm=="hogbom" || algorithm=="multiscale"){
-      sm_p->solveResiduals(*se_p);
+      //write the model visibility to ms for now 
+      sm_p->solveResiduals(*se_p, True);
       
     }
     redoSkyModel_p=False;
@@ -4823,7 +4825,7 @@ Bool Imager::mem(const String& algorithm,
     beamValid_p=True;
 
     if(algorithm=="entropy" || algorithm=="emptiness" )
-      sm_p->solveResiduals(*se_p);
+      sm_p->solveResiduals(*se_p, True);
     restoreImages(image);
     writeFluxScales(fluxscale_p);
     destroySkyEquation();  
@@ -6816,10 +6818,10 @@ Bool Imager::createFTMachine()
 	  gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
 	}
       } 
-      ft_p = new SDGrid(*ms_p, mLocation_p, *gvp_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
+      ft_p = new SDGrid(mLocation_p, *gvp_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
     }
     else {
-      ft_p = new SDGrid(*ms_p, mLocation_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
+      ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
     }
     VisIter& vi(vs_p->iter());
     // Get bigger chunks o'data: this should be tuned some time
@@ -6843,7 +6845,7 @@ Bool Imager::createFTMachine()
 	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
       }
     } 
-    ft_p = new MosaicFT(*mssel_p, *gvp_p, cache_p/2, tile_p, True);
+    ft_p = new MosaicFT(*gvp_p, mLocation_p, cache_p/2, tile_p, True);
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -6984,7 +6986,7 @@ Bool Imager::createFTMachine()
     }
     if(sdScale_p!=1.0) os << "Multiplying single dish data by factor " << sdScale_p << LogIO::POST;
     if(sdWeight_p!=1.0) os << "Multiplying single dish weights by factor " << sdWeight_p << LogIO::POST;
-    ft_p = new GridBoth(*ms_p, *gvp_p, cache_p/2, tile_p,
+    ft_p = new GridBoth(*gvp_p, cache_p/2, tile_p,
 			mLocation_p, phaseCenter_p,
 			gridfunction_p, "SF", padding,
 			sdScale_p, sdWeight_p);
@@ -8160,5 +8162,28 @@ Int Imager::interactivemask(const String& image, const String& mask,
    Int val=vwrCln.go(niter, ncycles, thresh);
    return val;
 }
+
+void Imager::setSkyEquation(){
+  /*  if(sm_p->nmodels() >0){
+    Long npix=0;
+    for (Int model=0; model < sm_p->nmodels(); ++model){
+      Long pixmod=sm_p->image(model).product();
+      npix=max(pixmod, npix);
+    }
+    Long pixInMem=(HostInfo::memoryTotal()/8)*1024;
+    if(npix > (pixInMem/2)){
+      se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
+      return;
+    }
+    //else lets make the base SkyEquation for now
+  }
+  
+  se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
+
+  */
+  se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
+  return;
+}
+
 } //# NAMESPACE CASA - END
 

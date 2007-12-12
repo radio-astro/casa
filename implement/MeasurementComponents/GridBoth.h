@@ -115,20 +115,20 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  GridBoth(MeasurementSet& ms, SkyJones& sj, Long cachesize, Int tilesize,
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
 	   String sdConvType="BOX",
 	   String synConvType="SF",
 	   Float padding=1.0,
 	   Float sdScale=1.0,
 	   Float sdWeight=1.0);
-  GridBoth(MeasurementSet& ms, SkyJones& sj, Long cachesize, Int tilesize,
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
 	   MPosition mLocation,
 	   String sdConvType="BOX",
 	   String synConvType="SF",
 	   Float padding=1.0,
 	   Float sdScale=1.0,
 	   Float sdWeight=1.0);
-  GridBoth(MeasurementSet& ms, SkyJones& sj, Long cachesize, Int tilesize,
+  GridBoth(SkyJones& sj, Long cachesize, Int tilesize,
 	   MPosition mLocation, MDirection mTangent,
 	   String sdConvType="BOX",
 	   String synConvType="SF",

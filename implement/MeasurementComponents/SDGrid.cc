@@ -78,49 +78,45 @@
 
 namespace casa {
 
-SDGrid::SDGrid(MeasurementSet& ms, SkyJones& sj, Int icachesize, Int itilesize,
+SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport)
-  : FTMachine(), ms_p(&ms), sj_p(&sj), imageCache(0), wImageCache(0),
+  : FTMachine(), sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport)
 {
-  //  mspc=new MSPointingColumns(ms_p->pointing());
   lastIndex_p=0;
 }
 
-SDGrid::SDGrid(MeasurementSet& ms, MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize,
+SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport)
-  : FTMachine(), ms_p(&ms), sj_p(&sj), imageCache(0), wImageCache(0),
+  : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport)
 {
   mLocation_p=mLocation;
-  //  mspc=new MSPointingColumns(ms_p->pointing());
   lastIndex_p=0;
 }
 
-SDGrid::SDGrid(MeasurementSet& ms, Int icachesize, Int itilesize,
+SDGrid::SDGrid(Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport)
-  : FTMachine(), ms_p(&ms), sj_p(0), imageCache(0), wImageCache(0),
+  : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport)
 {
-  //  mspc=new MSPointingColumns(ms_p->pointing());
   lastIndex_p=0;
 }
 
-SDGrid::SDGrid(MeasurementSet& ms, MPosition &mLocation, Int icachesize, Int itilesize,
+SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport)
-  : FTMachine(), ms_p(&ms), sj_p(0), imageCache(0), wImageCache(0),
+  : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport)
 {
   mLocation_p=mLocation;
-  //  mspc=new MSPointingColumns(ms_p->pointing());
   lastIndex_p=0;
 }
 
@@ -128,7 +124,14 @@ SDGrid::SDGrid(MeasurementSet& ms, MPosition &mLocation, Int icachesize, Int iti
 SDGrid& SDGrid::operator=(const SDGrid& other)
 {
   if(this!=&other) {
-    ms_p=other.ms_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    freqFrameValid_p=other.freqFrameValid_p;
     sj_p=other.sj_p;
     imageCache=other.imageCache;
     wImage=other.wImage;
@@ -141,7 +144,6 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     wLattice=other.wLattice;
     wArrayLattice=other.wArrayLattice;
     convType=other.convType;
-    mspc=other.mspc;
     pointingToImage=other.pointingToImage;
     userSetSupport_p=other.userSetSupport_p;
   };

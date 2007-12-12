@@ -130,13 +130,13 @@ public:
   // larger support for the convolution if the user wants it ..-1 will 
   // use the default  i.e 1 for BOX and 3 for others
   // <group>
-  SDGrid(MeasurementSet& ms, SkyJones& sj, Int cachesize, Int tilesize,
+  SDGrid(SkyJones& sj, Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
-  SDGrid(MeasurementSet& ms, MPosition& ml, SkyJones& sj, Int cachesize,
+  SDGrid(MPosition& ml, SkyJones& sj, Int cachesize,
 	 Int tilesize, String convType="BOX", Int userSupport=-1);
-  SDGrid(MeasurementSet& ms, Int cachesize, Int tilesize,
+  SDGrid(Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
-  SDGrid(MeasurementSet& ms, MPosition& ml, Int cachesize, Int tilesize,
+  SDGrid(MPosition& ml, Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
   // </group>
 
@@ -189,8 +189,6 @@ private:
   void findPBAsConvFunction(const ImageInterface<Complex>& image,
 			    const VisBuffer& vb);
 
-  MeasurementSet* ms_p;
-
   SkyJones* sj_p;
 
   // Get the appropriate data pointer
@@ -232,8 +230,6 @@ private:
   Array<Complex> griddedData;
   Array<Float> wGriddedData;
 
-  // Pointing columns
-  MSPointingColumns* mspc;
 
   DirectionCoordinate directionCoord;
 

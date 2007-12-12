@@ -177,7 +177,8 @@ public:
 
   // Solve explicitly for the residuals: same as solve for
   // this class
-  Bool solveResiduals (SkyEquation& me);
+  // modelToMs determines if predicted vis is put in the MODEL_DATA column
+  Bool solveResiduals (SkyEquation& me, Bool modelToMS=False);
 
   // Make the approximate PSFs needed for each model
   virtual void makeApproxPSFs(SkyEquation& se);

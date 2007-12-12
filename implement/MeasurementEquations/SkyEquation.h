@@ -347,6 +347,8 @@ public:
 
   virtual void checkVisIterNumRows(ROVisibilityIterator& vi);
 
+  virtual void predictComponents(Bool& incremental, Bool& initialized);
+
   // SkyModel
   SkyModel* sm_;
 

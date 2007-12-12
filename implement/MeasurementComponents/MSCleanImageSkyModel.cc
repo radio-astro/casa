@@ -154,7 +154,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   
-
+  Bool converged=True;
   // Loop over all channels and polarizations
   for (Int chan=0; chan<nchan; chan++) {
 
@@ -223,6 +223,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  }
 	}
 
+	
+
 	if(doClean) {
 	  SubLattice<Float> subImage(image(0), onePlane, True);
 	  
@@ -234,7 +236,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
 			     Quantity(threshold(), "Jy"), True);
 	  
-	  cleaner.clean(subImage, progress_p);
+	  converged=cleaner.clean(subImage, progress_p);
 	
 	  // calculate residuals 
 	  
@@ -249,7 +251,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   }
   modified_p=True;
 
-  return(True);
+  return(converged);
 };
 
 } //# NAMESPACE CASA - END

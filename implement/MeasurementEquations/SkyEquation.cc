@@ -153,24 +153,14 @@ void SkyEquation::setSkyJones(SkyJones& j) {
 
 //----------------------------------------------------------------------
 // Predict the Sky coherence
-void SkyEquation::predict(Bool incremental) {
-
-  AlwaysAssert(cft_, AipsError);
-  AlwaysAssert(sm_, AipsError);
-  AlwaysAssert(vs_, AipsError);
-  if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
+void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
   // Initialize 
   VisIter& vi=vs_->iter();
   checkVisIterNumRows(vi);
   VisBuffer vb(vi);
-
-  // Reset the visibilities only if this is not an incremental
-  // change to the model
-  Bool initialized=False;
-
-  // Do the component model only if this is not an incremental update;
+   // Do the component model only if this is not an incremental update;
   if(sm_->hasComponentList() &&  !incremental ) {
-
+    
     // Reset the various SkyJones
     resetSkyJones();
 
@@ -198,6 +188,26 @@ void SkyEquation::predict(Bool incremental) {
     }
     if(!incremental&&!initialized) initialized=True;
   }
+
+
+}
+
+void SkyEquation::predict(Bool incremental) {
+
+  AlwaysAssert(cft_, AipsError);
+  AlwaysAssert(sm_, AipsError);
+  AlwaysAssert(vs_, AipsError);
+  if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
+  // Initialize 
+  VisIter& vi=vs_->iter();
+  checkVisIterNumRows(vi);
+  VisBuffer vb(vi);
+
+  // Reset the visibilities only if this is not an incremental
+  // change to the model
+  Bool initialized=False;
+  predictComponents(incremental, initialized);
+ 
   // Now do the images
   for (Int model=0;model<sm_->numberOfModels();model++) {      
     
@@ -258,7 +268,8 @@ void SkyEquation::predict(Bool incremental) {
       finalizeGet();
       unScaleImage(model, incremental);
       if(!incremental&&!initialized) initialized=True;
-    }
+    
+  }
   }
 }
 
@@ -1077,7 +1088,7 @@ void SkyEquation::put(const VisBuffer & vb, Int model, Bool dopsf, FTMachine::Ty
     ift_->put(vb, -1, dopsf, col);
   }
 
-
+  isBeginingOfSkyJonesCache_p=False;
 }
 
 
@@ -1125,7 +1136,7 @@ void SkyEquation::finalizePut(const VisBuffer& vb, Int model) {
   // Actually do the transform. Update weights as we do so.
   ift_->finalizeToSky();
   // 1. Now get the (unnormalized) image and add the 
-  // weight to the summed weight
+  // weight to the summed weights
   Matrix<Float> delta;
   sm_->cImage(model).copyData(ift_->getImage(delta, False));
   sm_->weight(model)+=delta;
@@ -1432,7 +1443,7 @@ void SkyEquation::applySkyJonesSquare(const VisBuffer& vb, Int row,
 
   // First fill the work image with the appropriate value
   // of the weight.
-  ft_->getWeightImage(work, weights);
+  ift_->getWeightImage(work, weights);
    // Apply SkyJones as needed
   if(!isPSFWork_p && (ft_->name() != "MosaicFT") ){
     if(ej_) ej_->applySquare(work,work,vb,row);
@@ -1448,7 +1459,7 @@ void SkyEquation::applySkyJonesSquare(const VisBuffer& vb, Int row,
   else{
     ggS.copyData(work);
   }
-
+ 
 };
 
 

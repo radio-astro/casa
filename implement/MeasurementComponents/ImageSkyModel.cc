@@ -258,8 +258,8 @@ Bool ImageSkyModel::solve(SkyEquation& se) {
 
 // Simply finds residual image: i.e. Dirty Image if started with
 // zero'ed image. We work from corrected visibilities only!
-Bool ImageSkyModel::solveResiduals(SkyEquation& se) {
-  makeNewtonRaphsonStep(se, False);
+Bool ImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) {
+  makeNewtonRaphsonStep(se, False, modelToMS);
   return True;
 }
 

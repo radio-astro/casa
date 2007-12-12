@@ -623,8 +623,8 @@ protected:
     
   virtual void setClarkCleanImageSkyModel()
     {sm_p = new ClarkCleanImageSkyModel(); return;};
-  virtual void setSkyEquation()
-    {se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); return;};
+  virtual void setSkyEquation();
+    
 
   String frmtTime(const Double time);
 
