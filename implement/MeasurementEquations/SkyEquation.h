@@ -186,6 +186,9 @@ public:
   // in the sense that it is a shift-invariant approximation
   virtual void makeApproxPSF(Int model, ImageInterface<Float>& PSF);
 
+  // make all the approx psfs in one go
+  virtual void makeApproxPSF(PtrBlock<TempImage<Float> *>& PSFs);
+
   // Make complex XFRs needed for incrementGradientChiSquared
   virtual void makeComplexXFRs();
 

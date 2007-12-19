@@ -206,7 +206,10 @@ public:
   // Return the name of the machine
 
   virtual String name(){ return "None";};
-
+ 
+  // set and get the location used for frame 
+  void setLocation(const MPosition& loc);
+  MPosition& getLocation();
 
 protected:
 

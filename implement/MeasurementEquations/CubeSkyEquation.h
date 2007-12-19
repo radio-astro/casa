@@ -46,28 +46,28 @@ class CubeSkyEquation : public SkyEquation {
   virtual ~CubeSkyEquation();
   virtual void predict(Bool incremental=False);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
-  virtual void initializePutSlice(const VisBuffer& vb, Int model,
-				  Int cubeSlice=0, Int nCubeSlice=1);
-  virtual void putSlice(const VisBuffer& vb, Int model, Bool dopsf, 
+  virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void putSlice(const VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
-  virtual void finalizePutSlice(const VisBuffer& vb, Int model, 
+  virtual void finalizePutSlice(const VisBuffer& vb,  
 				Int cubeSlice=0, Int nCubeSlice=1);
-  void initializeGetSlice(const VisBuffer& vb, Int row, Int model,
+  void initializeGetSlice(const VisBuffer& vb, Int row,
 			  Bool incremental, Int cubeSlice=0, 
 			  Int nCubeSlice=1);   
   virtual VisBuffer& getSlice(VisBuffer& vb, 
-			      Int nmodels, Bool incremental, Int cubeSlice=0,
+			      Bool incremental, Int cubeSlice=0,
 			      Int nCubeSlice=1); 
   void finalizeGetSlice();
   void isLargeCube(ImageInterface<Complex>& theIm, Int& nCubeSlice);
-  void makeApproxPSF(Int model, ImageInterface<Float>& psf);
+  //void makeApproxPSF(Int model, ImageInterface<Float>& psf);
   //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
-  
+  void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
+
  protected:
-  CountedPtr<ImageInterface<Complex> > imGetSlice_p;
-  CountedPtr<ImageInterface<Complex> > imPutSlice_p;
-  Matrix<Float> weightSlice_p;
+  Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
+  Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;
+  Block<Matrix<Float> >weightSlice_p;
   Slicer sl_p;
   Int nchanPerSlice_p;
   // Type of copy 
@@ -89,7 +89,8 @@ class CubeSkyEquation : public SkyEquation {
   Block< Vector<Int> >blockNumChanGroup_p, blockChanStart_p;
   Block< Vector<Int> > blockChanWidth_p, blockChanInc_p;
   Block<Vector<Int> > blockSpw_p;
-
+  Block<CountedPtr<FTMachine> > ftm_p;
+  Block<CountedPtr<FTMachine> > iftm_p;
 
 };
 

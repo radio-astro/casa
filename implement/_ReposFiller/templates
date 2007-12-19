@@ -51,6 +51,12 @@
      template class CountedPtr<Cube<Complex> >
      template class SimpleCountedConstPtr<Cube<Complex> >
      template class SimpleCountedPtr<Cube<Complex> >
+1030 casa/Utilities/CountedPtr.cc
+     = synthesis/MeasurementComponents/FTMachine.h
+     template class PtrRep<FTMachine> 
+     template class SimpleCountedPtr<FTMachine>
+     template class SimpleCountedConstPtr<FTMachine>
+     template class CountedPtr<FTMachine>
 1000 casa/Utilities/Register.cc casa/Containers/OrderedMap.h 
      = synthesis/Parallel/Algorithm.h 
      template uInt Register(OrderedMapNotice<Int, Algorithm *> const *) 

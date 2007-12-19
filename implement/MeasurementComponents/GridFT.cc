@@ -161,7 +161,7 @@ GridFT& GridFT::operator=(const GridFT& other)
 };
 
 //----------------------------------------------------------------------
-GridFT::GridFT(const GridFT& other)
+GridFT::GridFT(const GridFT& other) : machineName_p("GridFT")
 {
   operator=(other);
 }

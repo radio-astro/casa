@@ -86,8 +86,7 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),
-    convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
+    pointingToImage(0), usezero_p(usezero),machineName_p("WProjectFT")
 {
   convSize=0;
   tangentSpecified_p=False;
@@ -104,8 +103,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),
-    convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
+    pointingToImage(0), usezero_p(usezero), machineName_p("WProjectFT")
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -124,8 +122,7 @@ WProjectFT::WProjectFT(
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-    pointingToImage(0), usezero_p(usezero),
-    convFunctionMap_p(-1),actualConvIndex_p(-1), machineName_p("WProjectFT")
+    pointingToImage(0), usezero_p(usezero),machineName_p("WProjectFT")
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -137,7 +134,7 @@ WProjectFT::WProjectFT(
 }
 
 WProjectFT::WProjectFT(const RecordInterface& stateRec)
-  : FTMachine(), convFunctionMap_p(-1), machineName_p("WProjectFT")
+  : FTMachine(),machineName_p("WProjectFT")
 {
   // Construct from the input state record
   String error;
@@ -179,7 +176,7 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 };
 
 //----------------------------------------------------------------------
-WProjectFT::WProjectFT(const WProjectFT& other) : convFunctionMap_p(-1)
+WProjectFT::WProjectFT(const WProjectFT& other) :machineName_p("WProjectFT")
 {
   operator=(other);
 }
@@ -267,15 +264,27 @@ WProjectFT::~WProjectFT() {
   if(imageCache) delete imageCache; imageCache=0;
   if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
+  /*
   Int numofmodels=convFunctions_p.nelements();
   for (Int k=0; k< numofmodels; ++k){
     delete convFunctions_p[k];
     delete convSupportBlock_p[k];
 
   }
+  */
   // convFuctions_p.resize();
   //  convSupportBlock_p.resize();
 
+}
+
+
+void WProjectFT::setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc){
+
+  wpConvFunc_p=pbconvFunc;
+}
+CountedPtr<WPConvFunc>& WProjectFT::getConvFunc(){
+
+  return wpConvFunc_p;
 }
 
 void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
@@ -1334,48 +1343,6 @@ void WProjectFT::makeImage(FTMachine::Type type,
   getImage(weight, True);
 }
 
-Bool WProjectFT::checkCenterPix(const ImageInterface<Complex>& image){
-
-  CoordinateSystem imageCoord=image.coordinates();
-  MDirection wcenter;  
-  Int directionIndex=imageCoord.findCoordinate(Coordinate::DIRECTION);
-  DirectionCoordinate
-    directionCoord=imageCoord.directionCoordinate(directionIndex);
-  Vector<Double> pcenter(2);
-  pcenter(0) = nx/2;
-  pcenter(1) = ny/2;    
-  directionCoord.toWorld( wcenter, pcenter );
-
-  ostringstream oos;
-  oos << setprecision(10);
-
-  oos << wcenter.getAngle("deg").getValue()(0);
-  oos << wcenter.getAngle("deg").getValue()(1);
-  String imageKey(oos);
-
-  if(convFunctionMap_p.ndefined() == 0){
-    convFunctionMap_p.define(imageKey, 0);    
-    actualConvIndex_p=0;
-    return False;
-  }
-   
-  if(!convFunctionMap_p.isDefined(imageKey)){
-    actualConvIndex_p=convFunctionMap_p.ndefined();
-    convFunctionMap_p.define(imageKey,actualConvIndex_p);
-    return False;
-  }
-  else{
-    actualConvIndex_p=convFunctionMap_p(imageKey);
-    convFunc.resize(); // break any reference
-    convFunc.reference(*convFunctions_p[actualConvIndex_p]);
-    convSupport.resize();
-    convSupport=*convSupportBlock_p[actualConvIndex_p];
-    convSize=convSizes_p[actualConvIndex_p];
-
-  }
-
-  return True;
-}
 
 String WProjectFT::name(){
 

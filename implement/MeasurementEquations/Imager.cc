@@ -7264,7 +7264,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	os << "Processing multiple facets with wide-field sky equation" << LogIO::POST;
       }
       else{
-	se_p=new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
+	setSkyEquation();
+	//se_p=new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
 	os << "Processing multiple facets with simple sky equation" << LogIO::POST;
       }
     }

@@ -162,7 +162,7 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 };
 
 //----------------------------------------------------------------------
-MosaicFT::MosaicFT(const MosaicFT& other)
+MosaicFT::MosaicFT(const MosaicFT& other): machineName_p("MosaicFT")
 {
   operator=(other);
 }

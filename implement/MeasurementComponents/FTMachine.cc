@@ -620,6 +620,7 @@ Bool FTMachine::matchChannel(const Int& spw,
   }
   
 
+
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
@@ -643,6 +644,7 @@ Bool FTMachine::matchChannel(const Int& spw,
     }
   }
 
+
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
 
@@ -655,6 +657,8 @@ Bool FTMachine::matchChannel(const Int& spw,
      return False;
   }
 
+
+ 
 
   return True;
 
@@ -678,12 +682,16 @@ void FTMachine::gridOk(Int convSupport){
 
 }
 
+void FTMachine::setLocation(const MPosition& loc){
 
+  mLocation_p=loc;
 
+}
 
+MPosition& FTMachine::getLocation(){
 
-
-
+  return mLocation_p;
+}
 
 
 

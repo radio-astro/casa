@@ -206,9 +206,13 @@ ImageSkyModel& ImageSkyModel::operator=(const ImageSkyModel& other) {
 void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
   LogIO os(LogOrigin("ImageSkyModel", "makeApproxPSFs"));
 
-  for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
-    if( !donePSF_p || !psf_p[thismodel]){ 
-      se.makeApproxPSF(thismodel, PSF(thismodel));  
+  if(!donePSF_p){
+    for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
+      //make sure the psf images are made
+      PSF(thismodel);
+    }
+    se.makeApproxPSF(psf_p);
+    for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
       beam(thismodel)=0.0;
       if(!StokesImageUtil::FitGaussianPSF(PSF(thismodel),
 					  beam(thismodel))) {

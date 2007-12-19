@@ -123,7 +123,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   nx_p=image.shape()(directionIndex); 
   ny_p=image.shape()(directionIndex+1);
 
-  cout << "nx ny " << nx_p << "  " << ny_p << endl;
   // Set up the convolution function. 
   if(wConvSize>1) {
     /* if(wConvSize>256) {
@@ -378,7 +377,6 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
   pcenter(0) = nx_p/2;
   pcenter(1) = ny_p/2;    
 
-  cout << "b nx ny " << nx_p << "  " << ny_p << endl;
   directionCoord.toWorld( wcenter, pcenter );
 
   ostringstream oos;

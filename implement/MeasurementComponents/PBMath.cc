@@ -1349,9 +1349,9 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 				       Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
     break;
   case SMA:
-    //Value provided by Crystal Brogan...
+    //Value provided by Crystal Brogan as of  Dec-12-2007
     //needs updating when proper values are given
-    pb_pointer_p = new PBMath1DGauss( Quantity((56.0/2.0),"arcsec"),  // half width==> /2
+    pb_pointer_p = new PBMath1DGauss( Quantity((52.3/2.0),"arcsec"),  // half width==> /2
 				      Quantity(35.0, "arcsec"),
 				      Quantity(224.0, "GHz"),
 				      False,

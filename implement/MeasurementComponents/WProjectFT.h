@@ -225,6 +225,13 @@ public:
 
   String name();
 
+  // Copy convolution function etc to another FT machine
+  // necessary if ft and ift are distinct but can share convfunctions
+
+  void setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc);
+  CountedPtr<WPConvFunc>& getConvFunc();
+
+
 protected:
 
   // Padding in FFT
@@ -300,12 +307,8 @@ protected:
   Int convSize;
   Vector<Int> convSupport;
 
-  PtrBlock < Cube<Complex> *> convFunctions_p;
-  PtrBlock < Vector<Int> *> convSupportBlock_p;
-  SimpleOrderedMap <String, Int> convFunctionMap_p;
   Vector<Int> convSizes_p;
 
-  Int actualConvIndex_p;
 
   Int wConvSize;
 
@@ -315,8 +318,6 @@ protected:
 	       const Double& interval);
 
   Bool getXYPos(const VisBuffer& vb, Int row);
-
-  Bool checkCenterPix(const ImageInterface<Complex>& image);
 
   String machineName_p;
 
