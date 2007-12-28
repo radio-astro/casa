@@ -62,6 +62,7 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
 
+#include <casa/OS/Memory.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -71,6 +72,8 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     firstOneChangesGet_p(False)
 {
 
+
+  
 
   Int nmod=sm_->numberOfModels();
 
@@ -93,8 +96,8 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     //For mosaic ...outlier fields get normal GridFT's
     MPosition loc=ift_->getLocation();
     for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
-      ftm_p[k]=new GridFT(1000000, 16, "SF", loc);
-      iftm_p[k]=new GridFT(1000000, 16, "SF", loc);
+      ftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
+      iftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
     }
   }
   else if(ft.name()== "WProjectFT"){
@@ -102,6 +105,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     ift_=new WProjectFT(static_cast<WProjectFT &>(ft));
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
+    CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
+    static_cast<WProjectFT &>(*ftm_p[0]).setConvFunc(sharedconvFunc);
+    static_cast<WProjectFT &>(*iftm_p[0]).setConvFunc(sharedconvFunc);
     // For now have all the fields have WProjectFt machines....
     //but should be seperated between GridFT's for the outliers and 
     //WProject for the facets.
@@ -109,7 +115,6 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
       ftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ft_));
       iftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ift_));
       // Give each pair of FTMachine a convolution function set to share
-      CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
       static_cast<WProjectFT &>(*ftm_p[k]).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*iftm_p[k]).setConvFunc(sharedconvFunc);
 
@@ -135,9 +140,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     }
   }
 
-  imGetSlice_p.resize(sm_->numberOfModels(), True);
-  imPutSlice_p.resize(sm_->numberOfModels(), True);
-  weightSlice_p.resize(sm_->numberOfModels(), True);
+  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  imPutSlice_p.resize(sm_->numberOfModels(), True, False);
+  weightSlice_p.resize(sm_->numberOfModels(), True, False);
 
 }
 
@@ -173,7 +178,7 @@ void  CubeSkyEquation::predict(Bool incremental) {
 
   Bool isEmpty=True;
   for (Int model=0; model < (sm_->numberOfModels());++model){
-    isEmpty=isEmpty &&  sm_->isEmpty(model);                
+    isEmpty=isEmpty &&  (sm_->isEmpty(model));                
 
   }
 
@@ -349,6 +354,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
   Bool changedVI=False;
   predictComponents(incremental, initialized);
   Bool predictedComp=initialized;
+
   sm_->initializeGradients();
   // Initialize 
   VisIter& vi=vs_->iter();
@@ -400,7 +406,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
    
   isLargeCube(sm_->cImage(0), nCubeSlice);
     
-    
+  
   for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
     //      vi.originChunks();
     //      vi.origin();      
@@ -423,7 +429,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
 		     "", "", "", True);
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	if(!incremental&&!initialized) {
+	if(!incremental && !predictedComp) {
 	  vb.setModelVisCube(Complex(0.0,0.0));
 	}
 	  // get the model visibility and write it to the model MS
@@ -441,11 +447,12 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
 	
       }
     }
+
     finalizeGetSlice();
     if(!incremental&&!initialized) initialized=True;
     finalizePutSlice(vb, cubeSlice, nCubeSlice);
   }
-
+  
   for (Int model=0;model<sm_->numberOfModels();model++) {
     //unScaleImage(model, incremental);
     ft_=&(*ftm_p[model]);
@@ -460,6 +467,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
     vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
 		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
 
+  
 
 }
 
@@ -644,7 +652,8 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //slice=0;
 
   if(typeOfSlice==0){
-    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates());
+    Double memoryMB=HostInfo::memoryFree()/1024.0/(4.0*(sm_->numberOfModels()));
+    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
     //slice->setCoordinateInfo(sm_->image(model).coordinates());

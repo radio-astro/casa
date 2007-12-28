@@ -261,7 +261,7 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
   return True;
 }
 
-
+/*
 void WFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se) {
   LogIO os(LogOrigin("ImageSkyModel", "makeApproxPSFs"));
 
@@ -289,7 +289,7 @@ void WFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se) {
     }
   }
 }
-
+*/
 
 
 } //# NAMESPACE CASA - END

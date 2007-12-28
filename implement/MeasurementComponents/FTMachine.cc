@@ -611,6 +611,7 @@ Bool FTMachine::matchChannel(const Int& spw,
   Vector<Double> lsrFreq(0);
   Bool convert=False;
  
+
   if(freqFrameValid_p){
     vb.lsrFrequency(spw, lsrFreq, convert);
     doConversion_p[spw]=convert;
@@ -619,7 +620,6 @@ Bool FTMachine::matchChannel(const Int& spw,
     lsrFreq=vb.lsrFrequency();
   }
   
-
 
   Vector<Double> c(1);
   c=0.0;

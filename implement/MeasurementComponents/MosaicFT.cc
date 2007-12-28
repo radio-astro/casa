@@ -120,6 +120,8 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     lastFieldId_p=other.lastFieldId_p;
     lastMSId_p=other.lastMSId_p;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
     nx=other.nx;
     ny=other.ny;
     npol=other.npol;
@@ -566,7 +568,7 @@ Array<Complex>* MosaicFT::getDataPointer(const IPosition& centerLoc2D,
 #endif
 
 extern "C" { 
-  void gmosft(Double*,
+  void gmosft(const Double*,
 	      Double*,
 	      const Complex*,
 	      Int*,
@@ -589,14 +591,14 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Int*,
-	      Complex*,
+	      const Complex*,
 	      Int*,
 	      Int*,
 	      Double*,
 	      Complex*,
 	      Complex*,
 	      Int*);
-  void dmosft(Double*,
+  void dmosft(const Double*,
 	      Double*,
 	      Complex*,
 	      Int*,
@@ -617,7 +619,7 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Int*,
-	      Complex*,
+	      const Complex*,
 	      Int*,
 	      Int*);
 }
@@ -788,7 +790,15 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   else {
     Bool del;
     IPosition s(flags.shape());
-    gmosft(uvw.getStorage(del),
+    Bool uvwcopy; 
+    const Double *uvwstor=uvw.getStorage(uvwcopy);
+    Bool gridcopy;
+    Complex *gridstor=griddedData.getStorage(gridcopy);
+    Bool convcopy;
+    const Complex *convstor=convFunc.getStorage(convcopy);
+    Bool weightcopy;
+    Complex *gridwgtstor=griddedWeight.getStorage(weightcopy);
+    gmosft(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
 	   &s(0),
@@ -801,7 +811,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
-	   griddedData.getStorage(del),
+	   gridstor,
 	   &nx,
 	   &ny,
 	   &npol,
@@ -811,14 +821,18 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &convSupport,
 	   &convSize,
 	   &convSampling,
-	   convFunc.getStorage(del),
+	   convstor,
 	   chanMap.getStorage(del),
 	   polMap.getStorage(del),
 	   sumWeight.getStorage(del),
-	   griddedWeight.getStorage(del),
+	   gridwgtstor,
 	   weightConvFunc_p.getStorage(del),
 	   &doWeightGridding
 	   );
+    uvw.freeStorage(uvwstor, uvwcopy);
+    griddedData.putStorage(gridstor, gridcopy);
+    convFunc.freeStorage(convstor, convcopy);
+    griddedWeight.putStorage(gridwgtstor, weightcopy);
   }
 
   data->freeStorage(datStorage, isCopy);
@@ -950,10 +964,18 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
-    IPosition s(vb.modelVisCube().shape());
-    dmosft(uvw.getStorage(del),
+     Bool isCopy;
+     Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
+     Bool uvwcopy; 
+     const Double *uvwstor=uvw.getStorage(uvwcopy);
+     Bool gridcopy;
+     const Complex *gridstor=griddedData.getStorage(gridcopy);
+     Bool convcopy;
+     const Complex *convstor=convFunc.getStorage(convcopy);
+     IPosition s(vb.modelVisCube().shape());
+     dmosft(uvwstor,
 	   dphase.getStorage(del),
-	   vb.modelVisCube().getStorage(del),
+	   datStorage,
 	   &s(0),
 	   &s(1),
 	   flags.getStorage(del),
@@ -962,7 +984,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
-	   griddedData.getStorage(del),
+	   gridstor,
 	   &nx,
 	   &ny,
 	   &npol,
@@ -972,9 +994,13 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	   &convSupport,
 	   &convSize,
 	   &convSampling,
-	   convFunc.getStorage(del),
+	   convstor,
 	   chanMap.getStorage(del),
 	   polMap.getStorage(del));
+     vb.modelVisCube().putStorage(datStorage, isCopy);
+     uvw.freeStorage(uvwstor, uvwcopy);
+     griddedData.freeStorage(gridstor, gridcopy);
+     convFunc.freeStorage(convstor, convcopy);
   }
 }
 

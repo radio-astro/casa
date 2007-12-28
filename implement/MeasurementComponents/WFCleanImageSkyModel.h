@@ -101,7 +101,7 @@ public:
   // Solve for this SkyModel
   virtual Bool solve (SkyEquation& me);
 
-  void makeApproxPSFs(SkyEquation& se);
+  //void makeApproxPSFs(SkyEquation& se);
   
 
   PtrBlock<TempImage<Complex> *>& cimageBlkPtr() { return cimage_p;};

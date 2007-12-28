@@ -744,7 +744,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	restFreq=restFreqVec[0];
       }
       mySpectral = new SpectralCoordinate(obsFreqRef,
-					  mfImageStart_p.get("Hz").getValue(),
+					  mfImageStart_p.get("Hz").getValue()+
+					  mfImageStep_p.get("Hz").getValue()/2.0,
 					  mfImageStep_p.get("Hz").getValue(),
 					  refChan, restFreq);
       os <<  "Frequency = "
@@ -3875,7 +3876,11 @@ Bool Imager::makeimage(const String& type, const String& image,
 #endif
     throw(x);
     return False;
-  } 
+  }
+  catch(...){
+    //Unknown exception...
+    throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
+  }
   this->unlock();
 
 #ifdef PABLO_IO
@@ -4605,6 +4610,12 @@ Bool Imager::clean(const String& algorithm,
       //continue and wrap up this function
       
     }
+    catch(...){
+      os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
+      os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	 <<LogIO::POST;
+
+    }
     
     this->unlock();
 
@@ -4634,6 +4645,10 @@ Bool Imager::clean(const String& algorithm,
 
     return False;
   } 
+  catch(...){
+    //Unknown exception...
+    throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
+  }
   this->unlock();
 
 #ifdef PABLO_IO
@@ -4861,15 +4876,20 @@ Bool Imager::mem(const String& algorithm,
 	  log.flush();
 	}
       }
-    }catch(exception& x){
+    }
+    catch(exception& x){
       
-	os << LogIO::WARN << "Caught exception: " << x.what()
-       << LogIO::POST;
-	os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted; you may consider deleting all the rows from this table"
-	   <<LogIO::POST; 
-	//continue and wrap up this function as normal
-
-      }
+      os << LogIO::WARN << "Caught exception: " << x.what()
+	 << LogIO::POST;
+      os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted; you may consider deleting all the rows from this table"
+	 <<LogIO::POST; 
+      //continue and wrap up this function as normal
+      
+    }
+    catch(...){
+      //Unknown exception...
+      throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
+    }
     
     this->unlock();
 
@@ -5239,7 +5259,11 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
     
     //    if (!se_p)
     if(!createSkyEquation(model, complist)) return False;
-    
+    if(incremental){
+      for (Int mod=0; mod < (sm_p->numberOfModels()); ++mod){
+	(sm_p->deltaImage(mod)).copyData(sm_p->image(mod));
+      }
+    }
     se_p->predict(incremental);
     
     destroySkyEquation();

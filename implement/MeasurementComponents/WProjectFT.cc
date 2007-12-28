@@ -155,6 +155,8 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     npol=other.npol;
     nchan=other.nchan;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
     padding_p=other.padding_p;
     nWPlanes_p=other.nWPlanes_p;
     imageCache=other.imageCache;
@@ -518,7 +520,7 @@ Array<Complex>* WProjectFT::getDataPointer(const IPosition& centerLoc2D,
 #endif
 
 extern "C" { 
-  void gwproj(Double*,
+  void gwproj(const Double*,
 	      Double*,
 	      const Complex*,
 	      Int*,
@@ -542,11 +544,11 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Int*,
-	      Complex*,
+	      const Complex*,
 	      Int*,
 	      Int*,
 	      Double*);
-  void dwproj(Double*,
+  void dwproj(const Double*,
 	      Double*,
 	      Complex*,
 	      Int*,
@@ -568,7 +570,7 @@ extern "C" {
 	      Int*,
 	      Int*,
 	      Int*,
-	      Complex*,
+	      const Complex*,
 	      Int*,
 	      Int*);
 }
@@ -725,8 +727,14 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else {
     Bool del;
+    Bool uvwcopy; 
+    const Double *uvwstor=uvw.getStorage(uvwcopy);
+    Bool gridcopy;
+    Complex *gridstor=griddedData.getStorage(gridcopy);
+    Bool convcopy;
+    const Complex *convstor=convFunc.getStorage(convcopy);
     IPosition s(flags.shape());
-    gwproj(uvw.getStorage(del),
+    gwproj(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
 	   &s(0),
@@ -739,7 +747,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
-	   griddedData.getStorage(del),
+	   gridstor,
 	   &nx,
 	   &ny,
 	   &npol,
@@ -750,10 +758,13 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &convSize,
 	   &convSampling,
 	   &wConvSize,
-	   convFunc.getStorage(del),
+	   convstor,
 	   chanMap.getStorage(del),
 	   polMap.getStorage(del),
 	   sumWeight.getStorage(del));
+    uvw.freeStorage(uvwstor, uvwcopy);
+    griddedData.putStorage(gridstor, gridcopy);
+    convFunc.freeStorage(convstor, convcopy);
   }
   
 
@@ -873,6 +884,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	       dataPtr->getStorage(del),
 	       &aNx,
 	       &aNy,
+
 	       &npol,
 	       &nchan,
 	       vb.frequency().getStorage(del),
@@ -889,10 +901,18 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
+    Bool isCopy;
+    Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
+    Bool uvwcopy; 
+    const Double *uvwstor=uvw.getStorage(uvwcopy);
+    Bool gridcopy;
+    const Complex *gridstor=griddedData.getStorage(gridcopy);
+    Bool convcopy;
+    const Complex *convstor=convFunc.getStorage(convcopy);
     IPosition s(vb.modelVisCube().shape());
-    dwproj(uvw.getStorage(del),
+    dwproj(uvwstor,
 	   dphase.getStorage(del),
-	   vb.modelVisCube().getStorage(del),
+	   datStorage,
 	   &s(0),
 	   &s(1),
 	   flags.getStorage(del),
@@ -901,7 +921,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
-	   griddedData.getStorage(del),
+	   gridstor,
 	   &nx,
 	   &ny,
 	   &npol,
@@ -912,9 +932,13 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	   &convSize,
 	   &convSampling,
 	   &wConvSize,
-	   convFunc.getStorage(del),
+	   convstor,
 	   chanMap.getStorage(del),
 	   polMap.getStorage(del));
+    vb.modelVisCube().putStorage(datStorage, isCopy);
+    uvw.freeStorage(uvwstor, uvwcopy);
+    griddedData.freeStorage(gridstor, gridcopy);
+    convFunc.freeStorage(convstor, convcopy);
   }
 
  

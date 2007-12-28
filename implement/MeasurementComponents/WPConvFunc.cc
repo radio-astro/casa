@@ -86,8 +86,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Vector<Int>& convSupport, Double& wScale){
 
 
+
+
   if(checkCenterPix(image)){ 
-    convFunc=convFunc_p;
+    convFunc.resize();
+    convFunc.reference(convFunc_p);
     convSize=convSize_p;
     convSampling=convSampling_p;
     convSupport=convSupport_p;
@@ -334,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   convSupportBlock_p.resize(actualConvIndex_p+1);
   convSupportBlock_p[actualConvIndex_p]= new Vector<Int>();
-  *convSupportBlock_p[actualConvIndex_p]=convSupport;
+  convSupportBlock_p[actualConvIndex_p]->assign(convSupport);
   convFunctions_p.resize(actualConvIndex_p+1);
   convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
   Int newConvSize=2*(max(convSupport)+2)*convSampling;
@@ -344,11 +347,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition trc(3, (newConvSize/2-2),
 		  (newConvSize/2-2),
 		  convSupport.shape()(0)-1);
-    *convFunctions_p[actualConvIndex_p]=convFunc(blc,trc);
+    *(convFunctions_p[actualConvIndex_p])=convFunc(blc,trc);
     convSize=newConvSize;
   }
   else{
-    *convFunctions_p[actualConvIndex_p]=convFunc;
+    (convFunctions_p[actualConvIndex_p])->assign(convFunc);
   }
   Int maxMemoryMB=HostInfo::memoryTotal()/1024;
   Int memoryMB;
@@ -371,19 +374,17 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
   Int directionIndex=imageCoord.findCoordinate(Coordinate::DIRECTION);
   DirectionCoordinate
     directionCoord=imageCoord.directionCoordinate(directionIndex);
-  Vector<Double> pcenter(2);
+  Vector<Double> incr=directionCoord.increment();
   nx_p=image.shape()(directionIndex);
   ny_p=image.shape()(directionIndex+1);
-  pcenter(0) = nx_p/2;
-  pcenter(1) = ny_p/2;    
 
-  directionCoord.toWorld( wcenter, pcenter );
 
+  //Images with same number of pixels and increments can have the same conv functions
   ostringstream oos;
-  oos << setprecision(10);
+  oos << setprecision(6);
 
-  oos << wcenter.getAngle("deg").getValue()(0);
-  oos << wcenter.getAngle("deg").getValue()(1);
+  oos << nx_p << "_"<< fabs(incr(0)) << "_";
+  oos << ny_p << "_"<< fabs(incr(1));
   String imageKey(oos);
 
   if(convFunctionMap_p.ndefined() == 0){
@@ -402,7 +403,7 @@ Bool WPConvFunc::checkCenterPix(const ImageInterface<Complex>& image){
     convFunc_p.resize(); // break any reference
     convFunc_p.reference(*convFunctions_p[actualConvIndex_p]);
     convSupport_p.resize();
-    convSupport_p=*convSupportBlock_p[actualConvIndex_p];
+    convSupport_p.reference(*convSupportBlock_p[actualConvIndex_p]);
     convSize_p=convSizes_p[actualConvIndex_p];
 
   }

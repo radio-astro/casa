@@ -143,6 +143,8 @@ GridFT& GridFT::operator=(const GridFT& other)
     npol=other.npol;
     nchan=other.nchan;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
@@ -701,7 +703,6 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
 
 
-
   if(isTiled) {
     Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
     Vector<Double> uvLambda(2);
@@ -767,6 +768,8 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   else {
     Bool del;
     IPosition s(flags.shape());
+    Bool gridcopy;
+    Complex *gridstor=griddedData.getStorage(gridcopy);
     ggridft(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
@@ -780,7 +783,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    &row,
 	    uvScale.getStorage(del),
 	    uvOffset.getStorage(del),
-	    griddedData.getStorage(del),
+	    gridstor,
 	    &nx,
 	    &ny,
 	    &npol,
@@ -793,6 +796,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del),
 	    sumWeight.getStorage(del));
+    griddedData.putStorage(gridstor, gridcopy);
   }
 
   if(!dopsf)
@@ -931,18 +935,18 @@ void GridFT::get(VisBuffer& vb, Int row)
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
-  if (row==-1) {
+  if (row < 0) {
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
     //unnecessary zeroing
-    //    vb.modelVisCube()=Complex(0.0,0.0);
+    //vb.modelVisCube()=Complex(0.0,0.0);
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
     //unnecessary zeroing
-    //    vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+    //vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
   }
 
   // Get the uvws in a form that Fortran can use
@@ -955,7 +959,6 @@ void GridFT::get(VisBuffer& vb, Int row)
     for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
     uvw(2,i)=vb.uvw()(i)(2);
   }
-
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
@@ -1050,10 +1053,12 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
+    Bool isCopy;
+    Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
     IPosition s(vb.modelVisCube().shape());
     dgridft(uvw.getStorage(del),
 	    dphase.getStorage(del),
-	    vb.modelVisCube().getStorage(del),
+	    datStorage,
 	    &s(0),
 	    &s(1),
 	    flags.getStorage(del),
@@ -1074,7 +1079,10 @@ void GridFT::get(VisBuffer& vb, Int row)
 	    gridder->cFunction().getStorage(del),
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del));
+    vb.modelVisCube().putStorage(datStorage, isCopy);
   }
+
+
 }
 
 void GridFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
