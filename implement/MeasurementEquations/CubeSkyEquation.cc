@@ -130,9 +130,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     }
   }
   else {
-    ft_=new GridFT(static_cast<GridFT &>(ft));
+    //ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
-    ftm_p[0]=ft_;
+    ftm_p[0]=CountedPtr<FTMachine>(ft_,False);
     iftm_p[0]=ift_;
     for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
       ftm_p[k]=new GridFT(static_cast<GridFT &>(*ft_));
