@@ -135,6 +135,7 @@ GridFT::GridFT(const RecordInterface& stateRec)
 GridFT& GridFT::operator=(const GridFT& other)
 {
   if(this!=&other) {
+    nAntenna_p=other.nAntenna_p;
     distance_p=other.distance_p;
     lastFieldId_p=other.lastFieldId_p;
     lastMSId_p=other.lastMSId_p;
@@ -142,22 +143,50 @@ GridFT& GridFT::operator=(const GridFT& other)
     ny=other.ny;
     npol=other.npol;
     nchan=other.nchan;
+    nvischan=other.nvischan;
+    nvispol=other.nvispol;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    mLocation_p=other.mLocation_p;
+    doUVWRotation_p=other.doUVWRotation_p;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
     selectedSpw_p=other.selectedSpw_p;
     multiChanMap_p=other.multiChanMap_p;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
-    gridder=other.gridder;
-    isTiled=other.isTiled;
-    lattice=other.lattice;
-    arrayLattice=other.arrayLattice;
     convType=other.convType;
+    if(other.gridder==0)
+      gridder=0;
+    else{
+      uvScale.resize();
+      uvOffset.resize();
+      uvScale=other.uvScale;
+      uvOffset=other.uvOffset;
+      gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
+						     uvScale, uvOffset,
+						     convType);
+    }
+    isTiled=other.isTiled;
+    //lattice=other.lattice;
+    lattice=0;
+    cachesize=other.cachesize;
+    tilesize=other.tilesize;
+    arrayLattice=other.arrayLattice;
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
+    noPadding_p=other.noPadding_p;
   };
   return *this;
 };

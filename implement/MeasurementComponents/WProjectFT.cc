@@ -146,6 +146,7 @@ WProjectFT::WProjectFT(const RecordInterface& stateRec)
 WProjectFT& WProjectFT::operator=(const WProjectFT& other)
 {
   if(this!=&other) {
+    nAntenna_p=other.nAntenna_p;
     mLocation_p=other.mLocation_p;
     distance_p=other.distance_p;
     lastFieldId_p=other.lastFieldId_p;
@@ -154,18 +155,45 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     ny=other.ny;
     npol=other.npol;
     nchan=other.nchan;
+    nvischan=other.nvischan;
+    nvispol=other.nvispol;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    doUVWRotation_p=other.doUVWRotation_p;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
     selectedSpw_p=other.selectedSpw_p;
     multiChanMap_p=other.multiChanMap_p;
     padding_p=other.padding_p;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
     nWPlanes_p=other.nWPlanes_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
-    gridder=other.gridder;
+    if(other.gridder==0)
+      gridder=0;
+    else{
+      uvScale.resize();
+      uvOffset.resize();
+      uvScale=other.uvScale;
+      uvOffset=other.uvOffset;
+      gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
+						     uvScale, uvOffset,
+						     "SF");
+    }
+
     isTiled=other.isTiled;
-    lattice=other.lattice;
-    arrayLattice=other.arrayLattice;
+    //lattice=other.lattice;
+    //arrayLattice=other.arrayLattice;
+    lattice=0;
+    arrayLattice=0;
+
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;

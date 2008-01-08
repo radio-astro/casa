@@ -116,12 +116,24 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 {
   if(this!=&other) {
     mLocation_p=other.mLocation_p;
+    nAntenna_p=other.nAntenna_p;
     distance_p=other.distance_p;
     lastFieldId_p=other.lastFieldId_p;
     lastMSId_p=other.lastMSId_p;
     freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
     selectedSpw_p=other.selectedSpw_p;
     multiChanMap_p=other.multiChanMap_p;
+    doUVWRotation_p=other.doUVWRotation_p;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
     nx=other.nx;
     ny=other.ny;
     npol=other.npol;
@@ -133,8 +145,12 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     tilesize=other.tilesize;
     isTiled=other.isTiled;
     lattice=other.lattice;
-    arrayLattice=other.arrayLattice;
-    weightLattice=other.weightLattice;
+    // arrayLattice=other.arrayLattice;
+    // weightLattice=other.weightLattice;
+    //if(arrayLattice) delete arrayLattice;
+    arrayLattice=0;
+    //if(weightLattice) delete weightLattice;
+    weightLattice=0;
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;

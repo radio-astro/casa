@@ -95,8 +95,11 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   RO_LatticeIterator<Float>* maskli = 0;
   
   if(hasMask(0)) {
-    AlwaysAssert(mask(0).shape()(0)==nx, AipsError);
-    AlwaysAssert(mask(0).shape()(1)==ny, AipsError);
+    // AlwaysAssert(mask(0).shape()(0)==nx, AipsError);
+    // AlwaysAssert(mask(0).shape()(1)==ny, AipsError);
+    if((mask(0).shape()(0)!=nx) || (mask(0).shape()(1)!=ny)){
+      throw(AipsError("Mask image shape is different from dirty image"));
+    }
     if(nchan >1){
       if(mask(0).shape()(3)==nchan){
 	isCubeMask=True;

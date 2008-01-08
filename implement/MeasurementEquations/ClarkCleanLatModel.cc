@@ -589,9 +589,9 @@ Bool ClarkCleanLatModel::singleSolve(LatConvEquation & eqn, Lattice<Float>& resi
   }
   else {
     itsLog << LogIO::WARN 
-	   << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
-	   << " and a maximum Residual of " << maxRes << endl;
-    
+	    << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
+	    << " and a maximum Residual of " << maxRes << endl;
+    return False;
   }
   
   setThreshold(maxRes);
