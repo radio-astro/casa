@@ -119,6 +119,14 @@ public:
   
   // Convert to Stokes Image
   static void To(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+
+  // Direct copy from Float to Complex with 
+  static void directCFromR(ImageInterface<Complex>& out,
+		   ImageInterface<Float>& in);
+  
+  // Direct copy To Float...
+  static void directCToR(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+
   
   // Convert to Stokes PSF
   static void ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Complex>& in);

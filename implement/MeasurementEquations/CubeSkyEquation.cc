@@ -38,6 +38,7 @@
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LatticeExpr.h>
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
@@ -72,8 +73,14 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     firstOneChangesGet_p(False)
 {
 
-
-  
+  /*
+  sm_=&sm;
+  vs_=&vs;
+  cft_=&cft;
+  ej_=0; dj_=0; tj_=0; fj_=0; iDebug_p=0; isPSFWork_p=False; 
+  noModelCol_p=noModelCol;
+  isBeginingOfSkyJonesCache_p=True; 
+  */
 
   Int nmod=sm_->numberOfModels();
 
@@ -120,7 +127,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
 
     }
   }
-  else if(ft_->name()== "GridBoth"){
+  else if(ft.name()== "GridBoth"){
     ft_=new GridBoth(static_cast<GridBoth &>(ft));
     ift_=new GridBoth(static_cast<GridBoth &>(ft));
     ftm_p[0]=ft_;
@@ -130,9 +137,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     }
   }
   else {
-    //ft_=new GridFT(static_cast<GridFT &>(ft));
+    //    ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
-    ftm_p[0]=CountedPtr<FTMachine>(ft_,False);
+    ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
     iftm_p[0]=ift_;
     for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
       ftm_p[k]=new GridFT(static_cast<GridFT &>(*ft_));
@@ -346,14 +353,21 @@ void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) {
   
 
 }
-void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
+void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
   AlwaysAssert(vs_, AipsError);
   Bool initialized=False;
   Bool changedVI=False;
+  
+  //For now we don't deal with incremental especially when having multi fields
+  Bool incremental=False;
+  
   predictComponents(incremental, initialized);
   Bool predictedComp=initialized;
+  
+  
+
 
   sm_->initializeGradients();
   // Initialize 
@@ -434,7 +448,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel){
 	}
 	  // get the model visibility and write it to the model MS
 	if(!isEmpty)
-	  getSlice(vb, predictedComp, cubeSlice, nCubeSlice);
+	  getSlice(vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
 	//this need to be done only when saving the model
 	if(commitModel)
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
@@ -579,6 +593,9 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
 				       Int cubeSlice, Int nCubeSlice) {
 
   for (Int model=0; model < sm_->numberOfModels(); ++model){
+    //the different apply...jones use ft_ and ift_
+    ft_=&(*ftm_p[model]);
+    ift_=&(*iftm_p[model]);
     // Actually do the transform. Update weights as we do so.
     iftm_p[model]->finalizeToSky();
     // 1. Now get the (unnormalized) image and add the 
@@ -609,6 +626,8 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     delete gSSlice;
     delete ggSSlice;
   }
+  ft_=&(*ftm_p[0]);
+  ift_=&(*iftm_p[0]);
   // 4. Finally, we add the statistics
   sm_->addStatistics(sumwt, chisq);
 }
@@ -619,6 +638,9 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Bool incremental, Int cubeSlice, 
 					   Int nCubeSlice){
   for(Int model=0; model < sm_->numberOfModels(); ++model){
+     //the different apply...jones use ft_ and ift_
+    ft_=&(*ftm_p[model]);
+    ift_=&(*iftm_p[model]);
     if(cubeSlice==0){
       if(incremental) {
 	applySkyJones(vb, row, sm_->deltaImage(model), sm_->cImage(model));
@@ -630,6 +652,9 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
     sliceCube(imGetSlice_p[model], model, cubeSlice, nCubeSlice, 1);
     ftm_p[model]->initializeToVis(*(imGetSlice_p[model]), vb);
   }
+  ft_=&(*ftm_p[0]);
+  ift_=&(*iftm_p[0]);
+  
 
 }
 
@@ -637,8 +662,8 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
 				Int nCubeSlice, Int typeOfSlice){
 
   IPosition blc(4,0,0,0,0);
-  IPosition trc(4,sm_->image(model).shape()(0)-1,
-		 sm_->image(model).shape()(1)-1,sm_->image(model).shape()(2)-1,
+  IPosition trc(4,sm_->cImage(model).shape()(0)-1,
+		 sm_->cImage(model).shape()(1)-1,sm_->cImage(model).shape()(2)-1,
 		 0);
   Int beginChannel=cubeSlice*nchanPerSlice_p;
   Int endChannel=beginChannel+nchanPerSlice_p-1;
@@ -647,7 +672,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   blc(3)=beginChannel;
   trc(3)=endChannel;
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
-  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, True);
+  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
   //if(slice) delete slice;
   //slice=0;
 
@@ -757,7 +782,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       }
     }
     else
-      ft_->get(result);
+      ftm_p[0]->get(result);
   }
   return result;
 

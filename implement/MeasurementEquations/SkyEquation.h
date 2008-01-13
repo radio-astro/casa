@@ -217,11 +217,11 @@ public:
     {scaleType_p = type; minPB_p = minPB; constPB_p = constPB;}
 
   // Lock and unlock the underlying MeasurementSet
-  virtual void lock() {};
-  virtual void unlock() {};
+  virtual void lock();
+  virtual void unlock();
   
   // Return the name of the underlying MeasurementSet
-  virtual String associatedMSName() {return String();};
+  virtual String associatedMSName();
   
  protected:
 

@@ -40,6 +40,7 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -308,7 +309,17 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
     
     Int npol=cimageShape(2);
     if(npol==3) cimageShape(2)=4;
-    
+    if(npol==2){
+      // 2-pol pixels and having Q or U
+      Int stokesIndex=image_p[model]->coordinates().findCoordinate(Coordinate::STOKES);
+      StokesCoordinate sC=image_p[model]->coordinates().stokesCoordinate(stokesIndex);
+      if(Stokes::type(sC.stokes()[0])==Stokes::Q || 
+	 Stokes::type(sC.stokes()[0])==Stokes::U ||
+	 Stokes::type(sC.stokes()[1])==Stokes::Q ||
+	 Stokes::type(sC.stokes()[1])==Stokes::U){
+	cimageShape(2)=4;
+      }
+    }
     CoordinateSystem cimageCoord =
       StokesImageUtil::CStokesCoord(cimageShape,
 				    image_p[model]->coordinates(),
@@ -320,12 +331,8 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
 			min(4, cimageShape(2)), min(32, cimageShape(3)));
     
     TempImage<Complex>* cimagePtr = 
-      new TempImage<Complex> (IPosition(image_p[model]->ndim(),
-					image_p[model]->shape()(0),
-					image_p[model]->shape()(1),
-					image_p[model]->shape()(2),
-					image_p[model]->shape()(3)),
-			      image_p[model]->coordinates(),
+      new TempImage<Complex> (cimageShape,
+			      cimageCoord,
 			      memoryMB);
     AlwaysAssert(cimagePtr, AipsError);
     cimage_p[model] = cimagePtr;

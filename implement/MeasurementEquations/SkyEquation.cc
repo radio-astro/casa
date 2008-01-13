@@ -1395,8 +1395,10 @@ ImageInterface<Complex>& SkyEquation::applySkyJones(const VisBuffer& vb,
 						    ImageInterface<Float>& in,
 						    ImageInterface<Complex>& out) {
 
-  AlwaysAssert(in.shape()==out.shape(), AipsError);
-
+  //Pol axis need not be same
+  AlwaysAssert(in.shape()[0]==out.shape()[0], AipsError);
+  AlwaysAssert(in.shape()[1]==out.shape()[1], AipsError);
+  AlwaysAssert(in.shape()[3]==out.shape()[3], AipsError);
   // Convert from Stokes to Complex
   StokesImageUtil::From(out, in);
 
@@ -1418,7 +1420,9 @@ void SkyEquation::applySkyJonesInv(const VisBuffer& vb, Int row,
                                    ImageInterface<Float>& work,
 				   ImageInterface<Float>& gS) {
 
-  AlwaysAssert(in.shape()==work.shape(), AipsError);
+  AlwaysAssert(in.shape()[0]==work.shape()[0], AipsError);
+  AlwaysAssert(in.shape()[1]==work.shape()[1], AipsError);
+  AlwaysAssert(in.shape()[3]==work.shape()[3], AipsError);
   AlwaysAssert(gS.shape()==work.shape(), AipsError);
 
   // Apply the various SkyJones to the current image
@@ -1676,21 +1680,22 @@ void SkyEquation::checkVisIterNumRows(ROVisibilityIterator& vi){
       vi.origin();
     }
   }
+}
+
+String SkyEquation::associatedMSName(){
+  return String("");
 };
 
+void SkyEquation::lock(){
 
+  //Do nothing for now
 
+}
 
+void SkyEquation::unlock(){
+  // Do nothing for now
 
-
-
-
-
-
-
-
-
-
+}
 
 } //# NAMESPACE CASA - END
 

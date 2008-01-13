@@ -80,6 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Int& wConvSize,
 				    const Vector<Double>& uvScale,
 				    const Vector<Double>& uvOffset, 
+				    const Float& padding,
 				    Int& convSampling,
 				    Cube<Complex>& convFunc, 
 				    Int& convSize,
@@ -89,6 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   if(checkCenterPix(image)){ 
+    cout << "actualConv " << actualConvIndex_p << endl;
     convFunc.resize();
     convFunc.reference(convFunc_p);
     convSize=convSize_p;
@@ -97,6 +99,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     wScale=wScale_p;
     return;
   }
+
+  cout << "actualConv " << actualConvIndex_p << endl;
+
   LogIO os;
   os << LogOrigin("WPConvFunc", "findConvFunction")  << LogIO::NORMAL;
   
@@ -123,8 +128,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Get the coordinate system
   CoordinateSystem coords(image.coordinates());
   Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-  nx_p=image.shape()(directionIndex); 
-  ny_p=image.shape()(directionIndex+1);
+  nx_p=Int(image.shape()(directionIndex)); 
+  ny_p=Int(image.shape()(directionIndex+1));
 
   // Set up the convolution function. 
   if(wConvSize>1) {
@@ -151,14 +156,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //nominal  512 wprojplanes above that you may (or not) go swapping
     Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
     convSampling_p=4;
-    convSize=max(nx_p,ny_p);
+    convSize=max(Int(nx_p*padding),Int(ny_p*padding));
     convSize=min(convSize,Int(maxConvSizeConsidered/2.0)*2);
+    cout << "convSize " << convSize << endl;
+
+
     
   }
   else {
     convSampling_p=1;
-    convSize=max(nx_p,ny_p);
+    convSize=max(Int(nx_p*padding),Int(ny_p*padding));
   }
+  cout << "nx ny " << nx_p << "   " <<ny_p << endl;
   convSampling=convSampling_p;
   Int maxConvSize=convSize;
   
@@ -171,8 +180,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   sampling = dc.increment();
   sampling*=Double(convSampling_p);
   //sampling*=Double(max(nx,ny))/Double(convSize);
-  sampling[0]*=Double(nx_p)/Double(convSize);
-  sampling[1]*=Double(ny_p)/Double(convSize);
+  sampling[0]*=Double(nx_p*padding)/Double(convSize);
+  sampling[1]*=Double(ny_p*padding)/Double(convSize);
   dc.setIncrement(sampling);
   
   Vector<Double> unitVec(2);
@@ -187,6 +196,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pcenter(0) = nx_p/2;
     pcenter(1) = ny_p/2;    
     coords.directionCoordinate(directionIndex).toWorld( wcenter, pcenter );
+    cout << "phasecenter " << wcenter << "    " << pcenter << endl;
+    cout << "phase center " << wcenter.getAngle().getValue() << "   " << wcenter.getAngle("rad").getValue() << endl;
     dc.setReferenceValue(wcenter.getAngle().getValue());
   }
   coords.replaceCoordinate(dc, directionIndex);
@@ -196,6 +207,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TempImage<Complex> twoDPB(pbShape, coords);
 
   Int inner=convSize/convSampling_p;
+  cout << "uvscale " << uvScale << "   " << uvOffset << endl;
   ConvolveGridder<Double, Complex>
     ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
 
@@ -289,6 +301,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int trial=0;
     for (trial=convSize/2-2;trial>0;trial--) {
       if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
+	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
+	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
 	break;
       }
@@ -348,6 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  (newConvSize/2-2),
 		  convSupport.shape()(0)-1);
     *(convFunctions_p[actualConvIndex_p])=convFunc(blc,trc);
+    // convFunctions_p[actualConvIndex_p]->assign(Cube<Complex>(convFunc(blc,trc)));
     convSize=newConvSize;
   }
   else{
@@ -364,6 +379,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convFunc.reference(*convFunctions_p[actualConvIndex_p]);
   convSizes_p.resize(actualConvIndex_p+1, True);
   convSizes_p(actualConvIndex_p)=convSize;
+
+  convSampling=convSampling_p;
+  wScale=wScale_p;
+
+  cout << "convsam " << convSampling << " wscale " << wScale << endl;
+
+
 
   }
 

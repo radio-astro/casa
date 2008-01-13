@@ -297,7 +297,8 @@ ImageInterface<Complex>& WFGridFT::getImage(Matrix<Float>& weights,
   if(nmaps_p > 1){
     if(arrayLatticeNumber[mapNumber_p]) delete arrayLatticeNumber[mapNumber_p]; 
     arrayLattice = new ArrayLattice<Complex>(*(griddedDataNumber[mapNumber_p]));
-    arrayLatticeNumber[mapNumber_p]=arrayLattice;
+    //Just trying to get this to compile now....need to get rid of this class
+    arrayLatticeNumber[mapNumber_p]=&(*arrayLattice);
     //    arrayLattice=arrayLatticeNumber[mapNumber_p];
     lattice=arrayLattice;
     image= imagePtr[mapNumber_p];
@@ -306,7 +307,6 @@ ImageInterface<Complex>& WFGridFT::getImage(Matrix<Float>& weights,
     myweight.resize((sumWeightPtr[mapNumber_p])->shape());
     myweight = (*(sumWeightPtr[mapNumber_p]));
   }
-  AlwaysAssert(lattice, AipsError);
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
 
@@ -486,7 +486,7 @@ void WFGridFT::initializeToMultiVis(PtrBlock< TempImage<Complex> * >& iimage,
       Array<Complex> * tempgrid = new Array<Complex> (gridShape, Complex(0.0));
       griddedDataNumber[i]=tempgrid;
       arrayLattice=arrayLatticeNumber[i];
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLatticeNumber[i] = new ArrayLattice<Complex>(*(griddedDataNumber[i]));
 
 
@@ -500,7 +500,7 @@ void WFGridFT::initializeToMultiVis(PtrBlock< TempImage<Complex> * >& iimage,
       lattice=arrayLatticeNumber[i];
     }
 
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     
     logIO() << LogIO::DEBUGGING
 	    << "Starting grid correction and FFT of image" << LogIO::POST;
@@ -624,12 +624,13 @@ void WFGridFT::initializeToMultiSky( PtrBlock< TempImage<Complex> * >& iimage,
     Array<Complex> * tempgrid = new Array<Complex> (gridShape, Complex(0.0));
     griddedDataNumber[i]=tempgrid;
     arrayLattice=arrayLatticeNumber[i];
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //    if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(*(griddedDataNumber[i]));
-    arrayLatticeNumber[i]=arrayLattice;
+    //Just making sure it compiles...this class has to go
+    arrayLatticeNumber[i]=&(*arrayLattice);
     lattice=arrayLattice;
   }
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
  }
 }
 

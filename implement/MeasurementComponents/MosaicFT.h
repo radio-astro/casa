@@ -262,12 +262,12 @@ protected:
   Bool isTiled;
 
   // Array lattice
-  Lattice<Complex> * arrayLattice;
+  CountedPtr<Lattice<Complex> > arrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  Lattice<Complex>* lattice;
-  Lattice<Complex>* weightLattice;
+  CountedPtr<Lattice<Complex> > lattice;
+  CountedPtr<Lattice<Complex> > weightLattice;
 
   Float maxAbsData;
 

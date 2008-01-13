@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 	       Bool usezero)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
-  gridder(0), isTiled(False), arrayLattice(0), lattice(0), convType(iconvType),
+  gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
   machineName_p("GridFT")
@@ -86,8 +86,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MPosition mLocation, Float padding, Bool usezero)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), arrayLattice(0),
-  lattice(0), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
   usePut2_p(False), machineName_p("GridFT")
 {
@@ -98,8 +97,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MDirection mTangent, Float padding, Bool usezero)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), arrayLattice(0),
-  lattice(0), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
   usePut2_p(False), machineName_p("GridFT")
 {
@@ -111,8 +109,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 	       MPosition mLocation, MDirection mTangent, Float padding,
 	       Bool usezero)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), arrayLattice(0),
-  lattice(0), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
   usePut2_p(False),machineName_p("GridFT")
 {
@@ -180,7 +177,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     lattice=0;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
-    arrayLattice=other.arrayLattice;
+    arrayLattice=0;
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
@@ -274,7 +271,7 @@ void GridFT::init() {
 // This is nasty, we should use CountedPointers here.
 GridFT::~GridFT() {
   if(imageCache) delete imageCache; imageCache=0;
-  if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
 }
 
@@ -323,7 +320,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
      IPosition gridShape(4, nx, ny, npol, nchan);
@@ -341,12 +338,12 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
      IPosition start(4, 0);
      griddedData(blc, trc) = image->getSlice(start, image->shape());
 
-     if(arrayLattice) delete arrayLattice; arrayLattice=0;
+     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
      arrayLattice = new ArrayLattice<Complex>(griddedData);
      lattice=arrayLattice;
   }
 
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
 
   logIO() << LogIO::DEBUGGING
 	  << "Starting grid correction and FFT of image" << LogIO::POST;
@@ -461,18 +458,18 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
     //iimage.get(griddedData, False);
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
 
 }
 
@@ -522,7 +519,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
 
 void GridFT::finalizeToSky()
 {  
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   if(isTiled) {
@@ -554,11 +551,11 @@ void GridFT::finalizeToSky(ImageInterface<Complex>& iimage)
 
   }
 
-  if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   arrayLattice = new ArrayLattice<Complex>(griddedData);
   lattice=arrayLattice;
   
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   if(isTiled) {
@@ -1231,7 +1228,7 @@ void GridFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
 // return the resulting image
 ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize) 
 {
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(gridder, AipsError);
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("GridFT", "getImage") << LogIO::NORMAL;
@@ -1427,7 +1424,7 @@ Bool GridFT::fromRecord(String& error, const RecordInterface& inRec)
     init(); 
 
     if(isTiled) {
-      lattice=image;
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -1441,12 +1438,12 @@ Bool GridFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition trc(blc+image->shape()-stride);
       griddedData(blc, trc) = image->getSlice(start, image->shape());
       
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
     }
 
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     AlwaysAssert(gridder, AipsError);
     AlwaysAssert(image, AipsError);
   };

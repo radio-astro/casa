@@ -92,7 +92,6 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <synthesis/MeasurementEquations/MosaicSkyEquation.h>
-#include <synthesis/MeasurementEquations/WFSkyEquation.h>
 #include <synthesis/MeasurementEquations/WBSkyEquation.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
@@ -108,7 +107,6 @@
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/MeasurementComponents/WFGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/PBWProjectFT.h>
@@ -1002,26 +1000,52 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   switch(npol_p) {
   case 1:
     whichStokes.resize(1);
-    whichStokes(0)=Stokes::I;
-    os <<  "Image polarization = Stokes I" << LogIO::POST;
+    
+    //possibilities
+    if(stokes_p=="RR")
+      whichStokes(0)=Stokes::RR;
+    else if(stokes_p=="LL")
+      whichStokes(0)=Stokes::LL;
+    else if(stokes_p=="XX")
+      whichStokes(0)=Stokes::XX;
+    else if(stokes_p=="YY")
+      whichStokes(0)=Stokes::YY;
+    else
+      whichStokes(0)=Stokes::I;
+    os <<  "Image polarization = Stokes "<< stokes_p << LogIO::POST;
     break;
   case 2:
     whichStokes.resize(2);
-    whichStokes(0)=Stokes::I;
-    if (polRep_p==SkyModel::LINEAR) {
-      whichStokes(1)=Stokes::Q;
-      os <<  "Image polarization = Stokes I,Q" << LogIO::POST;
+    //default to IQ or IV if not known
+    if(stokes_p=="RRLL"){
+      whichStokes(0)=Stokes::RR;
+      whichStokes(1)=Stokes::LL;
     }
-    else {
-      whichStokes(1)=Stokes::V;
-      os <<  "Image polarization = Stokes I,V" << LogIO::POST;
+    else if(stokes_p=="XXYY"){
+      whichStokes(0)=Stokes::XX;
+      whichStokes(1)=Stokes::YY;
+    }
+    else if(stokes_p=="QU"){
+      whichStokes(0)=Stokes::Q;
+      whichStokes(1)=Stokes::U;
+    }
+    else{
+      whichStokes(0)=Stokes::I;
+      if (polRep_p==SkyModel::LINEAR) {
+	whichStokes(1)=Stokes::Q;
+	os <<  "Image polarization = Stokes I,Q" << LogIO::POST;
+      }
+      else {
+	whichStokes(1)=Stokes::V;
+	os <<  "Image polarization = Stokes I,V" << LogIO::POST;
+      }
     }
     break;
   case 3:
     whichStokes.resize(3);
     whichStokes(0)=Stokes::I;
     whichStokes(1)=Stokes::Q;
-    whichStokes(1)=Stokes::U;
+    whichStokes(2)=Stokes::U;
     os <<  "Image polarization = Stokes I,Q,U" << LogIO::POST;
     break;
   case 4:
@@ -1358,10 +1382,12 @@ Bool Imager::setimage(const Int nx, const Int ny,
     destroySkyEquation();    
 
     // Now make the derived quantities 
-    if(stokes_p=="I") {
+    if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
+       stokes_p=="XX" || stokes_p=="YY") {
       npol_p=1;
     }
-    else if(stokes_p=="IQ") {
+    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" || 
+	    stokes_p=="QU") {
       npol_p=2;
     }
     else if(stokes_p=="IV") {
@@ -1563,10 +1589,12 @@ Bool Imager::defineImage(const Int nx, const Int ny,
     destroySkyEquation();    
 
     // Now make the derived quantities 
-    if(stokes_p=="I") {
+    if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
+       stokes_p=="XX" || stokes_p=="YY") {
       npol_p=1;
     }
-    else if(stokes_p=="IQ") {
+    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" ||
+	    stokes_p=="QU") {
       npol_p=2;
     }
     else if(stokes_p=="IV") {
@@ -5056,13 +5084,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       modelNames[k]=images_p[k]->name();
     }
 
-
+    
     if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT")){
       // very large for convolution ...destroy Skyequations to release memory
       // need to fix the convolution to be leaner
       destroySkyEquation();
 
     }
+    
     if(restoredNames.nelements()>0) {
       for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
 	   ++thismodel) {
@@ -5082,11 +5111,13 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    restored.copyData(le);
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
+	    
 	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
 	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p, 
 					0.0,(restored/(sm_p->fluxScale(thismodel)))));
 	      restored.copyData(le);
 	    }
+	    
 	  }
 	  else {
 	    os << LogIO::SEVERE << "No residual image for model "
@@ -7045,15 +7076,9 @@ Bool Imager::createFTMachine()
       oos << "     "
 	  << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
       os << String(oos)  << LogIO::POST;
-
-      if(wfGridding_p){
-	ft_p = new WFGridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
-			    phaseCenter_p,padding);
-      }
-      else{
 	ft_p = new GridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
 			  phaseCenter_p, padding);
-      }
+      
     }
     else {
       os << "Single facet Fourier transforms will use image center as tangent points"
@@ -7267,7 +7292,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     if(doVP_p){
       //bypassing the minimum size FT stuff as its broken till its fixed
       //se_p=new MosaicSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
+      
       setSkyEquation();
+      if(ft_p->name() != "MosaicFT") 
+	sm_p->mandateFluxScale(0);
       os << "Mosaicing multiple fields with simple sky equation" << LogIO::POST;
     }
     // mosaicing with no vp correction
@@ -7283,21 +7311,18 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   else {
     // Support serial and parallel specializations
     if((facets_p >1)){
-      if(wfGridding_p){
-	se_p=new WFSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
-	os << "Processing multiple facets with wide-field sky equation" << LogIO::POST;
-      }
-      else{
 	setSkyEquation();
 	//se_p=new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
 	os << "Processing multiple facets with simple sky equation" << LogIO::POST;
-      }
     }
     // Mosaicing
     else if(doVP_p) {
       //Bypassing the mosaicskyequation to the slow version for now.
       //      se_p=new MosaicSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
+      
       setSkyEquation();
+      if(ft_p->name() != "MosaicFT") 
+	sm_p->mandateFluxScale(0);
       os << "Mosaicing single field with simple sky equation" << LogIO::POST;      
     }
     // Multi Frequency Synthesis (wideband)
@@ -7314,8 +7339,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   }
   //os.localSink().flush();
   //For now force none sault weighting with mosaic ft machine
+  
   if(ft_p->name()=="MosaicFT")
     scaleType_p="NONE";
+  
   se_p->setImagePlaneWeighting(scaleType_p, minPB_p, constPB_p);
 
   AlwaysAssert(se_p, AipsError);

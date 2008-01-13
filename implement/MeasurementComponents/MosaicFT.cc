@@ -84,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   Bool usezero)
   : FTMachine(), sj_p(&sj),
     imageCache(0),  cachesize(icachesize), tilesize(itilesize), gridder(0),
-    isTiled(False), arrayLattice(0), lattice(0), weightLattice(0),
+    isTiled(False),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), convSampling(1),
     skyCoverage_p(0), machineName_p("MosaicFT")
@@ -144,7 +144,8 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     cachesize=other.cachesize;
     tilesize=other.tilesize;
     isTiled=other.isTiled;
-    lattice=other.lattice;
+    //lattice=other.lattice;
+    lattice=0;
     // arrayLattice=other.arrayLattice;
     // weightLattice=other.weightLattice;
     //if(arrayLattice) delete arrayLattice;
@@ -252,7 +253,7 @@ void MosaicFT::init() {
 // This is nasty, we should use CountedPointers here.
 MosaicFT::~MosaicFT() {
   if(imageCache) delete imageCache; imageCache=0;
-  if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  //  if(arrayLattice) delete arrayLattice; arrayLattice=0;
 }
 
 
@@ -335,7 +336,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> > (image, False);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -350,12 +351,12 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
     IPosition start(4, 0);
     griddedData(blc, trc) = image->getSlice(start, image->shape());
     
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
   
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
   
@@ -451,7 +452,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
     if( !doneWeightImage_p && (convWeightImage_p==0)){
       
       convWeightImage_p=new  TempImage<Complex> (iimage.shape(), 
@@ -469,7 +470,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
       
@@ -487,7 +488,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
       
       griddedWeight(blc, trc).set(Complex(0.0));
 
-      if(weightLattice) delete weightLattice; weightLattice=0;
+      //if(weightLattice) delete weightLattice; weightLattice=0;
       weightLattice = new ArrayLattice<Complex>(griddedWeight);
 
     }
@@ -517,7 +518,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
    }
 
   }
-  AlwaysAssert(lattice, AipsError);
+  // AlwaysAssert(lattice, AipsError);
   
 }
 
@@ -1119,7 +1120,7 @@ void MosaicFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
 ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 					    Bool normalize) 
 {
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(image, AipsError);
   
   logIO() << LogOrigin("MosaicFT", "getImage") << LogIO::NORMAL;
@@ -1310,7 +1311,7 @@ Bool MosaicFT::fromRecord(String& error, const RecordInterface& inRec)
     init(); 
     
     if(isTiled) {
-      lattice=image;
+      lattice=CountedPtr<Lattice<Complex> > (image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -1325,12 +1326,12 @@ Bool MosaicFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition trc(blc+image->shape()-stride);
       griddedData(blc, trc) = image->getSlice(start, image->shape());
       
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
     }
     
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     AlwaysAssert(image, AipsError);
   };
   return retval;

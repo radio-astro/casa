@@ -71,6 +71,7 @@ namespace casa{
 			    const Int& wConvSize,
 			    const Vector<Double>& uvScale,
 			    const Vector<Double>& uvOffset,
+			    const Float& padding, 
 			    Int& convSampling,
 			    Cube<Complex>& convFunc, 
 			    Int& convsize,

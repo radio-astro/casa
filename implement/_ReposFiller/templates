@@ -40,8 +40,10 @@
      template class PtrRep<ImageInterface<Complex> >
      template class CountedPtr<ImageInterface<Complex> >
 1020 casa/Utilities/CountedPtr.cc 
-     = casa/Arrays/Vector.h 
+     = casa/Arrays/Vector.h
+     = casa/Arrays/Matrix.h 
      = casa/Arrays/Cube.h
+     = lattices/Lattices/Lattice.h
      = casa/BasicSL/Complex.h
      template class PtrRep<Vector<Int> > 
      template class SimpleCountedPtr<Vector<Int> >
@@ -51,6 +53,14 @@
      template class CountedPtr<Cube<Complex> >
      template class SimpleCountedConstPtr<Cube<Complex> >
      template class SimpleCountedPtr<Cube<Complex> >
+     template class PtrRep<Matrix<Float> > 
+     template class CountedPtr<Matrix<Float> >
+     template class SimpleCountedConstPtr<Matrix<Float> >
+     template class SimpleCountedPtr<Matrix<Float> >
+     template class PtrRep<Lattice<Complex> > 
+     template class CountedPtr<Lattice<Complex> >
+     template class SimpleCountedConstPtr<Lattice<Complex> >
+     template class SimpleCountedPtr<Lattice<Complex> >	
 1030 casa/Utilities/CountedPtr.cc
      = synthesis/MeasurementComponents/FTMachine.h
      template class PtrRep<FTMachine> 

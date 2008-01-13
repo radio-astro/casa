@@ -324,7 +324,8 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 
 
 
-  wpConvFunc_p->findConvFunction(image, vb, wConvSize, uvScale, uvOffset, 
+  wpConvFunc_p->findConvFunction(image, vb, wConvSize, uvScale, uvOffset,
+				 padding_p,
 				 convSampling, 
 				 convFunc, convSize, convSupport, 
 				 savedWScale_p); 
