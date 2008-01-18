@@ -2496,11 +2496,11 @@ Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Qua
     rec1.assign(*imageRegRec);
     recordRegion=ImageRegion::fromRecord(rec1,"");    
   }
-  ImageRegion *unionReg;
+  ImageRegion *unionReg=0;
   if(boxregions!=0 && recordRegion!=0){
     unionReg=regMan.doUnion(*boxregions, *recordRegion);
-    delete boxregions;
-    delete recordRegion;
+    delete boxregions; boxregions=0;
+    delete recordRegion; recordRegion=0;
   }
   else if(boxregions !=0){
     unionReg=boxregions;
@@ -2519,7 +2519,9 @@ Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Qua
   ArrayLattice<Bool> pixmask(latReg.get());
   LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
   partToMask.copyData(myexpr);
-
+  
+  if(unionReg !=0)
+    delete unionReg; unionReg=0;
   maskImage.table().unmarkForDelete();
   return True;
 
@@ -5112,10 +5114,18 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
 	    
-	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
+	    // this should go away...e
+	    //special casing like this gets hard to maintain
+	    // need to redo how interactive is done so that it is outside 
+	    //of this code 
+	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel)) && (scaleType_p=="NONE")) {
 	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p, 
 					0.0,(restored/(sm_p->fluxScale(thismodel)))));
 	      restored.copyData(le);
+	      LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p, 
+					0,(residIm/(sm_p->fluxScale(thismodel)))));
+	      residIm.copyData(le1);
+
 	    }
 	    
 	  }
@@ -7340,10 +7350,11 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   //os.localSink().flush();
   //For now force none sault weighting with mosaic ft machine
   
+  String scaleType=scaleType_p;
   if(ft_p->name()=="MosaicFT")
-    scaleType_p="NONE";
+    scaleType="NONE";
   
-  se_p->setImagePlaneWeighting(scaleType_p, minPB_p, constPB_p);
+  se_p->setImagePlaneWeighting(scaleType, minPB_p, constPB_p);
 
   AlwaysAssert(se_p, AipsError);
 

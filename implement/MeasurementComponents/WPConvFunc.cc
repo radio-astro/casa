@@ -90,7 +90,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   if(checkCenterPix(image)){ 
-    cout << "actualConv " << actualConvIndex_p << endl;
     convFunc.resize();
     convFunc.reference(convFunc_p);
     convSize=convSize_p;
@@ -100,7 +99,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   }
 
-  cout << "actualConv " << actualConvIndex_p << endl;
 
   LogIO os;
   os << LogOrigin("WPConvFunc", "findConvFunction")  << LogIO::NORMAL;
@@ -158,7 +156,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSampling_p=4;
     convSize=max(Int(nx_p*padding),Int(ny_p*padding));
     convSize=min(convSize,Int(maxConvSizeConsidered/2.0)*2);
-    cout << "convSize " << convSize << endl;
 
 
     
@@ -167,7 +164,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSampling_p=1;
     convSize=max(Int(nx_p*padding),Int(ny_p*padding));
   }
-  cout << "nx ny " << nx_p << "   " <<ny_p << endl;
   convSampling=convSampling_p;
   Int maxConvSize=convSize;
   
@@ -196,8 +192,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pcenter(0) = nx_p/2;
     pcenter(1) = ny_p/2;    
     coords.directionCoordinate(directionIndex).toWorld( wcenter, pcenter );
-    cout << "phasecenter " << wcenter << "    " << pcenter << endl;
-    cout << "phase center " << wcenter.getAngle().getValue() << "   " << wcenter.getAngle("rad").getValue() << endl;
     dc.setReferenceValue(wcenter.getAngle().getValue());
   }
   coords.replaceCoordinate(dc, directionIndex);
@@ -207,7 +201,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TempImage<Complex> twoDPB(pbShape, coords);
 
   Int inner=convSize/convSampling_p;
-  cout << "uvscale " << uvScale << "   " << uvOffset << endl;
   ConvolveGridder<Double, Complex>
     ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
 
@@ -383,7 +376,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convSampling=convSampling_p;
   wScale=wScale_p;
 
-  cout << "convsam " << convSampling << " wscale " << wScale << endl;
 
 
 

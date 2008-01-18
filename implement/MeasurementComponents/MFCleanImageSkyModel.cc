@@ -38,6 +38,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/CountedPtr.h>
 
 #include <casa/sstream.h>
 
@@ -50,6 +51,7 @@
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LCBox.h>
+
 
 
 namespace casa {
@@ -174,7 +176,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   isCubeMask.set(False);
   Int nx, ny, npol;
   Int nchan=image(0).shape()(3);
-  PtrBlock< Matrix<Float>* > lmaskCube(nmodels*nchan);
+  PtrBlock<Matrix<Float> *>  lmaskCube(nmodels*nchan);
 
   for (model=0;model<numberOfModels();model++) {
     
@@ -197,9 +199,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       Int mx=mask(model).shape()(0);
       Int my=mask(model).shape()(1);
       Int mpol=mask(model).shape()(2);
-      AlwaysAssert(mx==nx, AipsError);
-      AlwaysAssert(my==ny, AipsError);
-      AlwaysAssert(mpol==npol, AipsError);
+      if((mx != nx) || (my != ny) || (mpol != npol)){
+	throw(AipsError("Mask image shape is not the same as dirty image"));
+      }
       LatticeStepper mls(mask(model).shape(),
 		       IPosition(4, nx, ny, 1, 1),
 		       IPosition(4, 0, 1, 2, 3));
@@ -209,6 +211,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	if(nchan==mask(model).shape()(3)){
 	  isCubeMask[model]=True;
 	  for (Int chan=0; chan < nchan; ++chan){
+	    if(lmaskCube[chan*nmodels+model]) 
+	      delete lmaskCube[chan*nmodels+model];
+	    lmaskCube[chan*nmodels+model]=0;
 	    lmaskCube[chan*nmodels+model]=makeMaskMatrix(nx,ny, maskli, 
 							   xbeg[model][chan],
 							   xend[model][chan],
@@ -219,6 +224,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	}
 	else{
 	  //Using first plane mask
+	  if(lmaskCube[model]) 
+	    delete lmaskCube[model];
+	  lmaskCube[model]=0;
 	  lmaskCube[model]=makeMaskMatrix(nx,ny, maskli, 
 					  xbeg[model][0],
 					  xend[model][0],
@@ -234,6 +242,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	}
       }
       else{
+	if(lmaskCube[model]) 
+	  delete lmaskCube[model];
+	lmaskCube[model]=0;
 	lmaskCube[model]=makeMaskMatrix(nx,ny, maskli, 
 					xbeg[model][0],
 					xend[model][0],
@@ -260,9 +271,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     // for cycles after the first one. If we have only one
     // model then we use convolutions to speed the processing
     os << "Making residual images for all fields" << LogIO::POST;
-    if(modified_p) 
-      makeNewtonRaphsonStep(se, (cycle>1));
-
+    if(modified_p){ 
+      makeNewtonRaphsonStep(se, False);
+      //makeNewtonRaphsonStep(se, (cycle>1));
+    }
     if(0) {
       ostringstream name;
       name << "Residual" << cycle;
@@ -350,7 +362,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	    IPosition onePlane(4, nx, ny, 1, 1);
 	    IPosition oneCube(4, nx, ny, npol, 1);
 	    
-	    AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
+	    //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
 	    
 	    // Loop over all channels. We only want the PSF for the first
 	    // polarization so we iterate over polarization LAST
@@ -373,9 +385,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	    Matrix<Float> maskArray;
 	    Bool domask=False;
 	    if(hasMask(model)) {
-		maskArray.resize(lmaskCube[model]->shape());
-		maskArray= *(lmaskCube[model]);
-		domask=True;
+	      maskArray.resize();
+	      //maskArray.resize(lmaskCube[model]->shape());
+	      maskArray.reference(*(lmaskCube[model]));
+	      domask=True;
 	    }
 
 	    // Now clean each channel
@@ -387,7 +400,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		   ggSli++,chan++) {
 
 	      if(hasMask(model) && isCubeMask[model] && chan >0) {
-		maskArray= *(lmaskCube[chan*nmodels+model]); 
+		maskArray.reference(*(lmaskCube[chan*nmodels+model])); 
 	      }
 	      
 	      if(psfmax(model)>0.0) {
@@ -403,6 +416,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		Array<Float>  residu(imageStepli.cursor());
 		Cube<Float> resid(residu.nonDegenerate(3));
 		Cube<Float> weight(sqrt(ggSli.cursor().nonDegenerate(3)/maxggS));
+
 
 		for (Int iy=0;iy<ny;iy++) {
 		  for (Int ix=0;ix<nx;ix++) {
@@ -453,17 +467,20 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
 		  deltaimageli.rwCursor().putStorage (ldeltaimage_data, delete_itdi);
+		  
 		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
+		  ///Need to go
 		  for (Int iy=0;iy<ny;iy++) {
 		    for (Int ix=0;ix<nx;ix++) {
 		      for (Int pol=0;pol<npol;pol++) {
 			if(weight(ix,iy,pol)>0.0) {
 			  step(ix,iy,pol)/=weight(ix,iy,pol);
-			}
+			} 
 		      }
 		    }
 		  }
 		  deltaimageli.rwCursor()=step.addDegenerate(1);     	  
+		  /////
 		  imageli.rwCursor()+=deltaimageli.cursor();
 		  psfli.cursor().freeStorage (lpsf_data, delete_itp);
 		  if (domask) {
@@ -502,7 +519,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  maxIterations=(iterations[model](chan)>maxIterations) ?
 		    iterations[model](chan) : maxIterations;
 		  modified_p=True;
+		  
 		  cleaner.getModel(deltaimageli.rwCursor());
+		  /////Need to go
+		  
 		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
 		  for (Int iy=0;iy<ny;iy++) {
 		    for (Int ix=0;ix<nx;ix++) {
@@ -513,7 +533,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		      }
 		    }
 		  }
-		  deltaimageli.rwCursor()=step.addDegenerate(1); 
+		  
+		  deltaimageli.rwCursor()=step.addDegenerate(1);	  
+		  /////
 		  imageli.rwCursor()+=deltaimageli.cursor();
 		  eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
@@ -559,12 +581,14 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   if (progress_p) delete progress_p;
+  
   for(model=0; model < nmodels; ++model){
     for(Int chan=0; chan < nchan; ++chan){
       if(lmaskCube[chan*nmodels+model] !=0) 
 	delete lmaskCube[chan*nmodels+model];
     }
   }
+  
   if(modified_p) {
     os << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
@@ -626,7 +650,7 @@ Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,
     Int npol=imagePtr->shape()(2);
     Int nchan=imagePtr->shape()(3);
 
-    AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
+    //    AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
     
     // Loop over all channels
     IPosition oneSlab(4, nx, ny, npol, 1);
@@ -654,9 +678,9 @@ Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,
       }
       if( (nchan >1) && nMaskChan==nchan)
 	cubeMask=True;
-      AlwaysAssert(mx==nx, AipsError);
-      AlwaysAssert(my==ny, AipsError);
-      AlwaysAssert(mpol==npol, AipsError);
+      if((mx != nx) || (my != ny) || (mpol != npol)){
+	throw(AipsError("Mask image shape is not the same as dirty image"));
+      }
       LatticeStepper mls(mask(model).shape(), oneSlab,
 			 IPosition(4, 0, 1, 2, 3));
       
@@ -677,7 +701,7 @@ Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,
     for (imageli.reset(),ggSli.reset();!imageli.atEnd();imageli++,ggSli++,chan++) {
       Float fmax, fmin;
       Bool delete_its;
-
+      Bool delete_its2;
       // Renormalize by the weights
       if(cubeMask){
 	if(maskIter.cursor().shape().nelements() > 1){
@@ -697,11 +721,14 @@ Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,
 	  }
 	}
       }
-      Float* limage_data=resid.getStorage(delete_its);
-      Float* lmask_data=maskArray.getStorage(delete_its);
+      const Float* limage_data=resid.getStorage(delete_its);
+      const Float* lmask_data=maskArray.getStorage(delete_its2);
       maximg((Float*)limage_data, &domask, (Float*)lmask_data,
 	     &nx, &ny, &npol, &fmin, &fmax);
 
+      
+      resid.freeStorage(limage_data, delete_its);
+      maskArray.freeStorage(lmask_data, delete_its2);
       if(fmax<0.99*imax) fmax=0.0;
       if(fmin>0.99*imin) fmin=0.0;
       if(abs(fmax)>absmax) absmax=abs(fmax);
