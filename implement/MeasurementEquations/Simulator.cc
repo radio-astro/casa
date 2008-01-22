@@ -1436,7 +1436,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
-	ft_p = new MosaicFT(*gvp_p, mLocation_p, cache_p/2, tile_p, True);
+	ft_p = new MosaicFT(*gvp_p, mLocation_p, stokesString_p, cache_p/2, tile_p, True);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "

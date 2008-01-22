@@ -135,7 +135,7 @@ public:
   // size of the tile used in gridding (cannot be less than
   // 12, 16 works in most cases). 
   // <group>
-  MosaicFT(SkyJones& sj, MPosition mloc,
+  MosaicFT(SkyJones& sj, MPosition mloc, String stokes,
 	    Long cachesize, Int tilesize=16, 
 	   Bool usezero=True);
   // </group>
@@ -323,6 +323,7 @@ protected:
   String machineName_p;
   Bool doneWeightImage_p;
   MosaicFT *otherFT_p;
+  String stokes_p;
 
 
 };

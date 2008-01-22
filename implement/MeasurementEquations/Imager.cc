@@ -6910,7 +6910,7 @@ Bool Imager::createFTMachine()
 	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
       }
     } 
-    ft_p = new MosaicFT(*gvp_p, mLocation_p, cache_p/2, tile_p, True);
+    ft_p = new MosaicFT(*gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);

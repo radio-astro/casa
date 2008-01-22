@@ -79,7 +79,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  MosaicFT::MosaicFT(SkyJones& sj, MPosition mloc,
+  MosaicFT::MosaicFT(SkyJones& sj, MPosition mloc, String stokes,
 		   Long icachesize, Int itilesize, 
 		   Bool usezero)
   : FTMachine(), sj_p(&sj),
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     isTiled(False),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), convSampling(1),
-    skyCoverage_p(0), machineName_p("MosaicFT")
+    skyCoverage_p(0), machineName_p("MosaicFT"), stokes_p(stokes)
 {
   convSize=0;
   tangentSpecified_p=False;
@@ -159,6 +159,7 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     usezero_p=other.usezero_p;
     doneWeightImage_p=other.doneWeightImage_p;
     pbConvFunc_p=other.pbConvFunc_p;
+    stokes_p=other.stokes_p;
     if(!other.skyCoverage_p.null())
       skyCoverage_p=other.skyCoverage_p;
     else
@@ -492,30 +493,6 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
       weightLattice = new ArrayLattice<Complex>(griddedWeight);
 
     }
-    //Get the Stokes coordinates right  his should go in StokeImageUtil
-   if(!doneWeightImage_p) {
-      Vector<Int> whichStokes(npol);
-      CoordinateSystem coords=convWeightImage_p->coordinates();
-      Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
-      switch(npol) {
-      case 1:
-	whichStokes(0)=Stokes::I;
-	break;
-      case 2:
-	whichStokes(0)=Stokes::I;
-	whichStokes(1)=Stokes::V;
-      break;
-      default:
-	whichStokes(0)=Stokes::I;
-	whichStokes(1)=Stokes::Q;
-	whichStokes(2)=Stokes::U;
-	whichStokes(3)=Stokes::V;
-      }
-      StokesCoordinate newStokesCoord(whichStokes);
-      coords.replaceCoordinate(newStokesCoord, stokesIndex);
-      convWeightImage_p->setCoordinateInfo(coords);
-
-   }
 
   }
   // AlwaysAssert(lattice, AipsError);
@@ -540,7 +517,63 @@ void MosaicFT::finalizeToSky()
   if(!doneWeightImage_p){
     
     LatticeFFT::cfft2d(*weightLattice, False);
-    skyCoverage_p=new TempImage<Float> (convWeightImage_p->shape(), convWeightImage_p->coordinates());
+    //Get the stokes right
+    CoordinateSystem coords=convWeightImage_p->coordinates();
+    Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
+    Int npol=1;
+    Vector<Int> whichStokes(npol);
+    if(stokes_p=="I" || stokes_p=="RR" || stokes_p=="LL" ||stokes_p=="XX" 
+       || stokes_p=="YY"){
+      npol=1;
+      whichStokes(0)=Stokes::type(stokes_p);
+    }
+    else if(stokes_p=="IV"){
+      npol=2;
+      whichStokes.resize(2);
+      whichStokes(0)=Stokes::I;
+      whichStokes(1)=Stokes::V;
+    }
+    else if(stokes_p=="QU"){
+      npol=2;
+      whichStokes.resize(2);
+      whichStokes(0)=Stokes::Q;
+      whichStokes(1)=Stokes::U;
+    }
+    else if(stokes_p=="RRLL"){
+      npol=2;
+      whichStokes.resize(2);
+      whichStokes(0)=Stokes::RR;
+      whichStokes(1)=Stokes::LL;
+    }   
+    else if(stokes_p=="XXYY"){
+      npol=2;
+      whichStokes.resize(2);
+      whichStokes(0)=Stokes::XX;
+      whichStokes(1)=Stokes::YY;
+    }  
+    else if(stokes_p=="IQU"){
+      npol=3;
+      whichStokes.resize(3);
+      whichStokes(0)=Stokes::I;
+      whichStokes(1)=Stokes::Q;
+      whichStokes(2)=Stokes::U;
+    }
+    else if(stokes_p=="IQUV"){
+      npol=2;
+      whichStokes.resize(4);
+      whichStokes(0)=Stokes::I;
+      whichStokes(1)=Stokes::Q;
+      whichStokes(2)=Stokes::U;
+      whichStokes(3)=Stokes::V;
+    } 
+    
+    StokesCoordinate newStokesCoord(whichStokes);
+    coords.replaceCoordinate(newStokesCoord, stokesIndex);
+    IPosition imshp=convWeightImage_p->shape();
+    imshp(2)=npol;
+
+
+    skyCoverage_p=new TempImage<Float> (imshp, coords);
     IPosition blc(4, (nx-image->shape()(0))/2,
 		    (ny-image->shape()(1))/2, 0, 0);
     IPosition stride(4, 1);
