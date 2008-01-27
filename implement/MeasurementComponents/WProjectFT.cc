@@ -84,7 +84,7 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
 		   Bool usezero)
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+    gridder(0), isTiled(False), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     pointingToImage(0), usezero_p(usezero),machineName_p("WProjectFT")
 {
@@ -101,7 +101,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
 		       Bool usezero, Float padding)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+    gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     pointingToImage(0), usezero_p(usezero), machineName_p("WProjectFT")
 {
@@ -120,7 +120,7 @@ WProjectFT::WProjectFT(
 		       Bool usezero, Float padding)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+    gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     pointingToImage(0), usezero_p(usezero),machineName_p("WProjectFT")
 {
@@ -292,9 +292,10 @@ void WProjectFT::init() {
 // This is nasty, we should use CountedPointers here.
 WProjectFT::~WProjectFT() {
   if(imageCache) delete imageCache; imageCache=0;
-  if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(gridder) delete gridder; gridder=0;
   /*
+  if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  
   Int numofmodels=convFunctions_p.nelements();
   for (Int k=0; k< numofmodels; ++k){
     delete convFunctions_p[k];
@@ -369,7 +370,7 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> > (image, False);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -384,12 +385,12 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
     IPosition start(4, 0);
     griddedData(blc, trc) = image->getSlice(start, image->shape());
     
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
   
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
   
@@ -499,17 +500,17 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=image;
+    lattice=CountedPtr<Lattice<Complex> > (image, False);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
-    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   
 }
 
@@ -1075,7 +1076,7 @@ void WProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
 ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
 					      Bool normalize) 
 {
-  AlwaysAssert(lattice, AipsError);
+  //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(image, AipsError);
   
   logIO() << LogOrigin("WProjectFT", "getImage") << LogIO::NORMAL;
@@ -1164,7 +1165,7 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
       
       // Do the copy
       image->put(griddedData(blc, trc));
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       griddedData.resize(IPosition(1,0));
     }
   }
@@ -1296,7 +1297,7 @@ Bool WProjectFT::fromRecord(String& error, const RecordInterface& inRec)
     init(); 
     
     if(isTiled) {
-      lattice=image;
+      lattice=CountedPtr<Lattice<Complex> > (image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -1311,12 +1312,12 @@ Bool WProjectFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition trc(blc+image->shape()-stride);
       griddedData(blc, trc) = image->getSlice(start, image->shape());
       
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
     }
     
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     AlwaysAssert(image, AipsError);
   };
   return retval;
