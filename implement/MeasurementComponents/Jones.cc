@@ -178,6 +178,109 @@ void Jones::zero() {
     (*ji_)=0.0;
 }
 
+
+// Constructor
+  JonesGenLin::JonesGenLin() : Jones() {}
+
+// In place invert
+void JonesGenLin::invert() {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesGenLin::invert()"));
+
+  // In linear approx, we merely negate the off-diag terms!
+
+  if (ok_[0]&&ok_[1]) {
+    j_[0]*=-1.0;
+    j_[1]*=-1.0;
+  } else {
+    zero();
+    ok_[0]=ok_[1]=False;
+  }
+
+}
+
+// In-place multipication with another Jones
+void JonesGenLin::operator*=(const Jones& other) {
+
+  switch(other.type()) {
+  case Jones::General: 
+  case Jones::GenLinear:
+  case Jones::Diagonal:
+  case Jones::Scalar:
+  default:
+    throw(AipsError("General multiplication NYI"));
+    break;
+  }
+}
+
+// Apply rightward to a VisVector
+void JonesGenLin::applyRight(VisVector& v) const {
+
+  switch(v.type()) {
+  case VisVector::Four: {
+
+    // Only adjust cross-hands by pars times parallel hands
+    v.v_[1]+=(j_[0]*v.v_[3]);
+    v.v_[2]+=(j_[1]*v.v_[0]);
+
+    break;
+  }
+  default:
+    throw(AipsError("JonesGenLin matrix apply (J::aR) incompatible with VisVector."));
+  }
+}
+
+// Apply rightward to a VisVector
+void JonesGenLin::applyRight(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyRight(v,vflag)"));
+
+  vflag|=(!(ok_[0]&&ok_[1]));
+  if (!vflag) applyRight(v);
+  else v.zero();
+  
+}
+
+// Apply leftward (transposed) to a VisVector 
+void JonesGenLin::applyLeft(VisVector& v) const {
+
+  switch(v.type()) {
+  case VisVector::Four: {
+    
+    // Only adjust cross-hands by pars times parallel hands
+    //
+    //  [A B] [1  Y*]  =  [A      B+AY*]
+    //  [C D] [X* 1 ]     [C+DX*  D    ]
+
+
+    v.v_[1]+=(conj(j_[1])*v.v_[0]);
+    v.v_[2]+=(conj(j_[0])*v.v_[3]);
+
+    break;
+  }
+  default:
+    throw(AipsError("JonesGenLin matrix apply (J::aL) incompatible with VisVector."));
+  }
+}
+
+// Apply leftward to a VisVector
+void JonesGenLin::applyLeft(VisVector& v, Bool& vflag) const {
+
+  if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyLeft(v,vflag)"));
+
+  vflag|=(!(ok_[0]&&ok_[1]));
+  if (!vflag) applyLeft(v);
+  else v.zero();
+
+}
+
+void JonesGenLin::zero() {
+  ji_=j_;
+  for (Int i=0;i<2;++i,++ji_)
+    (*ji_)=0.0;
+}
+
+
 // Constructor
 JonesDiag::JonesDiag() : Jones() {}
 
@@ -205,6 +308,7 @@ void JonesDiag::operator*=(const Jones& other) {
 
   switch(other.type()) {
   case Jones::General: 
+  case Jones::GenLinear: 
     throw(AipsError("Can't multiply Diagonal by General Jones matrix."));
     break;
   case Jones::Diagonal: {
@@ -341,6 +445,7 @@ void JonesScal::operator*=(const Jones& other) {
 
   switch(other.type()) {
   case Jones::General: 
+  case Jones::GenLinear: 
     throw(AipsError("Can't multiply Scalar Jones by General Jones matrix."));
     break;
   case Jones::Diagonal:
@@ -400,6 +505,9 @@ Jones* createJones(const Jones::JonesType& jtype) {
   case Jones::General:
     j = new Jones();
     break;
+  case Jones::GenLinear:
+    j = new JonesGenLin();
+    break;
   case Jones::Diagonal:
     j = new JonesDiag();
     break;
@@ -440,6 +548,11 @@ ostream& operator<<(ostream& os, const Jones& mat) {
       cout << ", " << *ji++ << "]";
       if (i<1) cout << endl;
     }
+    break;
+  case Jones::GenLinear:
+    cout << "GenLinear Jones: (off diag) " << endl;
+    cout << " [" << *ji++;
+    cout << ", " << *ji << "]";
     break;
   case Jones::Diagonal:
     cout << "Diagonal Jones: " << endl;

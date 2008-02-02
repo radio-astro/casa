@@ -81,7 +81,7 @@ void PJones::calcPar() {
   Complex* cp=currCPar().data();
   Double ang(0.0);
   for (Int iant=0;iant<nAnt();++iant,++a,++cp) {
-    ang=Double(*a);
+    ang=-1.0*Double(*a);
     (*cp) = Complex(cos(ang),sin(ang));
   }
   // Pars now valid, matrices not
@@ -481,7 +481,8 @@ void BJones::normalize() {
 DJones::DJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  SolvableVisJones(vs)    // immediate parent
+  SolvableVisJones(vs),   // immediate parent
+  solvePol_(False)
 {
   if (prtlev()>2) cout << "D::D(vs)" << endl;
 }
@@ -489,7 +490,8 @@ DJones::DJones(VisSet& vs) :
 DJones::DJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  SolvableVisJones(nAnt)
+  SolvableVisJones(nAnt),
+  solvePol_(False)
 {
   if (prtlev()>2) cout << "D::D(nAnt)" << endl;
 }
@@ -503,6 +505,16 @@ void DJones::setSolve(const Record& solvepar) {
   // Call parent
   SolvableVisJones::setSolve(solvepar);
 
+  // Determine if we are solving for source pol or not
+  if (solvepar.isDefined("type")) {
+    String type = solvepar.asString("type");
+    solvePol_=type.contains("QU");
+    if (solvePol()) 
+      logSink() << "Will solve for source polarization (Q,U)" << LogIO::POST;
+  }
+
+  logSink() << "Using only cross-hand data for instrumental polarization solution." << LogIO::POST;
+  
   // For D insist preavg is meaningful (5 minutes or user-supplied)
   if (preavg()<0.0)
     preavg()=300.0;
@@ -541,7 +553,129 @@ void DJones::guessPar(VisBuffer& vb) {
   // First guess is zero D-terms
   solveCPar()=0.0;
   solveParOK()=True;
+
+
+  if (jonesType()==Jones::GenLinear) {
+    vb.weightMat().row(0)=0.0;
+    vb.weightMat().row(3)=0.0;
+  }
+
+  if (solvePol()) {
+
+    // Sum up rl and lr for estimate of Q+iU
+    DComplex rl(0.0),lr(0.0);
+    Double sumwt(0.0);
+    Complex d,md;
+    Float wt;
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      if (!vb.flagRow()(irow)) {
+	for (Int ich=0;ich<vb.nChannel();++ich) {
+	  if (!vb.flag()(ich,irow)) {
+	    for (Int icorr=1;icorr<3;++icorr) {
+	      d=vb.visCube()(icorr,ich,irow);
+	      md=vb.modelVisCube()(icorr,ich,irow);
+	      wt=vb.weightMat()(icorr,irow);
+	      if (wt>0.0 && abs(d)>0.0 && abs(md)>0.0) {
+		if (icorr==1)
+		  rl+=DComplex(Complex(wt)*d/md);
+		else
+		  lr+=DComplex(Complex(wt)*d/md);
+
+		sumwt+=Double(wt);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    
+    // combine lr with lr
+    rl+=conj(lr);
+
+    if (sumwt>0)
+      rl/=DComplex(sumwt);
+
+
+    srcPolPar().resize(2);
+    srcPolPar()(0)=Complex(real(rl));
+    srcPolPar()(1)=Complex(imag(rl));
+
+    //    srcPolPar()=Complex(0.0);
+
+    //logSink() << "First guess for Q,U = " 
+    //	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
+
+
+  }
+
 }
+
+void DJones::applyRefAnt() {
+
+  if (refant()<0)
+    throw(AipsError("No refant specified."));
+
+  // Get the refant name from the nMS
+  String refantName("none");
+  MeasurementSet ms(msName());
+  MSAntennaColumns msantcol(ms.antenna());
+  refantName=msantcol.name()(refant());
+  
+  logSink() << "Applying refant: " << refantName
+            << LogIO::POST;
+
+  Vector<Int> altrefantlist(nAnt());
+  indgen(altrefantlist);
+
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+
+    currSpw()=ispw;
+
+    if (cs().nTime(ispw)>0) {
+
+      // References to ease access to solutions
+      Array<Complex> sol(cs().par(ispw));
+      Array<Bool> sok(cs().parOK(ispw));
+
+      for (Int islot=0;islot<cs().nTime(ispw);++islot) {
+
+	for (Int ich=0;ich<cs().nChan(ispw);++ich) {
+
+	  IPosition ipr(4,0,ich,0,islot);
+
+	  Complex refD1(0.0),refD2(0.0);
+
+	  // Assume user's refant
+	  ipr(2)=refant();
+
+	  // If user's refant unavailable, so find another
+	  if (!cs().parOK(ispw)(ipr)) {
+	    ipr(2)=0;
+	    while (ipr(2)<cs().nElem() &&
+		   !cs().parOK(ispw)(ipr)) ++ipr(2);
+	  }
+
+	  // Found a refant, so use it
+	  if (ipr(2)<nAnt()) {
+
+	    refD1=cs().par(ispw)(ipr);
+	    refD2=conj(refD1);
+
+	    for (Int iant=0;iant<cs().nElem();++iant) {
+	      ipr(2)=iant;
+	      ipr(0)=0;
+	      cs().par(ispw)(ipr)-=refD1;
+	      ipr(0)=1;
+	      cs().par(ispw)(ipr)+=refD2;
+	    }
+	  } // found refant
+	} // ich
+      } // islot
+    } // nTime(ispw)>0
+  } // ispw
+
+}
+
 
 // Fill the trivial DJ matrix elements
 void DJones::initTrivDJ() {
@@ -554,10 +688,18 @@ void DJones::initTrivDJ() {
   //  0 1     0 0
   //  0 0  &  1 0
 
-  diffJElem().resize(IPosition(4,4,2,1,1));
-  diffJElem()=0.0;
-  diffJElem()(IPosition(4,1,0,0,0))=Complex(1.0);
-  diffJElem()(IPosition(4,2,1,0,0))=Complex(1.0);
+  if (jonesType()==Jones::General) {
+    diffJElem().resize(IPosition(4,4,2,1,1));
+    diffJElem()=0.0;
+    diffJElem()(IPosition(4,1,0,0,0))=Complex(1.0);
+    diffJElem()(IPosition(4,2,1,0,0))=Complex(1.0);
+  }
+  else {
+    diffJElem().resize(IPosition(4,2,2,1,1));
+    diffJElem()=0.0;
+    diffJElem()(IPosition(4,0,0,0,0))=Complex(1.0);
+    diffJElem()(IPosition(4,1,1,0,0))=Complex(1.0);
+  }
 
 }
 

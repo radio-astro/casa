@@ -85,10 +85,14 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="T" || uptype=="T JONES") 
     return new TJones(vs);
 
-  else if (uptype=="D" || uptype=="D JONES") 
+  else if (uptype.before('+')=="DLIN" ||
+	   uptype.before('+')=="D" || 
+	   uptype=="D JONES") 
     return new DJones(vs);
 
-  else if (uptype=="DF" || uptype=="DF JONES") 
+  else if (uptype.before('+')=="DFLIN" || 
+	   uptype.before('+')=="DF" || 
+	   uptype=="DF JONES") 
     return new DfJones(vs);
 
   else if (uptype=="J" || uptype=="J JONES") 

@@ -113,6 +113,8 @@ protected:
   inline Array<Complex>&   dR()   { return dR_; };
   inline Matrix<Bool>&     Rflg() { return Rflg_; };
 
+  inline Array<Complex>&   dSrc()   { return dSrc_; };
+
   // Access to maxIter_
   inline Int&    maxIter() { return maxIter_; };
 
@@ -126,13 +128,20 @@ protected:
 
   // Access to parameters, & grad,hess,dp
   inline Int&              nTotalPar() { return nTotalPar_; };
+  inline Int&              nCalPar()   { return nCalPar_; };
+  inline Int&              nSrcPar()   { return nSrcPar_; };
   inline Vector<Complex>&  par()       { return par_; };
   inline Vector<Bool>&     parOK()     { return parOK_; };
   inline Vector<Float>&    parErr()    { return parErr_; };
-  inline Vector<Complex>&  lastPar()   { return lastPar_; };
+  inline Vector<Complex>&  srcPar()    { return srcPar_; };
   inline Vector<DComplex>& grad()      { return grad_; };
   inline Vector<Double>&   hess()      { return hess_; };
   inline Vector<Complex>&  dpar()      { return dpar_; };
+  inline Vector<Complex>&  dCalPar()   { return dsrcpar_; };
+  inline Vector<Complex>&  dSrcPar()   { return dcalpar_; };
+  inline Vector<Complex>&  lastCalPar()   { return lastCalPar_; };
+  inline Vector<Complex>&  lastSrcPar()   { return lastSrcPar_; };
+
   inline Double&           lambda()    { return lambda_; };
 
   // Initialize solving data
@@ -180,11 +189,16 @@ private:
 
   // Total Number of parameters
   Int nTotalPar_;
+  Int nCalPar_;
+  Int nSrcPar_;
 
   // Residual/Differentiation caches
   Cube<Complex>  R_;
   Array<Complex> dR_;
   Matrix<Bool>    Rflg_;
+
+  // Derivative wrt Q and U
+  Array<Complex> dSrc_;
 
   // Maximum number of solve iterations to attempt
   Int maxIter_;
@@ -203,10 +217,12 @@ private:
   Vector<Complex> par_;
   Vector<Bool>    parOK_;
   Vector<Float>   parErr_;
-  Vector<Complex> lastPar_;
+  Vector<Complex> srcPar_;  
+  Vector<Complex> lastCalPar_,lastSrcPar_;
 
   // Parameter update
   Vector<Complex> dpar_;
+  Vector<Complex> dcalpar_,dsrcpar_;
 
   // Gradient, Hessian
   //  (these are Double for precision in accumulation

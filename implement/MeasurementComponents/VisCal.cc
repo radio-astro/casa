@@ -1140,11 +1140,11 @@ void VisJones::syncJones(const Bool& doInv) {
   else {
 
     // Make local matrix element cache the correct size:
-    currJElem().resize(jonesType(),nChanMat(),nAnt());
+    currJElem().resize(jonesNPar(jonesType()),nChanMat(),nAnt());
     currJElem().unique();    // Ensure uniqueness!
 
     // OK matches size of the J matrix itself
-    currJElemOK().resize(jonesType(),nChanMat(),nAnt());
+    currJElemOK().resize(jonesNPar(jonesType()),nChanMat(),nAnt());
     currJElem().unique();    // Ensure uniqueness!
     currJElem()=False;
 
@@ -1267,7 +1267,7 @@ void VisJones::createJones() {
 
   if (prtlev()>6) cout << "       VJ::createJones()" << endl;
 
-  // Delete current Mueller if wrong type
+  // Delete current Jones if wrong type
   Jones::JonesType jtype(jonesType());
 
   if (J1_[currSpw()] &&

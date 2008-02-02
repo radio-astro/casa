@@ -102,6 +102,7 @@ public:
   friend class MuellerDiag2;
   friend class MuellerScal;
   friend class Jones;
+  friend class JonesGenLin;
   friend class JonesDiag;
   friend class JonesScal;
 

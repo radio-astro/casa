@@ -696,6 +696,7 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("append", TpBool);
   solveparDesc.addField ("solnorm", TpBool);
   solveparDesc.addField ("minsnr", TpFloat);
+  solveparDesc.addField ("type", TpString);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
@@ -709,6 +710,9 @@ Bool Calibrater::setsolve (const String& type,
   solvepar.define ("append", append);
   solvepar.define ("solnorm", solnorm);
   solvepar.define ("minsnr", minsnr);
+  String uptype=type;
+  uptype.upcase();
+  solvepar.define ("type", uptype);
   
   return setsolve(type,solvepar);
 
@@ -1335,6 +1339,10 @@ Bool Calibrater::standardSolve() {
 
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(islot(spw));
+	  
+	  // Report QU solution (no-op if not solved for)
+	  svc_p->reportSolvedQU();
+
 	}
 	else 
 	  // report where this failure occured

@@ -686,6 +686,7 @@ void StokesImageUtil::directCToR(ImageInterface<Float>& out, ImageInterface<Comp
   SkyModel::PolRep inPolFrame;
   Int nStokesIn=CStokesPolMap(inMap, inPolFrame, in.coordinates());
 
+
   AlwaysAssert(nStokesOut, AipsError);
   AlwaysAssert(nStokesIn, AipsError);
   if(inPolFrame != outPolFrame){
@@ -1058,6 +1059,7 @@ Int StokesImageUtil::CStokesPolMap(Vector<Int>& map, SkyModel::PolRep& polFrame,
     stokesCoord.toPixel(p, Stokes::RL)||
     stokesCoord.toPixel(p, Stokes::RR);
 
+
   if(Circular) {
     pol=0;
     if(stokesCoord.toPixel(p, Stokes::RR)) {map(p)=pol;found++;} pol++;
@@ -1231,7 +1233,12 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
   
   Int spectralIndex=coord.findCoordinate(Coordinate::SPECTRAL);
   SpectralCoordinate spectralCoord=coord.spectralCoordinate(spectralIndex);
-  
+ 
+  Int stokesIndex=coord.findCoordinate(Coordinate::STOKES);
+  StokesCoordinate
+    stokesCoord=coord.stokesCoordinate(stokesIndex);
+
+ 
   // Polarization: If the specified whichStokes are ok, we use them
   // otherwise we guess
   if(Int(whichStokes.nelements())!=npol) {
@@ -1242,7 +1249,15 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
       switch(npol) {
       case 1:
 	whichStokes.resize(1);
-	whichStokes(0)=Stokes::I;
+	if(Stokes::type(stokesCoord.stokes()[0])==Stokes::XX){
+	  whichStokes(0)=Stokes::XX; 
+	}
+	else if(Stokes::type(stokesCoord.stokes()[0])==Stokes::YY){
+	  whichStokes(0)=Stokes::YY;
+	}
+	else{
+	  whichStokes(0)=Stokes::I;
+	}
 	break;
       case 2:
 	whichStokes.resize(2);
@@ -1262,7 +1277,15 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
       switch(npol) {
       case 1:
 	whichStokes.resize(1);
-	whichStokes(0)=Stokes::I;
+	if(Stokes::type(stokesCoord.stokes()[0])==Stokes::RR){
+	  whichStokes(0)=Stokes::RR; 
+	}
+	else if(Stokes::type(stokesCoord.stokes()[0])==Stokes::LL){
+	  whichStokes(0)=Stokes::LL;
+	}
+	else{
+	  whichStokes(0)=Stokes::I;
+	}
 	break;
       case 2:
 	whichStokes.resize(2);
@@ -1280,12 +1303,12 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
     }
   }
   AlwaysAssert(whichStokes.nelements(), AipsError);
-  StokesCoordinate stokesCoord(whichStokes);
+  StokesCoordinate stokesCoordOut(whichStokes);
   
   // Now set up coordinates
   CoordinateSystem coordInfo; 
   coordInfo.addCoordinate(directionCoord);
-  coordInfo.addCoordinate(stokesCoord);
+  coordInfo.addCoordinate(stokesCoordOut);
   coordInfo.addCoordinate(spectralCoord);
   return coordInfo;
 
@@ -1439,6 +1462,7 @@ void StokesImageUtil::changeCStokesRep(ImageInterface<Complex>& image,
     stokesCoord=coords.stokesCoordinate(stokesIndex);
 
   Int npol=stokesCoord.stokes().nelements();
+
 
   Vector<Int> whichStokes(npol);
 

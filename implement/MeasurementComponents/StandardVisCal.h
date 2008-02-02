@@ -249,22 +249,32 @@ public:
   virtual String longTypeName() { return "D Jones (instrumental polarization"; };
 
   // Type of Jones matrix according to nPar()
-  virtual Jones::JonesType jonesType() { return Jones::General; };
+  //  Work in linear approx for now
+  //  TBD: provide toggle to support choice of General (non-linear) option
+  virtual Jones::JonesType jonesType() { return Jones::GenLinear; };
+  //virtual Jones::JonesType jonesType() { return Jones::General; };
+
+  // We can solve for polarization with D
+  virtual Bool solvePol() { return solvePol_; };
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
   // D-specific reReference
   // TBD: non-triv impl
-  virtual void reReference() {};
+  virtual void reReference() { cout << "reReference!" << endl;};
+
+  virtual void applyRefAnt();
+
 
 protected:
 
   // D has two Complex parameters
   virtual Int nPar() { return 2; };
 
-  // Jones matrix elements are trivial
-  virtual Bool trivialJonesElem() { return False; };
+  // Jones matrix elements are trivial?
+  //  True if GenLinear, False if General
+  virtual Bool trivialJonesElem() { return (jonesType()==Jones::GenLinear); };  
 
   // dD/dp are trivial
   virtual Bool trivialDJ() { return True; };
@@ -278,7 +288,8 @@ protected:
 
 private:
 
-  // <nothing>
+  Bool solvePol_;
+
   
 };
 

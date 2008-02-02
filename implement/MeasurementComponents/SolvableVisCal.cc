@@ -80,7 +80,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveRPar_(vs.numberSpw(),NULL),
   solveParOK_(vs.numberSpw(),NULL),
   solveParErr_(vs.numberSpw(),NULL),
-  solveParSNR_(vs.numberSpw(),NULL)
+  solveParSNR_(vs.numberSpw(),NULL),
+  srcPolPar_()
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -112,7 +113,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveRPar_(1,NULL),
   solveParOK_(1,NULL),
   solveParErr_(1,NULL),
-  solveParSNR_(1,NULL)
+  solveParSNR_(1,NULL),
+  srcPolPar_()
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -465,7 +467,6 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
 }
 
-
 void SolvableVisCal::initSolve(VisSet& vs) {
 
   if (prtlev()>2) cout << "SVC::initSolve(vs)" << endl;
@@ -695,9 +696,9 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
     Int nCorr(vb.corrType().nelements());
     Float amp(1.0);
     Complex cor(1.0);
-    Vector<Float> ampCorr(nCorr);
     Bool *flR=vb.flagRow().data();
     Bool *fl =vb.flag().data();
+    Vector<Float> ampCorr(nCorr);
     Vector<Int> n(nCorr,0);
     for (Int irow=0;irow<vb.nRow();++irow,++flR) {
       if (!vb.flagRow()(irow)) {
@@ -739,6 +740,56 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
   } // phase- or amp-only
 
   //  cout << "amp(vb.visCube())=" << amplitude(vb.visCube().reform(IPosition(1,vb.visCube().nelements()))) << endl;
+
+
+}
+void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
+
+  // TBD: migrate this to VisEquation?
+  
+  // Divide model and data by (scalar) stokes I, and set model cross-hands
+  //  to (1,0) so we can solve for fraction pol factors.
+
+  Int nCorr(vb.corrType().nelements());
+  Bool *flR=vb.flagRow().data();
+  Bool *fl =vb.flag().data();
+  Vector<Float> ampCorr(nCorr);
+  Vector<Int> n(nCorr,0);
+  Complex sI(0.0);
+  for (Int irow=0;irow<vb.nRow();++irow,++flR) {
+    if (!vb.flagRow()(irow)) {
+      ampCorr=0.0f;
+      n=0;
+      for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
+	if (!vb.flag()(ich,irow)) {
+	  
+	  sI=(vb.visCube()(0,ich,irow)+vb.visCube()(0,ich,irow))/Complex(2.0);
+	  
+	  if (abs(sI)>0.0) {
+	    for (Int icorr=0;icorr<nCorr;icorr++) {
+	      vb.visCube()(icorr,ich,irow)/=sI;
+	      ampCorr(icorr)+=abs(sI);
+	      n(icorr)++;
+	    } // icorr
+	  }
+	  else
+	    vb.flag()(ich,irow)=True;
+	  
+	} // !*fl
+      } // ich
+      // Make appropriate weight adjustment
+      for (Int icorr=0;icorr<nCorr;icorr++)
+	if (n(icorr)>0)
+	  // weights adjusted by square of the mean(amp)
+	  vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
+	else
+	  // weights now zero
+	  vb.weightMat()(icorr,irow)=0.0f;
+    } // !*flR
+  } // irow
+
+  // Model is now all unity  (Is this ok for flagged data? Probably.)
+  vb.modelVisCube()=Complex(1.0);
 
 
 }
@@ -846,18 +897,24 @@ void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
 
 }
 
+     
+void SolvableVisCal::updatePar(const Vector<Complex> dCalPar,const Vector<Complex> dSrcPar) {
 
-void SolvableVisCal::updatePar(const Vector<Complex> dpar) {
+  AlwaysAssert((solveCPar().nelements()==dCalPar.nelements()),AipsError);
 
-  AlwaysAssert((solveCPar().nelements()==dpar.nelements()),AipsError);
-
-  Cube<Complex> dparcube(dpar.reform(solveCPar().shape()));
+  Cube<Complex> dparcube(dCalPar.reform(solveCPar().shape()));
 
   // zero flagged increments
   dparcube(!solveParOK())=Complex(0.0);
   
   // Add the increment
   solveCPar()+=dparcube;
+
+  // Update source params
+  if (solvePol()) {
+    srcPolPar()+=dSrcPar;
+    //    cout << "Updated Q,U = " << real(srcPolPar()) << endl;
+  }
 
   // The matrices are nominally out-of-sync now
   invalidateCalMat();
@@ -1024,6 +1081,20 @@ void SolvableVisCal::calcPar() {
     invalidateCalMat();
   }
 
+}
+
+// Report solved-for QU
+void SolvableVisCal::reportSolvedQU() {
+
+  if (solvePol()) {
+    logSink() << "Source polarization solution for field " << currField();
+    if (freqDepPar())
+      logSink() << " (chan = " << focusChan() << ")";
+    
+    logSink() << ": Q = " << real(srcPolPar()(0)) 
+	      << ",  U = " << real(srcPolPar()(1))
+	      << LogIO::POST;
+  }
 }
 
 // File a solved solution (and meta-data) into a slot in the CalSet
@@ -1623,6 +1694,17 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
     Vflg.reference(vb.flag());   // Just reference whole flag array
   }
 
+  // "Apply" the current Q,U estimates to the crosshand model
+  if (solvePol()) {
+    const Complex pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));
+    IPosition blc(3,1,0,0), trc(3,1,nChanMat()-1,nRow-1);
+    Array<Complex> RL(Vout(blc,trc));
+    RL*=pol;
+    blc(0)=trc(0)=2;
+    Array<Complex> LR(Vout(blc,trc));
+    LR*=conj(pol);
+  }
+
   // Visibility vector renderers
   VisVector::VisType vt(visType(nCorr));
   VisVector cVm(vt);  // The model data corrupted by trial solution
@@ -1745,6 +1827,115 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
       dV2.advance(chpar);
       dJ1().advance(chpar);
       dJ2().advance(chpar);
+    }
+  }
+
+}
+
+void SolvableVisJones::diffSrc(VisBuffer& vb,
+			       Array<Complex>& dVout) {
+    
+  if (prtlev()>3) cout << "  SVJ::diffSrc()" << endl;
+
+  // Some vb shape info
+  Int& nRow(vb.nRow());
+  Int nCorr(vb.corrType().nelements());
+
+  // Size up the output data arrays
+  dVout.resize(IPosition(4,nCorr,nChanMat(),nRow,2));
+  dVout.unique();
+  dVout=Complex(0.0);
+  
+  IPosition blc(4,0,0,0,0), trc(4,0,nChanMat()-1,nRow-1,0);
+  blc(0)=1;
+  trc(0)=2;
+  blc(3)=trc(3)=0;
+  dVout(blc,trc)=Complex(1.0);
+  blc(3)=trc(3)=1;
+  blc(0)=trc(0)=1;
+  dVout(blc,trc)=Complex(0.0,1.0);
+  blc(0)=trc(0)=2;
+  dVout(blc,trc)=Complex(0.0,-1.0);
+
+  // Visibility vector renderers
+  VisVector::VisType vt(visType(nCorr));
+  VisVector dSm1(vt);  // The model data corrupted by trial solution
+  VisVector dSm2(vt);  // The model data corrupted by trial solution
+
+  // Starting synchronization for output visibility data
+  dSm1.sync(dVout(IPosition(4,0,0,0,0)));
+  dSm2.sync(dVout(IPosition(4,0,0,0,1)));
+
+  // Synchronize current calibration pars/matrices
+  syncSolveCal();
+
+  // Nominal synchronization of dJs
+  dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
+  dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // VisBuffer indices
+  Double* time=  vb.time().data();
+  Int*    a1=    vb.antenna1().data();
+  Int*    a2=    vb.antenna2().data();
+  Bool*   flagR= vb.flagRow().data();
+  Bool*   flag=  vb.flag().data();
+  
+  // TBD: set weights according to flags??
+
+  // iterate rows
+  for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
+    
+    // Avoid ACs
+    if (*a1==*a2) *flagR=True;
+
+    if (!*flagR) {  // if this row unflagged
+	
+      // Re-update matrices if time changes
+      if (timeDepMat() && *time != lastTime()) {
+	currTime()=*time;
+	invalidateDiffCalMat();
+	syncCalMat();
+	syncDiffMat();
+	lastTime()=currTime();
+      }
+
+      // Synchronize Jones renderers for the ants on this baseline
+      J1().sync(currJElem()(0,0,*a1),currJElemOK()(0,0,*a1));
+      J2().sync(currJElem()(0,0,*a2),currJElemOK()(0,0,*a2));
+
+      // Synchronize differentiated Jones renderers for this baseline
+      if (trivialDJ()) {
+	dJ1().origin();
+	dJ2().origin();
+      } else {
+	dJ1().sync(diffJElem()(IPosition(4,0,0,0,*a1)));
+	dJ2().sync(diffJElem()(IPosition(4,0,0,0,*a2)));
+      }
+
+      // Assumes all iterating quantities have nChanMat() channelization
+      for (Int ich=0; ich<nChanMat();ich++,flag++,
+	     dSm1++, dSm2++, J1()++, J2()++) {
+	     
+	// if channel unflagged an cal ok
+	if (!*flag) { 
+	  
+	  J1().applyRight(dSm1);
+	  J2().applyLeft(dSm1);
+	  J1().applyRight(dSm2);
+	  J2().applyLeft(dSm2);
+
+	}
+
+      } // chn
+		
+    } // !*flagR
+    else {
+      // Must advance all chan-, par-dep pointers over flagged row
+      flag+=nChanMat(); 
+      dSm1.advance(nChanMat());
+      dSm2.advance(nChanMat());
+      J1().advance(nChanMat());
+      J2().advance(nChanMat());
     }
   }
 
@@ -1894,7 +2085,7 @@ void SolvableVisJones::syncDiffJones() {
     // Ensure trivial matrices ready
     initTrivDJ();
   else {
-    diffJElem().resize(IPosition(4,jonesType(),nPar(),nChanMat(),nCalMat()));
+    diffJElem().resize(IPosition(4,jonesNPar(jonesType()),nPar(),nChanMat(),nCalMat()));
     diffJElem().unique();
     invalidateDJ();
 

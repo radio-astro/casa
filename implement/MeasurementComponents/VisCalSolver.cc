@@ -65,7 +65,8 @@ VisCalSolver::VisCalSolver() :
   lastChiSq_(0.0),dChiSq_(0.0),
   sumWt_(0.0),nWt_(0),
   cvrgcount_(0),
-  par_(), parOK_(), parErr_(), lastPar_(), dpar_(),
+  par_(), parOK_(), parErr_(), srcPar_(), lastCalPar_(), lastSrcPar_(),
+  dpar_(), dcalpar_(), dsrcpar_(),
   grad_(),hess_(),
   lambda_(2.0),
   optstep_(True),
@@ -104,6 +105,9 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   initSolve();
 
   Vector<Float> steplist(maxIter_+2,0.0);
+
+  //  cout << "svb.modelVisCube() = " << phase(svb.modelVisCube())*180.0/C::pi << endl;
+  //  cout << "svb.modelVisCube() = " << amplitude(svb.modelVisCube()) << endl;
 
   // Verify VisBuffer validity for solving
   //   (this sets parOK() on per-antenna basis (for focusChan)
@@ -169,7 +173,9 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	solveGradHess();
 	
 	// Remember curr pars
-	lastPar()=par();
+	lastCalPar()=par();
+	if (svc_->solvePol())
+	  lastSrcPar()=srcPar();
 	
 	// Refine the step size by exploring chi2 in the
 	//  gradient direction
@@ -179,7 +185,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	// Update current parameters (saves a copy of them)
 	updatePar();
 
-	steplist(iter)=max(amplitude(dpar())/amplitude(par()));
+	steplist(iter)=max(amplitude(dCalPar())/amplitude(par()));
 
       }
       else {
@@ -188,7 +194,8 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 
 	if (prtlev()>0) {
 	  cout << "Iterations =" << iter << endl;
-	  //	cout << "par()=" << par() << endl;
+	  cout << "par()=" << par() << endl;
+	  cout << "srcPar()=" << srcPar() << endl;
 	}
 
 
@@ -234,8 +241,15 @@ void VisCalSolver::initSolve() {
     
   if (prtlev()>2) cout << " VCS::initSolve()" << endl;
 
-  // Get total number of parameters from svc info
-  nTotalPar()=svc().nTotalPar();
+  // Get total number of cal parameters from svc info
+  nCalPar()=svc().nTotalPar();
+
+  if (svc().solvePol())
+    nSrcPar()=2;
+  else
+    nSrcPar()=0;
+
+  nTotalPar()=nCalPar()+nSrcPar();
 
   if (prtlev()>2)
     cout << "  Total parameters in solve: " << nTotalPar() << endl;
@@ -251,18 +265,32 @@ void VisCalSolver::initSolve() {
   // Link up svc's internal pars with local reference
   //   (only if shape is correct)
 
-  if (svc().solveCPar().nelements()==uInt(nTotalPar())) {
-    par().reference(svc().solveCPar().reform(IPosition(1,nTotalPar())));
-    parOK().reference(svc().solveParOK().reform(IPosition(1,nTotalPar())));
-    parErr().reference(svc().solveParErr().reform(IPosition(1,nTotalPar())));
+  if (svc().solveCPar().nelements()==uInt(nCalPar())) {
+    par().reference(svc().solveCPar().reform(IPosition(1,nCalPar())));
+    parOK().reference(svc().solveParOK().reform(IPosition(1,nCalPar())));
+    parErr().reference(svc().solveParErr().reform(IPosition(1,nCalPar())));
+    if (svc().solvePol()) 
+      srcPar().reference(svc().srcPolPar());
   }
   else
     throw(AipsError("Solver and SVC cannot synchronize parameters."));
 
   // Pars
-  lastPar().resize(nTotalPar());
+
   dpar().resize(nTotalPar());
   dpar()=0.0;
+
+  lastCalPar().resize(nCalPar());
+  dCalPar().reference(dpar()(IPosition(1,0),IPosition(1,nCalPar()-1)));
+
+  if (svc().solvePol()) {
+    lastSrcPar().resize(nSrcPar());
+    dSrcPar().reference(dpar()(IPosition(1,nCalPar()),IPosition(1,nTotalPar()-1)));
+  }
+  else {
+    lastSrcPar().resize();
+    dSrcPar().resize();
+  }
 
   // Gradient and Hessian
   grad().resize(nTotalPar());
@@ -299,6 +327,13 @@ void VisCalSolver::differentiate() {
 
   // Delegate to VisEquation
   ve().diffResiduals(svb(),R(),dR(),Rflg());
+
+
+  if (svc().solvePol()) {
+
+    // Differentiate w.r.t source
+    svc().diffSrc(svb(),dSrc());
+  }
 
   if (prtlev()>6) {  // R, dR
     cout << "   R= " << R() << endl;
@@ -425,6 +460,7 @@ Bool VisCalSolver::converged() {
       // Four such steps we believe we have converged!
       //      if (cvrgcount_>3)
       if (cvrgcount_>5)
+      //      if (cvrgcount_>500)
 	return True;
     }
 
@@ -526,6 +562,22 @@ void VisCalSolver::accGradHess() {
       fl = flag.array().data() + svc().focusChan();
       for (Int ich=0;ich<nChan;++ich) {
 	if (!*fl) { 
+
+	  // Do source bits, if necessary
+	  if (svc().solvePol()) {
+	    for (Int icorr=0;icorr<nCorr;++icorr) {
+	      Float swt=Vector<Float>(wtMat.array())(icorr);
+	      grad()(nCalPar())  += DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,0))*
+							    conj(R()(icorr,ich,irow))));
+	      grad()(nCalPar()+1)+= DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,1))*
+							    conj(R()(icorr,ich,irow))));
+	      hess()(nCalPar())  += Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,0))*
+							  conj(dSrc()(IPosition(4,icorr,ich,irow,0)))));
+	      hess()(nCalPar()+1)+= Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,1))*
+							  conj(dSrc()(IPosition(4,icorr,ich,irow,1)))));
+	    }
+	  }
+
 	  // Register R,dR for this channel, row
 	  Rp = Rit.array().data();
 	  dR0p = dR0it.array().data();
@@ -644,8 +696,9 @@ void VisCalSolver::revert() {
 
   // Recall the last decent parameter set
   //  TBD: the OK flag?
-  par()=lastPar();
-
+  par()=lastCalPar();
+  if (svc().solvePol())
+    srcPar()=lastSrcPar();
 }
 
 void VisCalSolver::solveGradHess() {
@@ -660,8 +713,8 @@ void VisCalSolver::solveGradHess() {
   lmfact=2.0;
 
   dpar()=Complex(0.0);
-  for (Int ipar=0; ipar<nTotalPar(); ipar++) {
-    if (parOK()(ipar) && hess()(ipar)!=0.0) {
+  for (Int ipar=0; ipar<nCalPar(); ipar++) {
+    if ( parOK()(ipar) && hess()(ipar)!=0.0) {
       // good hess for this par:
       dpar()(ipar) = grad()(ipar)/hess()(ipar);
       dpar()(ipar)/=lmfact;
@@ -671,6 +724,18 @@ void VisCalSolver::solveGradHess() {
       parOK()(ipar)=False;
     }
   }
+  
+  if (svc().solvePol()) 
+    for (Int ipar=nCalPar(); ipar<nTotalPar(); ipar++) {
+      if ( hess()(ipar)!=0.0) {
+	// good hess for this par:
+	dpar()(ipar) = grad()(ipar)/hess()(ipar);
+	dpar()(ipar)/=lmfact;
+      }
+      else {
+	dpar()(ipar)=0.0; 
+      }
+    }
 
   // Negate (so updatePar() can _add_)
   dpar()*=Complex(-1.0f);
@@ -685,9 +750,13 @@ void VisCalSolver::updatePar() {
 
   //  if (prtlev()>4) cout << "        dpar=" << dpar() << endl;
 
+
+  //  cout << "dCalPar() = " << dCalPar() << endl;
+  //  cout << "dSrcPar() = " << dSrcPar() << endl;
+
   // Tell svc to update the par 
   //   (permits svc() to condition the current solutions)
-  svc().updatePar(dpar());
+  svc().updatePar(dCalPar(),dSrcPar());
 
   if (prtlev()>4) 
     cout << "        new =" << endl
@@ -706,7 +775,8 @@ void VisCalSolver::optStepSize() {
   x2(0)=chiSq();
 
   // take nominal step
-  par()+=dpar();  
+  par()+=dCalPar();  
+  if (svc().solvePol()) srcPar()+=dSrcPar();  
   residualate();
   chiSquare();
   x2(1)=chiSq();
@@ -715,14 +785,16 @@ void VisCalSolver::optStepSize() {
   if (x2(1)<x2(0)) {
 
     // ...double step size until x2 starts increasing
-    par()=dpar(); par()*=Complex(2.0*step); par()+=lastPar();
+    par()=dCalPar(); par()*=Complex(2.0*step); par()+=lastCalPar();
+    if (svc().solvePol()) { srcPar()=dSrcPar(); srcPar()*=Complex(2.0*step); srcPar()+=lastSrcPar(); };
     residualate();
     chiSquare();
     x2(2)=chiSq();
     //    cout <<   "  down:    " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
     while (x2(2)<x2(1)) {    //  && step<4.0) {
       step*=2.0;
-      par()=dpar(); par()*=Complex(2.0*step); par()+=lastPar();
+      par()=dCalPar(); par()*=Complex(2.0*step); par()+=lastCalPar();
+      if (svc().solvePol()) { srcPar()=dSrcPar(); srcPar()*=Complex(2.0*step); srcPar()+=lastSrcPar(); };
       residualate();
       chiSquare();
       x2(1)=x2(2);
@@ -736,7 +808,8 @@ void VisCalSolver::optStepSize() {
 
     // ... contract by halves until we bracket a minimum
     step*=0.5;
-    par()=dpar(); par()*=Complex(step); par()+=lastPar();
+    par()=dCalPar(); par()*=Complex(step); par()+=lastCalPar();
+    if (svc().solvePol()) {srcPar()=dSrcPar(); srcPar()*=Complex(step); srcPar()+=lastSrcPar();};
     residualate();
     chiSquare();
     x2(2)=x2(1);
@@ -744,7 +817,8 @@ void VisCalSolver::optStepSize() {
     //    cout <<   "  up:       " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
     while (x2(1)>x2(0)) { //  && step>0.125) {
       step*=0.5;
-      par()=dpar(); par()*=Complex(step); par()+=lastPar();
+      par()=dCalPar(); par()*=Complex(step); par()+=lastCalPar();
+      if (svc().solvePol()) {srcPar()=dSrcPar(); srcPar()*=Complex(step); srcPar()+=lastSrcPar();};
       residualate();
       chiSquare();
       x2(2)=x2(1);
@@ -772,7 +846,8 @@ void VisCalSolver::optStepSize() {
        << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi << " ";
   */
 
-  par()=lastPar();
+  par()=lastCalPar();
+  srcPar()=lastSrcPar();
   
   // Adjust step by the optfactor
   if (optfactor>0.0)
@@ -793,7 +868,7 @@ void VisCalSolver::getErrors() {
 
   parErr()=0.0;
   //  Vector<Double> snr(nTotalPar(),0.0);
-  for (Int i=0;i<nTotalPar();++i) 
+  for (Int i=0;i<nCalPar();++i) 
     if (hess()(i)>0.0) {
       parErr()(i)=1.0/sqrt(hess()(i)/k2/2.0);   // 2 is from def of Hess!
       //      snr(i)=Double(abs(par()(i)))/errs(i);

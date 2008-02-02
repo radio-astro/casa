@@ -224,6 +224,14 @@ void VisEquation::collapse(VisBuffer& vb) {
   // TBD: optimize in combo with model origination?
   vb.sortCorr();
 
+  // If we are solving for the polarization:
+  //  1. Normalize data and model by I model
+  //  2. Set cross-hands to (1,0) so P factors multiplying them
+  //     are propogated, and we can solve for pol factors
+  if (svc().solvePol())
+    svc().setUpForPolSolve(vb);
+
+  // TBD: When warranted, do freqAve before setUpForPolSolve?
   
   // initialize LHS/RHS indices
   Int lidx=0;

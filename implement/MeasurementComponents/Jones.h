@@ -41,7 +41,7 @@ class Jones {
   
 public:
   
-  enum JonesType{General=4,Diagonal=2,Scalar=1};
+  enum JonesType{General=4,GenLinear=3,Diagonal=2,Scalar=1};
 
   // Construct 
   Jones();
@@ -51,6 +51,7 @@ public:
   
   // Return type id
   inline virtual JonesType type() const { return Jones::General; };
+  inline virtual Int typesize() const { return 4; };
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { j0_=&mat; origin(); };
@@ -60,11 +61,11 @@ public:
   inline void origin() {j_=j0_; ok_=ok0_;};
   
   // Increment to next matrix (according to type)
-  inline void operator++()    { j_+=type(); if (ok_) ok_+=type();};
-  inline void operator++(int) { j_+=type(); if (ok_) ok_+=type();};
+  inline void operator++()    { j_+=typesize(); if (ok_) ok_+=typesize();};
+  inline void operator++(int) { j_+=typesize(); if (ok_) ok_+=typesize();};
 
-  // Advance step matrices forward (according to type)
-  inline void advance(const Int& step) { j_+=(step*type()); if (ok_) ok_+=(step*type());};
+  // Advance step matrices forward (according to typesize)
+  inline void advance(const Int& step) { j_+=(step*typesize()); if (ok_) ok_+=(step*typesize());};
 
   // In-place invert
   virtual void invert();
@@ -118,6 +119,52 @@ private:
   
 };
 
+
+class JonesGenLin : public Jones {
+  
+public:
+  
+  // Construct 
+  JonesGenLin();
+  
+  // Dtor
+  virtual ~JonesGenLin() {};
+  
+  // Return type id
+  inline virtual JonesType type() const { return Jones::GenLinear; };
+  inline virtual Int typesize() const { return 2; };
+
+  // In-place invert
+  virtual void invert();
+
+  // In-place multipication with another Jones
+  virtual void operator*=(const Jones& other);
+
+  // Apply rightward to a VisVector
+  virtual void applyRight(VisVector& v) const;
+  virtual void applyRight(VisVector& v, Bool& vflag) const;
+
+  // Apply leftward (transposed) to a VisVector
+  virtual void applyLeft(VisVector& v) const;
+  virtual void applyLeft(VisVector& v, Bool& vflag) const;
+
+  // Give access to Mueller formation methods
+  friend class MuellerDiag;
+  friend class MuellerDiag2;
+    
+protected:
+  
+  // Copy ctor protected 
+  JonesGenLin(const JonesGenLin& mat);
+
+private:
+
+  // Zero the Jones matrix
+  virtual void zero();
+
+};
+
+
 class JonesDiag : public Jones {
   
 public:
@@ -130,6 +177,7 @@ public:
   
   // Return type id
   inline virtual JonesType type() const { return Jones::Diagonal; };
+  inline virtual Int typesize() const { return 2; };
 
   // In-place invert
   virtual void invert();
@@ -174,6 +222,7 @@ public:
   
   // Return type id
   inline virtual JonesType type() const { return Jones::Scalar; };
+  inline virtual Int typesize() const { return 1; };
 
   // In-place invert
   virtual void invert();
@@ -216,6 +265,25 @@ void apply(const Jones& j1, VisVector& v, const Jones& j2, Bool& vflag);
 
 // Return enum from integer
 Jones::JonesType jonesType(const Int& n);
+
+// Return parameter count from 
+inline Int jonesNPar(const Jones::JonesType& jtype) {
+  switch (jtype) {
+  case Jones::General:
+    return 4;
+    break;
+  case Jones::GenLinear:
+  case Jones::Diagonal:
+    return 2;
+    break;
+  case Jones::Scalar:
+    return 1;
+    break;
+  }
+  // must return something
+  return 0;
+}
+
 
 } //# NAMESPACE CASA - END
 

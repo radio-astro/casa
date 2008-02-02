@@ -87,6 +87,10 @@ public:
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
 
+  // Solve for point-source Q,U?
+  //  nominally no
+  virtual Bool solvePol() { return False; };
+
   // Does normalization by MODEL_DATA commute with this VisCal?
   //   (if so, permits pre-solve time-averaging)
   virtual Bool normalizable()=0;
@@ -148,6 +152,9 @@ public:
   inline virtual Cube<Float> &  solveParErr() {return (*solveParErr_[currSpw()]);};
   inline virtual Cube<Float> &  solveParSNR() {return (*solveParSNR_[currSpw()]);};
 
+  // Access to source pol parameters
+  inline Vector<Complex>& srcPolPar() { return srcPolPar_; };
+
   // Synchronize the meta data with a solvable VisBuffer
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
@@ -161,14 +168,21 @@ public:
   // Self-solving mechanism
   virtual void selfSolve(VisSet& vs, VisEquation& ve);
 
+  // Set up data and model for pol solve
+  void setUpForPolSolve(VisBuffer& vb);
+
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(VisBuffer& vb,        
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
 			     Matrix<Bool>& Vflg)=0;
 
+  // Differentiate VB model w.r.t. Source parameters
+  virtual void diffSrc(VisBuffer& vb,        
+		       Array<Complex>& dV)=0;
+
   // Update solve parameters incrementally (additive)
-  virtual void updatePar(const Vector<Complex> dpar);
+  virtual void updatePar(const Vector<Complex> dCalPar,const Vector<Complex> dSrcPar);
 
   // Form solution SNR
   virtual void formSolveSNR();
@@ -186,6 +200,9 @@ public:
   virtual void smooth(Vector<Int>& fields,
 		      const String& smtype,
 		      const Double& smtime);
+
+  // Report solved-for QU
+  virtual void reportSolvedQU();
 
   // File the current solved solution into a slot in the CalSet
   virtual void keep(const Int& slot);
@@ -331,6 +348,8 @@ private:
   PtrBlock<Cube<Float>*>   solveParErr_; // [nSpw](nPar,1,{1|nElm})
   PtrBlock<Cube<Float>*>   solveParSNR_; // [nSpw](nPar,1,{1|nElm})
 
+  Vector<Complex> srcPolPar_;
+
   // LogIO
   LogIO logsink_p;
 
@@ -368,6 +387,9 @@ public:
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow)
 			     Matrix<Bool>& Vflg) { throw(AipsError("NYI")); };
+  // Differentiate VB model w.r.t. Source parameters
+  virtual void diffSrc(VisBuffer& vb,        
+		       Array<Complex>& dV) {throw(AipsError("NYI")); };
 
   // Apply refant (no-op for Muellers)
   virtual void reReference() {};
@@ -474,13 +496,17 @@ public:
   virtual Int nTotalPar() { return nPar()*nAnt(); };
 
   // Does normalization by MODEL_DATA commute with this VisCal?
-  virtual Bool normalizable() { return (this->jonesType() < Jones::General); };
+  virtual Bool normalizable() { return (this->jonesType() < Jones::GenLinear); };
 
   // Differentiate VB model w.r.t. Jones parameters
   virtual void differentiate(VisBuffer& vb,          // input data
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)
 			     Matrix<Bool>& Vflg);
+
+  // Differentiate VB model w.r.t. Source parameters
+  virtual void diffSrc(VisBuffer& vb,        
+		       Array<Complex>& dV);
 
   // Apply refant
   virtual void reReference();
