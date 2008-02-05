@@ -145,7 +145,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
     if (mssel_p) delete mssel_p;
     mssel_p=new MeasurementSet(*ms_p);
     
-    logSink() << LogIO::NORMAL
+    logSink() << LogIO::NORMAL3
 	      << "Initializing nominal selection to the whole MS."
 	      << LogIO::POST;
 
@@ -230,7 +230,7 @@ void Calibrater::setdata(const String& mode,
 //    msSelect     const String&            MS selection string (TAQL)
 // Output to private data:
 //
-  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL3;
 
   try {
     
@@ -364,7 +364,7 @@ void Calibrater::selectvis(const String& time,
 //    msSelect     const String&            MS selection string (TAQL)
 // Output to private data:
 //
-  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL3;
   
   try {
 
@@ -589,7 +589,7 @@ Bool Calibrater::setapply (const String& type,
     String upType=type;
     upType.upcase();
 
-    logSink() << LogIO::NORMAL 
+    logSink() << LogIO::NORMAL3 
 	      << "Arranging to APPLY:"
 	      << LogIO::POST;
 
@@ -684,7 +684,7 @@ Bool Calibrater::setsolve (const String& type,
 			   const Float& minsnr)
 {
   
-  logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL3;
   
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
@@ -727,7 +727,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Float& maskedge,
 				  const Int& refant) {
 
-  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL3;
 
   // TBD: support solution interval!
 
@@ -777,7 +777,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Float& maskedge,
 				  const String& refant) {
 
-  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL3;
 
   // TBD: support solution interval!
 
@@ -827,7 +827,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
 				    const Int& numpoint,
 				    const Double& phasewrap) {
   
-  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL3;
 
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
@@ -866,7 +866,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
 				    const Double& phasewrap,
 				    const String& refant) {
   
-  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL3;
 
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
@@ -912,7 +912,7 @@ Bool Calibrater::setsolve (const String& type,
     // Clean out any old solve that was lying around
     unsetsolve();
 
-    logSink() << LogIO::NORMAL 
+    logSink() << LogIO::NORMAL3 
 	      << "Arranging to SOLVE:"
 	      << LogIO::POST;
 
@@ -943,7 +943,7 @@ Bool Calibrater::setsolve (const String& type,
 
 Bool Calibrater::state() {
 
-  logSink() << LogOrigin("Calibrater","state") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","state") << LogIO::NORMAL3;
 
   applystate();
   solvestate();
@@ -1170,7 +1170,7 @@ Bool Calibrater::correct() {
 
 Bool Calibrater::solve() {
 
-  logSink() << LogOrigin("Calibrater","solve") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","solve") << LogIO::NORMAL3;
 
   try {
 
@@ -1442,7 +1442,7 @@ void Calibrater::fluxscale(const String& infile,
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
 
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
@@ -1497,7 +1497,7 @@ void Calibrater::fluxscale(const String& infile,
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
 
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
@@ -1527,7 +1527,7 @@ void Calibrater::fluxscale(const String& infile,
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
   // TBD: write inputs to MSHistory
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
 
   try {
     // If infile is Calibration table
@@ -1649,7 +1649,7 @@ void Calibrater::accumulate(const String& intab,
 			    const Double& t,
 			    const Vector<Int>& spwmap) {
 
-  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL3;
 
   // Convert refFields/transFields to index lists
   Vector<Int> fldidx(0);

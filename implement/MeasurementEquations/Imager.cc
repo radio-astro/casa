@@ -4522,7 +4522,7 @@ Bool Imager::clean(const String& algorithm,
 
 	  return False;
 	}
-      os << "Created Sky Equation" << LogIO::POST;
+      os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
       addResidualsToSkyEquation(residualNames);
     }
     else{
@@ -4849,7 +4849,7 @@ Bool Imager::mem(const String& algorithm,
       {
 	return False;
       }
-    os << "Created Sky Equation" << LogIO::POST;
+    os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
     
     addResidualsToSkyEquation(residualNames);
 
