@@ -743,12 +743,14 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
 
 
 }
+
 void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
 
   // TBD: migrate this to VisEquation?
   
-  // Divide model and data by (scalar) stokes I, and set model cross-hands
-  //  to (1,0) so we can solve for fraction pol factors.
+  // Divide model and data by (scalar) stokes I (which may be resolved!), 
+  //  and set model cross-hands to (1,0) so we can solve for fraction 
+  //  pol factors.
 
   Int nCorr(vb.corrType().nelements());
   Bool *flR=vb.flagRow().data();
@@ -763,8 +765,7 @@ void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
       for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
 	if (!vb.flag()(ich,irow)) {
 	  
-	  sI=(vb.visCube()(0,ich,irow)+vb.visCube()(0,ich,irow))/Complex(2.0);
-	  
+	  sI=(vb.modelVisCube()(0,ich,irow)+vb.modelVisCube()(3,ich,irow))/Complex(2.0);
 	  if (abs(sI)>0.0) {
 	    for (Int icorr=0;icorr<nCorr;icorr++) {
 	      vb.visCube()(icorr,ich,irow)/=sI;
