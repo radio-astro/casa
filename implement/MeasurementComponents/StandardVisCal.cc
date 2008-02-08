@@ -485,6 +485,7 @@ DJones::DJones(VisSet& vs) :
   solvePol_(False)
 {
   if (prtlev()>2) cout << "D::D(vs)" << endl;
+
 }
 
 DJones::DJones(const Int& nAnt) :
@@ -494,11 +495,22 @@ DJones::DJones(const Int& nAnt) :
   solvePol_(False)
 {
   if (prtlev()>2) cout << "D::D(nAnt)" << endl;
+
 }
 
 DJones::~DJones() {
   if (prtlev()>2) cout << "D::~D()" << endl;
 }
+
+void DJones::setApply(const Record& apply) {
+
+  SolvableVisJones::setApply(apply);
+
+  // Force calwt to False for now
+  calWt()=False;
+
+}
+
 
 void DJones::setSolve(const Record& solvepar) {
 
@@ -602,8 +614,8 @@ void DJones::guessPar(VisBuffer& vb) {
 
     //    srcPolPar()=Complex(0.0);
 
-    //logSink() << "First guess for Q,U = " 
-    //	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
+    //    logSink() << "First guess for Q,U = " 
+    //    	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
 
 
   }

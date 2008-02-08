@@ -237,6 +237,10 @@ public:
 
   virtual ~DJones();
 
+  // Local setapply
+  using SolvableVisJones::setApply;
+  virtual void setApply(const Record& apply);
+
   // D-specific solve setup
   using SolvableVisJones::setSolve;
   void setSolve(const Record& solvepar);
