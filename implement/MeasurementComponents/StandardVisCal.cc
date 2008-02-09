@@ -55,7 +55,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 PJones::PJones(VisSet& vs) :
   VisCal(vs), 
   VisMueller(vs),
-  VisJones(vs)
+  VisJones(vs),
+  pjonestype_(Jones::Diagonal),
+  pa_()
 {
   if (prtlev()>2) cout << "P::P(vs)" << endl;
 }
@@ -64,12 +66,31 @@ PJones::~PJones() {
   if (prtlev()>2) cout << "P::~P()" << endl;
 }
 
+// We need to locally form the Jones according to 
+//  the correlations we have
+
+void PJones::syncJones(const Bool& doInv) {
+
+  // Circulars
+  if (vb().corrType()(0)==5)
+    pjonestype_=Jones::Diagonal;
+
+  // Linears
+  else if (vb().corrType()(0)==9)
+    pjonestype_=Jones::General;
+
+  VisJones::syncJones(doInv);
+
+}
+
+
 void PJones::calcPar() {
 
   if (prtlev()>6) cout << "      VC::calcPar()" << endl;
 
   // Get parallactic angle from the vb:
-  Vector<Float> pa(vb().feed_pa(currTime()));
+  pa().resize(nAnt());
+  pa() = vb().feed_pa(currTime());
 
   // Initialize parameter arrays
   currCPar().resize(1,1,nAnt());
@@ -77,12 +98,12 @@ void PJones::calcPar() {
   currParOK()=True;
 
   // Fill currCPar() with exp(i*pa)
-  Float* a=pa.data();
+  Float* a=pa().data();
   Complex* cp=currCPar().data();
   Double ang(0.0);
   for (Int iant=0;iant<nAnt();++iant,++a,++cp) {
-    ang=-1.0*Double(*a);
-    (*cp) = Complex(cos(ang),sin(ang));
+    ang=Double(*a);
+    (*cp) = Complex(cos(ang),sin(ang));  // as a complex number
   }
   // Pars now valid, matrices not
   validateP();
@@ -100,9 +121,29 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
 
   // Circular version:
   if (pOk(0)) {
-    mat(0)=par(0);
-    mat(1)=conj(par(0));
-    mOk=True;
+
+    switch (jonesType()) {
+    case Jones::Diagonal: {
+      mat(0)=conj(par(0));  // exp(-ia)
+      mat(1)=par(0);        // exp(ia)
+      mOk=True;
+      break;
+    }
+    case Jones::General: {
+      Float a=arg(par(0));
+      mat(0)=mat(3)=cos(a);
+      mat(1)=sin(a);
+      mat(2)=-mat(1);
+      break;
+    }
+    default:
+      throw(AipsError("PJones doesn't know if it is Diag (Circ) or General (Lin)"));
+      break;
+
+    }
+
+
+
   }
 }
 

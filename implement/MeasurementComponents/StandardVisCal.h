@@ -60,12 +60,14 @@ public:
   virtual String longTypeName() { return "P Jones (parallactic angle phase)"; };
 
   // Type of Jones matrix according to nPar()
-  Jones::JonesType jonesType() { return Jones::Diagonal; };
+  Jones::JonesType jonesType() { return pjonestype_; };
 
 protected:
 
   // P has one trivial Complex parameter
   virtual Int nPar() { return 1; };
+
+  virtual Vector<Float>& pa() { return pa_; };
 
   // Jones matrix elements are NOT trivial
   virtual Bool trivialJonesElem() { return False; };
@@ -73,13 +75,19 @@ protected:
   // Calculate parallactic angle
   virtual void calcPar();
 
+  // We need to locally form the Jones according to 
+  //  the correlations we have
+  virtual void syncJones(const Bool& doInv);
+
   // Calculate a single PJones matrix 
   virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
 			    const Vector<Complex>& par, const Vector<Bool>& pOk );
 
 private:
 
-  // <nothing>
+  Jones::JonesType pjonestype_;
+
+  Vector<Float> pa_;
   
 };
 
