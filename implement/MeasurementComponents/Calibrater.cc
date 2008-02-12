@@ -106,7 +106,7 @@ String Calibrater::timerString() {
 
 Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
   
-  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL3;
   
   try {
     timer_p.mark();
@@ -145,7 +145,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
     if (mssel_p) delete mssel_p;
     mssel_p=new MeasurementSet(*ms_p);
     
-    logSink() << LogIO::NORMAL3
+    logSink() << LogIO::NORMAL
 	      << "Initializing nominal selection to the whole MS."
 	      << LogIO::POST;
 
@@ -198,7 +198,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
 Bool Calibrater::initCalSet(const Int& calSet) 
 {
 
-  //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL;
+  //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL3;
 
   if (vs_p) {
     vs_p->initCalSet(calSet);
@@ -589,7 +589,7 @@ Bool Calibrater::setapply (const String& type,
     String upType=type;
     upType.upcase();
 
-    logSink() << LogIO::NORMAL3 
+    logSink() << LogIO::NORMAL 
 	      << "Arranging to APPLY:"
 	      << LogIO::POST;
 
@@ -912,7 +912,7 @@ Bool Calibrater::setsolve (const String& type,
     // Clean out any old solve that was lying around
     unsetsolve();
 
-    logSink() << LogIO::NORMAL3 
+    logSink() << LogIO::NORMAL 
 	      << "Arranging to SOLVE:"
 	      << LogIO::POST;
 
@@ -1144,6 +1144,71 @@ Bool Calibrater::correct() {
 	  
 	  // Write out weight col, if it has changed
 	  if (calwt) vi.setWeightMat(vb.weightMat()); 
+	}
+      }
+      else 
+	cout << "Encountered data spw for which there no calibration." << endl;
+      
+    }
+    // Flush to disk
+    vs_p->flush();
+
+    return True;  
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+
+    logSink() << "Reseting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::correct."));
+    return False;
+  } 
+  return False;
+}
+
+Bool Calibrater::corrupt() {
+  
+  logSink() << LogOrigin("Calibrater","corrupt") << LogIO::NORMAL;
+  
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for corrupt!"));
+
+    // Ensure apply list non-zero and properly sorted
+    ve_p->setapply(vc_p);
+
+    // Report the types that will be applied
+    applystate();
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    vs_p->resetVisIter(columns,0.0);
+    VisIter& vi(vs_p->iter());
+    VisBuffer vb(vi);
+    
+    // Pass each timestamp (VisBuffer) to VisEquation for correction
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+      // Only procede if spw can be calibrated
+      if (spwOK_p(vi.spectralWindow())) {
+
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // Corrupt the MODEL_DATA
+	  //  (note we are not treating weights and flags)
+	  ve_p->corrupt(vb);    // throws exception if nothing to apply
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+
 	}
       }
       else 

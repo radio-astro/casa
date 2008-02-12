@@ -134,6 +134,7 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
       mat(0)=mat(3)=cos(a);
       mat(1)=sin(a);
       mat(2)=-mat(1);
+      mOk=True;
       break;
     }
     default:

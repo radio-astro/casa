@@ -183,8 +183,13 @@ class Calibrater
   Bool reset(const Bool& apply=True, 
 	     const Bool& solve=True);
 
-  // Apply all setapply'd calibration components forming the CORRECTED_DATA column
+  // Apply all setapply'd calibration components to DATA and
+  //  deposit in the CORRECTED_DATA column
   Bool correct();
+
+  // Apply all setapply'd calibration components to MODEL_DATA and
+  //  deposit in the MODEL_DATA column
+  Bool corrupt();
 
   // Solve for a given calibration component
   Bool solve();
