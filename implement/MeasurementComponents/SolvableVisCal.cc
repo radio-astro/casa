@@ -3231,8 +3231,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   Int isol = 0; // total solution counter
   Bool prompt = True; // if true, issue prompt
   
-  //   This redirection technique copied from: 
-  //   http://www.velocityreviews.com/forums/t284482-redirect-cout-to-file.html
+  // Redirect cout to listfile
   ofstream file;
   streambuf* sbuf = cout.rdbuf();
   if(listfile!="") {
@@ -3274,6 +3273,10 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   
   int numAntCols = 4; // Number of antenna columns
 
+  logSink() << LogIO::NORMAL1
+       << "Listing CalTable: " << calTableName()
+       << "   (" << typeName() << ") "
+       << LogIO::POST;
   cout << endl
        << "Listing CalTable: " << calTableName()
        << "   (" << typeName() << ") "
@@ -3283,6 +3286,10 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   String dateStr0=dateTimeStr0.substr(0,10);
   
   // Default header info.
+  logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;
+  logSink() << LogIO::NORMAL << "Date= " << dateStr0 << endl
+                             << "SpwId= " << spw << endl
+                             << "Channel= " << dochan << endl;
   cout << "MS name = " << msName() << ", "
        << "Date= " << dateStr0 << ", "
        << "SpwId= " << spw << ", "
@@ -3444,6 +3451,9 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 
     if (endOutput) {break;} // break out of ielem loop
   } // ielem
+  logSink() << LogIO::NORMAL1
+            << "Listed " << isol << " antenna solutions." 
+            << LogIO::POST; 
   cout << endl
        << "Listed " << isol << " antenna solutions." 
        << endl << endl;
