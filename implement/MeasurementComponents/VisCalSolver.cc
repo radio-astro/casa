@@ -105,6 +105,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   initSolve();
 
   Vector<Float> steplist(maxIter_+2,0.0);
+  Vector<Float> rsteplist(maxIter_+2,0.0);
 
   //  cout << "svb.modelVisCube() = " << phase(svb.modelVisCube())*180.0/C::pi << endl;
   //  cout << "svb.modelVisCube() = " << amplitude(svb.modelVisCube()) << endl;
@@ -120,7 +121,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 			 << "amp = " << amplitude(par()) << endl
 			 << "pha = " << phase(par()) 
 			 << endl;
-    
+
     // Iterate solution
     Int iter(0);
     Bool done(False);
@@ -185,7 +186,10 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	// Update current parameters (saves a copy of them)
 	updatePar();
 
-	steplist(iter)=max(amplitude(dCalPar())/amplitude(par()));
+	//	cout << "srcPar() = " << srcPar() << endl;
+
+	steplist(iter)=max(amplitude(dCalPar()));
+	rsteplist(iter)=max(amplitude(dCalPar())/amplitude(par()));
 
       }
       else {
@@ -199,12 +203,14 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
 	}
 
 
-    /*
+	/*
 	cout << " good pars=" << ntrue(parOK())
-	     << " iterations=" << iter
+	     << " iterations=" << iter << endl
 	     << " steps=" << steplist(IPosition(1,0),IPosition(1,iter)) 
+	     << endl
+	     << " rsteps=" << rsteplist(IPosition(1,0),IPosition(1,iter)) 
 	     << endl;
-    */
+	*/   
 
 	// Get parameter errors:
 	accGradHess();
@@ -244,11 +250,10 @@ void VisCalSolver::initSolve() {
   // Get total number of cal parameters from svc info
   nCalPar()=svc().nTotalPar();
 
-  if (svc().solvePol())
-    nSrcPar()=2;
-  else
-    nSrcPar()=0;
+  // solvePol() tells us how many source pol params we are solving for
+  nSrcPar()=svc().solvePol();
 
+  // the total number of parameters
   nTotalPar()=nCalPar()+nSrcPar();
 
   if (prtlev()>2)
@@ -459,8 +464,8 @@ Bool VisCalSolver::converged() {
 
       // Four such steps we believe we have converged!
       //      if (cvrgcount_>3)
+      //if (cvrgcount_>10)
       if (cvrgcount_>5)
-      //      if (cvrgcount_>500)
 	return True;
     }
 
@@ -567,14 +572,13 @@ void VisCalSolver::accGradHess() {
 	  if (svc().solvePol()) {
 	    for (Int icorr=0;icorr<nCorr;++icorr) {
 	      Float swt=Vector<Float>(wtMat.array())(icorr);
-	      grad()(nCalPar())  += DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,0))*
-							    conj(R()(icorr,ich,irow))));
-	      grad()(nCalPar()+1)+= DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,1))*
-							    conj(R()(icorr,ich,irow))));
-	      hess()(nCalPar())  += Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,0))*
-							  conj(dSrc()(IPosition(4,icorr,ich,irow,0)))));
-	      hess()(nCalPar()+1)+= Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,1))*
-							  conj(dSrc()(IPosition(4,icorr,ich,irow,1)))));
+
+	      for (Int ispar=0;ispar<nSrcPar();++ispar) {
+		grad()(nCalPar()+ispar) += DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,ispar))*
+								   conj(R()(icorr,ich,irow))));
+		hess()(nCalPar()+ispar) += Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,ispar))*
+								 conj(dSrc()(IPosition(4,icorr,ich,irow,ispar)))));
+	      }
 	    }
 	  }
 

@@ -267,10 +267,15 @@ public:
   //virtual Jones::JonesType jonesType() { return Jones::General; };
 
   // We can solve for polarization with D
-  virtual Bool solvePol() { return solvePol_; };
+  virtual Int solvePol() { return solvePol_; };
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
+
+  // Update the parameters from solving
+  //  (in linear approx, we always set the source update to zero, for now!)
+  virtual void updatePar(const Vector<Complex> dCalPar,
+			 const Vector<Complex> dSrcPar);
 
   // D-specific reReference
   // TBD: non-triv impl
@@ -287,7 +292,6 @@ protected:
   // Jones matrix elements are trivial?
   //  True if GenLinear, False if General
   virtual Bool trivialJonesElem() { return (jonesType()==Jones::GenLinear); };  
-
   // dD/dp are trivial
   virtual Bool trivialDJ() { return True; };
 
@@ -300,7 +304,7 @@ protected:
 
 private:
 
-  Bool solvePol_;
+  Int solvePol_;
 
   
 };

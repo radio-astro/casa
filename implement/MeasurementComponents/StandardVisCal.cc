@@ -30,6 +30,7 @@
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
+#include <scimath/Fitting/LSQFit.h>
 
 #include <tables/Tables/ExprNode.h>
 
@@ -524,7 +525,7 @@ DJones::DJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
   SolvableVisJones(vs),   // immediate parent
-  solvePol_(False)
+  solvePol_(0)
 {
   if (prtlev()>2) cout << "D::D(vs)" << endl;
 
@@ -534,7 +535,7 @@ DJones::DJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
   SolvableVisJones(nAnt),
-  solvePol_(False)
+  solvePol_(0)
 {
   if (prtlev()>2) cout << "D::D(nAnt)" << endl;
 
@@ -562,9 +563,16 @@ void DJones::setSolve(const Record& solvepar) {
   // Determine if we are solving for source pol or not
   if (solvepar.isDefined("type")) {
     String type = solvepar.asString("type");
-    solvePol_=type.contains("QU");
-    if (solvePol()) 
+    if (type.contains("QU")) {
+      solvePol_=2;
       logSink() << "Will solve for source polarization (Q,U)" << LogIO::POST;
+    }
+    else if (type.contains("X")) {
+      solvePol_=1;
+      logSink() << "Will solve for source polarization position angle correction" << LogIO::POST;
+    }
+    else
+      solvePol_=0;
   }
 
   logSink() << "Using only cross-hand data for instrumental polarization solution." << LogIO::POST;
@@ -608,7 +616,6 @@ void DJones::guessPar(VisBuffer& vb) {
   solveCPar()=0.0;
   solveParOK()=True;
 
-
   if (jonesType()==Jones::GenLinear) {
     vb.weightMat().row(0)=0.0;
     vb.weightMat().row(3)=0.0;
@@ -616,6 +623,14 @@ void DJones::guessPar(VisBuffer& vb) {
 
   if (solvePol()) {
 
+    // solvePol() tells us how many source pol parameters
+    srcPolPar().resize(solvePol());
+
+    // The following assumes the MODEL_DATA has been
+    //  corrupted by P 
+
+
+    if (False) {
     // Sum up rl and lr for estimate of Q+iU
     DComplex rl(0.0),lr(0.0);
     Double sumwt(0.0);
@@ -643,27 +658,106 @@ void DJones::guessPar(VisBuffer& vb) {
       }
     }
     
-    // combine lr with lr
+    // combine lr with rl
     rl+=conj(lr);
 
-    if (sumwt>0)
+    Double a=abs(rl);
+    if (sumwt>0 && a>0.0)
       rl/=DComplex(sumwt);
+    else {
+      // Source model apparently has no polarization, 
+      ///  so don't solve for its pos ang.
+      solvePol_=0;
+      logSink() << "Turning off solve for polarization position angle since source model has no linear polarization."
+		<< LogIO::POST;
+    }
 
 
-    srcPolPar().resize(2);
-    srcPolPar()(0)=Complex(real(rl));
-    srcPolPar()(1)=Complex(imag(rl));
+    srcPolPar().resize(solvePol());
+    if (solvePol()==1 && a>0.0) 
+      srcPolPar()(0)=Complex(arg(rl));
+    else if (solvePol()==2) {
+      srcPolPar()(0)=Complex(real(rl));
+      srcPolPar()(1)=Complex(imag(rl));
+    }
+
+    } // False
+
+    
+    LSQFit fit(2,LSQComplex());
+    Vector<Complex> ce(2);
+    ce(0)=Complex(1.0);
+    Complex d,md;
+    Float wt,rd,rmd,id,imd,a;
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      if (!vb.flagRow()(irow) ) {
+	// &&
+	//	  vb.antenna1()(irow)==0 &&
+	//	  vb.antenna2()(irow)==1) {
+	for (Int ich=0;ich<vb.nChannel();++ich) {
+	  if (!vb.flag()(ich,irow)) {
+	    for (Int icorr=1;icorr<2;++icorr) {
+	      md=vb.modelVisCube()(icorr,ich,irow);
+	      if (icorr==2) md=conj(md);
+	      a=abs(md);
+	      if (a>0.0) {
+		wt=Double(vb.weightMat()(icorr,irow));
+		if (wt>0.0) {
+		  d=vb.visCube()(icorr,ich,irow);
+		  if (icorr==2) d=conj(d);
+		  if (abs(d)>0.0) {
+
+		    ce(1)=md;
+		    fit.makeNorm(ce.data(),wt,d,LSQFit::COMPLEX);
+
+		  } // abs(d)>0
+		} // wt>0
+	      } // a>0
+	    } // icorr
+	  } // !flag
+	} // ich
+      } // !flagRow
+    } // row
+
+    uInt rank;
+    Bool ok = fit.invert(rank);
+
+    Complex sol[2];
+    if (ok)
+      fit.solve(sol);
+    else
+      throw(AipsError("Source polarization solution is singular; try solving for D-terms only."));
+
+    if (solvePol()==1 && a>0.0) 
+      srcPolPar()(0)=Complex(arg(sol[1]));
+    else if (solvePol()==2) {
+      srcPolPar()(0)=Complex(real(sol[1]));
+      srcPolPar()(1)=Complex(imag(sol[1]));
+    }
+
 
     //    srcPolPar()=Complex(0.0);
 
     //    logSink() << "First guess for Q,U = " 
-    //    	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
+    //	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
 
 
-  }
+  } // solvePol()?
 
 }
 
+void DJones::updatePar(const Vector<Complex> dCalPar,
+		       const Vector<Complex> dSrcPar) {
+
+  // Enforce no change in source parameters 
+  //  before calling generic version
+  Vector<Complex> dsrcpar(dSrcPar.shape());
+  dsrcpar=Complex(0.0);
+  SolvableVisJones::updatePar(dCalPar,dsrcpar);
+
+}
+
+						       
 void DJones::applyRefAnt() {
 
   if (refant()<0)

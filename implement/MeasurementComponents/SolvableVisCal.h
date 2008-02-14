@@ -87,9 +87,9 @@ public:
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
 
-  // Solve for point-source Q,U?
-  //  nominally no
-  virtual Bool solvePol() { return False; };
+  // Solve for point-source X or Q,U?
+  //  nominally no (0)
+  virtual Int solvePol() { return 0; };
 
   // Does normalization by MODEL_DATA commute with this VisCal?
   //   (if so, permits pre-solve time-averaging)

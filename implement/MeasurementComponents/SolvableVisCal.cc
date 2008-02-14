@@ -749,49 +749,54 @@ void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
   // TBD: migrate this to VisEquation?
   
   // Divide model and data by (scalar) stokes I (which may be resolved!), 
-  //  and set model cross-hands to (1,0) so we can solve for fraction 
+  //  and set model cross-hands to (1,0) so we can solve for fractional
   //  pol factors.
 
-  Int nCorr(vb.corrType().nelements());
-  Bool *flR=vb.flagRow().data();
-  Bool *fl =vb.flag().data();
-  Vector<Float> ampCorr(nCorr);
-  Vector<Int> n(nCorr,0);
-  Complex sI(0.0);
-  for (Int irow=0;irow<vb.nRow();++irow,++flR) {
-    if (!vb.flagRow()(irow)) {
-      ampCorr=0.0f;
-      n=0;
-      for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
-	if (!vb.flag()(ich,irow)) {
-	  
-	  sI=(vb.modelVisCube()(0,ich,irow)+vb.modelVisCube()(3,ich,irow))/Complex(2.0);
-	  if (abs(sI)>0.0) {
-	    for (Int icorr=0;icorr<nCorr;icorr++) {
-	      vb.visCube()(icorr,ich,irow)/=sI;
-	      ampCorr(icorr)+=abs(sI);
-	      n(icorr)++;
-	    } // icorr
-	  }
+  // Only if solving for Q an U
+  //  (leave cross-hands alone if just solving for X)
+  if (solvePol()>1) {
+
+    Int nCorr(vb.corrType().nelements());
+    Bool *flR=vb.flagRow().data();
+    Bool *fl =vb.flag().data();
+    Vector<Float> ampCorr(nCorr);
+    Vector<Int> n(nCorr,0);
+    Complex sI(0.0);
+    for (Int irow=0;irow<vb.nRow();++irow,++flR) {
+      if (!vb.flagRow()(irow)) {
+	ampCorr=0.0f;
+	n=0;
+	for (Int ich=0;ich<vb.nChannel();++ich,++fl) {
+	  if (!vb.flag()(ich,irow)) {
+	    
+	    sI=(vb.modelVisCube()(0,ich,irow)+vb.modelVisCube()(3,ich,irow))/Complex(2.0);
+	    if (abs(sI)>0.0) {
+	      for (Int icorr=0;icorr<nCorr;icorr++) {
+		vb.visCube()(icorr,ich,irow)/=sI;
+		ampCorr(icorr)+=abs(sI);
+		n(icorr)++;
+	      } // icorr
+	    }
+	    else
+	      vb.flag()(ich,irow)=True;
+	    
+	  } // !*fl
+	} // ich
+	// Make appropriate weight adjustment
+	for (Int icorr=0;icorr<nCorr;icorr++)
+	  if (n(icorr)>0)
+	    // weights adjusted by square of the mean(amp)
+	    vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
 	  else
-	    vb.flag()(ich,irow)=True;
-	  
-	} // !*fl
-      } // ich
-      // Make appropriate weight adjustment
-      for (Int icorr=0;icorr<nCorr;icorr++)
-	if (n(icorr)>0)
-	  // weights adjusted by square of the mean(amp)
-	  vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
-	else
-	  // weights now zero
-	  vb.weightMat()(icorr,irow)=0.0f;
-    } // !*flR
-  } // irow
+	    // weights now zero
+	    vb.weightMat()(icorr,irow)=0.0f;
+      } // !*flR
+    } // irow
+    
+    // Model is now all unity  (Is this ok for flagged data? Probably.)
+    vb.modelVisCube()=Complex(1.0);
 
-  // Model is now all unity  (Is this ok for flagged data? Probably.)
-  vb.modelVisCube()=Complex(1.0);
-
+  }
 
 }
 
@@ -1087,13 +1092,22 @@ void SolvableVisCal::calcPar() {
 // Report solved-for QU
 void SolvableVisCal::reportSolvedQU() {
 
-  if (solvePol()) {
+  if (solvePol()==2) {
     logSink() << "Source polarization solution for field " << currField();
     if (freqDepPar())
       logSink() << " (chan = " << focusChan() << ")";
     
     logSink() << ": Q = " << real(srcPolPar()(0)) 
 	      << ",  U = " << real(srcPolPar()(1))
+	      << LogIO::POST;
+  }
+  else if (solvePol()==1) {
+    logSink() << "Source polarization solution for field " << currField();
+    if (freqDepPar())
+      logSink() << " (chan = " << focusChan() << ")";
+    
+    logSink() << ": X = " << real(srcPolPar()(0))*180.0/C::pi 
+	      << " degrees"
 	      << LogIO::POST;
   }
 }
@@ -1695,9 +1709,15 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
     Vflg.reference(vb.flag());   // Just reference whole flag array
   }
 
-  // "Apply" the current Q,U estimates to the crosshand model
-  if (solvePol()) {
-    const Complex pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));
+  // "Apply" the current Q,U or X estimates to the crosshand model
+  if (solvePol()>0) {
+    Complex pol(1.0);
+
+    if (solvePol()==2)  // pol = Q+iU
+      pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));
+    else if (solvePol()==1)   // pol = exp(iX)
+      pol=exp(Complex(0.0,real(srcPolPar()(0))));
+    
     IPosition blc(3,1,0,0), trc(3,1,nChanMat()-1,nRow-1);
     Array<Complex> RL(Vout(blc,trc));
     RL*=pol;
@@ -1705,7 +1725,7 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
     Array<Complex> LR(Vout(blc,trc));
     LR*=conj(pol);
   }
-
+  
   // Visibility vector renderers
   VisVector::VisType vt(visType(nCorr));
   VisVector cVm(vt);  // The model data corrupted by trial solution
@@ -1843,20 +1863,30 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
   Int nCorr(vb.corrType().nelements());
 
   // Size up the output data arrays
-  dVout.resize(IPosition(4,nCorr,nChanMat(),nRow,2));
+  dVout.resize(IPosition(4,nCorr,nChanMat(),nRow,solvePol()));
   dVout.unique();
   dVout=Complex(0.0);
   
   IPosition blc(4,0,0,0,0), trc(4,0,nChanMat()-1,nRow-1,0);
-  blc(0)=1;
-  trc(0)=2;
-  blc(3)=trc(3)=0;
-  dVout(blc,trc)=Complex(1.0);
-  blc(3)=trc(3)=1;
-  blc(0)=trc(0)=1;
-  dVout(blc,trc)=Complex(0.0,1.0);
-  blc(0)=trc(0)=2;
-  dVout(blc,trc)=Complex(0.0,-1.0);
+
+  if (solvePol()==2) {
+    blc(3)=trc(3)=0;
+    blc(0)=1;trc(0)=2;
+    dVout(blc,trc)=Complex(1.0);   // Q part (both RL & LR)
+    blc(3)=trc(3)=1;
+    blc(0)=trc(0)=1;
+    dVout(blc,trc)=Complex(0.0,1.0);  // U part (in RL)
+    blc(0)=trc(0)=2;
+    dVout(blc,trc)=Complex(0.0,-1.0); // U part (in LR)
+  }
+  else if (solvePol()==1) {
+    Complex dX=Complex(0.0,1.0)*exp(Complex(0.0,real(srcPolPar()(0))));
+    blc(3)=trc(3)=0;
+    blc(0)=trc(0)=1;
+    dVout(blc,trc)=dX;  // multiplying RL
+    blc(0)=trc(0)=2;
+    dVout(blc,trc)=conj(dX); // multiplying LR
+  }
 
   // Visibility vector renderers
   VisVector::VisType vt(visType(nCorr));
@@ -1865,7 +1895,8 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
 
   // Starting synchronization for output visibility data
   dSm1.sync(dVout(IPosition(4,0,0,0,0)));
-  dSm2.sync(dVout(IPosition(4,0,0,0,1)));
+  if (solvePol()>1)
+    dSm2.sync(dVout(IPosition(4,0,0,0,1)));
 
   // Synchronize current calibration pars/matrices
   syncSolveCal();
@@ -1904,15 +1935,6 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
       J1().sync(currJElem()(0,0,*a1),currJElemOK()(0,0,*a1));
       J2().sync(currJElem()(0,0,*a2),currJElemOK()(0,0,*a2));
 
-      // Synchronize differentiated Jones renderers for this baseline
-      if (trivialDJ()) {
-	dJ1().origin();
-	dJ2().origin();
-      } else {
-	dJ1().sync(diffJElem()(IPosition(4,0,0,0,*a1)));
-	dJ2().sync(diffJElem()(IPosition(4,0,0,0,*a2)));
-      }
-
       // Assumes all iterating quantities have nChanMat() channelization
       for (Int ich=0; ich<nChanMat();ich++,flag++,
 	     dSm1++, dSm2++, J1()++, J2()++) {
@@ -1922,9 +1944,10 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
 	  
 	  J1().applyRight(dSm1);
 	  J2().applyLeft(dSm1);
-	  J1().applyRight(dSm2);
-	  J2().applyLeft(dSm2);
-
+	  if (solvePol()>1) {
+	    J1().applyRight(dSm2);
+	    J2().applyLeft(dSm2);
+	  }
 	}
 
       } // chn
@@ -3272,7 +3295,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   }
   
   int numAntCols = 4; // Number of antenna columns
-
+ 
   logSink() << LogIO::NORMAL1
        << "Listing CalTable: " << calTableName()
        << "   (" << typeName() << ") "
@@ -3451,9 +3474,6 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 
     if (endOutput) {break;} // break out of ielem loop
   } // ielem
-  logSink() << LogIO::NORMAL1
-            << "Listed " << isol << " antenna solutions." 
-            << LogIO::POST; 
   cout << endl
        << "Listed " << isol << " antenna solutions." 
        << endl << endl;
