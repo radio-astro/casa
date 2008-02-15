@@ -683,12 +683,11 @@ void DJones::guessPar(VisBuffer& vb) {
 
     } // False
 
-    
     LSQFit fit(2,LSQComplex());
     Vector<Complex> ce(2);
     ce(0)=Complex(1.0);
     Complex d,md;
-    Float wt,rd,rmd,id,imd,a;
+    Float wt,a;
     for (Int irow=0;irow<vb.nRow();++irow) {
       if (!vb.flagRow()(irow) ) {
 	// &&
@@ -735,11 +734,8 @@ void DJones::guessPar(VisBuffer& vb) {
       srcPolPar()(1)=Complex(imag(sol[1]));
     }
 
-
-    //    srcPolPar()=Complex(0.0);
-
-    //    logSink() << "First guess for Q,U = " 
-    //	      << real(srcPolPar()(0)) << "," << real(srcPolPar()(1)) << endl;
+    // Log source polarization solution
+    reportSolvedQU();
 
 
   } // solvePol()?
@@ -755,6 +751,22 @@ void DJones::updatePar(const Vector<Complex> dCalPar,
   dsrcpar=Complex(0.0);
   SolvableVisJones::updatePar(dCalPar,dsrcpar);
 
+}
+
+void DJones::formSolveSNR() {
+
+  solveParSNR()=0.0;
+
+  for (Int iant=0;iant<nAnt();++iant)
+    for (Int ipar=0;ipar<nPar();++ipar) {
+      if (solveParOK()(ipar,0,iant) &&
+	  solveParErr()(ipar,0,iant)>0.0f) {
+	solveParSNR()(ipar,0,iant)=1.0f/solveParErr()(ipar,0,iant);
+      }
+      else
+	// Ensure F if Err<=0  (OK?)
+	solveParOK()(ipar,0,iant)=False;
+    }
 }
 
 						       

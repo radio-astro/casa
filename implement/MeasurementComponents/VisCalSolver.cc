@@ -729,7 +729,8 @@ void VisCalSolver::solveGradHess() {
     }
   }
   
-  if (svc().solvePol()) 
+  // Turn off source pol update for the moment
+  if (svc().solvePol() && False) 
     for (Int ipar=nCalPar(); ipar<nTotalPar(); ipar++) {
       if ( hess()(ipar)!=0.0) {
 	// good hess for this par:

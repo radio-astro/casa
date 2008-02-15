@@ -1405,9 +1405,6 @@ Bool Calibrater::standardSolve() {
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(islot(spw));
 	  
-	  // Report QU solution (no-op if not solved for)
-	  svc_p->reportSolvedQU();
-
 	}
 	else 
 	  // report where this failure occured

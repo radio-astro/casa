@@ -169,7 +169,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       else {
 	os << "Using visibility-subtraction for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, incremental);
+	makeNewtonRaphsonStep(se, False);
       }
       os << "Finished update of residuals"
 	 << LogIO::POST;
@@ -290,11 +290,11 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  if(hasMask(model)) {
 		    SubLattice<Float>  mask_sl (mask(model), psfbox, True);
 		    cleaner.setMask(mask_sl);
-		    modified_p= cleaner.singleSolve(eqn, residual_sl) || modified_p;
 		  }
-		  else {
-		    modified_p= cleaner.singleSolve(eqn, residual_sl) || modified_p;
-		  }
+		
+		  modified_p= cleaner.singleSolve(eqn, residual_sl) || modified_p;
+		  
+
 		  if(modified_p){
 		    os << "Finished minor cycle of Clean"
 		       << LogIO::POST;
@@ -433,12 +433,13 @@ Float CSCleanImageSkyModel::maxField(Block<Vector<Float> >& imagemax,
     }
     
     Int chan=0;
+    Int polpl=0;
     Float imax, imin;
     imax=-1E20; imagemax[model]=imax;
     imin=+1E20; imagemin[model]=imin;
     imageli.reset();
 
-    for (imageli.reset();!imageli.atEnd();imageli++,chan++) {
+    for (imageli.reset();!imageli.atEnd();imageli++) {
       imax=-1E20;
       imin=+1E20;
       IPosition imageposmax(imageli.cursor().ndim());
@@ -461,6 +462,11 @@ Float CSCleanImageSkyModel::maxField(Block<Vector<Float> >& imagemax,
       if(abs(imin)>absmax) absmax=abs(imin);
       if(imin<imagemin[model][chan]) imagemin[model][chan]=imin;
       if(imax>imagemax[model][chan]) imagemax[model][chan]=imax;
+      ++polpl;
+      if(polpl==npol){
+	++chan;
+	polpl=0;	  
+      }
     }
   }
   return absmax;

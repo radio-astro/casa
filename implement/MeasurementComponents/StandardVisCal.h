@@ -277,6 +277,9 @@ public:
   virtual void updatePar(const Vector<Complex> dCalPar,
 			 const Vector<Complex> dSrcPar);
 
+  // SNR is 1/err for D-terms (?)
+  virtual void formSolveSNR();
+
   // D-specific reReference
   // TBD: non-triv impl
   virtual void reReference() { cout << "reReference!" << endl;};

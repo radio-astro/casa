@@ -1092,21 +1092,21 @@ void SolvableVisCal::calcPar() {
 // Report solved-for QU
 void SolvableVisCal::reportSolvedQU() {
 
+  MeasurementSet ms(msName());
+  MSFieldColumns msfldcol(ms.field());
+  String fldname(msfldcol.name()(currField()));
+
   if (solvePol()==2) {
-    logSink() << "Source polarization solution for field " << currField();
-    if (freqDepPar())
-      logSink() << " (chan = " << focusChan() << ")";
-    
-    logSink() << ": Q = " << real(srcPolPar()(0)) 
+    logSink() << "Source polarization solution for field " << fldname
+	      << " in spw = " << currSpw()
+	      << ": Q = " << real(srcPolPar()(0)) 
 	      << ",  U = " << real(srcPolPar()(1))
 	      << LogIO::POST;
   }
   else if (solvePol()==1) {
-    logSink() << "Source polarization solution for field " << currField();
-    if (freqDepPar())
-      logSink() << " (chan = " << focusChan() << ")";
-    
-    logSink() << ": X = " << real(srcPolPar()(0))*180.0/C::pi 
+    logSink() << "Source polarization p.a. solution for field " << fldname
+	      << " in spw = " << currSpw()
+	      << ": X = " << real(srcPolPar()(0))*180.0/C::pi 
 	      << " degrees"
 	      << LogIO::POST;
   }
@@ -1867,6 +1867,9 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
   dVout.unique();
   dVout=Complex(0.0);
   
+  // For now, we don't actually need gradients w.r.t. the source
+  return;
+
   IPosition blc(4,0,0,0,0), trc(4,0,nChanMat()-1,nRow-1,0);
 
   if (solvePol()==2) {
