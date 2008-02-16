@@ -287,8 +287,9 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		    cleaner.setProgress( *progress_p );
 		  }
 		  os << "Starting minor cycle of Clean" << LogIO::POST;
+		  SubLattice<Float> mask_sl;
 		  if(hasMask(model)) {
-		    SubLattice<Float>  mask_sl (mask(model), psfbox, True);
+		    mask_sl=SubLattice<Float>  (mask(model), psfbox, True);
 		    cleaner.setMask(mask_sl);
 		  }
 		
