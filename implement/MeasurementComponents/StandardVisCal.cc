@@ -1345,4 +1345,326 @@ void TOpac::calcAllJones() {
 }
 
 
+// **********************************************************
+//  XMueller: positiona angle for circulars
+//
+
+XMueller::XMueller(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  SolvableVisMueller(vs)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(vs)" << endl;
+}
+
+XMueller::XMueller(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  SolvableVisMueller(nAnt)
+{
+  if (prtlev()>2) cout << "X::X(nAnt)" << endl;
+}
+
+XMueller::~XMueller() {
+  if (prtlev()>2) cout << "X::~X()" << endl;
+}
+
+void XMueller::setApply(const Record& apply) {
+
+  SolvableVisCal::setApply(apply);
+
+  // Force calwt to False 
+  calWt()=False;
+
+}
+
+
+void XMueller::setSolve(const Record& solvepar) {
+
+  SolvableVisCal::setSolve(solvepar);
+
+  // Force calwt to False 
+  calWt()=False;
+
+  // For X insist preavg is meaningful (5 minutes or user-supplied)
+  if (preavg()<0.0)
+    preavg()=300.0;
+
+}
+
+
+
+
+void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+
+  // Arrange for iteration over data
+  Block<Int> columns;
+  if (interval()==0.0) {
+    // include scan iteration
+    // avoid scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+  } else {
+    // avoid scan iteration
+    columns.resize(4);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::FIELD_ID;
+    columns[2]=MS::DATA_DESC_ID;
+    columns[3]=MS::TIME;
+  }
+  vs.resetVisIter(columns,interval());
+
+  // Initial the solve (sets shapes)
+  initSolve(vs);
+
+  // Solve each solution interval (chunk)
+  Vector<Int> islot(nSpw(),0);
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+    Int spw(vi.spectralWindow());
+    //      cout << "Spw=" << spw << " slot=" << islot(spw) << " field="
+    //           << vi.fieldId() << " " << MVTime(vb.time()(0)/86400.0) << " -------------------" << endl;
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+
+    // Collapse each timestamp in this chunk according to VisEq
+    //  with calibration and averaging
+
+    for (vi.origin(); vi.more(); vi++) {
+
+      ve.collapse(vb);
+
+      //      vb.normalize();
+
+      // Accumulate collapsed vb in a time average
+      vba.accumulate(vb);
+     
+    }
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Extract meta data from visBuffer
+    syncSolveMeta(svb,vi.fieldId());
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+
+    if (svb.nRow()>0) {
+
+      // solve for the R-L phase term in the current VB
+      solveOneVB(svb);
+
+    }
+
+    keep(islot(spw));
+
+    islot(spw)++;
+
+  }
+  
+  // Store it.
+  store();
+
+}
+
+// File a solved solution (and meta-data) into a slot in the CalSet
+void XMueller::keep(const Int& slot) {
+
+  if (prtlev()>4) cout << " M::keep(i)" << endl;
+
+  if (slot<cs().nTime(currSpw())) {
+    // An available valid slot
+
+   
+    //    cout << "Result: solveCPar() = " << solveCPar() << endl;
+
+    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
+    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
+
+    //    cout << "Result: solveParOK() = " << solveParOK() << endl;
+
+    cs().fieldId(currSpw())(slot)=currField();
+    cs().time(currSpw())(slot)=refTime();
+
+    // Only stop-start diff matters
+    //  TBD: change CalSet to use only the interval
+    //  TBD: change VisBuffAcc to calculate exposure properly
+    cs().startTime(currSpw())(slot)=0.0;
+    cs().stopTime(currSpw())(slot)=interval();
+
+    // For now, just make these non-zero:
+    cs().iFit(currSpw()).column(slot)=1.0;
+    cs().iFitwt(currSpw()).column(slot)=1.0;
+    cs().fit(currSpw())(slot)=1.0;
+    cs().fitwt(currSpw())(slot)=1.0;
+
+    IPosition blc4(4,0,       0,           0,        slot);
+    IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
+    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
+    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
+
+    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
+
+  }
+  else
+    throw(AipsError("XMueller::keep: Attempt to store solution in non-existent CalSet slot"));
+
+}
+
+void XMueller::calcAllMueller() {
+
+  //  cout << "currMElem().shape() = " << currMElem().shape() << endl;
+
+  // Put the phase factor into the cross-hand diagonals
+  //  (1,0) for the para-hands  
+  IPosition blc(3,0,0,0);
+  IPosition trc(3,0,nChanMat()-1,nElem()-1);
+  currMElem()(blc,trc)=Complex(1.0);
+
+  blc(0)=trc(0)=1;
+  currMElem()(blc,trc)=currCPar()(0,0,0);
+  blc(0)=trc(0)=2;
+  currMElem()(blc,trc)=currCPar()(0,0,0);
+
+  blc(0)=trc(0)=3;
+  currMElem()(blc,trc)=Complex(1.0);
+
+  currMElemOK()=True;
+
+}
+
+
+void XMueller::solveOneVB(const VisBuffer& vb) {
+
+
+    if (False) {
+    // Sum up rl and lr for estimate of Q+iU
+    DComplex rl(0.0),lr(0.0);
+    Double sumwt(0.0);
+    Complex d,md;
+    Float wt;
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      if (!vb.flagRow()(irow)) {
+	for (Int ich=0;ich<vb.nChannel();++ich) {
+	  if (!vb.flag()(ich,irow)) {
+	    for (Int icorr=1;icorr<3;++icorr) {
+	      d=vb.visCube()(icorr,ich,irow);
+	      md=vb.modelVisCube()(icorr,ich,irow);
+	      wt=vb.weightMat()(icorr,irow);
+	      if (wt>0.0 && abs(d)>0.0 && abs(md)>0.0) {
+		if (icorr==1)
+		  rl+=DComplex(Complex(wt)*d/md);
+		else
+		  lr+=DComplex(Complex(wt)*d/md);
+
+		sumwt+=Double(wt);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    
+    // combine lr with rl
+    rl+=conj(lr);
+
+    Double a=abs(rl);
+    if (sumwt>0 && a>0.0)
+      rl/=DComplex(sumwt);
+    else
+      cout << "HELP" << endl;
+
+    } // False
+
+    LSQFit fit(2,LSQComplex());
+    Vector<Complex> ce(2);
+    ce(0)=Complex(1.0);
+    Complex d,md;
+    Float wt,a;
+    DComplex rl(0.0),lr(0.0);
+    Double sumwt(0.0);
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      if (!vb.flagRow()(irow) ) {
+	// &&
+	//	  vb.antenna1()(irow)==0 &&
+	//	  vb.antenna2()(irow)==1) {
+	for (Int ich=0;ich<vb.nChannel();++ich) {
+	  if (!vb.flag()(ich,irow)) {
+	    for (Int icorr=1;icorr<2;++icorr) {
+	      md=vb.modelVisCube()(icorr,ich,irow);
+	      if (icorr==2) md=conj(md);
+	      a=abs(md);
+	      if (a>0.0) {
+		wt=Double(vb.weightMat()(icorr,irow));
+		if (wt>0.0) {
+		  d=vb.visCube()(icorr,ich,irow);
+		  if (icorr==2) d=conj(d);
+		  if (abs(d)>0.0) {
+		    ce(1)=md;
+		    fit.makeNorm(ce.data(),wt,d,LSQFit::COMPLEX);
+
+		    if (icorr==1)
+		      rl+=DComplex(Complex(wt)*d/md);
+		    else
+		      lr+=DComplex(Complex(wt)*d/md);
+		    
+		    sumwt+=Double(wt);
+
+		  } // abs(d)>0
+		} // wt>0
+	      } // a>0
+	    } // icorr
+	  } // !flag
+	} // ich
+      } // !flagRow
+    } // row
+
+    // combine lr with rl
+    rl+=conj(lr);
+
+    Double amp=abs(rl);
+    if (sumwt>0 && amp>0.0) {
+      rl/=DComplex(amp);
+    }
+    else
+      throw(AipsError("Insufficient data to determine position angle correction."));
+      
+    uInt rank;
+    Bool ok = fit.invert(rank);
+
+    Complex sol[2];
+    if (ok && False)  // hardwire simple average for now
+      fit.solve(sol);
+    else 
+      sol[1]=Complex(rl);
+
+    //    cout << "Solution: " << boolalpha << ok << " " << sol[1] << " " << rl << endl;
+
+    // Ensure unit amplitude
+    // TBD: report when this is way off?
+    sol[1]/=abs(sol[1]);
+
+    cout << "R-L phase offset solution = " << arg(sol[1])*180.0/C::pi << endl;
+
+    // Store the parameter for all baselines
+    // TBD: drop unneeded basline-dependence
+    solveCPar()=sol[1];
+    solveParOK()=True;
+
+
+}
+
+
 } //# NAMESPACE CASA - END

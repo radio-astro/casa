@@ -546,6 +546,69 @@ private:
 };
 
 
+// **********************************************************
+//  X: position angle calibration (for circulars!)
+//    (rendered as a Mueller for now)
+
+class XMueller : public SolvableVisMueller {
+public:
+
+  // Constructor
+  XMueller(VisSet& vs);
+  XMueller(const Int& nAnt);
+
+  virtual ~XMueller();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::X; };
+
+  // Return type name as string
+  virtual String typeName()     { return "X Mueller"; };
+  virtual String longTypeName() { return "X Mueller (baseline-based)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Mueller::MuellerType muellerType() { return Mueller::Diagonal; };
+
+  // Local setApply
+  using SolvableVisCal::setApply;
+  virtual void setApply(const Record& apply);
+
+  // Local setSolve
+  using SolvableVisCal::setSolve;
+  void setSolve(const Record& solvepar);
+
+  // Turn off normalization by model....
+  virtual Bool normalizable() { return False; };
+
+  // X solves for itself
+  virtual Bool standardSolve() { return False; };
+
+  // X solves for itself 
+  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+
+  virtual void keep(const Int& slot);
+
+protected:
+
+  // X has just 1 complex parameter, storing a phase
+  virtual Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialMuellerElem() { return False; };
+
+  // Calculate the X matrix for all ants
+  virtual void calcAllMueller();
+
+  // Solve in one VB for the position angle
+  void solveOneVB(const VisBuffer& vb);
+
+private:
+
+  // <nothing>
+
+};
+
+
 } //# NAMESPACE CASA - END
 
 #endif

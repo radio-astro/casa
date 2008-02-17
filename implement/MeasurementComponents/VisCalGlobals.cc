@@ -104,6 +104,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="MF" || uptype=="MF MUELLER")
     return new MfMueller(vs);
      
+  else if (uptype=="X" || uptype=="X MUELLER")
+    return new XMueller(vs);
+
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));
