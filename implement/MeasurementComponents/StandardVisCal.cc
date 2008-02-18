@@ -1536,7 +1536,7 @@ void XMueller::calcAllMueller() {
   blc(0)=trc(0)=1;
   currMElem()(blc,trc)=currCPar()(0,0,0);
   blc(0)=trc(0)=2;
-  currMElem()(blc,trc)=currCPar()(0,0,0);
+  currMElem()(blc,trc)=conj(currCPar()(0,0,0));
 
   blc(0)=trc(0)=3;
   currMElem()(blc,trc)=Complex(1.0);
@@ -1656,13 +1656,20 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
     // TBD: report when this is way off?
     sol[1]/=abs(sol[1]);
 
-    cout << "R-L phase offset solution = " << arg(sol[1])*180.0/C::pi << endl;
+    MeasurementSet ms(msName());
+    MSFieldColumns msfldcol(ms.field());
+    String fldname(msfldcol.name()(currField()));
+
+    logSink() << "Position angle offset solution for " << fldname
+	      << " (spw = " << currSpw() << ") = "
+	      << arg(sol[1])*180.0/C::pi/2.0
+	      << " deg."
+	      << LogIO::POST;
 
     // Store the parameter for all baselines
     // TBD: drop unneeded basline-dependence
     solveCPar()=sol[1];
     solveParOK()=True;
-
 
 }
 

@@ -1097,17 +1097,24 @@ void SolvableVisCal::reportSolvedQU() {
   String fldname(msfldcol.name()(currField()));
 
   if (solvePol()==2) {
-    logSink() << "Source polarization solution for field " << fldname
-	      << " in spw = " << currSpw()
-	      << ": Q = " << real(srcPolPar()(0)) 
-	      << ",  U = " << real(srcPolPar()(1))
+    Float Q=real(srcPolPar()(0));
+    Float U=real(srcPolPar()(1));
+    Float P=sqrt(Q*Q + U*U);
+    Float X=atan2(U,Q)/2.0*180.0/C::pi;
+
+    logSink() << "Fractional polarization solution for " << fldname
+	      << " (spw = " << currSpw() << "): "
+	      << ": Q = " << Q
+	      << ", U = " << U
+	      << "  (P = " << P
+	      << ", X = " << X << " deg)"
 	      << LogIO::POST;
   }
   else if (solvePol()==1) {
-    logSink() << "Source polarization p.a. solution for field " << fldname
-	      << " in spw = " << currSpw()
-	      << ": X = " << real(srcPolPar()(0))*180.0/C::pi 
-	      << " degrees"
+    logSink() << "Position angle offset solution for " << fldname
+	      << " (spw = " << currSpw() << ") = "
+	      << real(srcPolPar()(0))*180.0/C::pi/2.0
+	      << " deg."
 	      << LogIO::POST;
   }
 }

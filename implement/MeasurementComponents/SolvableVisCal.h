@@ -411,10 +411,11 @@ public:
   // List calibration solutions in tabular form.
   virtual void listCal(const Vector<Int> ufldids, 
                        const Vector<Int> uantids,
-		           const Int& spw = 0, 
+		       const Int& spw = 0, 
                        const Int& chan = 0,
-		           const String& listfile = "",
-                       const Int& pagerows = 50) {};
+		       const String& listfile = "",
+                       const Int& pagerows = 50) 
+  { throw(AipsError(String("Calibration listing not supported for "+typeName()))); };
 
 protected:
 
