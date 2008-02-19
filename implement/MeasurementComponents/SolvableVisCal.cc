@@ -3322,7 +3322,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;
   logSink() << LogIO::NORMAL << "Date= " << dateStr0 << endl
                              << "SpwId= " << spw << endl
-                             << "Channel= " << dochan << endl;
+                             << "Channel= " << dochan << LogIO::POST;
   cout << "MS name = " << msName() << ", "
        << "Date= " << dateStr0 << ", "
        << "SpwId= " << spw << ", "
