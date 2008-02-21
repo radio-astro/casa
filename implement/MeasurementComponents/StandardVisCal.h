@@ -591,7 +591,7 @@ public:
 protected:
 
   // X has just 1 complex parameter, storing a phase
-  virtual Int nPar() { return 2; };
+  virtual Int nPar() { return 1; };
 
   // Jones matrix elements are trivial
   virtual Bool trivialMuellerElem() { return False; };

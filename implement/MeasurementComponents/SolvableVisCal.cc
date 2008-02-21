@@ -323,6 +323,12 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (prtlev()>2) cout << "SVC::setSolve(solve)" << endl;
 
   // Collect parameters
+  if (solve.isDefined("table"))
+    calTableName()=solve.asString("table");
+
+  if (calTableName().length()==0)
+    throw(AipsError("Please specify a name for the output calibration table!"));
+
   if (solve.isDefined("t"))
     interval()=solve.asFloat("t");
 
@@ -336,9 +342,6 @@ void SolvableVisCal::setSolve(const Record& solve)
     apmode()=solve.asString("apmode");
 
   apmode().upcase();
-
-  if (solve.isDefined("table"))
-    calTableName()=solve.asString("table");
 
   if (solve.isDefined("append"))
     append()=solve.asBool("append");

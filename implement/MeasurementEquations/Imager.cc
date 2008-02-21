@@ -779,7 +779,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       chanFreq.resize(newsize, True);
       chanFreq(Slice(origsize, newsize-origsize))=msc.spectralWindow().chanFreq()(spw);
       freqResolution.resize(newsize, True);
-      freqResolution(Slice(origsize, newsize-origsize))=
+     freqResolution(Slice(origsize, newsize-origsize))=
 	msc.spectralWindow().chanWidth()(spw); 
       
 
@@ -814,7 +814,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(imageStep_p==0)
 	imageStep_p=1;
       Int nsubchans=
-	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p);
+	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
       if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
 
       os << "Image spectral coordinate: "<< imageNchan_p
@@ -2049,6 +2049,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
+
+
     if(mode=="none"){
       //check if we can find channel selection in the spw string
       Matrix<Int> chanselmat=thisSelection.getChanList();
@@ -2062,7 +2064,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  if(dataStep_p[k] < 1)
 	    dataStep_p[k]=1;
 	  dataStart_p[k]=chanselmat.row(k)(1);
-	  dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k];
+	  dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k]+1;
 	  if(dataNchan_p[k]<1)
 	    dataNchan_p[k]=1;	  
 	}
@@ -7787,6 +7789,8 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 
   LogIO os(LogOrigin("Imager", "selectDataChannel()", WHERE));
 
+
+
   if(dataMode=="channel") {
       if (dataNchan.nelements() != spectralwindowids.nelements()){
 	if(dataNchan.nelements()==1){
@@ -7837,17 +7841,27 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  Int spwid=spectralwindowids(i);
 	  if(dataStart[i]<0) {
 	    os << LogIO::SEVERE << "Illegal start pixel = " 
-	       << dataStart[i] + 1 << " for spw " << spwid
+	       << dataStart[i]  << " for spw " << spwid
 	       << LogIO::POST;
 	    return False;
 	  }
 	 
-	  if(dataNchan[i]<=0) nch=vs.numberChan()(spwid);
+	  if(dataNchan[i]<=0){ 
+	    if(dataStep[i] <= 0)
+	      dataStep[i]=1;
+	    nch=(vs.numberChan()(spwid)-dataStart[i])/Int(dataStep[i])+1;
+	  }
 	  else nch = dataNchan[i];
-	  Int end = Int(dataStart[i]) + Int(nch) * Int(dataStep[i]);
-	  if(end < 1 || end > vs.numberChan()(spwid)) {
+	  while((nch*dataStep[i]+dataStart[i]) > vs.numberChan()(spwid)){
+	    --nch;
+	  }
+	  Int end = Int(dataStart[i]) + Int(nch-1) * Int(dataStep[i]);
+	  if(end < 0 || end > (vs.numberChan()(spwid))-1) {
 	    os << LogIO::SEVERE << "Illegal step pixel = " << dataStep[i]
 	       << " for spw " << spwid
+	       << "\n end channel " << end 
+	       << " is out of range " << dataStart[i] << " to " 
+	       << (vs.numberChan()(spwid)-1)
 	       << LogIO::POST;
 	    return False;
 	  }
@@ -7860,11 +7874,21 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  dataNchan[i]=nch;
 	}
       }	else {
-	if(dataNchan[0]<=0) dataNchan[0]=vs.numberChan()(0);
-	Int end = Int(dataStart[0]) + Int(dataNchan[0]) 
+	if(dataNchan[0]<=0){
+	  if(dataStep[0] <=0)
+	    dataStep[0]=1;
+	  dataNchan[0]=(vs.numberChan()(0)-dataStart[0])/Int(dataStep[0])+1;
+	  
+	}
+	while((dataNchan[0]*dataStep[0]+dataStart[0]) > vs.numberChan()(0))
+	  --dataNchan[0];
+
+	Int end = Int(dataStart[0]) + Int(dataNchan[0]-1) 
 	  * Int(dataStep[0]);
-	if(end < 1 || end > vs.numberChan()(0)) {
+	if(end < 0 || end > (vs.numberChan()(0))-1) {
 	  os << LogIO::SEVERE << "Illegal step pixel = " << dataStep[0]
+	     << "\n end channel " << end << " is out of range 1 to " 
+	     << (vs.numberChan()(0)-1)
 	     << LogIO::POST;
 	  return False;
 	}

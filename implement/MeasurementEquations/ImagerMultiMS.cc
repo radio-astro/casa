@@ -246,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if(dataStep_p[k] < 1)
 	      dataStep_p[k]=1;
 	    dataStart_p[k]=chanselmat.row(k)(1);
-	    dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k];
+	    dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k]+1;
 	    if(dataNchan_p[k]<1)
 	      dataNchan_p[k]=1;	  
 	  }
@@ -435,12 +435,25 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	    return False;
 	  }
 	 
-	  if(dataNchan_p[i]<=0) nch=blockNChan_p[numMS_p-1](i);
+	  if(dataNchan_p[i]<=0){
+	    if(dataStep_p[i] <= 0)
+	      dataStep_p[i]=1;
+	    nch=(blockNChan_p[numMS_p-1](i)-dataStart_p[i])/Int(dataStep_p[i])+1;
+	    
+	  }
 	  else nch = dataNchan_p[i];
-	  Int end = Int(dataStart_p[i]) + Int(nch) * Int(dataStep_p[i]);
-	  if(end < 1 || end > blockNChan_p[numMS_p-1](i)) {
+	  while((nch*dataStep_p[i]+dataStart_p[i]) >
+		blockNChan_p[numMS_p-1](i)){
+	    --nch;
+	  }
+	  Int end = Int(dataStart_p[i]) + Int(nch-1) * Int(dataStep_p[i]);
+	  if(end < 0 || end > (blockNChan_p[numMS_p-1](i)-1)) {
 	    os << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p[i]
 	       << " for spw " << spwid
+	       << "\n end channel " << end << " out of range " 
+	       << dataStart_p[i] << " to "   
+	       << (blockNChan_p[numMS_p-1](i)-1)
+
 	       << LogIO::POST;
 	    return False;
 	  }
