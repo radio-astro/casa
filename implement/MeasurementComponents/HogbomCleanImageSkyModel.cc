@@ -183,7 +183,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   
   LogIO os(LogOrigin("HogbomCleanImageSkyModel","solve"));
   
-  Bool converged=True;
+  Bool converged=False;
   if(numberOfModels()>1) {
     os << "Cannot process more than one field" << LogIO::EXCEPTION;
   }
@@ -267,6 +267,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
     //Deal with cube mask
     if(hasMask(0) && isCubeMask && chan >0) {
       (*maskli)++;
+      if(lmask) delete lmask;
+      lmask=0;
       lmask=makeMaskMatrix(nx, ny, *maskli, xbeg, 
 			   xend, ybeg, yend);       
     }
@@ -282,8 +284,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
     if(nchan>1) {
       os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
     }
-    if(psfmax==0.0) {
-      os<<"No data for this channel: skipping"<<LogIO::POST;
+    if((psfmax==0.0) || (hasMask(0) && (lmask==0))) {
+      os<<"No data or blank mask for this channel: skipping"<<LogIO::POST;
     }
     else {
       Bool delete_iti, delete_its, delete_itp, delete_itm;
@@ -359,10 +361,12 @@ Matrix<Float>* HogbomCleanImageSkyModel::makeMaskMatrix(const Int& nx,
   (*mask)=maskIter.matrixCursor();
   // ignore mask if none exists
   if(max(*mask) < 0.000001) {
-    os << "Mask seems to be empty; will CLEAN inner quarter" 
-       << LogIO::WARN;
-    mask->resize(1,1);
-    mask->set(1.0);
+    //os << "Mask seems to be empty; will CLEAN inner quarter" 
+    //   << LogIO::WARN;
+    //mask->resize(1,1);
+    //mask->set(1.0);
+    delete mask;
+    mask=0;
     return mask;
   }
   // Now read the mask and determine the bounding box

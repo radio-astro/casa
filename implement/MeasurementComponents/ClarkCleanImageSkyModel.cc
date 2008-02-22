@@ -63,7 +63,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("ClarkCleanImageSkyModel","solve",WHERE));
   
-  Bool converged=True; 
+  Bool converged=False; 
   if(numberOfModels()>1) {
     os << "Cannot process more than one field" << LogIO::EXCEPTION;
   }
@@ -89,7 +89,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   yend=3*ny/4-1;
 
   Bool isCubeMask=False; 
-  AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
+  //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
   
   SubLattice<Float>* mask_sl = 0;
   RO_LatticeIterator<Float>* maskli = 0;
@@ -125,6 +125,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   for (Int ichan=0; ichan < nchan; ichan++) {
     if(hasMask(0) && isCubeMask && ichan >0) {
       (*maskli)++;
+      if(mask_sl) delete mask_sl;
+      mask_sl=0;
       mask_sl=makeMaskSubLat(nx, ny, *maskli, xbeg, 
 			     xend, ybeg, yend);       
     }
@@ -152,8 +154,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     if(nchan>1) {
       os<<"Processing channel "<<ichan+1<<" of "<<nchan<<LogIO::POST;
     }
-    if(psfmax==0.0) {
-      os << "No data for this channel: skipping" << LogIO::POST;
+    if((psfmax==0.0) ||(hasMask(0) && (mask_sl == 0)) ) {
+      os << "No data or blank mask for this channel: skipping" << LogIO::POST;
     } else {
       LatConvEquation eqn(psf_sl, residual_sl);
       ClarkCleanLatModel cleaner( localmodel );
@@ -173,6 +175,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       cleaner.setHistLength(1024);
       cleaner.setMaxNumPix(32*1024);
       cleaner.setCycleFactor(cycleFactor_p);
+      // clean if there is no mask or if it has mask AND mask is not empty 
       cleaner.solve(eqn);
       cleaner.setChoose(False);
       os << "Clean used " << cleaner.numberIterations() << " iterations" 
@@ -181,15 +184,16 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       LatticeExpr<Float> expr= model_sl + localmodel; 
       model_sl.copyData(expr);
  
-      converged =  (cleaner.getMaxResidual() < threshold()) || (cleaner.numberIterations()==0);
+      converged =  (cleaner.getMaxResidual() < threshold()) 
+	|| (cleaner.numberIterations()==0);
       //      if (cpp != 0 ) delete cpp; cpp=0;
       //      if (pgp != 0 ) delete pgp; pgp=0;
     }
-    if (mask_sl != 0 && isCubeMask)  {
-      delete mask_sl;
-      mask_sl=0;
-    }
     
+  }
+  if (mask_sl != 0)  {
+    delete mask_sl;
+    mask_sl=0;
   }
   os << LatticeExprNode(sum(image(0))).getFloat() 
 	       << " Jy is the sum of clean components " << LogIO::POST;
@@ -216,8 +220,8 @@ SubLattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
   Matrix<Float> mask= maskIter.matrixCursor();
   // ignore mask if none exists
   if(max(mask) < 0.000001) {
-    os << "Mask seems to be empty; will CLEAN inner quarter" 
-       << LogIO::WARN;
+    //os << "Mask seems to be empty; will CLEAN inner quarter" 
+    //   << LogIO::WARN;
     return mask_sl;
   }
   // Now read the mask and determine the bounding box
