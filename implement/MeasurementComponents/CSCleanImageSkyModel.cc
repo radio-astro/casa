@@ -356,7 +356,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
     os << LatticeExprNode(sum(image(0))).getFloat() 
        << " Jy is the sum of clean components " << LogIO::POST;
     os << "Finalizing residual images for all fields" << LogIO::POST;
-    makeNewtonRaphsonStep(se, False);
+    makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
 
     os << "Final maximum residual = " << finalabsmax << LogIO::POST;

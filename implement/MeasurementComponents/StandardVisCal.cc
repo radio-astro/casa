@@ -1399,6 +1399,9 @@ void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
 
+  MeasurementSet ms(msName());
+  MSFieldColumns msfldcol(ms.field());
+
   // Arrange for iteration over data
   Block<Int> columns;
   if (interval()==0.0) {
@@ -1458,6 +1461,7 @@ void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
     syncSolveMeta(svb,vi.fieldId());
 
     // Fill solveCPar() with 1, nominally, and flagged
+    // TBD: drop unneeded basline-dependence    
     solveCPar()=Complex(1.0);
     solveParOK()=False;
 
@@ -1465,6 +1469,24 @@ void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 
       // solve for the R-L phase term in the current VB
       solveOneVB(svb);
+
+      if (solveParOK()(0,0,0))
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") = "
+		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
+		  << " deg."
+		  << LogIO::POST;
+      else
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") "
+		  << " was not determined (insufficient data)."
+		  << LogIO::POST;
+	
+
+
+
 
     }
 
@@ -1548,80 +1570,38 @@ void XMueller::calcAllMueller() {
 
 void XMueller::solveOneVB(const VisBuffer& vb) {
 
+  // This just a simple average of the cross-hand
+  //  visbilities...
 
-    if (False) {
-    // Sum up rl and lr for estimate of Q+iU
-    DComplex rl(0.0),lr(0.0);
-    Double sumwt(0.0);
-    Complex d,md;
-    Float wt;
-    for (Int irow=0;irow<vb.nRow();++irow) {
-      if (!vb.flagRow()(irow)) {
-	for (Int ich=0;ich<vb.nChannel();++ich) {
-	  if (!vb.flag()(ich,irow)) {
-	    for (Int icorr=1;icorr<3;++icorr) {
-	      d=vb.visCube()(icorr,ich,irow);
-	      md=vb.modelVisCube()(icorr,ich,irow);
-	      wt=vb.weightMat()(icorr,irow);
-	      if (wt>0.0 && abs(d)>0.0 && abs(md)>0.0) {
-		if (icorr==1)
-		  rl+=DComplex(Complex(wt)*d/md);
-		else
-		  lr+=DComplex(Complex(wt)*d/md);
+  Complex d,md;
+  Float wt,a;
+  DComplex rl(0.0),lr(0.0);
+  Double sumwt(0.0);
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    if (!vb.flagRow()(irow) ) {
+      for (Int ich=0;ich<vb.nChannel();++ich) {
+	if (!vb.flag()(ich,irow)) {
+	  for (Int icorr=1;icorr<2;++icorr) {
+	    md=vb.modelVisCube()(icorr,ich,irow);
+	    if (icorr==2) md=conj(md);
+	    a=abs(md);
+	    if (a>0.0) {
+	      wt=Double(vb.weightMat()(icorr,irow));
+	      if (wt>0.0) {
+		d=vb.visCube()(icorr,ich,irow);
+		if (icorr==2) d=conj(d);
+		if (abs(d)>0.0) {
+		  
+		  // correct weight for model normalization
+		  wt*=(a*a);
 
-		sumwt+=Double(wt);
-	      }
-	    }
-	  }
-	}
-      }
-    }
-    
-    // combine lr with rl
-    rl+=conj(lr);
-
-    Double a=abs(rl);
-    if (sumwt>0 && a>0.0)
-      rl/=DComplex(sumwt);
-    else
-      cout << "HELP" << endl;
-
-    } // False
-
-    LSQFit fit(2,LSQComplex());
-    Vector<Complex> ce(2);
-    ce(0)=Complex(1.0);
-    Complex d,md;
-    Float wt,a;
-    DComplex rl(0.0),lr(0.0);
-    Double sumwt(0.0);
-    for (Int irow=0;irow<vb.nRow();++irow) {
-      if (!vb.flagRow()(irow) ) {
-	// &&
-	//	  vb.antenna1()(irow)==0 &&
-	//	  vb.antenna2()(irow)==1) {
-	for (Int ich=0;ich<vb.nChannel();++ich) {
-	  if (!vb.flag()(ich,irow)) {
-	    for (Int icorr=1;icorr<2;++icorr) {
-	      md=vb.modelVisCube()(icorr,ich,irow);
-	      if (icorr==2) md=conj(md);
-	      a=abs(md);
-	      if (a>0.0) {
-		wt=Double(vb.weightMat()(icorr,irow));
-		if (wt>0.0) {
-		  d=vb.visCube()(icorr,ich,irow);
-		  if (icorr==2) d=conj(d);
-		  if (abs(d)>0.0) {
-		    ce(1)=md;
-		    fit.makeNorm(ce.data(),wt,d,LSQFit::COMPLEX);
-
-		    if (icorr==1)
-		      rl+=DComplex(Complex(wt)*d/md);
-		    else
-		      lr+=DComplex(Complex(wt)*d/md);
-		    
-		    sumwt+=Double(wt);
-
+		  if (icorr==1)
+		    rl+=DComplex(Complex(wt)*d/md);
+		  else
+		    lr+=DComplex(Complex(wt)*d/md);
+		  
+		  sumwt+=Double(wt);
+		  
 		  } // abs(d)>0
 		} // wt>0
 	      } // a>0
@@ -1634,42 +1614,15 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
     // combine lr with rl
     rl+=conj(lr);
 
+    // Normalize to unit amplitude
+    //  (note that the phase result is insensitive to sumwt)
     Double amp=abs(rl);
     if (sumwt>0 && amp>0.0) {
       rl/=DComplex(amp);
+
+      solveCPar()=Complex(rl);
+      solveParOK()=True;
     }
-    else
-      throw(AipsError("Insufficient data to determine position angle correction."));
-      
-    uInt rank;
-    Bool ok = fit.invert(rank);
-
-    Complex sol[2];
-    if (ok && False)  // hardwire simple average for now
-      fit.solve(sol);
-    else 
-      sol[1]=Complex(rl);
-
-    //    cout << "Solution: " << boolalpha << ok << " " << sol[1] << " " << rl << endl;
-
-    // Ensure unit amplitude
-    // TBD: report when this is way off?
-    sol[1]/=abs(sol[1]);
-
-    MeasurementSet ms(msName());
-    MSFieldColumns msfldcol(ms.field());
-    String fldname(msfldcol.name()(currField()));
-
-    logSink() << "Position angle offset solution for " << fldname
-	      << " (spw = " << currSpw() << ") = "
-	      << arg(sol[1])*180.0/C::pi/2.0
-	      << " deg."
-	      << LogIO::POST;
-
-    // Store the parameter for all baselines
-    // TBD: drop unneeded basline-dependence
-    solveCPar()=sol[1];
-    solveParOK()=True;
 
 }
 
