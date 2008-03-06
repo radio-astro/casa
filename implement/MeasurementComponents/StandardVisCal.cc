@@ -1073,6 +1073,7 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
     //      cout << "Spw=" << spw << " slot=" << islot(spw) << " field="
     //           << vi.fieldId() << " " << MVTime(vb.time()(0)/86400.0) << " -------------------" << endl;
 
+
     // Arrange to accumulate
     VisBuffAccumulator vba(nAnt(),preavg(),False);
 
@@ -1573,57 +1574,67 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
   // This just a simple average of the cross-hand
   //  visbilities...
 
-  Complex d,md;
-  Float wt,a;
+  Complex d,md,dI(1.0),mI(1.0);
+  Float wt,a,aI(1.0);
   DComplex rl(0.0),lr(0.0);
   Double sumwt(0.0);
   for (Int irow=0;irow<vb.nRow();++irow) {
-    if (!vb.flagRow()(irow) ) {
+    if (!vb.flagRow()(irow) &&
+	vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+
       for (Int ich=0;ich<vb.nChannel();++ich) {
 	if (!vb.flag()(ich,irow)) {
-	  for (Int icorr=1;icorr<2;++icorr) {
-	    md=vb.modelVisCube()(icorr,ich,irow);
-	    if (icorr==2) md=conj(md);
-	    a=abs(md);
-	    if (a>0.0) {
-	      wt=Double(vb.weightMat()(icorr,irow));
-	      if (wt>0.0) {
-		d=vb.visCube()(icorr,ich,irow);
-		if (icorr==2) d=conj(d);
-		if (abs(d)>0.0) {
-		  
-		  // correct weight for model normalization
-		  wt*=(a*a);
 
-		  if (icorr==1)
-		    rl+=DComplex(Complex(wt)*d/md);
-		  else
-		    lr+=DComplex(Complex(wt)*d/md);
-		  
-		  sumwt+=Double(wt);
-		  
+	  dI=(vb.visCube()(0,ich,irow)+vb.visCube()(3,ich,irow))/Complex(2.0);
+	  aI=abs(dI);
+	  mI=(vb.modelVisCube()(0,ich,irow)+vb.modelVisCube()(3,ich,irow))/Complex(2.0);
+
+	  if (aI>0.0 && abs(mI)>0.0) {
+	    for (Int icorr=1;icorr<2;++icorr) {
+	      md=vb.modelVisCube()(icorr,ich,irow)/mI;
+	      if (icorr==2) md=conj(md);
+	      a=abs(md);
+	      if (a>0.0) {
+		wt=Double(vb.weightMat()(icorr,irow));
+		if (wt>0.0) {
+		  d=vb.visCube()(icorr,ich,irow)/dI;
+		  wt*=(aI*aI);
+		  if (icorr==2) d=conj(d);
+		  if (abs(d)>0.0) {
+		    
+		    // correct weight for model normalization
+		    wt*=(a*a);
+		    
+		    if (icorr==1)
+		      rl+=DComplex(Complex(wt)*d/md);
+		    else
+		      lr+=DComplex(Complex(wt)*d/md);
+		    
+		    sumwt+=Double(wt);
+		    
 		  } // abs(d)>0
 		} // wt>0
 	      } // a>0
 	    } // icorr
-	  } // !flag
-	} // ich
-      } // !flagRow
-    } // row
-
+	  } // I>0
+	} // !flag
+      } // ich
+    } // !flagRow
+  } // row
+  
     // combine lr with rl
-    rl+=conj(lr);
-
-    // Normalize to unit amplitude
-    //  (note that the phase result is insensitive to sumwt)
-    Double amp=abs(rl);
-    if (sumwt>0 && amp>0.0) {
-      rl/=DComplex(amp);
-
-      solveCPar()=Complex(rl);
-      solveParOK()=True;
-    }
-
+  rl+=conj(lr);
+  
+  // Normalize to unit amplitude
+  //  (note that the phase result is insensitive to sumwt)
+  Double amp=abs(rl);
+  if (sumwt>0 && amp>0.0) {
+    rl/=DComplex(amp);
+    
+    solveCPar()=Complex(rl);
+    solveParOK()=True;
+  }
+  
 }
 
 

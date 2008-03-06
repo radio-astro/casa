@@ -283,7 +283,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition pbSlice(4, convSize/2-1, convSize/2-1, 1, 1);
     convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
   }
-  convFunc/=max(abs(convFunc));
+
+  Complex maxconv=max(abs(convFunc));
+  convFunc=convFunc/maxconv;
 
   // Find the edge of the function by stepping in from the
   // uv plane edge. We do this for each plane to save time on the
@@ -359,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSize=newConvSize;
   }
   else{
-    (convFunctions_p[actualConvIndex_p])->assign(convFunc);
+    *(convFunctions_p[actualConvIndex_p])=convFunc;
   }
   Int maxMemoryMB=HostInfo::memoryTotal()/1024;
   Int memoryMB;
