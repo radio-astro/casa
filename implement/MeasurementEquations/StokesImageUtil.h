@@ -83,7 +83,12 @@ public:
   static Bool FitGaussianPSF(ImageInterface<Float>& psf,
 			     Quantity& bmaj, Quantity& bmin, Quantity& bpa);
   //</group>
+  // Locat peak of PSF return pos, peak and first plane that satisfies 
+  // peak >0.9
   
+  static void locatePeakPSF(ImageInterface<Float>& psf, Int& xpos, Int& ypos, 
+			    Float& amp, Matrix<Float>& psfplane);
+
   // Convolve a Stokes Image in place
   //<group>
   static void Convolve(ImageInterface<Float>& image,

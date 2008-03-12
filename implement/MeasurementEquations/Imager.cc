@@ -4151,7 +4151,10 @@ Bool Imager::approximatepsf(const String& psf)
     
     
     destroySkyEquation();
-    
+    if(ft_p)
+      delete ft_p;
+    ft_p=0;
+
     this->unlock();
     return True;
   } catch (AipsError x) {

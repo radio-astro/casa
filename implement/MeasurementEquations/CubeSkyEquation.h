@@ -65,6 +65,10 @@ class CubeSkyEquation : public SkyEquation {
   void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
 
  protected:
+
+  //Different versions of psf making
+  void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
+  void makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs);
   Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
   Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;
   Block<Matrix<Float> >weightSlice_p;

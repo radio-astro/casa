@@ -260,7 +260,53 @@ void  CubeSkyEquation::predict(Bool incremental) {
 
 }
 
-void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) {
+void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) 
+{
+
+  if(iftm_p[0]->name()=="MosaicFT")
+    makeMosaicPSF(psfs);
+  else
+    makeSimplePSF(psfs);
+
+}
+void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
+  //lets try to make the psf directly
+  LogIO os(LogOrigin("SkyEquation", "makeMosaicPSF"));
+  makeSimplePSF(psfs);
+  Int xpos;
+  Int ypos;
+  Matrix<Float> psfplane;
+  Float peak;
+  StokesImageUtil::locatePeakPSF(*(psfs[0]), xpos, ypos, peak, psfplane);
+  Int nx=psfplane.shape()(0);
+  Int ny=psfplane.shape()(1);
+  Bool centered=True;
+  // lets ignore  misers who made 10x10 pixel images
+  centered=(abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
+  if(centered)
+    return;
+  //lets back up the ftmachines
+  MosaicFT *ft_back= new MosaicFT(static_cast<MosaicFT &>(*ftm_p[0]));
+  MosaicFT *ift_back = new MosaicFT(static_cast<MosaicFT &>(*iftm_p[0]));
+  os << LogIO::WARN << "Mosaic psf is off. \nCould be no pointing in center of image \n"
+     << "Will retry to make an approximate one without primary beam "
+     << LogIO::POST;
+  MPosition loc=iftm_p[0]->getLocation();
+  ftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
+  iftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
+  ft_=&(*ftm_p[0]);
+  ift_=&(*iftm_p[0]);
+  // try again with simple ftmachines
+  makeSimplePSF(psfs);
+  //that 's the best psf you'd get
+  //restore back MosaicFT machinas
+  ftm_p[0]=ft_back;
+  ft_=ft_back;
+  iftm_p[0]=ift_back;
+  ift_=ift_back;
+}
+
+void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
   
 
   Int nmodels=psfs.nelements();

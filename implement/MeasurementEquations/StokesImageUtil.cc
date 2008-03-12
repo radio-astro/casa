@@ -386,6 +386,8 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf,
   return status;
 }
 
+
+
 Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& beam) {
   
   Vector<Double> deltas;
@@ -402,38 +404,12 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
   Int nchan = psf.shape()(map(3));
   Int px=0;
   Int py=0;
-  Matrix<Float> lpsf;
-  Float psfmax;
-
   Float bamp=0;
-
-
-  IPosition oneplane(psf.ndim(), nx, ny, 1, 1);
-  LatticeStepper psfls(psf.shape(), oneplane,
-		       IPosition(4,map(0),map(1),map(3),map(2)));
-  RO_LatticeIterator<Float> psfli(psf,psfls);
-  while (nchan >= 1 && bamp < 0.9){
-    lpsf=psfli.matrixCursor();
-    
-    IPosition psfposmax(lpsf.ndim());
-    IPosition psfposmin(lpsf.ndim());
-    Float psfmin;
-    
-    minMax(psfmin, psfmax, psfposmin, psfposmax, lpsf); 
-    
-    px=psfposmax(0);
-    py=psfposmax(1);
-    
-
-
-    bamp=lpsf(px,py);
-
-    ++psfli;
-    --nchan;
-  }
+  Matrix<Float> lpsf;
+  locatePeakPSF(psf, px, py, bamp, lpsf);
 
   //check if peak is outside inner quarter
-  if(px < nx/4.0 || px > 3.0*nx/4.0 || py < ny/4.0 || py > 3.0*ny/4.0) {
+  if(px < nx/4.0 || px > 3.0*nx/4.0 || py < ny/4.0 || py > 3.0*ny/4.0) {    
     throw(AipsError("Peak of psf is outside the inner quarter of defined image"));
   }
 
@@ -453,7 +429,7 @@ try{
     return False;
   }
   
-  lpsf/=psfmax;
+  lpsf/=bamp;
 
   // The selection code attempts to avoid including any sidelobes, even
   // if they exceed the threshold, by starting from the center column and
@@ -601,6 +577,47 @@ try{
    } 
 
 }
+
+void StokesImageUtil::locatePeakPSF(ImageInterface<Float>& in, Int& xpos, Int& ypos, Float& amp, Matrix<Float>& lpsf){
+  Vector<Int> map;
+  AlwaysAssert(StokesMap(map, in.coordinates()), AipsError);
+  
+  Int nx = in.shape()(map(0));
+  Int ny = in.shape()(map(1));
+  Int nchan = in.shape()(map(3));
+  xpos=0;
+  ypos=0;
+  Float psfmax;
+
+  amp=0;
+
+
+  IPosition oneplane(in.ndim(), nx, ny, 1, 1);
+  LatticeStepper psfls(in.shape(), oneplane,
+		       IPosition(4,map(0),map(1),map(3),map(2)));
+  RO_LatticeIterator<Float> psfli(in,psfls);
+  while (nchan >= 1 && amp < 0.9){
+    lpsf=psfli.matrixCursor();
+    
+    IPosition psfposmax(lpsf.ndim());
+    IPosition psfposmin(lpsf.ndim());
+    Float psfmin;
+    
+    minMax(psfmin, psfmax, psfposmin, psfposmax, lpsf); 
+    
+    xpos=psfposmax(0);
+    ypos=psfposmax(1);
+    
+
+
+    amp=lpsf(xpos,ypos);
+
+    ++psfli;
+    --nchan;
+  }
+
+}
+
 void StokesImageUtil::directCFromR(ImageInterface<Complex>& out, ImageInterface<Float>& in) {
   AlwaysAssert(in.shape()(0)==out.shape()(0), AipsError);
   AlwaysAssert(in.shape()(1)==out.shape()(1), AipsError);
