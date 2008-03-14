@@ -5123,11 +5123,16 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //special casing like this gets hard to maintain
 	    // need to redo how interactive is done so that it is outside 
 	    //of this code 
+
+
+	    //
+	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
+	    //
 	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel)) && (scaleType_p=="NONE")) {
-	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p, 
+	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
 					0.0,(restored/(sm_p->fluxScale(thismodel)))));
 	      restored.copyData(le);
-	      LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p, 
+	      LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
 					0,(residIm/(sm_p->fluxScale(thismodel)))));
 	      residIm.copyData(le1);
 
