@@ -556,6 +556,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   if(spectralwindowids_p.nelements()==1){
     if(spectralwindowids_p[0]<0){
       spectralwindowids_p.resize();
+      if(dataspectralwindowids_p.nelements()==0){
+         Int nspwinms=ms_p->spectralWindow().nrow();
+         dataspectralwindowids_p.resize(nspwinms);
+         indgen(dataspectralwindowids_p);
+      }
       spectralwindowids_p=dataspectralwindowids_p;
     }
     
@@ -579,8 +584,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
   //using the first frame of reference; TO DO should do the right thing 
   //for different frames selected. 
-  if(measFreqRef(spectralwindowids_p(0)) >=0) 
+  //Int eh = spectralwindowids_p(0);
+  if(spectralwindowids_p.size() && measFreqRef(spectralwindowids_p(0)) >=0) {
      obsFreqRef=(MFrequency::Types)measFreqRef(spectralwindowids_p(0));
+  }
 			    
 
   MVDirection mvPhaseCenter(phaseCenter_p.getAngle());
