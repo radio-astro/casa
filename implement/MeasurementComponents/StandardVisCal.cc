@@ -1016,9 +1016,10 @@ void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
     Int spw(vi.spectralWindow());
-    //      cout << "Spw=" << spw << " slot=" << islot(spw) << " field="
-    //           << vi.fieldId() << " " << MVTime(vb.time()(0)/86400.0) << " -------------------" << endl;
 
+    // Abort if we encounter a spw for which a priori cal not available
+    if (!ve.spwOK(spw))
+      throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
 
     // Arrange to accumulate
     VisBuffAccumulator vba(nAnt(),preavg(),False);

@@ -55,7 +55,8 @@
 
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
-//#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
+#include <synthesis/MeasurementComponents/VisCal.h>
+#include <synthesis/MeasurementComponents/VisCalGlobals.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 
 #include <measures/Measures/Stokes.h>
@@ -72,7 +73,6 @@
 
 #include <ms/MeasurementSets/MSSummary.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-//#include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 #include <synthesis/MeasurementComponents/SimACohCalc.h>
 #include <synthesis/MeasurementComponents/SimACoh.h>
@@ -96,18 +96,22 @@
 
 #include <casa/namespace.h>
 
-Simulator::Simulator(): msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-			// VisJones deprecating   gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
-			ac_p(0), vp_p(0), gvp_p(0), 
-			sim_p(0),
-			// epJ_p(0),
-			epJTableName_p()
+Simulator::Simulator(): 
+  msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
+  seed_p(11111),
+  ve_p(),
+  vc_p(),
+  ac_p(0), vp_p(0), gvp_p(0), 
+  sim_p(0),
+  // epJ_p(0),
+  epJTableName_p()
 {
 }
 
 Simulator::Simulator(String& msname) 
   : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ve_p(),
+    vc_p(),
     ac_p(0), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
@@ -130,7 +134,8 @@ Simulator::Simulator(String& msname)
 
 Simulator::Simulator(MeasurementSet &theMs)
   : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ve_p(),
+    vc_p(),
     ac_p(0), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
@@ -152,7 +157,8 @@ Simulator::Simulator(MeasurementSet &theMs)
 
 Simulator::Simulator(const Simulator &other)
   : msname_p(""), ms_p(0), vs_p(0), seed_p(11111),
-    // VisJones deprecating    gj_p(0), pj_p(0), dj_p(0), bj_p(0), 
+    ve_p(),
+    vc_p(),
     ac_p(0), vp_p(0), gvp_p(0),
     sim_p(0),
     // epJ_p(0),
@@ -180,20 +186,7 @@ Simulator &Simulator::operator=(const Simulator &other)
     *ac_p = *(other.ac_p);
   }
 
-  /*  VisJones deprecating...
-  if (gj_p && this != &other) {
-    *gj_p = *(other.gj_p);
-  }
-  if (pj_p && this != &other) {
-    *pj_p = *(other.pj_p);
-  }
-  if (dj_p && this != &other) {
-    *dj_p = *(other.dj_p);
-  }
-  if (bj_p && this != &other) {
-    *bj_p = *(other.bj_p);
-  }
-  */
+  // TBD VisEquation/VisCal stuff
 
   if (vp_p && this != &other) {
     *vp_p = *(other.vp_p);
@@ -227,39 +220,19 @@ Simulator::~Simulator()
   }
   vs_p = 0;
 
-/* VisJones deprecating
-  if (gj_p) {
-    delete gj_p;
-  }
-  gj_p = 0;
-  if (pj_p) {
-    delete pj_p;
-  }
-  pj_p = 0;
-  if (dj_p) {
-    delete dj_p;
-  }
-  dj_p = 0;
-  if (bj_p) {
-    delete bj_p;
-  }
-  bj_p = 0;
-*/
+  // Delete all vis-plane calibration corruption terms
+  resetviscal();
 
-  if (ac_p) {
-    delete ac_p;
-  }
-  ac_p = 0;
+  // Delete all im-plane calibration corruption terms
+  resetimcal();
+
+  if(sim_p) delete sim_p; sim_p = 0;
 
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
-  if(vp_p) delete vp_p; vp_p = 0;
-  if(gvp_p) delete gvp_p; gvp_p = 0;
-  if(sim_p) delete sim_p; sim_p = 0;
-  //  if(epJ_p) delete epJ_p; epJ_p = 0;
-}
 
+}
 
 
 void Simulator::defaults()
@@ -324,22 +297,21 @@ Bool Simulator::close()
   LogIO os(LogOrigin("Simulator", "close()", WHERE));
   os << "Closing MeasurementSet and detaching from Simulator"
      << LogIO::POST;
+
+  // Delete all im-plane calibration corruption terms
+  resetimcal();
+  // Delete all vis-plane calibration corruption terms
+  resetviscal();
+
   ms_p->unlock();
   if(mssel_p) mssel_p->unlock();
   if(vs_p) delete vs_p; vs_p = 0;
   if(mssel_p) delete mssel_p; mssel_p = 0;
   if(ms_p) delete ms_p; ms_p = 0;
-  if(ac_p) delete ac_p; ac_p = 0;
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
-/* VisJones deprecating
-  if(gj_p) delete gj_p; gj_p = 0;
-  if(pj_p) delete pj_p; pj_p = 0;
-  if(dj_p) delete dj_p; dj_p = 0;
-  if(bj_p) delete bj_p; bj_p = 0;
-  if(epJ_p) delete epJ_p; epJ_p = 0;
-*/
+
   return True;
 }
 
@@ -503,67 +475,28 @@ Bool Simulator::optionsSummary(LogIO& os)
  
 Bool Simulator::corruptSummary(LogIO& os)
 {
-  Bool gainResult = gainSummary(os);
-  Bool leakageResult = leakageSummary(os);
-  Bool bpesult = bandpassSummary(os);
-  Bool paResult = paSummary(os);
-  Bool noiseResult = noiseSummary(os);  
-  if (!gainResult && !leakageResult && !bpesult && !paResult && !noiseResult) {
+  if (vc_p.nelements()<1 && !ac_p) {
     os << "===========================================" << LogIO::POST;
     os << "No corrupting-type information has been set" << LogIO::POST;
     os << "===========================================" << LogIO::POST;
     return False;
   }
-  return True;
-}
-Bool Simulator::gainSummary(LogIO& os)
-{
-  return False;
-  /*
-  if(!gj_p) {
-    return False;
-  } else {
-    os << "Gain corruption activated" << LogIO::POST;
+  else {
+    os << "Visibilities will be CORRUPTED with the following terms:" << LogIO::POST;
+
+    Int napp(vc_p.nelements());
+    for (Int iapp=0;iapp<napp;++iapp)
+      os << LogIO::NORMAL << ".   "
+	 << vc_p[iapp]->applyinfo()
+	 << LogIO::POST;
+    
+    // Report also on the noise settings
+    noiseSummary(os);  
+
   }
   return True;
-  */
 }
-Bool Simulator::leakageSummary(LogIO& os)
-{
-  return False;
-  /*  
-  if(!dj_p) {
-    return False;
-  } else {
-    os << "Polarization leakage corruption activated" << LogIO::POST;
-  } 
-  return True;
-  */
-}
-Bool Simulator::bandpassSummary(LogIO& os)
-{
-  return False;
-  /*
-  if(!bj_p) {
-    return False;
-  } else {
-    os << "Bandpass corruption activated" << LogIO::POST;
-  }
-  return True;
-  */
-}
-Bool Simulator::paSummary(LogIO& os)
-{
-  return False;
-  /*
-  if(!pj_p) {
-    return False;
-  } else {
-    os << "PA corruption activated" << LogIO::POST;
-  }
-  return True;
-  */
-}
+
 Bool Simulator::noiseSummary(LogIO& os)
 {
   if (!ac_p) {
@@ -954,6 +887,107 @@ Bool Simulator::setnoise(const String& mode,
   
 }
 
+Bool Simulator::setapply(const String& type,
+			 const Double& t,
+			 const String& table,
+			 const String& spw,
+			 const String& field,
+			 const String& interp,
+			 const Bool& calwt,
+			 const Vector<Int>& spwmap,
+			 const Float& opacity)
+{
+  LogIO os(LogOrigin("Simulator", "setapply()", WHERE));
+
+  // First try to create the requested VisCal object
+  VisCal *vc(NULL);
+    
+  try {
+
+    makeVisSet();
+
+    // Set record format for calibration table application information
+    RecordDesc applyparDesc;
+    applyparDesc.addField ("t", TpDouble);
+    applyparDesc.addField ("table", TpString);
+    applyparDesc.addField ("interp", TpString);
+    applyparDesc.addField ("spw", TpArrayInt);
+    applyparDesc.addField ("field", TpArrayInt);
+    applyparDesc.addField ("calwt",TpBool);
+    applyparDesc.addField ("spwmap",TpArrayInt);
+    applyparDesc.addField ("opacity",TpFloat);
+    
+    // Create record with the requisite field values
+    Record applypar(applyparDesc);
+    applypar.define ("t", t);
+    applypar.define ("table", table);
+    applypar.define ("interp", interp);
+    applypar.define ("spw",Vector<Int>());
+    applypar.define ("field",Vector<Int>());
+    //    applypar.define ("spw",getSpwIdx(spw));
+    //    applypar.define ("field",getFieldIdx(field));
+    applypar.define ("calwt",calwt);
+    applypar.define ("spwmap",spwmap);
+    applypar.define ("opacity", opacity);
+    
+    String upType=type;
+    if (upType=="")
+      // Get type from table
+      upType = calTableType(table);
+
+    // Must be upper case
+    upType.upcase();
+    
+    os << LogIO::NORMAL
+       << "Arranging to CORRUPT with:"
+       << LogIO::POST;
+    
+    // Add a new VisCal to the apply list
+    vc = createVisCal(upType,*vs_p);
+    
+    vc->setApply(applypar);
+
+    os << LogIO::NORMAL << ".   "
+       << vc->applyinfo()
+       << LogIO::POST;
+    
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << x.getMesg()
+       << " Check inputs and try again."
+       << LogIO::POST;
+    if (vc) delete vc;
+    throw(AipsError("Error in Simulator::setapply."));
+    return False;
+  }
+
+  // Creation apparently successful, so add to the apply list
+  // TBD: consolidate with above?
+  try {
+
+    uInt napp=vc_p.nelements();
+    vc_p.resize(napp+1,False,True);
+    vc_p[napp] = vc;
+    vc=NULL;
+
+    // Maintain sort of apply list
+    ve_p.setapply(vc_p);
+
+    return True;
+
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::POST;
+    if (vc) delete vc;
+    throw(AipsError("Error in Simulator::setapply."));
+    return False;
+  }
+  return False;
+}
+
+
+
+
+
 Bool Simulator::setgain(const String& mode, const String& table,
 			const Quantity& interval,
 			const Vector<Double>& amplitude) {
@@ -1076,21 +1110,58 @@ Bool Simulator::setleakage(const String& mode, const String& table,
   return True;
 }
 
-Bool Simulator::reset() {
-  LogIO os(LogOrigin("Simulator", "simulate()", WHERE));
+Bool Simulator::resetviscal() {
+  LogIO os(LogOrigin("Simulator", "reset()", WHERE));
   try {
+
+    os << "Resetting all visibility corruption components" << LogIO::POST;
     
+    // The noise term (for now)
     if(ac_p) delete ac_p; ac_p=0;
+
+    // Delete all VisCals
+    for (uInt i=0;i<vc_p.nelements();++i)
+      if (vc_p[i]) delete vc_p[i];
+    vc_p.resize(0,True);
+
+    // reset the VisEquation (by sending an empty vc_p)
+    ve_p.setapply(vc_p);
+
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
+}
+
+Bool Simulator::resetimcal() {
+  LogIO os(LogOrigin("Simulator", "reset()", WHERE));
+  try {
+
+    os << "Reset all image-plane corruption components" << LogIO::POST;
+    
     if(vp_p) delete vp_p; vp_p=0;
     if(gvp_p) delete gvp_p; gvp_p=0;
-    if(sim_p) delete sim_p; sim_p=0;
     /*
-    if(gj_p) delete gj_p; gj_p=0;
-    if(dj_p) delete dj_p; dj_p=0;
-    if(pj_p) delete pj_p; pj_p=0;
-    if(epJ_p) delete epJ_p; epJ_p=0;
+    //    if(epJ_p) delete epJ_p; epJ_p=0;
     */
-    os << "Reset all components" << LogIO::POST;
+
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
+}
+
+Bool Simulator::reset() {
+  LogIO os(LogOrigin("Simulator", "reset()", WHERE));
+  try {
+    
+    // reset vis-plane cal terms
+    resetviscal();
+
+    // reset im-plane cal terms
+    resetimcal();
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -1100,62 +1171,79 @@ Bool Simulator::reset() {
 }
 
 Bool Simulator::corrupt() {
+
+  // VIS-plane (only) corruption
   
   LogIO os(LogOrigin("Simulator", "corrupt()", WHERE));
 
   try {
     
-    //   throw(AipsError("Corruption by simulated errors temporarily disabled (06Nov20 gmoellen)"));
-
-
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
+
     makeVisSet();
     AlwaysAssert(vs_p, AipsError);
+
+    // Arrange the sort for efficient cal apply
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    vs_p->resetVisIter(columns,0.0);
+
     VisIter& vi=vs_p->iter();
     VisBuffer vb(vi);
-    
 
-    //Need to make all these VisCal then apply them
-    /*
-    // -----------------------------------------------------------
-    // Make and initialize the Measurement Equations i.e. Vis and 
-    // Sky Equations
-    VisEquation ve(*vs_p);
+    // Ensure VisEquation is ready
+    ve_p.setapply(vc_p);
 
-    // set corruption terms
-    if (ac_p) ve.setACoh(*ac_p);
-    if (pj_p) ve.setVisJones(*pj_p);
-    if (gj_p) ve.setVisJones(*gj_p);
-    if (dj_p) ve.setVisJones(*dj_p);
-    if (bj_p) ve.setVisJones(*bj_p);
-    
-    // Corruption applies the gains and errors to the OBSERVED column,
-    // and puts the result in BOTH the OBSERVED and CORRECTED columns
-    ve.corrupt();      
-    */
-    //For now add the noise independently after doing all the other corruptions
-    
+    // Apply 
+    if (vc_p.nelements()>0) {
+      os << LogIO::NORMAL << "Doing visbility corruption." 
+	 << LogIO::POST;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	// Only if 
+	if (ve_p.spwOK(vi.spectralWindow())) {
+	  for (vi.origin(); vi.more(); vi++) {
+	    
+	    // Corrupt the *model*
+	    ve_p.corrupt(vb);
+	    
+	    // Deposit into DATA/CORRECTED_DATA
+	    vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);
+	    vi.setVis(vb.modelVisCube(), VisibilityIterator::Corrected);
+	  }
+	}
+	else 
+	  cout << "Encountered data spw for which there is no calibration." << endl;
+      }
+
+    }
+
+    // Old-fashioned noise, for now
     if(ac_p != NULL){
-      os << LogIO::NORMAL << "Will do only noise corruption for now " 
+      os << LogIO::NORMAL << "Doing noise corruption " 
 	 << LogIO::POST;
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
+
 	  ac_p->apply(vb);
 	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
 	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
 	}
       }
     }
-    else{
-      os << LogIO::WARN << "No corruption done." 
-	 << LogIO::POST;
-    }
+
+    // Flush to disk
+    vs_p->flush();
+
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
-
-
 
   } catch (std::exception& x) {
     ms_p->relinquishAutoLocks();

@@ -53,6 +53,7 @@ VisEquation::VisEquation() :
   lfd_(-1),
   rfd_(9999),
   svc_(NULL),
+  spwOK_(),
   prtlev_(VISEQPRTLEV)
 {
   if (prtlev()>0) cout << "VE::VE()" << endl;
@@ -90,37 +91,50 @@ void VisEquation::setapply(PtrBlock<VisCal*>& vcin) {
   // How many VisCals in list?
   napp_=vc().nelements();
 
-  // only sort if a non-trivial list
-  if (napp_>1) {
+  // only if at least one VisCal in list
+  if (napp_>0) {
 
-    // A temporary local copy for sorting:
-    PtrBlock<VisCal*> lvc;
-    lvc.resize(napp_,True,True);
-    lvc=vc();
-
-    // Sorted index will go here
-    Vector<uInt> order(napp_,0);
-
-    // Fill in the sort key
-    Vector<Int> key(napp_,0);
-    for (Int i=0;i<napp_;i++)
-      key(i)=Int(vc()[i]->type());
-
-    // Do the sort
-    {
-      Sort sort;
-      sort.sortKey(&key(0),TpInt);
-      sort.sort(order,uInt(napp_));
-    }
-
-    // Assign VisCals in sorted order
-    if (prtlev()>2) cout << "Sorted VisCals:" << endl;
-    vc().set(NULL);
-    for (Int i=0;i<napp_;i++) {
-      vc()[i]=lvc[order(i)];
-      if (prtlev()>2) cout << vc()[i]->typeName() << " (" << vc()[i]->type() << ")" << endl;
-    }
+    // only sort if a non-trivial list
+    if (napp_>1) {
       
+      // A temporary local copy for sorting:
+      PtrBlock<VisCal*> lvc;
+      lvc.resize(napp_,True,True);
+      lvc=vc();
+      
+      // Sorted index will go here
+      Vector<uInt> order(napp_,0);
+      
+      // Fill in the sort key
+      Vector<Int> key(napp_,0);
+      for (Int i=0;i<napp_;i++)
+	key(i)=Int(vc()[i]->type());
+      
+      // Do the sort
+      {
+	Sort sort;
+	sort.sortKey(&key(0),TpInt);
+	sort.sort(order,uInt(napp_));
+      }
+      
+      // Assign VisCals in sorted order
+      if (prtlev()>2) cout << "Sorted VisCals:" << endl;
+      vc().set(NULL);
+      for (Int i=0;i<napp_;i++) {
+	vc()[i]=lvc[order(i)];
+	
+	if (prtlev()>2) cout << vc()[i]->typeName() << " (" << vc()[i]->type() << ")" << endl;
+      }
+      
+    }
+    
+    // Maintain spwOK_ list
+    // TBD: Should VisEquation know a priori how many spw here? Probably.
+    spwOK_.resize();
+    spwOK_ = (vc()[0])->spwOK();
+    for (Int i=1;i<napp_;++i) 
+      spwOK_ = spwOK_ && vc()[i]->spwOK();
+    
   }
 
   // Set up freq-dependence of the Vis Equation

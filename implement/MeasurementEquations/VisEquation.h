@@ -107,6 +107,9 @@ public:
   // Arrange for solve of a single SolvableVisCal
   void setsolve(SolvableVisCal& svc);
 
+  // Report if spw has solutions available from all applied tables
+  inline Bool spwOK(const Int& spw) { return (napp_>0) ? spwOK_(spw) : True; };
+
   // Correct in place the OBSERVED visibilities in a VisBuffer
   //  with the apply-able VisCals
   void correct(VisBuffer& vb);
@@ -168,6 +171,9 @@ private:
   // VisCal with solving interface
   //  (No ownership responsibilities)
   SolvableVisCal* svc_;
+
+  // SpwOK?
+  Vector<Bool> spwOK_;
 
   // Diagnostic print level
   Int prtlev_;

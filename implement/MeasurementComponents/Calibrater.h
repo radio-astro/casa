@@ -366,9 +366,6 @@ class Calibrater
   Int dataNchan_p, dataStart_p, dataStep_p;
   MRadialVelocity mDataStart_p, mDataStep_p;
 
-  // Spw avoidance flag
-  Vector<Bool> spwOK_p;
-
   //Spline phase wrapping helper params
   Double phasewrap_p;
   Int splinepoint_p;

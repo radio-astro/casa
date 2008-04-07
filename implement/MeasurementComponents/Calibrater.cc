@@ -62,7 +62,6 @@ Calibrater::Calibrater():
   ve_p(0),
   vc_p(),
   svc_p(0),
-  spwOK_p(),
   histLockCounter_p(), 
   hist_p(0)
 {
@@ -615,9 +614,6 @@ Bool Calibrater::setapply (const String& type,
   // TBD: consolidate with above?
   try {
 
-    // Maintain spw availability list
-    spwOK_p = spwOK_p && (vc->spwOK());
-
     uInt napp=vc_p.nelements();
     vc_p.resize(napp+1,False,True);      
     vc_p[napp] = vc;
@@ -1021,14 +1017,8 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
   //  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
 
   // Delete the VisCal apply list
-  if (apply && vs_p) {
+  if (apply && vs_p) 
     unsetapply();
-
-    // spw-availability bookkeeping...    
-    spwOK_p.resize(vs_p->numberSpw());
-    spwOK_p=True;
-
-  }
 
   // Delete the VisCal solve object
   if (solve)
@@ -1130,7 +1120,7 @@ Bool Calibrater::correct() {
       //	   << endl;
 
       // Only procede if spw can be calibrated
-      if (spwOK_p(vi.spectralWindow())) {
+      if (ve_p->spwOK(vi.spectralWindow())) {
 
 	for (vi.origin(); vi.more(); vi++) {
 	  
@@ -1200,7 +1190,7 @@ Bool Calibrater::corrupt() {
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
       // Only procede if spw can be calibrated
-      if (spwOK_p(vi.spectralWindow())) {
+      if (ve_p->spwOK(vi.spectralWindow())) {
 
 	for (vi.origin(); vi.more(); vi++) {
 	  
@@ -1319,7 +1309,7 @@ Bool Calibrater::standardSolve() {
     Int spw(vi.spectralWindow());
     
     // Abort if we encounter a spw for which a priori cal not available
-    if (!spwOK_p(spw)) 
+    if (!ve_p->spwOK(spw)) 
       throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
 
     // Arrange to accumulate 

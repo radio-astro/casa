@@ -34,13 +34,14 @@
 #include <measures/Measures/MPosition.h>
 #include <synthesis/MeasurementComponents/BeamSquint.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
+#include <synthesis/MeasurementEquations/VisEquation.h>
 //#include <synthesis/MeasurementComponents/EPJones.h>
 
 #include <casa/namespace.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 class MeasurementSet;
 class VisSet;
-  //class VisJones;
+class VisCal;
 class ACoh;
 class SkyEquation;
 class ComponentList;
@@ -178,6 +179,18 @@ public:
   // Set the random number generator seed for the addition of errors
   Bool setseed(const Int seed);
 
+  // Arrange to corrupt with existing calibration
+  //   (cf Calibrater setapply)
+  Bool setapply (const String& type,
+                 const Double& t,
+                 const String& table,
+                 const String& spw,
+                 const String& field,
+                 const String& interp,
+                 const Bool& calwt,
+                 const Vector<Int>& spwmap,
+                 const Float& opacity);
+
   // Apply antenna-based gain errors
   Bool setgain(const String& mode, const String& table,
 	       const Quantity& interval, const Vector<Double>& amplitude);
@@ -242,6 +255,8 @@ public:
 
   Bool summary();
 
+  Bool resetviscal();
+  Bool resetimcal();
   Bool reset();
 
   // Set the processing options
@@ -286,10 +301,6 @@ private:
   Bool optionsSummary(LogIO& os);
 
   Bool corruptSummary(LogIO& os);
-  Bool gainSummary(LogIO& os);
-  Bool leakageSummary(LogIO& os);
-  Bool bandpassSummary(LogIO& os);
-  Bool paSummary(LogIO& os);
   Bool noiseSummary(LogIO& os);
   // </group>
 
@@ -307,10 +318,12 @@ private:
 
   Int seed_p;
 
-  //  VisJones *gj_p;
-  //  VisJones *pj_p;
-  //  VisJones *dj_p;
-  //  VisJones *bj_p;
+  // VisEquation handles corruption by visibility calibration effects
+  VisEquation ve_p;
+
+  // Generic container for any number of calibration effects to corrupt with
+  PtrBlock<VisCal*> vc_p;
+
   ACoh     *ac_p;
 
   SkyEquation* se_p;
