@@ -47,8 +47,6 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
-#include <casa/Quanta/MVTime.h>
-
 #include <fstream>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -3192,55 +3190,13 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
 }
 
-
+// listCal************************************************* 
 void SolvableVisJones::listCal(const Vector<Int> ufldids,
 			       const Vector<Int> uantids,
 			       const Int& spw, 
 			       const Int& chan,
 			       const String& listfile,
 			       const Int& pagerows) {
-
-/* Function to output calibration table.
-   2007sep26 - jcrossle - Modified 'listCal' to produce prompt after printing
-     'maxScrRows'.  Prompt allows user to (Q)uit, print (A)ll without prompt,
-     or, by default, print 'maxScrRows' more and prompt again (RETURN).  After
-     each prompt, the column headings, time stamp, and field name are 
-     rewritten.
-       Also added additional loop to the output.  First loop
-     uses normal 'cout' (sends output to terminal).  Second loop redirects
-     'cout' to file ".listcal.out" (filename hard coded).  File output receives
-     column headings only once.  No prompts issued while writing to file.
-   2007sep27 - gmoellen - Added user-supplied listfile and pagerows
-     parameters to control if a file is written, and how many rows
-     to write per page.  Remoeved Jared's iout loop, since user can 
-     control this directly now.
-   2007oct01 - gmoellen - Some fixes:
-     1. Reorganized various loops so that non-trivial field selection 
-     doesn't cause hang, mainly, by moving the ielem++ back to the for
-     statement.
-     2. Added header on each page, even when writing to file
-     3. Other misc. cleanup
-   2007oct10 - gmoellen - Index cal data directly, instead of
-     via a variously incremented pointer.  This simplifies Jared's
-     pending re-formatting work, and also fixes a channel selection
-     bug in listing of B tables.
-   2007oct10 - jcrossle - Output format changed, as per efomalont's 
-     suggestions.  Looping is now done over 1st- antenna, 2nd- time,
-     3rd- polarization.  However, multiple antennas are written per row,
-     so "sub-loops" over 'numAntCols' antennas are performed when 
-     necessary. New hard-coded parameter, numAntCols, controls
-     the number of antennas printed per row.
-   2007oct29 - jcrossle - Created local Vector 'pAntids' that holds
-     the antenna ID's that will be written; 'numAnts' holds the number
-     of elements in pAntids.  The for-loop over antennas is now actually
-     a loop over the index of Vector pAntids.  This avoids output problems
-     when the user specifies antenna ID's.
-   2007nov06 - jcrossle - Format corrections.  Discovered that task 
-     parameter antenna takes (exact) antenna names, as a string
-     of comma-separated values; '3,7' does Not equal '03,07' 
-   2007nov14 - gmoellen - Moved MS name listing out of loops so
-     it only appears once.
-*/
 
   // Catch bad spw specification:
   if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
@@ -3253,16 +3209,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     dochan=0;
   }
 
-// /* Query the terminal size. */   // DISABLED
-//   struct winsize mywinsize;
-//   ioctl(1, TIOCGWINSZ, &mywinsize);
-//   // diagnostic message
-//   printf("screen size = rows: %d, columns: %d\n", mywinsize.ws_row, mywinsize.ws_col);
-// /* Set listCal output to correspond to terminal size. */
-//   Int maxScrRows(mywinsize.ws_row); // number of rows to print before prompting
-
   Int maxScrRows(pagerows);
-  Int scrRows(0); // screen row counter, reset after continue prompt
+  Int scrRows=0; // screen row counter, reset after continue prompt
   Bool endOutput = False; // if true, end output immediately
   Int isol = 0; // total solution counter
   Bool prompt = True; // if true, issue prompt
@@ -3296,18 +3244,62 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   Vector<String> fldname(msfld.name().getColumn());
   
   // Setup the column widths.  Check width of each string.
-  int timeLength = 10;
-  int maxFldstrLength = 0; 
+  
+  uInt precTime, precAmp, precPhase; // Column precision
+  uInt oAmp, oPhase; // Column order
+  // Column width
+  uInt wTime, wField, wAmp, wPhase, wFlag, wPol, wAntCol, wTotal;
+
+  wTime = 10; // set width of time field
+  wField = 0; 
   for (Int ielem=0;ielem<cs().nElem(); ielem++) {
     for (Int itime=0;itime<cs().nTime(spw);++itime) {
       Int fldid(cs().fieldId(spw)(itime));
       String fldstr=(fldname(fldid)); 
-      Int fldstrLength = fldstr.length();
-      if (maxFldstrLength < fldstrLength) { maxFldstrLength = fldstrLength; }
+      uInt fldstrLength = fldstr.length();
+      if (wField < fldstrLength) { wField = fldstrLength; }
     }
   }
-  
-  int numAntCols = 4; // Number of antenna columns
+
+  // For multiple channels, I think I will need to write a method that 
+  // looks through all spws to determine the necessary order for the 
+  // Amplitude and Phase.
+
+  // set width of amplitude column
+  //oAmp = (uInt)max(1,(Int)rint(log10(max())+0.5));
+  oAmp = 1;
+  precAmp = 3; 
+  wAmp = oAmp + precAmp + 1; // order + precision + decimal point
+
+  // set width of phase column
+  //oPhase = (uInt)max(1,(Int)rint(abs(log10(max())+0.5)));
+  oPhase = 4;
+  precPhase = 1; 
+  wPhase = oPhase + precPhase + 1; // order + precision + decimal point
+
+  wFlag=1;
+  wPol = wAmp + 1 + wPhase + 1 + wFlag + 1; 
+  wAntCol = wPol*2; 
+ 
+  logSink() << LogIO::DEBUG1 << "oAmp = " << oAmp << ", precAmp = " << precAmp 
+            << ", wAmp = " << wAmp << endl
+            << "oPhase = " << oPhase << ", precPhase = " << precPhase 
+            << ", wPhase = " << wPhase
+            << LogIO::POST;
+              
+  uInt numAntCols = 4; // Number of antenna columns
+  wTotal = wTime + 1 + wField + 1 + wAntCol*numAntCols;
+
+  // Construct the horizontal separator
+  String hSeparator=replicate('-',wTotal); 
+  uInt colPos=0;
+  colPos+=wTime; hSeparator[colPos]='|'; colPos++;
+  colPos+=wField; hSeparator[colPos]='|'; colPos++;
+  for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
+    colPos+=wPol-1;
+    hSeparator[colPos]='|';
+    colPos++;
+  }
  
   logSink() << LogIO::NORMAL1
        << "Listing CalTable: " << calTableName()
@@ -3317,22 +3309,24 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
        << "Listing CalTable: " << calTableName()
        << "   (" << typeName() << ") "
        << endl;
+  scrRows++;
 
   String dateTimeStr0=MVTime(cs().time(spw)(0)/C::day).string(MVTime::YMD,7);
   String dateStr0=dateTimeStr0.substr(0,10);
   
   // Default header info.
   logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;
-  logSink() << LogIO::NORMAL << "Date= " << dateStr0 << endl
-                             << "SpwId= " << spw << endl
-                             << "Channel= " << dochan << LogIO::POST;
+  logSink() << LogIO::NORMAL  << "Date= "     << dateStr0 << endl
+                              << "SpwId= "    << spw      << endl
+                              << "Channel= "  << dochan   << LogIO::POST;
   cout << "MS name = " << msName() << ", "
        << "Date= " << dateStr0 << ", "
        << "SpwId= " << spw << ", "
        << "Channel= " << dochan << "."
        << endl
-       << "---------------------------------------------------------------"
+       << replicate('-',wTotal)
        << endl;
+  scrRows+=2;
 
   // labels for flagged solutions
   Vector<String> flagstr(2); 
@@ -3342,19 +3336,19 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   //  Complex *g=cs().par(spw).data()+dochan;
   //  Bool *gok=cs().parOK(spw).data()+dochan;
   
-  Array<Complex> g;
-  g.reference(cs().par(spw));
+  Array<Complex> calGains;
+  calGains.reference(cs().par(spw));
   Array<Bool> gok;
   gok.reference(cs().parOK(spw));
   IPosition gidx(4,0,dochan,0,0);
 
   // Setup a Vector of antenna ID's to ease the process of printing 
   //  multiple antenna columns per row.
-  Int numAnts; // Hold number of antennas to be output.
+  uInt numAnts; // Hold number of antennas to be output.
   Vector<Int> pAntids(cs().nElem()); // Vector of antenna ID's.
   if (uantids.nelements()==0) { // Print all antennas.
     numAnts = cs().nElem(); 
-    for(int i=0; i<cs().nElem(); pAntids[i]=i++); // Fill pAntids with all antenna ID's.
+    for(Int i=0; i<cs().nElem(); pAntids[i]=i++); // Fill pAntids with all antenna IDs.
   } else { // Use the user-specified antenna ID's.
     numAnts = uantids.nelements(); 
     pAntids.resize(numAnts);
@@ -3362,7 +3356,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
   }
 
   // loop over antenna elements
-  for (Int ielem=0;ielem<numAnts;ielem=ielem+numAntCols) { 
+  for (uInt ielem=0;ielem<numAnts;ielem=ielem+numAntCols) { 
     gidx(2)=pAntids(ielem);
 
     Bool header=True; // New antenna, require print header
@@ -3392,57 +3386,62 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
           // If beginning new screen, print the header
           if (scrRows == 0 || header) {  //(irow%cs().nElem()==0) 
             header=False;
-            string AmpPhaseStr = "  Amp    Phase ";
-            string AmpPhaseDel = "---------------"; // 15 chars long
             
             // Begin writing Antenna line (put spaces over the time, field cols)
-            for(int k=0; k<(timeLength+1+maxFldstrLength); k++) { cout<<" "; }
+            for(uInt k=0; k<(wTime+1+wField); k++) { cout<<" "; }
             // Finish antenna line
-            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-              cout << "| ";
+            cout << "|";
+            for(uInt k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
               // Center antenna name between polarization columns
               //  For now, the maximum antenna name length is 8. Could be as
               //  high as 32-6=24.
-              int antNameLength = ( antname(pAntids(ielem+k)).length() < 8)
-                                  ? antname(pAntids(ielem+k)).length() : 8;
-              float halfspace = ( 32 - 6 - antNameLength ) / 2.0; 
-              // cout << antname(pAntids(ielem+k)).length() << "," << halfspace << "," << int(halfspace) << "," << int(halfspace+0.5);
-              for(int j=1; j<=int(halfspace); j++) { cout<<" "; }
-              cout << "Ant = "
-                   << setw(antNameLength) << antname(pAntids(ielem+k));
-              for(int j=1; j<=int(halfspace+0.5); j++) { cout<<" "; }
+              // int antNameLength = ( antname(pAntids(ielem+k)).length() < 8)
+              //                     ? antname(pAntids(ielem+k)).length() : 8;
+              // float halfspace = ( 32 - 6 - antNameLength ) / 2.0; 
+              // // cout << antname(pAntids(ielem+k)).length() << "," << halfspace << "," << int(halfspace) << "," << int(halfspace+0.5);
+              // for(int j=1; j<=int(halfspace); j++) { cout<<" "; }
+              String tAntName = " Ant = " + String(antname(pAntids(ielem+k)));
+              cout.setf(ios::left,ios::adjustfield);
+              cout << setw(wAntCol-1) << tAntName << "|";
             }
             cout << endl;
               
               // Write time and field headings (only once)
             cout << setiosflags(ios::left)
-                 << setw(timeLength) << "Time"  << " "
-                 << setw(maxFldstrLength) << "Field";
+                 << setw(wTime) << "Time"  << " "
+                 << setw(wField) << "Field" << "|";
               
             // Write Amp and Phase headings for each antenna column
-            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-              cout << "| " << AmpPhaseStr << "  " << AmpPhaseStr;
+            cout.setf(ios::right, ios::adjustfield);
+            for(uInt k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
+              cout << setw(wAmp)   << "Amp"   << " " 
+                   << setw(wPhase) << "Phs" << " "
+                   << "F" << " "
+                   << setw(wAmp)   << "Amp"   << " " 
+                   << setw(wPhase) << "Phs" << " "
+                   << "F" << "|";
             }
             cout << endl;
             // Write delimiters
-            for(int k=0; k<timeLength; k++) { cout << "-"; } // time col
-            cout << " ";
-            for(int k=0; k<maxFldstrLength; k++) { cout << "-"; } // field col
-            for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-              cout << "| " << AmpPhaseDel << "  " << AmpPhaseDel;
-            }
-            cout << endl;
-            scrRows+=4;
+            cout << hSeparator << endl;
+            /// for(uInt k=0; k<wTime; k++) { cout << "-"; } // time col
+            /// cout << " ";
+            /// for(uInt k=0; k<wField; k++) { cout << "-"; } // field col
+            /// for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
+            ///   cout << " " << AmpPhaseDel << " " << AmpPhaseDel;
+            /// }
+            /// cout << endl;
+            scrRows+=3;
             // End of header
           }
           
-          cout << setw(timeLength) << timeStr << " "
-               << setw(maxFldstrLength) << fldStr;
+          cout << setw(wTime) << timeStr << " "
+               << setw(wField) << fldStr << "|";
           // Set i/o flags for writing data
           cout << setiosflags(ios::fixed) << setiosflags(ios::right);
 
           // Write data for each antenna column
-          for (Int kelem=ielem; (kelem<ielem+numAntCols) and (kelem<=numAnts-1); 
+          for (uInt kelem=ielem; (kelem<ielem+numAntCols) and (kelem<=numAnts-1); 
                kelem++) {
             gidx(2)=pAntids(kelem);
             
@@ -3450,11 +3449,13 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
             for (Int ipar=0;ipar<nPar();++ipar) {
               gidx(0)=ipar; 
 
-              cout << "| "
-		   << setprecision(3) << setw(6) << abs(g(gidx)) 
-		   << flagstr(Int(gok(gidx))) << " "
-		   << setprecision(1) << setw(6) << arg(g(gidx))*180.0/C::pi 
-		   << flagstr(Int(gok(gidx)));
+              // WRITE THE DATA
+                   // amplitude
+		      cout << setprecision(precAmp) << setw(wAmp) << abs(calGains(gidx)) << " "
+                   // phase
+		           << setprecision(precPhase) << setw(wPhase) << arg(calGains(gidx))*180.0/C::pi << " ";
+                   // flag
+       		       cout << flagstr(Int(gok(gidx))) << " ";
             }
           }
 
@@ -3462,7 +3463,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
           isol=isol+numAntCols; scrRows++;
 
           // If at end of screen, signal new page (new header)
-          if (maxScrRows>0 && (scrRows >= maxScrRows-1) ) {  
+          if (maxScrRows>0 && (scrRows >= maxScrRows-1) ) { // scrRows counts from 0
 
             // signal a new page
             scrRows = 0;
