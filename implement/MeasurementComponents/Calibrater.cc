@@ -2158,15 +2158,22 @@ Bool Calibrater::listCal(const String& infile,
   SolvableVisCal *svc(NULL);
 
   try {
+
+    // Trap (currently) unsupported types
+    if (upcase(calTableType(infile))=="GSPLINE" ||
+	upcase(calTableType(infile))=="BPOLY")
+      throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
+
+    // Get user's selected fields, ants
     Vector<Int> ufldids=getFieldIdx(field);
     Vector<Int> uantids=getAntIdx(antenna);
 
+    // Get user's selected spw and channels
     Vector<Int> uspwids=getSpwIdx(spw);
     Matrix<Int> uchanids=getChanIdx(spw);
 
     //    cout << "uspwids  = " << uspwids << endl;
     //    cout << "uchanids = " << uchanids << endl;
-
 
     // By default, do first spw, first chan
     if (uspwids.nelements()==0) {
@@ -2187,11 +2194,11 @@ Bool Calibrater::listCal(const String& infile,
     Record applypar(applyparDesc);
     applypar.define ("table", infile);
     
-    // Add a new VisCal to the apply list
+    // Generate the VisCal to be listed
     svc = createSolvableVisCal(calTableType(infile),*vs_p);  
-    
     svc->setApply(applypar);       
-    
+
+    // list it
     svc->listCal(ufldids,uantids,uchanids(0,0),uchanids(0,1),
 		 listfile,pagerows);
 
