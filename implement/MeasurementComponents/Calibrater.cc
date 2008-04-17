@@ -2153,74 +2153,73 @@ Bool Calibrater::listCal(const String& infile,
 			 const String& antenna,
 			 const String& spw,
 			 const String& listfile,
-			 const Int& pagerows) {
-
-  SolvableVisCal *svc(NULL);
-
-  try {
-
-    // Trap (currently) unsupported types
-    if (upcase(calTableType(infile))=="GSPLINE" ||
-	upcase(calTableType(infile))=="BPOLY")
-      throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
-
-    // Get user's selected fields, ants
-    Vector<Int> ufldids=getFieldIdx(field);
-    Vector<Int> uantids=getAntIdx(antenna);
-
-    // Get user's selected spw and channels
-    Vector<Int> uspwids=getSpwIdx(spw);
-    Matrix<Int> uchanids=getChanIdx(spw);
-
-    //    cout << "uspwids  = " << uspwids << endl;
-    //    cout << "uchanids = " << uchanids << endl;
-
-    // By default, do first spw, first chan
-    if (uspwids.nelements()==0) {
-      uchanids.resize(1,4);
-      uchanids=0;
-    } 
-    else if (uspwids.nelements()>1) 
-      cout << "Only listing spw = " << uchanids(0,0) << endl;
-
-    if (uchanids(0,1)!=uchanids(0,2))
-      cout << "Only listing chan = " << uchanids(0,1) << endl;
-
-    // Set record format for calibration table application information
-    RecordDesc applyparDesc;
-    applyparDesc.addField ("table", TpString);
+             const Int& pagerows) {
     
-    // Create record with the requisite field values
-    Record applypar(applyparDesc);
-    applypar.define ("table", infile);
+    SolvableVisCal *svc(NULL);
+    logSink() << LogOrigin("Calibrater","listCal",WHERE);
     
-    // Generate the VisCal to be listed
-    svc = createSolvableVisCal(calTableType(infile),*vs_p);  
-    svc->setApply(applypar);       
-
-    // list it
-    svc->listCal(ufldids,uantids,uchanids(0,0),uchanids(0,1),
-		 listfile,pagerows);
-
-    if (svc) delete svc; svc=NULL;
-
-    return True;
-    
-  } catch (AipsError x) {
-    
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-    // Clean up
-    if (svc) delete svc; svc=NULL;
-    
-    throw(AipsError("Error in Calibrater::listCal."));
-    
+    try {
+        
+        // Trap (currently) unsupported types
+        if (upcase(calTableType(infile))=="GSPLINE" ||
+            upcase(calTableType(infile))=="BPOLY")
+            throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
+        
+        // Get user's selected fields, ants
+        Vector<Int> ufldids=getFieldIdx(field);
+        Vector<Int> uantids=getAntIdx(antenna);
+        
+        String newSpw = spw;
+        if (spw.empty()) { newSpw = "*"; } // list all channels (default)
+        // Get user's selected spw and channels
+        Vector<Int> uspwids=getSpwIdx(newSpw);
+        Matrix<Int> uchanids=getChanIdx(newSpw);
+        
+        logSink() << LogIO::DEBUG2 
+                  << "uspwids = "  << uspwids  << endl
+                  << "uchanids = " << uchanids << LogIO::POST;
+        
+        // By default, do first spw, first chan
+        if (uspwids.nelements()==0) {
+            uchanids.resize(1,4);
+            uchanids=0;
+        } 
+        
+        // Set record format for calibration table application information
+        RecordDesc applyparDesc;
+        applyparDesc.addField ("table", TpString);
+        
+        // Create record with the requisite field values
+        Record applypar(applyparDesc);
+        applypar.define ("table", infile);
+        
+        // Generate the VisCal to be listed
+        svc = createSolvableVisCal(calTableType(infile),*vs_p);  
+        svc->setApply(applypar);       
+        
+        // list it
+        svc->listCal(ufldids,uantids,uchanids,  //uchanids(0,0),uchanids(0,1),
+                     listfile,pagerows);
+        
+        if (svc) delete svc; svc=NULL;
+        
+        return True;
+        
+    } catch (AipsError x) {
+        
+        logSink() << LogIO::SEVERE
+                  << "Caught Exception: "
+                  << x.getMesg()
+                  << LogIO::POST;
+        // Clean up
+        if (svc) delete svc; svc=NULL;
+        
+        throw(AipsError("Error in Calibrater::listCal."));
+        
+        return False;
+    }
     return False;
-  }
-  return False;
-  
+    
 }
 
 void Calibrater::selectChannel(const String& spw) {

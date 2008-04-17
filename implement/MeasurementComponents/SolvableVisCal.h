@@ -233,7 +233,7 @@ public:
   virtual void currMetaNote();
 
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
-		       const Int& spw, const Int& chan,
+		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
 		       const String& listfile="",const Int& pagerows=50)=0;
 
 protected:
@@ -411,9 +411,8 @@ public:
   // List calibration solutions in tabular form.
   virtual void listCal(const Vector<Int> ufldids, 
                        const Vector<Int> uantids,
-		       const Int& spw = 0, 
-                       const Int& chan = 0,
-		       const String& listfile = "",
+                       const Matrix<Int> uchanids,
+   		               const String& listfile = "",
                        const Int& pagerows = 50) 
   { throw(AipsError(String("Calibration listing not supported for "+typeName()))); };
 
@@ -536,10 +535,15 @@ public:
   // Report state:
   inline virtual void state() { stateSVJ(True); };
 
+  // Write calibration solutions to the terminal
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
-		       const Int& spw, const Int& chan,
-		       const String& listfile="",const Int& pagerows=50);
+                       const Matrix<Int> uchanids,
+                       const String& listfile="",const Int& pagerows=50);
 
+  // Write header for listCal output
+  int writeHeader(const uInt numAntCols, 
+                  const uInt numAnts,
+                  const uInt iElem);
 
 protected:
  
@@ -607,7 +611,12 @@ private:
 
   // Validity of Jones matrix derivatives
   Bool DJValid_;
-  
+
+  // Column widths for listing
+  uInt wTime_p,  wField_p, wChan_p, wAmp_p, 
+       wPhase_p, wFlag_p,  wPol_p,  wAntCol_p, 
+       wTotal_p, wPreAnt_p;
+          
 };
 
 // Global methods

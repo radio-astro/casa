@@ -3190,314 +3190,367 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
 }
 
-// listCal************************************************* 
 void SolvableVisJones::listCal(const Vector<Int> ufldids,
-			       const Vector<Int> uantids,
-			       const Int& spw, 
-			       const Int& chan,
-			       const String& listfile,
-			       const Int& pagerows) {
+                               const Vector<Int> uantids,
+                               const Matrix<Int> uchanids, 
+			                   const String& listfile,
+                               const Int& maxScrRows) {
 
-  // Catch bad spw specification:
-  if (spw<0 || spw>=nSpw() || cs().nTime(spw)==0)
-    throw(AipsError("Nothing to list for specified spw."));
-
-  // Do specified channel, nominally
-  Int dochan=chan;
-  const Int nchan=cs().par(spw).shape()(1);
-  if (dochan>(nchan-1)) {
-    dochan=0;
-  }
-
-  Int maxScrRows(pagerows);
-  Int scrRows=0; // screen row counter, reset after continue prompt
-  Bool endOutput = False; // if true, end output immediately
-  Int isol = 0; // total solution counter
-  Bool prompt = True; // if true, issue prompt
-  
-  // Redirect cout to listfile
-  ofstream file;
-  streambuf* sbuf = cout.rdbuf();
-  if(listfile!="") {
-    // non-interactive
-    prompt = False;
+    Int uSpwID = uchanids(0,0);
+    Int chan = uchanids(0,1);
     
-    // Guard against trampling existing file
-    File diskfile(listfile);
-    if (diskfile.exists()) {
-      String errmsg = "File: " + listfile + 
-      " already exists; delete it or choose a different name.";
-      throw(AipsError(errmsg));
+    // The number of spws; that is, the number of rows in matrix uchanids.
+    // Actually, this is the number of spw/channel selections made in the
+    // spw selection parameter.  The rows of uchanids may contain the same
+    // spw.
+    uInt nSpws = uchanids.nrow();
+    
+    // Prep for listing
+    Bool endOutput = False; // if true, end output immediately
+    Bool prompt = True; // if true, issue prompt
+    Int isol = 0; // total solution counter
+    Int scrRows=0; // screen row counter, reset after continue prompt
+    
+    // Redirect cout to listfile
+    ofstream file;
+    streambuf* sbuf = cout.rdbuf();
+    if(listfile!="") { // non-interactive
+        prompt = False;
+        // Guard against trampling existing file
+        File diskfile(listfile);
+        if (diskfile.exists()) {
+            String errmsg = "File: " + listfile + 
+                " already exists; delete it or choose a different name.";
+            throw(AipsError(errmsg));
+        }
+        else
+            cout << "Writing output to file: " << listfile << endl;
+        file.open(listfile.data());
+        cout.rdbuf(file.rdbuf());
     }
-    else
-      cout << "Writing output to file: " << listfile << endl;
+    
+    // Access to ms for meta info
+    MeasurementSet ms(msName());
+    MSAntennaColumns msant(ms.antenna());
+    Vector<String> antname(msant.name().getColumn());
+    MSFieldColumns msfld(ms.field());
+    Vector<String> fldname(msfld.name().getColumn());
+    
+    // Default header info.
+    logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;        
+        
+    // Begin loop through SPWs
+    logSink() << LogIO::NORMAL1 << "Number of spectral window selections = " << nSpws
+              << LogIO::POST;
+    for(uInt iUchanids = 0; iUchanids<nSpws; iUchanids++) {
+        Vector<Int> RowUchanids = uchanids.row(iUchanids);
+        uInt spwID = RowUchanids(0); // Current spw ID
+        logSink() << LogIO::DEBUG2 << "At top of spwID loop" << LogIO::POST;
 
-    file.open(listfile.data());
-    cout.rdbuf(file.rdbuf());
-  }
+        // Catch bad spw specification:
+        // if (spwID<0 || spwID>=nSpwsnSpws || cs().nTime(spwID)==0)
+        //   throw(AipsError("Nothing to list for specified Spw ID."));
+        
+        // Do specified channel, nominally
+        if(cs().par(spwID).shape()(1) < 0) 
+            throw(AipsError("Number of spectral channels in calibration table < 0!"));
+        logSink() << LogIO::DEBUG1 << "For Spw ID " << spwID 
+                  << ": Number of spectral channels in calibration table = "
+                  << cs().par(spwID).shape()(1) << LogIO::POST;
+        const uInt nchan= (uInt)cs().par(spwID).shape()(1);
 
-  // Access to ms for meta info
-  MeasurementSet ms(msName());
-  MSAntennaColumns msant(ms.antenna());
-  Vector<String> antname(msant.name().getColumn());
-  MSFieldColumns msfld(ms.field());
-  Vector<String> fldname(msfld.name().getColumn());
+        // Extract channel info from uchanids
+        Int stepChan   = RowUchanids(3);
+        if (stepChan == 0) { stepChan = 1; } // one channel at a time (default)
+        else if (stepChan < 0) {
+            throw(AipsError("Stepping backwards through channels not supported."));
+        }
+        uInt startChan = RowUchanids(1);
+        uInt stopChan  = RowUchanids(2);
+        if ((startChan == 0) && (stopChan == 0)) { 
+            stopChan = nchan - 1; // include all channels (default)
+        }
+        else if (startChan > stopChan) {
+            throw(AipsError("Start channel must be less than or equal to stop channel."));
+        }
+        uInt numChans = ((stopChan - startChan) / stepChan) + 1; 
+        
+        logSink() << LogIO::DEBUG1 << "For spwID " << spwID << endl
+                  << "  startChan = " << startChan << endl
+                  << "  stopChan = " << stopChan << endl
+                  << "  stepChan = " << stepChan << endl
+                  << "  Number of channels to list: numChans = " << numChans
+                  << LogIO::POST;
+        
+        // if (dochan>(nchan-1)) {
+        //   throw(AipsError("Specified channel does not exist."));
+        // }
   
-  // Setup the column widths.  Check width of each string.
-  
-  uInt precTime, precAmp, precPhase; // Column precision
-  uInt oAmp, oPhase; // Column order
-  // Column width
-  uInt wTime, wField, wAmp, wPhase, wFlag, wPol, wAntCol, wTotal;
-
-  wTime = 10; // set width of time field
-  wField = 0; 
-  for (Int ielem=0;ielem<cs().nElem(); ielem++) {
-    for (Int itime=0;itime<cs().nTime(spw);++itime) {
-      Int fldid(cs().fieldId(spw)(itime));
-      String fldstr=(fldname(fldid)); 
-      uInt fldstrLength = fldstr.length();
-      if (wField < fldstrLength) { wField = fldstrLength; }
-    }
-  }
-
-  // For multiple channels, I think I will need to write a method that 
-  // looks through all spws to determine the necessary order for the 
-  // Amplitude and Phase.
-
-  // set width of amplitude column
-  //oAmp = (uInt)max(1,(Int)rint(log10(max())+0.5));
-  oAmp = 1;
-  precAmp = 3; 
-  wAmp = oAmp + precAmp + 1; // order + precision + decimal point
-
-  // set width of phase column
-  //oPhase = (uInt)max(1,(Int)rint(abs(log10(max())+0.5)));
-  oPhase = 4;
-  precPhase = 1; 
-  wPhase = oPhase + precPhase + 1; // order + precision + decimal point
-
-  wFlag=1;
-  wPol = wAmp + 1 + wPhase + 1 + wFlag + 1; 
-  wAntCol = wPol*2; 
- 
-  logSink() << LogIO::DEBUG1 << "oAmp = " << oAmp << ", precAmp = " << precAmp 
-            << ", wAmp = " << wAmp << endl
-            << "oPhase = " << oPhase << ", precPhase = " << precPhase 
-            << ", wPhase = " << wPhase
+        // Setup the column widths.  Check width of each string.        
+        uInt precAmp, precPhase; // Column precision
+        uInt oAmp, oPhase; // Column order
+        
+        wTime_p = 10; // set width of time column
+        // set the field column width (looking at the whole cal table)
+        wField_p = 0; 
+        if(cs().nElem() < 0) throw(AipsError("Number of elements < 0!"));
+        for (Int iElem=0;iElem<cs().nElem(); iElem++) {
+            for (Int itime=0;itime<cs().nTime(spwID);++itime) {
+                Int fldid(cs().fieldId(spwID)(itime));
+                String fldstr=(fldname(fldid)); 
+                uInt fldstrLength = fldstr.length();
+                if (wField_p < fldstrLength) { wField_p = fldstrLength; }
+            }
+        }
+        wChan_p = (uInt)max(3,(Int)rint(log10(nchan)+0.5));
+        wPreAnt_p = wTime_p + 1 + wField_p + 1 + wChan_p; // do not count final pipe ("|")
+        logSink() << LogIO::DEBUG1 << "Column widths:" << endl
+                  << "  time = "    << wTime_p  << endl
+                  << "  field = "   << wField_p << endl
+                  << "  channel = " << wChan_p << LogIO::POST;
+        
+        // For multiple channels, I think I will need to write a method that 
+        // looks through all spws to determine the necessary order for the 
+        // Amplitude and Phase.
+        
+        // set width of amplitude column
+        //oAmp = (uInt)max(1,(Int)rint(log10(max())+0.5));
+        oAmp = 1;
+        precAmp = 3; 
+        wAmp_p = oAmp + precAmp + 1; // order + precision + decimal point
+        
+        // set width of phase column
+        //oPhase = (uInt)max(1,(Int)rint(abs(log10(max())+0.5)));
+        oPhase = 4;
+        precPhase = 1; 
+        wPhase_p = oPhase + precPhase + 1; // order + precision + decimal point
+        
+        wFlag_p=1;
+        wPol_p = wAmp_p + 1 + wPhase_p + 1 + wFlag_p + 1; 
+        wAntCol_p = wPol_p*2; 
+        
+        logSink() << LogIO::DEBUG1 << "oAmp = " << oAmp 
+            << ", precAmp = " << precAmp 
+            << ", wAmp_p = " << wAmp_p << endl
+            << "oPhase = " << oPhase 
+            << ", precPhase = " << precPhase 
+            << ", wPhase_p = " << wPhase_p
             << LogIO::POST;
-              
-  uInt numAntCols = 4; // Number of antenna columns
-  wTotal = wTime + 1 + wField + 1 + wAntCol*numAntCols;
-
-  // Construct the horizontal separator
-  String hSeparator=replicate('-',wTotal); 
-  uInt colPos=0;
-  colPos+=wTime; hSeparator[colPos]='|'; colPos++;
-  colPos+=wField; hSeparator[colPos]='|'; colPos++;
-  for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
-    colPos+=wPol-1;
-    hSeparator[colPos]='|';
-    colPos++;
-  }
- 
-  logSink() << LogIO::NORMAL1
-       << "Listing CalTable: " << calTableName()
-       << "   (" << typeName() << ") "
-       << LogIO::POST;
-  cout << endl
-       << "Listing CalTable: " << calTableName()
-       << "   (" << typeName() << ") "
-       << endl;
-  scrRows++;
-
-  String dateTimeStr0=MVTime(cs().time(spw)(0)/C::day).string(MVTime::YMD,7);
-  String dateStr0=dateTimeStr0.substr(0,10);
-  
-  // Default header info.
-  logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;
-  logSink() << LogIO::NORMAL  << "Date= "     << dateStr0 << endl
-                              << "SpwId= "    << spw      << endl
-                              << "Channel= "  << dochan   << LogIO::POST;
-  cout << "MS name = " << msName() << ", "
-       << "Date= " << dateStr0 << ", "
-       << "SpwId= " << spw << ", "
-       << "Channel= " << dochan << "."
-       << endl
-       << replicate('-',wTotal)
-       << endl;
-  scrRows+=2;
-
-  // labels for flagged solutions
-  Vector<String> flagstr(2); 
-  flagstr(0)="F";
-  flagstr(1)=" ";
-
-  //  Complex *g=cs().par(spw).data()+dochan;
-  //  Bool *gok=cs().parOK(spw).data()+dochan;
-  
-  Array<Complex> calGains;
-  calGains.reference(cs().par(spw));
-  Array<Bool> gok;
-  gok.reference(cs().parOK(spw));
-  IPosition gidx(4,0,dochan,0,0);
-
-  // Setup a Vector of antenna ID's to ease the process of printing 
-  //  multiple antenna columns per row.
-  uInt numAnts; // Hold number of antennas to be output.
-  Vector<Int> pAntids(cs().nElem()); // Vector of antenna ID's.
-  if (uantids.nelements()==0) { // Print all antennas.
-    numAnts = cs().nElem(); 
-    for(Int i=0; i<cs().nElem(); pAntids[i]=i++); // Fill pAntids with all antenna IDs.
-  } else { // Use the user-specified antenna ID's.
-    numAnts = uantids.nelements(); 
-    pAntids.resize(numAnts);
-    pAntids = uantids;
-  }
-
-  // loop over antenna elements
-  for (uInt ielem=0;ielem<numAnts;ielem=ielem+numAntCols) { 
-    gidx(2)=pAntids(ielem);
-
-    Bool header=True; // New antenna, require print header
-
-    // If antenna element is among selected antennas, print it
-    if (uantids.nelements()==0 || anyEQ(uantids,pAntids(ielem))) {
+        
+        uInt numAntCols = 4; // Number of antenna columns
+        wTotal_p = wPreAnt_p + 1 + wAntCol_p*numAntCols;
+        
+        // Construct the horizontal separator
+        String hSeparator=replicate('-',wTotal_p); 
+        uInt colPos=0;
+        colPos+=wPreAnt_p; hSeparator[colPos]='|'; colPos++;
+        for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
+            colPos+=wPol_p-1;
+            hSeparator[colPos]='|';
+            colPos++;
+        }
+        
+        logSink() << LogIO::NORMAL
+            << "Listing CalTable: " << calTableName()
+            << "   (" << typeName() << ") "
+            << LogIO::POST;
+        
+        String dateTimeStr0=MVTime(cs().time(spwID)(0)/C::day).string(MVTime::YMD,7);
+        String dateStr0=dateTimeStr0.substr(0,10);
+        
+        String headLine = "SpwID = " + String::toString(spwID) + ", "
+                          "Date = " + dateStr0 + ",  " +
+                          "CalTable = " + calTableName() + " (" + typeName() + "), " +
+                          "MS name = " + msName();
+        cout.setf(ios::left,ios::adjustfield);
+        cout << setw(wTotal_p) << headLine << endl
+             << replicate('-',wTotal_p) << endl;
+        scrRows+=2;
+        
+        // labels for flagged solutions
+        Vector<String> flagstr(2); 
+        flagstr(0)="F";
+        flagstr(1)=" ";
+        
+        //  Complex *g=cs().par(spw).data()+dochan;
+        //  Bool *gok=cs().parOK(spw).data()+dochan;
+        
+        Array<Complex> calGains;
+        calGains.reference(cs().par(spwID));
+        Array<Bool> calGainOK;
+        calGainOK.reference(cs().parOK(spwID));
+        IPosition gidx(4,0,0,0,0); // 4-element IPosition, all zeros
+        
+        // Setup a Vector of antenna ID's to ease the process of printing 
+        // multiple antenna columns per row.
+        uInt numAnts; // Hold number of antennas to be output.
+        Vector<Int> pAntids(cs().nElem()); // Vector of antenna ID's.
+        if (uantids.nelements()==0) { // Print all antennas.
+            numAnts = cs().nElem(); 
+            for(uInt i=0; i< numAnts; i++) { // Fill pAntids with all antenna IDs.
+                pAntids[i] = i;
+            }
+        } else { // Use the user-specified antenna ID's.
+            numAnts = uantids.nelements(); 
+            pAntids.resize(numAnts);
+            pAntids = uantids;
+        }
+        
+        // loop over antenna elements
+        for (uInt iElem=0;iElem<numAnts;iElem+=numAntCols) { 
+            gidx(2)=pAntids(iElem);
+            
+            Bool header=True; // New antenna, require print header
+            
+            // If antenna element is among selected antennas, print it
+            if (uantids.nelements()==0 || anyEQ(uantids,pAntids(iElem))) {
+                
+                // Begin loop over time
+                for (Int itime=0;itime<cs().nTime(spwID);++itime) { 
+                    gidx(3)=itime;
+                    
+                    Int fldid(cs().fieldId(spwID)(itime));
+                    
+                    // Get date-time string
+                    String dateTimeStr=MVTime(cs().time(spwID)(itime)/C::day).string(MVTime::YMD,7);
+                    String dateStr=dateTimeStr.substr(0,10);
+                    String timeStr=dateTimeStr.substr(11,10);
+                    // Get field string
+                    String fldStr=(fldname(fldid));
+                    
+                    String tmp_timestr = timeStr; // tmp_ variables get reset during the loop
+                    String tmp_fldstr = fldStr; //
+                    
+                    // If no user-specified fields, or fldid is in user's list
+                    if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+                        
+                        // Set i/o flags for writing data
+                        cout << setiosflags(ios::fixed) << setiosflags(ios::right);
+                        
+                        // Loop over channels
+                        for (uInt iChan=startChan; iChan<=stopChan; iChan+=stepChan) {
+                            
+                            // If beginning new screen, print the header
+                            if (scrRows == 0 || header) {
+                                header=False;
+                                // Write Antenna line (put spaces over the time, field cols)
+                                for(uInt k=0; k<(wPreAnt_p); k++) { cout<<" "; }
+                                cout << "|";
+                                for(uInt k=0; (k<numAntCols) and (iElem+k<=numAnts-1); k++) {
+                                    String tAntName = " Ant = " + String(antname(pAntids(iElem+k)));
+                                    cout.setf(ios::left,ios::adjustfield);
+                                    cout << setw(wAntCol_p-1) << tAntName << "|";
+                                }
+                                cout << endl;    scrRows++;
+                                
+                                // Write part of header with no data
+                                scrRows += writeHeader(numAntCols, numAnts, iElem);
+                            }
+                            
+                            
+                            gidx(1)=iChan;
+                            // Write the Time and Field for each row
+                            cout << setw(wTime_p) << timeStr << " "
+                                 << setw(wField_p) << fldStr << " "
+                                 << setw(wChan_p) << iChan << "|";
+                            
+                            // Write data for each antenna column
+                            for (uInt kelem=iElem; (kelem<iElem+numAntCols) and (kelem<=numAnts-1); 
+                                 kelem++) {
+                                gidx(2)=pAntids(kelem);
+                                
+                                // Loop over polarization
+                                for (Int ipar=0;ipar<nPar();++ipar) {
+                                    gidx(0)=ipar; 
+                                    
+                                    // WRITE THE DATA
+                                    // amplitude
+                                    cout << setprecision(precAmp) << setw(wAmp_p) << abs(calGains(gidx)) << " "
+                                         // phase
+                                         << setprecision(precPhase) << setw(wPhase_p) << arg(calGains(gidx))*180.0/C::pi << " "
+                                         // flag
+                                         << flagstr(Int(calGainOK(gidx))) << " ";
+                                } // end ipar loop
+                                
+                            } // end kelem loop
+                            
+                            cout << resetiosflags(ios::right) << endl;
+                            isol=isol+numAntCols; scrRows++;
+                            
+                            // If at end of screen prompt user or new header
+                            if (maxScrRows>0 && (scrRows >= maxScrRows-1) ) { // scrRows counts from 0
+                                scrRows = 0; // signal a new page
+                                if (prompt) { // query the user, if we are interactive
+                                    string contStr;
+                                    cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
+                                    getline(cin,contStr);
+                                    if ( (contStr.compare(0,1,"q") == 0) or 
+                                         (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
+                                    if ( (contStr.compare(0,1,"a") == 0) or 
+                                         (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
+                                }
+                            }
+                        } // end iChan loop
+                        
+                    } // end if (field)
+                    
+                    if (endOutput) {break;} // break out of itime loop
+                    
+                } // itime
+                
+            } // end if (antenna)
+            
+            if (endOutput) {break;} // break out of ielem loop
+            
+        } // end iElem loop
+        
+        if (endOutput) {break;} // break out of spw loop
+        if (listfile!="") cout.rdbuf(sbuf); // restore cout
+        
+    } // end spw loop   
     
-      // Begin loop over time
-      for (Int itime=0;itime<cs().nTime(spw);++itime) { 
-        gidx(3)=itime;
-
-        Int fldid(cs().fieldId(spw)(itime));
-
-        // Get date-time string
-        String dateTimeStr=MVTime(cs().time(spw)(itime)/C::day).string(MVTime::YMD,7);
-        String dateStr=dateTimeStr.substr(0,10);
-        String timeStr=dateTimeStr.substr(11,10);
-        // Get field string
-        String fldStr=(fldname(fldid));
-
-        String tmp_timestr = timeStr; // tmp_ variables get reset during the loop
-        String tmp_fldstr = fldStr; //
-
-        // If no user-specified fields, or fldid is in user's list
-        if (ufldids.nelements()==0 || anyEQ(ufldids,fldid) ) {
+    cout << endl
+         << "Listed " << isol << " antenna solutions." 
+         << endl << endl;
          
-          // If beginning new screen, print the header
-          if (scrRows == 0 || header) {  //(irow%cs().nElem()==0) 
-            header=False;
-            
-            // Begin writing Antenna line (put spaces over the time, field cols)
-            for(uInt k=0; k<(wTime+1+wField); k++) { cout<<" "; }
-            // Finish antenna line
-            cout << "|";
-            for(uInt k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-              // Center antenna name between polarization columns
-              //  For now, the maximum antenna name length is 8. Could be as
-              //  high as 32-6=24.
-              // int antNameLength = ( antname(pAntids(ielem+k)).length() < 8)
-              //                     ? antname(pAntids(ielem+k)).length() : 8;
-              // float halfspace = ( 32 - 6 - antNameLength ) / 2.0; 
-              // // cout << antname(pAntids(ielem+k)).length() << "," << halfspace << "," << int(halfspace) << "," << int(halfspace+0.5);
-              // for(int j=1; j<=int(halfspace); j++) { cout<<" "; }
-              String tAntName = " Ant = " + String(antname(pAntids(ielem+k)));
-              cout.setf(ios::left,ios::adjustfield);
-              cout << setw(wAntCol-1) << tAntName << "|";
-            }
-            cout << endl;
-              
-              // Write time and field headings (only once)
-            cout << setiosflags(ios::left)
-                 << setw(wTime) << "Time"  << " "
-                 << setw(wField) << "Field" << "|";
-              
-            // Write Amp and Phase headings for each antenna column
-            cout.setf(ios::right, ios::adjustfield);
-            for(uInt k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-              cout << setw(wAmp)   << "Amp"   << " " 
-                   << setw(wPhase) << "Phs" << " "
-                   << "F" << " "
-                   << setw(wAmp)   << "Amp"   << " " 
-                   << setw(wPhase) << "Phs" << " "
-                   << "F" << "|";
-            }
-            cout << endl;
-            // Write delimiters
-            cout << hSeparator << endl;
-            /// for(uInt k=0; k<wTime; k++) { cout << "-"; } // time col
-            /// cout << " ";
-            /// for(uInt k=0; k<wField; k++) { cout << "-"; } // field col
-            /// for(int k=0; (k<numAntCols) and (ielem+k<=numAnts-1); k++) {
-            ///   cout << " " << AmpPhaseDel << " " << AmpPhaseDel;
-            /// }
-            /// cout << endl;
-            scrRows+=3;
-            // End of header
-          }
-          
-          cout << setw(wTime) << timeStr << " "
-               << setw(wField) << fldStr << "|";
-          // Set i/o flags for writing data
-          cout << setiosflags(ios::fixed) << setiosflags(ios::right);
-
-          // Write data for each antenna column
-          for (uInt kelem=ielem; (kelem<ielem+numAntCols) and (kelem<=numAnts-1); 
-               kelem++) {
-            gidx(2)=pAntids(kelem);
-            
-            // Loop over polarization
-            for (Int ipar=0;ipar<nPar();++ipar) {
-              gidx(0)=ipar; 
-
-              // WRITE THE DATA
-                   // amplitude
-		      cout << setprecision(precAmp) << setw(wAmp) << abs(calGains(gidx)) << " "
-                   // phase
-		           << setprecision(precPhase) << setw(wPhase) << arg(calGains(gidx))*180.0/C::pi << " ";
-                   // flag
-       		       cout << flagstr(Int(gok(gidx))) << " ";
-            }
-          }
-
-          cout << resetiosflags(ios::right) << endl;
-          isol=isol+numAntCols; scrRows++;
-
-          // If at end of screen, signal new page (new header)
-          if (maxScrRows>0 && (scrRows >= maxScrRows-1) ) { // scrRows counts from 0
-
-            // signal a new page
-            scrRows = 0;
-
-            // query the user, if we are interactive
-            if (prompt) {
-              string contStr;
-              cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
-              getline(cin,contStr);
-              if ( (contStr.compare(0,1,"q") == 0) or 
-                 (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
-              if ( (contStr.compare(0,1,"a") == 0) or 
-                 (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
-            }
-          }
-        } // end if (field)
-
-        if (endOutput) {break;} // break out of itime loop
-      } // itime
-
-    } // end if (antenna)
-
-    if (endOutput) {break;} // break out of ielem loop
-  } // ielem
-  cout << endl
-       << "Listed " << isol << " antenna solutions." 
-       << endl << endl;
-
-  // restore cout
-  if(listfile!="")
-    cout.rdbuf(sbuf);
-
 }// end function listCal
 
+int SolvableVisJones::writeHeader(const uInt numAntCols, 
+                                  const uInt numAnts,
+                                  const uInt iElem) {
+    uInt lineCount=0;
+    // Write time and field headings (only once)
+    cout << setiosflags(ios::left)
+         << setw(wTime_p) << "Time"  << " "
+         << setw(wField_p) << "Field" << " "
+         << setw(wChan_p) << "Chn" << "|";
+    
+    // Write Amp and Phase headings for each antenna column
+    cout.setf(ios::right, ios::adjustfield);
+    for(uInt k=0; (k<numAntCols) and (iElem+k<=numAnts-1); k++) {
+        cout << setw(wAmp_p)   << "Amp"   << " " 
+             << setw(wPhase_p) << "Phs" << " "
+             << "F" << " "
+             << setw(wAmp_p)   << "Amp"   << " " 
+             << setw(wPhase_p) << "Phs" << " "
+             << "F" << "|";
+    }
+    cout << endl;    lineCount++;
+    // Construct the horizontal separator
+    String hSeparator=replicate('-',wTotal_p); 
+    uInt colPos=0;
+    colPos+=wTime_p; hSeparator[colPos]='|'; colPos++;
+    colPos+=wField_p; hSeparator[colPos]='|'; colPos++;
+    colPos+=wChan_p; hSeparator[colPos]='|'; colPos++;
+    for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
+        colPos+=wPol_p-1;
+        hSeparator[colPos]='|';
+        colPos++;
+    }
+    // Write horizontal separator
+    cout << hSeparator << endl;   lineCount++;
+    return lineCount;
+} // end writeHeader
 
 // Globals
 
