@@ -243,6 +243,10 @@ public:
 	       const Quantity& fillValue=1.0,
 	       const Quantity& externalValue=0.0);
 
+  //make a mask image from regions
+  Bool regionmask(const String& maskimage, Record* imageRegRec, 
+		  Matrix<Quantity>& blctrcs, const Float& value=1.0);
+
   // Clip an image below some Stokes I threshold
   Bool clipimage(const String& clippedImage, const String& inputImage,
 		 const Quantity& threshold);

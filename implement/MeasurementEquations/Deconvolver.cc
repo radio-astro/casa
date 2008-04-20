@@ -96,7 +96,7 @@
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <synthesis/MeasurementEquations/IPLatConvEquation.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
-
+#include <synthesis/MeasurementEquations/Imager.h>
 
 #include <casa/System/PGPlotter.h>
 
@@ -1779,6 +1779,19 @@ Bool Deconvolver::boxmask(const String& boxmask,
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   }   
   return True;
+}
+
+Bool Deconvolver::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
+ 
+  LogIO os(LogOrigin("deconvolver", "regionmask()", WHERE));
+  if((!Table::isWritable(maskimage)) && (!dirty_p)) {
+    clone(maskimage, dirty_p->name());
+    PagedImage<Float> mim(maskimage);
+    mim.set(0.0);
+    mim.table().relinquishAutoLocks();
+  }
+  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, value);
+
 }
 
 // Fourier transform the model

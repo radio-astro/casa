@@ -2472,6 +2472,11 @@ Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Qua
   if(!Table::isWritable(maskimage)) {
     make(maskimage);
   }
+  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, value);
+
+}
+
+Bool Imager::regionToImageMask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
   PagedImage<Float> maskImage(maskimage);
   CoordinateSystem cSys=maskImage.coordinates();
   maskImage.table().markForDelete();

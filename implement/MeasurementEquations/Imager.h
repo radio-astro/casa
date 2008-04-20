@@ -293,6 +293,10 @@ class Imager
   //value is the value of the mask pixels
   Bool regionmask(const String& maskimage, Record* imageRegRec, 
 		  Matrix<Quantity>& blctrcs, const Float& value=1.0);
+
+  static Bool regionToImageMask(const String& maskimage, Record* imageRegRec, 
+				Matrix<Quantity>& blctrcs, 
+				const Float& value=1.0);
   // Clip on Stokes I
   Bool clipimage(const String& image, const Quantity& threshold);
 
