@@ -3257,7 +3257,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
         logSink() << LogIO::DEBUG1 << "For Spw ID " << spwID 
                   << ": Number of spectral channels in calibration table = "
                   << cs().par(spwID).shape()(1) << LogIO::POST;
-        const uInt nchan= (uInt)cs().par(spwID).shape()(1);
+        const uInt nchan= (uInt)cs().par(spwID).shape()(1); // number of channels in Cal table
 
         // Extract channel info from uchanids
         Int stepChan   = RowUchanids(3);
@@ -3265,15 +3265,29 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
         else if (stepChan < 0) {
             throw(AipsError("Stepping backwards through channels not supported."));
         }
-        uInt startChan = RowUchanids(1);
-        uInt stopChan  = RowUchanids(2);
-        if ((startChan == 0) && (stopChan == 0)) { 
-            stopChan = nchan - 1; // include all channels (default)
-        }
-        else if (startChan > stopChan) {
+        // Currently, the Cal table channels are a subset of the MS channels.
+        // Therefore, subtract the Cal table startChan from the selected channels.
+        uInt startChan = RowUchanids(1) - cs().startChan()(spwID);
+        uInt stopChan  = RowUchanids(2) - cs().startChan()(spwID);
+        uInt numChans = ((stopChan - startChan) / stepChan) + 1; // number of channels selected
+        if (numChans >= nchan) {
+            // Default listing (spw='') is of all channels.  Calibrater::listCal catches
+            // this condition and selected all channels in the MS.  It is possible,
+            // however, that the Cal table has fewer channels than the MS.  Hence the
+            // need to watch for numChans >= nchan.  Under this condition, *assume*
+            // all channels are desired.  When CalSelection is created, this will 
+            // not be needed.
+            logSink() << LogIO::NORMAL1 << "Appears that all Cal table channels are selected.  Listing all." << LogIO::POST;
+            startChan = 0;
+            stopChan = nchan - 1;
+        } else if (startChan < 0) {
+            logSink() << LogIO::DEBUG1 << "startChan < 0 is not allowed; startChan = "
+                      << startChan << LogIO::POST;
+            throw(AipsError("Start channel does not exist in Cal table.")); 
+        } else if (startChan > stopChan) {  // this error should be caught by MSSelection.
             throw(AipsError("Start channel must be less than or equal to stop channel."));
         }
-        uInt numChans = ((stopChan - startChan) / stepChan) + 1; 
+
         
         logSink() << LogIO::DEBUG1 << "For spwID " << spwID << endl
                   << "  startChan = " << startChan << endl
