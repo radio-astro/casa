@@ -42,7 +42,6 @@
 
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
-#include <casa/Containers/Record.h>
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -64,6 +63,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
+#include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
@@ -163,9 +163,12 @@
 
 #include <casa/sstream.h>
 
+
+
 #ifdef PABLO_IO
 #include "PabloTrace.h"
 #endif
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -262,6 +265,10 @@ traceEvent(1,"Entering imager::defaults",25);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
+  /*
+  QtApp::init();
+  plotter_p=simplePlotter(Plotter::DEFAULT);
+  */
 
 }
 
@@ -351,7 +358,9 @@ Imager &Imager::operator=(const Imager & other)
   if (pgplotter_p && this != &other) {
     *pgplotter_p = *(other.pgplotter_p);
   }
-
+  if (this != &other) {
+    plotter_p = other.plotter_p;
+  }
   return *this;
 }
 
@@ -6243,30 +6252,47 @@ Bool Imager::plotuv(const Bool rotate)
 	 << " arcsec" << LogIO::POST;
     }
     
-    PGPlotter plotter=getPGPlotter();
+
+    Char** lala=0;
+    Int lala1=0;
+    QApplication app(lala1,lala);
+    plotter_p=simplePlotter(Plotter::QWT);
+    /*PGPlotter plotter=getPGPlotter();
     plotter.env(-maxAbsUV*1.1, +maxAbsUV*1.1, -maxAbsUV*1.1, +maxAbsUV*1.1,
 		Int(1), Int(0));
     plotter.sci(1);
     plotter.pt(u,v,-1);
+    */
     if(rotate) {
-      plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
-		  +imageName()+" (rotated points in red)");
-      plotter.sci(2);
-      plotter.pt(uRotated, vRotated, -1);
+      //plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
+      //		  +imageName()+" (rotated points in red)");
+      //    plotter.sci(2);
+      // plotter.pt(uRotated, vRotated, -1);
+      plotter_p->setCanvasTitle("UV coverage for "
+				+imageName()+" (rotated points in red)");
+      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 8);
+      plotter_p->plotxy(uRotated, vRotated);
+
     }
     else {
-      plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
-		  +imageName()+" (conjugate points in red)");
+      //plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
+      //		  +imageName()+" (conjugate points in red)");
+      plotter_p->setWindowTitle("UV-plot");
+      plotter_p->setCanvasTitle("UV coverage for "
+				+imageName()+" (conjugate points in red)");
+      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
+      plotter_p->setLine("black",PlotLine::NOLINE);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "black", 3);
+      plotter_p->plotxy(u,v);
       u=u*Float(-1.0);
       v=v*Float(-1.0);
-      plotter.sci(2);
-      plotter.pt(u,v,-1);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 3);
+      plotter_p->plotxy(u,v);
     }
-    plotter.sci(1);
-    plotter.iden();
     
     this->unlock();
-    return True;
+    return app.exec();
   } catch (AipsError x) {
     this->unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
@@ -8266,7 +8292,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
    return False;
    
    }
+   vwrCln.setButtonState(interactiveState_p);
    Int val=vwrCln.go(niter, ncycles, thresh);
+   vwrCln.getButtonState(interactiveState_p);
    return val;
 }
 

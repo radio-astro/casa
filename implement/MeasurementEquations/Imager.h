@@ -29,6 +29,7 @@
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
+#include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
@@ -42,6 +43,7 @@
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
+#include <graphics/GenericPlotter/SimplePlotter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -55,7 +57,6 @@ class File;
 class VPSkyJones;
 class PGPlotter;
 class EPJones;
-
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
@@ -668,8 +669,8 @@ protected:
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
   Bool doPointing, doPBCorr;
-
-
+  SimplePlotterPtr plotter_p;
+  Record interactiveState_p;
 
 
 };
