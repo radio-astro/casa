@@ -1781,11 +1781,17 @@ Bool Deconvolver::boxmask(const String& boxmask,
   return True;
 }
 
+//regionmask
 Bool Deconvolver::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
  
   LogIO os(LogOrigin("deconvolver", "regionmask()", WHERE));
-  if((!Table::isWritable(maskimage)) && (!dirty_p)) {
-    clone(maskimage, dirty_p->name());
+  if(!dirty_p) {
+    os << LogIO::SEVERE << "Program logic error: Dirty image pointer dirty_p not yet set"
+       << LogIO::POST;
+    return False;
+  }
+  if(!Table::isWritable(maskimage)) {
+    if (!clone(dirty_p->name(),maskimage)) return False;
     PagedImage<Float> mim(maskimage);
     mim.set(0.0);
     mim.table().relinquishAutoLocks();
@@ -1920,11 +1926,19 @@ Bool Deconvolver::convolve(const String& convolvedName,
 Bool Deconvolver::makegaussian(const String& gaussianName, Quantity& mbmaj, Quantity& mbmin,
 			       Quantity& mbpa, Bool normalizeVolume)
 {
+  LogIO os(LogOrigin("Deconvolver", "makegaussian()", WHERE));
+  if(!dirty_p) {
+    os << LogIO::SEVERE << "Program logic error: Dirty image pointer dirty_p not yet set"
+       << LogIO::POST;
+    return False;
+  }
   PagedImage<Float> gaussian(dirty_p->shape(),
 			     dirty_p->coordinates(),
 			     gaussianName);
   gaussian.set(0.0);
   uInt naxis=gaussian.shape().nelements();
+  // StokesImageUnil::Convolve requires an image with four axes
+  /* 
   if(naxis==2){
     IPosition center = gaussian.shape()/2;
     gaussian.putAt(1.0, center);
@@ -1935,6 +1949,13 @@ Bool Deconvolver::makegaussian(const String& gaussianName, Quantity& mbmaj, Quan
       center(2) = k;
       gaussian.putAt(1.0, center);
     }
+  }
+  */
+  if(naxis<4){
+    os << LogIO::SEVERE << "Input dirty image: naxis=" <<naxis
+       << ". Four axes are required."<< LogIO::POST;
+    return False;
+
   }
   else if(naxis==4){
     IPosition center(4, Int((nx_p/4)*2), Int((ny_p/4)*2),0,0);
