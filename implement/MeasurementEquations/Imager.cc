@@ -2234,6 +2234,9 @@ Bool Imager::setvp(const Bool dovp,
   
   os << "Setting voltage pattern parameters" << LogIO::POST;
   
+  if(!dovp && !vp_p)
+    delete vp_p;
+  vp_p=0;
   doVP_p=dovp;
   doDefaultVP_p = doDefaultVPs;
   vpTableStr_p = vpTable;
@@ -4281,12 +4284,15 @@ Bool Imager::clean(const String& algorithm,
 		   const String& complist,
 		   const Vector<String>& mask,
 		   const Vector<String>& image,
-		   const Vector<String>& residual)
+		   const Vector<String>& residual,
+		   const Vector<String>& psfnames)
 {
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::clean",22);
 #endif
-  Bool converged=True;  
+  Bool converged=True; 
+
+ 
   if(!valid())
     {
 
@@ -4611,6 +4617,7 @@ Bool Imager::clean(const String& algorithm,
       sm_p->solveResiduals(*se_p, True);
       
     }
+    savePSF(psfnames);
     redoSkyModel_p=False;
     restoreImages(image);
     writeFluxScales(fluxscale_p);
@@ -5294,6 +5301,7 @@ Bool Imager::nnls(const String&,  const Int niter, const Float tolerance,
     // Get the PSF fit while we are here
     StokesImageUtil::FitGaussianPSF(sm_p->PSF(0), bmaj_p, bmin_p, bpa_p);
     beamValid_p=True;
+   
     
     // Restore the image
     restoreImages(image);
@@ -6198,6 +6206,7 @@ Bool Imager::plotuv(const Bool rotate)
       os << "UVW will be rotated to specified phase center" << LogIO::POST;    
     }
     
+    
     Vector<Float> u(nVis); u=0.0;
     Vector<Float> v(nVis); v=0.0;
     Vector<Float> uRotated(nVis); uRotated=0.0;
@@ -6282,17 +6291,18 @@ Bool Imager::plotuv(const Bool rotate)
       plotter_p->setCanvasTitle("UV coverage for "
 				+imageName()+" (conjugate points in red)");
       plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
-      plotter_p->setLine("black",PlotLine::NOLINE);
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "black", 3);
-      plotter_p->plotxy(u,v);
-      u=u*Float(-1.0);
-      v=v*Float(-1.0);
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 3);
-      plotter_p->plotxy(u,v);
+      plotter_p->showLines(False);
+      plotter_p->showSymbols(True);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 6);
+      plotter_p->plotxy(u,v,True);
+      Vector<Float> u1=u*Float(-1.0);
+      Vector<Float> v1=v*Float(-1.0);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "green", 6);
+      plotter_p->plotxy(u1,v1, True);
+      app.exec();
     }
     
     this->unlock();
-    return app.exec();
   } catch (AipsError x) {
     this->unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
@@ -6522,16 +6532,23 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
   
   this->lock();
   try {
-    if(!assertDefinedImageParameters()) {this->unlock(); return False;}
+    
     
     os << "Plotting IMAGING_WEIGHT column for currently selected data" << LogIO::POST;
     
     VisIter& vi(vs_p->iter());
     VisBuffer vb(vi);
     
-    PGPlotter plotter=getPGPlotter();
+    Char** lala=0;
+    Int lala1=0;
+    QApplication app(lala1,lala);
+    plotter_p=simplePlotter(Plotter::QWT); 
+
+
+    //PGPlotter plotter=getPGPlotter();
     
     if(gridded) {
+      if(!assertDefinedImageParameters()) {this->unlock(); return False;}
       // First find the gridded weights
       Float uscale, vscale;
       Int uorigin, vorigin;
@@ -6589,6 +6606,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       
       Float umax=Float(nx_p/2)/uscale;
       Float vmax=Float(ny_p/2)/vscale;
+      /*
       plotter.env(-umax, +umax, -vmax, +vmax, Int(0), Int(0));
       Vector<Float> tr(6); tr=0.0;
       tr(0)=-umax; tr(1)=1.0/uscale;
@@ -6597,7 +6615,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       plotter.lab("U (wavelengths)", "V (wavelengths)", "Gridded weights for "
 		  +imageName());
       plotter.iden();
-      
+      */
     }
     else {
       
@@ -6672,7 +6690,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	os << LogIO::SEVERE << "Maximum uv distance is zero" << LogIO::POST;
 	return False;
       }
-      
+      /*
       plotter.env(0.0, +maxuvDistance*1.15, 0, +maxWeight*1.1,
 		  Int(0), Int(0));
       plotter.lab("UVDistance (wavelengths)", "Weights", "Weights for "
@@ -6680,7 +6698,19 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       plotter.sci(1);
       plotter.pt(uvDistance,weights,-1);
       plotter.iden();
+      */
+      plotter_p->setWindowTitle("ImagingWeight-plot");
+      plotter_p->setCanvasTitle("Weights for "+imageName());
+      plotter_p->setAxesLabels("UVDistance (wavelengths)","Weights" );
+      plotter_p->showLines(False);
+      plotter_p->showSymbols(True);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
+      plotter_p->plotxy(uvDistance,weights);
+      app.exec();
+
     }
+    
+
     
     this->unlock();
     return True;
@@ -8318,6 +8348,25 @@ void Imager::setSkyEquation(){
   */
   se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
   return;
+}
+
+void Imager::savePSF(const Vector<String>& psf){
+
+  if( (psf.nelements() > 0) && (Int(psf.nelements()) <= sm_p->numberOfModels())){
+
+    for (Int thismodel=0;thismodel<Int(psf.nelements());++thismodel) {
+      if(removeTable(psf(thismodel))) {
+	PagedImage<Float> psfimage(images_p[thismodel]->shape(),
+				   images_p[thismodel]->coordinates(),
+				   psf(thismodel));
+	psfimage.copyData(sm_p->PSF(thismodel));
+      }
+    }
+
+
+
+  }  
+
 }
 
 } //# NAMESPACE CASA - END

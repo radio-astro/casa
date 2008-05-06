@@ -335,7 +335,8 @@ class Imager
 	     const String& complist,
 	     const Vector<String>& mask,
 	     const Vector<String>& restored,
-	     const Vector<String>& residual);
+	     const Vector<String>& residual,
+	     const Vector<String>& psf=Vector<String>(0));
   
   // MEM algorithm
   Bool mem(const String& algorithm,
@@ -630,6 +631,7 @@ protected:
     {sm_p = new ClarkCleanImageSkyModel(); return;};
   virtual void setSkyEquation();
     
+  virtual void savePSF(const Vector<String>& psf);
 
   String frmtTime(const Double time);
 
