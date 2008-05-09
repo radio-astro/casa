@@ -199,6 +199,10 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
     os << "Model 1 is not solveable!" << LogIO::EXCEPTION;
   }
   
+  if(numberIterations() < 1){
+    return True;
+  }
+
   Int nx=image(0).shape()(0);
   Int ny=image(0).shape()(1);
   Int npol=image(0).shape()(2);
@@ -223,7 +227,9 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   Matrix<Float>* lmask= new Matrix<Float>(1,1); 
   lmask->set(1.0);
   Int xbeg, xend;
-  Int ybeg, yend; 
+  Int ybeg, yend;
+  Int newNx=nx;
+  Int newNy=ny;
   //default clean support
   xbeg=nx/4; 
   xend=3*nx/4-1;
@@ -251,15 +257,19 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
 		       IPosition(4, 0, 1, 2, 3));
     maskli= new RO_LatticeIterator<Float>(mask(0), mls);
     maskli->reset();
-    lmask=makeMaskMatrix(nx, ny, *maskli, xbeg, 
+    lmask=makeMaskMatrix(nx, ny, newNx, newNy, *maskli, xbeg, 
 			 xend, ybeg, yend); 
   }
   else {
     domask=False;
   }
   
- 
-  
+  //Some variables if we change the image size
+  IPosition newshp(4, newNx, newNy, 1,1);
+  Array<Float> newData;
+  Array<Float> newStep;
+  Array<Float> newPsf;
+  //------------------
   Int chan=0;
   for (imageStepli.reset(),imageli.reset(),psfli.reset();
        !imageStepli.atEnd();
@@ -269,10 +279,11 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       (*maskli)++;
       if(lmask) delete lmask;
       lmask=0;
-      lmask=makeMaskMatrix(nx, ny, *maskli, xbeg, 
+      lmask=makeMaskMatrix(nx, ny, newNx, newNy, *maskli, xbeg, 
 			   xend, ybeg, yend);       
     }
 
+    //cout << "newNx " << newNx << endl;
     
     // Make IPositions and find position of peak of PSF
     IPosition psfposmax(psfli.cursor().ndim());
@@ -288,14 +299,31 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       os<<"No data or blank mask for this channel: skipping"<<LogIO::POST;
     }
     else {
+      
       Bool delete_iti, delete_its, delete_itp, delete_itm;
       const Float *lpsf_data, *lmask_data;
       Float *limage_data, *limageStep_data;
-      limage_data=imageli.rwCursor().getStorage(delete_iti);
-      limageStep_data=imageStepli.rwCursor().getStorage(delete_its);
       lmask_data=lmask->getStorage(delete_itm);
-      lpsf_data=psfli.cursor().getStorage(delete_itp);
-      
+      if(newNx==nx){
+	limage_data=imageli.rwCursor().getStorage(delete_iti);
+	limageStep_data=imageStepli.rwCursor().getStorage(delete_its);
+	lpsf_data=psfli.cursor().getStorage(delete_itp);
+      }
+      else{
+	IPosition blc(4, (newNx-nx)/2, (newNy-ny)/2, 0,0);
+	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, 0,0);
+	IPosition newshp(4, newNx, newNy, 1,1);
+	newData.resize(newshp);
+	newStep.resize(newshp);
+	newPsf.resize(newshp);
+	newData.set(0.0); newStep.set(0.0), newPsf.set(0.0);
+	newData(blc,trc).assign(imageli.rwCursor());
+	newStep(blc,trc).assign(imageStepli.rwCursor());
+	newPsf(blc,trc).assign(psfli.cursor());
+	limage_data=newData.getStorage(delete_iti);
+	limageStep_data=newStep.getStorage(delete_its);
+	lpsf_data=newPsf.getStorage(delete_itp);
+      }
       Int niter=numberIterations();
       Float g=gain();
       Float thres=threshold();
@@ -316,16 +344,27 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       Float cycleSpeedup = -1; // ie, ignore it
       hclean(limage_data, limageStep_data,
 	     (Float*)lpsf_data, &domaskI, (Float*)lmask_data,
-	     &nx, &ny, &npol,
+	     &newNx, &newNy, &npol,
 	     &fxbeg, &fxend, &fybeg, &fyend, &niter,
 	     &starting_iteration, &ending_iteration,
 	     &g, &thres, &cycleSpeedup,
 	     (void*) &HogbomCleanImageSkyModelmsgput,
 	     (void*) &HogbomCleanImageSkyModelstopnow);
-      imageli.rwCursor().putStorage (limage_data, delete_iti);
-      imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
+      if(nx==newNx){
+	imageli.rwCursor().putStorage (limage_data, delete_iti);
+	imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
+	psfli.cursor().freeStorage (lpsf_data, delete_itp);
+      }
+      else{
+	IPosition blc(4, (newNx-nx)/2, (newNy-ny)/2, 0,0);
+	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, 0,0);
+	newData.putStorage(limage_data, delete_iti);
+	newStep.putStorage(limageStep_data, delete_its);
+	newPsf.freeStorage(lpsf_data, delete_itp);
+	imageli.rwCursor().assign(newData(blc,trc));
+	imageStepli.rwCursor().assign(newStep(blc,trc));
+      }
       lmask->freeStorage (lmask_data, delete_itm);
-      psfli.cursor().freeStorage (lpsf_data, delete_itp);
       Float residualmax, residualmin;
       minMax(residualmin, residualmax, imageStepli.cursor());
       residualmax=max(residualmax, abs(residualmin));
@@ -343,15 +382,19 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
 };
 
 Matrix<Float>* HogbomCleanImageSkyModel::makeMaskMatrix(const Int& nx, 
-						       const Int& ny, 
-						       RO_LatticeIterator<Float>& maskIter,
-						       Int& xbeg,
-						       Int& xend,
-						       Int& ybeg,
-						       Int& yend) {
+						       const Int& ny,
+							Int& newNx, Int& newNy,
+							RO_LatticeIterator<Float>& maskIter,
+							Int& xbeg,
+							Int& xend,
+							Int& ybeg,
+							Int& yend) {
 
   LogIO os(LogOrigin("HogbomCleanImageSkyModel","makeMaskMatrix",WHERE)); 
 
+
+  newNx=nx;
+  newNy=ny;
   xbeg=nx/4;
   ybeg=ny/4;
   
@@ -388,14 +431,33 @@ Matrix<Float>* HogbomCleanImageSkyModel::makeMaskMatrix(const Int& nx,
   }
   // Now have possible BLC. Make sure that we don't go over the
   // edge later
+  Bool larger_quarter=False;
   if((xend - xbeg)>nx/2) {
-    xbeg=nx/4-1; //if larger than quarter take inner of mask
-    os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
+    //xbeg=nx/4-1; //if larger than quarter take inner of mask
+    //os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
+    larger_quarter=True;
   } 
   if((yend - ybeg)>ny/2) { 
-    ybeg=ny/4-1;
-    os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
+    //ybeg=ny/4-1;
+    //os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
+    larger_quarter=True;
   }  
+  if(larger_quarter){
+    newNx=2*nx;
+    newNy=2*ny;
+    Matrix<Float> * newMask= new Matrix<Float>(newNx, newNy);
+    newMask->set(0.0);
+    IPosition blc(2, (newNx-nx)/2, (newNy-ny)/2);
+    IPosition trc(2, (newNx+nx)/2-1, (newNy+ny)/2-1);
+    ((*newMask)(blc,trc)).assign(*mask);
+    delete mask;
+    mask=newMask;
+    xbeg=xbeg+(newNx-nx)/2;
+    ybeg=ybeg+(newNy-ny)/2;
+    xend=xend+(newNx-nx)/2;
+    yend=yend+(newNy-ny)/2;
+  }
+  
   xend=min(xend,xbeg+nx/2-1);
   yend=min(yend,ybeg+ny/2-1);   
   

@@ -81,7 +81,9 @@ public:
   // Solve for this SkyModel
   virtual Bool solve (SkyEquation& me);
   Matrix<Float>* makeMaskMatrix(const Int& nx, 
-				const Int& ny, 
+				const Int& ny,
+				Int& newNx,
+				Int& newNy,
 				RO_LatticeIterator<Float>& maskIter,
 				Int& xbeg,
 				Int& xend,

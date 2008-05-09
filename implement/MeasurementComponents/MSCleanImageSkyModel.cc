@@ -93,6 +93,11 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   //Make the PSF
   if(!donePSF_p)
     makeApproxPSFs(se);
+
+  if(numberIterations() <1){
+    return True;
+  }
+  
   
   if(!isSolveable(0)) {
     os << "Model 1 is not solveable!" << LogIO::EXCEPTION;

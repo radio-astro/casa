@@ -98,8 +98,8 @@ public:
 
   //make a mask sub-lattice
 
-  SubLattice<Float>* makeMaskSubLat(const Int& nx, 
-				    const Int& ny, 
+  Lattice<Float>* makeMaskSubLat(const Int& nx, 
+				 const Int& ny, Int& newNx, Int& newNy,
 				    RO_LatticeIterator<Float>& maskIter,
 				    Int& xbeg, Int& xend, 
 				    Int& ybeg, Int& yend);

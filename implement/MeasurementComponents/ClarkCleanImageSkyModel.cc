@@ -75,12 +75,20 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   //Make the PSF
   if(!donePSF_p)
     makeApproxPSFs(se);
+
+  if(numberIterations() < 1){
+
+    return True;
+  }
   
   Int nx=image(0).shape()(0);
   Int ny=image(0).shape()(1);
   Int npol=image(0).shape()(2);
   Int nchan=image(0).shape()(3);
   
+  Int newNx=nx;
+  Int newNy=ny;
+
   Int xbeg, xend, ybeg, yend;
   //default clean box
   xbeg=nx/4; 
@@ -91,7 +99,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   Bool isCubeMask=False; 
   //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
   
-  SubLattice<Float>* mask_sl = 0;
+  Lattice<Float>* mask_sl = 0;
   RO_LatticeIterator<Float>* maskli = 0;
   
   if(hasMask(0)) {
@@ -117,7 +125,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 		       IPosition(4, 0, 1, 3, 2));
     maskli= new RO_LatticeIterator<Float>(mask(0), mls);
     maskli->reset();
-    mask_sl=makeMaskSubLat(nx, ny, *maskli, xbeg, xend, 
+    mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, xend, 
 			   ybeg, yend);
   }
 
@@ -127,7 +135,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       (*maskli)++;
       if(mask_sl) delete mask_sl;
       mask_sl=0;
-      mask_sl=makeMaskSubLat(nx, ny, *maskli, xbeg, 
+      mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, 
 			     xend, ybeg, yend);       
     }
     LCBox imagebox(IPosition(4, xbeg, ybeg, 0, ichan), 
@@ -136,15 +144,41 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     LCBox psfbox(IPosition(4, 0, 0, 0, ichan), 
 		 IPosition(4, nx-1, ny-1, 0, ichan),
 		 PSF(0).shape());
+
+    SubLattice<Float> psf_sl(PSF(0), psfbox, False);
+    SubLattice<Float>  residual_sl(residual(0), imagebox, True);
+    SubLattice<Float>  model_sl=SubLattice<Float>   (image(0), imagebox, True);
     
-    SubLattice<Float>  psf_sl (PSF(0), psfbox, False);
-    SubLattice<Float>  residual_sl (residual(0), imagebox, True);
-    SubLattice<Float>  model_sl (image(0), imagebox, True);
+    
+    ArrayLattice<Float> psftmp;
+    /*
+    ArrayLattice<Float> residtmp;
+    */
+    //cout << "newNx " << newNx << endl;
+
+    if(nx != newNx){
+      cout << " into making new psf " << endl;
+
+      psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
+      psftmp.set(0.0);
+      Array<Float> tmparr=psf_sl.get();
+      psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
+      psf_sl=SubLattice<Float>(psftmp, True);
+      //residtmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
+      //residtmp.set(0.0);
+      //tmparr=residual_sl.get();
+      //residtmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
+      //residual_sl=SubLattice<Float>(residtmp, True);
+
+    }
 
     TempLattice<Float> dirty_sl( residual_sl.shape());
     dirty_sl.copyData(residual_sl);
     TempLattice<Float> localmodel(model_sl.shape());
     localmodel.set(0.0);
+
+    if(mask_sl)
+      cout << "mask shpe " << mask_sl->shape() << "  model shp " << localmodel.shape() << endl;
 
     Float psfmax;
     {
@@ -181,8 +215,10 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       os << "Clean used " << cleaner.numberIterations() << " iterations" 
 	 << " to get to a max residual of " << cleaner.threshold() 
 	 << LogIO::POST;
+
       LatticeExpr<Float> expr= model_sl + localmodel; 
       model_sl.copyData(expr);
+      
  
       converged =  (cleaner.getMaxResidual() < threshold()) 
 	|| (cleaner.numberIterations()==0);
@@ -201,8 +237,9 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   return(converged);
 };
 
-SubLattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx, 
+Lattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx, 
 							    const Int& ny, 
+							Int& newNx, Int& newNy,
 							    RO_LatticeIterator<Float>& maskIter,
 							   Int& xbeg,
 							   Int& xend,
@@ -211,6 +248,9 @@ SubLattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
 
   LogIO os(LogOrigin("ClarkCleanImageSkyModel","makeMaskSubLat",WHERE)); 
 
+
+  newNx=nx;
+  newNy=ny;
   SubLattice<Float>* mask_sl = 0;
   xbeg=nx/4;
   ybeg=ny/4;
@@ -218,10 +258,8 @@ SubLattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
   xend=xbeg+nx/2-1;
   yend=ybeg+ny/2-1;  
   Matrix<Float> mask= maskIter.matrixCursor();
-  // ignore mask if none exists
   if(max(mask) < 0.000001) {
-    //os << "Mask seems to be empty; will CLEAN inner quarter" 
-    //   << LogIO::WARN;
+    //zero mask ....
     return mask_sl;
   }
   // Now read the mask and determine the bounding box
@@ -245,33 +283,49 @@ SubLattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
   }
   // Now have possible BLC. Make sure that we don't go over the
   // edge later
+  Bool larger_quarter=False;
   if((xend - xbeg)>nx/2) {
-    xbeg=nx/4-1; //if larger than quarter take inner of mask
-    os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
+    // xbeg=nx/4-1; //if larger than quarter take inner of mask
+    //os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
+    larger_quarter=True;
   } 
   if((yend - ybeg)>ny/2) { 
-    ybeg=ny/4-1;
-    os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
+    //ybeg=ny/4-1;
+    //os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
+    larger_quarter=True;
   }  
+
+
   xend=min(xend,xbeg+nx/2-1);
   yend=min(yend,ybeg+ny/2-1); 
   
 
   
   if ((xend > xbeg) && (yend > ybeg) ) {
+
     IPosition latshape(4, mask.shape()(0), mask.shape()(1), 1,1);
     ArrayLattice<Float> arrayLat(latshape);
     LCBox maskbox (IPosition(4, xbeg, ybeg, 0, 0), 
 		   IPosition(4, xend, yend, 0, 0), 
-		   latshape);
-    arrayLat.putSlice(mask, IPosition(4, 0, 0, 0, 0));
-    mask_sl = new SubLattice<Float> (arrayLat, maskbox, False);
+    		   latshape);
+    
+    arrayLat.putSlice(mask, IPosition(4,0,0,0,0));
+    mask_sl=new SubLattice<Float> (arrayLat, maskbox, False);
+    
 
 
   }
   
-
-return mask_sl;
+  if(larger_quarter){
+    newNx=2*nx;
+    newNy=2*ny;
+    /*xbeg=xbeg+(newNx-nx)/2;
+    ybeg=ybeg+(newNy-ny)/2;
+    xend=xend+(newNx-nx)/2;
+    yend=yend+(newNy-ny)/2;
+    */
+  }
+  return mask_sl;
 }
 
 

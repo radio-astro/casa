@@ -275,6 +275,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       makeNewtonRaphsonStep(se, False);
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
+    if(numberIterations() < 1){
+      // Why waste the time to set up
+      return True;
+
+    }
+
     if(0) {
       ostringstream name;
       name << "Residual" << cycle;
