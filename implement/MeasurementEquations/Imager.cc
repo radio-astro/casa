@@ -163,6 +163,10 @@
 
 #include <casa/sstream.h>
 
+#include <sys/types.h>
+#include <unistd.h>
+
+using namespace std;
 
 
 #ifdef PABLO_IO
@@ -5156,13 +5160,24 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
 	    //
-	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel)) && (scaleType_p=="NONE")) {
-	      LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
-					0.0,(restored/(sm_p->fluxScale(thismodel)))));
-	      restored.copyData(le);
-	      LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
-					0,(residIm/(sm_p->fluxScale(thismodel)))));
-	      residIm.copyData(le1);
+	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
+	      if(scaleType_p=="NONE"){
+		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
+		restored.copyData(le);
+		LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+					   0,(residIm/(sm_p->fluxScale(thismodel)))));
+		residIm.copyData(le1);
+	      }
+	      Vector<String> maskNames=sm_p->fluxScale(thismodel).regionNames(RegionHandler::Masks);
+	      if(maskNames.nelements() >0){
+		ImageRegion imreg=sm_p->fluxScale(thismodel).getRegion(maskNames[0]);
+		ImageRegion outreg=restored.makeMask(maskNames[0], False, True);
+		LCRegion& outmask=outreg.asMask();
+		outmask.put(imreg.asMask().get());
+		restored.defineRegion(maskNames[0], outreg, RegionHandler::Masks, True);
+		restored.setDefaultMask(maskNames[0]);
+	      }
 
 	    }
 	    
@@ -6173,7 +6188,12 @@ Bool Imager::plotuv(const Bool rotate)
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "plotuv()", WHERE));
-  
+  /*
+  pid_t pId = fork();
+
+  if(pId==0){
+  */
+  if(1){
   this->lock();
   try {
     os << "Plotting uv coverage for currently selected data" << LogIO::POST;
@@ -6303,12 +6323,24 @@ Bool Imager::plotuv(const Bool rotate)
     }
     
     this->unlock();
-  } catch (AipsError x) {
+    //exit(0);
+  } 
+  catch (AipsError x) {
     this->unlock();
+    //exit(0);
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
+    
+  } 
+  catch (...) {
+    this->unlock();
+    //exit(0);
+    
   } 
   this->unlock();
+  }
+  
+
   return True;
 }
 
@@ -6603,10 +6635,11 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	   << LogIO::POST;
 	  return False;
       }
-      
+     
+      /* 
       Float umax=Float(nx_p/2)/uscale;
       Float vmax=Float(ny_p/2)/vscale;
-      /*
+     
       plotter.env(-umax, +umax, -vmax, +vmax, Int(0), Int(0));
       Vector<Float> tr(6); tr=0.0;
       tr(0)=-umax; tr(1)=1.0/uscale;

@@ -282,8 +282,6 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       lmask=makeMaskMatrix(nx, ny, newNx, newNy, *maskli, xbeg, 
 			   xend, ybeg, yend);       
     }
-
-    //cout << "newNx " << newNx << endl;
     
     // Make IPositions and find position of peak of PSF
     IPosition psfposmax(psfli.cursor().ndim());

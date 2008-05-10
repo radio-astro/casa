@@ -30,6 +30,7 @@
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
+#include <images/Images/ImageRegion.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 
@@ -54,10 +55,13 @@
 #include <casa/BasicSL/String.h>
 #include <lattices/Lattices/Lattice.h>
 #include <measures/Measures/UVWMachine.h>
+#include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/LatticeStepper.h>
+#include <lattices/Lattices/LCRegion.h>
 #include <casa/Containers/Block.h>
 
 #include <casa/Exceptions/Error.h>
@@ -1632,6 +1636,12 @@ void SkyEquation::fixImageScale()
 					 sm_->ggS(model)) ));
 	}
 	else{
+
+	  sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+	  ImageRegion maskReg = sm_->fluxScale(model).makeMask ("mask0", False, False);
+	  LCRegion& mask = maskReg.asMask();
+	 
+
 	  Int nXX=sm_->ggS(model).shape()(0);
 	  Int nYY=sm_->ggS(model).shape()(1);
 	  Int npola= sm_->ggS(model).shape()(2);
@@ -1639,10 +1649,19 @@ void SkyEquation::fixImageScale()
 	  IPosition blc(4,nXX, nYY, npola, nchana);
 	  IPosition trc(4, nXX, nYY, npola, nchana);
 	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
+
+	  //step over the channels first
+	  LatticeStepper maskStepper (sm_->fluxScale(model).shape(), 
+				       IPosition(4,nXX, nYY, 1, 1), 
+				       IPosition(4, 0, 1, 3, 2));
+	  LatticeIterator<Bool> maskIter(mask, maskStepper);
+	  maskIter.reset();
+
 	  //Those damn weights per plane can be wildly different so 
 	  //deal with it properly here
 	  for (Int j=0; j < npola; ++j){
 	    for (Int k=0; k < nchana ; ++k){
+	      
 	      blc(2)=j; trc(2)=j;
 	      blc(3)=k; trc(3)=k;
 	      Slicer sl(blc, trc, Slicer::endIsLast);
@@ -1659,8 +1678,15 @@ void SkyEquation::fixImageScale()
 				 (iif(ggSSub < (ggSMin2), 0.0, 
 				      planeMax) ));
 	      }
+	      ArrayLattice<Bool> maskSub(maskIter.rwCursor());
+	      maskSub.copyData((LatticeExpr<Bool>) 
+				 (iif(ggSSub < (planeMax), False, 
+				      True) ));
+	      ++maskIter;
 	    }
 	  }
+	  sm_->fluxScale(model).defineRegion ("mask0", maskReg, RegionHandler::Masks);
+	  
 	}	
       }
     }
