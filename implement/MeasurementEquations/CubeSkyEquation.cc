@@ -113,6 +113,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
+    static_cast<WProjectFT &>(ft).setConvFunc(sharedconvFunc);
     static_cast<WProjectFT &>(*ftm_p[0]).setConvFunc(sharedconvFunc);
     static_cast<WProjectFT &>(*iftm_p[0]).setConvFunc(sharedconvFunc);
     // For now have all the fields have WProjectFt machines....
