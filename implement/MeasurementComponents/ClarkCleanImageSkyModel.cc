@@ -151,34 +151,21 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     
     
     ArrayLattice<Float> psftmp;
-    /*
-    ArrayLattice<Float> residtmp;
-    */
-    //cout << "newNx " << newNx << endl;
 
     if(nx != newNx){
-      cout << " into making new psf " << endl;
 
       psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
       psftmp.set(0.0);
       Array<Float> tmparr=psf_sl.get();
       psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
       psf_sl=SubLattice<Float>(psftmp, True);
-      //residtmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
-      //residtmp.set(0.0);
-      //tmparr=residual_sl.get();
-      //residtmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
-      //residual_sl=SubLattice<Float>(residtmp, True);
-
+ 
     }
 
     TempLattice<Float> dirty_sl( residual_sl.shape());
     dirty_sl.copyData(residual_sl);
     TempLattice<Float> localmodel(model_sl.shape());
     localmodel.set(0.0);
-
-    if(mask_sl)
-      cout << "mask shpe " << mask_sl->shape() << "  model shp " << localmodel.shape() << endl;
 
     Float psfmax;
     {

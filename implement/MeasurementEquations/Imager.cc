@@ -6318,6 +6318,7 @@ Bool Imager::plotuv(const Bool rotate)
       Vector<Float> u1=u*Float(-1.0);
       Vector<Float> v1=v*Float(-1.0);
       plotter_p->setSymbol(PlotSymbol::CIRCLE, "green", 6);
+      plotter_p->showDefaultHandTools(True);
       plotter_p->plotxy(u1,v1, True);
       app.exec();
     }
@@ -6636,10 +6637,21 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	  return False;
       }
      
-      /* 
+      
       Float umax=Float(nx_p/2)/uscale;
       Float vmax=Float(ny_p/2)/vscale;
+
+      plotter_p->setWindowTitle("ImagingWeight-plot");
+      plotter_p->setCanvasTitle("Gridded weights for "+imageName());
+      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
+      plotter_p->showDefaultHandTools(True);
+      gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
+      //gwt=gwt*(Float(0xFFFFFF)/maxWeight);
+      plotter_p->rasterPlot(gwt, -umax, umax, -vmax, vmax);
+      
+      app.exec(); 
      
+      /*
       plotter.env(-umax, +umax, -vmax, +vmax, Int(0), Int(0));
       Vector<Float> tr(6); tr=0.0;
       tr(0)=-umax; tr(1)=1.0/uscale;
@@ -6738,6 +6750,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       plotter_p->showLines(False);
       plotter_p->showSymbols(True);
       plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
+      plotter_p->showDefaultHandTools(True);
       plotter_p->plotxy(uvDistance,weights);
       app.exec();
 
@@ -7736,6 +7749,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
     ArrayLattice<Bool> sdMask(model.getMask());
     mask.copyData( LatticeExpr<Float> (mask* ntrue(sdMask)*model));
     StokesImageUtil::MaskFrom(mask, mask, Quantity(0.0, "Jy"));
+    model.copyData( LatticeExpr<Float> (mask*model));
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
