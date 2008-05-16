@@ -154,6 +154,7 @@
 #include <display/Display/StandAloneDisplayApp.h>
 #include <display/QtViewer/QtClean.qo.h>
 
+
 #include <casa/OS/HostInfo.h>
 #include <casa/System/PGPlotter.h>
 
@@ -6492,7 +6493,13 @@ Bool Imager::plotvis(const String& type, const Int increment)
       return False;
     }
     
-    PGPlotter plotter=getPGPlotter();
+    //    PGPlotter plotter=getPGPlotter();
+
+
+    Char** lala=0;
+    Int lala1=0;
+    QApplication app(lala1,lala);
+    plotter_p=simplePlotter(Plotter::QWT); 
 
     Float Ymax(0.0);
 
@@ -6515,35 +6522,62 @@ Bool Imager::plotvis(const String& type, const Int increment)
 	if(maxModelAmp>Ymax)     Ymax = maxModelAmp;
 	if(maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
       }
-    
+    /*
       
     plotter.sci(1);
     plotter.env(0.0, +maxuvDistance*1.15, 0, +Ymax*1.15,
 		Int(0), Int(0));
     plotter.lab("UVDistance (wavelengths)", "Amplitude",
 		"Stokes I Visibility for "+imageName());
+    */
+
+     plotter_p->setWindowTitle("Vis-plot");
+     plotter_p->setCanvasTitle("Stokes I Visibility for "+imageName());
+     plotter_p->setAxesLabels("UVDistance (wavelengths)","Amplitude" );
+     plotter_p->showLines(False);
+     plotter_p->showSymbols(True);
+     plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
+     plotter_p->showDefaultHandTools(True);
+
+
     if(type=="all"||type==""||type.contains("observed")) {
-      plotter.sci(1);
-      plotter.text(1.02*maxuvDistance, 1.10*Ymax, "observed");
-      plotter.pt(uvDistance,amp,-1);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
+      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.10*Ymax, "observed");
+      PlotFontPtr fntptr=txtptr->font();
+      fntptr->setColor("blue");
+      txtptr->setFont(fntptr);
+
+      plotter_p->plotxy(uvDistance,amp);
+      
     }
     if(type=="all"||type==""||type.contains("corrected")) {
-      plotter.sci(2);
-      plotter.text(1.02*maxuvDistance, 1.05*Ymax, "corrected");
-      plotter.pt(uvDistance,correctedAmp,-1);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 4);
+      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.05*Ymax, "corrected");
+      PlotFontPtr fntptr=txtptr->font();
+      fntptr->setColor("red");
+      txtptr->setFont(fntptr);
+      plotter_p->plotxy(uvDistance,correctedAmp);
     }
     if(type=="all"||type==""||type.contains("model")) {
-      plotter.sci(7);
-      plotter.text(1.02*maxuvDistance, 1.00*Ymax, "model");
-      plotter.pt(uvDistance,modelAmp,-1);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "green", 4);
+      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.00*Ymax, "model");
+      PlotFontPtr fntptr=txtptr->font();
+      fntptr->setColor("green");
+      txtptr->setFont(fntptr);
+      plotter_p->plotxy(uvDistance,modelAmp);
     }
     if(type=="all"||type==""||type.contains("residual")) {
-      plotter.sci(4);
-      plotter.text(1.02*maxuvDistance, 0.95*Ymax, "residual");
-      plotter.pt(uvDistance,residualAmp,-1);
+      plotter_p->setSymbol(PlotSymbol::CIRCLE, "yellow", 4);
+      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 0.95*Ymax, "residual");
+      PlotFontPtr fntptr=txtptr->font();
+      fntptr->setColor("yellow");
+      txtptr->setFont(fntptr);
+      plotter_p->plotxy(uvDistance,residualAmp);
     }
-    plotter.sci(1);
-    plotter.iden();
+
+    app.exec();
+
+
     
     this->unlock();
     return True;
@@ -6833,10 +6867,15 @@ Bool Imager::clipvis(const Quantity& threshold)
 Bool Imager::plotsummary() 
 {
   
+  
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "plotsummary()", WHERE));
   
+
+  os << "NOT implemented "<< LogIO::WARN << LogIO::POST;
+  return False;
+
   this->lock();
   try {
     os << "Plotting field and spectral window ids for currently selected data" << LogIO::POST;
