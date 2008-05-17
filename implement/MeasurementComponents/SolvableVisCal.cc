@@ -3196,8 +3196,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 			                   const String& listfile,
                                const Int& maxScrRows) {
 
-    Int uSpwID = uchanids(0,0);
-    Int chan = uchanids(0,1);
+    //Int uSpwID = uchanids(0,0);
+    //Int chan = uchanids(0,1);
     
     // The number of spws; that is, the number of rows in matrix uchanids.
     // Actually, this is the number of spw/channel selections made in the
@@ -3245,65 +3245,83 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     // Default header info.
     logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;        
         
-    // Begin loop through SPWs
-    logSink() << LogIO::NORMAL1 << "Number of spectral window selections (may not be unique) = " 
+    logSink() << LogIO::DEBUG1 << "Number of spectral window selections (may not be unique) = " 
               << nSpws << LogIO::POST;
-    logSink() << LogIO::NORMAL2 << "Number of (unique) spws in cal table = "
+    logSink() << LogIO::DEBUG1 << "Number of (unique) spws in cal table = "
               << cs().nSpw() << LogIO::POST;
-    Bool spwError = False;
+    // Begin loop through SPWs
     for(uInt iUchanids = 0; iUchanids<nSpws; iUchanids++) {
         logSink() << LogIO::DEBUG2 << "At top of spwID loop" << LogIO::POST;
         Vector<Int> RowUchanids = uchanids.row(iUchanids);
         uInt spwID = RowUchanids(0); // Current spw ID
+        
         // If Spw is out of range for cal table, go to next spw.
-        if (spwID >= (uInt)cs().nSpw()) { 
-            logSink() << LogIO::DEBUG1 << "Spw " << spwID << " requested, but only "
-                      << cs().nSpw() << " spws are present in the cal table." << endl
-                      << "Skipping this spw request!" << LogIO::POST;
-        } else if (spwID<0 || cs().nTime(spwID)==0) {
+        if (spwID<0 || cs().nTime(spwID)==0) {
             String errMsg;
-            errMsg = "Nothing to list for specified SpwID: " 
+            errMsg = "Nothing to list for selected SpwID: " 
                             + errMsg.toString(spwID);
-            throw(AipsError(errMsg));
+            logSink() << LogIO::NORMAL1 << errMsg << LogIO::POST;
         } else { // Spw is not out of range.  Proceed with listing...
 
-            // Do specified channel, nominally
+            // Handle channel selection here.
             if(cs().par(spwID).shape()(1) < 0) 
                 throw(AipsError("Number of spectral channels in calibration table < 0!"));
+            const uInt nchan= (uInt)cs().par(spwID).shape()(1); // number of channels in Cal table
             logSink() << LogIO::DEBUG1 << "For Spw ID " << spwID 
                       << ": Number of spectral channels in calibration table = "
-                      << cs().par(spwID).shape()(1) << LogIO::POST;
-            const uInt nchan= (uInt)cs().par(spwID).shape()(1); // number of channels in Cal table
+                      << nchan << LogIO::POST;
 
-            // Extract channel info from uchanids
+            // Extract channel selection info from uchanids
             Int stepChan   = RowUchanids(3);
             if (stepChan == 0) { stepChan = 1; } // one channel at a time (default)
             else if (stepChan < 0) {
                 throw(AipsError("Stepping backwards through channels not supported."));
             }
-            // Currently, the Cal table channels are a subset of the MS channels.
-            // Therefore, subtract the Cal table startChan from the selected channels.
-            uInt startChan = RowUchanids(1) - cs().startChan()(spwID);
-            uInt stopChan  = RowUchanids(2) - cs().startChan()(spwID);
-            uInt numChans = ((stopChan - startChan) / stepChan) + 1; // number of channels selected
-            if (numChans >= nchan) {
-                // Default listing (spw='') is of all channels.  Calibrater::listCal catches
-                // this condition and selected all channels in the MS.  It is possible,
-                // however, that the Cal table has fewer channels than the MS.  Hence the
-                // need to watch for numChans >= nchan.  Under this condition, *assume*
-                // all channels are desired.  When CalSelection is created, this will 
-                // not be needed.
-                logSink() << LogIO::NORMAL1 << "Appears that all Cal table channels are selected.  Listing all." << LogIO::POST;
-                startChan = 0;
-                stopChan = nchan - 1;
-            } else if (startChan < 0) {
-                logSink() << LogIO::DEBUG1 << "startChan < 0 is not allowed; startChan = "
-                          << startChan << LogIO::POST;
-                throw(AipsError("Start channel does not exist in Cal table.")); 
-            } else if (startChan > stopChan) {  // this error should be caught by MSSelection.
+            // Cal table channels are a subset of the MS channels.
+            // MS indices of channels in cal table.
+            const uInt msCalStartChan = cs().startChan()(spwID);
+            const uInt msCalStopChan  = cs().startChan()(spwID) + nchan - 1;
+            // MS indices of selected channels
+            uInt msSelStartChan = RowUchanids(1);
+            uInt msSelStopChan  = RowUchanids(2);
+            // Cal table indices of selected channels
+            Int startChan = msSelStartChan - msCalStartChan;
+            Int stopChan  = msSelStopChan - msCalStartChan;
+            if (startChan > stopChan) { 
                 throw(AipsError("Start channel must be less than or equal to stop channel."));
+            } else if ((stopChan < 0) || (startChan > (Int)nchan - 1)) { 
+                // All selected channels out of range
+                String errMsg = "None of the selected channels are present in cal table.";
+                logSink() << LogIO::SEVERE << errMsg
+                          << endl << "Selected channel range = [" 
+                          << msSelStartChan << "," << msSelStopChan << "]" << endl
+                          << "Cal table channel range = [" 
+                          << msCalStartChan << "," << msCalStopChan << "]" << LogIO::POST;
+                throw(AipsError(errMsg));
+            } 
+            if (startChan < 0) {
+                logSink() << LogIO::NORMAL1 << "Start channel ( " << msSelStartChan
+                          << " ) below allowed range." << endl
+                          << "Increasing start channel to " << msCalStartChan
+                          << LogIO::POST;
+                startChan = 0;
             }
-
+            if (stopChan > (Int)nchan - 1) {
+                logSink() << LogIO::NORMAL1 << "Stop channel ( " << msSelStopChan
+                          << " ) above allowed range." << endl
+                          << "Decreasing stop channel to " << msCalStopChan
+                          << LogIO::POST;
+                stopChan = (Int)nchan - 1;
+            }
+            // Number of channels selected
+            Int numChans = ((stopChan - startChan) / stepChan) + 1; 
+            if (numChans > nchan) {
+                logSink() << LogIO::NORMAL1 
+                          << "More channels requested than are present in the cal table."
+                          << endl << "Cal table channels for this spw: "
+                          << msCalStartChan << " to " << msCalStopChan
+                          << LogIO::POST;
+            } 
             
             logSink() << LogIO::DEBUG1 << "For spwID " << spwID << endl
                       << "  startChan = " << startChan << endl
@@ -3312,10 +3330,6 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                       << "  Number of channels to list: numChans = " << numChans
                       << LogIO::POST;
             
-            // if (dochan>(nchan-1)) {
-            //   throw(AipsError("Specified channel does not exist."));
-            // }
-  
             // Setup the column widths.  Check width of each string.        
             uInt precAmp, precPhase; // Column precision
             uInt oAmp, oPhase; // Column order
@@ -3380,7 +3394,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                 colPos++;
             }
             
-            logSink() << LogIO::NORMAL
+            logSink() << LogIO::DEBUG1
                 << "Listing CalTable: " << calTableName()
                 << "   (" << typeName() << ") "
                 << LogIO::POST;
@@ -3479,10 +3493,10 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                 
                                 
                                 gidx(1)=iChan;
-                                // Write the Time and Field for each row
+                                // Write the Time, Field, and Channel for each row
                                 cout << setw(wTime_p) << timeStr << " "
                                      << setw(wField_p) << fldStr << " "
-                                     << setw(wChan_p) << iChan << "|";
+                                     << setw(wChan_p) << msCalStartChan + iChan << "|";
                                 
                                 // Write data for each antenna column
                                 for (uInt kelem=iElem; (kelem<iElem+numAntCols) and (kelem<=numAnts-1); 
@@ -3494,7 +3508,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                         gidx(0)=ipar; 
                                         
                                         // WRITE THE DATA
-                                        // amplitude
+                                             // amplitude
                                         cout << setprecision(precAmp) << setw(wAmp_p) << abs(calGains(gidx)) << " "
                                              // phase
                                              << setprecision(precPhase) << setw(wPhase_p) << arg(calGains(gidx))*180.0/C::pi << " "

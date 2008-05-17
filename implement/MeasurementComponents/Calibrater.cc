@@ -2156,7 +2156,7 @@ Bool Calibrater::listCal(const String& infile,
              const Int& pagerows) {
     
     SolvableVisCal *svc(NULL);
-    logSink() << LogOrigin("Calibrater","listCal",WHERE);
+    logSink() << LogOrigin("Calibrater","listCal");
     
     try {
         
@@ -2170,11 +2170,21 @@ Bool Calibrater::listCal(const String& infile,
         Vector<Int> uantids=getAntIdx(antenna);
         
         String newSpw = spw;
-        if (spw.empty()) { newSpw = "*"; } // list all channels (default)
+        Bool defaultSelect = False;
+        if (spw.empty()) { // list all channels (default)
+            defaultSelect = True;
+            newSpw = "*"; 
+            logSink() << LogIO::NORMAL1 << "Spws selected: ALL" << endl
+                      << "Channels selected: ALL" << LogIO::POST;
+        }
         // Get user's selected spw and channels
         Vector<Int> uspwids=getSpwIdx(newSpw);
         Matrix<Int> uchanids=getChanIdx(newSpw);
-        
+        if (!defaultSelect) {
+            logSink() << LogIO::NORMAL1 << "Spw and Channel selection matrix: "
+                      << endl << "Each rows shows: [ Spw , Start Chan , Stop Chan , Chan Step ]"
+                      << endl << uchanids << LogIO::POST;
+        }
         logSink() << LogIO::DEBUG2 
                   << "uspwids = "  << uspwids  << endl
                   << "uchanids = " << uchanids << LogIO::POST;
