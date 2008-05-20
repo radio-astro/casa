@@ -5170,15 +5170,16 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
-	      Vector<String> maskNames=sm_p->fluxScale(thismodel).regionNames(RegionHandler::Masks);
-	      if(maskNames.nelements() >0){
-		ImageRegion imreg=sm_p->fluxScale(thismodel).getRegion(maskNames[0]);
-		ImageRegion outreg=restored.makeMask(maskNames[0], False, True);
-		LCRegion& outmask=outreg.asMask();
-		outmask.put(imreg.asMask().get());
-		restored.defineRegion(maskNames[0], outreg, RegionHandler::Masks, True);
-		restored.setDefaultMask(maskNames[0]);
-	      }
+
+	      //Setting the bit-mask for mosaic image
+	      LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+					  False, True));
+	      ImageRegion outreg=restored.makeMask("mask0", False, True);
+	      LCRegion& outmask=outreg.asMask();
+	      outmask.copyData(lemask);
+	      restored.defineRegion("mask0", outreg, RegionHandler::Masks, True);
+	      restored.setDefaultMask("mask0");
+	      
 
 	    }
 	    

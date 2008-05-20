@@ -669,7 +669,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   } else if (telescope(0,7)=="NRAO12M") {
     whichPB = PBMath::NRAO12M;
     band = "UNKNOWN";
-  } else if (telescope(0,7)=="IRAMPDB") {
+  } else if (telescope(0,7)=="IRAMPDB" || (telescope.contains("IRAM") && telescope.contains("PDB"))) {
     whichPB = PBMath::IRAMPDB;
     band = "UNKNOWN";
   } else if (telescope(0,7)=="IRAM30M") {
@@ -690,6 +690,9 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   } else if (telescope(0,3)=="SMA"){
     whichPB = PBMath::SMA;
     band= "UNKNOWN";
+  } else if (telescope(0,3)=="ATA") {
+    whichPB = PBMath::ATA;
+    band = "UNKNOWN";  
   } else if (telescope(0,4)=="NONE") {
     whichPB = PBMath::NONE;
     band = "UNKNOWN";
@@ -806,6 +809,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::SMA:
     str = "SMA";
     break;
+  case PBMath::ATA:
+    str = "ATA";
+    break;
   case PBMath::NONE:
     str = "NONE";
     break;
@@ -888,6 +894,8 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::ACA;
   } else if (str == "SMA"){
     ipb = PBMath::SMA;
+  } else if (str == "ATA"){
+    ipb = PBMath::ATA;
   } else if (str == "NONE") {
     ipb = PBMath::NONE;
   } else {
@@ -1361,7 +1369,12 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 						 Quantity(224.0, "GHz")),
 				      False);
     break;
- 
+
+  case ATA:
+    pb_pointer_p = new PBMath1DAiry( Quantity(6.0,"m"), Quantity(0.5,"m"),
+				     Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
+    break;
+    
   case NONE:
     {
       Vector<Double> coef(1);
