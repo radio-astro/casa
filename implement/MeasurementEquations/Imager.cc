@@ -2786,6 +2786,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	  os << "Determining scaling from SD restoring beam.\n"
 	     << LogIO::POST;
 	  TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
+	  lowpsf0.set(0.0);
 	  IPosition center(4, Int((cweight.shape()(0)/4)*2), 
 			   Int((cweight.shape()(1)/4)*2),0,0);
 	  lowpsf0.putAt(1.0, center);
@@ -7763,11 +7764,13 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
 	//Brute Force for now.
 	IPosition imshape(4, nx_p, ny_p, 1, 1);
 	TempImage<Float> lowpsf(imshape, coordsys);
+	lowpsf.set(0.0);
 	IPosition center(4, Int((nx_p/4)*2), Int((ny_p/4)*2),0,0);
         lowpsf.putAt(1.0, center);
 	StokesImageUtil::Convolve(lowpsf, lBeam(0), lBeam(1),lBeam(2), False);
 	LatticeExprNode sumImage = sum(lowpsf);
 	beamFactor=1.0/sumImage.getFloat();
+
 	
       }
       os << "Beam volume factor  "
