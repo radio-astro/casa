@@ -670,21 +670,22 @@ Bool Calibrater::setsolve (const String& type,
 }
 
 Bool Calibrater::setsolve (const String& type, 
-			   const Double& t,
+			   const String& solint,
 			   const String& table,
                            const Bool& append,
                            const Double& preavg, 
 			   const String& apmode,
                            const String& refant,
 			   const Bool& solnorm,
-			   const Float& minsnr)
+			   const Float& minsnr,
+			   const String& combine)
 {
   
   logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL3;
   
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
-  solveparDesc.addField ("t", TpDouble);
+  solveparDesc.addField ("solint", TpString);
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("refant", TpInt);
@@ -693,10 +694,11 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("solnorm", TpBool);
   solveparDesc.addField ("minsnr", TpFloat);
   solveparDesc.addField ("type", TpString);
+  solveparDesc.addField ("combine", TpString);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
-  solvepar.define ("t", t);
+  solvepar.define ("solint", solint);
   solvepar.define ("preavg", preavg);
   String upmode=apmode;
   upmode.upcase();
@@ -710,6 +712,10 @@ Bool Calibrater::setsolve (const String& type,
   uptype.upcase();
   solvepar.define ("type", uptype);
   
+  String upcomb=combine;
+  upcomb.upcase();
+  solvepar.define("combine",upcomb);
+
   return setsolve(type,solvepar);
 
 }
@@ -1248,7 +1254,8 @@ Bool Calibrater::solve() {
 
     // Generally use standard solver
     if (svc_p->standardSolve())
-      standardSolve();
+      //      standardSolve();   // old way
+      standardSolve2();        // new way: supports combine
     else
       svc_p->selfSolve(*vs_p,*ve_p);
 
@@ -1261,6 +1268,148 @@ Bool Calibrater::solve() {
     throw(AipsError("Error in Calibrater::solve."));
     return False;
   } 
+
+  return True;
+
+}
+
+Bool Calibrater::standardSolve2() {
+
+  // Create the solver
+  VisCalSolver vcs;
+  
+  // Inform logger/history
+  logSink() << "Solving for " << svc_p->typeName()
+	    << LogIO::POST;
+  
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = svc_p->sizeUpSolve(*vs_p,nChunkPerSol);
+
+  // The iterator, VisBuffer
+  VisIter& vi(vs_p->iter());
+  VisBuffer vb(vi);
+  
+  Vector<Int> slotidx(vs_p->numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate 
+    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
+
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+    
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+    
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve_p->spwOK(spw)) 
+	throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+	
+	// Force read of the field Id
+	vb.fieldId();
+
+	// This forces the data/model/wt I/O, and applies
+	//   any prior calibrations
+	ve_p->collapse(vb);
+	
+	// If permitted/required by solvable component, normalize
+	if (svc_p->normalizable()) 
+	  vb.normalize();
+	
+	// Accumulate collapsed vb in a time average
+	vba.accumulate(vb);
+
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+    
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff()); 
+
+    svc_p->enforceAPonData(svb);
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=svc_p->syncSolveMeta(svb,-1);
+
+    Int thisSpw=svc_p->spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    if (vbOk) {
+
+      svc_p->guessPar(svb);
+      //      cout << "Guess = 0.3" << endl;
+      //      svc_p->solveCPar()=Complex(0.3);
+      //      svc_p->solveParOK()=True;
+      
+      // Solve for each parameter channel (in curr Spw)
+      
+      // (NB: force const version of nChanPar()  [why?])
+      //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
+      Bool totalGoodSol(False);
+      for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
+
+	// If pars chan-dep, SVC mechanisms for only one channel at a time
+	svc_p->focusChan()=ich;
+
+	// Pass VE, SVC, VB to solver
+	Bool goodSoln=vcs.solve(*ve_p,*svc_p,svb);
+
+	// If good... 
+	if (goodSoln) {
+	  totalGoodSol=True;
+
+	  svc_p->formSolveSNR();
+	  svc_p->applySNRThreshold();
+
+	  // ..and file this solution in the correct slot
+	  svc_p->keep(slotidx(thisSpw));
+	  
+	}
+	else 
+	  // report where this failure occured
+	  svc_p->currMetaNote();
+	
+      } // parameter channels
+
+      // Cound good solutions.
+      if (totalGoodSol)	nGood++;
+      
+    } // vbOK
+    
+  } // isol
+
+  logSink() << "  Found good " 
+	    << svc_p->typeName() << " solutions in "
+	    << nGood << " slots."
+	    << LogIO::POST;
+  
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+	      << LogIO::POST;
+  else {
+    
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    svc_p->globalPostSolveTinker();
+
+    // write the table
+    svc_p->store();
+  }
 
   return True;
 

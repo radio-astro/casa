@@ -301,6 +301,8 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
 				const VisBuffer& vb) {
   
   convSampling=1;
+  if(pbConvFunc_p.null())
+    pbConvFunc_p=new SimplePBConvFunc();
   pbConvFunc_p->findConvFunction(iimage, vb, convSampling,*sj_p, convFunc, weightConvFunc_p, convSize, convSupport);
  				 
 }
@@ -678,21 +680,28 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 {
 
 
-  findConvFunction(*image, vb);
-  const Cube<Complex> *data;
-  if(type==FTMachine::MODEL){
-    data=&(vb.modelVisCube());
-  }
-  else if(type==FTMachine::CORRECTED){
-    data=&(vb.correctedVisCube());
-  }
-  else{
-    data=&(vb.visCube());
-  }
 
+
+
+  findConvFunction(*image, vb);
+  const Cube<Complex> *data=0;
+  if(! dopsf){
+    if(type==FTMachine::MODEL){
+      data=&(vb.modelVisCube());
+    }
+    else if(type==FTMachine::CORRECTED){
+      data=&(vb.correctedVisCube());
+    }
+    else{
+      data=&(vb.visCube());
+    }
+  }
 
   Bool isCopy;
-  const Complex *datStorage=data->getStorage(isCopy);
+  const Complex *datStorage=0;
+
+  if(!dopsf)
+    datStorage=data->getStorage(isCopy);
  
   
   // If row is -1 then we pass through all rows
@@ -885,7 +894,8 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     griddedWeight.putStorage(gridwgtstor, weightcopy);
   }
 
-  data->freeStorage(datStorage, isCopy);
+  if(!dopsf)
+    data->freeStorage(datStorage, isCopy);
 
 }
 

@@ -432,8 +432,9 @@ public:
   virtual Bool standardSolve() { return False; };
 
   // M solves for itself (by copying averaged data)
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
-
+  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
+  virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
   virtual void keep(const Int& slot);
 
@@ -584,7 +585,9 @@ public:
   virtual Bool standardSolve() { return False; };
 
   // X solves for itself 
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
+  virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
   virtual void keep(const Int& slot);
 

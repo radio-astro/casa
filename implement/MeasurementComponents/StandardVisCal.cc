@@ -106,6 +106,8 @@ void PJones::calcPar() {
     ang=Double(*a);
     (*cp) = Complex(cos(ang),sin(ang));  // as a complex number
   }
+  //  cout << "ang = " << ang << endl;
+
   // Pars now valid, matrices not
   validateP();
   invalidateJ();
@@ -981,7 +983,178 @@ void MMueller::setApply(const Record& apply) {
 
 }
 
-void MMueller::selfSolve(VisSet& vs, VisEquation& ve) {
+void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+  
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+
+        // Force read of the field Id
+        vb.fieldId();
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        if (normalizable())
+          vb.normalize();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // TBD
+    //    enforceAPonData(svb);
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // Insist that channel,row shapes match
+      IPosition visshape(svb.visCube().shape());
+      AlwaysAssert(solveCPar().shape().getLast(2)==visshape.getLast(2),AipsError);
+      
+      // Zero flagged data
+      IPosition vblc(3,0,0,0);
+      IPosition vtrc(visshape);  vtrc-=1;      
+      Int nCorr(visshape(0));
+      for (Int i=0;i<nCorr;++i) {
+	vblc(0)=vtrc(0)=i;
+	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=Complex(1.0);
+      }
+      
+      // Form correct slice of visCube to copy to solveCPar
+      IPosition vcblc(3,0,0,0);
+      IPosition vctrc(svb.visCube().shape()); vctrc-=1;
+      IPosition vcstr(3,1,1,1);
+
+      IPosition spblc(3,0,0,0);
+      IPosition sptrc(solveCPar().shape()); sptrc-=1;
+
+      IPosition flshape(svb.flag().shape());
+      
+      switch (nCorr) {
+      case 1: {
+	// fill 1st par only
+	spblc(0)=sptrc(0)=0; 
+	solveCPar()(spblc,sptrc)=svb.visCube();
+	// first pol flags
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	break;
+      }
+      case 2: {
+	// shapes match
+	solveCPar()=svb.visCube();
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
+	break;
+      }
+      case 4: {
+	// Slice visCube with stride
+	vcstr(0)=3;
+	solveCPar()=svb.visCube()(vcblc,vctrc,vcstr);
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
+	break;
+      }
+      default:
+	throw(AipsError("Problem in MMueller::selfSolve."));
+	break;
+      }
+
+      nGood++;
+    }
+
+    keep(slotidx(thisSpw));
+    
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    //  TBD
+    // globalPostSolveTinker();
+
+    // write the table
+    store();
+  }
+
+}
+
+void MMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
 
@@ -1340,10 +1513,138 @@ void XMueller::setSolve(const Record& solvepar) {
 
 }
 
+void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+
+  MeasurementSet ms(msName());
+  MSFieldColumns msfldcol(ms.field());
+
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+  
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
 
 
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
 
-void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
+        // Force read of the field Id
+        vb.fieldId();
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        //if (normalizable())
+	//          vb.normalize();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    // TBD: drop unneeded basline-dependence    
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // solve for the R-L phase term in the current VB
+      solveOneVB(svb);
+
+      if (solveParOK()(0,0,0))
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") = "
+		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
+		  << " deg."
+		  << LogIO::POST;
+      else
+	logSink() << "Position angle offset solution for " 
+		  << msfldcol.name()(currField())
+		  << " (spw = " << currSpw() << ") "
+		  << " was not determined (insufficient data)."
+		  << LogIO::POST;
+	
+      nGood++;
+    }
+
+    keep(slotidx(thisSpw));
+    
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    //  TBD
+    // globalPostSolveTinker();
+
+    // write the table
+    store();
+  }
+
+}
+
+void XMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
 
@@ -1432,10 +1733,6 @@ void XMueller::selfSolve(VisSet& vs, VisEquation& ve) {
 		  << " was not determined (insufficient data)."
 		  << LogIO::POST;
 	
-
-
-
-
     }
 
     keep(islot(spw));

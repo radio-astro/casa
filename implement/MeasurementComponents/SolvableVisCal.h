@@ -71,9 +71,15 @@ public:
   inline Vector<Int>& spwMap()         { return spwMap_; };
   inline Int&         refant()         { return refant_; };
   inline String&      apmode()         { return apmode_; };
+  inline String&      solint()         { return solint_; };
   inline Double&      preavg()         { return preavg_; };
   inline Bool&        solnorm()        { return solnorm_;};
   inline Float&       minSNR()         { return minSNR_; };
+
+  inline String&      combine()        { return combine_; };
+  inline Bool         combspw()        { return upcase(combine_).contains("SPW"); };
+  inline Bool         combfld()        { return upcase(combine_).contains("FIELD"); };
+  inline Bool         combscan()       { return upcase(combine_).contains("SCAN"); };
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
@@ -130,6 +136,9 @@ public:
 			     const String& select,
 			     const Double& t,
 			     const Int& refAnt=-1);
+
+  // Size up the solving arrays, etc.  (supports combine)
+  Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
   // Initialize internal shapes for solving
   void initSolve(VisSet& vs);
@@ -323,6 +332,9 @@ private:
   // Solving mode
   String apmode_;
 
+  // User-specified solint (string)
+  String solint_;
+
   // Preavering interval
   Double preavg_;
 
@@ -331,6 +343,9 @@ private:
 
   // SNR threshold
   Float minSNR_;
+
+  // axes to combine for solve
+  String combine_;
 
   // In-focus channel for single-chan solves on multi-chan data
   Int focusChan_;

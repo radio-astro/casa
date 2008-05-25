@@ -120,14 +120,15 @@ class Calibrater
 
   // Arrange to solve (using MSSelection syntax)
   Bool setsolve (const String& type, 
-		 const Double& t,
+		 const String& solint,
 		 const String& table,
 		 const Bool& append,
 		 const Double& preavg, 
 		 const String& apmode="AP",
 		 const String& refant="",
 		 const Bool& solnorm=False,
-		 const Float& minsnr=0.0f);
+		 const Float& minsnr=0.0f,
+		 const String& combine="");
 
   // Arrange to solve for BPOLY
   Bool setsolvebandpoly(const String& table,
@@ -345,6 +346,7 @@ class Calibrater
 
   // The standard solving mechanism
   Bool standardSolve();
+  Bool standardSolve2();
 
   // Input MeasurementSet and derived selected MeasurementSet
   String msname_p;

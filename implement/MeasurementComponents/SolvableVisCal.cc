@@ -38,6 +38,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
 #include <casa/Utilities/GenSort.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <casa/sstream.h>
@@ -68,8 +70,10 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   refant_(-1),
   solved_(False),
   apmode_(""),
+  solint_("inf"),
   solnorm_(False),
   minSNR_(0.0f),
+  combine_(""),
   focusChan_(0),
   dataInterval_(0.0),
   fitWt_(0.0),
@@ -101,8 +105,10 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   refant_(-1),
   solved_(False),
   apmode_(""),
+  solint_("inf"),
   solnorm_(False),
   minSNR_(0.0),
+  combine_(""),
   focusChan_(0),
   dataInterval_(0.0),
   fitWt_(0.0),
@@ -232,7 +238,7 @@ void SolvableVisCal::setApply(const Record& apply) {
       else
 	spwMap()(IPosition(1,0),IPosition(1,spwmap.nelements()-1))=spwmap;
       // TBD: Report non-trivial spwmap to logger.
-      cout << "Note: spwMap() = " << spwMap() << endl;
+      //      cout << "Note: spwMap() = " << spwMap() << endl;
     }
   }
 
@@ -327,9 +333,33 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (calTableName().length()==0)
     throw(AipsError("Please specify a name for the output calibration table!"));
 
-  if (solve.isDefined("t"))
-    interval()=solve.asFloat("t");
+  if (solve.isDefined("solint")) 
+    solint()=solve.asString("solint");
 
+  if (upcase(solint()).contains("INF") || solint()=="") {
+    solint()="inf";
+    interval()=-1.0;
+  }
+  else if (upcase(solint()).contains("INT"))
+    interval()=0.0;
+  else {
+    QuantumHolder qhsolint;
+    String error;
+    Quantity qsolint;
+    qhsolint.fromString(error,solint());
+    if (error.length()!=0)
+      throw(AipsError("Unrecognized units for solint."));
+    qsolint=qhsolint.asQuantumDouble();
+    
+    if (qsolint.isConform("s"))
+      interval()=qsolint.get("s").getValue();
+    else {
+      // assume seconds
+      interval()=qsolint.getValue();
+      solint()=solint()+"s";
+    }
+  }
+  
   if (solve.isDefined("preavg"))
     preavg()=solve.asFloat("preavg");
 
@@ -350,21 +380,18 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("minsnr"))
     minSNR()=solve.asFloat("minsnr");
 
+  if (solve.isDefined("combine"))
+    combine()=solve.asString("combine");
+
   //  cout << "SVC::setsolve: minSNR() = " << minSNR() << endl;
 
   // TBD: Warn if table exists (and append=F)!
 
-  // If normalizable & preavg<0, use inteval for preavg 
+  // If normalizable & preavg<0, use full pre-averaging
   //  (or handle this per type, e.g. D)
   // TBD: make a nice log message concerning preavg
-  // TBD: make this work better with solnboundary par
   if (normalizable() && preavg()<0.0)
-    if (interval()>0.0)
-      // use interval
-      preavg()=interval();
-    else
-      // scan-based, so max out preavg() to get full-chunk time-average
-      preavg()=DBL_MAX;
+    preavg()=DBL_MAX;
 
   // This is the solve context
   setSolved(True);
@@ -393,7 +420,8 @@ String SolvableVisCal::solveinfo() {
     << typeName()
     << ": table="      << calTableName()
     << " append="     << append()
-    << " t="          << interval()
+    << " solint="     << solint()
+    //    << " t="          << interval()
     //    << " preavg="     << preavg()
     << " refant="     << "'" << refantName << "'" // (id=" << refant() << ")"
     << " minsnr=" << minSNR()
@@ -468,12 +496,186 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
 }
 
+
+Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
+
+  // New version that counts solutions (which may overlap in 
+  //   field and/or ddid) rather than chunks
+
+  Bool verby(False);
+
+  // Set Nominal per-spw channelization
+  setSolveChannelization(vs);
+
+  // Interpret solution interval for the VisIter
+  Double iterInterval(max(interval(),DBL_MIN));
+  if (interval() < 0.0) {   // means no interval (infinite solint)
+    iterInterval=0.0;
+    interval()=DBL_MAX;
+  }
+
+  Int nsortcol(4+Int(!combscan()));  // include room for scan
+  Block<Int> columns(nsortcol);
+  Int i(0);
+  columns[i++]=MS::ARRAY_ID;
+  if (!combscan()) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
+  if (!combfld()) columns[i++]=MS::FIELD_ID;      // force field boundaries
+  if (!combspw()) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
+  columns[i++]=MS::TIME;
+  if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
+  if (combfld()) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
+  if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
+  
+  if (verby) {
+    cout << "Sort columns: ";
+    for (Int i=0;i<nsortcol;++i) 
+      cout << columns[i] << " ";
+    cout << endl;
+  }
+
+  vs.resetVisIter(columns,iterInterval);
+  
+  // Number of VisIter chunks per spw
+  Vector<Int> nChunkPerSpw(vs.numberSpw(),0);
+
+  // Number of VisIter chunks per solution
+  nChunkPerSol.resize(100);
+  nChunkPerSol=0;
+
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+  vi.originChunks();
+  vi.origin();
+    
+  Double time0(86400.0*floor(vb.time()(0)/86400.0));
+  Double time1(0.0),time(0.0);
+
+  Int thisscan(-1),lastscan(-1);
+  Int chunk(0);
+  Int sol(-1);
+  Double soltime1(-1.0);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
+    vi.origin();
+    time1=vb.time()(0);  // first time in this chunk
+    thisscan=vb.scan()(0);
+    
+    nChunkPerSpw(vb.spectralWindow())++;
+
+    // New chunk means new sol interval, IF....
+    if ( (!combfld() && !combspw()) ||              // not combing fld or spw, OR
+	 ((time1-soltime1)>interval()) ||           // (combing fld and/or spw) and solint exceeded, OR
+	 ((time1-soltime1)<0.0) ||                  // a negative time step occurs, OR
+	 (!combscan() && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered 
+	 (sol==-1))  {                              // this is the first interval
+      soltime1=time1;
+      sol++;
+      if (verby) {
+	cout << "--------------------------------" << endl;
+	cout << "sol = " << sol << endl;
+      }
+      // increase size of nChunkPerSol array, if needed
+      if (nChunkPerSol.nelements()<uInt(sol+1))
+	nChunkPerSol.resize(nChunkPerSol.nelements()+100,True);
+      nChunkPerSol(sol)=0;
+    }
+
+    // Increment chunk-per-sol count for current solution
+    nChunkPerSol(sol)++;
+
+    if (verby) {
+      cout << "          ck=" << chunk << " " << soltime1-time0 << endl;
+      
+      Int iter(0);
+      for (vi.origin(); vi.more();vi++,iter++) {
+	time=vb.time()(0);
+	cout  << "                 " << "vb=" << iter << " ";
+	cout << "ar=" << vb.arrayId() << " ";
+	cout << "sc=" << vb.scan()(0) << " ";
+	if (!combfld()) cout << "fl=" << vb.fieldId() << " ";
+	if (!combspw()) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << "t=" << floor(time-time0)  << " (" << floor(time-soltime1) << ") ";
+	if (combfld()) cout << "fl=" << vb.fieldId() << " ";
+	if (combspw()) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << endl;
+      }
+    }
+    
+    lastscan=thisscan;
+    
+  }
+  
+  if (verby) {
+    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
+    cout << "nchunk = " << chunk << endl;
+  }
+
+  Int nSol(sol+1);
+  
+  nChunkPerSol.resize(nSol,True);
+  
+  spwMap().resize(vs.numberSpw());
+  indgen(spwMap());
+  Vector<Int> spwlist=spwMap()(nChunkPerSpw>0).getCompressedArray();
+  Int spwlab=0;
+  if (combspw()) {
+    while (nChunkPerSpw(spwlab)<1) spwlab++;
+    if (verby) cout << "Obtaining " << nSol << " solutions, labelled as spw=" << spwlab  << endl;
+    spwMap()=-1;  // TBD: needed?
+    spwMap()(nChunkPerSpw>0)=spwlab;
+
+    if (verby)
+      cout << "nChanParList = " << nChanParList()(nChunkPerSpw>0).getCompressedArray() 
+	   << "==" << nChanParList()(spwlab) <<  endl;
+
+    // Verify that all spws have same number of channels (so they can be combined!)
+    if (!allEQ(nChanParList()(spwMap()>-1).getCompressedArray(),nChanParList()(spwlab)))
+      throw(AipsError("Spws with different selected channelizations cannot be combined."));
+
+    nChunkPerSpw = 0;
+    nChunkPerSpw(spwlab)=nSol;
+  }
+
+  if (verby) {
+    cout << " spwMap()  = " << spwMap() << endl;
+    cout << " spwlist = " << spwlist << endl;
+    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
+    cout << "Total solutions = " << nSol << endl;
+    cout << "nChunkPerSol = " << nChunkPerSol << endl;
+  }
+
+  if (combscan())
+    logSink() << "Combining scans." << LogIO::POST;
+  if (combspw()) 
+    logSink() << "Combining spws: " << spwlist << " -> " << spwlab << LogIO::POST;
+  if (combfld()) 
+    logSink() << "Combining fields." << LogIO::POST;
+  
+
+  logSink() << "For solint = " << solint() << ", found "
+	    <<  nSol << " solution intervals."
+	    << LogIO::POST;
+
+  // Inflate the CalSet
+  inflate(nChanParList(),startChanList(),nChunkPerSpw);
+
+  // Size the solvePar arrays
+  initSolvePar();
+
+  // Return the total number of solution intervals
+  return nSol;
+
+}
+
 void SolvableVisCal::initSolve(VisSet& vs) {
 
   if (prtlev()>2) cout << "SVC::initSolve(vs)" << endl;
 
   // Determine solving channelization according to VisSet & type
   setSolveChannelization(vs);
+
+  // Nominal spwMap in solve is identity
+  spwMap().resize(vs.numberSpw());
+  indgen(spwMap());
 
   // Inflate the CalSet according to VisSet
   inflate(vs);
@@ -655,11 +857,10 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
   // Returns True, only if sum of weights is positive,
   //  i.e., there is data to solve with
 
-  // TBD: Get fieldId from vb (need to make sure fieldId survives averaging)
   // TBD: freq info, etc.
 
-  currSpw()=vb.spectralWindow();
-  currField()=fieldId;
+  currSpw()=spwMap()(vb.spectralWindow());
+  currField()=vb.fieldId();
 
   // Row weights as a Doubles
   Vector<Double> dWts;
@@ -3315,7 +3516,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
             }
             // Number of channels selected
             Int numChans = ((stopChan - startChan) / stepChan) + 1; 
-            if (numChans > nchan) {
+            if (numChans > Int(nchan)) {
                 logSink() << LogIO::NORMAL1 
                           << "More channels requested than are present in the cal table."
                           << endl << "Cal table channels for this spw: "
@@ -3472,7 +3673,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                             cout << setiosflags(ios::fixed) << setiosflags(ios::right);
                             
                             // Loop over channels
-                            for (uInt iChan=startChan; iChan<=stopChan; iChan+=stepChan) {
+                            for (uInt iChan=startChan; iChan<=uInt(stopChan); iChan+=stepChan) {
                                 
                                 // If beginning new screen, print the header
                                 if (scrRows == 0 || header) {
