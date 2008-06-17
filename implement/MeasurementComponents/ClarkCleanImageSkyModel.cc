@@ -138,6 +138,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, 
 			     xend, ybeg, yend);       
     }
+
+
     LCBox imagebox(IPosition(4, xbeg, ybeg, 0, ichan), 
 		   IPosition(4, xend, yend, npol-1, ichan),
 		   image(0).shape());
@@ -192,7 +194,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       cleaner.setGain(gain());
       cleaner.setNumberIterations(numberIterations());
       cleaner.setThreshold(threshold()); 
-      cleaner.setPsfPatchSize(IPosition(2,51)); 
+      cleaner.setPsfPatchSize(IPosition(2,51,51)); 
       cleaner.setHistLength(1024);
       cleaner.setMaxNumPix(32*1024);
       cleaner.setCycleFactor(cycleFactor_p);
@@ -282,10 +284,16 @@ Lattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
     larger_quarter=True;
   }  
 
+  // make sure xend, yend does not go out of bounds
+  if(larger_quarter){
+    xend=min(xend, nx-1);
+    yend=min(yend, ny-1);
 
-  xend=min(xend,xbeg+nx/2-1);
-  yend=min(yend,ybeg+ny/2-1); 
-  
+  }
+  else{
+    xend=min(xend,xbeg+nx/2-1);
+    yend=min(yend,ybeg+ny/2-1); 
+  }
 
   
   if ((xend > xbeg) && (yend > ybeg) ) {

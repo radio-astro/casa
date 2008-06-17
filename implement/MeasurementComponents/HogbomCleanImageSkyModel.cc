@@ -348,6 +348,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
 	     &g, &thres, &cycleSpeedup,
 	     (void*) &HogbomCleanImageSkyModelmsgput,
 	     (void*) &HogbomCleanImageSkyModelstopnow);
+
+
       if(nx==newNx){
 	imageli.rwCursor().putStorage (limage_data, delete_iti);
 	imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
@@ -456,8 +458,8 @@ Matrix<Float>* HogbomCleanImageSkyModel::makeMaskMatrix(const Int& nx,
     yend=yend+(newNy-ny)/2;
   }
   
-  xend=min(xend,xbeg+nx/2-1);
-  yend=min(yend,ybeg+ny/2-1);   
+  xend=min(xend,xbeg+newNx/2-1);
+  yend=min(yend,ybeg+newNy/2-1);   
   
 
   return mask;
