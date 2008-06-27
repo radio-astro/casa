@@ -484,13 +484,14 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
       convWeightImage_p=new  TempImage<Complex> (iimage.shape(), 
 						 iimage.coordinates());
       griddedWeight.resize(gridShape);
-      IPosition stride(4, 1);
+      /*IPosition stride(4, 1);
       IPosition blc(4, (nx-image->shape()(0))/2,
 		    (ny-image->shape()(1))/2, 0, 0);
       IPosition trc(blc+image->shape()-stride);
       
       griddedWeight(blc, trc).set(Complex(0.0));
-
+      */
+      griddedWeight.set(Complex(0.0));
       //if(weightLattice) delete weightLattice; weightLattice=0;
       weightLattice = new ArrayLattice<Complex>(griddedWeight);
 
@@ -561,7 +562,7 @@ void MosaicFT::finalizeToSky()
       whichStokes(2)=Stokes::U;
     }
     else if(stokes_p=="IQUV"){
-      npol=2;
+      npol=4;
       whichStokes.resize(4);
       whichStokes(0)=Stokes::I;
       whichStokes(1)=Stokes::Q;
@@ -584,9 +585,21 @@ void MosaicFT::finalizeToSky()
     // Do the copy
     IPosition start(4, 0);
     convWeightImage_p->put(griddedWeight(blc, trc));
-
-
     StokesImageUtil::To(*skyCoverage_p, *convWeightImage_p);
+    if(npol>1){
+      // only the I get it right Q and U or V may end up with zero depending 
+      // if RR or XX
+      blc(0)=0; blc(1)=0; blc(3)=0;blc(2)=0;
+      trc=skyCoverage_p->shape()-stride;
+      trc(2)=0;
+      SubImage<Float> isubim(*skyCoverage_p, Slicer(blc, trc, Slicer::endIsLast));
+      for (Int k=1; k < npol; ++k){
+	blc(2)=k; trc(2)=k;
+	SubImage<Float> quvsubim(*skyCoverage_p, Slicer(blc, trc, Slicer::endIsLast), True);
+	quvsubim.copyData(isubim);
+      }
+
+    }
     delete convWeightImage_p;
     convWeightImage_p=0;
     doneWeightImage_p=True;
