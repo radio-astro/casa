@@ -647,10 +647,10 @@ protected:
   Int nmodels_p;
   // Everything here must be a real class since we make, handle and
   // destroy these.
-  PtrBlock<PagedImage<Float>* > images_p;
-  PtrBlock<PagedImage<Float>* > masks_p;
-  PtrBlock<PagedImage<Float>* > fluxMasks_p;
-  PtrBlock<PagedImage<Float>* > residuals_p;
+  Block<CountedPtr<PagedImage<Float> > > images_p;
+  Block<CountedPtr<PagedImage<Float> > > masks_p;
+  Block<CountedPtr<PagedImage<Float> > > fluxMasks_p;
+  Block<CountedPtr<PagedImage<Float> > > residuals_p;
   
   // Freq frame is good and valid conversions can be done (or not)
   Bool freqFrameValid_p;

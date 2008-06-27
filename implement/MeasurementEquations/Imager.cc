@@ -390,6 +390,8 @@ Imager::~Imager()
   if (ft_p) {
     delete ft_p;
   }
+  
+  
   ft_p = 0;
   if (cft_p) {
     delete cft_p;
@@ -4628,7 +4630,7 @@ Bool Imager::clean(const String& algorithm,
     restoreImages(image);
     writeFluxScales(fluxscale_p);
     for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      if(residuals_p[thismodel] != 0){
+      if(residuals_p[thismodel]->ok()){
 	residuals_p[thismodel]->table().relinquishAutoLocks(True);
 	residuals_p[thismodel]->table().unlock();
       }
@@ -4696,11 +4698,11 @@ Bool Imager::clean(const String& algorithm,
   } 
   catch (exception &x) { 
     for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	 if (images_p[thismodel]) {
+	 if (!images_p[thismodel].null()) {
              images_p[thismodel]->table().relinquishAutoLocks(True);
              images_p[thismodel]->table().unlock();
 	 }
-	 if (residuals_p[thismodel]) {
+	 if (residuals_p[thismodel]->ok()) {
              residuals_p[thismodel]->table().relinquishAutoLocks(True);
              residuals_p[thismodel]->table().unlock();
 	 }
@@ -5125,13 +5127,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       modelNames[k]=images_p[k]->name();
     }
 
-    
+    /*
     if((nx_p*ny_p > 7000*7000) && (ft_p->name() != "MosaicFT")){
       // very large for convolution ...destroy Skyequations to release memory
       // need to fix the convolution to be leaner
       destroySkyEquation();
 
     }
+    */
     
     if(restoredNames.nelements()>0) {
       for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
@@ -7075,6 +7078,7 @@ Bool Imager::createFTMachine()
 	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
       }
     } 
+    gvp_p->setThreshold(minPB_p);
     ft_p = new MosaicFT(*gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
 
     // VisIter& vi(vs_p->iter());
@@ -7413,7 +7417,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       }
       images_p[model]=0;
       images_p[model]=new PagedImage<Float>(image(model));
-      AlwaysAssert(images_p[model], AipsError);
+      //AlwaysAssert(images_p[model], AipsError);
 
       //Determining the number of XFR
       Int numOfXFR=nmodels_p+1;
@@ -7438,7 +7442,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       fluxMasks_p[model]=0;
       if(fluxMask(model)!=""&&Table::isReadable(fluxMask(model))) {
 	fluxMasks_p[model]=new PagedImage<Float>(fluxMask(model));
-	AlwaysAssert(fluxMasks_p[model], AipsError);
+	AlwaysAssert(!fluxMasks_p[model].null(), AipsError);
         if(!sm_p->addFluxMask(model, *fluxMasks_p[model])) {
 	  os << LogIO::SEVERE << "Error adding flux mask " << model
 	     << " : " << fluxMask(model) << LogIO::POST;
@@ -7550,7 +7554,7 @@ Bool Imager::addResidualsToSkyEquation(const Vector<String>& imageNames) {
 	new PagedImage<Float> (images_p[thismodel]->shape(),
 			       images_p[thismodel]->coordinates(),
 			       imageNames(thismodel));
-      AlwaysAssert(residuals_p[thismodel], AipsError);
+      AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
       residuals_p[thismodel]->setUnits(Unit("Jy/beam"));
       sm_p->addResidual(thismodel, *residuals_p[thismodel]);
     }
@@ -7564,13 +7568,24 @@ void Imager::destroySkyEquation()
   if(sm_p) delete sm_p; sm_p=0;
   if(vp_p) delete vp_p; vp_p=0;
   if(gvp_p) delete gvp_p; gvp_p=0;
+  
   if(componentList_p) delete componentList_p; componentList_p=0;
+  /*
   for (Int model=0;model<Int(nmodels_p); ++model) {
-    if(images_p[model]) delete images_p[model]; images_p[model]=0;
-    if(masks_p[model]) delete masks_p[model]; masks_p[model]=0;
+    
+    //if(images_p[model]) delete images_p[model]; images_p[model]=0;
+    
+    cout << "image " <<  " destroyed "<< endl; 
+   if(masks_p[model]) delete masks_p[model]; masks_p[model]=0;
+   cout << "mask " <<   " destroyed "<< endl; 
     if(fluxMasks_p[model]) delete fluxMasks_p[model]; fluxMasks_p[model]=0;
-    if(residuals_p[model]) delete residuals_p[model]; residuals_p[model]=0;
+    cout << "fluxmask " <<   " destroyed "<< endl; 
+    
+    //cout << "ok residual " << &(*residuals_p[model]) << endl;
+    //    if(residuals_p[model]) delete residuals_p[model]; residuals_p[model]=0;
+    
   }
+  */
   redoSkyModel_p=True;
 }
 
@@ -7620,11 +7635,13 @@ Bool Imager::addMasksToSkyEquation(const Vector<String>& mask){
   LogIO os(LogOrigin("imager", "addMasksToSkyEquation()", WHERE));
 
   for(Int model=0 ;model < nmodels_p; ++model){
-    if(!(masks_p[model])) delete masks_p[model];
+    /*
+    if(!(masks_p[model].null())) delete masks_p[model];
     masks_p[model]=0;
+    */
       if(mask(model)!=""&&Table::isReadable(mask(model))) {
 	masks_p[model]=new PagedImage<Float>(mask(model));
-	AlwaysAssert(masks_p[model], AipsError);
+	AlwaysAssert(!masks_p[model].null(), AipsError);
         if(!sm_p->addMask(model, *masks_p[model])) {
 	  os << LogIO::SEVERE << "Error adding mask " << model
 	     << " : " << mask(model) << LogIO::POST;
