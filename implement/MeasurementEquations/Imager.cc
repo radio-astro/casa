@@ -5796,7 +5796,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 	  PagedImage<Float> modimage(model);
 	  modimage.table().unmarkForDelete();
-	  tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),"temp.setjy.image");
+	  String tempmodname=File::newUniqueName("./", "setjyimage").baseName();
+	  tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
 	  tmodimage->table().markForDelete();
 	  tmodimage->set(0.0f);
 	  
