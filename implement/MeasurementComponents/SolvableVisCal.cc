@@ -1045,7 +1045,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     
     antOK=False;
     for (Int iant=0;iant<nAnt();++iant) {
-      if (blperant(iant)>3 &&
+      if (blperant(iant)>2 &&
 	  wtperant(iant)>0.0) {
 	// This antenna is good, keep it
 	nAntForSolve+=1;
