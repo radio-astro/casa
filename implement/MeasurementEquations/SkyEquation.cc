@@ -291,9 +291,16 @@ void SkyEquation::gradientsChiSquared(const Matrix<Bool>& required,
 void SkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel) {
   AlwaysAssert(ok(),AipsError);
 
+  if ((ft_->name() == "PBWProjectFT"))
+    {
+      ft_->setNoPadding(False);
+      fullGradientsChiSquared(incremental);
+    }
+  else
+    {
   Bool forceFull=True;
   // for these 2 gridders force incremental
-  if((ft_->name() == "MosaicFT") || (ft_->name() == "WProjectFT") )
+  if((ft_->name() == "MosaicFT") || (ft_->name() == "WProjectFT"))
     forceFull=True;
 
   if( (sm_->numberOfModels() != 1) || !ft_->isFourier() || !incremental 
@@ -311,6 +318,7 @@ void SkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel) {
   else {
     incrementGradientsChiSquared();
   }
+    }
 }
 //----------------------------------------------------------------------
 void SkyEquation::fullGradientsChiSquared(Bool incremental) {

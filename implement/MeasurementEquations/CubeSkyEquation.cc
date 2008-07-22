@@ -49,6 +49,7 @@
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
+#include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
@@ -135,6 +136,17 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     iftm_p[0]=ift_;
     if(sm_->numberOfModels() > 1){
       throw(AipsError("No multifield with joint gridding allowed"));
+    }
+  }
+  else if(ft.name()== "PBWProjectFT"){
+//     ft_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
+//     ift_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
+//     ftm_p[0]=ft_;
+//     iftm_p[0]=ift_;
+//     iftm_p[0] = ift_=&ft;
+    iftm_p[0] = ftm_p[0] = ft_ = ift_ = &ft;
+    if(sm_->numberOfModels() > 1){
+      throw(AipsError("No multifield with pb-projection allowed"));
     }
   }
   else {

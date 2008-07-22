@@ -247,7 +247,7 @@ void EGainCurve::calcAllJones() {
 // **********************************************************
 //  EPJones
 //
-
+/*
 EPJones::EPJones(VisSet& vs) :
   VisCal(vs), 
   VisMueller(vs),
@@ -337,6 +337,6 @@ void EPJones::differentiate(VisBuffer& vb,
   Mflg.reference(vb.flag());
 
 }
-
+*/
 
 } //# NAMESPACE CASA - END

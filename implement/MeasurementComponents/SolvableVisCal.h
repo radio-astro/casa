@@ -36,8 +36,11 @@
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <calibration/CalTables/CalSet.h>
+#include <calibration/CalTables/CalSetMetaInfo.h>
 #include <calibration/CalTables/CalInterp.h>
+#include <calibration/CalTables/VisCalEnum.h>
 #include <msvis/MSVis/VisSet.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -119,6 +122,8 @@ public:
   // Set the application parameters 
   virtual void setApply();
   virtual void setApply(const Record& apply);
+  virtual void setModel(const String& modelImage) 
+  {throw(SynthesisError("Internal error: setModel() not yet supported for non EPJones type."));};
 
   // Report apply info/params, e.g. for logging
   virtual String applyinfo();
@@ -185,6 +190,11 @@ public:
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
 			     Matrix<Bool>& Vflg)=0;
+  virtual void differentiate(VisBuffer& vb,          // vb.visCube() has the obs. data.  vb.modelVisCube() will receive the residuals
+                             VisBuffer& dV0  ,       // 1st. Derivative w.r.t. first parameter
+                             VisBuffer& dV1,         // 1st. Derivative w.r.t. second parameter
+                             Matrix<Bool>& Vflg){};
+
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
@@ -238,7 +248,15 @@ public:
 
   // Report state:
   inline virtual void state() { stateSVC(True); };
-
+  inline virtual Int nSlots(Int spw)
+  {
+    Int nslots;
+    if (parType() == VisCalEnum::COMPLEX) nslots=cs().nTime(spw);
+    else if (parType() == VisCalEnum::REAL) nslots=rcs().nTime(spw);
+    return nslots;
+  };
+  virtual VisCalEnum::VCParType setParType(VisCalEnum::VCParType type) 
+  {parType_ = type;return (VisCalEnum::VCParType)parType_;};
   virtual void currMetaNote();
 
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
@@ -252,6 +270,7 @@ protected:
 
   // Access to CalSet/CalInterp
   inline virtual CalSet<Complex>& cs() { return *cs_; };
+  inline virtual CalSet<Float>& rcs() { return *rcs_; };
   inline virtual CalInterp& ci() { return *cint_; };
 
   // Initialize solve parameters (shape)
@@ -293,6 +312,17 @@ protected:
   // Logger
   LogIO& logSink() { return logsink_p; };
 
+  void makeCalSet();
+
+  // Check if a cal table is appropriate
+  void verifyCalTable(const String& caltablename);
+
+  Int parType_;
+  // Solution/Interpolation 
+  CalSet<Complex> *cs_;
+  CalSet<Float> *rcs_;
+  CalInterp *cint_;
+  CalSetMetaInfo csmi;
 private:
 
   // Default ctor is private
@@ -304,12 +334,6 @@ private:
   // Delete pointers
   void deleteSVC();
 
-  // Check if a cal table is appropriate
-  void verifyCalTable(const String& caltablename);
-
-  // Solution/Interpolation 
-  CalSet<Complex> *cs_;
-  CalInterp *cint_;
 
   // Cal table name
   String calTableName_;

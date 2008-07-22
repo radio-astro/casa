@@ -43,6 +43,7 @@ namespace casa
       BeamCalc_VLA_U,
       BeamCalc_VLA_K,
       BeamCalc_VLA_Q,
+      BeamCalc_VLA_4,
 
       BeamCalc_EVLA_L,
       BeamCalc_EVLA_S,
@@ -52,6 +53,7 @@ namespace casa
       BeamCalc_EVLA_K,
       BeamCalc_EVLA_A,
       BeamCalc_EVLA_Q,
+      BeamCalc_EVLA_4,
       
       BeamCalc_NumBandCodes	/* this line last */
     };

@@ -25,7 +25,7 @@
 *                            520 Edgemont Road
 *                            Charlottesville, VA 22903-2475 USA
 *
-*     $Id$
+*     $Id: fpbwproj.f,v 1.13 2006/07/20 00:24:20 sbhatnag Exp $
 *-----------------------------------------------------------------------
 C
 C Grid a number of visibility records
@@ -66,7 +66,7 @@ C      complex convfunc(convsize/2-1, convsize/2-1, wconvsize, polused),
      $     cwt
 
       real norm
-      complex cnorm
+      complex cnorm,tcnorm
       real wt
 
       logical opbwproj,reindex
@@ -107,8 +107,8 @@ C      complex convfunc(convsize/2-1, convsize/2-1, wconvsize, polused),
       cDPA = cos(dPA)
       sDPA = sin(dPA)
 
-      convOrigin = (convsize-1)/2
-C      convOrigin = (convsize+1)/2
+c      convOrigin = (convsize-1)/2
+      convOrigin = (convsize+1)/2
 c$$$      write(*,*) convOrigin, convsize, (convsize/2),
 c$$$     $     convfunc(convOrigin,convOrigin,1,1)
       do irow=rbeg, rend
@@ -134,9 +134,12 @@ c$$$     $     convfunc(convOrigin,convOrigin,1,1)
                         if((flag(ipol,ichan,irow).ne.1).and.
      $                       (apol.ge.1).and.(apol.le.npol)) then
 
-                           PolnPlane=PolnPlane-1
-                           ConjPlane = conjcfmap(ipol)+1
-                           PolnPlane = cfmap(ipol)+1
+c$$$                           ConjPlane = conjcfmap(ipol)+1
+c$$$                           PolnPlane = cfmap(ipol)+1
+C
+C The following after feed_x -> -feed_x and PA -> PA + PI/2
+                           ConjPlane = cfmap(ipol)+1
+                           PolnPlane = conjcfmap(ipol)+1
 C
 C If we are making a PSF then we don't want to phase rotate but we do want 
 C to reproject uvw
@@ -154,6 +157,7 @@ C
                            norm=0.0
                            cnorm=cmplx(1.0,0.0)
                            cnorm=0.0
+			   tcnorm=0.0
                            do iy=-rsupport,rsupport
 c$$$                              iloc(2)=1+(iy*sampling+off(2))
 c$$$     $                             +convOrigin
@@ -196,9 +200,9 @@ c$$$                                 jj=iloc(1)
      $                                      ConjPlane))
                                        pcwt=conjg(pcwt)
                                     else
-                                       cwt=convfunc(iloc(1),
+                                       cwt=(convfunc(iloc(1),
      $                                      iloc(2), iloc(3),
-     $                                      PolnPlane)
+     $                                      PolnPlane))
 c                                       pcwt=conjg(pcwt)
                                     end if
                                     cwt = cwt * pcwt
@@ -264,9 +268,9 @@ C
 C     $                                iloc(2), iloc(3),PolnPlane))
                                        pcwt=conjg(pcwt)
                                     else
-                                       cwt=convfunc(iloc(1),
+                                       cwt=(convfunc(iloc(1),
      $                                      iloc(2), iloc(3),
-     $                                      PolnPlane)
+     $                                      PolnPlane))
 C     $                                iloc(2), iloc(3),PolnPlane)
                                        pcwt=(pcwt)
 c                                       pcwt=conjg(pcwt)
@@ -281,11 +285,17 @@ c$$$                                    endif
      $                                   loc(2)+iy,apol,achan)+
      $                                   nvalue*cwt
      $                                   /cnorm
-                                    norm=norm+real(cwt/cnorm)
+c                                    norm=norm+real(cwt/cnorm)
+c$$$                                    write(*,*) 'G ',abs(cwt),
+c$$$     $                                   ix,iy,iloc(1),iloc(2)
+                                    tcnorm=tcnorm+(cwt/cnorm)
 c                              cnorm=cnorm+cwt
                                  endif
                               end do
+c$$$                              write(*,*)
                            end do
+c$$$                           stop
+                           norm=real(tcnorm)
                            sumwt(apol,achan)=sumwt(apol,achan)+
      $                          weight(ichan,irow)*norm
                         end if
@@ -375,7 +385,8 @@ C
 
       cDPA = cos(dPA)
       sDPA = sin(dPA)
-      convOrigin = (convsize-1)/2
+c      convOrigin = (convsize-1)/2
+      convOrigin = (convsize+1)/2
 
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
@@ -412,9 +423,12 @@ c$$$                  stop
                      apol=polmap(ipol)+1
                      if((flag(ipol,ichan,irow).ne.1).and.
      $                    (apol.ge.1).and.(apol.le.npol)) then
-C                        PolnPlane=PolnPlane+1
-                        ConjPlane = conjcfmap(ipol)+1
-                        PolnPlane = cfmap(ipol)+1
+
+c$$$                        ConjPlane = conjcfmap(ipol)+1
+c$$$                        PolnPlane = cfmap(ipol)+1
+C The following after feed_x -> -feed_x and PA -> PA + PI/2
+                        ConjPlane = cfmap(ipol)+1
+                        PolnPlane = conjcfmap(ipol)+1
 
                         nvalue=0.0
                         norm(apol)=cmplx(0.0,0.0)
@@ -453,19 +467,23 @@ C                        PolnPlane=PolnPlane+1
                                  else
                                     cwt=(convfunc(iloc(1),
      $                                   iloc(2), iloc(3),PolnPlane))
-                                    pcwt = (pcwt)
+c                                    pcwt = conjg(pcwt)
                                  endif
                                  nvalue=nvalue+(cwt)*(pcwt)*
      $                              grid(loc(1)+ix,loc(2)+iy,apol,achan)
                                  norm(apol)=norm(apol)+(pcwt*cwt)
 c                              norm(apol)=norm(apol)+cwt
-c$$$                              write(*,*)abs(grid(loc(1)+ix,loc(2)+iy
-c$$$     $                             ,apol,achan)),ix,iy,apol,abs(cwt)
+c$$$                              write(*,*)nvalue,
+c$$$     $                                abs(grid(loc(1)+ix,loc(2)+iy,
+c$$$     $                                apol,achan)),ix,iy,apol,
+c$$$     $                                iloc(1), iloc(2),
+c$$$     $                                abs(cwt)
                               endif
                            end do
 c$$$                           write(*,*)
                         end do
 c                        norm(apol) = norm(apol)/abs(norm(apol))
+c$$$                        write (*,*) nvalue, norm(apol)
                         values(ipol,ichan,irow)=
      $                       nvalue*conjg(phasor)
      $                       /norm(apol)
@@ -525,7 +543,7 @@ C      complex convfunc(convsize/2-1, convsize/2-1, wconvsize, polused),
       complex norm(4),gradaznorm(4),gradelnorm(4)
 
       logical opbwproj,reindex
-      external wcppEij
+      external nwcppEij
 
       real pos(3)
       integer loc(3), off(3), iloc(3)
@@ -594,6 +612,9 @@ c$$$                  stop
      $                    (apol.ge.1).and.(apol.le.npol)) then
                         ConjPlane = conjcfmap(ipol)+1
                         PolnPlane = cfmap(ipol)+1
+C The following after feed_x -> -feed_x and PA -> PA + PI/2
+                        ConjPlane = cfmap(ipol)+1
+                        PolnPlane = conjcfmap(ipol)+1
 
                         nvalue=0.0
                         ngazvalue = 0.0
@@ -623,7 +644,7 @@ c$$$                  stop
                                     ra2 = raoff(ant2(irow)+1)
                                     dec1= decoff(ant1(irow)+1)
                                     dec2= decoff(ant2(irow)+1)
-                                    call wcppEij(griduvw,area,
+                                    call nwcppEij(griduvw,area,
      $                                   ra1,dec1,ra2,dec2,
      $                                   dograd,pcwt,pdcwt1,pdcwt2,
      $                                   currentCFPA)
@@ -632,7 +653,7 @@ c$$$                                 write(*,*) ra1,ra2,dec1,dec2
                                  if(uvw(3,irow).gt.0.0) then
                                     cwt=conjg(convfunc(iloc(1),
      $                                   iloc(2), iloc(3),ConjPlane))
-                                    pcwt = conjg(pcwt)
+				    pcwt = conjg(pcwt)
                                     pdcwt1 = conjg(pdcwt1)
                                     pdcwt2 = conjg(pdcwt2)
                                  else
@@ -681,6 +702,13 @@ c                        norm(apol) = norm(apol)/abs(norm(apol))
                         values(ipol,ichan,irow)=
      $                       nvalue*conjg(phasor)
      $                       /norm(apol)
+c$$$                        if (ant1(irow) .eq. 3 .and.
+c$$$     $                       ant2(irow) .eq. 7) then
+c$$$                           write(*,*)irow,ant1(irow),
+c$$$     $                          ant2(irow),ipol,ichan,
+c$$$     $                          values(ipol,ichan,irow)
+c$$$                           stop
+c$$$                        endif
                         if (dograd .eq. 1) then
                            gazvalues(ipol,ichan,irow)=ngazvalue*
      $                          conjg(phasor)/norm(apol)
@@ -749,11 +777,13 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0
       double precision sinDPA, cosDPA
       integer ix,iy
       
-      ix = cosDPA*inx + sinDPA*iny+1
-      iy =-sinDPA*inx + cosDPA*iny+1
+      ix = nint(cosDPA*inx + sinDPA*iny+1)
+      iy = nint(-sinDPA*inx + cosDPA*iny+1)
       outx = ix+Origin
       outy = iy+Origin
 
+c$$$      outx=ix
+c$$$      outy=iy
       reindex=(outx .ge. 1 .and. 
      $     outx .le. Size .and.
      $     outy .ge. 1 .and.

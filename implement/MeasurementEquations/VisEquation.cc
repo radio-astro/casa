@@ -450,6 +450,65 @@ void VisEquation::diffResiduals(VisBuffer& vb,
   
 }
 
+void VisEquation::diffResiduals(VisBuffer& R,
+                                VisBuffer& dR0,
+                                VisBuffer& dR1,
+                                Matrix<Bool>& Rflg)
+{
+  if (prtlev()>3) cout << "VE::diffResiduals()" << endl;
+
+  // Trap unspecified solvable term
+  if (!svc_)
+    throw(AipsError("No calibration term to differentiate."));
+
+  // Get trial model corrupt and differentiation from the SVC
+  //   (R, dR, and Rflg will be sized by svc_)
+  svc().differentiate(R,dR0,dR1, Rflg);
+
+  // Now, subtract obs'd data from trial model corruption
+
+  // Shape info
+  Int nCorr(R.corrType().nelements());
+  Int& nChan(R.nChannel());
+  Int& nRow(R.nRow());
+  IPosition blc(3,0,0,0);
+  IPosition trc(3,nCorr-1,nChan-1,nRow-1);
+
+  // Slice if specific channel requested
+  if (svc().freqDepPar())
+    blc(1)=trc(1)=svc().focusChan();
+ // If shapes match, subtract, else throw
+  //  TBD: avoid subtraction in flagged channels?
+  //  Cube<Complex> Vo(R.visCube()(blc,trc));
+//   cout << R.correctedVisCube().shape() << " "
+//        << R.visCube().shape() << " "
+//        << blc << " " << trc << endl;
+//  Cube<Complex> Vo(R.correctedVisCube()(blc,trc));
+  Cube<Complex> Vo(R.visCube()(blc,trc));
+  Cube<Complex> Res;Res.reference(R.modelVisCube());
+  /*
+  for(Int i=0;i<Res.shape()(2);i++)
+    {
+      cout << i
+           << " " << Res(0,0,i)
+           << " " << Res(3,0,i)
+           << " " << R.visCube()(0,0,i)
+           << " " << R.visCube()(3,0,i)
+           << " " << R.flag()(0,i)
+           << " " << R.flag()(3,i)
+           << " " << R.antenna1()(i)
+           << " " << R.antenna2()(i)
+           << " " << R.flagRow()(i)
+           << endl;
+    }
+  exit(0);
+  */
+  if (Res.shape()==Vo.shape())
+    Res-=Vo;
+  else
+    throw(AipsError("Shape mismatch in residual calculation"));
+}
+
 
 //----------------------------------------------------------------------
 // ***************************************************************************

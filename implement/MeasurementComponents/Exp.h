@@ -36,9 +36,9 @@ namespace casa
 template<class T> class Exp
 {
 public:
-  Exp() {EStep=0; ETable=NULL;Size=0;};
-  Exp(int n, T Step) {EStep=Size=0;ETable=NULL;Build(n,Step);};
-  ~Exp() {if (ETable) free(ETable);};
+  Exp<T>() {EStep=0; ETable=NULL;Size=0;};
+  Exp<T>(int n, T Step) {EStep=Size=0;ETable=NULL;Build(n,Step);};
+  ~Exp<T>() {if (ETable) free(ETable);};
 
   inline void build(int n, T Step)
   {

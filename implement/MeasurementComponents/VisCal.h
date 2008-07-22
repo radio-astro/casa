@@ -35,6 +35,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
+#include <calibration/CalTables/VisCalEnum.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <msvis/MSVis/VisSet.h>
 
@@ -72,7 +73,7 @@ public:
   virtual String longTypeName() { return "Unknown VisCal"; };
 
   // Return the parameter type (nominally complex)
-  virtual ParType parType() { return VisCal::Co; };
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::COMPLEX; };
 
   // Number of pars per ant/bln
   //    (Must be implemented in specializations!)

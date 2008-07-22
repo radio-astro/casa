@@ -634,6 +634,13 @@ Bool Calibrater::setapply (const String& type,
   return False;
 }
 
+Bool Calibrater::setmodel(const String& modelImage)
+{
+  if (!svc_p)
+    throw(AipsError("Calibrater::setmodel() called before Calibrater::setsolve()"));
+  svc_p->setModel(modelImage);
+  return True;
+}
 
 
 Bool Calibrater::setsolve (const String& type, 
@@ -642,19 +649,24 @@ Bool Calibrater::setsolve (const String& type,
 			   const Bool& phaseonly,
                            const Int& refant, 
 			   const String& table,
-                           const Bool& append)
+                           const Bool& append,
+			   const String& cfCache,
+			   const Float& paInc)
 {
   
   logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
   
   // Create a record description containing the solver parameters
   RecordDesc solveparDesc;
+  Double dPAInc = paInc;
   solveparDesc.addField ("t", TpDouble);
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("phaseonly", TpBool);
   solveparDesc.addField ("refant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
+  solveparDesc.addField ("cfcache", TpString);
+  solveparDesc.addField ("painc", TpDouble);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
@@ -664,6 +676,8 @@ Bool Calibrater::setsolve (const String& type,
   solvepar.define ("refant", refant);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
+  solvepar.define ("cfcache", cfCache);
+  solvepar.define ("painc", dPAInc);
 
   return setsolve(type,solvepar);
 

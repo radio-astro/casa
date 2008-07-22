@@ -41,6 +41,8 @@
 #include <casa/Logging/LogMessage.h>
 
 #include <casa/OS/File.h>
+#include <casa/OS/Path.h>
+
 #include <casa/OS/HostInfo.h>
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/Table.h>
@@ -109,7 +111,7 @@
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
-#include <synthesis/MeasurementComponents/PBWProjectFT.h>
+#include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/WideBandFT.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
@@ -7140,55 +7142,51 @@ Bool Imager::createFTMachine()
 	os << "Performing pb + w-plane projection"
 	   << LogIO::POST;
       }
-    if (doPointing) 
-      {
-	try
-	  {
-	    // Warn users we are have temporarily disabled pointing cal
-	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
-	    //  TBD: Bring this up-to-date with new VisCal mechanisms
-	    //	    epJ = new EPJones(*vs_p);
-	    //	    epJ->load(epJTableName_p,"","diagonal");
-	  }
-	catch(AipsError& x)
-	  {
-	    //
-	    // Add some more useful info. to the message and translate
-	    // the generic AipsError exception object to a more specific
-	    // SynthesisError object.
-	    //
-	    String mesg = x.getMesg();
-	    // We should end a sentence (to be seen by a human!) with a
-	    // full-stop!
-	    mesg += ". Error in loading pointing offset table.";
-	    SynthesisError err(mesg);
-	    throw(err);
-	  }
-      }
+
 
     if(!gvp_p) 
       {
 	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
       }
-    /*
-    ft_p = new PBWProjectFT(*ms_p, epJ, gvp_p, facets_p, cache_p/2, 
- 			    doPointing, tile_p, paStep_p, 
- 			    pbLimit_p, True);
-    */
-    //    String cfCacheDir="cache";
-    ft_p = new PBWProjectFT(*ms_p, epJ, 
-			    //			    gvp_p, 
-			    wprojPlanes_p, cache_p/2, 
-			    cfCacheDirName_p,
- 			    doPointing, doPBCorr, tile_p, paStep_p, 
- 			    pbLimit_p, True);
+
+    ft_p = new nPBWProjectFT(//*ms_p, 
+			     wprojPlanes_p, cache_p/2,
+                            cfCacheDirName_p, doPointing, doPBCorr,
+                             tile_p, paStep_p, pbLimit_p, True);
     //
     // Explicit type casing to ft_p does not look good.  It does not
     // pick up the setPAIncrement() method of PBWProjectFT without
     // this
     //
-    ((PBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+    ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+    if (doPointing)
+      {
+        try
+          {
+            epJ = new EPJones(*vs_p, *ms_p);
+            RecordDesc applyRecDesc;
+            applyRecDesc.addField("table", TpString);
+            applyRecDesc.addField("interp",TpString);
+            Record applyRec(applyRecDesc);
+            applyRec.define("table",epJTableName_p);
+            applyRec.define("interp", "nearest");
+            epJ->setApply(applyRec);
+            ((nPBWProjectFT *)ft_p)->setEPJones(epJ);
+          }
+        catch(AipsError& x)
+          {
+            //
+            // Add some more useful info. to the message and translate
+            // the generic AipsError exception object to a more specific
+            // SynthesisError object.
+            //
+            String mesg = x.getMesg();
+            mesg += ". Error in loading pointing offset table.";
+            SynthesisError err(mesg);
+            throw(err);
+          }
+      }
 
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
@@ -8454,7 +8452,15 @@ void Imager::setSkyEquation(){
   se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
 
   */
-  se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
+  if (ft_p->name() == "PBWProjectFT")
+    {
+      logSink_p.clearLocally();
+      LogIO os(LogOrigin("imager", "setSkyEquation()"), logSink_p);
+      os << "Creating SkyEquation for PBWProjectFT" << LogIO::POST;
+     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
+    }
+  else
+    se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
   return;
 }
 

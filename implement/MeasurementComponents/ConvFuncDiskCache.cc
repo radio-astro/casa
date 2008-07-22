@@ -63,9 +63,19 @@ namespace casa{
     try
       {
 	name << Dir << "/" << aux;
-	ifstream aux(name.str().c_str());
-	Int Npa,Nw;
-	aux >> Npa >> Nw;
+	File file(name);
+	Int Npa=0,Nw=0;
+	ifstream aux;
+	Bool readFromFile=False;
+	if (file.exists() && file.isRegular()) 
+	  {
+	    readFromFile=True;
+	    aux.open(name.str().c_str());
+	    if (readFromFile && aux.good()) aux >> Npa >> Nw;
+	    else
+	      throw(SynthesisFTMachineError(String("Error while reading convolution function cache file ")+name));
+	  }
+
 	if (Npa > 0)
 	  {
 	    paList.resize(Npa,True);
@@ -430,7 +440,7 @@ namespace casa{
     convSupport.resize(wConvSize,polInUse,where+1,True);
     for(Int i=0;i<wConvSize;i++)
       for(Int j=0;j<polInUse;j++)
-	convSupport(i,0,where) = XSup(i,0,where);
+	convSupport(i,j,where) = XSup(i,0,where);
     //    cout << "##### " << convFuncCache.nelements() << endl;
     convSampling = Sampling;
     return True;

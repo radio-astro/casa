@@ -26,7 +26,7 @@
 //#
 //# $Id$
 
-#define USETABLES 1
+#define USETABLES 0
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 
 namespace casa{
@@ -56,19 +56,20 @@ namespace casa{
 					 )
   {
     DComplex Kij;
-    Double Rij,Eij0, u,v,dra,ddec,s;
-    Double cpa,spa;
+    Double Rij,u,v,dra,ddec,s;
+    //    Double cpa,spa;
     //
     // If the PA of the convolution function changed, set up a new
     // rotation matrix
     //
+    /*
     if (pa_p != currentCFPA)
       {
 	pa_p = currentCFPA;
 	cpa = cos(pa_p);
 	spa = sin(pa_p);
       }
-    s=4*sigma;
+    */
     //
     // Compute the PA rotated (u,v)
     //
@@ -76,12 +77,15 @@ namespace casa{
     //    v = spa*coord[0] + cpa*coord[1];
     u = coord[0];
     v = coord[1];
-    dra=*raoff1- *raoff2;
-    ddec=*decoff1- *decoff2;
+    s=4*sigma;
+    dra=(*raoff1- *raoff2);
+    ddec=(*decoff1 - *decoff2);
     Rij = (dra*dra + ddec*ddec)*s/2.0;
+    //    Kij = Complex(0,M_PI*(u*(*raoff1+*raoff2) + v*(*decoff1+*decoff2)));
     Kij = Complex(0,M_PI*(u*(*raoff1+*raoff2) + v*(*decoff1+*decoff2)));
     //    Eij0 = (u*u + v*v)*M_PI*M_PI/s;
 
+    //    Rij = (dra*dra + ddec*ddec);
     Rij = 0;
 #if(USETABLES)
     //
@@ -97,6 +101,7 @@ namespace casa{
     //
     //    weight = (exp((-Eij0-Rij)+Kij)/ *area);
     weight = (exp((-Rij)+Kij)/ *area);
+    //    cout << exp(-Rij) << " " << exp(Kij) << " " << dra << " " << ddec << endl;
 #endif
 
     if (doGrad)
@@ -107,6 +112,9 @@ namespace casa{
 	// 	dweight1 = (Complex(0,M_PI*u)-Complex(dra*  s,0.0))*weight;
 	// 	dweight2 = (Complex(0,M_PI*v)-Complex(ddec* s,0.0))*weight;
 	//
+//    	dweight1 = -Complex(2*ddec,0) +  (Complex(0,M_PI*u));//*weight;
+//   	dweight2 = -Complex(2*dra,0) + (Complex(0,M_PI*v));//*weight;
+        //
 	// Following 2 lines when Rij=0
 	//
 	dweight1 = (Complex(0,M_PI*u));//*weight;

@@ -69,6 +69,14 @@ namespace casa{
 			TempImage<Complex>& uvGrid, 
 			const VisBuffer& vb,
 			Bool doSquint=True,Int bandID=-1);
+    void regridAperture(CoordinateSystem& skyCS,
+			IPosition& skyShape,
+			TempImage<Complex>& uvGrid,
+			const VisBuffer &vb,
+			const Vector<Float>& paList,
+			Bool doSquint, Int bandID);
+    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
+		 const Vector<Float>& paList, Int bandID);
     void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1);
     void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1);
     void skyMuller(ImageInterface<Complex>& skyJones);

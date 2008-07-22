@@ -142,12 +142,12 @@ void VisCal::setApply() {
     currSpw()=ispw;
 
     switch (parType()) {
-    case VisCal::Co: {
+    case VisCalEnum::COMPLEX: {
       currCPar().resize(nPar(),nChanPar(),nElem());
       currCPar()=Complex(1.0);
       break;
     } 
-    case VisCal::Re: {
+    case VisCalEnum::REAL: {
       currRPar().resize(nPar(),nChanPar(),nElem());
       currRPar()=1.0;
       break;
@@ -506,19 +506,19 @@ void VisCal::calcPar() {
   if (prtlev()>6) cout << "      VC::calcPar()" << endl;
 
   // Ensure we have some parameters
-  if (parType()==VisCal::Co && (currCPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
+  if (parType()==VisCalEnum::COMPLEX && (currCPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
 				currParOK().shape()!=IPosition(3,nPar(),nChanPar(),nElem())) ) {
     cout << "currCPar()   = " << currCPar() << endl;
     cout << "currParOK() = " << currParOK() << endl;
     throw(AipsError("No (complex) parameters available!"));
   }
-  else if (parType()==VisCal::Re && (currRPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
+  else if (parType()==VisCalEnum::REAL && (currRPar().shape()!=IPosition(3,nPar(),nChanPar(),nElem()) ||
 				     currParOK().shape()!=IPosition(3,nPar(),nChanPar(),nElem())) ) {
     cout << "currRPar()   = " << currRPar() << endl;
     cout << "currParOK() = " << currParOK() << endl;
     throw(AipsError("No (real) parameters available!"));
   }
-  else if (parType()==VisCal::CoRe)
+  else if (parType()==VisCalEnum::COMPLEXREAL)
     throw(AipsError("We can't handle combined Real and Complex parameters yet."));
   else
     // Parameters appear to be available, so signal validation

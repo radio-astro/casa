@@ -692,7 +692,10 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
     band= "UNKNOWN";
   } else if (telescope(0,3)=="ATA") {
     whichPB = PBMath::ATA;
-    band = "UNKNOWN";  
+    band = "UNKNOWN"; 
+  } else if (telescope(0,3)=="ATF") {
+    whichPB = PBMath::ALMA;
+    band = "UNKNOWN"; 
   } else if (telescope(0,4)=="NONE") {
     whichPB = PBMath::NONE;
     band = "UNKNOWN";
@@ -896,6 +899,8 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::SMA;
   } else if (str == "ATA"){
     ipb = PBMath::ATA;
+  } else if (str == "ATF") {
+    ipb = PBMath::ALMA;
   } else if (str == "NONE") {
     ipb = PBMath::NONE;
   } else {

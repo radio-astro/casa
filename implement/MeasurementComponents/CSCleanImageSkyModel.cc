@@ -28,6 +28,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Matrix.h>
 #include <synthesis/MeasurementComponents/CSCleanImageSkyModel.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/PagedImage.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
@@ -81,6 +82,20 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
   os << "Making approximate Point Spread Functions" << LogIO::POST;
   if(!donePSF_p)
     makeApproxPSFs(se);
+  //
+  // Quite a few lines of code required to pull out co-ordinate info.
+  // from an image, one would think.
+  //
+  CoordinateSystem psfCoord=PSF(0).coordinates();
+  Int dirIndex = psfCoord.findCoordinate(Coordinate::DIRECTION);
+  DirectionCoordinate dc=psfCoord.directionCoordinate(dirIndex);
+  Vector<Double> incr=dc.increment();
+  //
+  // The fitted beam params. are in arcsec.  Increments returned
+  // by the coordinate system are in radians.
+  //
+  incr *= 3600.0*180.0/M_PI;
+  incr = abs(incr);
 
   // Validate PSFs for each field
   Vector<Float> psfmax(numberOfModels()); psfmax=0.0;
@@ -121,9 +136,14 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       // 4 pixels:  pretty arbitrary, but only look for sidelobes
       // outside the inner (2n+1) * (2n+1) square
       // Changed the algorithm now..so that 4 is not used
-      psfmaxouter(model) = maxOuter(subPSF, 4);  
+      Int mainLobeSizeInPixels = (Int)(max(beam(0)[0]/incr[0],beam(0)[1]/incr[1]));
+      //      psfmaxouter(model) = maxOuter(subPSF, 4);  
+      psfmaxouter(model) = maxOuter(subPSF, mainLobeSizeInPixels);  
 
-      os << "Model " << model+1 << ": max, min, maxOuter PSF = "
+      os << "Model " << model+1 << ": Estimated size of the PSF mainlobe = " 
+	 << (Int)(beam(0)[0]/incr[0]+0.5) << " X " << (Int)(beam(0)[1]/incr[1] + 0.5) << " pixels" 
+	 << endl;
+      os << "Model " << model+1 << ": PSF Peak, min, max sidelobe = "
 	 << psfmax(model) << ", " << psfmin(model) << ", " <<
 	psfmaxouter(model) << endl;
       if(abs(psfmin(model))>maxSidelobe) maxSidelobe=abs(psfmin(model));
@@ -476,9 +496,6 @@ Float CSCleanImageSkyModel::maxField(Block<Vector<Float> >& imagemax,
 
 Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter ) 
 {
-  //Float myMax=0.0;
-  //Float myMin=0.0;
-
   /*
   TempLattice<Float>  mask(lat.shape());
   mask.set(1.0);
@@ -518,6 +535,7 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
   Float amin=1e9;
   Float amin2=1e9;
   Bool toggle=False;
+  /*
   for (uInt ix = 0; ix < nx; ix++) {
     for (uInt iy = 0; iy < ny; iy++) {
       if(arr(IPosition(4, ix, iy, 0, 0)) < amin){
@@ -543,12 +561,33 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
       }
     }
   }
+  Float absMax=max(median(amax2), abs(amin));
+  return absMax;
+  */
 
-  //uInt nxL = nxc - nCenter;
-  //uInt nxH = nxc + nCenter;
-  //uInt nyL = nyc - nCenter;
-  //uInt nyH = nyc + nCenter;
-  /*
+  //
+  // First locate the location of the peak
+  //
+  for (uInt ix = 0; ix < nx; ix++) {
+    for (uInt iy = 0; iy < ny; iy++) {
+      if (arr(IPosition(4, ix, iy, 0, 0)) > amax) {
+	nxc = ix;
+	nyc = iy;
+	amax = arr(IPosition(4, ix, iy, 0, 0));
+      }
+    }
+  }
+  //
+  // Now exclude the mainlobe center on the location of the peak to
+  // get the max. outer sidelobe.
+  //
+  Float myMax=0.0;
+  Float myMin=0.0;
+
+  uInt nxL = nxc - nCenter;
+  uInt nxH = nxc + nCenter;
+  uInt nyL = nyc - nCenter;
+  uInt nyH = nyc + nCenter;
     
   for (uInt ix = 0; ix < nx; ix++) {
     for (uInt iy = 0; iy < ny; iy++) {
@@ -563,9 +602,7 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
 
   Float absMax = max( abs(myMin), myMax );
   return absMax;
-  */
-  Float absMax=max(median(amax2), abs(amin));
-  return absMax;
+
 
 };
 

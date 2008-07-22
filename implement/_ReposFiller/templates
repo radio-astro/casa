@@ -30,13 +30,18 @@
      template class CountedPtr<WPConvFunc>
 1010 casa/Utilities/CountedPtr.cc 
      = images/Images/TempImage.h
+     = images/Images/PagedImage.h
      = images/Images/ImageInterface.h
      template class SimpleCountedConstPtr<TempImage<Float> >
+     template class SimpleCountedConstPtr<PagedImage<Float> >
      template class SimpleCountedConstPtr<ImageInterface<Complex> >
      template class SimpleCountedPtr<TempImage<Float> >
+     template class SimpleCountedPtr<PagedImage<Float> >
      template class SimpleCountedPtr<ImageInterface<Complex> >
      template class CountedPtr<TempImage<Float> >
+     template class CountedPtr<PagedImage<Float> >
      template class PtrRep<TempImage<Float> >
+     template class PtrRep<PagedImage<Float> >
      template class PtrRep<ImageInterface<Complex> >
      template class CountedPtr<ImageInterface<Complex> >
 1020 casa/Utilities/CountedPtr.cc 

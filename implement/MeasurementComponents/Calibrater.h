@@ -109,6 +109,8 @@ class Calibrater
   Bool setapply (const String& type, 
 		 const Record& applypar);
 
+  Bool setmodel(const String& modelImage);
+
   //  Arrange to solve
   Bool setsolve (const String& type, 
 		 const Double& t,
@@ -116,7 +118,9 @@ class Calibrater
 		 const Bool& phaseonly,
 		 const Int& refant, 
 		 const String& table,
-		 const Bool& append);
+		 const Bool& append,
+		 const String& cfCach="",
+		 const Float& paInc=360.0f);
 
   // Arrange to solve (using MSSelection syntax)
   Bool setsolve (const String& type, 

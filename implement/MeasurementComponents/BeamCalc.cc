@@ -36,6 +36,7 @@
 #include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
 #include <images/Images/TempImage.h>
 #include <casa/Exceptions.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 namespace casa{
   /* normalizes a "vector" of 3 Doubles in the vector sense */
   
@@ -55,12 +56,21 @@ namespace casa{
     Int i;
     Double d, r, m, z;
     FILE *in;
-    
-    in = fopen(geomfile, "r");
+    const char *sep=" ";
+    char *aipsPath = strtok(getenv("AIPSPATH"),sep);
+    if (aipsPath == NULL)
+      throw(SynthesisError("AIPSPATH not found."));
+
+    String fullFileName(aipsPath);
+    fullFileName = fullFileName + "/data/nrao/VLA/" + geomfile;
+
+    in = fopen(fullFileName.c_str(), "r");
+
     if(!in)
       {
-	fprintf(stderr, "File %s not found\n", geomfile);
-	return 0;
+	String msg = "File " + fullFileName 
+	  + " not found.\n   Did you forget to install package data repository?\n";
+	throw(SynthesisError(msg));
       }
     
     a = (calcAntenna *)malloc(sizeof(calcAntenna));

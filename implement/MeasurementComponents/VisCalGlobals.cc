@@ -30,6 +30,7 @@
 #include <synthesis/MeasurementComponents/GSpline.h>
 #include <synthesis/MeasurementComponents/BPoly.h>
 #include <synthesis/MeasurementComponents/EJones.h>
+#include <synthesis/MeasurementComponents/EPJones.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -97,6 +98,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 
   else if (uptype=="J" || uptype=="J JONES") 
     return new JJones(vs);
+
+  else if (uptype == "EP" || uptype == "EP JONES")
+    return new EPJones(vs);
 
   else if (uptype=="M" || uptype=="M MUELLER")
     return new MMueller(vs);

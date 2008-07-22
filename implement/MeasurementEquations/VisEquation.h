@@ -134,6 +134,10 @@ public:
 		     Cube<Complex>& R, 
 		     Array<Complex>& dR,
 		     Matrix<Bool>& Rflg); 
+  void diffResiduals(VisBuffer& R,
+                     VisBuffer& dR0,
+                     VisBuffer& dR1,
+                     Matrix<Bool>& Rflg);
 
  
   // Report the VisEq's state

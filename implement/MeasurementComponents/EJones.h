@@ -106,7 +106,7 @@ private:
 // **********************************************************
 //  EPJones (pointing errors)
 //
-
+/*
 class EPJones : public SolvableVisJones {
 public:
 
@@ -157,7 +157,7 @@ private:
   Matrix<Float> pointPar_;
 
 };
-
+*/
 
 
 

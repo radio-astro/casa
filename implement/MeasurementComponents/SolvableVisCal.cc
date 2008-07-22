@@ -138,6 +138,33 @@ SolvableVisCal::~SolvableVisCal() {
 
 }
 
+void SolvableVisCal::makeCalSet()
+{
+  switch(parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	cs().initCalTableDesc(typeName(),parType_);
+	nChanParList() = cs().nChan();
+	startChanList() = cs().startChan();
+
+	// Create CalInterp
+	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
+	ci().setSpwMap(spwMap());
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	//	rcs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    default:
+         throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+			 "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
+    }    
+}
 
 // Generic setapply
 void SolvableVisCal::setApply() {
@@ -158,11 +185,12 @@ void SolvableVisCal::setApply() {
   // Assemble inflated (but empty) CalSet from current shapes
   Vector<Int> nTimes(nSpw(),1);
   cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
+  cs().initCalTableDesc(typeName(),parType_);
+  //  cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
 
   // Assemble CalInterp
   cint_ = new CalInterp(cs(),tInterpType(),"nearest");
   ci().setSpwMap(spwMap());
-
 }
 
 // Setapply from a Cal Table, etc.
@@ -256,7 +284,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 
 
   // Create CalSet, from table
-  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+  //  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+  makeCalSet();
 
   // These come from CalSet now, but will eventually come from CalInterp
 
@@ -265,11 +294,31 @@ void SolvableVisCal::setApply(const Record& apply) {
   //  cout << "cs().nChan().shape()   = " << cs().nChan().shape() << endl;
   //  cout << "cs().nChan()           = " << cs().nChan() << endl;
 
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-    nChanParList()(ispw) = cs().nChan()(spwMap()(ispw));
-    startChanList()(ispw) = cs().startChan()(spwMap()(ispw));
-  }
-
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	for (Int ispw=0;ispw<nSpw();++ispw) 
+	  {
+	    nChanParList()(ispw) = cs().nChan()(spwMap()(ispw));
+	    startChanList()(ispw) = cs().startChan()(spwMap()(ispw));
+	  }
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	for (Int ispw=0;ispw<nSpw();++ispw) 
+	  {
+	    nChanParList()(ispw) = rcs().nChan()(spwMap()(ispw));
+	    startChanList()(ispw) = rcs().startChan()(spwMap()(ispw));
+	  }
+	break;
+      }
+    case VisCalEnum::COMPLEXREAL:
+      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		      "COMPLEXREAL found in SolvableVisCal::setApply()"));
+        break;
+    }
   //  cout << "nChanParList().shape() = " << nChanParList().shape() << endl;
   //  cout << "nChanParList()         = " << nChanParList() << endl;
   //  cout << "cs().nChan().shape()   = " << cs().nChan().shape() << endl;
@@ -318,7 +367,7 @@ void SolvableVisCal::setSolve() {
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
   cs_ = new CalSet<Complex>(nSpw());
-
+  cs().initCalTableDesc(typeName(),parType_);
 }
 
 void SolvableVisCal::setSolve(const Record& solve) 
@@ -400,7 +449,7 @@ void SolvableVisCal::setSolve(const Record& solve)
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
   cs_ = new CalSet<Complex>(nSpw());
-
+  cs().initCalTableDesc(typeName(),parType_);
   //  state();
 
 }
@@ -409,11 +458,15 @@ String SolvableVisCal::solveinfo() {
 
   // Get the refant name from the MS
   String refantName("none");
+  /*
   if (refant()>-1) {
     MeasurementSet ms(msName());
     MSAntennaColumns mscol(ms.antenna());
     refantName=mscol.name()(refant());
   }
+  */
+  if (refant()>-1)
+      refantName=csmi.getAntName(refant());
 
   ostringstream o;
   o << boolalpha
@@ -459,6 +512,7 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
     // Create CalSet, from table
     cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+    cs().initCalTableDesc(typeName(), parType_);
 
     nChanParList() = cs().nChan();
     startChanList() = cs().startChan();
@@ -478,6 +532,7 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
     // Create a pristine CalSet
     //  TBD: move this to inflate()?
     cs_ = new CalSet<Complex>(nSpw());
+    cs().initCalTableDesc(typeName(),parType_);
 
     // Size, inflate CalSet (incl. filling meta data)
     setSolveChannelization(vs);
@@ -679,6 +734,8 @@ void SolvableVisCal::initSolve(VisSet& vs) {
 
   // Inflate the CalSet according to VisSet
   inflate(vs);
+
+  cs().initCalTableDesc(typeName(), parType_);
 
   // Size the solvePar arrays
   initSolvePar();
@@ -1045,7 +1102,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     
     antOK=False;
     for (Int iant=0;iant<nAnt();++iant) {
-      if (blperant(iant)>2 &&
+      if (blperant(iant)>3 &&
 	  wtperant(iant)>0.0) {
 	// This antenna is good, keep it
 	nAntForSolve+=1;
@@ -1077,9 +1134,9 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
       solveParOK().xyPlane(iant) = True;
     else
       // This ant not ok, set soln to zero
-      if (parType()==VisCal::Co)
+      if (parType()==VisCalEnum::COMPLEX)
       	solveCPar().xyPlane(iant)=1.0;
-      else if (parType()==VisCal::Re)
+      else if (parType()==VisCalEnum::REAL)
       	solveRPar().xyPlane(iant)=0.0;
   //  cout << "antOK = " << antOK << endl;
   //  cout << "solveParOK() = " << solveParOK() << endl;
@@ -1294,9 +1351,12 @@ void SolvableVisCal::calcPar() {
 // Report solved-for QU
 void SolvableVisCal::reportSolvedQU() {
 
+  /*
   MeasurementSet ms(msName());
   MSFieldColumns msfldcol(ms.field());
   String fldname(msfldcol.name()(currField()));
+  */
+  String fldname(csmi.getFieldName(currField()));
 
   if (solvePol()==2) {
     Float Q=real(srcPolPar()(0));
@@ -1440,7 +1500,7 @@ void SolvableVisCal::store() {
     logSink() << "Writing solutions to table: " << calTableName()
 	      << LogIO::POST;
 
-  cs().store(calTableName(),typeName(),msName(),append());
+  cs().store(calTableName(),typeName(),append(),msName());
 
 }
 
@@ -1546,7 +1606,9 @@ void SolvableVisCal::initSVC() {
     solveParErr_[ispw] = new Cube<Float>();
     solveParSNR_[ispw] = new Cube<Float>();
   }
-
+  
+  parType_=VisCalEnum::COMPLEX;
+  csmi.reset(msName());
 }
 
 void SolvableVisCal::deleteSVC() {
@@ -1626,18 +1688,45 @@ void SolvableVisMueller::initSolvePar() {
     
     currSpw()=ispw;
 
-    // TBD: Consider per-baseline solving (3rd=1)
-    solveCPar().resize(nPar(),nChanPar(),nBln());
-    solveParOK().resize(nPar(),nChanPar(),nBln());
-    solveParErr().resize(nPar(),nChanPar(),nBln());
-    solveParSNR().resize(nPar(),nChanPar(),nBln());
-
-    // TBD: solveRPar()?
-    
-    solveCPar()=Complex(1.0);
-    solveParOK()=True;
-    solveParErr()=0.0;
-    solveParSNR()=0.0;
+    switch(parType())
+      {
+      case VisCalEnum::COMPLEX:
+	{
+	  // TBD: Consider per-baseline solving (3rd=1)
+	  solveCPar().resize(nPar(),nChanPar(),nBln());
+	  solveParOK().resize(nPar(),nChanPar(),nBln());
+	  solveParErr().resize(nPar(),nChanPar(),nBln());
+	  solveParSNR().resize(nPar(),nChanPar(),nBln());
+	  
+	  // TBD: solveRPar()?
+	  
+	  solveCPar()=Complex(1.0);
+	  solveParOK()=True;
+	  solveParErr()=0.0;
+	  solveParSNR()=0.0;
+	  break;
+	}
+      case VisCalEnum::REAL:
+	{
+	  // TBD: Consider per-baseline solving (3rd=1)
+	  solveRPar().resize(nPar(),nChanPar(),nBln());
+	  solveParOK().resize(nPar(),nChanPar(),nBln());
+	  solveParErr().resize(nPar(),nChanPar(),nBln());
+	  solveParSNR().resize(nPar(),nChanPar(),nBln());
+	  
+	  // TBD: solveRPar()?
+	  
+	  solveRPar()=0.0;
+	  solveParOK()=True;
+	  solveParErr()=0.0;
+	  solveParSNR()=0.0;
+	  break;
+	}
+      case VisCalEnum::COMPLEXREAL:
+         throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+			 "COMPLEXREAL found in SolvableVisMueller::initSolvePar()"));
+         break;
+      }//endcase
   }
   currSpw()=0;
 
@@ -2266,18 +2355,19 @@ void SolvableVisJones::initSolvePar() {
     currSpw()=ispw;
 
     switch (parType()) {
-    case VisCal::Co: {
+    case VisCalEnum::COMPLEX: {
       solveCPar().resize(nPar(),1,nAnt());
       solveCPar()=Complex(1.0);
       break;
     }
-    case VisCal::Re: {
+    case VisCalEnum::REAL: {
       solveRPar().resize(nPar(),1,nAnt());
       solveRPar()=0.0;
       break;
     }
     default:
-      throw(AipsError("Parameters must be entirely Real or entirely Complex for now!"));
+      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		      "COMPLEXREAL found in SolvableVisJones::initSolvePar()"));
     }
 
     solveParOK().resize(nPar(),1,nAnt());
@@ -2461,9 +2551,12 @@ void SolvableVisJones::applyRefAnt() {
 
   // Get the refant name from the nMS
   String refantName("none");
+  /*
   MeasurementSet ms(msName());
   MSAntennaColumns msantcol(ms.antenna());
   refantName=msantcol.name()(refant());
+  */
+  refantName=csmi.getAntName(refant());
 
   logSink() << "Applying refant: " << refantName
 	    << LogIO::POST;
@@ -2535,7 +2628,8 @@ void SolvableVisJones::applyRefAnt() {
 			  << ", pol=" << ipar 
 			  << ", chan=" << ichan 
 			  << ")"
-			  << ", using refant " << msantcol.name()(currrefant)
+		  //			  << ", using refant " << msantcol.name()(currrefant)
+			  << ", using refant " << csmi.getAntName(currrefant)
 			  << " (id=" << currrefant 
 			  << ")" << " (alternate)"
 			  << LogIO::POST;
@@ -2626,7 +2720,8 @@ void SolvableVisJones::applyRefAnt() {
 			      << ", pol=" << ipar 
 			      << ", chan=" << ichan 
 			      << ")"
-			      << ", using refant " << msantcol.name()(currrefant)
+		      //			      << ", using refant " << msantcol.name()(currrefant)
+			      << ", using refant " << csmi.getAntName(currrefant)
 			      << " (id=" << currrefant 
 			      << ")" << " (alternate)"
 			      << LogIO::POST;
@@ -3437,12 +3532,17 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
     }
     
     // Access to ms for meta info
+    /*
     MeasurementSet ms(msName());
     MSAntennaColumns msant(ms.antenna());
     Vector<String> antname(msant.name().getColumn());
     MSFieldColumns msfld(ms.field());
     Vector<String> fldname(msfld.name().getColumn());
-    
+    */
+
+    Vector<String> antname=csmi.getAntNames();
+    Vector<String> fldname=csmi.getFieldNames();
+
     // Default header info.
     logSink() << LogIO::NORMAL1 << "MS name = " << msName() << LogIO::POST;        
         
