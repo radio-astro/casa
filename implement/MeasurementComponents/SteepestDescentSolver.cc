@@ -63,6 +63,16 @@ namespace casa {
     N = vb.nRow();
     Double wt;
     sumWt = 0;
+    //
+    // It will be most useful to use
+    // both RR and LL, and both cases are useful: (1) compute joind RR
+    // and LL chisq, and (2) compute separate Chisq for RR and LL.
+    // The CalTable stuff below all this is however not yet capable of
+    // writing a caltable with 2 real parameters for 2 polarizations.
+    //
+    // Currently computing chisq for only the first polarization in
+    // vis. ArrayColumn from the MS.
+    //
     for(IPosition ndx(3,0);ndx(2)<N;ndx(2)++)
       if ((!residual.flagCube()(ndx))     && 
 	  (!residual.flag()(0,ndx(2)))    &&
@@ -221,8 +231,10 @@ namespace casa {
     Bool Converged=False;
     Vector<Bool> antFlagged;
     antFlagged.resize(nAnt);
-    cout << "####Sol. int. = " 
-	 << SlotNo << " Chisq = " << Chisq << " " << sumWt << endl;
+    logIO() << LogOrigin("PointingCal","SDS::solve()") 
+	    << "Solution interval = " << SlotNo 
+	    << " Initial Chisq = " << Chisq 
+	    << " SumOfWt = " << sumWt << LogIO::NORMAL3 << LogIO::POST;
     
     for (iter=0;iter<numberIterations();iter++)
       {
@@ -277,7 +289,9 @@ namespace casa {
 	      }
 	    catch (AipsError &x)
 	      {
-		cout << x.getMesg() << endl;
+		logIO() << LogOrigin("PointingCal","SDS::solve()") 
+			<< x.getMesg() 
+			<< LogIO::POST;
 		return -1;
 	      }
 	  }
@@ -301,7 +315,9 @@ namespace casa {
 		}
 	      catch (AipsError &x)
 		{
-		  cout << x.getMesg() << endl;
+		  logIO() << LogOrigin("PointingCal","SDS::solve") 
+			  << x.getMesg() 
+			  << LogIO::POST;
 		  return -1;
 		}
 	      Chisq0 = Chisq;
@@ -311,15 +327,16 @@ namespace casa {
 	      oldOffsets = epj.solveRPar();
 	    }
       }
-    cout << "###Sol. int. = " 
-	 << SlotNo << " Final Chisq = " << Chisq << endl;
+    logIO() << LogOrigin("PointingCal","SDS::solve") 
+	    << "Solution interval = " << SlotNo << " Final Chisq = " << Chisq 
+	    << LogIO::NORMAL3 << LogIO::POST;
 
     //
     // Finalize the solutions in VisJones internal cache.
     //
     Chisq = fabs(Chisq0-Chisq);
 
-    logIO() << LogIO::NORMAL << "No. of iterations used: " 
+    logIO() << LogIO::NORMAL3 << "No. of iterations used: " 
 	    << iter
 	    << " Time total, per iteration:  " 
 	    << timer.all() << ", " << timer.all()/(iter+1) << " sec" << LogIO::POST;
@@ -360,7 +377,9 @@ namespace casa {
       }
     catch (AipsError &x)
       {
-	cout << x.getMesg() << endl;
+	logIO() << LogOrigin("PointingCal","SDS::solve2") 
+		<< x.getMesg() 
+		<< LogIO::POST;
 	return -1;
       }
 
@@ -374,8 +393,10 @@ namespace casa {
     Bool Converged=False;
     Vector<Bool> antFlagged;
     antFlagged.resize(nAnt);
-    cout << "####Sol. int. = " 
-	 << SlotNo << " Chisq = " << Chisq << " " << sumWt << endl;
+    logIO() << LogOrigin("PointingCal","SDS::solve2") 
+	    << "Solution interval = " << SlotNo << " Initial Chisq = " << Chisq 
+	    << " SumOfWt = " << sumWt 
+	    << LogIO::NORMAL3 << LogIO::POST;
     //    return 1e-5;
     //    if (Chisq < 1e-5) return Chisq;
     
@@ -433,7 +454,9 @@ namespace casa {
 	      }
 	    catch (AipsError &x)
 	      {
-		cout << x.getMesg() << endl;
+		logIO() << LogOrigin("PointingCal","SDS::solve2")  
+			<< x.getMesg() 
+			<< LogIO::POST;
 		return -1;
 	      }
 	  }
@@ -459,7 +482,8 @@ namespace casa {
 		}
 	      catch (AipsError &x)
 		{
-		  cout << x.getMesg() << endl;
+		  logIO() << LogOrigin("PointingCal","SDS::solve2") 
+			  << x.getMesg() << LogIO::POST;
 		  return -1;
 		}
 
@@ -470,14 +494,16 @@ namespace casa {
 	      oldOffsets = epj.solveRPar();
 	    }
       }
-    cout << "###Sol. int. = " << SlotNo << " Final Chisq = " << Chisq << endl;
+    logIO() << LogOrigin("PointingCal","SDS::solve2") 
+	    << "Solution interval = " << SlotNo 
+	    << " Final Chisq = " << Chisq << LogIO::NORMAL3 << LogIO::POST;
 
     //
     // Finalize the solutions in VisJones internal cache.
     //
     Chisq = fabs(Chisq0-Chisq);
 
-    logIO() << LogIO::NORMAL << "No. of iterations used: " 
+    logIO() << LogIO::NORMAL3 << "No. of iterations used: " 
 	    << iter
 	    << " Time total, per iteration:  " 
 	    << timer.all() << ", " << timer.all()/(iter+1) << " sec" << LogIO::POST;

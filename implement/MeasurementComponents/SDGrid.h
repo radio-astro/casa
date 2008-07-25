@@ -236,6 +236,8 @@ private:
   MDirection::Convert* pointingToImage;
 
   Vector<Double> xyPos;
+  //Original xypos of moving source
+  Vector<Double> xyPosMovingOrig_p;
 
   MDirection worldPosMeas;
 

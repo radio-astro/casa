@@ -477,7 +477,7 @@ c$$$                              write(*,*)nvalue,
 c$$$     $                                abs(grid(loc(1)+ix,loc(2)+iy,
 c$$$     $                                apol,achan)),ix,iy,apol,
 c$$$     $                                iloc(1), iloc(2),
-c$$$     $                                abs(cwt)
+c$$$     $                                abs(cwt),iu,iv
                               endif
                            end do
 c$$$                           write(*,*)
@@ -576,7 +576,7 @@ c$$$      enddo
       dPA = -(currentCFPA - actualPA)
       cDPA = cos(dPA)
       sDPA = sin(dPA)
-      convOrigin = (convsize-1)/2
+      convOrigin = (convsize+1)/2
 
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
@@ -644,7 +644,7 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
                                     ra2 = raoff(ant2(irow)+1)
                                     dec1= decoff(ant1(irow)+1)
                                     dec2= decoff(ant2(irow)+1)
-                                    call nwcppEij(griduvw,area,
+                                    call wcppEij(griduvw,area,
      $                                   ra1,dec1,ra2,dec2,
      $                                   dograd,pcwt,pdcwt1,pdcwt2,
      $                                   currentCFPA)
@@ -664,6 +664,11 @@ c$$$                                 write(*,*) ra1,ra2,dec1,dec2
                                  nvalue=nvalue+(cwt)*
      $                                grid(loc(1)+ix,loc(2)+iy,apol,
      $                                achan)
+c$$$                              write(*,*)nvalue,
+c$$$     $                                abs(grid(loc(1)+ix,loc(2)+iy,
+c$$$     $                                apol,achan)),ix,iy,apol,
+c$$$     $                                iloc(1), iloc(2),
+c$$$     $                                abs(cwt),iu,iv
                                  
                                  if ((doconj .eq. 1) .and. 
      $                                (dograd .eq. 1)) then

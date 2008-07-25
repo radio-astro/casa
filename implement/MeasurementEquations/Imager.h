@@ -176,7 +176,10 @@ class Imager
 			   const Quantity& qStep,
 			   const Vector<Int>& spectralwindowids, 
 			   const Quantity& restFreq,
-			   const Int facets, const Quantity& distance);
+			   const Int facets, const Quantity& distance,
+			   const Bool trackSource=False, const MDirection& 
+			   trackDir=MDirection(Quantity(0.0, "deg"), 
+					       Quantity(90.0, "deg")));
   // Set the data selection parameters
  
   virtual  Bool setDataPerMS(const String& msname, const String& mode, 
@@ -674,6 +677,10 @@ protected:
   SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 
+  //Track moving source stuff
+  Bool doTrackSource_p;
+  MDirection trackDir_p;
+    
 
 };
 

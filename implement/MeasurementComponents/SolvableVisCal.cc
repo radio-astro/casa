@@ -157,7 +157,10 @@ void SolvableVisCal::makeCalSet()
     case VisCalEnum::REAL:
       {
 	rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	//	rcs().initCalTableDesc(typeName(),parType_);
+	rcs().initCalTableDesc(typeName(),parType_);
+	// Create CalInterp
+// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
+// 	ci().setSpwMap(spwMap());
 	break;
       }
     default:
@@ -184,12 +187,28 @@ void SolvableVisCal::setApply() {
 
   // Assemble inflated (but empty) CalSet from current shapes
   Vector<Int> nTimes(nSpw(),1);
-  cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
-  cs().initCalTableDesc(typeName(),parType_);
+  switch(parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
+	cs().initCalTableDesc(typeName(),parType_);
+	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
+	rcs().initCalTableDesc(typeName(),parType_);
+// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
+	break;
+      }
+    default: 
+      throw(AipsError("Internal SVC error: Got invalid VisCalEnum"));
+    }
   //  cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
 
   // Assemble CalInterp
-  cint_ = new CalInterp(cs(),tInterpType(),"nearest");
   ci().setSpwMap(spwMap());
 }
 
@@ -303,6 +322,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 	    nChanParList()(ispw) = cs().nChan()(spwMap()(ispw));
 	    startChanList()(ispw) = cs().startChan()(spwMap()(ispw));
 	  }
+	// Create CalInterp
+	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
 	break;
       }
     case VisCalEnum::REAL:
@@ -312,6 +333,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 	    nChanParList()(ispw) = rcs().nChan()(spwMap()(ispw));
 	    startChanList()(ispw) = rcs().startChan()(spwMap()(ispw));
 	  }
+	// Create CalInterp
+	//	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
 	break;
       }
     case VisCalEnum::COMPLEXREAL:
@@ -327,8 +350,6 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Sanity check on parameter channel shape
   //  AlwaysAssert((freqDepPar()||allEQ(nChanParList(),1)),AipsError);
 
-  // Create CalInterp
-  cint_ = new CalInterp(cs(),tInterpType(),"nearest");
   ci().setSpwMap(spwMap());
 
 }
@@ -366,8 +387,23 @@ void SolvableVisCal::setSolve() {
 
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
-  cs_ = new CalSet<Complex>(nSpw());
-  cs().initCalTableDesc(typeName(),parType_);
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw());
+	cs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw());
+	rcs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::setSolve() error: Got invalide VisCalEnum"));
+    }
 }
 
 void SolvableVisCal::setSolve(const Record& solve) 
@@ -448,8 +484,23 @@ void SolvableVisCal::setSolve(const Record& solve)
 
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
-  cs_ = new CalSet<Complex>(nSpw());
-  cs().initCalTableDesc(typeName(),parType_);
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw());
+	cs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw());
+	rcs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
+    }
   //  state();
 
 }
@@ -511,11 +562,28 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 	      << LogIO::POST;
 
     // Create CalSet, from table
-    cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-    cs().initCalTableDesc(typeName(), parType_);
+    switch (parType())
+      {
+      case VisCalEnum::COMPLEX:
+	{
+	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	  cs().initCalTableDesc(typeName(), parType_);
+	  nChanParList() = cs().nChan();
+	  startChanList() = cs().startChan();
+	  break;
+	}
+      case VisCalEnum::REAL:
+	{
+	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	  rcs().initCalTableDesc(typeName(), parType_);
+	  nChanParList() = rcs().nChan();
+	  startChanList() = rcs().startChan();
+	  break;
+	}
+      default:
+	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
+      }
 
-    nChanParList() = cs().nChan();
-    startChanList() = cs().startChan();
 
     // The following should be for trivial types only!    
     nChanMatList()=nChanParList();
@@ -531,22 +599,49 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
     // Create a pristine CalSet
     //  TBD: move this to inflate()?
-    cs_ = new CalSet<Complex>(nSpw());
-    cs().initCalTableDesc(typeName(),parType_);
+    switch (parType())
+      {
+      case VisCalEnum::COMPLEX:
+	{
+	  cs_ = new CalSet<Complex>(nSpw());
+	  cs().initCalTableDesc(typeName(),parType_);
 
-    // Size, inflate CalSet (incl. filling meta data)
-    setSolveChannelization(vs);
-    // Override single-channel per solve! (trivial types only)
-    nChanMatList()=nChanParList();
+	  // Size, inflate CalSet (incl. filling meta data)
+	  setSolveChannelization(vs);
+	  // Override single-channel per solve! (trivial types only)
+	  nChanMatList()=nChanParList();
 
-    inflate(vs,True);
+	  inflate(vs,True);
 
-    // Set parOK,etc. to true
-    for (Int ispw=0;ispw<nSpw();ispw++) {
-      cs().parOK(ispw)=True;
-      cs().solutionOK(ispw)=True;
-    }
+	  // Set parOK,etc. to true
+	  for (Int ispw=0;ispw<nSpw();ispw++) {
+	    cs().parOK(ispw)=True;
+	    cs().solutionOK(ispw)=True;
+	  }
+	  break;
+	}
+      case VisCalEnum::REAL:
+	{
+	  rcs_ = new CalSet<Float>(nSpw());
+	  rcs().initCalTableDesc(typeName(),parType_);
 
+	  // Size, inflate CalSet (incl. filling meta data)
+	  setSolveChannelization(vs);
+	  // Override single-channel per solve! (trivial types only)
+	  nChanMatList()=nChanParList();
+
+	  inflate(vs,True);
+
+	  // Set parOK,etc. to true
+	  for (Int ispw=0;ispw<nSpw();ispw++) {
+	    rcs().parOK(ispw)=True;
+	    rcs().solutionOK(ispw)=True;
+	  }
+	  break;
+	}
+      default:
+	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
+      }
   }
 
 }
@@ -735,7 +830,21 @@ void SolvableVisCal::initSolve(VisSet& vs) {
   // Inflate the CalSet according to VisSet
   inflate(vs);
 
-  cs().initCalTableDesc(typeName(), parType_);
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs().initCalTableDesc(typeName(), parType_);
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs().initCalTableDesc(typeName(), parType_);
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::initSolve(vs) error: Got invalid VisCalEnum"));
+    }
 
   // Size the solvePar arrays
   initSolvePar();
@@ -796,9 +905,24 @@ void SolvableVisCal::inflate(const Vector<Int>& nChan,
   if (prtlev()>3) cout << "  SVC::inflate(,,)" << endl;
 
   // Size up the CalSet
-  cs().resize(nPar(),nChan,nElem(),nSlot);
-  cs().setStartChan(startChan);
-
+  
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs().resize(nPar(),nChan,nElem(),nSlot);
+	cs().setStartChan(startChan);
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs().resize(nPar(),nChan,nElem(),nSlot);
+	rcs().setStartChan(startChan);
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::inflate(...) error: Got invalide VisCalEnum"));
+    }
 }
 
 
@@ -3921,7 +4045,9 @@ String calTableType(const String& tablename) {
   if (ti.type()!="Calibration") {
     ostringstream o;
     o << "Table " << tablename
-      << " is not a valid Calibration table.";
+      << " is not a valid Calibration table."
+      << " (expected type = \"Calibration\"; type found = \""
+      << ti.type() << "\")";
     throw(AipsError(String(o)));
     
   }

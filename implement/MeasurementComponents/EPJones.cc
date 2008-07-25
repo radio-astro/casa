@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointPar_(),
     ms_p(0), vs_p(&vs),
     maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-7), gain_p(0.2), niter_p(500)
+    timer(), polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointPar_(),
     ms_p(&ms), vs_p(&vs),
     maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-7), gain_p(0.2), niter_p(500)
+    timer(), polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -141,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pbwp_p->initializeToVis(targetVisModel_,vb);
 
     polMap_p = pbwp_p->getPolMap();
-    cout << "Pol Map = " << polMap_p << endl;
+    //    cout << "Pol Map = " << polMap_p << endl;
   }
   //
   //-----------------------------------------------------------------------
@@ -548,6 +548,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Determine solving channelization according to VisSet & type
     setSolveChannelization(vs);
     
+    // Nominal spwMap in solve is identity
+    spwMap().resize(vs.numberSpw());
+    indgen(spwMap());
+
     // Inflate the CalSet according to VisSet
     SolvableVisCal::inflate(vs);
     
@@ -568,13 +572,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	currSpw()=ispw;
       
-	cout << solveRPar().shape() << " " << solveParOK().shape() << endl;
+	//	cout << "EPJ::initSolvePar(): " << solveRPar().shape() << " " << solveParOK().shape() << endl;
 	solveRPar().resize(nPar(),1,nAnt());
 	solveParOK().resize(nPar(),1,nAnt());
+	solveParErr().resize(nPar(),1,nAnt());
 	
 	solveRPar()=(0.0);
 	solveParOK()=True;
+
+	solveParSNR().resize(nPar(),1,nAnt());
+	solveParSNR()=0.0;
       }
+
     currSpw()=0;
   }
   //
@@ -739,13 +748,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (print)
       {
-	//	Int f = (Int)(100*(slotNo>0?slotNo:1)/(nSlots>0?nSlots:1));
 	Int f = (Int)(100*(slotNo+1)/(nSlots>0?nSlots:1));
-// 	ostringstream str;
-// 	str << "Spw=" << spw << " slot=" << slotNo << " field=" 
-// 	    << fieldId 
-// 	  //	  << " time = " << MVTime(vb.time()(0)/86400.0)
-// 	  ;
 	logSink()<< LogIO::NORMAL 
 		 << "Spw=" << spw << " slot=" << slotNo << " field=" 
 		 << fieldId << ". Done " << f << "%"
@@ -821,11 +824,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		timer.mark();
 		//	      goodSoln = (sds.solve(ve, *this, svb,nAnt(),islot(spw))<0)?False:True;
 		goodSoln = (sds.solve2(ve,vi,*this, nAnt(),islot(spw))<0)?False:True;
-  		{
-  		  cout << "Solutions = " << MVTime(vb.time()(0)/86400.0) 
-  		       << solveRPar()*57.295*3600 << " "
-  		       << endl;
-  		}	
+//   		{
+//   		  cout << "Solutions = " << MVTime(vb.time()(0)/86400.0) 
+//   		       << solveRPar()*57.295*3600 << " "
+//   		       << endl;
+//   		}	
 		if (goodSoln) 
 		  {
 		    //
@@ -871,6 +874,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pointingOffsets(0,0,ndx(0)) = solveRPar()(0,0,ndx(0));//pointPar_(0,0,ndx(0));
 	pointingOffsets(1,0,ndx(0)) = solveRPar()(1,0,ndx(0));//pointPar_(1,0,ndx(0));
       }
+    //    cout << "EPJ: " << pointingOffsets << endl;
     //
     // Model vis shape must match visibility
     //
@@ -914,26 +918,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    cout << "chunk==========================================" << endl;
 	    cout << vb.modelVisCube().shape() << " " << vb.visCube().shape() << " " << vb.flag().shape() 
 		 << vb.flagRow().shape() << " " << vb.flagCube().shape() << endl;
+	    Int m=1;
 	    for(Int i=0;i<vb.modelVisCube().shape()(2);i++)
 	      {
 		cout << "Residual: " << i 
 		     << " " << vb.modelVisCube()(0,0,i) 
-		     << " " << vb.modelVisCube()(3,0,i)
+		     << " " << vb.modelVisCube()(m,0,i)
 		     << " " << vb.visCube()(0,0,i) 
-		     << " " << vb.visCube()(3,0,i)
+		     << " " << vb.visCube()(m,0,i)
 		     << " " << vb.modelVisCube()(0,0,i)-vb.visCube()(0,0,i) 
-		     << " " << vb.modelVisCube()(3,0,i)-vb.visCube()(3,0,i) 
+		     << " " << vb.modelVisCube()(m,0,i)-vb.visCube()(m,0,i) 
 		     << " " << vb.flag()(0,i) 
 		     << " " << vb.antenna1()(i)<< "-" << vb.antenna2()(i) 
 		     << " " << vb.flagRow()(i) 
 		     << " " << vb.flagCube()(0,0,i) 
-		     << " " << vb.flagCube()(3,0,i) 
+		     << " " << vb.flagCube()(m,0,i) 
 		     << endl;
 	      }
-	    //exit(0);
+	    exit(0);
 	  }
 	*/
-	
 	vb.modelVisCube() -= vb.visCube();  // Residual = VModel - VObs
 
 	resAvgr.accumulate(vb);

@@ -250,7 +250,7 @@ public:
   inline virtual void state() { stateSVC(True); };
   inline virtual Int nSlots(Int spw)
   {
-    Int nslots;
+    Int nslots=0;
     if (parType() == VisCalEnum::COMPLEX) nslots=cs().nTime(spw);
     else if (parType() == VisCalEnum::REAL) nslots=rcs().nTime(spw);
     return nslots;

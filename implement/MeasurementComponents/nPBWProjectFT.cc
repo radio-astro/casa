@@ -88,7 +88,7 @@
 #include <casa/System/ProgressMeter.h>
 
 #define CONVSIZE (1024*2)
-#define USETABLES 1           // If equal to 1, use tabulated exp() and
+#define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
 // determine the resolution of the
@@ -321,6 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double Lambda=C::c/Freq;
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);
+    nwEij.setSigma(sigma);
     Int bandID = getVLABandID(Freq,telescopeNames(0));
     return bandID;
   }
@@ -666,7 +667,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     NAnt=pointingOffsets.shape()(2)-1;
     l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
     m_off = pointingOffsets(IPosition(3,1,0,0),IPosition(3,1,0,NAnt));
-
     /*
     IPosition shp(pointingOffsets.shape());
     IPosition shp1(l_off.shape()),shp2(m_off.shape());
@@ -861,6 +861,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Float peak=0;
     Int NAnt;
+    /*
     if (doPointing)
       NAnt=findPointingOffsets(vb,l_offsets,m_offsets,False);
     else
@@ -871,8 +872,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::NORMAL
 	    << LogIO::POST;
     
-    noOfPASteps++;
     if (!doPointing) NAnt=1;
+    */
+    noOfPASteps++;
     NAnt=1;
     
     for(Int ant=0;ant<NAnt;ant++)
@@ -1281,6 +1283,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // the average PB can get inconsistant with the rest of the
         // cache.
         //
+	logIO() << LogOrigin("nPBWProjectFT::findConvFunction()","") 
+		<< "Making the convolution function for PA=" << pa << "deg."
+		<< LogIO::NORMAL 
+		<< LogIO::POST;
+	makeConvFunction(image,vb,pa);
 	try
 	  {
 	    cfCache.loadAvgPB(avgPB);
@@ -1295,7 +1302,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    makeAveragePB0(vb, image, polInUse,avgPB);
 	  }
 
-	makeConvFunction(image,vb,pa);
 	//	makeAveragePB(vb, image, polInUse,avgPB);
 	pbNormalized=False; 
 	normalizeAvgPB();
@@ -1384,6 +1390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     //  PAIndex++;
     //  PAIndex = convFuncCache.nelements();
+    if (bandID_p == -1) bandID_p=getVisParams(vb);
     Int NNN=0;
     logIO() << LogOrigin("nPBWProjectFT", "makeConvFunction") 
 	    << "Making a new convolution function for PA="
@@ -1579,7 +1586,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  vlaPB.applyPB(twoDPB, vb);
 	  }
 	*/
-	if (bandID_p == -1) bandID_p=getVisParams(vb);
 	vlaPB.applyPB(twoDPB, vb, bandID_p);
 //         Bool isRefPB;  
 //         Array<Complex> pbBuf;
@@ -1589,7 +1595,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Now FFT and get the result back
 	//
+
+	//	String name("pb.im");
+	//	storeImg(name,twoDPB);
+
 	LatticeFFT::cfft2d(twoDPB);
+
+	//	name="aperture.im";
+	//	storeImg(name,twoDPB);
 	//
 	// Fill the convolution function planes with the result.
 	//
@@ -2439,16 +2452,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> ConjCFMap, CFMap;
     actualPA = getPA(vb);
     ConjCFMap = polMap;
-    //    CFMap = makeConjPolMap(vb);
     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
-    //    cout << "CFMap = " << CFMap << "  ConjCFMap = " << ConjCFMap << endl;
-    /*
-      Int N;
-      N=polMap.nelements();
-      CFMap = polMap; ConjCFMap = polMap;
-      for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
-    */
+
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
     
@@ -2526,7 +2532,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     &currentCFPA
 	     ,&actualPA
 	     );
-    /*
+
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
     CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
     
@@ -2549,7 +2555,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
     vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
     vb.antenna2().freeStorage((const Int*&) vb_ant2_p,deleteThem(VBANT2));
-    */
   }
   //
   //----------------------------------------------------------------------
@@ -2736,6 +2741,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     const casa::Complex *datStorage=data->getStorage(isCopy);
     //  Array<Float> l_offsets,m_offsets;
     Int NAnt = 0;
+
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
     //
@@ -2914,9 +2920,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     findConvFunction(*image, vb);
     Int NAnt=0;
+    if (bandID_p == -1) bandID_p=getVisParams(vb);
     if (doPointing)   
-      //     NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
-      NAnt = l_off.shape()(0);
+      NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
+    //      NAnt = l_off.shape()(0);
     l_offsets=l_off;
     m_offsets=m_off;
     Matrix<Double> uvw(3, vb.uvw().nelements());
@@ -3085,9 +3092,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //    cout << "PBWP::get: Current PA = " << currentCFPA << endl;
     //  Array<Float> l_offsets,m_offsets;
+    if (bandID_p == -1) bandID_p=getVisParams(vb);
     Int NAnt=0;
-     if (doPointing)   
-       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
+    if (doPointing)   
+      NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
 
     Matrix<Double> uvw(3, vb.uvw().nelements());
     uvw=0.0;
@@ -3260,6 +3268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     
     //  Array<Float> l_offsets,m_offsets;
+    if (bandID_p == -1) bandID_p=getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     

@@ -268,6 +268,7 @@ traceEvent(1,"Entering imager::defaults",25);
   nmodels_p=0;
   useModelCol_p=True;  
   freqFrameValid_p=False;
+  doTrackSource_p=False;
   logSink_p=LogSink(LogMessage::NORMAL, False);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
@@ -338,6 +339,8 @@ Imager &Imager::operator=(const Imager & other)
   latestObsInfo_p=other.latestObsInfo_p;
   parAngleInc_p=other.parAngleInc_p;
   skyPosThreshold_p=other.skyPosThreshold_p;
+  doTrackSource_p=other.doTrackSource_p;
+  trackDir_p=other.trackDir_p;
   if (mssel_p && this != &other) {
     *mssel_p = *(other.mssel_p);
   }
@@ -1511,7 +1514,8 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 			 const Vector<Int>& spectralwindowids,
 			 const Quantity& restFreq,
 			 const Int facets,
-			 const Quantity& distance)
+			 const Quantity& distance, const Bool dotrackDir, 
+			 const MDirection& trackDir)
 {
 
 
@@ -1542,6 +1546,10 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 
     os << "Defining image properties" << LogIO::POST;
   
+    doTrackSource_p=dotrackDir;
+    trackDir_p=trackDir;
+
+
     /**** this check is not really needed here especially for SD imaging
     if(2*Int(nx/2)!=nx) {
       this->unlock();
@@ -7164,7 +7172,8 @@ Bool Imager::createFTMachine()
       {
         try
           {
-            epJ = new EPJones(*vs_p, *ms_p);
+	    //            epJ = new EPJones(*vs_p, *ms_p);
+            epJ = new EPJones(*vs_p);
             RecordDesc applyRecDesc;
             applyRecDesc.addField("table", TpString);
             applyRecDesc.addField("interp",TpString);
@@ -7272,6 +7281,9 @@ Bool Imager::createFTMachine()
     
   }
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+  if(doTrackSource_p){
+    ft_p->setMovingSource(trackDir_p);
+  }
   return True;
 }
 
@@ -8397,8 +8409,12 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
 
     Int fieldid = (datafieldids_p.nelements()>0 ? datafieldids_p(0) : 
 		   fieldid_p);
-    msdoppler.dopplerInfo(restFreq ,spw,fieldid);
-
+    try{
+      msdoppler.dopplerInfo(restFreq ,spw,fieldid);
+    }
+    catch(...){
+      restFreq.resize();
+    }
   }
   if(restFreq.nelements() >0) 
     return True;

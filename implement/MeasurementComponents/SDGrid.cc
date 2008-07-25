@@ -148,6 +148,11 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     convType=other.convType;
     pointingToImage=other.pointingToImage;
     userSetSupport_p=other.userSetSupport_p;
+    xyPosMovingOrig_p=other.xyPosMovingOrig_p;
+    movingDir_p=other.movingDir_p;
+    fixMovingSource_p=other.fixMovingSource_p;
+    firstMovingDir_p=other.firstMovingDir_p;
+
   };
   return *this;
 };
@@ -399,7 +404,6 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
   Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
   AlwaysAssert(directionIndex>=0, AipsError);
   directionCoord=coords.directionCoordinate(directionIndex);
-  cout << "cachesize " << cachesize << " prod " << image->shape().product() << endl;
   if((image->shape().product())>cachesize) {
     isTiled=True;
   }
@@ -1040,13 +1044,31 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     mFrame_p.resetEpoch(epoch);
     mFrame_p.resetPosition(FTMachine::mLocation_p);
   }
+  
   worldPosMeas=(*pointingToImage)(act_mspc.directionMeas(pointIndex));
   Bool result=directionCoord.toPixel(xyPos, worldPosMeas);
+  
+
+
+
   if(!result) {
     logIO_p << "Failed to find pixel location for " 
 	    << worldPosMeas.getAngle().getValue() << LogIO::EXCEPTION;
     return False;
   }
+  if(fixMovingSource_p){
+    if(xyPosMovingOrig_p.nelements() <2){
+      directionCoord.toPixel(xyPosMovingOrig_p, firstMovingDir_p);
+    }
+    MDirection actSourceDir=(*pointingToImage)(movingDir_p);
+    Vector<Double> actPix;
+    directionCoord.toPixel(actPix, actSourceDir);
+
+    xyPos=xyPos+xyPosMovingOrig_p-actPix;
+
+  }
+
+
   return result;
 
   // Convert to pixel coordinates

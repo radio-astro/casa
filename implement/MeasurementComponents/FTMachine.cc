@@ -72,7 +72,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FTMachine::FTMachine() : image(0), uvwMachine_p(0), tangentSpecified_p(False),
+  FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
+			   tangentSpecified_p(False), fixMovingSource_p(False),
 			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			 freqFrameValid_p(False)
 {
@@ -112,6 +113,8 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   // Set the frame for the UVWMachine
   mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s")), mLocation_p);
 
+  
+
   // First get the CoordinateSystem for the image and then find
   // the DirectionCoordinate
   CoordinateSystem coords=image->coordinates();
@@ -119,6 +122,14 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   AlwaysAssert(directionIndex>=0, AipsError);
   DirectionCoordinate
     directionCoord=coords.directionCoordinate(directionIndex);
+
+  // get the first position of moving source
+  if(fixMovingSource_p){
+    MDirection::Ref outref(directionCoord.directionType(), mFrame_p);
+    firstMovingDir_p=MDirection::Convert(movingDir_p, outref)();
+
+  }
+
 
   // Now we need MDirection of the image phase center. This is
   // what we define it to be. So we define it to be the
@@ -282,6 +293,8 @@ FTMachine::~FTMachine()
 {
  if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
 }
+
+
 
 void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 			  const VisBuffer& vb)
@@ -694,8 +707,19 @@ MPosition& FTMachine::getLocation(){
 }
 
 
+void FTMachine::setMovingSource(const String& sourcename){
 
+  fixMovingSource_p=True;
+  movingDir_p=MDirection(Quantity(0.0,"deg"), Quantity(90.0, "deg"));
+  movingDir_p.setRefString(sourcename);
 
+}
+void FTMachine::setMovingSource(const MDirection& mdir){
+
+  fixMovingSource_p=True;
+  movingDir_p=mdir;
+
+}
 
 
 

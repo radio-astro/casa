@@ -211,6 +211,11 @@ public:
   void setLocation(const MPosition& loc);
   MPosition& getLocation();
 
+  // set a moving source aka planets or comets =>  adjust phase center
+  // on the fly for gridding 
+  virtual void setMovingSource(const String& sourcename);
+  virtual void setMovingSource(const MDirection& mdir);
+
 protected:
 
   LogIO logIO_p;
@@ -228,6 +233,12 @@ protected:
   MDirection mTangent_p;
 
   MDirection mImage_p;
+
+  // moving source stuff
+  MDirection movingDir_p;
+  Bool fixMovingSource_p;
+  MDirection firstMovingDir_p;
+    
 
   Double distance_p;
 
