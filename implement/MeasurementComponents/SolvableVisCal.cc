@@ -3616,6 +3616,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 			                   const String& listfile,
                                const Int& maxScrRows) {
 
+    char cfill = cout.fill(' '); // Set fill character for terminal output
+    
     //Int uSpwID = uchanids(0,0);
     //Int chan = uchanids(0,1);
     
@@ -3984,6 +3986,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
          << endl << endl;
          
     if (listfile!="") cout.rdbuf(sbuf); // restore cout
+    cout.fill(cfill);
 
 }// end function listCal
 
