@@ -32,6 +32,8 @@
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/SteepestDescentSolver.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumHolder.h>
 
 #include <tables/Tables/ExprNode.h>
 
@@ -171,7 +173,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       paInc       //Float paSteps=1.0
 			       );
     casa::Quantity patol(paInc,"deg");
-    logSink() << "Parallactic Angle tolerance set to " << patol.getValue("deg") << " deg" << LogIO::POST;
+    logSink() << LogOrigin("EPJones","setSolve") 
+	      << "Parallactic Angle tolerance set to " << patol.getValue("deg") << " deg" 
+	      << LogIO::POST;
     pbwp_p->setPAIncrement(patol);
     pbwp_p->setEPJones(this);
     
@@ -189,9 +193,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    calTableName_="test";
     //  SolvableVisCal::setSolve(solve);
     
-    if (solve.isDefined("t"))
-      interval()=solve.asFloat("t");
+//     if (solve.isDefined("t"))
+//       interval()=solve.asFloat("t");
+     if (solve.isDefined("solint"))
+       solint()=solve.asString("solint");
     
+    QuantumHolder qhsolint;
+    String error;
+    Quantity qsolint;
+    qhsolint.fromString(error,solint());
+    if (error.length()!=0)
+      throw(AipsError("EPJones::setsolve(): Unrecognized units for solint."));
+    qsolint=qhsolint.asQuantumDouble();
+    if (qsolint.isConform("s"))
+      interval()=qsolint.get("s").getValue();
+    else 
+      {
+	// assume seconds
+	interval()=qsolint.getValue();
+	solint()=solint()+"s";
+      }
+
     if (solve.isDefined("preavg"))
       preavg()=solve.asFloat("preavg");
     
@@ -724,6 +746,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Int spw, const Int nSolutions)
   {
     Int nSlots, nMesg;
+
     nSlots = rcs().nTime(spw);
     
     Double timeTaken = timer.all();
@@ -732,10 +755,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     avgTimePerSolution += timeTaken;
     Double avgT =  avgTimePerSolution/(nSolutions>0?nSolutions:1);
     //
-    // Boost the no. of messages printed if the average time
-    // per solution is large (larger than my patience anyway)
+    // Boost the no. of messages printed if the next message, based on
+    // the average time per solution, is going to appear after a time
+    // longer than my (SB) patience would permit!  The limit of
+    // patience is set to 10 min.
     //
-    Float boost = avgT/(10*60.0);
+    Float boost = avgT*printFraction(nSlots)*nSlots/(10*60.0);
     boost = (boost < 1.0)? 1.0:boost;
     nMesg = (Int)(nSlots*printFraction(nSlots)/boost);
     nMesg = (nMesg<1?1:nMesg);
@@ -995,7 +1020,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Array<Float>  par  = getOffsets(currSpw());
     Vector<Double> time = getTime(currSpw());
-    Int nant=nAnt();
+    //    Int nant=nAnt();
     uInt nTimes = time.nelements(), slot=0;
     Double dT=abs(time[0]-thisTime);
     IPosition shp=par.shape();

@@ -692,7 +692,9 @@ Bool Calibrater::setsolve (const String& type,
                            const String& refant,
 			   const Bool& solnorm,
 			   const Float& minsnr,
-			   const String& combine)
+			   const String& combine,
+			   const String& cfcache,
+			   const Double& painc)
 {
   
   logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL3;
@@ -709,6 +711,8 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("minsnr", TpFloat);
   solveparDesc.addField ("type", TpString);
   solveparDesc.addField ("combine", TpString);
+  solveparDesc.addField ("cfcache", TpString);
+  solveparDesc.addField ("painc", TpDouble);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
@@ -729,6 +733,8 @@ Bool Calibrater::setsolve (const String& type,
   String upcomb=combine;
   upcomb.upcase();
   solvepar.define("combine",upcomb);
+  solvepar.define ("cfcache", cfcache);
+  solvepar.define ("painc", painc);
 
   return setsolve(type,solvepar);
 

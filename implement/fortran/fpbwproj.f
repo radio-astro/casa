@@ -70,7 +70,7 @@ C      complex convfunc(convsize/2-1, convsize/2-1, wconvsize, polused),
       real wt
 
       logical opbwproj,reindex
-      external wcppeij
+      external nwcppeij
 
       real pos(3)
       integer loc(3), off(3), iloc(3),iu,iv
@@ -187,7 +187,7 @@ c$$$                                 jj=iloc(1)
                                        ra2 = raoff(ant2(irow)+1)
                                        dec1= decoff(ant1(irow)+1)
                                        dec2= decoff(ant2(irow)+1)
-                                       call wcppeij(griduvw,area,
+                                       call nwcppeij(griduvw,area,
      $                                      ra1,dec1,ra2,dec2,
      $                                      dograd,pcwt,pdcwt1,pdcwt2,
      $                                      currentCFPA)
@@ -253,7 +253,7 @@ C
                                        ra2 = raoff(ant2(irow)+1)
                                        dec1= decoff(ant1(irow)+1)
                                        dec2= decoff(ant2(irow)+1)
-                                       call wcppeij(griduvw,area,
+                                       call nwcppeij(griduvw,area,
      $                                      ra1,dec1,ra2,dec2,
      $                                      dograd,pcwt,pdcwt1,pdcwt2,
      $                                      currentCFPA)
@@ -355,7 +355,7 @@ C      complex convfunc(convsize/2-1, convsize/2-1, wconvsize, polused),
       complex norm(4)
 
       logical opbwproj,reindex
-      external wcppEij
+      external nwcppEij
 
       real pos(3)
       integer loc(3), off(3), iloc(3)
@@ -454,7 +454,7 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
                                     ra2 = raoff(ant2(irow)+1)
                                     dec1= decoff(ant1(irow)+1)
                                     dec2= decoff(ant2(irow)+1)
-                                    call wcppEij(griduvw,area,
+                                    call nwcppEij(griduvw,area,
      $                                   ra1,dec1,ra2,dec2,
      $                                   dograd,pcwt,pdcwt1,pdcwt2,
      $                                   currentCFPA)
@@ -644,7 +644,7 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
                                     ra2 = raoff(ant2(irow)+1)
                                     dec1= decoff(ant1(irow)+1)
                                     dec2= decoff(ant2(irow)+1)
-                                    call wcppEij(griduvw,area,
+                                    call nwcppEij(griduvw,area,
      $                                   ra1,dec1,ra2,dec2,
      $                                   dograd,pcwt,pdcwt1,pdcwt2,
      $                                   currentCFPA)

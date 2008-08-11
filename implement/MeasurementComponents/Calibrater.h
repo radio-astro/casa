@@ -119,7 +119,7 @@ class Calibrater
 		 const Int& refant, 
 		 const String& table,
 		 const Bool& append,
-		 const String& cfCach="",
+		 const String& cfCache="",
 		 const Float& paInc=360.0f);
 
   // Arrange to solve (using MSSelection syntax)
@@ -132,7 +132,9 @@ class Calibrater
 		 const String& refant="",
 		 const Bool& solnorm=False,
 		 const Float& minsnr=0.0f,
-		 const String& combine="");
+		 const String& combine="",
+		 const String& cfcache="",
+		 const Double& painc=360.0);
 
   // Arrange to solve for BPOLY
   Bool setsolvebandpoly(const String& table,

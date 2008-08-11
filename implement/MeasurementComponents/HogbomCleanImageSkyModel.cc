@@ -265,7 +265,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   }
   
   //Some variables if we change the image size
-  IPosition newshp(4, newNx, newNy, 1,1);
+  IPosition newshp(4, newNx, newNy, npol,1);
   Array<Float> newData;
   Array<Float> newStep;
   Array<Float> newPsf;
@@ -309,14 +309,20 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       }
       else{
 	IPosition blc(4, (newNx-nx)/2, (newNy-ny)/2, 0,0);
-	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, 0,0);
-	IPosition newshp(4, newNx, newNy, 1,1);
+	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, npol-1,0);
+	newshp(0)=newNx; 
+	newshp(1)=newNy;
 	newData.resize(newshp);
 	newStep.resize(newshp);
-	newPsf.resize(newshp);
-	newData.set(0.0); newStep.set(0.0), newPsf.set(0.0);
+	
+	newData.set(0.0); newStep.set(0.0);
 	newData(blc,trc).assign(imageli.rwCursor());
 	newStep(blc,trc).assign(imageStepli.rwCursor());
+	//psf we use first plane only of pol image
+	newshp(2)=1;
+	newPsf.resize(newshp);
+	newPsf.set(0.0);
+	trc(2)=0;
 	newPsf(blc,trc).assign(psfli.cursor());
 	limage_data=newData.getStorage(delete_iti);
 	limageStep_data=newStep.getStorage(delete_its);
@@ -357,7 +363,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       }
       else{
 	IPosition blc(4, (newNx-nx)/2, (newNy-ny)/2, 0,0);
-	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, 0,0);
+	IPosition trc(4, (newNx+nx)/2-1, (newNy+ny)/2-1, npol-1,0);
 	newData.putStorage(limage_data, delete_iti);
 	newStep.putStorage(limageStep_data, delete_its);
 	newPsf.freeStorage(lpsf_data, delete_itp);
