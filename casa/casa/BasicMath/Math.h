@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.h 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id$
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
 
 #include <casa/aips.h>
-//# The following is to get abs(int) and (is)finite.
+//# The following is to get abs(int)
 #include <casa/math.h>
 #include <casa/stdlib.h>
 
-// On some systems the following is needed to get the finite function
+// the following is needed to get the finite function
 #if defined (AIPS_SOLARIS) || defined(AIPS_IRIX)
 #include <ieeefp.h>
 #endif
@@ -259,16 +259,16 @@ inline Bool allNearAbs(Double val1, Double val2, Double tol = 1.0e-13)
 // <group>
 inline Bool isFinite (const Float& val)
 {
-#if defined(AIPS_DARWIN)
-  return std::isfinite(val);
+#if defined(__APPLE__) || defined(AIPS_DARWIN)
+	return isfinite(val);
 #else
   return finite(val);
 #endif
 }
 inline Bool isFinite (const Double& val)
 {
-#if defined(AIPS_DARWIN)
-  return std::isfinite(val);
+#if defined(__APPLE__) || defined(AIPS_DARWIN)
+	return isfinite(val);
 #else
   return finite(val);
 #endif

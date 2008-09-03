@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSUvDistGram.ll 20266 2008-02-26 00:43:05Z gervandiepen $
+    $Id$
 */
 
 %{
@@ -45,7 +45,7 @@ FNUMBER   {NUMBER}?{EXP}?
 KILO       ([Kk]?)
 MEGA       (M?)
 METER      (m?)
-LAMBDA     ([Ll]?)
+LAMBDA     ((("lambda")|("LAMBDA"))?)
 WAVELENGTHUNIT   (({KILO}|{MEGA})?{LAMBDA})
 DISTANCEUNIT     (({KILO})?{METER})
 UNIT      ({DISTANCEUNIT}|{WAVELENGTHUNIT})

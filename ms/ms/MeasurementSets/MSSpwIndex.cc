@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwIndex.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id$
 
 #include <measures/Measures/MDoppler.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -308,6 +308,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  (freqList(j+3) == MSSpwIndex::MSSPW_INDEXRANGE))
 		{
 		  Int start=(Int)freqList(j), stop=(Int)freqList(j+1), step=(Int)freqList(j+2);
+		  if (start == -1) start = 0;
+		  if (stop == -1) stop = numChans(spw(i))-1;
 		  if (stop == start)
 		    {
 		      start = stop = start < 0? 0 : start;

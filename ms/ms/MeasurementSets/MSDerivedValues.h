@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSDerivedValues.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id$
 
 #ifndef MS_MSDERIVEDVALUES_H
 #define MS_MSDERIVEDVALUES_H
@@ -141,6 +141,10 @@ public:
   // Set field center
   MSDerivedValues& setFieldCenter(const MDirection& fieldCenter);
 
+  //If you have used setMeasurementSet then this version of 
+  //setFieldCenter using field id makes sense
+  MSDerivedValues& setFieldCenter(uInt fieldid=0);
+
   // Set antenna index, sets the position reference for the conversions. 
   // Use -1 to set the reference frame to the observatory position.
   MSDerivedValues& setAntenna(Int antenna);
@@ -188,6 +192,11 @@ public:
 
   Quantity toFrequency(const Quantity& vel, const Quantity& restFreq);
   Quantity toFrequency(const Quantity& vel);
+
+  // get velocity from frequency
+  Quantity toVelocity(const Quantity& freq, const Quantity& restFreq);
+  Quantity toVelocity(const Quantity& freq);
+
 protected:
 
 private:

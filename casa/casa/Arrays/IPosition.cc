@@ -123,7 +123,8 @@ IPosition::IPosition (const IPosition& other)
 IPosition IPosition::nonDegenerate (uInt startingAxis) const
 {
     if (startingAxis >= size_p) {
-        return *this;
+        throw (AipsError("IPosition::nonDegenerate: startingAxis is greater"
+                         " than size of this IPosition."));
     }
     IPosition ignoreAxes(startingAxis);
     for (uInt i=0; i<startingAxis; i++) {

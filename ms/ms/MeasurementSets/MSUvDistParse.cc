@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistParse.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id$
 
 #include <ms/MeasurementSets/MSUvDistParse.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -77,19 +77,19 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
       endPoint = endUV;
       distanceUnit = True;
     } 
-  else if(units == "ml") // Mega Lambda
+  else if(units == "mlambda") // Mega Lambda
     {
       startPoint = startUV * 1000000;
       endPoint = endUV * 1000000;
       wavelengthUnit = True;
     } 
-  else if(units == "kl") // Kilo lambda
+  else if(units == "klambda") // Kilo lambda
     {
       startPoint = startUV * 1000;
       endPoint = endUV * 1000;
       wavelengthUnit = True;
     } 
-  else if(units == "l") // Lambda
+  else if(units == "lambda") // Lambda
     {
       startPoint = startUV;
       endPoint = endUV;
@@ -99,7 +99,7 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
     {
       String Mesg="Unrecognized units " + 
 	units + 
-	" found.  Possible units are [Kk][Ll] for wavelengths or [Kk][Mm] for distance.";
+	" found.  Possible units are [Kk][LAMBDA or lambda] for wavelengths or [Kk][Mm] for distance.";
       throw(MSSelectionUvDistParseError(Mesg));
     }
   

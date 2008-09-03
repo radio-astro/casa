@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSFieldGram.yy 20266 2008-02-26 00:43:05Z gervandiepen $
+    $Id$
 */
 
 %{
@@ -211,7 +211,7 @@ fieldidbounds: LT INT // <ID
 		  Int n=atoi($2);
 		  $$ = new Vector<Int>(myMSFI.matchFieldIDLT(n));
 
-		  ostringstream m; m << "No field ID found <=" << n;
+		  ostringstream m; m << "No field ID found <" << n;
 		  checkFieldError(*($$), m);
 
 
@@ -224,7 +224,7 @@ fieldidbounds: LT INT // <ID
 		  Int n=atoi($2);
 		  $$ = new Vector<Int>(myMSFI.matchFieldIDGT(n));
 
-		  ostringstream m; m << "No field ID found >= " << n;
+		  ostringstream m; m << "No field ID found >" << n;
 		  checkFieldError(*($$), m);
 
 		  free($2);
