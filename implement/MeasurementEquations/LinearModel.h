@@ -114,6 +114,6 @@ public:
 } //# NAMESPACE CASA - END
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <synthesis/MeasurementEquations/LinearModel.cc>
+#include <synthesis/MeasurementEquations/LinearModel.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 #endif

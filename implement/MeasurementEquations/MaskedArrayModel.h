@@ -148,6 +148,6 @@ protected:
 } //# NAMESPACE CASA - END
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <synthesis/MeasurementEquations/MaskedArrayModel.cc>
+#include <synthesis/MeasurementEquations/MaskedArrayModel.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 #endif

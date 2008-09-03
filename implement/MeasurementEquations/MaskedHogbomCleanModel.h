@@ -139,6 +139,6 @@ protected:
 } //# NAMESPACE CASA - END
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <synthesis/MeasurementEquations/MaskedHogbomCleanModel.cc>
+#include <synthesis/MeasurementEquations/MaskedHogbomCleanModel.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 #endif

@@ -151,6 +151,6 @@ public:
 } //# NAMESPACE CASA - END
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <synthesis/MeasurementEquations/ResidualEquation.cc>
+#include <synthesis/MeasurementEquations/ResidualEquation.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 #endif

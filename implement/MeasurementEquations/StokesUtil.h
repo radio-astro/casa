@@ -151,6 +151,6 @@ Bool near(const StokesVector& val1, const StokesVector& val2,
 } //# NAMESPACE CASA - END
 
 #ifndef AIPS_NO_TEMPLATE_SRC
-#include <synthesis/MeasurementEquations/StokesUtil.cc>
+#include <synthesis/MeasurementEquations/StokesUtil.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 #endif
