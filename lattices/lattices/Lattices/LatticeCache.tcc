@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeCache.tcc 20256 2008-02-23 20:28:24Z gervandiepen $
+//# $Id: LatticeCache.tcc 20403 2008-09-15 07:02:01Z gervandiepen $
 
 #include <casa/aips.h>
 #include <lattices/Lattices/Lattice.h>
@@ -67,6 +67,7 @@ LatticeCache<T> &LatticeCache<T>::operator=(const LatticeCache<T> & other)
   numberTiles=other.numberTiles;
   tileShape=other.tileShape;
   tileShapeVec=other.tileShapeVec;
+  tileOffsetVec=other.tileOffsetVec;
   tileOverlap=other.tileOverlap;
   cacheSize=other.cacheSize;
   cacheAccesses=other.cacheAccesses;

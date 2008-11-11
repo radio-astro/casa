@@ -23,14 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Record.cc 20324 2008-06-04 13:06:54Z gervandiepen $
-
-#ifndef HAVE_HDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
+//# $Id: tHDF5Record.cc 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #include <casa/HDF5/HDF5Record.h>
 #include <casa/HDF5/HDF5File.h>
@@ -40,6 +33,13 @@ int main()
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
+
+#ifndef HAVE_LIBHDF5
+int main()
+{
+  return 3;     // skipped
+}
+#else
 
 using namespace casa;
 

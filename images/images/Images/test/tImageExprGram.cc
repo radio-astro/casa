@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageExprGram.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tImageExprGram.cc 20416 2008-10-29 15:23:33Z gervandiepen $
 
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageExpr.h>
@@ -257,7 +257,7 @@ int main (int argc, const char* argv[])
     PtrBlock<const ImageRegion*> regions(1);
     regions[0] = new ImageRegion(LCBox(shape));
     LatticeExpr<Double> expr(ImageExprParse::command
-         ("$OBJ#1#O + ($OBJ#2#O + $OBJ#3#O)[$REGION#1]",
+         ("$1 + ($2 + $3)[$R1]",
 						      temps, regions));
     delete regions[0];
     a.copyData(expr);
@@ -279,7 +279,7 @@ int main (int argc, const char* argv[])
     mask(0,0) = True;
     regions[0] = new ImageRegion(LCPixelSet(mask,LCBox(IPosition(2,0),
 						       shape-2, shape)));
-    LatticeExpr<Double> expr(ImageExprParse::command ("nelements(b[$REGION#1])",
+    LatticeExpr<Double> expr(ImageExprParse::command ("nelements(b[$R1])",
 						      temps, regions));
     delete regions[0];
     a.copyData(expr);
@@ -308,8 +308,8 @@ int main (int argc, const char* argv[])
     regions[1] = new ImageRegion(LCPixelSet(mask2,LCBox(IPosition(2,0),
 							shape-2, shape)));
     LatticeExpr<Double> expr(ImageExprParse::command
-			     ("nelements(b[$REGION#1 || $REGION#2]) - "
-			      "length(b[$REGION#1],0)",
+			     ("nelements(b[$R1 || $R2]) - "
+			      "length(b[$R1],0)",
 			      temps, regions));
     delete regions[0];
     delete regions[1];

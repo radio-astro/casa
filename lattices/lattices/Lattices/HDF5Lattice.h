@@ -23,12 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.h 20308 2008-05-19 13:36:41Z gervandiepen $
+//# $Id: HDF5Lattice.h 20399 2008-09-11 13:18:38Z gervandiepen $
 
 #ifndef LATTICES_HDF5LATTICE_H
 #define LATTICES_HDF5LATTICE_H
-
-#ifdef HAVE_HDF5
 
 //# Includes
 #include <lattices/Lattices/Lattice.h>
@@ -37,6 +35,8 @@
 #include <casa/HDF5/HDF5Group.h>
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/BasicSL/String.h>
+
+#ifdef HAVE_LIBHDF5
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

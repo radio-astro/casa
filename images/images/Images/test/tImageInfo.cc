@@ -153,8 +153,10 @@ try {
     AlwaysAssertExit(mii3.toFITS(error, header));
     ImageInfo mii4;
     Vector<String> error2;
-    AlwaysAssertExit(mii4.fromFITSOld(error2, header));
+    AlwaysAssertExit(mii4.fromFITS(error2, header));
     equal(mii4, mii3);
+//    AlwaysAssertExit(mii4.fromFITSOld(error2, header));
+//    equal(mii4, mii3);
 //
 // output stream
 //

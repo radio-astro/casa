@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5File.cc 20284 2008-03-13 12:58:07Z gervandiepen $
+//# $Id: tHDF5File.cc 20398 2008-09-11 13:17:49Z gervandiepen $
 
-#ifndef HAVE_HDF5
+#include <casa/HDF5/HDF5File.h>
+#include <casa/Utilities/Assert.h>
+#include <casa/Exceptions/Error.h>
+
+#ifndef HAVE_LIBHDF5
 int main()
 {
   return 3;     // skipped
 }
 #else
-
-#include <casa/HDF5/HDF5File.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
 
 using namespace casa;
 

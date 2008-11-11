@@ -673,17 +673,17 @@ ImageAnalysis::imagefromfits(const String& outfile, const String& fitsfile,
     //
     ImageInterface<Float>* pOut = 0;
     String error;
-    if (oldParser) {
-      ImageFITSConverter::FITSToImageOld(pOut, error, outfile, fitsfile,
-					 whichhdu,
-					 HostInfo::memoryFree()/1024,
-					 overwrite, zeroBlanks);
-    } else {
-      ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-				      whichrep, whichhdu,
-				      HostInfo::memoryFree()/1024,
-				      overwrite, zeroBlanks);
-    }
+//    if (oldParser) {
+//       ImageFITSConverter::FITSToImageOld(pOut, error, outfile, fitsfile,
+// 					 whichhdu,
+// 					 HostInfo::memoryFree()/1024,
+// 					 overwrite, zeroBlanks);
+//    } else {
+    ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
+				    whichrep, whichhdu,
+				    HostInfo::memoryFree()/1024,
+				    overwrite, zeroBlanks);
+//    }
     //
     if (pOut == 0) {
       *itsLog << error << LogIO::EXCEPTION;
@@ -6860,17 +6860,17 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
     //
     ImageInterface<Float>* pOut = 0;
     String error;
-    if (oldParser) {
-      ImageFITSConverter::FITSToImageOld(pOut, error, outfile, fitsfile,
-					 whichhdu,
-					 HostInfo::memoryFree()/1024,
-					 overwrite, zeroBlanks);
-    } else {
-      ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-				      whichrep, whichhdu,
-				      HostInfo::memoryFree()/1024,
-				      overwrite, zeroBlanks);
-    }
+//    if (oldParser) {
+//      ImageFITSConverter::FITSToImageOld(pOut, error, outfile, fitsfile,
+//					 whichhdu,
+//					 HostInfo::memoryFree()/1024,
+//					 overwrite, zeroBlanks);
+//    } else {
+    ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
+				    whichrep, whichhdu,
+				    HostInfo::memoryFree()/1024,
+				    overwrite, zeroBlanks);
+//    }
     //
     if (pOut == 0) {
       *itsLog << error << LogIO::EXCEPTION;

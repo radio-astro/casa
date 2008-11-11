@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageConcat.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ImageConcat.h 20410 2008-10-20 09:00:06Z gervandiepen $
 
 #ifndef IMAGES_IMAGECONCAT_H
 #define IMAGES_IMAGECONCAT_H
@@ -127,7 +127,7 @@ template <class T> class ImageConcat : public ImageInterface<T>
 public:
 
 // Constructor. Specify the pixel axis for concatenation
-   ImageConcat (uInt axis, Bool tempClose=True);
+   explicit ImageConcat (uInt axis, Bool tempClose=True);
 
 // Default constructor, Sets the concatenation axis to 0
    ImageConcat();

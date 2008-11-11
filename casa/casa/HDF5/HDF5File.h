@@ -23,12 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.h 20284 2008-03-13 12:58:07Z gervandiepen $
+//# $Id: HDF5File.h 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #ifndef CASA_HDF5FILE_H
 #define CASA_HDF5FILE_H
 
 //# Includes
+#include <casa/HDF5Config.h>
 #include <casa/HDF5/HDF5Object.h>
 #include <casa/BasicSL/String.h>
 #include <casa/IO/ByteIO.h>
@@ -67,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class HDF5File : public HDF5Object
   {
   public:
-#ifndef HAVE_HDF5
+#ifndef HAVE_LIBHDF5
     explicit HDF5File (const String&)
       {}
     static Bool isHDF5 (const String&)

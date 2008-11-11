@@ -23,9 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerHDF5.cc 20287 2008-03-13 13:20:30Z gervandiepen $
-
-#ifdef HAVE_HDF5
+//# $Id: RegionHandlerHDF5.cc 20400 2008-09-11 13:20:37Z gervandiepen $
 
 #include <images/Images/RegionHandlerHDF5.h>
 #include <images/Images/ImageRegion.h>
@@ -36,6 +34,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
+#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

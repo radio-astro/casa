@@ -23,15 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Iterator.cc 20329 2008-06-06 07:59:22Z gervandiepen $
-
-#ifndef HAVE_HDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
-
+//# $Id: tHDF5Iterator.cc 20399 2008-09-11 13:18:38Z gervandiepen $
 
 #include <casa/aips.h>
 #include <lattices/Lattices/HDF5Lattice.h>
@@ -51,9 +43,17 @@ int main()
 #include <casa/Utilities/Assert.h>
 #include <casa/Inputs/Input.h>
 #include <casa/iostream.h>
-
-
 #include <casa/namespace.h>
+
+
+#ifndef HAVE_LIBHDF5
+int main()
+{
+  return 3;     // skipped
+}
+#else
+
+
 void testVectorROIter (const Lattice<Int>& lattice, Bool useRef)
 {
     cout << "  Testing using a Vector cursor" << endl;

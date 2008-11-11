@@ -23,14 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Image.cc 20329 2008-06-06 07:59:22Z gervandiepen $
-
-#ifndef HAVE_HDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
+//# $Id: tHDF5Image.cc 20400 2008-09-11 13:20:37Z gervandiepen $
 
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageInfo.h>
@@ -62,6 +55,14 @@ int main()
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
+
+
+#ifndef HAVE_LIBHDF5
+int main()
+{
+  return 3;     // skipped
+}
+#else
 
 
 // Remove the dirname from the file name in an error message.

@@ -23,12 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.h 20324 2008-06-04 13:06:54Z gervandiepen $
+//# $Id: HDF5DataType.h 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #ifndef CASA_HDF5DATATYPE_H
 #define CASA_HDF5DATATYPE_H
 
-#ifdef HAVE_HDF5
+#include <casa/HDF5Config.h>
+#ifdef HAVE_LIBHDF5
 
 //# Includes
 #include <casa/aips.h>

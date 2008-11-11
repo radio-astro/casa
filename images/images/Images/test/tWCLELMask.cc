@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tWCLELMask.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tWCLELMask.cc 20400 2008-09-11 13:20:37Z gervandiepen $
 
 #include <casa/aips.h>
 #include <images/Images/WCLELMask.h>
@@ -80,6 +80,7 @@ int main ()
     indgen (arr);
     PagedImage<Float> image(latticeShape, cSys, "tWCLELMask_tmp.img");
     image.put (arr);
+    image.flush();
     ArrayLattice<Float> arrlat(arr);
     {
       WCLELMask mask(String("fmod(floor(tWCLELMask_tmp.img / 4), 2) == 0"));
@@ -112,6 +113,7 @@ int main ()
       indgen (arr2);
       PagedImage<Float> image2(shape2, cSys2, "tWCLELMask_tmp.img2");
       image2.put (arr2);
+      image2.flush();
       WCLELMask mask("fmod(floor(tWCLELMask_tmp.img2 / 4), 2) == 0");
       AlwaysAssertExit (mask.ndim() == shape2.nelements());
       LCRegion* lc = mask.toLCRegion (cSys, latticeShape);

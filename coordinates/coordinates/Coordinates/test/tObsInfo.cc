@@ -184,51 +184,59 @@ int main()
 
     Vector<String> error2;
     Record rec2;
+    cerr << oi;
     AlwaysAssertExit(oi.toFITS(error, rec2));
     AlwaysAssertExit(oi.toFITS(error, rec2));      // Second pass removes pre-existing fields
     ObsInfo oi4;
-    AlwaysAssertExit(oi4.fromFITSOld(error2, rec2));
+    AlwaysAssertExit(oi4.fromFITS(error2, rec2));
     AlwaysAssertExit(oi4.telescope() == "telescope2" &&
 		     oi4.observer() == "observer2" &&
 		     near(oi4.obsDate().get("d").getValue(), dateVal) &&
-                     near(oi4.pointingCenter().get()(0),0.03) &&
-                     near(oi4.pointingCenter().get()(1),0.04));
-//
+		     near(oi4.pointingCenter().get()(0),0.03) &&
+		     near(oi4.pointingCenter().get()(1),0.04));
+
 
 
 // Forced errors
 
-    {
+    {    
        Record rec3;
        Double x = 0;
+       Bool rval = True;
        rec3.define("telescop", x);
-       AlwaysAssertExit(!oi4.fromFITSOld(error2, rec3));
+       try {
+	   rval = oi4.fromFITS(error2, rec3);
+       } catch (AipsError x) {
+	   cerr << (rval==True) << endl;
+//	   AlwaysAssertExit(!rval);
+       }
+       
     }
     {
        Record rec3;
        Double x = 0;
        rec3.define("observer", x);
-       AlwaysAssertExit(!oi4.fromFITSOld(error2, rec3));
+       AlwaysAssertExit(!oi4.fromFITS(error2, rec3));
     }
     {
        Record rec3;
        String x("I like fish");
        rec3.define("date-obs", x);
        rec3.define("timesys", x);
-       AlwaysAssertExit(!oi4.fromFITSOld(error2, rec3));
+       AlwaysAssertExit(!oi4.fromFITS(error2, rec3));
     }
     {
        Record rec3;
        Double x = 0;
        rec3.define("date-obs", x);
-       AlwaysAssertExit(!oi4.fromFITSOld(error2, rec3));
+       AlwaysAssertExit(!oi4.fromFITS(error2, rec3));
     }
     {
        Record rec3;
        Float x = 0;
        rec3.define("obsra", x);
        rec3.define("obsdec", x);
-       AlwaysAssertExit(!oi4.fromFITSOld(error2, rec3));
+       AlwaysAssertExit(!oi4.fromFITS(error2, rec3));
     }
 
 // This is a fragile test, but probably better to do it than not.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5.h 20285 2008-03-13 12:59:06Z gervandiepen $
+//# $Id: HDF5.h 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #ifndef CASA_HDF5_H
 #define CASA_HDF5_H
@@ -108,8 +108,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <note>
 // The compilation of these HDF5 classes is conditionally by means of ifdef-s
-// on HAVE_HDF5. See the casacore build instructions at casacore.googlecode.com
-// how to enable the compilation of the HDF5 code.
+// on HAVE_LIBHDF5 which is defined in HDF5Config.h. This file is generated
+// by the build system.
+// See the casacore build instructions at casacore.googlecode.com
+// for more information.
 // </note>
 // </synopsis>
 

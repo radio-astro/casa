@@ -537,76 +537,76 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
 }
 
 
-Bool ImageInfo::fromFITSOld(Vector<String>& error, const RecordInterface& header)
-{
-   error.resize(2);
-   Bool ok = True;
-   ImageInfo tmp;
-   (*this) = tmp; // Make sure we are "empty" first;
-//
-   if (header.isDefined("bmaj") && header.isDefined("bmin") &&
-       header.isDefined("bpa")) {
-//
-      DataType typeMaj = header.dataType("bmaj");
-      DataType typeMin = header.dataType("bmin");
-      DataType typePA = header.dataType("bpa");
-//
-      Bool ok = (typeMaj==TpDouble || typeMaj==TpFloat) &&
-                (typeMin==TpDouble || typeMin==TpFloat) &&
-                (typePA==TpDouble || typePA==TpFloat);
-//
-      if (ok) {
-         Double bmaj = header.asDouble("bmaj");
-         Double bmin = header.asDouble("bmin");
-         Double bpa = header.asDouble("bpa");
-//
-         Quantum<Double> bmajq(max(bmaj,bmin), "deg");
-         Quantum<Double> bminq(min(bmaj,bmin), "deg");
-         bmajq.convert(Unit("arcsec"));
-         bminq.convert(Unit("arcsec"));
-         setRestoringBeam(bmajq, bminq, Quantum<Double>(bpa, "deg"));
-      } else {
-         error[0] = "BMAJ, BMIN, BPA fields are not of type Double or Float";
-      }
-   }
-//
-   if (header.isDefined("btype")) {
-      if (header.dataType("btype")==TpString) {
-         String type = header.asString("btype");
+// Bool ImageInfo::fromFITSOld(Vector<String>& error, const RecordInterface& header)
+// {
+//    error.resize(2);
+//    Bool ok = True;
+//    ImageInfo tmp;
+//    (*this) = tmp; // Make sure we are "empty" first;
+// //
+//    if (header.isDefined("bmaj") && header.isDefined("bmin") &&
+//        header.isDefined("bpa")) {
+// //
+//       DataType typeMaj = header.dataType("bmaj");
+//       DataType typeMin = header.dataType("bmin");
+//       DataType typePA = header.dataType("bpa");
+// //
+//       Bool ok = (typeMaj==TpDouble || typeMaj==TpFloat) &&
+//                 (typeMin==TpDouble || typeMin==TpFloat) &&
+//                 (typePA==TpDouble || typePA==TpFloat);
+// //
+//       if (ok) {
+//          Double bmaj = header.asDouble("bmaj");
+//          Double bmin = header.asDouble("bmin");
+//          Double bpa = header.asDouble("bpa");
+// //
+//          Quantum<Double> bmajq(max(bmaj,bmin), "deg");
+//          Quantum<Double> bminq(min(bmaj,bmin), "deg");
+//          bmajq.convert(Unit("arcsec"));
+//          bminq.convert(Unit("arcsec"));
+//          setRestoringBeam(bmajq, bminq, Quantum<Double>(bpa, "deg"));
+//       } else {
+//          error[0] = "BMAJ, BMIN, BPA fields are not of type Double or Float";
+//       }
+//    }
+// //
+//    if (header.isDefined("btype")) {
+//       if (header.dataType("btype")==TpString) {
+//          String type = header.asString("btype");
 
-// We are going to cope with aips++ values and Miriad values
-// For Miriad there are a few extra ones (which we put on the Stokes
-// axis in aips++ - e.g. position angle).  For the ones that are common
-// the Miriad ones have underscores and the aips++ ones have spaces
+// // We are going to cope with aips++ values and Miriad values
+// // For Miriad there are a few extra ones (which we put on the Stokes
+// // axis in aips++ - e.g. position angle).  For the ones that are common
+// // the Miriad ones have underscores and the aips++ ones have spaces
 
-         ImageInfo::ImageTypes imageType = ImageInfo::imageType(type);
-         if (imageType != ImageInfo::Undefined) {
-            setImageType(imageType);
-         } else {
-            imageType = MiriadImageType (type);
-            if (imageType != ImageInfo::Undefined) {
-               setImageType(imageType);
-            }
-         }
-      }  else {
-         error(1) = "BTYPE field is not of type String";
-         ok = False;
-      }
-   }
-//
-   if (header.isDefined("object")) {
-      if (header.dataType("object")==TpString) {
-         String objectName = header.asString("object");
-         setObjectName(objectName);
-      }  else {
-         error(1) = "OBJECT field is not of type String";
-         ok = False;
-      }
-   }
-//
-   if (ok) error.resize(0);
-   return ok;
-}
+//          ImageInfo::ImageTypes imageType = ImageInfo::imageType(type);
+//          if (imageType != ImageInfo::Undefined) {
+//             setImageType(imageType);
+//          } else {
+//             imageType = MiriadImageType (type);
+//             if (imageType != ImageInfo::Undefined) {
+//                setImageType(imageType);
+//             }
+//          }
+//       }  else {
+//          error(1) = "BTYPE field is not of type String";
+//          ok = False;
+//       }
+//    }
+// //
+//    if (header.isDefined("object")) {
+//       if (header.dataType("object")==TpString) {
+//          String objectName = header.asString("object");
+//          setObjectName(objectName);
+//       }  else {
+//          error(1) = "OBJECT field is not of type String";
+//          ok = False;
+//       }
+//    }
+// //
+//    if (ok) error.resize(0);
+//    return ok;
+// }
 
 
 

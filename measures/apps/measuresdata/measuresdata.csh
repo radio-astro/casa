@@ -1,8 +1,12 @@
 #!/bin/tcsh
 # 
-# measuresdata.tcsh
+# measuresdata.csh
 # Must be executable. Call it with all defaults or arguments for measuresdata
 # It is a test script to enable writing python (or other) versions
+#
+# Set connection type (maybe should be ftp, not pftp in some cases)
+#
+set pftp = pftp
 #
 # get possible arguments
 set mdarg = ''
@@ -22,19 +26,20 @@ while ( 1 == 1 )
 #
 # Check and analyse call-back
 #
-  if ( ! -e measuresdata.link) then
-    echo Severe error: no measuresdata.link file returned
+  if ( ! -e measuresdata.rc) then
+    echo Severe error: no measuresdata.rc file returned
     exit 1
   endif
-  set mdata = (`cat measuresdata.link`)
-
+  set mdata = (`cat measuresdata.rc`)
   if ( $#mdata < 2 ) then
-    echo Severe program error: measuresdata.link has not enough fields
+    echo Severe program error: measuresdata.rc has not enough fields
     exit 1
   endif
+
+  echo Called by measuresdata $mdata
 
   if ( "$mdata[1]" != "status:" ) then
-    echo Severe: no status given in measuresdata.link
+    echo Severe: no status given in measuresdata.rc
     exit 1
   endif
   shift mdata
@@ -43,18 +48,20 @@ while ( 1 == 1 )
     exit 0
   endif
   if ( "$mdata[1]" != "cont" ) then
-    echo Severe: unknown statuss given in measuresdata.link
+    echo Severe: unknown statuss given in measuresdata.rc
     exit 1
   endif
   shift mdata
 
   set arg = ""
+  unset ftp
+  unset http
+
   while ( $#mdata > 1 ) 
     if ( "$mdata[1]" == "ftp:" ) then
       set ftp = $mdata[2]
-    else if ( "$mdata[1]" == "html:" ) then
-      echo Severe: html protocol not yet supported
-      exit 1
+    else if ( "$mdata[1]" == "http:" ) then
+      set http = $mdata[2]
     else if ( "$mdata[1]" == "data:" ) then
       set data = $mdata[2]
       if ( "$data" != "ascii" ) then
@@ -77,21 +84,25 @@ while ( 1 == 1 )
       shift mdata
     endif
   end
-  if ( ! $?ftp || ! $?dir || ! $?file || ! $?arg ) then
-    echo Severe: missing ftp, dir, file or arg data
+  if ( ! ( $?ftp || $?http ) || ! $?dir || ! $?file || ! $?arg ) then
+    echo Severe: missing ftp/http, dir, file or arg data
     exit 1
   endif
 #
-# Obtain ftp
+# Obtain ftp/http
 #
-  ftp -n -v -i $ftp <<_EOD_
-quote user ftp
-quote pass brouw@astron.nl
-ascii
-cd $dir
-get $file
-quit
+  if ($?http) then
+    lynx -dump -dont_wrap_pre 'http://'$http'/'$dir'/'$file >! $file
+  else
+    $pftp -n -v -i $ftp <<_EOD_
+    quote user ftp
+    quote pass brouw@astron.nl
+    ascii
+    cd $dir
+    get $file
+    quit
 _EOD_
+  endif
 #
 # Call back
 #

@@ -23,14 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Lattice.cc 20286 2008-03-13 13:02:22Z gervandiepen $
-
-#ifndef HAVE_HDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
+//# $Id: tHDF5Lattice.cc 20399 2008-09-11 13:18:38Z gervandiepen $
 
 #include <lattices/Lattices/HDF5Lattice.h>
 #include <lattices/Lattices/LatticeStepper.h>
@@ -53,7 +46,15 @@ int main()
 #include <casa/namespace.h>
 
 
-int main() {
+#ifndef HAVE_LIBHDF5
+int main()
+{
+  return 3;     // skipped
+}
+#else
+
+int main()
+{
   try {
     {
       HDF5Lattice<Float> pa(IPosition(2,12), "tHDF5Lattice_tmp.dat");

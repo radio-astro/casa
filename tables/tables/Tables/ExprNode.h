@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.h 20382 2008-08-12 14:06:26Z gervandiepen $
+//# $Id: ExprNode.h 20407 2008-10-14 14:00:50Z gervandiepen $
 
 #ifndef TABLES_EXPRNODE_H
 #define TABLES_EXPRNODE_H
@@ -754,6 +754,7 @@ public:
     TableExprNode (const Complex& value);
     TableExprNode (const DComplex& value);
     TableExprNode (const String& value);
+    TableExprNode (const std::string& value);
     TableExprNode (const char*);
     TableExprNode (const Regex& value);
     TableExprNode (const MVTime& value);

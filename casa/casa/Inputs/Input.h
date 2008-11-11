@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Input.h 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: Input.h 20424 2008-11-05 10:52:44Z gervandiepen $
 
 #ifndef CASA_INPUT_H
 #define CASA_INPUT_H
@@ -250,7 +250,7 @@ public:
   void close();
 
   // fill the parameter list from argc, argv command line args
-  void readArguments (Int argc, const char* argv[]);
+  void readArguments (int argc, char const* const* argv);
 
   // Get the double value of the parameter (or 0.0 if unknown key).
   // If the program is in prompt mode, ask the user for the value.

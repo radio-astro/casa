@@ -23,9 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Record.cc 20381 2008-08-06 09:57:44Z gervandiepen $
-
-#ifdef HAVE_HDF5
+//# $Id: HDF5Record.cc 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #include <casa/HDF5/HDF5Record.h>
 #include <casa/HDF5/HDF5DataSet.h>
@@ -33,6 +31,8 @@
 #include <casa/HDF5/HDF5HidMeta.h>
 #include <casa/HDF5/HDF5Error.h>
 #include <casa/Utilities/Assert.h>
+
+#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

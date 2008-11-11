@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeCache.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LatticeCache.h 20403 2008-09-15 07:02:01Z gervandiepen $
 
 #ifndef LATTICES_LATTICECACHE_H
 #define LATTICES_LATTICECACHE_H
@@ -133,7 +133,7 @@ protected:
 
   Int numberTiles;
   IPosition tileShape;
-  Vector<Int> tileShapeVec, tileLocVec, tileOffsetVec;
+  Vector<Int> tileShapeVec, tileOffsetVec;
   Vector<Float> tileOverlap;
   Bool additive;
 

@@ -49,6 +49,7 @@ namespace casa {
   template<class T> class Vector;
   class CoordinateSystem;
   class WCRegion;
+  class WCBox;
   template<class T> class PtrBlock;
   class ImageRegion;
   template<class T> class Quantum;
@@ -105,26 +106,50 @@ namespace casa {
 			    const Vector<Int>& pixelaxes,  
 			    const String& absrel);
       
-      //Different versions of unioning regions
-      ImageRegion*  doUnion(const WCRegion& reg1, const WCRegion& reg2);
-      ImageRegion*  doUnion(const PtrBlock<const WCRegion*>& reg1);
-      ImageRegion*  doUnion(const ImageRegion& reg1, const ImageRegion& reg2);
+      /**************************************************************
+       ** Routines for combining regions                           **
+       **                                                          **
+       ** Note: Many of the WCXxx classes which are used to do the **
+       **       work can take multiple regions at once, why not    **
+       **       accept a ptr block of Image Regions then?          **
+       **************************************************************/
 
+      //Various versions of creating a complement region
+      ImageRegion*  doComplement(const WCRegion& reg1);
+      ImageRegion*  doComplement(const PtrBlock<const WCRegion*>& reg1);
+      ImageRegion*  doComplement(const ImageRegion& reg1);
+
+      //Various versions of concatenating a region onto another.
+      ImageRegion*  doConcatenation(const WCRegion& region, const WCBox& box);
+      ImageRegion*  doconcatenation(const PtrBlock<const WCRegion*>& regions, const WCBox& box);
+      ImageRegion*  doConcatenation(const PtrBlock<const ImageRegion*>& regions, const TableRecord& box);
+      ImageRegion*  doConcatenation(const Record& regions, const TableRecord& box);
+
+
+      //Various versions of handling the difference of regions
+      ImageRegion*  doDifference(const WCRegion& reg1, const WCRegion& reg2);
+      ImageRegion*  doDifference(const PtrBlock<const WCRegion*>& reg1);
+      ImageRegion*  doDifference(const ImageRegion& reg1, const ImageRegion& reg2);
+      
       //Different versions of intersecting regions
       ImageRegion*  doIntersection(const WCRegion& reg1, const WCRegion& reg2);
       ImageRegion*  doIntersection(const PtrBlock<const WCRegion*>& reg1);
       ImageRegion*  doIntersection(const ImageRegion& reg1, const ImageRegion& reg2);
 
-      //Different versions of creating a complement region
-      ImageRegion*  doComplement(const WCRegion& reg1);
-      ImageRegion*  doComplement(const PtrBlock<const WCRegion*>& reg1);
-      ImageRegion*  doComplement(const ImageRegion& reg1);
+      //Different versions of unioning regions
+      ImageRegion*  doUnion(const WCRegion& reg1, const WCRegion& reg2);
+      ImageRegion*  doUnion(const PtrBlock<const WCRegion*>& reg1);
+      ImageRegion*  doUnion(const ImageRegion& reg1, const ImageRegion& reg2);
       
+
+      /**************************************************************
+       ** Routines for reading/writing regions                     **
+       **************************************************************/
 
       //Reading of a file containing an ImageRegion
       Record* readImageFile( String filename, String regionname );
 
-
+      
       //save region into a table (image, blank table or any other such)
       String imageRegionToTable(const String& tabName, 
 				const ImageRegion& imreg,

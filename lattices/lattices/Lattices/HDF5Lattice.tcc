@@ -23,9 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.tcc 20286 2008-03-13 13:02:22Z gervandiepen $
-
-#ifdef HAVE_HDF5
+//# $Id: HDF5Lattice.tcc 20399 2008-09-11 13:18:38Z gervandiepen $
 
 #include <lattices/Lattices/HDF5Lattice.h>
 #include <lattices/Lattices/LatticeIterator.h>
@@ -41,6 +39,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/iostream.h>
 
+#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

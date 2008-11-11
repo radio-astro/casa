@@ -569,47 +569,53 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
 
 // Crack header
 
-    if (oldParser) {
-       if (dataType==FITS::FLOAT) {
-          crackHeaderOld<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
-                                scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
-       } else if (dataType==FITS::DOUBLE) {
-          crackHeaderOld<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
-                              scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
-       } else if (dataType==FITS::LONG) {
-          crackHeaderOld<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
-                           scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
-       } if (dataType==FITS::SHORT) {
-          crackHeaderOld<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
-                             scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
-       }
+//    if (oldParser) {
+//        if (dataType==FITS::FLOAT) {
+//           crackHeaderOld<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
+//                                 scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
+//        } else if (dataType==FITS::DOUBLE) {
+//           crackHeaderOld<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
+//                               scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
+//        } else if (dataType==FITS::LONG) {
+//           crackHeaderOld<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
+//                            scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
+//        } if (dataType==FITS::SHORT) {
+//           crackHeaderOld<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
+//                              scale, offset, shortMagic, longMagic, hasBlanks, os, infile);
+//        }
 
-// Fix any DirectionCoordinate for cylindrical coordinates mess
+// // Fix any DirectionCoordinate for cylindrical coordinates mess
 
-       String errorMessage;
-       if (!CoordinateUtil::cylindricalFix (cSys, errorMessage, shape)) {
-          throw (AipsError(errorMessage));
-       }
-    } else {
-       if (dataType==FITS::FLOAT) {
-          crackHeader<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo,  scale,
-                             offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-       } else if (dataType==FITS::DOUBLE) {
-          crackHeader<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-                              offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-       } else if (dataType==FITS::LONG) {
-          crackHeader<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-                           offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-       } if (dataType==FITS::SHORT) {
-          crackHeader<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-                             offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-       }
+//        String errorMessage;
+//        if (!CoordinateUtil::cylindricalFix (cSys, errorMessage, shape)) {
+//           throw (AipsError(errorMessage));
+//        }
+//    } else {
+    if (dataType==FITS::FLOAT) {
+	crackHeader<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo,  scale,
+			   offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    } else if (dataType==FITS::DOUBLE) {
+	crackHeader<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
+			    offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    } else if (dataType==FITS::LONG) {
+	crackHeader<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
+			 offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    } if (dataType==FITS::SHORT) {
+	crackHeader<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
+			   offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
     }
+//  }
 
 // Get recordnumber 
    
     recordnumber = infile.recno();
 }
+
+template void FITSImage::crackHeader<Double> (CoordinateSystem &, IPosition &, ImageInfo &, Unit &, RecordInterface &, Float &, Float &, Short &, Int &, Bool &, LogIO &, FitsInput &, uInt);
+template void FITSImage::crackHeader<Float> (CoordinateSystem &, IPosition &, ImageInfo &, Unit &, RecordInterface &, Float &, Float &, Short &, Int &, Bool &, LogIO &, FitsInput &, uInt);
+template void FITSImage::crackHeader<Int> (CoordinateSystem &, IPosition &, ImageInfo &, Unit &, RecordInterface &, Float &, Float &, Short &, Int &, Bool &, LogIO &, FitsInput &, uInt);
+template void FITSImage::crackHeader<Short> (CoordinateSystem &, IPosition &, ImageInfo &, Unit &, RecordInterface &, Float &, Float &, Short &, Int &, Bool &, LogIO &, FitsInput &, uInt);
+
 
 } //# NAMESPACE CASA - END
 

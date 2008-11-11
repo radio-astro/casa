@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: ImageExprGram.ll 19949 2007-02-27 12:20:55Z Malte.Marquarding $
+    $Id: ImageExprGram.ll 20410 2008-10-20 09:00:06Z gervandiepen $
 */
 
 %{
@@ -69,8 +69,8 @@ UASTRING   \'[^\'\n]*\n
 STRING    ({QSTRING}|{ASTRING})+
 USTRING   ({UQSTRING}|{UASTRING})+
 NAME      [A-Za-z_]([A-Za-z_0-9])*
-TMPNAME   "$OBJ#"{INT}"#O"
-TMPREGION "$REGION#"{INT}
+TMPNAME   "$"{INT}
+TMPREGION "$"[rR]{INT}
 ESCNAME   ([A-Za-z_~$]|(\\.))([A-Za-z0-9._~$]|(\\.))*
 COLONNAME ({NAME}|{ESCNAME})?":"":"?({NAME}|{ESCNAME})
 
@@ -166,7 +166,7 @@ COLONNAME ({NAME}|{ESCNAME})?":"":"?({NAME}|{ESCNAME})
  /* A temporary image number can be given */
 {TMPNAME} {
             imageExprGramPosition() += yyleng;
-            lvalp->val = new ImageExprParse (atoi(ImageExprGramtext+5));
+            lvalp->val = new ImageExprParse (atoi(ImageExprGramtext+1));
 	    ImageExprParse::addNode (lvalp->val);
 	    return NAME;
 	  }
@@ -174,7 +174,7 @@ COLONNAME ({NAME}|{ESCNAME})?":"":"?({NAME}|{ESCNAME})
  /* A temporary region number can be given */
 {TMPREGION} {
             imageExprGramPosition() += yyleng;
-            lvalp->val = new ImageExprParse (atoi(ImageExprGramtext+8));
+            lvalp->val = new ImageExprParse (atoi(ImageExprGramtext+2));
 	    ImageExprParse::addNode (lvalp->val);
 	    return TMPREG;
 	  }

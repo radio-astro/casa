@@ -23,9 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCHDF5Mask.cc 20286 2008-03-13 13:02:22Z gervandiepen $
-
-#ifdef HAVE_HDF5
+//# $Id: LCHDF5Mask.cc 20399 2008-09-11 13:18:38Z gervandiepen $
 
 #include <lattices/Lattices/LCHDF5Mask.h>
 #include <tables/Tables/TableRecord.h>
@@ -33,6 +31,7 @@
 #include <casa/OS/Path.h>
 #include <casa/Exceptions/Error.h>
 
+#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

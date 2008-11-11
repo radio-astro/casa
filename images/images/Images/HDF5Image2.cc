@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image2.cc 20287 2008-03-13 13:20:30Z gervandiepen $
-
-#ifdef HAVE_HDF5
+//# $Id: HDF5Image2.cc 20400 2008-09-11 13:20:37Z gervandiepen $
 
 #include <images/Images/HDF5Image.h>
-#include <casa/Exceptions/Error.h>
 #include <casa/HDF5/HDF5File.h>
+#include <casa/Exceptions/Error.h>
+
+#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -61,6 +61,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       } 
     }
     return retval;
+  }
+
+} //# NAMESPACE CASA - END
+
+#else
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+  DataType hdf5imagePixelType (const String&)
+  {
+    return TpOther;
+  }
+
+  Bool isHDF5Image (const String&)
+  {
+    return False;
   }
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.cc 20330 2008-06-06 08:57:41Z gervandiepen $
+//# $Id: Regex.cc 20422 2008-11-04 11:12:40Z gervandiepen $
 
 // Regex class implementation
 
@@ -70,7 +70,7 @@ void Regex::create(const String& exp, Int fast, Int bufsize,
 			    RE_NO_BK_REFS+         // backreferences possible
 			    RE_NO_EMPTY_RANGES+    // e.g. [z-a] is empty set
 			    RE_CONTEXTUAL_INVALID_OPS);
-  Char* msg = a2_re_compile_pattern((Char*)(exp.chars()), tlen, buf);
+  const char* msg = a2_re_compile_pattern((Char*)(exp.chars()), tlen, buf);
   a2_re_set_syntax(orig);
   if (msg != 0) {
     throw(invalid_argument("Regex: invalid regular expression given"));

@@ -23,13 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Object.h 20290 2008-03-20 15:25:20Z gervandiepen $
+//# $Id: HDF5Object.h 20398 2008-09-11 13:17:49Z gervandiepen $
 
 #ifndef CASA_HDF5OBJECT_H
 #define CASA_HDF5OBJECT_H
 
 //# Includes
-#ifdef HAVE_HDF5
+#include <casa/HDF5Config.h>
+#ifdef HAVE_LIBHDF5
 # include <hdf5.h>
 #endif
 #include <casa/BasicSL/String.h>
@@ -67,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The destructor in a derived class should close the hid appropriately.
     virtual ~HDF5Object();
 
-#ifdef HAVE_HDF5
+#ifdef HAVE_LIBHDF5
     // Close the hid if valid.
     virtual void close() = 0;
 
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   inline HDF5Object::HDF5Object()
-#ifdef HAVE_HDF5
+#ifdef HAVE_LIBHDF5
       : itsHid(-1)
 #endif
     {}

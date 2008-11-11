@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManAccessor.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: DataManAccessor.h 20396 2008-09-09 07:22:06Z gervandiepen $
 
 #ifndef TABLES_DATAMANACCESSOR_H
 #define TABLES_DATAMANACCESSOR_H
@@ -81,9 +81,7 @@ class String;
 class RODataManAccessor
 {
 protected:
-    // Construct the object for the data manager in the table.
-    // An exception is thrown if the data manager type does not
-    // match the type of this IncrementalDataManAccessor object.
+    // Construct the object.
     RODataManAccessor();
 
     ~RODataManAccessor();

@@ -285,11 +285,11 @@ private:
                      uInt whichRep);
 		     
 // Old version
-   template <typename T>
-   void crackHeaderOld (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
-                     Unit& brightnessUnit, RecordInterface& miscInfo,
-                     Float& scale, Float& offset, Short& magicShort,
-                     Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile);
+//   template <typename T>
+//   void crackHeaderOld (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
+//                     Unit& brightnessUnit, RecordInterface& miscInfo,
+//                     Float& scale, Float& offset, Short& magicShort,
+//                     Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile);
 };
 
 

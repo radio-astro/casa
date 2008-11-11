@@ -57,9 +57,8 @@ namespace casa { //# name space casa begins
 
   RegionManager::RegionManager()
   {
-    itsLog= new LogIO();
-    itsCSys=0;
-
+      itsLog= new LogIO();
+      itsCSys=0;
   }
 
   RegionManager::RegionManager(CoordinateSystem& csys):itsCSys(0)
@@ -82,18 +81,19 @@ namespace casa { //# name space casa begins
   // Private method
   String RegionManager::absreltype(const Int absrelval){
     *itsLog << LogOrigin("RegionManager", "absreltype");
+
     if(absrelval == RegionType::Abs)
       return String("abs");
     else if(absrelval == RegionType::RelRef)
       return String("relref");
     else if(absrelval == RegionType::RelCen)
       return String("relcen");
+    //    else if(absrelval == RegionType::RelDir)
+    //return String("reldir");
 
-    *itsLog << LogIO::WARN << "absrelvalue " << absrelval << " is not valid" 
-	    << LogIO::POST;
+    *itsLog << LogIO::WARN << "absrelvalue " << absrelval 
+	    << " is not valid" << LogIO::POST;
     return String("Unknown");
-
-
   }
 
   void RegionManager::setcoordsys(const CoordinateSystem& csys){
@@ -367,16 +367,13 @@ namespace casa { //# name space casa begins
   ImageRegion*  RegionManager::doIntersection(
       const PtrBlock<const WCRegion*>& regions)
   {
-
       WCIntersection leIntersect(False, regions);
       ImageRegion* leReturn= new ImageRegion(leIntersect);
       return leReturn;
-
   }
 
   ImageRegion*  RegionManager::doIntersection(const ImageRegion& reg1, 
 				       const ImageRegion& reg2){
-
       *itsLog << LogOrigin("RegionManager", "doIntersection");
       *itsLog << LogIO::DEBUGGING
 	      << "reg1 type " << reg1.isWCRegion() << " " << reg1.isLCRegion() 
@@ -385,9 +382,9 @@ namespace casa { //# name space casa begins
 	      << reg2.isLCRegion() << " "<< reg2.isLCSlicer()
 	      << LogIO::POST;
 
-    WCIntersection leIntersection(reg1, reg2);
-    ImageRegion* leReturn= new ImageRegion(leIntersection);
-    return leReturn;
+      WCIntersection leIntersection(reg1, reg2);
+      ImageRegion* leReturn= new ImageRegion(leIntersection);
+      return leReturn;
   }
 
   /*************************************************************
@@ -423,11 +420,119 @@ namespace casa { //# name space casa begins
 
   /*************************************************************
    **  DIFFERENCE routines                                    **
+   **  Note, that the we could add support for doing the      **
+   **  difference of multiple regions since the support       **
+   **  exists underneath.                                     **
    *************************************************************/
 
+  ImageRegion*  RegionManager::doDifference(const WCRegion& reg1, 
+					const WCRegion& reg2){
+
+      ImageRegion imageReg1(reg1);
+      ImageRegion imageReg2(reg2);
+      return doDifference(imageReg1, imageReg2);
+  }
+
+  ImageRegion*  RegionManager::doDifference(
+      const PtrBlock<const WCRegion*>& regions)
+  {
+      WCDifference leDiff(False, regions);
+      ImageRegion* leReturn = new ImageRegion(leDiff);
+      return leReturn;
+  }
+
+  ImageRegion*  RegionManager::doDifference(const ImageRegion& reg1, 
+				       const ImageRegion& reg2){
+      *itsLog << LogOrigin("RegionManager", "doDifference");
+      *itsLog << LogIO::DEBUGGING
+	      << "reg1 type " << reg1.isWCRegion() << " " << reg1.isLCRegion() 
+	      << " "<< reg1.isLCSlicer() 
+	      << "\nreg2 type " << reg2.isWCRegion() << " " 
+	      << reg2.isLCRegion() << " "<< reg2.isLCSlicer()
+	      << LogIO::POST;
+
+      WCDifference leDiff(reg1, reg2);
+      ImageRegion* leReturn= new ImageRegion(leDiff);
+      return leReturn;
+  }
+
+    
   /*************************************************************
-   **  CONCAT region routines                                 **
+   **  CONCAT a box to a region(s) routines                   **
    *************************************************************/
+	
+ ImageRegion*  RegionManager::doConcatenation(
+     const WCRegion& region, 
+     const WCBox& box )
+ {
+     PtrBlock<const ImageRegion *> imageRegions(1);
+     imageRegions[0]= new ImageRegion(region);
+     TableRecord recordBox = box.toRecord("");
+     return doConcatenation(imageRegions, recordBox);
+  }
+
+  ImageRegion*  doConcatenation(
+      const PtrBlock<const WCRegion*>& regions, 
+      const WCBox& box)
+  {
+      WCConcatenation leConcat(False, regions, box);
+      ImageRegion* leReturn= new ImageRegion(leConcat);
+      return leReturn;
+  }
+
+  ImageRegion*  RegionManager::doConcatenation(
+      const PtrBlock<const ImageRegion*>& regions,
+      const TableRecord& box )
+  {
+      *itsLog << LogOrigin("RegionManager", "doConcatenation");
+
+      for ( uInt i=0; regions.nelements(); i++ )
+	  *itsLog << LogIO::DEBUGGING
+		  << "\nregion " << i 
+		  << "'s type (WCRegion/LCRegion/LCSLicer): " 
+		  << regions[i]->isWCRegion() << "/" 
+		  << regions[i]->isLCRegion() << "/"
+		  << regions[i]->isLCSlicer()  << LogIO::POST;
+
+      const WCBox *lebox = WCBox::fromRecord( box, "" );
+      WCConcatenation leConcatenation(regions, *lebox );
+      
+      ImageRegion* leReturn= new ImageRegion(leConcatenation);
+      return leReturn;
+  }
+
+
+  ImageRegion*  RegionManager::doConcatenation(
+      const Record& regions,
+      const TableRecord& box )
+  {
+      *itsLog << LogOrigin("RegionManager", "doConcatenation");
+
+      // Once we convert the region Record to PtrBlock of 
+      // ImageRegions then we just call one of the other
+      // doConcatenation routines.
+
+      if ( regions.nfields() < 1 )
+	  throw(AipsError(String("No regions have been supplied to concatenation" ) ) );
+
+      PtrBlock<const ImageRegion*> imageRegions(regions.nfields());
+      ImageRegion* reg=0;
+      TableRecord tblRec;
+      for( uInt i=0; i < (regions.nfields()); i++ )
+      {
+	  tblRec.assign(regions.asRecord(casa::RecordFieldId(0)));
+	  reg=ImageRegion::fromRecord(tblRec, "");
+	  imageRegions[i]=reg;
+      }       
+
+      // Convert the box table record to a WCBox
+      const WCBox *lebox = WCBox::fromRecord( box, "" );
+      WCConcatenation leConcatenation(imageRegions, *lebox );
+      
+      ImageRegion* leReturn= new ImageRegion(leConcatenation);
+      return leReturn;
+  }
+
 
   /*************************************************************
    **  EXTEND region routines                                 **
