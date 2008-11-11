@@ -215,11 +215,23 @@ public:
   virtual String typeName()     { return "B Jones"; };
   virtual String longTypeName() { return "B Jones (bandpass)"; };
 
+  // Local setSolve
+  using GJones::setSolve;
+  virtual void setSolve(const Record& solve);
+
   // This is the freq-dep version of G 
   //   (this is the ONLY fundamental difference from G)
   virtual Bool freqDepPar() { return True; };
 
   virtual void normalize();
+
+  // Specialize post solve operations (adds chan gap fill)
+  virtual void globalPostSolveTinker();
+  
+  // Fill in bracketted channel gaps in solutions
+  virtual void fillChanGaps();
+  virtual void fillChanGapArray(Array<Complex>& sol,
+				Array<Bool>& solOK);
 
 protected:
 
@@ -227,8 +239,10 @@ protected:
 
 private:
 
-  // <nothing>
-  
+  // widest channel gap to fill by interpolation
+  Int maxchangap_p;
+
+
 };
 
 
@@ -436,6 +450,9 @@ public:
   virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
+  // Local M version only supports normalization
+  virtual void globalPostSolveTinker();
+
   virtual void keep(const Int& slot);
 
 protected:
@@ -475,6 +492,9 @@ public:
   // This is the freq-dep version of M
   //   (this is the ONLY fundamental difference from M)
   virtual Bool freqDepPar() { return True; };
+
+  // Normalize baseline spectra (after B)
+  virtual void normalize();
 
 protected:
 

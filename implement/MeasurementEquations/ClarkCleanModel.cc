@@ -378,12 +378,13 @@ Bool ClarkCleanModel::solve(ConvolutionEquation & eqn){
       // Count the number of major cycles
       numMajorCycles++;
     }
-    else
+    else{
       theLog << LogIO::WARN 
-	     << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
-	     << " and a maximum Residual of " << maxRes << endl;
-    
-    userHalt = stopnow();
+      	     << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
+      	     << " and a maximum Residual of " << maxRes << LogIO::POST;
+      userHalt=True;
+    }
+    userHalt = userHalt || stopnow();
   }
   setThreshold(maxRes);
   setNumberIterations(numIterations);
@@ -483,7 +484,7 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
   else
     theLog << LogIO::WARN 
 	   << "Zero Pixels selected with a Fluxlimit of " << fluxLimit
-	   << " and a maximum Residual of " << maxRes << endl;
+	   << " and a maximum Residual of " << maxRes << LogIO::POST;
 
   setNumberIterations(numIterations);
   theMaxNumPix = maxNumPix;

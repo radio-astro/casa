@@ -313,7 +313,7 @@ void WideBandFT::initializeToVis(ImageInterface<Complex>& iimage,
      
 
      IPosition stride(4, 1);
-     IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
      IPosition trc(blc+image->shape()-stride);
 
      IPosition start(4, 0);
@@ -430,7 +430,7 @@ void WideBandFT::wbinitializeToVis(ImageInterface<Complex>& iimage,
      
 
      IPosition stride(4, 1);
-     IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
      IPosition trc(blc+image->shape()-stride);
 
      IPosition start(4, 0);
@@ -816,7 +816,7 @@ void WideBandFT::finalizeToSky(ImageInterface<Complex>& iimage)
   }
   else{
      IPosition stride(4, 1);
-     IPosition blc(4, (nx-iimage.shape()(0))/2, (ny-iimage.shape()(1))/2, 0, 0);
+     IPosition blc(4, (nx-iimage.shape()(0)+(nx%2==0))/2, (ny-iimage.shape()(1)+(ny%2==0))/2, 0, 0);
      IPosition trc(blc+iimage.shape()-stride);
 
      IPosition start(4, 0);
@@ -1569,7 +1569,7 @@ ImageInterface<Complex>& WideBandFT::getImage(Matrix<Float>& weights, Bool norma
 
     if(!isTiled) {
       // Check the section from the image BEFORE converting to a lattice 
-      IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       // Do the copy
@@ -1674,7 +1674,7 @@ ImageInterface<Complex>& WideBandFT::wbgetImage(PtrBlock<ImageInterface<Complex>
 
     if(!isTiled) {
       // Check the section from the image BEFORE converting to a lattice 
-      IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       // Do the copy
@@ -1825,7 +1825,7 @@ Bool WideBandFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);

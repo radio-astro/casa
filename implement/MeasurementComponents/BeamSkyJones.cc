@@ -81,6 +81,7 @@ BeamSkyJones::BeamSkyJones(MeasurementSet& ms,
      
 {  
   reset();
+  setThreshold(0.01); // use this in apply to determine level of cutoff
 };
 
 void BeamSkyJones::reset()
@@ -353,7 +354,7 @@ BeamSkyJones::apply(const ImageInterface<Complex>& in,
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
       return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
 	      Quantity(lastParallacticAngles_p[lastUpdateIndex1_p],"rad"),
-              doSquint_p, False, Float(0.01), forward);
+              doSquint_p, False, threshold(), forward);
     else 
       throw(AipsError("BeamSkyJones::apply(Image...)!!! - PBMath not found"));
   }
@@ -378,7 +379,7 @@ BeamSkyJones::applySquare(const ImageInterface<Float>& in,
     PBMath myPBMath;
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
       return myPBMath.applyPB2(in, out, lastDirections_p[lastUpdateIndex1_p],
-           lastParallacticAngles_p[lastUpdateIndex1_p], doSquint_p, 0.0);
+           lastParallacticAngles_p[lastUpdateIndex1_p], doSquint_p, threshold()*threshold());
     else 
       throw(AipsError("BeamSkyJones::applySquare(Image...) - PBMath not found"));    
   }
@@ -407,7 +408,7 @@ BeamSkyJones::apply(SkyComponent& in,
       return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
 			      Quantity(vb.frequency()(0), "Hz"), 
 			      lastParallacticAngles_p[lastUpdateIndex1_p],
-			      doSquint_p, False, Float(0.01), forward);
+			      doSquint_p, False, threshold(), forward);
       else 
       throw(AipsError("BeamSkyJones::apply(SkyComponent,...) - PBMath not found"));    
   }

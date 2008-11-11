@@ -137,7 +137,7 @@ public:
 
 protected:
 
-  ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
+  virtual ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
 				 ImageInterface<Complex>& out,
 				 const MDirection& sp,
 				 const Quantity parAngle,	      
@@ -148,14 +148,14 @@ protected:
 				 Float cutoff,
 				 Bool forward); 
 
-  ImageInterface<Float>& apply(const ImageInterface<Float>& in,
+  virtual ImageInterface<Float>& apply(const ImageInterface<Float>& in,
 			       ImageInterface<Float>& out,
 			       const MDirection& sp,
 			       const Quantity parAngle,	      
 			       const BeamSquint::SquintType doSquint,
-			       Float cutoff);
+			       Float cutoff, Int ipower);
 
-  SkyComponent& apply(SkyComponent& in,
+  virtual SkyComponent& apply(SkyComponent& in,
 		      SkyComponent& out,
 		      const MDirection& sp,
 		      const Quantity frequency,	      

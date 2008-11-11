@@ -1,5 +1,5 @@
 //# Imager.cc: Implementation of Imager.h
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 1997-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -40,6 +40,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
 
+#include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Path.h>
 
@@ -113,10 +114,12 @@
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/WideBandFT.h>
+#include <synthesis/MeasurementComponents/PBMath.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
@@ -128,8 +131,14 @@
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
 #include <lattices/Lattices/LatticeExpr.h> 
-#include <lattices/Lattices/LCBox.h> 
 #include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/Lattices/LCEllipsoid.h>
+#include <lattices/Lattices/LCRegion.h>
+#include <lattices/Lattices/LCBox.h>
+#include <lattices/Lattices/LCIntersection.h>
+#include <lattices/Lattices/LCUnion.h>
+#include <lattices/Lattices/LCExtension.h>
+
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageRegion.h>
 #include <images/Images/RegionManager.h>
@@ -376,33 +385,58 @@ Imager &Imager::operator=(const Imager & other)
 
 Imager::~Imager()
 {
+  try{
+    destroySkyEquation();
+    this->unlock(); //unlock things if they are in a locked state
+    
+    if (mssel_p) {
+      delete mssel_p;
+    }
+    mssel_p = 0;
+    if (ms_p) {
+      delete ms_p;
+    }
+    ms_p = 0;
+    if (vs_p) {
+      delete vs_p;
+    }
+    vs_p = 0;
+    if (ft_p) {
+      delete ft_p;
+    }
+    
+    
+    ft_p = 0;
+    if (cft_p) {
+      delete cft_p;
+    }
+    cft_p = 0;
+  }
+  catch (AipsError x){
+    String mess=x.getMesg();
+    //This is a bug for wproject and facet together...
+    //somebody is erasing a TempLattice before desturctor.
+    //will keep this in place till i figure it out...its benign
+    if(mess.contains("does not exist") && mess.contains("TempLattice")){
+      String rootpath="/"+String(mess.after("/")).before("TempLattice");
+      String pid=String(mess.after("TempLattice")).before("_");
+      DirectoryIterator dir(rootpath, Regex::fromPattern("TempLattice"+pid+"*"));
+      while(!dir.pastEnd()){
+	  Directory ledir(rootpath+"/"+dir.name());
+	  ledir.removeRecursive();
+	  dir++;
+	  
+      }
 
-  destroySkyEquation();
-  this->unlock(); //unlock things if they are in a locked state
-  
-  if (mssel_p) {
-    delete mssel_p;
+    }
+    else{
+      throw(AipsError(x));
+
+    }
+
   }
-  mssel_p = 0;
-  if (ms_p) {
-    delete ms_p;
-  }
-  ms_p = 0;
-  if (vs_p) {
-    delete vs_p;
-  }
-  vs_p = 0;
-  if (ft_p) {
-    delete ft_p;
-  }
-  
-  
-  ft_p = 0;
-  if (cft_p) {
-    delete cft_p;
-  }
-  cft_p = 0;
-  
+
+
   //Note we don't deal with pgplotter here.
   
 
@@ -2494,22 +2528,25 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
   return True;
 }
 
-Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
+  Bool Imager::regionmask(const String& maskimage, Record* imageRegRec, 
+			  Matrix<Quantity>& blctrcs, Matrix<Float>& circles, 
+			  const Float& value){
 
   //This function does not modify ms(s) so no need of lock 
   LogIO os(LogOrigin("imager", "regionmask()", WHERE));
   if(!Table::isWritable(maskimage)) {
     make(maskimage);
   }
-  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, value);
+  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, circles, value);
 
 }
 
-Bool Imager::regionToImageMask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, const Float& value){
+  Bool Imager::regionToImageMask(const String& maskimage, Record* imageRegRec, Matrix<Quantity>& blctrcs, Matrix<Float>& circles, const Float& value){
   PagedImage<Float> maskImage(maskimage);
   CoordinateSystem cSys=maskImage.coordinates();
   maskImage.table().markForDelete();
   ImageRegion *boxregions=0;
+  ImageRegion *circleregions=0;
   RegionManager regMan;
   regMan.setcoordsys(cSys);
   Vector<Quantum<Double> > blc(2);
@@ -2532,6 +2569,36 @@ Bool Imager::regionToImageMask(const String& maskimage, Record* imageRegRec, Mat
       delete lesbox[k];
     }
   }
+  if((circles.nelements()) > 0){
+    if(circles.shape()(1) != 3)
+      throw(AipsError("Need a list of 3 elements to define a circle"));
+    Int nrow=circles.shape()(0);
+    Vector<Float> cent(2); 
+    cent(0)=circles(0,1); cent(1)=circles(0,2);
+    Float radius=circles(0,0);
+    IPosition xyshape(2,maskImage.shape()(0),maskImage.shape()(1));
+    LCEllipsoid *circ= new LCEllipsoid(cent, radius, xyshape);
+    //Tell LCUnion to delete the pointers
+    LCUnion *elunion= new LCUnion(True, circ);
+    //now lets do the remainder
+    for (Int k=1; k < nrow; ++k){
+      cent(0)=circles(k,1); cent(1)=circles(k,2);
+      radius=circles(k,0);
+      circ= new LCEllipsoid(cent, radius, xyshape); 
+      elunion=new LCUnion(True, elunion, circ);
+    }
+    //now lets extend that to the whole image
+    IPosition trc(2);
+    trc(0)=maskImage.shape()(2)-1;
+    trc(1)=maskImage.shape()(3)-1;
+    LCBox lbox(IPosition(2,0,0), trc, 
+	       IPosition(2,maskImage.shape()(2),maskImage.shape()(3)) );
+    LCExtension linter(*elunion, IPosition(2,2,3),lbox);
+    circleregions=new ImageRegion(linter);
+    delete elunion;
+  }
+
+
   ImageRegion* recordRegion=0;
   if(imageRegRec !=0){
     ImageAnalysis::tweakedRegionRecord(imageRegRec);
@@ -2551,23 +2618,35 @@ Bool Imager::regionToImageMask(const String& maskimage, Record* imageRegRec, Mat
   else if(recordRegion !=0){
     unionReg=recordRegion;
   }
-  else{
-    throw(AipsError("No valid regions found"));
-
-  }
+      
 
  
-  SubImage<Float> partToMask(maskImage, *unionReg, True);
-  LatticeRegion latReg=unionReg->toLatticeRegion(cSys, maskImage.shape());
-  ArrayLattice<Bool> pixmask(latReg.get());
-  LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
-  partToMask.copyData(myexpr);
   
-  if(unionReg !=0)
+  if(unionReg !=0){
+    regionToMask(maskImage, *unionReg, value);
     delete unionReg; unionReg=0;
+  }
+  //As i can't unionize LCRegions and WCRegions;  do circles seperately
+  if(circleregions !=0){
+    regionToMask(maskImage, *circleregions, value);
+    delete circleregions;
+    circleregions=0;
+  }
   maskImage.table().unmarkForDelete();
   return True;
 
+}
+
+
+Bool Imager::regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value){
+
+  SubImage<Float> partToMask(maskImage, imagreg, True);
+  LatticeRegion latReg=imagreg.toLatticeRegion(maskImage.coordinates(), maskImage.shape());
+  ArrayLattice<Bool> pixmask(latReg.get());
+  LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
+  partToMask.copyData(myexpr);
+
+  return True;
 }
 
 
@@ -4563,21 +4642,21 @@ Bool Imager::clean(const String& algorithm,
     sm_p->setAlgorithm("clean");
 
     //    if (!se_p)
-      if(!createSkyEquation(modelNames, fixed, maskNames, complist)) 
-	{
-	  
+    if(!createSkyEquation(modelNames, fixed, maskNames, complist)) 
+      {
+	
 #ifdef PABLO_IO
-	  traceEvent(1,"Exiting Imager::clean",21);
+	traceEvent(1,"Exiting Imager::clean",21);
 #endif
-
-	  return False;
-	}
-      os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
-      addResidualsToSkyEquation(residualNames);
+	
+	return False;
+      }
+    os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
+    addResidualsToSkyEquation(residualNames);
     }
     else{
       //adding or modifying mask associated with skyModel
-      addMasksToSkyEquation(maskNames);
+      addMasksToSkyEquation(maskNames,fixed);
     }
 
     if (displayProgress) {
@@ -4630,7 +4709,9 @@ Bool Imager::clean(const String& algorithm,
        << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
        << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
-    if(algorithm=="clark" || algorithm=="hogbom" || algorithm=="multiscale"){
+    
+    if((algorithm=="clark" || algorithm=="hogbom" || algorithm=="multiscale") 
+       && (niter !=0)){
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
       
@@ -4706,8 +4787,9 @@ Bool Imager::clean(const String& algorithm,
 
     return converged;
   } 
+  
   catch (exception &x) { 
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+    for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
 	 if (!images_p[thismodel].null()) {
              images_p[thismodel]->table().relinquishAutoLocks(True);
              images_p[thismodel]->table().unlock();
@@ -7079,18 +7161,9 @@ Bool Imager::createFTMachine()
   }
   else if(ftmachine_p=="mosaic") {
     os << "Performing Mosaic gridding" << LogIO::POST;
-    if(!gvp_p) {
-      if (doDefaultVP_p) {
-	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
-      } else {
-	os << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
-	Table vpTable( vpTableStr_p ); 
-	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
-      }
-    } 
-    gvp_p->setThreshold(minPB_p);
-    ft_p = new MosaicFT(*gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
+   
+    setMosaicFTMachine();
+
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -7446,10 +7519,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	os << LogIO::SEVERE << "Error adding model " << model << LogIO::POST;
 	return False;
       }
-      if(Int(fixed.nelements())>model&&fixed(model)) {
-        os << "Model " << model << " will be held fixed" << LogIO::POST;
-	sm_p->fix(model);
-      }      
+ 
       fluxMasks_p[model]=0;
       if(fluxMask(model)!=""&&Table::isReadable(fluxMask(model))) {
 	fluxMasks_p[model]=new PagedImage<Float>(fluxMask(model));
@@ -7462,7 +7532,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       }
       residuals_p[model]=0;
     }
-    addMasksToSkyEquation(mask);
+    addMasksToSkyEquation(mask, fixed);
   }
   
   // Always need a VisSet and an FTMachine
@@ -7539,7 +7609,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   AlwaysAssert(se_p, AipsError);
 
   // Now add any SkyJones that are needed
-  if(doVP_p) {
+  if(doVP_p && (ft_p->name()!="MosaicFT")) {
     if (doDefaultVP_p) {
       vp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p, skyPosThreshold_p);
     } else { 
@@ -7642,10 +7712,16 @@ void Imager::setPGPlotter(PGPlotter& thePlotter) {
 
   pgplotter_p=&thePlotter;
 }
-Bool Imager::addMasksToSkyEquation(const Vector<String>& mask){
+Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool>& fixed){
   LogIO os(LogOrigin("imager", "addMasksToSkyEquation()", WHERE));
 
   for(Int model=0 ;model < nmodels_p; ++model){
+
+    
+    if((Int(fixed.nelements())>model) && fixed(model)) {
+      os << "Model " << model << " will be held fixed" << LogIO::POST;
+      sm_p->fix(model);
+    }     
     /*
     if(!(masks_p[model].null())) delete masks_p[model];
     masks_p[model]=0;
@@ -8499,5 +8575,35 @@ void Imager::savePSF(const Vector<String>& psf){
 
 }
 
+void Imager::setMosaicFTMachine(){
+   LogIO os(LogOrigin("Imager", "setmosaicftmachine", WHERE));
+  ROMSColumns msc(*ms_p);
+  String telescop=msc.observation().telescopeName()(0);
+  PBMath::CommonPB kpb;
+  PBMath::enumerateCommonPB(telescop, kpb);
+  if(!((kpb == PBMath::UNKNOWN) || 
+       (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA))){
+    
+    if(!gvp_p) {
+      if (doDefaultVP_p) {
+	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
+	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
+      } else {
+	os << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
+	Table vpTable( vpTableStr_p ); 
+	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,skyPosThreshold_p);
+      }
+    } 
+    gvp_p->setThreshold(minPB_p);
+  }
+  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
+  if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
+     || (kpb==PBMath::ALMA)){
+    os << "Using antenna diameters for determining beams for gridding" << LogIO::POST;
+    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc();
+    static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
+  }
+  
+}
 } //# NAMESPACE CASA - END
 

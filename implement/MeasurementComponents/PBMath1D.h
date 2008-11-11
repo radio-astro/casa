@@ -230,12 +230,15 @@ protected:
 				 Float cutoff,
 				 Bool forward); 
 
+
   ImageInterface<Float>& apply(const ImageInterface<Float>& in,
 			       ImageInterface<Float>& out,
 			       const MDirection& sp,
 			       const Quantity parAngle,	      
 			       const BeamSquint::SquintType doSquint,
-			       Float cutoff);
+			       Float cutoff, 
+			       const Int ipower=4); //only 2 values allowed 2 and 4
+                                              //PB and PB^2
 
   SkyComponent& apply(SkyComponent& in,
 		      SkyComponent& out,

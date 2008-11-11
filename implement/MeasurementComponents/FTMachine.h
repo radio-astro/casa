@@ -216,6 +216,9 @@ public:
   virtual void setMovingSource(const String& sourcename);
   virtual void setMovingSource(const MDirection& mdir);
 
+  //reset stuff in an FTMachine
+  virtual void reset(){};
+
 protected:
 
   LogIO logIO_p;

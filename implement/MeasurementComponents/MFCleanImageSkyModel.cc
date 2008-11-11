@@ -143,7 +143,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       // 4 pixels:  pretty arbitrary, but only look for sidelobes
       // outside the inner (2n+1) * (2n+1) square
       psfmaxouter(model) = maxOuter(subPSF, 4);  
-      os << "Model " << model+1 << ": max, min, maxOuter PSF = "
+      os << "Model " << model << ": max, min, maxOuter PSF = "
 	 << psfmax(model) << ", " << psfmin(model) << ", " <<
 	psfmaxouter(model) << endl;
       if(abs(psfmin(model))>maxSidelobe) maxSidelobe=abs(psfmin(model));
@@ -264,7 +264,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
 
-    os << "*** Starting major cycle " << cycle+1 << LogIO::POST;
+    os << "*** Starting major cycle " << cycle << LogIO::POST;
     cycle++;
 
     // Make the residual images. We do an incremental update
@@ -320,7 +320,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     absmax=maxField(resmax, resmin);
 
     for (model=0;model<numberOfModels();model++) {
-      os << "Model " << model+1 << ": max, min (weighted) residuals = "
+      os << "Model " << model << ": max, min (weighted) residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;
@@ -412,7 +412,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	      if(psfmax(model)>0.0) {
 
 		if(nchan>1) {
-		  os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
+		  os<<"Processing channel "<<chan<<" of "<<nchan<<LogIO::POST;
 		}
 
 		// Renormalize by the weights 
@@ -563,7 +563,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	       << model << LogIO::POST;
 	  }
 	  else {
-	    os<<"No need to clean model "<<model+1<<" :peak residual below threshold"
+	    os<<"No need to clean model "<<model<<" :peak residual below threshold"
 	      <<LogIO::POST;
 	  }
 	}
@@ -603,7 +603,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     os << "Final maximum residual = " << finalabsmax << LogIO::POST;
     converged=(finalabsmax < 1.05 * threshold());
     for (model=0;model<numberOfModels();model++) {
-      os << "Model " << model+1 << ": max, min residuals = "
+      os << "Model " << model << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
   }

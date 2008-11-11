@@ -304,6 +304,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 
   // With current VisIter sort order, this chunking does
   //   all times for each spw and field
+  // Double t0;
   for (chunk=0, vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
 
     // Extract the current visibility buffer spectral window id.
@@ -314,7 +315,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 
     os << LogIO::NORMAL 
        << "Accumulating data for:  field= " << fieldName 
-       << ", spw= " << spwid+1 
+       << ", spw= " << spwid
        << ", nchan= " << nChan 
        << LogIO::POST;
 
@@ -330,14 +331,12 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
     VisBuffAccumulator vba(nAnt(),preavg(),False);
 
     vi.origin();
-    //    Double t0=86400.0*floor(vb.time()(0)/86400.0);
+    //    t0=86400.0*floor(vb.time()(0)/86400.0);
     
     // Collapse each timestamp in this chunk according to VisEq
     //  with calibration and averaging
     for (vi.origin(); vi.more(); vi++) {
 
-      //      cout << "Time = " << vb.time()(0) - t0 << endl;
-      
       // TBD: initialize weights from sigma here?
       
       ve.collapse(vb);
@@ -350,7 +349,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
       vba.accumulate(vb);
     }
     vba.finalizeAverage();
-    
+
     // The VisBuffer to work with in solve
     VisBuffer& svb(vba.aveVisBuff());
 
@@ -494,6 +493,9 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
     delete(visTimeSeries[k]);
     delete(weightTimeSeries[k]);
   };
+
+
+  //  Double t0=86400.0*floor(min(time)/86400.0);
 
   // Compute the number of spline knots
   Vector<Double> knots, ampKnots(1,0.0), phaKnots(1,0.0);

@@ -133,6 +133,7 @@ class Calibrater
 		 const Bool& solnorm=False,
 		 const Float& minsnr=0.0f,
 		 const String& combine="",
+		 const Int& fillgaps=0,
 		 const String& cfcache="",
 		 const Double& painc=360.0);
 
@@ -149,6 +150,8 @@ class Calibrater
   // Arrange to solve for BPOLY (using MSSelection syntax)
   Bool setsolvebandpoly(const String& table,
 			const Bool& append,
+			const String& solint,
+			const String& combine,
 			const Vector<Int>& degree,
 			const Bool& visnorm,
 			const Bool& solnorm,
@@ -353,6 +356,7 @@ class Calibrater
   // The standard solving mechanism
   Bool standardSolve();
   Bool standardSolve2();
+  Bool standardSolve3();
 
   // Input MeasurementSet and derived selected MeasurementSet
   String msname_p;

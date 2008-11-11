@@ -296,6 +296,15 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
   Bool centered=True;
   // lets ignore  misers who made 10x10 pixel images
   centered=(abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
+
+  /////////////////////
+  //cout << "nx " << nx << " ny " << ny << " xpos " << xpos << " ypos " << ypos << " peak " << peak << endl;
+  //PagedImage<Float> thisScreen(psfs[0]->shape(), psfs[0]->coordinates(), "PSF__.psf");
+  //thisScreen.copyData(*(psfs[0]));
+
+
+
+  ///////////////////////////////
   if(centered)
     return;
   //lets back up the ftmachines
@@ -554,11 +563,18 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
   }
   else{
     Long npix=theIm.shape().product();
-    Long pixInMem=(HostInfo::memoryTotal()/8)*1024;
+    Long memtot=HostInfo::memoryTotal();
+    //check for 32 bit OS and limit it to 2Gbyte
+    if( ((signed Long)(4000000000)) < 0){
+      if(memtot > 2000000)
+	memtot=2000000;
+    }
+
+    Long pixInMem=(memtot/8)*1024;
     nslice=1;
     if(npix > (pixInMem/2)){
-      //Lets slice it so grid is at most 1/4th of memory
-      pixInMem=pixInMem/4;
+      //Lets slice it so grid is at most 1/6th of memory
+      pixInMem=pixInMem/6;
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
@@ -577,6 +593,9 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
     sliceCube(imPutSlice_p[model], model, cubeSlice, nCubeSlice, 0);
     weightSlice_p[model].resize();
+    if(nCubeSlice>1){
+      iftm_p[model]->reset();
+    }
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
   }
@@ -855,6 +874,10 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   Bool CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi, 
 				     const CoordinateSystem& coords, 
 				     Int slice, Int nslice){
+
+    //bypass this for now
+    return False;
+
     // Only one slice lets keep what the user selected
     if(nslice==1)
       return False;

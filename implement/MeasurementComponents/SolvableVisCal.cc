@@ -664,6 +664,13 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     interval()=DBL_MAX;
   }
 
+  if (verby) {
+    cout << "solint = " << interval() << endl;
+    cout << boolalpha << "combscan() = " << combscan() << endl;
+    cout << boolalpha << "combfld()  = " << combfld() << endl;
+    cout << boolalpha << "combspw()  = " << combspw() << endl;
+  }
+
   Int nsortcol(4+Int(!combscan()));  // include room for scan
   Block<Int> columns(nsortcol);
   Int i(0);
@@ -701,6 +708,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   Double time1(0.0),time(0.0);
 
   Int thisscan(-1),lastscan(-1);
+  Int thisfld(-1),lastfld(-1);
+  Int thisspw(-1),lastspw(-1);
   Int chunk(0);
   Int sol(-1);
   Double soltime1(-1.0);
@@ -708,14 +717,18 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     vi.origin();
     time1=vb.time()(0);  // first time in this chunk
     thisscan=vb.scan()(0);
+    thisfld=vb.fieldId();
+    thisspw=vb.spectralWindow();
     
-    nChunkPerSpw(vb.spectralWindow())++;
+    nChunkPerSpw(thisspw)++;
 
     // New chunk means new sol interval, IF....
-    if ( (!combfld() && !combspw()) ||              // not combing fld or spw, OR
+    if ( (!combfld() && !combspw()) ||              // not combing fld nor spw, OR
 	 ((time1-soltime1)>interval()) ||           // (combing fld and/or spw) and solint exceeded, OR
 	 ((time1-soltime1)<0.0) ||                  // a negative time step occurs, OR
-	 (!combscan() && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered 
+	 (!combscan() && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
+	 (!combspw() && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
+	 (!combfld() && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR 
 	 (sol==-1))  {                              // this is the first interval
       soltime1=time1;
       sol++;
@@ -751,6 +764,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     }
     
     lastscan=thisscan;
+    lastfld=thisfld;
+    lastspw=thisspw;
     
   }
   
@@ -1030,6 +1045,23 @@ void SolvableVisCal::fillMetaData(VisSet& vs) {
 }
 
 
+Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
+
+  // Adopt meta data from FIRST CalVisBuffer in the VBGA, for now
+  currSpw()=spwMap()(vbga(0).spectralWindow());
+  currField()=vbga(0).fieldId();
+  
+  // The timestamp really is global, in any case
+  Double& rTime(vbga.globalTimeStamp());
+  if (rTime > 0.0) {
+    refTime()=rTime;
+    return True;
+  }
+  else
+    return False;
+
+}
+
 Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb, 
 				   const Int& fieldId) {
 
@@ -1183,6 +1215,104 @@ void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
 
 }
 
+Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
+
+  // TBD: handle multi-channel infocusFlag properly
+  // TBD: optimize array access
+  
+  // Assemble nominal baseline weights distribution
+  Matrix<Double> blwtsum(nAnt(),nAnt(),0.0);
+  for (Int ivb=0;ivb<vbag.nBuf();++ivb) {
+    CalVisBuffer& cvb(vbag(ivb));
+
+    cvb.setFocusChan(focusChan());
+
+    for (Int irow=0;irow<cvb.nRow();++irow) {
+      Int& a1(cvb.antenna1()(irow));
+      Int& a2(cvb.antenna2()(irow));
+      if (!cvb.flagRow()(irow) && a1!=a2) {
+	if (!cvb.infocusFlag()(0,irow)) {
+	  Double wt=Double(sum(cvb.weightMat().column(irow)));
+	  blwtsum(a2,a1)+=wt;
+	  blwtsum(a1,a2)+=wt;
+	} // flag
+      } // flagRow 
+    } // irow
+  } // ivb
+
+  // Recursively apply threshold on baselines per antenna
+  //  Currently, we insist on at least 3 baselines per antenna
+  //  (This will eventually be a user-specified parameter: blperant)
+  Int minblperant(3);
+  Vector<Bool> antOK(nAnt(),True);  // nominally OK
+  Vector<Int> blperant(nAnt(),0);
+  Int iant=0;
+  while (iant<nAnt()) {
+    if (antOK(iant)) {   // avoid reconsidering already bad ones
+      Int nbl=ntrue(blwtsum.column(iant)>0.0);
+      blperant(iant)=nbl;
+      if (nbl<minblperant) {
+	// some baselines available, but not enough
+	//  so eliminate this antenna 
+	antOK(iant)=False;
+	blwtsum.row(iant)=0.0;
+	blwtsum.column(iant)=0.0;
+	blperant(iant)=0;
+	// ensure we begin recount at first antenna again
+	iant=-1;
+      }
+    }      
+    ++iant;
+  }
+
+  //  cout << "  blperant = " << blperant << endl;
+  //  cout << "  antOK    = " << antOK << endl;
+  //  cout << "  ntrue(antOK) = " << ntrue(antOK) << endl;
+
+  // Apply constraints results to solutions and data
+  solveParOK()=False;   // Solutions nominally bad
+  for (Int iant=0;iant<nAnt();++iant) {
+    if (antOK(iant)) {
+      // set solution good
+      solveParOK().xyPlane(iant) = True;
+    }
+    else {
+      // This ant not ok, set soln to zero
+      if (parType()==VisCalEnum::COMPLEX)
+      	solveCPar().xyPlane(iant)=1.0;
+      else if (parType()==VisCalEnum::REAL)
+      	solveRPar().xyPlane(iant)=0.0;
+
+      // Flag corresponding data
+      for (Int ivb=0;ivb<vbag.nBuf();++ivb) {
+	CalVisBuffer& cvb(vbag(ivb));
+	Vector<Int>& a1(cvb.antenna1());
+	Vector<Int>& a2(cvb.antenna2());
+	for (Int irow=0;irow<cvb.nRow();++irow) {
+	  if (a1(irow)==iant || a2(irow)==iant)
+	    cvb.infocusFlag()(0,irow)=True;
+	}
+	// the following didn't work because row(0) behaved
+	//  as contiguous and set the wrong flags for multi-chan data!
+	//	cvb.infocusFlag().row(0)(a1==iant)=True;
+	//	cvb.infocusFlag().row(0)(a2==iant)=True;
+      } // ivb
+
+    } // antOK
+  } // iant
+  
+  // We return sum(antOK)>0 here because it is not how many 
+  //  good ants there are, but rather how many good baselines 
+  //  per ant there are.  The above counting exercise will 
+  //  reduce sum(antOK) to zero when the baseline counts 
+  //  constraint is violated over enough of the whole array.  
+  //  so as to make the solution impossible.  Otherwise
+  //  there will be at least blperant+1 (>0) good antennas.
+
+  return (ntrue(antOK)>0);
+
+}
+
 // Verify VisBuffer data sufficient for solving (wts, etc.)
 Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
 
@@ -1285,6 +1415,14 @@ void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
     throw(AipsError("Attempt to call un-implemented selfSolve()"));
 
 }
+void SolvableVisCal::selfSolve2(VisBuffGroupAcc& vbga) {
+    
+  if (standardSolve())
+    throw(AipsError("Spurious call to selfSolve()."));
+  else
+    throw(AipsError("Attempt to call un-implemented selfSolve()"));
+
+}
 
      
 void SolvableVisCal::updatePar(const Vector<Complex> dCalPar,const Vector<Complex> dSrcPar) {
@@ -1328,17 +1466,17 @@ void SolvableVisCal::updatePar(const Vector<Complex> dCalPar,const Vector<Comple
 
 void SolvableVisCal::formSolveSNR() {
 
+  // Nominally zero
   solveParSNR()=0.0;
 
   for (Int iant=0;iant<nAnt();++iant)
     for (Int ipar=0;ipar<nPar();++ipar) {
-      if (solveParOK()(ipar,0,iant) &&
-	  solveParErr()(ipar,0,iant)>0.0f) {
-	solveParSNR()(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
-      }
-      else
-	// Ensure F if Err<=0  (OK?)
-	solveParOK()(ipar,0,iant)=False;
+      if (solveParOK()(ipar,0,iant))
+	if (solveParErr()(ipar,0,iant)>0.0f) 
+	  solveParSNR()(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
+	else 
+	  // if error is zero, SNR is officially infinite; use a (large) special value here
+	  solveParSNR()(ipar,0,iant)=9999999.0;
     }
 }
 
@@ -2077,6 +2215,183 @@ void SolvableVisJones::reReference() {
   else 
     throw(AipsError("Attempt to reference non-trivial calibration type."));
 
+
+}
+
+
+void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
+
+  if (prtlev()>3) cout << "  SVJ::differentiate(CVB)" << endl;
+
+  // NB: For freqDepPar()=True, the data and solutions are
+  //     multi-channel, but nChanMat()=1 because we only 
+  //     consider one channel at a time.  In this case,
+  //     focusChan is the specific channel under consideration.
+  //     Otherwise, we will use all channels in the vb 
+  //     simultaneously
+
+  // Some vb shape info
+  Int& nRow(cvb.nRow());
+  Int& nCorr(cvb.nCorr());
+
+  // Size (diff)residuals workspace in the CVB
+  cvb.setFocusChan(focusChan());
+  cvb.sizeResiduals(nPar(),2);    // 2 sets of nPar() derivatives per baseline
+
+  // Copy in-focus model to residual workspace
+  cvb.initResidWithModel();
+
+
+  // References to workspaces
+  Cube<Complex>& Vout(cvb.residuals());
+  Array<Complex>& dVout(cvb.diffResiduals());
+  Matrix<Bool>& Vflg(cvb.residFlag());
+  
+  // "Apply" the current Q,U or X estimates to the crosshand model
+  if (solvePol()>0) {
+    Complex pol(1.0);
+
+    if (solvePol()==2)  // pol = Q+iU
+      pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));
+    else if (solvePol()==1)   // pol = exp(iX)
+      pol=exp(Complex(0.0,real(srcPolPar()(0))));
+    
+    IPosition blc(3,1,0,0), trc(3,1,nChanMat()-1,nRow-1);
+    Array<Complex> RL(Vout(blc,trc));
+    RL*=pol;
+    blc(0)=trc(0)=2;
+    Array<Complex> LR(Vout(blc,trc));
+    LR*=conj(pol);
+  }
+  
+  // Visibility vector renderers
+  VisVector::VisType vt(visType(nCorr));
+  VisVector cVm(vt);  // The model data corrupted by trial solution
+  VisVector dV1(vt);  // The deriv of V wrt pars of 1st ant in bln 
+  VisVector dV2(vt);  // The deriv of V wrt pars of 2nd ant in bln 
+
+  // Temporary non-iterating VisVectors to hold partial applies
+  VisVector J1V(vt,True);
+  VisVector VJ2(vt,True);
+
+  // Starting synchronization for output visibility data
+  cVm.sync(Vout(0,0,0));
+  dV1.sync(dVout(IPosition(5,0,0,0,0,0)));
+  dV2.sync(dVout(IPosition(5,0,0,0,0,1)));
+
+  // Synchronize current calibration pars/matrices
+  syncSolveCal();
+
+  // Nominal synchronization of dJs
+  dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
+  dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // VisBuffer indices
+  Double* time=  cvb.time().data();
+  Int*    a1=    cvb.antenna1().data();
+  Int*    a2=    cvb.antenna2().data();
+  Bool*   flagR= cvb.flagRow().data();
+  Bool*   flag=  Vflg.data();            // via local reference
+  
+  // TBD: set weights according to flags??
+
+  // iterate rows
+  for (Int irow=0; irow<nRow; irow++,flagR++,a1++,a2++,time++) {
+    
+    // Avoid ACs
+    if (*a1==*a2) *flagR=True;
+
+    if (!*flagR) {  // if this row unflagged
+	
+      // Re-update matrices if time changes
+      if (timeDepMat() && *time != lastTime()) {
+	currTime()=*time;
+	invalidateDiffCalMat();
+	syncCalMat();
+	syncDiffMat();
+	lastTime()=currTime();
+      }
+
+      // Synchronize Jones renderers for the ants on this baseline
+      J1().sync(currJElem()(0,0,*a1),currJElemOK()(0,0,*a1));
+      J2().sync(currJElem()(0,0,*a2),currJElemOK()(0,0,*a2));
+
+      // Synchronize differentiated Jones renderers for this baseline
+      if (trivialDJ()) {
+	dJ1().origin();
+	dJ2().origin();
+      } else {
+	dJ1().sync(diffJElem()(IPosition(4,0,0,0,*a1)));
+	dJ2().sync(diffJElem()(IPosition(4,0,0,0,*a2)));
+      }
+
+      // Assumes all iterating quantities have nChanMat() channelization
+      for (Int ich=0; ich<nChanMat();ich++,flag++,
+	     cVm++, J1()++, J2()++) {
+	     
+	// if channel unflagged an cal ok
+	//	if (!*flag && (*J1Ok && *J2Ok) ) {  
+	if (!*flag) { 
+	  
+	  // Partial applies for repeated use below
+	  VJ2=cVm;                    
+	  J2().applyLeft(VJ2,*flag);      // VJ2 = Vm*J2, used below
+
+	  J1().applyRight(cVm,*flag);     
+	  J1V=cVm;                        // J1V = J1*Vm, used below
+
+	  // Finish trial corruption
+	  J2().applyLeft(cVm,*flag);      // cVm = (J1*Vm)*J2
+
+	}
+
+	// Only continue with diff-ing, if we aren't flagged yet
+	if (!*flag) {
+
+	  // Differentiation per par
+	  for (Int ip=0;ip<nPar();ip++,
+		 dV1++,dJ1()++,
+		 dV2++,dJ2()++) {
+	    
+	    dV1=VJ2;
+	    dJ1().applyRight(dV1);  // dV1 = dJ1(ip)*(Vm*J2)
+	    
+	    dV2=J1V;
+	    dJ2().applyLeft(dV2);   // dV2 = (J1*Vm)*dJ2(ip)
+	  }
+	  
+	} // (!*flag)
+	else {
+	  // set trial corruption to zero
+	  cVm.zero();
+	  
+	  // Advance all par-dep pointers over flagged channel
+	  dV1.advance(nPar());
+	  dV2.advance(nPar());
+	  dJ1().advance(nPar());
+	  dJ2().advance(nPar());
+	}
+
+      } // chn
+		
+    } // !*flagR
+    else {
+      // Must advance all chan-, par-dep pointers over flagged row
+      flag+=nChanMat(); 
+      cVm.advance(nChanMat());
+      J1().advance(nChanMat());
+      J2().advance(nChanMat());
+      Int chpar(nChanMat()*nPar());
+      dV1.advance(chpar);
+      dV2.advance(chpar);
+      dJ1().advance(chpar);
+      dJ2().advance(chpar);
+    }
+  }
+
+  // Subtract the obs'd data from the trial-corrupted model
+  //  to form residuals
+  cvb.finalizeResiduals();
 
 }
 
@@ -3522,7 +3837,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
             logSink() << LogIO::WARN
 		      << " Insufficient information to calculate scale factor for "
 		      << fldname(tranidx)
-		      << " in SpW="<< iSpw+1
+		      << " in SpW="<< iSpw
 		      << LogIO::POST;
           }
 

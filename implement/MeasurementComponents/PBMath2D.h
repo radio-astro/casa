@@ -157,7 +157,7 @@ public:
 
   PBMath2D();
 
-  virtual ~PBMath2D() = 0;
+  virtual ~PBMath2D();
 
   // Summarize the Voltage Pattern;
   // For PBMath2D, list nValues worth of the VP array

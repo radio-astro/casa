@@ -37,6 +37,7 @@
 #include <casa/Arrays/Cube.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/CompositeNumber.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
@@ -153,9 +154,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int maxMemoryMB=HostInfo::memoryTotal()/1024;
     //nominal  512 wprojplanes above that you may (or not) go swapping
     Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
+    CompositeNumber cn(Int(maxConvSizeConsidered/2.0)*2);
+    
     convSampling_p=4;
     convSize=max(Int(nx_p*padding),Int(ny_p*padding));
-    convSize=min(convSize,Int(maxConvSizeConsidered/2.0)*2);
+    convSize=min(convSize,(Int)cn.nearestEven(Int(maxConvSizeConsidered/2.0)*2));
 
 
     
@@ -213,6 +216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   Bool writeResults=False;
   Int warner=0;
+
 
   // Accumulate terms 
   Matrix<Complex> screen(convSize, convSize);

@@ -290,16 +290,20 @@ class Imager
   
   // Fill in a region of a mask
   Bool boxmask(const String& mask, const Vector<Int>& blc,
-	       const Vector<Int>& trc, const Float value);
+	       const Vector<Int>& trc,const Float value);
 
   //Make a region either from record or array of blc trc 
   //(Matrix(nboxes,4)) into a mask image
   //value is the value of the mask pixels
+  //circular masks has form Matrix(ncircles,3)
+  //where the 3 values on a row are radius, x, y pixel values 
   Bool regionmask(const String& maskimage, Record* imageRegRec, 
-		  Matrix<Quantity>& blctrcs, const Float& value=1.0);
+		  Matrix<Quantity>& blctrcs, Matrix<Float>& circles, 
+		  const Float& value=1.0);
 
   static Bool regionToImageMask(const String& maskimage, Record* imageRegRec, 
 				Matrix<Quantity>& blctrcs, 
+				Matrix<Float>& circles, 
 				const Float& value=1.0);
   // Clip on Stokes I
   Bool clipimage(const String& image, const Quantity& threshold);
@@ -604,7 +608,7 @@ protected:
   Bool addResidualsToSkyEquation(const Vector<String>& residual);
 
   // Add or replace the masks
-  Bool addMasksToSkyEquation(const Vector<String>& mask);
+  Bool addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool>& fixed=Vector<Bool>(0));
 
   // Get the rest frequency ..returns 1 element in restfreq 
   // if user specified or try to get the info from the SOURCE table 
@@ -638,6 +642,11 @@ protected:
 
   String frmtTime(const Double time);
 
+  //copy imageregion to pixels on image as value given
+  static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value=1.0);
+
+  //set the mosaic ft machine and right convolution function
+  virtual void setMosaicFTMachine(); 
  
   ComponentList* componentList_p;
 

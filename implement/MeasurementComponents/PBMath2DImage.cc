@@ -509,7 +509,7 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
 					    const MDirection& sp,
 					    const Quantity parAngle,	      
 					    const BeamSquint::SquintType doSquint,
-					    Float cutoff)
+					    Float cutoff, Int ipower)
 {
   LogIO os(LogOrigin("PBMath2DImage", "apply"));
 

@@ -574,7 +574,7 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 		const MDirection& pointDir,
 		const Quantity parAngle,
 		const BeamSquint::SquintType doSquint,
-		Float cutoff)
+		Float cutoff, const Int ipower)
 {
   LogIO os(LogOrigin("PBMath1D", "apply"));
  
@@ -759,7 +759,8 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 	  indx = Int(r*inverseIncrementRadius_p);
 	  if (norm(vp_p(indx)) > 0.0) {
 	    taper = real(vp_p(indx) * conj(vp_p(indx)));
-	    taper *= taper;
+	    if(ipower==4)
+	      taper *= taper;
 	  } else {
 	    taper = 0.0;
 	  }
@@ -853,7 +854,16 @@ PBMath1D::apply(SkyComponent& in,
       compFlux(pol) = 0.0;
     } else {
       if (norm(vp_p(Int(r*inverseIncrementRadius_p))) > 0.0) {
-	taper = pow( vp_p(Int(r*inverseIncrementRadius_p)), (Float)iPower);
+	if(iPower>1){
+	  taper=vp_p(Int(r*inverseIncrementRadius_p))*conj(vp_p(Int(r*inverseIncrementRadius_p)));
+	  if(iPower==4)
+	    taper*=taper;
+	  
+	}  
+	else{
+	  taper =  vp_p(Int(r*inverseIncrementRadius_p));
+	  //taper = pow( vp_p(Int(r*inverseIncrementRadius_p)), (Float)iPower);
+	}
       } else {
 	taper = 0.0;
       }

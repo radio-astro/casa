@@ -135,7 +135,7 @@ public:
   // size of the tile used in gridding (cannot be less than
   // 12, 16 works in most cases). 
   // <group>
-  MosaicFT(SkyJones& sj, MPosition mloc, String stokes,
+  MosaicFT(SkyJones* sj, MPosition mloc, String stokes,
 	    Long cachesize, Int tilesize=16, 
 	   Bool usezero=True);
   // </group>
@@ -220,6 +220,8 @@ public:
   void setConvFunc(CountedPtr<SimplePBConvFunc>& pbconvFunc);
   CountedPtr<SimplePBConvFunc>& getConvFunc();
 
+  //reset weight image
+  virtual void reset();
 
 
 protected:        
@@ -300,12 +302,14 @@ protected:
   // Grid/degrid zero spacing points?
   Bool usezero_p;
 
-  Matrix<Complex> convFunc;
-  Matrix<Complex> weightConvFunc_p;
+  Cube<Complex> convFunc;
+  Cube<Complex> weightConvFunc_p;
   Int convSampling;
   Int convSize;
   Int convSupport;
-  Vector<Int> convSupportPerAnt_p;
+  Vector<Int> convSupportPlanes_p;
+  Vector<Int> convSizePlanes_p;
+  Vector<Int> convRowMap_p;
 
   Int wConvSize;
 

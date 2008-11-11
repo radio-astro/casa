@@ -125,8 +125,12 @@ void FTMachine::initMaps(const VisBuffer& vb) {
 
   // get the first position of moving source
   if(fixMovingSource_p){
+
+    //First convert to HA-DEC or AZEL for parallax correction
+    MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+    MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
     MDirection::Ref outref(directionCoord.directionType(), mFrame_p);
-    firstMovingDir_p=MDirection::Convert(movingDir_p, outref)();
+    firstMovingDir_p=MDirection::Convert(tmphadec, outref)();
 
   }
 

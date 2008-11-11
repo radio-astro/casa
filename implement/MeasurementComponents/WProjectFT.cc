@@ -378,8 +378,8 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
     griddedData=Complex(0.0);
     
     IPosition stride(4, 1);
-    IPosition blc(4, (nx-image->shape()(0))/2,
-		  (ny-image->shape()(1))/2, 0, 0);
+    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition trc(blc+image->shape()-stride);
     
     IPosition start(4, 0);
@@ -1158,8 +1158,8 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
 
     if(!isTiled) {
       // Check the section from the image BEFORE converting to a lattice 
-      IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       
@@ -1305,8 +1305,8 @@ Bool WProjectFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);

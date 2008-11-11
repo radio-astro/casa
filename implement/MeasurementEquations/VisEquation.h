@@ -130,6 +130,7 @@ public:
   
   // Calculate residuals and differentiated residuals
   //   (optionally for specific chan)
+  void diffResiduals(CalVisBuffer& cvb);
   void diffResiduals(VisBuffer& vb, 
 		     Cube<Complex>& R, 
 		     Array<Complex>& dR,

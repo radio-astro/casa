@@ -59,11 +59,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
-  SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),
+   SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),
 					convFunctionMap_p(-1), 
 					actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
     //
+
+     pbClass_p=PBMathInterface::COMMONPB;
+  }
+
+  SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): PixelatedConvFunc<Complex>(),
+					convFunctionMap_p(-1), 
+					actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
+    //
+    pbClass_p=typeToUse;
+
   }
 
   SimplePBConvFunc::~SimplePBConvFunc(){
@@ -74,19 +83,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
 					  const Int& convSampling,
-					  SkyJones& sj,
-					  Matrix<Complex>& convFunc, 
-					  Matrix<Complex>& weightConvFunc, 
-					  Int& convsize,
-					  Int& convSupport){
+					  Cube<Complex>& convFunc, 
+					  Cube<Complex>& weightConvFunc, 
+					  Vector<Int>& convsize,
+					  Vector<Int>& convSupport,
+					  Vector<Int>& convFuncMap
+					  ){
+
+    //Only one plane in this version
+    convFuncMap.resize();
+    convFuncMap=Vector<Int>(vb.nRow(),0);
     //break reference
     convFunc.resize();
     weightConvFunc.resize();
     if(checkPBOfField(vb)){
-      convFunc.reference(convFunc_p);
-      weightConvFunc.reference(weightConvFunc_p);
-      convsize=convSize_p;
-      convSupport=convSupport_p;
+      convFunc.reference(*(convFunctions_p[actualConvIndex_p]));
+      weightConvFunc.reference(*(convWeights_p[actualConvIndex_p]));
+      convsize=Vector<Int>(1,convSize_p);
+      convSupport=Vector<Int>(1,convSupport_p);
       return;
     }
     LogIO os;
@@ -105,14 +119,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert(directionIndex>=0, AipsError);
 
     // Set up the convolution function.
-    Int nx=iimage.shape()(directionIndex); 
-    convSize_p=nx;
+    Int nx=iimage.shape()(directionIndex);
+    Int ny=iimage.shape()(directionIndex+1);
+    convSize_p=max(nx,ny)*convSampling;
 
     DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
     Vector<Double> sampling;
     sampling = dc.increment();
     sampling*=Double(convSampling);
-    sampling*=Double(nx)/Double(convSize_p);
+    sampling(0)*=Double(nx)/Double(convSize_p);
+    sampling(1)*=Double(ny)/Double(convSize_p);
     dc.setIncrement(sampling);
     
     Vector<Double> unitVec(2);
@@ -144,7 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     screen=1.0;
     // Either the SkyJones
     twoDPB.putSlice(screen, start);
-    sj.apply(twoDPB, twoDPB, vb, 0); 
+    sj_p->apply(twoDPB, twoDPB, vb, 0); 
     
     //*****Test
     TempImage<Complex> twoDPB2(pbShape, coords);
@@ -153,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Matrix<Float> screenoo(convSize_p, convSize_p);
       screenoo.set(1.0);
       screen2.putSlice(screenoo,start);
-      sj.applySquare(screen2, screen2, vb, 0);
+      sj_p->applySquare(screen2, screen2, vb, 0);
       LatticeExpr<Complex> le(screen2);
       twoDPB2.copyData(le);
     }
@@ -191,6 +207,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float minAbsConvFunc=min(amplitude(convFunc_p));
     convSupport_p=-1;
     Bool found=False;
+    Bool found2=True;
+    Int trial2=0;
     Int trial=0;
     for (trial=convSize_p/2-2;trial>0;trial--) {
       //Searching down a diagonal
@@ -200,19 +218,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	break;
       }
     }
+    /*
+    for (trial2=convSize_p/2-2;trial2>0;trial2--) {
+      //Searching from centre moving away
+      if(abs(convFunc_p(trial2,trial2)) <  (5.0e-2*maxAbsConvFunc)) {
+	found2=True;
+	break;
+      }
+    }
+    
+    if(found2 && (trial2 < trial)){
+      trial=trial2;
+      found=True;
+    }
+    */
     if(!found){
       if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	found=True;
       // if it drops by more than 2 magnitudes per pixel
       trial=3;
     }
-    
+    /*
+    if(trial < 3) 
+      trial=3;
+    */
     if(found) {
       convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
     }
     else {
-      os << "Convolution function is misbehaved - support seems to be zero"
-	      << LogIO::EXCEPTION;
+      os << "Convolution function is misbehaved - support seems to be zero\n"
+	 << "Reasons can be: \nThe image definition not covering one or more of the pointings selected \n"
+         << "Or no unflagged data in a given pointing"
+	 << LogIO::EXCEPTION;
     }
     
     // Normalize such that plane 0 sums to 1 (when jumping in
@@ -275,17 +312,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p,1);
       convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc_p;
     }
-    
-    convFunc.reference(convFunc_p);
-    weightConvFunc.reference(weightConvFunc_p);
-    convsize=convSize_p;
-    convSupport=convSupport_p;
+   
 
+    convFunc.reference(*(convFunctions_p[actualConvIndex_p]));
+    weightConvFunc.reference(*(convWeights_p[actualConvIndex_p]));
+    convsize=Vector<Int>(1,convSize_p);
+    convSupport=Vector<Int>(1,convSupport_p);
     
     
   }
 
 
+  void SimplePBConvFunc::setSkyJones(SkyJones* sj){
+    sj_p=sj;
+  }
 
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
     Int fieldid=vb.fieldId();

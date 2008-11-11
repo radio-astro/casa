@@ -68,6 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 class VisEquation;
+class VisBuffGroupAcc;
 
 class BJonesPoly : public BJones {
 public:
@@ -85,7 +86,7 @@ public:
   virtual String typeName()     { return "BPOLY"; };
   virtual String longTypeName() { return "B Jones Poly (bandpass)"; };
 
-  virtual Bool standardSolve() { return False; };
+  virtual Bool standardSolve() { return True; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -99,7 +100,8 @@ public:
   virtual void setApply(const Record& applypar);
 
   // Solve
-  virtual void selfSolve (VisSet& vs, VisEquation& ve);
+  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  virtual void selfSolve2(VisBuffGroupAcc& vbga);
 
 
 protected:
@@ -131,6 +133,9 @@ private:
   Double solTimeStamp;
   Int solSpwId;
   Int solFldId;
+
+  // CalDescId per spw
+  Vector<Int> calDescId_p;
 
   // Determine if a given channel is masked
   Bool maskedChannel (const Int& chan, const Int& nChan);

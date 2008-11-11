@@ -440,7 +440,7 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
     wLattice=wArrayLattice;
 
     // Now find the SubLattice corresponding to the image
-    IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition stride(4, 1);
     IPosition trc(blc+image->shape()-stride);
     LCBox gridBox(blc, trc, gridShape);
@@ -928,8 +928,8 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
   if(!isTiled) {
     // Now find the SubLattice corresponding to the image
     IPosition gridShape(4, nx, ny, npol, nchan);
-    IPosition blc(4, (nx-image->shape()(0))/2,
-		  (ny-image->shape()(1))/2, 0, 0);
+    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition stride(4, 1);
     IPosition trc(blc+image->shape()-stride);
     LCBox gridBox(blc, trc, gridShape);
@@ -1060,7 +1060,10 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     if(xyPosMovingOrig_p.nelements() <2){
       directionCoord.toPixel(xyPosMovingOrig_p, firstMovingDir_p);
     }
-    MDirection actSourceDir=(*pointingToImage)(movingDir_p);
+    //via HADEC or AZEL for parallax of near sources
+    MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+    MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+    MDirection actSourceDir=(*pointingToImage)(tmphadec);
     Vector<Double> actPix;
     directionCoord.toPixel(actPix, actSourceDir);
 

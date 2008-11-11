@@ -1505,7 +1505,7 @@ void SkyEquation::scaleImage(Int model)
   if ((scaleType_p != "NONE" && sm_->doFluxScale(model)) 
       //|| (ft_->name() == "MosaicFT") ) {
       ){
-      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
+    LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/(sm_->fluxScale(model))) );
       sm_->image(model).copyData(latticeExpr);
     }  
   else if(ft_->name() == "MosaicFT"){
@@ -1522,10 +1522,14 @@ void SkyEquation::unScaleImage(Int model)
 {
 
     if ( (scaleType_p != "NONE" && sm_->doFluxScale(model)) 
-	 ){
+	 ){/*
       sm_->image(model).copyData( (LatticeExpr<Float>)
 				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
+	   */
+      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
+      sm_->image(model).copyData(latticeExpr);
+      
     }
     else if(ft_->name() == "MosaicFT"){
      
@@ -1557,8 +1561,13 @@ void SkyEquation::scaleDeltaImage(Int model)
 {
     if ((scaleType_p != "NONE" && sm_->doFluxScale(model) ) 
 	){
+      /*
       LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
       sm_->deltaImage(model).copyData(latticeExpr);
+      */
+      sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
+				       (iif(sm_->fluxScale(model) <= (0.0), 0.0,
+					    ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
     }
     else if(ft_->name() == "MosaicFT"){
       sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
@@ -1573,10 +1582,13 @@ void SkyEquation::scaleDeltaImage(Int model)
 void SkyEquation::unScaleDeltaImage(Int model)
 {
     if ( (scaleType_p != "NONE" && sm_->doFluxScale(model))
-	 ){
+	 ){/*
     sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
 				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 				      ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
+	   */
+       LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
+      sm_->deltaImage(model).copyData(latticeExpr);
     }
     else if(ft_->name() == "MosaicFT"){
       LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
@@ -1595,7 +1607,7 @@ void SkyEquation::fixImageScale()
   // We also keep the fluxScale(mod) images around to
   // undo the weighting.
   
-  if(ej_) {
+  if(ej_ || (ft_->name() == "MosaicFT") ) {
     Float ggSMax=0.0;
     for (Int model=0;model<sm_->numberOfModels();model++) {
     
@@ -1617,6 +1629,7 @@ void SkyEquation::fixImageScale()
     for (Int model=0;model<sm_->numberOfModels();model++) {
       
       if (scaleType_p == "SAULT") {
+	sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
 	// Adjust flux scale to account for ggS being truncated at ggSMin1
 	// Below ggSMin2, set flux scale to 0.0
 	// FluxScale * image => true brightness distribution, but
@@ -1626,7 +1639,7 @@ void SkyEquation::fixImageScale()
 	// if ggS > ggSMin1, set to 1.0
 	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
 					(iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					     ggSMin1/(sm_->ggS(model)) )) );
+					     ((sm_->ggS(model))/ggSMin1) )) );
 	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
 					(iif(sm_->ggS(model) > (ggSMin1), 1.0,
 					     (sm_->fluxScale(model)) )) );
@@ -1645,7 +1658,7 @@ void SkyEquation::fixImageScale()
 	}
 	else{
 
-	  sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+	  
 	 
 
 	  Int nXX=sm_->ggS(model).shape()(0);

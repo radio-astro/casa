@@ -37,6 +37,8 @@
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
+#include <msvis/MSVis/VisBuffGroupAcc.h>
+#include <msvis/MSVis/CalVisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -100,13 +102,15 @@ public:
 
   // Do the solve
   Bool solve(VisEquation& viseq, SolvableVisCal& svc, VisBuffer& svb);
+  Bool solve(VisEquation& viseq, SolvableVisCal& svc, VisBuffGroupAcc& vbga);
 
 protected:
 
   // Access to fundamental external objects:
-  inline VisBuffer&      svb() { return *svb_; };
-  inline VisEquation&    ve()  { return *ve_; };
-  inline SolvableVisCal& svc() { return *svc_; };
+  inline VisBuffer&       svb()  { return *svb_; };
+  inline VisBuffGroupAcc& vbga() { return *vbga_; };
+  inline VisEquation&     ve()   { return *ve_; };
+  inline SolvableVisCal&  svc()  { return *svc_; };
 
   // Accessors to current svb's (differentiated) Residuals
   inline Cube<Complex>&    R()    { return R_; };
@@ -149,24 +153,29 @@ protected:
 
   // Obtain trial residuals w.r.t svc's current pars
   void residualate();
+  void residualate2();
 
   // Differentiate the svb w.r.t svc's pars
   void differentiate();
+  void differentiate2();
 
   // Calculate residuals (incl. diff'd) and chi2 
   void chiSquare();
+  void chiSquare2();
 
   // Check for convergence
   Bool converged();
 
   // Internal solving methods
   void accGradHess();
+  void accGradHess2();
   void revert();
   void solveGradHess();
   void updatePar();
 
   // Optimize the step parabolically
   void optStepSize();
+  void optStepSize2();
 
   // Get and print par errors
   void getErrors();
@@ -180,6 +189,7 @@ private:
 
   // VisBuffer (from outside)
   VisBuffer* svb_;
+  VisBuffGroupAcc* vbga_;
 
   // VisEquation (from outside)
   VisEquation* ve_;

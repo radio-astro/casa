@@ -42,6 +42,8 @@
 #include <calibration/CalTables/CalInterp.h>
 #include <calibration/CalTables/VisCalEnum.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/CalVisBuffer.h>
+#include <msvis/MSVis/VisBuffGroupAcc.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
@@ -172,20 +174,24 @@ public:
   // Synchronize the meta data with a solvable VisBuffer
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
+  Bool syncSolveMeta(VisBuffGroupAcc& vbga);
 
   // Make vb phase-only
   virtual void enforceAPonData(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
+  virtual Bool verifyConstraints(VisBuffGroupAcc& vbag);
   virtual Bool verifyForSolve(VisBuffer& vb);
   
   // Self-solving mechanism
   virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  virtual void selfSolve2(VisBuffGroupAcc& vs);
 
   // Set up data and model for pol solve
   void setUpForPolSolve(VisBuffer& vb);
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
+  virtual void differentiate(CalVisBuffer& cvb)=0;
   virtual void differentiate(VisBuffer& vb,        
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
@@ -422,6 +428,7 @@ public:
   virtual void guessPar(VisBuffer& vb) { throw(AipsError("NYI")); };
 
   // Differentiate VB model w.r.t. Mueller parameters (no 2nd derivative yet)
+  virtual void differentiate(CalVisBuffer& cvb) {throw(AipsError("NYI")); };
   virtual void differentiate(VisBuffer& vb,          // input data
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow)
@@ -542,6 +549,7 @@ public:
   virtual Bool normalizable() { return (this->jonesType() < Jones::GenLinear); };
 
   // Differentiate VB model w.r.t. Jones parameters
+  virtual void differentiate(CalVisBuffer& cvb);
   virtual void differentiate(VisBuffer& vb,          // input data
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)

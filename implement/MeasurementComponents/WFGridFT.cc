@@ -369,7 +369,7 @@ ImageInterface<Complex>& WFGridFT::getImage(Matrix<Float>& weights,
     if(!isTiled) {
       // Now find the SubLattice corresponding to the image
       IPosition gridShape(4, nx, ny, npol, nchan);
-      IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       LCBox gridBox(blc, trc, gridShape);
@@ -491,7 +491,7 @@ void WFGridFT::initializeToMultiVis(PtrBlock< TempImage<Complex> * >& iimage,
 
 
     // Now find the SubLattice corresponding to the image
-      IPosition blc(4, (nx-image->shape()(0))/2, (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       LCBox gridBox(blc, trc, gridShape);

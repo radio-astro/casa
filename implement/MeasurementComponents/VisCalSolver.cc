@@ -55,6 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisCalSolver::VisCalSolver() :
   svb_(NULL),
+  vbga_(NULL),
   ve_(NULL),
   svc_(NULL),
   nTotalPar_(0),
@@ -97,6 +98,7 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   ve_=&ve;
   svc_=&svc;
   svb_=&svb;
+  vbga_=NULL;
 
   // Verify that VisEq has the correct svc:
   // TBD?
@@ -242,6 +244,168 @@ Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffer& svb) {
   return False;
     
 }
+
+// New VisBuffGroupAcc version
+Bool VisCalSolver::solve(VisEquation& ve, SolvableVisCal& svc, VisBuffGroupAcc& vbga) {
+
+  if (prtlev()>1) cout << "VCS::solve(,,VBGA)" << endl;
+
+  /*
+  LogSink logsink;
+  {
+    LogMessage message(LogOrigin("VisCalSolver", "solve"));
+    ostringstream o; o<<"Beginning solve...";
+    message.message(o);
+    logsink.post(message);
+  }
+  */
+  // Pointers to local ve,svc,svb
+  ve_=&ve;
+  svc_=&svc;
+  svb_=NULL;
+  vbga_=&vbga;
+
+  // Verify that VisEq has the correct svc:
+  // TBD?
+
+  // Initialize everything 
+  initSolve();
+
+  Vector<Float> steplist(maxIter_+2,0.0);
+  Vector<Float> rsteplist(maxIter_+2,0.0);
+
+  // Verify Data's validity for solve w.r.t. baselines available
+  //   (this sets parOK() on per-antenna basis (for focusChan)
+  //    based on data weights and baseline participation)
+  Bool oktosolve = svc_->verifyConstraints(*vbga_);
+
+  if (oktosolve) {
+    
+    if (prtlev()>1) cout << "First guess:" << endl
+			 << "amp = " << amplitude(par()) << endl
+			 << "pha = " << phase(par()) 
+			 << endl;
+
+    // Iterate solution
+    Int iter(0);
+    Bool done(False);
+    while (!done) {
+      
+      if (prtlev()>2) cout << " Beginning iteration " << iter 
+			   << "---------------------------------" << endl;
+      
+      // Differentiate the VB and get current Chi2
+      differentiate2();
+      chiSquare2();
+      if (chiSq()==0.0) {
+	//	cout << "CHI2 IS SPURIOUSLY ZERO!*************************************" << endl;
+	//	cout << "R() = " << R() << endl;
+	//	cout << "wtmat = " << svb.weightMat() << endl;
+	//	cout << "flag = " << svb.flag() << endl;
+	//	cout << "sum(wtmat) = " << sum(wtmat) << endl;
+	return False;
+      }
+
+      dChiSq() = chiSq()-lastChiSq();
+
+      //      cout << "chi2 = " << chiSq() << " " << dChiSq() << " " << dChiSq()/chiSq() << endl;
+      
+      // Continuue if we haven't converged
+      if (!converged()) {
+	
+	if (dChiSq()<=0.0) {
+	  // last step was good...
+	  lastChiSq()=chiSq();
+	  
+	  // so accumulate new grad/hess...
+	  accGradHess2();
+	  
+	  //...and adjust lambda downward
+	  //	lambda()/=2.0;
+	  //	lambda()=0.8;
+	  lambda()=1.0;
+	}
+	else {
+	  //	  cout << "reverting..." << chiSq() << " " << dChiSq() << " (" << iter << ")" << endl;
+	  // last step was bad, revert to previous 
+	  revert();
+	  //...with a larger lambda
+	  //	lambda()*=4.0;
+	  lambda()=1.0;
+	}
+	
+	// Solve for the parameter step
+	solveGradHess();
+	
+	// Remember curr pars
+	lastCalPar()=par();
+	if (svc_->solvePol())
+	  lastSrcPar()=srcPar();
+	
+	// Refine the step size by exploring chi2 in the
+	//  gradient direction
+	if (optstep_) //  && cvrgcount_>=3)
+	  optStepSize2();
+	
+	// Update current parameters (saves a copy of them)
+	updatePar();
+
+	//	cout << "srcPar() = " << srcPar() << endl;
+
+	steplist(iter)=max(amplitude(dCalPar()));
+	rsteplist(iter)=max(amplitude(dCalPar())/amplitude(par()));
+
+      }
+      else {
+	// Convergence means we're done!
+	done=True;
+
+	if (prtlev()>0) {
+	  cout << "Iterations =" << iter << endl;
+	  cout << "par()=" << par() << endl;
+	  cout << "srcPar()=" << srcPar() << endl;
+	}
+
+
+	/*
+	cout << " good pars=" << ntrue(parOK())
+	     << " iterations=" << iter << endl
+	     << " steps=" << steplist(IPosition(1,0),IPosition(1,iter)) 
+	     << endl
+	     << " rsteps=" << rsteplist(IPosition(1,0),IPosition(1,iter)) 
+	     << endl;
+	*/   
+
+	// Get parameter errors:
+	accGradHess2();
+	getErrors();
+
+	// Return, signaling success if at least 1 good solution
+	return (ntrue(parOK())>0);
+	
+      }
+      
+      // Escape iteration loop via iteration limit
+      if (iter==maxIter()) {
+	cout << "Reached iteration limit: " << iter << " iterations.  " << endl;
+	//	cout << " good pars = " << ntrue(parOK())
+	//	     << "  steps = " << steplist
+	//	     << endl;
+	done=True;
+      }
+      
+      // Advance iteration counter
+      iter++;
+    }
+    
+  }
+  else {
+    cout << " Insufficient unflagged antennas to proceed with this solve." << endl;
+  }
+
+  return False;
+    
+}
   
 void VisCalSolver::initSolve() {
     
@@ -326,6 +490,21 @@ void VisCalSolver::residualate() {
 
 }
 
+void VisCalSolver::residualate2() {
+
+  if (prtlev()>2) cout << "  VCS::residualate()" << endl;
+
+  // Delegate to VisEquation
+  //  ve().residuals(svb(),R(),Rflag());
+
+  // For now, just use ve.diffResid, until we have
+  //  implemented focuschan-aware trial corrupt in SVC
+  //  (this will hurt performance a bit)
+  
+  for (Int ibuf=0;ibuf<vbga().nBuf();++ibuf) 
+    ve().diffResiduals(vbga()(ibuf));
+}
+
 void VisCalSolver::differentiate() {
 
   if (prtlev()>2) cout << "  VCS::differentiate()" << endl;
@@ -343,6 +522,22 @@ void VisCalSolver::differentiate() {
   if (prtlev()>6) {  // R, dR
     cout << "   R= " << R() << endl;
     cout << "   dR=" << dR() << endl;
+  }
+
+}
+
+void VisCalSolver::differentiate2() {
+
+  if (prtlev()>2) cout << "  VCS::differentiate(VBGA version)" << endl;
+
+  // Delegate to VisEquation
+  for (Int ibuf=0;ibuf<vbga().nBuf();++ibuf)
+    ve().diffResiduals(vbga()(ibuf));
+
+  if (svc().solvePol()) {
+    //    throw(AipsError("solvePol not yet sorted w.r.t. VBGA."));
+    // Differentiate w.r.t source
+    svc().diffSrc(vbga()(0),dSrc());
   }
 
 }
@@ -438,6 +633,89 @@ void VisCalSolver::chiSquare() {
   }
 
 
+}
+
+void VisCalSolver::chiSquare2() {
+
+  if (prtlev()>2) cout << "   VCS::chiSquare(CVB version)" << endl;
+
+  // NB: Assumes R() is up-to-date
+
+  //  TBD: Review correctness of summing weights 
+  //     inside the channel loop?
+
+  // TBD: per-ant/bln chiSq?
+
+  //  cout << "VCS::chiSquare: svc().focusChan() = " << svc().focusChan() << endl;
+
+  chiSq()=0.0;
+  chiSqV()=0.0;
+  sumWt()=0.0;
+  nWt()=0;
+
+  // Loop over CVBs
+  for (Int ibuf=0;ibuf<vbga().nBuf();++ibuf) {
+
+    // Focus on one CVB at a time
+    CalVisBuffer& cvb(vbga()(ibuf));
+
+    R().reference(cvb.residuals());
+
+    // Shapes for iteration
+    IPosition shR(R().shape());
+    Int nCorr=shR(0);
+    Int nChan=shR(1);
+    Int nRow=shR(2);
+    
+    ArrayIterator<Bool>  flag(cvb.residFlag(),1);        // fl(chan) by (row)
+    ArrayIterator<Float> wtMat(cvb.weightMat(),1);  // wt(corr) by (row)
+    ArrayIterator<Complex> Rit(R(),1);                // R(corr)  by (chan,row)
+    
+    Bool*  flR = cvb.flagRow().data();
+    Bool*  fl;
+    Float* wt;
+    Complex *Rp;
+    
+    for (Int irow=0;irow<nRow;++irow) { 
+      if (!*flR) {
+	// This row's wt(corr), flag(chan)
+	wt = wtMat.array().data(); 
+	fl = flag.array().data();
+	// Register R for this row, 0th channel
+	for (Int ich=0;ich<nChan;++ich) {
+	  if (!*fl) { 
+	    
+	    Rp = Rit.array().data();
+	    for (Int icorr=0;icorr<nCorr;++icorr) {
+	      
+	      chiSq()+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
+	      chiSqV()(icorr)+=Double( (*wt)*real((*Rp)*conj(*Rp)) );
+	      sumWt()+=Double(*wt);   // for each channel?!
+	      
+	      if (*wt>0.0) nWt()++;
+	      
+	      //Advance to next corr
+	      ++wt;
+	      ++Rp;
+	    }
+	    // Use same wt(corr) vectors for each channel
+	    wt-=nCorr;
+	  }
+	  // Advance to next channel
+	  Rit.next();
+	  ++fl;
+	}
+      }
+      else 
+	// Advance over flagged row!
+	for (Int ich=0;ich<nChan;++ich) Rit.next();
+      
+      // Advance to next row
+      ++flR;
+      flag.next();
+      wtMat.next();
+    }
+  } // ibuf
 }
 
 
@@ -694,6 +972,146 @@ void VisCalSolver::accGradHess() {
 
 }
 
+
+void VisCalSolver::accGradHess2() {
+
+  if (prtlev()>2) cout << "     VCS::accGradHess(CVB version)" << endl;
+
+  grad()=0.0;
+  hess()=0.0;
+
+  for (Int ibuf=0;ibuf<vbga().nBuf();++ibuf) {
+
+    CalVisBuffer& cvb(vbga()(ibuf));
+
+    R().reference(cvb.residuals());
+    dR().reference(cvb.diffResiduals());
+
+    
+    IPosition dRip(dR().shape());
+    
+    Int& nRow(dRip(3));
+    Int& nChan(dRip(2));
+    Int& nPar(dRip(1));   // pars per antenna
+    Int& nCorr(dRip(0));
+    
+    ArrayIterator<Bool>  flag(cvb.residFlag(),1);        // fl(chan) by (row)
+    ArrayIterator<Float> wtMat(cvb.weightMat(),1);  // wt(corr) by (row)
+    
+    ArrayIterator<Complex> Rit(R(),1);       // R(corr)       by (chan,row)
+    
+    Array<Complex> dR0, dR1;
+    {
+      ArrayIterator<Complex> dRit(dR(),4);  // dR(corr,par,chan,row) by (ant)
+      dR0.reference(dRit.array());
+      dRit.next();
+      dR1.reference(dRit.array());
+    }
+    ArrayIterator<Complex> dR0it(dR0,2);   // dR0(corr,par) by (chan,row)
+    ArrayIterator<Complex> dR1it(dR1,2);   // dR1(corr,par) by (chan,row)
+    
+    Bool*  flR = cvb.flagRow().data();
+    Bool*  fl;
+    Float* wt;
+    Int*   a1 = cvb.antenna1().data();
+    Int*   a2 = cvb.antenna2().data();
+    Complex *Rp;
+    Complex *dR0p;
+    Complex *dR1p;
+    DComplex *G1;
+    DComplex *G2;
+    Double *H1;
+    Double *H2;
+
+    for (Int irow=0;irow<nRow;++irow) { 
+      if (!*flR) {
+	// Register grad, hess for ants in this baseline
+	Int p1((*a1)*nPar);
+	Int p2((*a2)*nPar);
+	G1 = grad().data() + p1;
+	G2 = grad().data() + p2;
+	H1 = hess().data() + p1;
+	H2 = hess().data() + p2;
+	// This row's wt(corr), flag(chan)
+	wt = wtMat.array().data(); 
+	fl = flag.array().data();
+	for (Int ich=0;ich<nChan;++ich) {
+	  if (!*fl) { 
+	    
+	    // Do source bits, if necessary
+	    if (svc().solvePol()) {
+	      for (Int icorr=0;icorr<nCorr;++icorr) {
+		Float swt=Vector<Float>(wtMat.array())(icorr);
+		
+		for (Int ispar=0;ispar<nSrcPar();++ispar) {
+		  grad()(nCalPar()+ispar) += DComplex((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,ispar))*
+								     conj(R()(icorr,ich,irow))));
+		  hess()(nCalPar()+ispar) += Double((swt)*2.0*real(dSrc()(IPosition(4,icorr,ich,irow,ispar))*
+								   conj(dSrc()(IPosition(4,icorr,ich,irow,ispar)))));
+		}
+	      }
+	    }
+	    
+	    // Register R,dR for this channel, row
+	    Rp = Rit.array().data();
+	    dR0p = dR0it.array().data();
+	    dR1p = dR1it.array().data();
+	    
+	    for (int ip=0;ip<nPar;++ip) {
+	      
+	      for (Int icorr=0;icorr<nCorr;++icorr) {
+		
+		(*G1) += DComplex( (*wt)*((*Rp)  *conj(*dR0p)) );
+		(*G2) += DComplex( (*wt)*((*dR1p)*conj(*Rp)) );
+		(*H1) +=   Double( (*wt)*real((*dR0p)*conj(*dR0p)) );
+		(*H2) +=   Double( (*wt)*real((*dR1p)*conj(*dR1p)) );
+		
+		//Advance to next corr
+		++wt;
+		++Rp;
+		++dR0p;++dR1p;
+	      }
+	      // Advance to next par
+	      ++G1; ++G2;
+	      ++H1; ++H2;
+	      // Use same Rp(corr), wt(corr) vectors for each parameter
+	      Rp-=nCorr;
+	      wt-=nCorr;
+	    }
+	    // Accumulate to same grad(par) & hess(par) for each channel
+	    G1-=nPar; G2-=nPar;
+	    H1-=nPar; H2-=nPar;
+	  }
+	  // Advance to next channel
+	  ++fl;
+	  Rit.next();
+	  dR0it.next();
+	  dR1it.next();
+	}
+      } // !*flgR
+      else {
+	// Advance over flagged row
+	for (Int ich=0;ich<nChan;++ich) {
+	  Rit.next();
+	  dR0it.next();
+	  dR1it.next();
+	}
+      }
+      // Advance to next row
+      ++flR;
+      ++a1;++a2;
+      flag.next();
+      wtMat.next();
+    }
+    
+    if (prtlev()>4) {  // grad, hess
+      cout << "      grad= " << grad() << endl;
+      cout << "      hess= " << hess() << endl;
+    }    
+
+  } // ibuf
+}
+
 void VisCalSolver::revert() {
 
   if (prtlev()>2) cout << "     VCS::revert()" << endl;
@@ -826,6 +1244,99 @@ void VisCalSolver::optStepSize() {
       if (svc().solvePol()) {srcPar()=dSrcPar(); srcPar()*=Complex(step); srcPar()+=lastSrcPar();};
       residualate();
       chiSquare();
+      x2(2)=x2(1);
+      x2(1)=chiSq();
+      //      cout << "  contract: " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    }
+
+  }
+
+  // At this point   x2(0) > x2(1) < x2(2), so 
+  //   calculate (quadratic) step optimization factor
+  Double optfactor(0.0);
+  Double optn(x2(2)-x2(1));
+  Double optd(x2(0)-2*x2(1)+x2(2));
+	      
+  if (abs(optd)>0.0)
+    optfactor=Double(step)*(1.5-optn/optd);
+  
+  /*  
+    cout << "Optimization: " 
+       << step << " " 
+       << optfactor << " "
+       << x2 << " "
+       << "(" << min(amplitude(lastPar())) << ") "
+       << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi << " ";
+  */
+
+  par()=lastCalPar();
+  srcPar()=lastSrcPar();
+  
+  // Adjust step by the optfactor
+  if (optfactor>0.0)
+    dpar()*=Complex(optfactor);
+
+  /*
+  cout << max(amplitude(dpar())/amplitude(lastPar()))*180.0/C::pi
+       << endl;
+  */
+}
+
+void VisCalSolver::optStepSize2() {
+
+  Vector<Double> x2(3,-999.0);
+  Float step(1.0);
+  
+  // Starting point is curr chiSq
+  x2(0)=chiSq();
+
+  // take nominal step
+  par()+=dCalPar();  
+  if (svc().solvePol()) srcPar()+=dSrcPar();  
+  residualate2();
+  chiSquare2();
+  x2(1)=chiSq();
+
+  // If nominal step is an improvement...
+  if (x2(1)<x2(0)) {
+
+    // ...double step size until x2 starts increasing
+    par()=dCalPar(); par()*=Complex(2.0*step); par()+=lastCalPar();
+    if (svc().solvePol()) { srcPar()=dSrcPar(); srcPar()*=Complex(2.0*step); srcPar()+=lastSrcPar(); };
+    residualate2();
+    chiSquare2();
+    x2(2)=chiSq();
+    //    cout <<   "  down:    " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    while (x2(2)<x2(1)) {    //  && step<4.0) {
+      step*=2.0;
+      par()=dCalPar(); par()*=Complex(2.0*step); par()+=lastCalPar();
+      if (svc().solvePol()) { srcPar()=dSrcPar(); srcPar()*=Complex(2.0*step); srcPar()+=lastSrcPar(); };
+      residualate2();
+      chiSquare2();
+      x2(1)=x2(2);
+      x2(2)=chiSq();
+      //      cout << "  stretch: " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+
+    }
+  }
+  // else nominal step too big, so...
+  else {
+
+    // ... contract by halves until we bracket a minimum
+    step*=0.5;
+    par()=dCalPar(); par()*=Complex(step); par()+=lastCalPar();
+    if (svc().solvePol()) {srcPar()=dSrcPar(); srcPar()*=Complex(step); srcPar()+=lastSrcPar();};
+    residualate2();
+    chiSquare2();
+    x2(2)=x2(1);
+    x2(1)=chiSq();
+    //    cout <<   "  up:       " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;
+    while (x2(1)>x2(0)) { //  && step>0.125) {
+      step*=0.5;
+      par()=dCalPar(); par()*=Complex(step); par()+=lastCalPar();
+      if (svc().solvePol()) {srcPar()=dSrcPar(); srcPar()*=Complex(step); srcPar()+=lastSrcPar();};
+      residualate2();
+      chiSquare2();
       x2(2)=x2(1);
       x2(1)=chiSq();
       //      cout << "  contract: " << step << " " << x2-x2(0) << LogicalArray(x2>=x2(0)) <<endl;

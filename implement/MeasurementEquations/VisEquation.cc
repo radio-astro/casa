@@ -411,7 +411,20 @@ void VisEquation::residuals(VisBuffer& vb,
 
 
 // Calculate residuals and differentiated residuals
-//   (optionally for specific chan)
+void VisEquation::diffResiduals(CalVisBuffer& cvb) {
+
+  if (prtlev()>3) cout << "VE::diffResiduals(CVB)" << endl;
+
+  // Trap unspecified solvable term
+  if (!svc_)
+    throw(AipsError("No calibration term to differentiate."));
+
+  // Delegate to the SVC
+  svc().differentiate(cvb);
+  
+}
+
+// Calculate residuals and differentiated residuals
 void VisEquation::diffResiduals(VisBuffer& vb, 
 				Cube<Complex>& R, 
 				Array<Complex>& dR,

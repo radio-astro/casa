@@ -97,3 +97,6 @@
      template class ResidualEquation<Lattice<Float> > 
 1000 synthesis/MeasurementComponents/PixelatedConvFunc.cc
      template class PixelatedConvFunc<Complex> 
+1000 scimath/Mathematics/MathFunc.cc
+     template class MathFunc<Float>
+     template class MathFunc<float>

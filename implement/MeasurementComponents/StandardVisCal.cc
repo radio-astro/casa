@@ -480,7 +480,8 @@ void GJones::initTrivDJ() {
 BJones::BJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  GJones(vs)              // immediate parent
+  GJones(vs),             // immediate parent
+  maxchangap_p(0)
 {
   if (prtlev()>2) cout << "B::B(vs)" << endl;
 }
@@ -488,13 +489,26 @@ BJones::BJones(VisSet& vs) :
 BJones::BJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  GJones(nAnt)
+  GJones(nAnt),
+  maxchangap_p(0)
 {
   if (prtlev()>2) cout << "B::B(nAnt)" << endl;
 }
 
 BJones::~BJones() {
   if (prtlev()>2) cout << "B::~B()" << endl;
+}
+
+void BJones::setSolve(const Record& solve) {
+
+  // call parent to get general stuff
+  GJones::setSolve(solve);
+
+  // get max chan gap from user
+  maxchangap_p=0;
+  if (solve.isDefined("maxgap"))
+    maxchangap_p=solve.asInt("maxgap");
+
 }
 
 void BJones::normalize() {
@@ -516,6 +530,126 @@ void BJones::normalize() {
       }
       
     }
+
+}
+
+void BJones::globalPostSolveTinker() {
+
+  // Call parent to do more general things
+  SolvableVisJones::globalPostSolveTinker();
+
+  // Fill gaps in channels, if necessary
+  if (maxchangap_p>0)
+    fillChanGaps();
+
+}
+
+void BJones::fillChanGaps() {
+
+  logSink() << "Filling in flagged solution channels by interpolation." 
+	    << LogIO::POST;
+
+  // Iteration axes (norm per spw, pol, ant, timestamp)
+  IPosition itax(3,0,2,3);
+
+  for (Int ispw=0;ispw<nSpw();++ispw)
+    // Only if there are any solutions, and there are more than 2 channels
+    if (cs().nTime(ispw)>0 && cs().nChan(ispw)>2) {
+      // Iterate over time, pol, and ant
+      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
+      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
+      while (!soliter.pastEnd()) {
+	fillChanGapArray(soliter.array(),okiter.array());
+	soliter.next();
+	okiter.next();
+      }
+    }
+}
+
+void BJones::fillChanGapArray(Array<Complex>& sol,
+			      Array<Bool>& solOK) {
+
+  // Make the arrays 1D
+  Vector<Complex> solv(sol.reform(IPosition(1,sol.nelements())));
+  Vector<Bool> solOKv(solOK.reform(IPosition(1,solOK.nelements())));
+
+  Int nChan(solv.nelements());
+  Bool done(False);
+  Int ich(0), ch1(-1), ch2(-1);
+  Int dch(1);
+  Float a0, da, a, p0, dp, p, fch;
+
+  // Advance to first unflagged channel
+  while(!solOKv(ich) && ich<nChan) ++ich;
+
+  // Found no unflagged channels, so signal escape
+  if (ich==nChan) done=True;
+
+  // done turns True if we reach nChan, and nothing more to do
+  while (!done) {
+
+    // Advance to next flagged channel
+    while(solOKv(ich) && ich<nChan) ++ich;
+
+    if (ich<nChan) {
+
+      // Left boundary of gap
+      ch1=ich-1;     // (NB: above logic prevents ch1 < 0)
+
+      // Find right boundary:
+      ch2=ich+1;
+      while (!solOKv(ch2) && ch2<nChan) ++ch2;
+
+      if (ch2<nChan) {
+	
+	// The span of the interpolation (in channels)
+	dch=ch2-ch1;
+
+	//cout << ch1 << " " << ch2 << " " << dch << endl;
+
+	// Interpolate only if gap is narrower than maxchangap_p
+	if (dch<=maxchangap_p+1) {
+
+	  // calculate interp params
+	  a0=abs(solv(ch1));
+	  da=abs(solv(ch2))-a0;
+	  p0=arg(solv(ch1));
+	  dp=arg(solv(ch2))-p0;
+	  if (dp>C::pi) dp-=(2*C::pi);
+	  if (dp<-C::pi) dp+=(2*C::pi);	
+
+	  //cout << a0 << " " << da << " " << p0 << " " << dp << endl;
+
+
+	  // interpolate the intervening channels
+	  while (ich<ch2) {
+	    fch=Float(ich-ch1)/Float(dch);
+	    a=a0 + da*fch;
+	    p=p0 + dp*fch;
+
+	    // cout << " " << ich << " " << a << " " << p << endl;
+
+	    solv(ich)=a*Complex(cos(p),sin(p));
+	    solOKv(ich)=True;
+	    ++ich;
+	  }
+
+	  // Begin looking for new gap on next round
+	  ++ich;
+	  
+	}
+	else
+	  // we skipped a gap, look beyond it on next round
+	  ich=ch2+1;
+      }
+      else
+	// Reached nChan looking for ch2
+	done=True;
+    }
+    else
+      // Reach nChan looking for gaps 
+      done=True;
+  } // done
 
 }
 
@@ -1051,8 +1185,8 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     // The VisBuffer to solve with
     VisBuffer& svb(vba.aveVisBuff());
 
-    // TBD
-    //    enforceAPonData(svb);
+    // Make data amp- or phase-only
+    enforceAPonData(svb);
 
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
@@ -1144,9 +1278,8 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
               << LogIO::POST;
   else {
 
-    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
-    //  TBD
-    // globalPostSolveTinker();
+    // Do global post-solve tinkering (e.g., normalization)
+    globalPostSolveTinker();
 
     // write the table
     store();
@@ -1295,6 +1428,14 @@ void MMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
 
 }
 
+void MMueller::globalPostSolveTinker() {
+
+  // normalize, if requested
+  if (solnorm()) normalize();
+
+}
+
+
 // File a solved solution (and meta-data) into a slot in the CalSet
 void MMueller::keep(const Int& slot) {
 
@@ -1363,6 +1504,32 @@ MfMueller::MfMueller(const Int& nAnt) :
 MfMueller::~MfMueller() {
   if (prtlev()>2) cout << "Mf::~Mf()" << endl;
 }
+
+void MfMueller::normalize() {
+
+  // This is just like BJones
+
+  logSink() << "Normalizing solutions per spw, pol, baseline, time"
+            << LogIO::POST;
+
+  // Iteration axes (norm per spw, pol, ant, timestamp)
+  //  (this normalizes each baseline spectrum)
+  IPosition itax(3,0,2,3);
+
+  for (Int ispw=0;ispw<nSpw();++ispw)
+    if (cs().nTime(ispw)>0) {
+      ArrayIterator<Complex> soliter(cs().par(ispw),itax,False);
+      ArrayIterator<Bool> okiter(cs().parOK(ispw),itax,False);
+      while (!soliter.pastEnd()) {
+        normSolnArray(soliter.array(),okiter.array(),True);
+        soliter.next();
+        okiter.next();
+      }
+
+    }
+
+}
+
 
 
 // **********************************************************

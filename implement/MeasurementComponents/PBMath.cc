@@ -64,6 +64,8 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <measures/Measures/MeasureHolder.h>
 
+#include <scimath/Mathematics/MathFunc.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath::PBMath()
@@ -1362,8 +1364,10 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 				       Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
     break;
   case SMA:
+    {
     //Value provided by Crystal Brogan as of  Dec-12-2007
     //needs updating when proper values are given
+    /*
     pb_pointer_p = new PBMath1DGauss( Quantity((52.3/2.0),"arcsec"),  // half width==> /2
 				      Quantity(35.0, "arcsec"),
 				      Quantity(224.0, "GHz"),
@@ -1373,6 +1377,23 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 							    MDirection::Ref(MDirection::AZEL)),
 						 Quantity(224.0, "GHz")),
 				      False);
+
+     //Crap beam no finite support in FFT
+   
+    */
+    //Using a spheroidal beam
+
+    MathFunc<Float> dd(SPHEROIDAL);
+    Vector<Float> valsph(31);
+    for(Int k=0; k <31; ++k){
+        valsph(k)=dd.value((Float)(k)/10.0);
+    }
+    //
+    Quantity fulrad((52.3/2.0*3.0/1.1117),"arcsec");
+    Quantity lefreq(224.0, "GHz");
+    
+    pb_pointer_p = new PBMath1DNumeric(valsph,fulrad,lefreq);
+    }
     break;
 
   case ATA:

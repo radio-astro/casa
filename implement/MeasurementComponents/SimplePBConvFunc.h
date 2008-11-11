@@ -30,6 +30,7 @@
 
 #include <casa/Arrays/Vector.h>
 #include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
+#include <synthesis/MeasurementComponents/PBMathInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
 
@@ -62,20 +63,44 @@ namespace casa{
     {
     public:
       SimplePBConvFunc();
-      ~SimplePBConvFunc();
+      SimplePBConvFunc(const PBMathInterface::PBClass typeToUse);
+      virtual ~SimplePBConvFunc();
       // Inputs are the image, visbuffer, convSampling and skyjones
       // findconv return a cached convvolution function appropriate for this 
-      // visbuffer and skyjones
-      void findConvFunction(const ImageInterface<Complex>& iimage, 
+      // visbuffer and skyjones ...this one should be superseded 
+      // by the one below and call setSkyJones when necessary
+      virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
 			    const VisBuffer& vb,const Int& convSampling,
 			    SkyJones& sj,
 			    Matrix<Complex>& convFunc, 
 			    Matrix<Complex>& weightConvFunc, Int& convsize,
-			    Int& convSupport);
+				    Int& convSupport){};
+
+
+      
+      
+      ////Returns the convfunctions in the Cubes...the Matrix rowChanMap maps 
+      // the vb.row and channel 
+      //to the plane of the convfunc appropriate 
+      virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
+				    const VisBuffer& vb,
+				    const Int& convSampling,
+				    Cube<Complex>& convFunc, 
+				    Cube<Complex>& weightConvFunc, 
+				    Vector<Int>& convsize,
+				    Vector<Int>& convSupport,
+				    Vector<Int>& rowChanMap);
+
+      virtual void setSkyJones(SkyJones* sj);
+
+    protected:
+      SkyJones* sj_p;
+
     private:
       Bool checkPBOfField(const VisBuffer& vb);
       SimpleOrderedMap <String, Int> convFunctionMap_p;
       Int actualConvIndex_p;
+      PBMathInterface::PBClass pbClass_p;
 
       Matrix<Complex> convFunc_p;
       Matrix<Complex> weightConvFunc_p;

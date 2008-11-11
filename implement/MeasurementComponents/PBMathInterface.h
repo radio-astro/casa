@@ -160,6 +160,13 @@ public:
 				   Float cutoff = 0.01,
 				   Bool forward=True);
 
+  ImageInterface<Float>& applyPB(const ImageInterface<Float>& in,
+				   ImageInterface<Float>& out,
+				   const MDirection& sp,
+				   const Quantity parAngle = Quantity(0.0,"deg"),
+				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
+				   Float cutoff = 0.01);
+
   // This has a very specialized role (in SkyEquation) and should
   // not be used elsewhere
   ImageInterface<Float>& applyPB2(const ImageInterface<Float>& in,
@@ -267,7 +274,7 @@ protected:
 	const MDirection& sp,
 	const Quantity parAngle,       
 	const BeamSquint::SquintType doSquint,
-	Float cutoff) =0;   
+	Float cutoff, const Int ipower=4) =0;   
 
   virtual SkyComponent& 
   apply(SkyComponent& in,

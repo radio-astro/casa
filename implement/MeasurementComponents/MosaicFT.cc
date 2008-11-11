@@ -79,10 +79,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  MosaicFT::MosaicFT(SkyJones& sj, MPosition mloc, String stokes,
+  MosaicFT::MosaicFT(SkyJones* sj, MPosition mloc, String stokes,
 		   Long icachesize, Int itilesize, 
 		   Bool usezero)
-  : FTMachine(), sj_p(&sj),
+  : FTMachine(), sj_p(sj),
     imageCache(0),  cachesize(icachesize), tilesize(itilesize), gridder(0),
     isTiled(False),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
@@ -300,10 +300,15 @@ void MosaicFT::copySharedInfo(){
 void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
 				const VisBuffer& vb) {
   
+  
   convSampling=1;
   if(pbConvFunc_p.null())
     pbConvFunc_p=new SimplePBConvFunc();
-  pbConvFunc_p->findConvFunction(iimage, vb, convSampling,*sj_p, convFunc, weightConvFunc_p, convSize, convSupport);
+  pbConvFunc_p->setSkyJones(sj_p);
+  pbConvFunc_p->findConvFunction(iimage, vb, convSampling, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p, convRowMap_p);
+  //For now only use one size and support
+  convSize=max(convSizePlanes_p);
+  convSupport=max(convSupportPlanes_p);
  				 
 }
 
@@ -347,8 +352,8 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
     griddedData=Complex(0.0);
     
     IPosition stride(4, 1);
-    IPosition blc(4, (nx-image->shape()(0))/2,
-		  (ny-image->shape()(1))/2, 0, 0);
+    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		  (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition trc(blc+image->shape()-stride);
     
     IPosition start(4, 0);
@@ -362,7 +367,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   //AlwaysAssert(lattice, AipsError);
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
-  
+  /*
   if(!sj_p) {
 
     Vector<Complex> correction(nx);
@@ -376,8 +381,9 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
       gridder->correctX1D(correction, lix.position()(1));
       lix.rwVectorCursor()/=correction;
     }
-  }
   
+  }
+  */
   // Now do the FFT2D in place
   LatticeFFT::cfft2d(*lattice);
   
@@ -485,8 +491,8 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
 						 iimage.coordinates());
       griddedWeight.resize(gridShape);
       /*IPosition stride(4, 1);
-      IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition trc(blc+image->shape()-stride);
       
       griddedWeight(blc, trc).set(Complex(0.0));
@@ -500,6 +506,12 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   // AlwaysAssert(lattice, AipsError);
   
+}
+
+void MosaicFT::reset(){
+
+  doneWeightImage_p=False;
+
 }
 
 void MosaicFT::finalizeToSky()
@@ -517,6 +529,9 @@ void MosaicFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
+
+  
+
   if(!doneWeightImage_p){
     
     LatticeFFT::cfft2d(*weightLattice, False);
@@ -577,8 +592,8 @@ void MosaicFT::finalizeToSky()
 
 
     skyCoverage_p=new TempImage<Float> (imshp, coords);
-    IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+    IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
     IPosition stride(4, 1);
     IPosition trc(blc+image->shape()-stride);
     
@@ -662,7 +677,9 @@ extern "C" {
 	      Double*,
 	      Complex*,
 	      Complex*,
-	      Int*);
+	      Int*,
+              Int*,
+              Int*);
   void dmosft(const Double*,
 	      Double*,
 	      Complex*,
@@ -686,7 +703,9 @@ extern "C" {
 	      Int*,
 	      const Complex*,
 	      Int*,
-	      Int*);
+	      Int*,
+              Int*,
+              Int*);
 }
 void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		   FTMachine::Type type)
@@ -709,6 +728,8 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
       data=&(vb.visCube());
     }
   }
+
+  Int nConvFunc=convFunc.shape()(2);
 
   Bool isCopy;
   const Complex *datStorage=0;
@@ -899,7 +920,9 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   sumWeight.getStorage(del),
 	   gridwgtstor,
 	   weightConvFunc_p.getStorage(del),
-	   &doWeightGridding
+	   &doWeightGridding,
+	   convRowMap_p.getStorage(del),
+	   &nConvFunc
 	   );
     uvw.freeStorage(uvwstor, uvwcopy);
     griddedData.putStorage(gridstor, gridcopy);
@@ -932,6 +955,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   
 
+  Int nConvFunc=convFunc.shape()(2);
 
 
   // Get the uvws in a form that Fortran can use
@@ -1031,7 +1055,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	     &convSampling,
 	     convFunc.getStorage(del),
 	     chanMap.getStorage(del),
-	     polMap.getStorage(del));
+	     polMap.getStorage(del),
+	     convRowMap_p.getStorage(del),
+	     &nConvFunc);
       }
     }
   }
@@ -1047,29 +1073,31 @@ void MosaicFT::get(VisBuffer& vb, Int row)
      const Complex *convstor=convFunc.getStorage(convcopy);
      IPosition s(vb.modelVisCube().shape());
      dmosft(uvwstor,
-	   dphase.getStorage(del),
-	   datStorage,
-	   &s(0),
-	   &s(1),
-	   flags.getStorage(del),
-	   rowFlags.getStorage(del),
-	   &s(2),
-	   &row,
-	   uvScale.getStorage(del),
-	   uvOffset.getStorage(del),
-	   gridstor,
-	   &nx,
-	   &ny,
-	   &npol,
-	   &nchan,
-	   vb.frequency().getStorage(del),
-	   &C::c,
-	   &convSupport,
-	   &convSize,
-	   &convSampling,
-	   convstor,
-	   chanMap.getStorage(del),
-	   polMap.getStorage(del));
+	    dphase.getStorage(del),
+	    datStorage,
+	    &s(0),
+	    &s(1),
+	    flags.getStorage(del),
+	    rowFlags.getStorage(del),
+	    &s(2),
+	    &row,
+	    uvScale.getStorage(del),
+	    uvOffset.getStorage(del),
+	    gridstor,
+	    &nx,
+	    &ny,
+	    &npol,
+	    &nchan,
+	    vb.frequency().getStorage(del),
+	    &C::c,
+	    &convSupport,
+	    &convSize,
+	    &convSampling,
+	    convstor,
+	    chanMap.getStorage(del),
+	    polMap.getStorage(del),
+	    convRowMap_p.getStorage(del),
+	    &nConvFunc);
      vb.modelVisCube().putStorage(datStorage, isCopy);
      uvw.freeStorage(uvwstor, uvwcopy);
      griddedData.freeStorage(gridstor, gridcopy);
@@ -1081,7 +1109,7 @@ void MosaicFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
 		   Array<Complex>& griddedVis, Vector<Double>& scale,
 		   Int row)
 {
-  
+  Int nConvFunc=convFunc.shape()(2);
   Int nX=griddedVis.shape()(0);
   Int nY=griddedVis.shape()(1);
   Vector<Double> offset(2);
@@ -1166,7 +1194,10 @@ void MosaicFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
 	 &convSampling,
 	 convFunc.getStorage(del),
 	 chanMap.getStorage(del),
-	 polMap.getStorage(del));
+	 polMap.getStorage(del),
+	 convRowMap_p.getStorage(del),
+	 &nConvFunc);
+  
   
 }
 
@@ -1221,10 +1252,12 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
 	if(weights(pol, chan)>0.0) {
+	  /*
 	  if(!sj_p) {
 	    gridder->correctX1D(correction, lix.position()(1));
 	    lix.rwVectorCursor()/=correction;
 	  }
+	  */
 	  if(normalize) {
 	    Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
 	    lix.rwCursor()*=rnorm;
@@ -1242,8 +1275,8 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 
     if(!isTiled) {
       // Check the section from the image BEFORE converting to a lattice 
-      IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
       
@@ -1265,7 +1298,7 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
   
   weights.resize(sumWeight.shape());
   convertArray(weights,sumWeight);
-  
+
   weightImage.copyData(*skyCoverage_p);
 
  
@@ -1375,8 +1408,8 @@ Bool MosaicFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition gridShape(4, nx, ny, npol, nchan);
       griddedData.resize(gridShape);
       griddedData=Complex(0.0);
-      IPosition blc(4, (nx-image->shape()(0))/2,
-		    (ny-image->shape()(1))/2, 0, 0);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
