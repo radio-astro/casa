@@ -3,7 +3,7 @@
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------
 XLIBLIST := CORE WCSLIB
-include $(word 1, $(AIPSPATH))/code/install/makefile.imp
+include $(word 1, $(CASAPATH))/code/install/makefile.imp
 
 # Set up a parallel make if PARALLEL_MAKE is defined in makedefs
 ifdef PARALLEL_MAKE

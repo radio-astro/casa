@@ -2,4 +2,4 @@
 XLIBLIST:=CORE WCSLIB 
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------
-include $(word 1, $(AIPSPATH))/code/install/makefile.imp
+include $(word 1, $(CASAPATH))/code/install/makefile.imp
