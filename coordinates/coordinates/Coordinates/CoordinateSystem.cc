@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CoordinateSystem.cc 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id$
 
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -3254,7 +3254,8 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
    {
      ostringstream oss;
      if (pixelAxis != -1) {
-        oss << pixelAxis + 1;
+       //oss << pixelAxis + 1;
+        oss << pixelAxis;
      } else {
         oss << "..";
      }
@@ -3272,7 +3273,8 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 
    {
      ostringstream oss;
-     oss << coordinate + 1;
+     //oss << coordinate + 1;
+     oss << coordinate;
      string = String(oss);
      if (findWidths) {
         widthCoordNumber = max(widthCoordNumber, string.length());
@@ -3441,9 +3443,9 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
       oss.setf(ios::fixed, ios::floatfield);
       oss.precision(precRefPixFloat);
       if (pixelAxis != -1) {
-         oss << pc->referencePixel()(axisInCoordinate) + 1.0;
+	oss << pc->referencePixel()(axisInCoordinate); // + 1.0;
       } else {
-         oss << (*pixel_replacement_values_p[coordinate])[axisInCoordinate] + 1.0;
+	oss << (*pixel_replacement_values_p[coordinate])[axisInCoordinate]; // + 1.0;
       }
       string = String(oss);
       if (findWidths) {
@@ -3629,7 +3631,7 @@ void CoordinateSystem::listVelocity (LogIO& os,  Coordinate* pc, uInt widthAxis,
       ostringstream oss;
       oss.setf(ios::fixed, ios::floatfield);
       oss.precision(precRefPixFloat);
-      oss << sc.referencePixel()(axisInCoordinate) + 1.0;
+      oss << sc.referencePixel()(axisInCoordinate); // + 1.0;
       string = String(oss);
    } else {
       string = " ";

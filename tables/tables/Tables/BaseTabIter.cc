@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTabIter.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: BaseTabIter.cc 20426 2008-11-17 12:43:24Z gervandiepen $
 
 #include <tables/Tables/BaseTabIter.h>
 #include <tables/Tables/TableIter.h>
@@ -55,7 +55,6 @@ BaseTableIterator::BaseTableIterator (BaseTable* btp,
   cmpFunc_p (cmpFunc)
 {
     // If needed sort the table in order of the iteration keys.
-    // DontCare is sorted as ascending.
     // Sort comparison functions are not used.
     // The passed in compare functions are for the iteration.
     if (option == TableIterator::NoSort) {

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DirectionCoordinate.cc 20261 2008-02-25 23:31:51Z gervandiepen $
+//# $Id$
 
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -32,6 +32,7 @@
 #include <coordinates/Coordinates/FITSCoordinateUtil.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/LinearXform.h>
+#include <measures/Measures/MCDirection.h>
 #include <coordinates/Coordinates/Coordinate.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Matrix.h>
@@ -40,7 +41,6 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/Quantum.h>
@@ -361,7 +361,7 @@ Bool DirectionCoordinate::toMix(Vector<Double>& worldOut,
 //
    const uInt nWorld = worldAxes.nelements();
    const uInt nPixel = pixelAxes.nelements();
-   if(nWorld == nWorld);      // (turn off stupid compiler warning...).
+   if(nWorld == nWorld);	// (turn off stupid compiler warning...).
    DebugAssert(nWorld==nWorldAxes(), AipsError);
    DebugAssert(nPixel==nPixelAxes(), AipsError);
    DebugAssert(worldIn.nelements()==nWorld, AipsError);
@@ -534,9 +534,14 @@ Vector<Double> DirectionCoordinate::referenceValue() const
 
 Vector<Double> DirectionCoordinate::increment() const
 {
+    Double d0,d1;
     Vector<Double> cdelt(2);
     cdelt[0] = wcs_p.cdelt[0];
     cdelt[1] = wcs_p.cdelt[1];            // degrees
+    d0 = wcs_p.pc[0]*wcs_p.cdelt[0] + wcs_p.pc[1]*wcs_p.cdelt[1];
+    d1 = wcs_p.pc[2]*wcs_p.cdelt[0] + wcs_p.pc[3]*wcs_p.cdelt[1];
+    cdelt[0]=d0; cdelt[1]=d1;
+    //    wcsprt(&wcs_p);
     toCurrent(cdelt);
     return cdelt;
 }
@@ -676,6 +681,7 @@ Vector<String> DirectionCoordinate::axisNames(MDirection::Types type,
 	case MDirection::JMEAN:
 	case MDirection::APP:
 	case MDirection::B1950:
+	case MDirection::B1950_VLA:
 	case MDirection::BMEAN:
 	case MDirection::BTRUE:
 	    names[0] = "RA";
@@ -718,6 +724,7 @@ Vector<String> DirectionCoordinate::axisNames(MDirection::Types type,
 	case MDirection::JMEAN:
 	case MDirection::APP:
 	case MDirection::B1950:
+	case MDirection::B1950_VLA:
 	case MDirection::BMEAN:
 	case MDirection::BTRUE:
 	    names[0] = "Right Ascension";

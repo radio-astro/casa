@@ -8,10 +8,10 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tMSConcat.run 18701 2005-05-23 07:45:44Z cvsmgr $
+# $Id: tMSConcat.run 20429 2008-11-18 08:18:44Z astrododo $
 #-----------------------------------------------------------------------------
 
-  if [ "$AIPSPATH" = "" ]
+  if [ ${#AIPSPATH} = 0 ]
   then
      echo "UNTESTED: tMSConcat.run (AIPSPATH not defined)"
      exit 3

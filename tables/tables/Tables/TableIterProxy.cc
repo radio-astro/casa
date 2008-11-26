@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableIterProxy.cc 19623 2006-09-19 06:37:53Z gvandiep $
+//# $Id: TableIterProxy.cc 20426 2008-11-17 12:43:24Z gervandiepen $
 
 #include <tables/Tables/TableIterProxy.h>
 #include <tables/Tables/TableProxy.h>
@@ -47,7 +47,7 @@ TableIterProxy::TableIterProxy (const TableProxy& tab,
   }
   String corder(order);
   corder.downcase();
-  TableIterator::Order taborder = TableIterator::DontCare;
+  TableIterator::Order taborder = TableIterator::Ascending;
   if (! corder.empty()) {
     if (corder[0] == 'a') {
       taborder = TableIterator::Ascending;

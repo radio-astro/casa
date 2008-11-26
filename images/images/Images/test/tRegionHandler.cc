@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: tRegionHandler.cc 20400 2008-09-11 13:20:37Z gervandiepen $
 
 #include <images/Images/RegionHandlerMemory.h>
 #include <images/Images/RegionHandlerTable.h>
+#include <images/Images/RegionHandlerHDF5.h>
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/PagedArray.h>
 #include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/LCPagedMask.h>
 #include <images/Images/ImageRegion.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
+#include <casa/HDF5/HDF5File.h>
 #include <casa/OS/File.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -46,13 +47,18 @@
 
 #include <casa/namespace.h>
 Table theTable;
-
 Table& getTable (void*, Bool)
 {
   return theTable;
 }
 
-    
+CountedPtr<HDF5File> theHDF5File;
+const CountedPtr<HDF5File>& getHDF5File (void*)
+{
+  return theHDF5File;
+}
+
+
 void doIt (RegionHandler& reghand)
 {
   IPosition shape(2,32,8);
@@ -133,60 +139,37 @@ void doIt (RegionHandler& reghand)
   AlwaysAssertExit (regptr->isLCRegion());
   delete regptr;
 
-// Remove the region, which should also remove the default mask and the table.
+// Remove the region, which should also remove the default mask.
+// If the handler uses a table, the table is also removed. This is checked
+// in the calling function.
   reghand.removeRegion ("reg2n");
   AlwaysAssertExit (! reghand.hasRegion ("reg2n"));
   AlwaysAssertExit (reghand.getDefaultMask() == "");
-  AlwaysAssertExit (! File("tRegionHandler_tmp.lat/reg2n").exists());
 }
 
-void doDoSimpleRegions(RegionHandler& reghand)
-{
-    // Box
-
-    // WBox
-
-    // WRegion
-
-    // Complement
-
-    
-}
-
-void doCombos(RegionHandler& reghand)
-{
-    // Union
-
-    // Intersection
-
-    // Difference
-
-    // Concatenation
-
-    
-}
-    
 
 int main()
 {
   try {
     RegionHandlerMemory regmem;
     doIt (regmem);
-    
+
     SetupNewTable newtab ("tRegionHandler_tmp.data", TableDesc(), Table::New);
     theTable = Table(newtab);
-    RegionHandlerTable regtab (getTable(), 0);
+    RegionHandlerTable regtab (getTable, 0);
     doIt (regtab);
+    AlwaysAssertExit (! File("tRegionHandler_tmp.lat/reg2n").exists());
 
-    // Test combining multiple regions
-    SetupNewTable combotab ("tRegionHandlerCombo_tmp.data", TableDesc(), Table::New);
-    theTable = Table(combotab);
-    RegionHandlerTable( getTable(), 0);
-    doIt (regtab);
+#ifdef HAVE_LIBHDF5
+    theHDF5File = new HDF5File ("tRegionHandler_tmp.hdf5", ByteIO::New);
+    RegionHandlerHDF5 reghdf5 (getHDF5File, 0);
+    doIt (reghdf5);
+#endif
+
   } catch (AipsError x) {
     cerr << "Unexpected exception: " << x.getMesg() << endl;
-    exit(1);
+    return 1;
   } 
   cout << "ok" << endl;
-  exit(0);
+  return 0;
 }

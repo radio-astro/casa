@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LinearCoordinate.cc 18886 2005-08-09 17:25:05Z dking $
+//# $Id$
 
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/LinearXform.h>
@@ -154,7 +154,7 @@ LinearCoordinate::LinearCoordinate(const ::wcsprm& wcs, Bool oneRel)
       String name(wcs.cunit[i]);
       Unit u(name);
       Unit u2 = UnitMap::fromFITS(u);
-      strncpy (wcs_p.cunit[0], u2.getName().chars(), 9);
+      strncpy (wcs_p.cunit[i], u2.getName().chars(), 9);
    }
 //
     setDefaultWorldMixRanges();

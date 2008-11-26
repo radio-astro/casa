@@ -24,13 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITSConverter.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ImageFITSConverter.h 20391 2008-09-01 01:07:48Z Malte.Marquarding $
 
 
 #ifndef IMAGES_IMAGEFITSCONVERTER_H
 #define IMAGES_IMAGEFITSCONVERTER_H
 
+#ifndef WCSLIB_GETWCSTAB
 #define WCSLIB_GETWCSTAB
+#endif
 
 #include <casa/aips.h>
 

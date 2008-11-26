@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.cc 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id$
 
 #include <coordinates/Coordinates/Projection.h>
 #include <casa/BasicMath/Math.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.cc 20422 2008-11-04 11:12:40Z gervandiepen $
+//# $Id: Regex.cc 20438 2008-11-21 07:44:08Z gervandiepen $
 
 // Regex class implementation
 
@@ -73,7 +73,8 @@ void Regex::create(const String& exp, Int fast, Int bufsize,
   const char* msg = a2_re_compile_pattern((Char*)(exp.chars()), tlen, buf);
   a2_re_set_syntax(orig);
   if (msg != 0) {
-    throw(invalid_argument("Regex: invalid regular expression given"));
+    throw(invalid_argument("Regex: invalid regular expression given (" +
+                           String(msg) + ')'));
   } else if (fast) a2_re_compile_fastmap(buf);
 }
 
@@ -214,26 +215,22 @@ String Regex::fromPattern(const String &pattern)
 		result[len++] = '\\';
 		break;
 	    case '{':
-		// Opening brace gets ((
-		result[len++] = '(';
+		// Opening brace gets (
 		c = '(';
 		bracecount++;
 		break;
 	    case ',':
-		// Comma after opening brace gets )|(
+		// Comma after opening brace gets |
 		// Otherwise it's still a comma.
 		if (bracecount) {
-		    result[len++] = ')';
-		    result[len++] = '|';
-		    c = '(';
+		    c = '|';
 		}
 		break;
 	    case '}':
-		// Closing brace after opening brace gets ))
+		// Closing brace after opening brace gets )
 		// Otherwise it's still an opening brace.
 		if (bracecount) {
 		    bracecount--;
-		    result[len++] = ')';
 		    c = ')';
 		}
 		break;

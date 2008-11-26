@@ -24,14 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.h 19930 2007-02-27 03:56:36Z Malte.Marquarding $
+//# $Id$
 
 #ifndef COORDINATES_PROJECTION_H
 #define COORDINATES_PROJECTION_H
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

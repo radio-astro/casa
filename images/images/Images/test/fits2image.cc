@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits2image.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id$
 
 #include <casa/aips.h>
+#include <casa/System/Aipsrc.h>
 #include <casa/Exceptions/Error.h>
 #include <fits/FITS/BasicFITS.h>
 #include <casa/Inputs/Input.h>
@@ -39,14 +40,15 @@
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
-int main(int argc, const char* argv[])
+int main(int argc, char **argv)
 {
   try {
     // Inputs
     Input inp(1);
     inp.version("2.0: PagedImage with coordinate conversion");
 
-    String name = "test_image.fits";
+    String root = Aipsrc::aipsRoot();
+    String name = root + "/data/demo/Images/test_image.fits";
     inp.create("in", name, "Input FITS file name", "string");
     inp.create("out", "fits2image_tmp.out", "Output AIPS++ Image name",
 	       "string");

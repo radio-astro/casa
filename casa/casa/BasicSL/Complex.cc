@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.cc 20232 2008-02-04 13:13:34Z gervandiepen $
+//# $Id: Complex.cc 20428 2008-11-17 13:47:12Z gervandiepen $
 
 
 //# Includes
@@ -108,6 +108,29 @@ void setNaN(DComplex &val)
 {
   Double x; setNaN(x);
   Double y; setNaN(y);
+  val = DComplex(x, y);
+}
+
+// Inf functions
+
+Bool isInf(const Complex &val)
+{
+  return isInf(val.real()) || isInf(val.imag());
+}
+Bool isInf(const DComplex &val)
+{
+  return isInf(val.real()) || isInf(val.imag());
+}
+void setInf(Complex &val)
+{
+  Float x; setInf(x);
+  Float y; setInf(y);
+  val = Complex(x, y);
+}
+void setInf(DComplex &val)
+{
+  Double x; setInf(x);
+  Double y; setInf(y);
   val = DComplex(x, y);
 }
 

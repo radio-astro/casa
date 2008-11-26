@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordInterface.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: RecordInterface.h 20427 2008-11-17 13:46:17Z gervandiepen $
 
 
 #ifndef CASA_RECORDINTERFACE_H
@@ -222,7 +222,15 @@ public:
     Bool isFixed() const;
 
     // How many fields does this structure have?
+    // <group>
     virtual uInt nfields() const = 0;
+    uInt size() const
+        { return nfields(); }
+    // </group>
+
+    // Is the record empty?
+    bool empty() const
+        { return size() == 0; }
 
     // Get the field number from the field name.
     // -1 is returned if the field name is unknown.

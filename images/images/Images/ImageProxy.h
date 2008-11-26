@@ -24,16 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageProxy.h 20410 2008-10-20 09:00:06Z gervandiepen $
+//# $Id: ImageProxy.h 20440 2008-11-25 10:34:08Z gervandiepen $
 
 #ifndef IMAGES_IMAGEPROXY_H
 #define IMAGES_IMAGEPROXY_H
 
 //# Includes
-#include <lattices/Lattices/LatticeBase.h>
 #include <images/Images/MaskSpecifier.h>
+#include <lattices/Lattices/LatticeBase.h>
+#include <lattices/Lattices/TiledShape.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Containers/ValueHolder.h>
+#include <casa/Containers/Record.h>
 
 namespace casa {
 
@@ -92,7 +94,7 @@ namespace casa {
     Bool isPersistent() const;
 
     // Get the name of the image.
-    String name (Bool stripPath = False) const;
+    String name (Bool stripPath=False) const;
 
     // Get the shape of the image.
     IPosition shape() const;
@@ -127,7 +129,7 @@ namespace casa {
     // Try to acquire a read or write lock.
     // nattempts=0 means wait until acquired. Otherwise every second an
     // attempt is done.
-    void lock (Bool writeLock = False, Int nattempts = 0);
+    void lock (Bool writeLock=False, Int nattempts=0);
 
     // Release the lock acquired by lock().
     void unlock();
@@ -135,7 +137,8 @@ namespace casa {
     // Form a new (virtual) image being a subset of the image.
     ImageProxy subImage (const IPosition& blc,
                          const IPosition& trc, 
-                         const IPosition& inc);
+                         const IPosition& inc,
+                         Bool dropDegenerate=True);
 
     // Get the brightness unit.
     String unit() const;
@@ -149,6 +152,53 @@ namespace casa {
     // Get the miscellaneous info.
     Record miscInfo() const;
 
+    // Get the history.
+    Vector<String> history() const;
+
+    // Write the image in FITS format.
+    // See class ImageFITSConverter for a description of the arguments.
+    // Currently only a float image can be written to FITS.
+    void toFits (const String& fitsfile, Bool overwrite=True,
+                 Bool velocity=True, Bool optical=True, Int bitpix=-32,
+                 Double minpix=-1, Double maxpix=1) const;
+
+    // Write the image to an image file with the given name.
+    // An exception is thrown if the name is the name of an already open image.
+    ImageProxy copy (const String& fileName, Bool overwrite=True,
+                     Bool hdf5=False,
+                     Bool copyMask=True, const String& newMaskName=String(),
+                     const IPosition& newTileShape=IPosition()) const;
+
+    // Return the statistics for the given axes.
+    // E.g. fn axes 0,1 is given in a 3-dim image, the statistics are calculated
+    // for each plane along the 3rd axis.
+    // MinMaxValues can be given to include or exclude (4th argument) pixels
+    // with values in the given range. If only one value is given, min=-abs(val)
+    // and max=abs(val).
+    // Robust statistics (Median, MedAbsDevMed, and Quartile) can be returned
+    // too.
+    Record statistics (const Vector<Int>& axes,
+                                   const String& mask,
+                                   const ValueHolder& minMaxValues,
+                                   Bool exclude = False,
+                                   Bool robust = False) const;
+
+    // Regrid the image on the given axes to the given coordinate system.
+    // The output is stored in the given file; it no file name is given a
+    // temporary image is made.
+    // If the output shape is empty, the old shape is used.
+    // <src>replicate=True</src> means replication rather than regridding.
+    ImageProxy regrid (const Vector<Int>& axes = Vector<Int>(),
+                       const String& outfile = String(),
+                       Bool overwriteOutFile = True,
+                       const IPosition& outShape = IPosition(),
+                       const Record& coordSys = Record(),
+                       const String& method = "linear",
+                       Int decimate = 10,
+                       Bool replicate = False,
+                       Bool doRefChange = True,
+                       Bool forceRegrid = False);
+
     // Check and adjust blc, trc, or inc using the shape.
     // <group>
     static IPosition adjustBlc (const IPosition& blc, const IPosition& shp);
@@ -156,34 +206,8 @@ namespace casa {
     static IPosition adjustInc (const IPosition& inc, const IPosition& shp);
     // </group>
 
+
     /*
-      CoordinateSystem coordSys (const Vector<Int>& axes);
-    Vector<String> history(Bool list = False, Bool browse = True);
-
-    ImageProxy regrid (const String& outfile, 
-                       const IPosition& shape, 
-                       const Record& csys, const Vector<Int>& axes,
-                       Record& region, const String& mask, 
-                       const String& method = "linear", 
-                       Int decimate = 10, 
-                       Bool replicate = False, 
-                       Bool doref = True, 
-                       Bool dropdeg = False, 
-                       Bool overwrite = False, 
-                       Bool force = False);
-
-    ImageProxy regrid(const String& outfile, 
-                      const IPosition& shape, 
-                      const CoordinateSystem& csys, 
-                      const Vector<Int>& axes,
-                      Record& region, const String& mask, 
-                      const String& method = "linear", 
-                      Int decimate = 10, 
-                      Bool replicate = False, 
-                      Bool doref = True, 
-                      Bool dropdeg = False, 
-                      Bool overwrite = False, 
-                      Bool force = False);
 
     ImageProxy rotate(const String& outfile, 
                       const IPosition& shape, 
@@ -195,31 +219,20 @@ namespace casa {
                       Bool dropdeg = False,
                       Bool overwrite = False);
 
-    Bool rename (const String& name, Bool overwrite = False);
 
     Bool setbrightnessunit (const String& unit);
 
-    bool setcoordsys (const Record& csys);
+    Bool setcoordsys (const Record& csys);
 
-    bool sethistory (const String& origin, const Vector<String>& history);
+    Bool sethistory (const String& origin, const Vector<String>& history);
 
-    bool setmiscinfo (const Record& info);
+    Bool setmiscinfo (const Record& info);
 
     ImageProxy subimage(const String& outfile, Record& region, 
                         const String& mask, 
                         Bool dropdeg = False, 
                         Bool overwrite = False, 
                         Bool list = True);
-
-    Vector<String> summary(Record& header, const String& doppler = "RADIO", 
-			    Bool list = True, 
-			    Bool pixelorder = True);
-
-    Bool tofits(const String& outfile, Bool velocity, Bool optical,
-		Int bitpix, Double minpix, Double maxpix, 
-		Record& region, const String& mask, 
-		Bool overwrite = False, Bool dropdeg = False, 
-		Bool deglast = False);
 
     Vector<Double> topixel(Record& value);
 
@@ -261,6 +274,50 @@ namespace casa {
     // Centre all axes except the Stokes one.
     void centreRefPix (CoordinateSystem& cSys, 
                        const IPosition& shape) const;
+
+    // Copy the image to an image (PagedImage or HDF5Image) with the given name.
+    // A new tile shape can be given.
+    // If the image is masked, the mask can be copied as well.
+    template <typename T>
+    ImageInterface<T>* copyImage (const String& fileName,
+                                  Bool hdf5, Bool copyMask,
+                                  const String& newMaskName, 
+                                  const IPosition& newTileShape,
+                                  const ImageInterface<T>& image) const;
+
+    // Form a tiled shape from the current shape and a possible new tile shape.
+    TiledShape makeTiledShape (const IPosition& newTileShape,
+                               const IPosition& shape,
+                               const IPosition& oldTileShape) const;
+
+    // Calculate the statistics.
+    template<typename T>
+    Record makeStatistics (const ImageInterface<T>& image,
+                                       const Vector<Int>& axes,
+                                       const String& mask,
+                                       const ValueHolder& minMaxValues,
+                                       Bool exclude,
+                                       Bool robust) const;
+
+    // Do the actual regridding.
+    template<typename T>
+    ImageProxy doRegrid (const ImageInterface<T>& image,
+                         const Vector<Int>& axes,
+                         const String& outfile,
+                         Bool overwrite,
+                         const IPosition& shape,
+                         const Record& coordSys,
+                         const String& method,
+                         Int decimate,
+                         Bool replicate, 
+                         Bool doRefChange,
+                         Bool force);
+
+    // Make a coordinate system from the Record.
+    // The cylindrical fix is applied if needed.
+    CoordinateSystem makeCoordinateSystem (const Record& coordinates,
+                                           const IPosition& shape) const;
+
 
     //# Data members.
     //# itsLattice is the real data; the pointers are for type convenience only.

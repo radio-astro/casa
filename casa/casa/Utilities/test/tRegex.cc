@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRegex.cc 19452 2006-05-31 14:26:42Z gvandiep $
+//# $Id: tRegex.cc 20436 2008-11-20 07:15:24Z gervandiepen $
 
 //# Includes
 
@@ -64,7 +64,7 @@ String::size_type doMatch (const Regex& exp, const char* str, uInt pos)
 {
   String::size_type k = exp.match (str, pos);
   if (k == String::npos) {
-    return 4294967295;
+    return 4294967295u;
   }
   return k;
 }
@@ -75,14 +75,14 @@ void a() {
     cout << doMatch (exp, "bdc",3) << " ";
     cout << doMatch (exp, "abcd",3) << " ";
     cout << doMatch (exp, "abcd",4) << " ";
-    cout << doMatch (exp, "abcdbcdcdd",10) << endl;;
+    cout << doMatch (exp, "abcdbcdcdd",10) << endl;
 
     cout << doMatch (RXalpha, "bcd",0) << " ";
     cout << doMatch (RXalpha, "bcd",1) << " ";
     cout << doMatch (RXalpha, "bcd",2) << " ";
     cout << doMatch (RXalpha, "bcd",3) << " ";
     cout << doMatch (RXalpha, "bcd",4) << " ";
-    cout << doMatch (RXalpha, "bcd",100) << endl;;
+    cout << doMatch (RXalpha, "bcd",100) << endl;
 
     cout << String("1").matches(RXdouble) << " ";
     cout << String("-1").matches(RXdouble) << " ";

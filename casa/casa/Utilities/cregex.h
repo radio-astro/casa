@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: cregex.h 20422 2008-11-04 11:12:40Z gervandiepen $
+    $Id: cregex.h 20438 2008-11-21 07:44:08Z gervandiepen $
 */
 
 #ifndef CASA_CREGEX_H
@@ -39,7 +39,7 @@ extern "C" {
 /* Define number of parens for which we record the beginnings and ends.
    This affects how much space the `struct re_registers' type takes up.  */
 #ifndef RE_NREGS
-#define RE_NREGS 10
+#define RE_NREGS 32
 #endif
 
 #define BYTEWIDTH 8
