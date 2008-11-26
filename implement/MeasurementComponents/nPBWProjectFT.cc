@@ -2720,7 +2720,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void nPBWProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
-			 FTMachine::Type type)
+			  FTMachine::Type type,
+			  const Matrix<Float>& imwght)
   {
     // Take care of translation of Bools to Integer
     Int idopsf=0;
@@ -2729,6 +2730,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     findConvFunction(*image, vb);
     
+
+    const Matrix<Float> *imagingweight;
+    if(imwght.nelements()>0)
+      imagingweight=&imwght;
+    else
+      imagingweight=&(vb.imagingWeight());
+
     const Cube<Complex> *data;
     if(type==FTMachine::MODEL)
       data=&(vb.modelVisCube());
@@ -2854,7 +2862,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int tmpPAI=PAIndex+1;
 		if (dopsf) doPSF=1; else doPSF=0;
 		runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-			      vb.imagingWeight(),rownr,actualOffset,
+			      *imagingweight,rownr,actualOffset,
 			      *dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
 			      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
 	      }
@@ -2871,7 +2879,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	Int tmpPAI=PAIndex+1;
 	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-		      vb.imagingWeight(),
+		      *imagingweight,
 		      row,uvOffset,
 		      griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);

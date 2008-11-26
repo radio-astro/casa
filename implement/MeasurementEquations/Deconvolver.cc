@@ -1796,7 +1796,8 @@ Bool Deconvolver::regionmask(const String& maskimage, Record* imageRegRec, Matri
     mim.set(0.0);
     mim.table().relinquishAutoLocks();
   }
-  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, value);
+  Matrix<Float> circles;
+  return Imager::regionToImageMask(maskimage, imageRegRec, blctrcs, circles, value);
 
 }
 

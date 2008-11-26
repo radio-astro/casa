@@ -197,7 +197,8 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED);
+	   FTMachine::Type type=FTMachine::OBSERVED, 
+	   const Matrix<Float>& imwght=Matrix<Float>(0,0));
 
   void put(const VisBuffer& vb, TempImage<Complex>& iimage, 
 	   Vector<Double>& scale, Int row=-1, UVWMachine *uvwMachine=0, 

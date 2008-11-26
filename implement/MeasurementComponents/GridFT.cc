@@ -639,11 +639,21 @@ extern "C" {
 		Int*);
 }
 void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type)
+		 FTMachine::Type type, const Matrix<Float>& imwght)
 {
 
 
   gridOk(gridder->cSupport()(0));
+
+
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=imagingweight->getStorage(iswgtCopy);
 
   const Cube<Complex> *data;
   data=0;
@@ -660,6 +670,9 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   Bool isCopy;
   const Complex *datStorage;
+
+
+
 
   if(!dopsf)
     datStorage=data->getStorage(isCopy);
@@ -770,7 +783,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		&idopsf,
 		flags.getStorage(del),
 		rowFlags.getStorage(del),
-		vb.imagingWeight().getStorage(del),
+		wgtStorage,
 		&s(2),
 		&rownr,
 		uvScale.getStorage(del),
@@ -804,7 +817,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    &idopsf,
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
-	    vb.imagingWeight().getStorage(del),
+	    wgtStorage,
 	    &s(2),
 	    &row,
 	    uvScale.getStorage(del),
@@ -827,6 +840,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!dopsf)
     data->freeStorage(datStorage, isCopy);
+  imagingweight->freeStorage(wgtStorage,iswgtCopy);
 
 }
 

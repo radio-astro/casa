@@ -695,7 +695,17 @@ BeamSkyJones::extent (const ImageInterface<Float>& im,
   }   
 };
 
+Int BeamSkyJones::support(const VisBuffer& vb, const CoordinateSystem& cs){
+  PBMath myPBMath;
 
+  if(changed(vb, 0)) update(vb, 0);
+  if (getPBMath(lastUpdateIndex1_p, myPBMath)) {
+    return myPBMath.support(cs);
+  } else {
+    throw(AipsError("BeamSkyJones::support() - PBMath not found"));
+  }
+
+}
 
 void BeamSkyJones::summary(Int n) 
 {

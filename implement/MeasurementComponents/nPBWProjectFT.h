@@ -238,7 +238,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //    throw(AipsError("nPBWProjectFT::put is not implemented"));
     }
     void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	     FTMachine::Type type=FTMachine::OBSERVED);
+	     FTMachine::Type type=FTMachine::OBSERVED,
+	     const Matrix<Float>& wgt=Matrix<Float>(0,0));
     
     // Make the entire image
     void makeImage(FTMachine::Type type,

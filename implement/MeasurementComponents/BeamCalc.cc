@@ -57,9 +57,9 @@ namespace casa{
     Double d, r, m, z;
     FILE *in;
     const char *sep=" ";
-    char *aipsPath = strtok(getenv("CASAPATH"),sep);
+    char *aipsPath = strtok(getenv("AIPSPATH"),sep);
     if (aipsPath == NULL)
-      throw(SynthesisError("CASAPATH not found."));
+      throw(SynthesisError("AIPSPATH not found."));
 
     String fullFileName(aipsPath);
     fullFileName = fullFileName + "/data/nrao/VLA/" + geomfile;

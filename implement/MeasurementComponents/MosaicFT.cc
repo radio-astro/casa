@@ -708,7 +708,8 @@ extern "C" {
               Int*);
 }
 void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
-		   FTMachine::Type type)
+		   FTMachine::Type type,
+		   const Matrix<Float>& imwght)
 {
 
 
@@ -716,6 +717,16 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
 
   findConvFunction(*image, vb);
+
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=imagingweight->getStorage(iswgtCopy);
+
   const Cube<Complex> *data=0;
   if(! dopsf){
     if(type==FTMachine::MODEL){
@@ -899,7 +910,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &idopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
-	   vb.imagingWeight().getStorage(del),
+	   wgtStorage,
 	   &s(2),
 	   &row,
 	   uvScale.getStorage(del),
@@ -932,6 +943,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!dopsf)
     data->freeStorage(datStorage, isCopy);
+  imagingweight->freeStorage(wgtStorage,iswgtCopy);
 
 }
 

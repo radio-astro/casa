@@ -427,7 +427,11 @@ PBMath::extent(const ImageInterface<Float> & im, const MDirection& pointing,
  return (pb_pointer_p->extent(im, pointing, row, fPad, iChan, sizeType));
 };
 
-
+Int
+PBMath::support(const CoordinateSystem& cs)
+{
+ return (pb_pointer_p->support(cs));
+};
 
 
 //Bool PBMath::flushToTable(Table& beamSubTable, Int iRow)

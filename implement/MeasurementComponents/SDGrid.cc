@@ -630,11 +630,21 @@ extern "C" {
 }
 
 void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type)
+		 FTMachine::Type type,const Matrix<Float>& imwght )
 {
   LogIO os(LogOrigin("SDGrid", "put"));
   
   gridOk(convSupport);
+
+
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=imagingweight->getStorage(iswgtCopy);
  
   const Cube<Complex> *data;
   if(type==FTMachine::MODEL){
@@ -718,7 +728,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 		  &idopsf,
 		  flags.getStorage(del),
 		  rowFlags.getStorage(del),
-		  vb.imagingWeight().getStorage(del),
+		  wgtStorage,
 		  &s(2),
 		  &rownr,
 		  dataPtr->getStorage(del),
@@ -756,7 +766,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      &idopsf,
 	      flags.getStorage(del),
 	      rowFlags.getStorage(del),
-	      vb.imagingWeight().getStorage(del),
+	      wgtStorage,
 	      &s(2),
 	      &row,
 	      griddedData.getStorage(del),
@@ -774,6 +784,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     }
   }
   data->freeStorage(datStorage, isCopy);
+  imagingweight->freeStorage(wgtStorage,iswgtCopy);
 
 }
 

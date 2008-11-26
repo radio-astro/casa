@@ -167,6 +167,9 @@ protected:
 		      Float cutoff,
 		      Bool forward); 
 
+  virtual Int support(const CoordinateSystem& cs);
+
+
 
 private:    
 

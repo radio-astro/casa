@@ -605,9 +605,18 @@ extern "C" {
 	      Int*);
 }
 void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
-		     FTMachine::Type type)
+		     FTMachine::Type type, const Matrix<Float>& imwght )
 {
   
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=imagingweight->getStorage(iswgtCopy);
+
   const Cube<Complex> *data;
   if(type==FTMachine::MODEL){
     data=&(vb.modelVisCube());
@@ -732,7 +741,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	       &idopsf,
 	       flags.getStorage(del),
 	       rowFlags.getStorage(del),
-	       vb.imagingWeight().getStorage(del),
+	       wgtStorage,
 	       &s(2),
 	       &rownr,
 	       uvScale.getStorage(del),
@@ -772,7 +781,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   &idopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
-	   vb.imagingWeight().getStorage(del),
+	   wgtStorage,
 	   &s(2),
 	   &row,
 	   uvScale.getStorage(del),
@@ -799,6 +808,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   
 
   data->freeStorage(datStorage, isCopy);
+  imagingweight->freeStorage(wgtStorage,iswgtCopy);
 }
 
 void WProjectFT::get(VisBuffer& vb, Int row)

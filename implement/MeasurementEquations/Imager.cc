@@ -1401,7 +1401,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
 	     << nxc << " will be more efficient" << LogIO::POST;
 	} else {
 	  os <<  LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
-	     << nxc <<  " or " << nnxc << " will be more efficient" << LogIO::POST;
+	     << nxc <<  " or " << nnxc << " will be more efficient for FFTs" << LogIO::POST;
 	}
       }
       if (! cn.isComposite(ny)) {
@@ -1411,8 +1411,8 @@ Bool Imager::setimage(const Int nx, const Int ny,
 	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " 
 	     << nyc << " will be more efficient" << LogIO::POST;
 	} else {
-	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " << nyc << 
-	      " or " << nnyc << " will be more efficient" << LogIO::POST;
+	  os <<  LogIO::WARN << "ny = " << ny << " is not composite ; ny = " << nyc << 
+	      " or " << nnyc << " will be more efficient for FFTs" << LogIO::POST;
 	}
 	os << LogIO::WARN 
 	   << "You may safely ignore this message for single dish imaging" 
@@ -5257,7 +5257,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
 	    //
-	    if ((ft_p->name()=="MosaicFT") && (sm_p->doFluxScale(thismodel))) {
+	    if (sm_p->doFluxScale(thismodel)) {
 	      if(scaleType_p=="NONE"){
 		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
 					  0.0,(restored/(sm_p->fluxScale(thismodel)))));

@@ -147,7 +147,47 @@ PBMath1D::extent (const ImageInterface<Float>& in, const MDirection& pointDir,
 
 
 
+Int PBMath1D::support(const CoordinateSystem& cs){
+Int directionIndex=cs.findCoordinate(Coordinate::DIRECTION);
+ AlwaysAssert(directionIndex>=0, AipsError);
+ DirectionCoordinate
+   directionCoord=cs.directionCoordinate(directionIndex);
+ 
+ Vector<String> dirunit=directionCoord.worldAxisUnits();
 
+ Double freq;
+ {
+   Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+   AlwaysAssert(spectralIndex>=0, AipsError);
+   SpectralCoordinate
+     spectralCoord=cs.spectralCoordinate(spectralIndex);
+
+   
+   Vector<String> units(1);
+   units = "Hz";
+   spectralCoord.setWorldAxisUnits(units);
+
+   Vector<Double> spectralWorld(1);
+   Vector<Double> spectralPixel(1);
+   spectralPixel(0) = 0;
+   spectralCoord.toWorld(spectralWorld, spectralPixel);  
+   freq  = spectralWorld(0);
+  }
+
+
+
+  // maximumRadius_p: maximum radius at 1 GHz frequency
+  Double delta = maximumRadius_p.getValue("rad") *  1.0e+9 / freq;
+
+
+  //Number of pix at freq
+  Double numpix=maximumRadius_p.getValue(dirunit(0))/fabs(directionCoord.increment()(0))*2.0*1.0e9/freq ;
+  
+ 
+  return Int(floor(numpix));
+
+
+}
 void  PBMath1D::refineSize(Vector<Float>& blc, Vector<Float>& trc, const IPosition& shape, 
 			    SkyJones::SizeType sizeType)
 {

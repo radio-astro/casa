@@ -157,7 +157,8 @@ public:
 
   // Put coherence to grid
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-		   FTMachine::Type type= FTMachine::OBSERVED) = 0;
+		   FTMachine::Type type= FTMachine::OBSERVED, 
+		   const Matrix<Float>& imweight = Matrix<Float>(0,0)) = 0;
 
   virtual void put(const VisBuffer& vb, TempImage<Complex>& image,
 		   Vector<Double>& scale,

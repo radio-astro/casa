@@ -121,6 +121,8 @@ PBMath2DImage& PBMath2DImage::operator=(const PBMath2DImage& other)
   return *this;
 };
 
+
+
 void
 PBMath2DImage::summary(Int nValues)
 {
@@ -997,4 +999,40 @@ void PBMath2DImage::checkImageCongruent(ImageInterface<Float>& image)
     
   }
 }
+
+Int PBMath2DImage::support(const CoordinateSystem& cs){
+  
+  Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+  AlwaysAssert(spectralIndex>=0, AipsError);
+  SpectralCoordinate
+    imageSpectralCoord=cs.spectralCoordinate(spectralIndex);
+  Double desiredFrequency=imageSpectralCoord.referenceValue()(0);
+
+  // Next get the frequency of the Jones image
+  spectralIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::SPECTRAL);
+  AlwaysAssert(spectralIndex>=0, AipsError);
+  imageSpectralCoord=reJonesImage_p->coordinates().spectralCoordinate(spectralIndex);
+  Double reFrequency=imageSpectralCoord.referenceValue()(0);
+
+  Double reFreqScale = reFrequency/desiredFrequency;
+
+  Double npixels=reJonesImage_p->shape()(0)*reFreqScale;
+  
+  Int dirIndex=cs.findCoordinate(Coordinate::DIRECTION);
+  DirectionCoordinate
+   directionCoord=cs.directionCoordinate(dirIndex);
+ 
+ Vector<String> dirunit=directionCoord.worldAxisUnits();
+
+ npixels=npixels/fabs(directionCoord.increment()(0));
+ dirIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::SPECTRAL);
+
+ directionCoord=(reJonesImage_p->coordinates()).directionCoordinate(dirIndex);
+ directionCoord.setWorldAxisUnits(dirunit);
+ npixels=npixels*fabs(directionCoord.increment()(0));
+
+ return Int(floor(npixels));
+
+}
+
 } //#End casa namespace

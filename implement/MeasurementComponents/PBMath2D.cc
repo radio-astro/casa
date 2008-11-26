@@ -112,6 +112,12 @@ PBMath2D::extent (const ImageInterface<Float>& in, const MDirection& pointDir,
 };
 
 
+Int PBMath2D::support(const CoordinateSystem& cs){
+
+  return 0;
+
+}
+
 
 } //# NAMESPACE CASA - END
 

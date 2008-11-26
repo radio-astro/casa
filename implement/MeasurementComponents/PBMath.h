@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class Table;
 class ImageRegion;
 class RecordInterface;
-
+class CoordinateSystem;
 // <summary> Primary beam envelope class, derived from PBMathInterface </summary>
 
 // <use visibility=export>
@@ -349,6 +349,8 @@ public:
 		       const Float fPad,  
 		       const Int iChan,  
 		       const SkyJones::SizeType);
+
+  Int support (const CoordinateSystem& cs);
 
   // given the Telescope name and the frequency, guess the most approrpiate
   // CommonPB primary beam type and the band

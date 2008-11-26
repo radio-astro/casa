@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class Table;
 class SkyComponent;
 class ImageRegion;
-
+class CoordinateSystem;
 
 // <summary> base class for 1D PBMath objects </summary>
 
@@ -196,6 +196,9 @@ public:
 		       const Float fPad,  
 		       const Int iChan,  
 		       const SkyJones::SizeType sizeType);
+
+
+  virtual Int support(const CoordinateSystem& cs);
 
 
 protected:

@@ -171,7 +171,8 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED);
+	   FTMachine::Type type=FTMachine::OBSERVED,
+	   const Matrix<Float>& wgt=Matrix<Float>(0,0));
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights

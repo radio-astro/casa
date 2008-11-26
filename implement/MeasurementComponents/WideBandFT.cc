@@ -914,11 +914,21 @@ extern "C" {
 		Int*);
 }
 void WideBandFT::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type)
+		     FTMachine::Type type, const Matrix<Float>& imwght)
 {
 
 
   gridOk(gridder->cSupport()(0));
+
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=imagingweight->getStorage(iswgtCopy);
+
 
   const Cube<Complex> *data;
   data=0;
@@ -1015,7 +1025,7 @@ void WideBandFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    &idopsf,
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
-	    vb.imagingWeight().getStorage(del),
+	    wgtStorage,
 	    &s(2),
 	    &row,
 	    uvScale.getStorage(del),
@@ -1042,7 +1052,7 @@ void WideBandFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     for(Int taylor=0;taylor<ntaylor_p;taylor++)
     {
   // modify weights vb.imagingWeight()
-    specWeights = vb.imagingWeight();
+    specWeights = *imagingweight;
     modifyWeights(vb,specWeights, taylor+1.0);
   // Call the fortran gridder again.
     ggridft(uvw.getStorage(del),
@@ -1075,6 +1085,8 @@ void WideBandFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   if(!dopsf)
     data->freeStorage(datStorage, isCopy);
+
+  imagingweight->freeStorage(wgtStorage,iswgtCopy);
 
 }
 

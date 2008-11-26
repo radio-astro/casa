@@ -255,6 +255,9 @@ public:
   // n =  m => plot m samples of the PB profile
   virtual void summary(Int n=0);
 
+  //Get an idea of the support of the PB in number of pixels
+  virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs);
+
 private:  
 
   MeasurementSet* ms_p;

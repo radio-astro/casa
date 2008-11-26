@@ -42,6 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //Forward declaration
 class Table;
 class MDirection;
+class CoordinateSystem;
 class SkyComponent;
 class ImageRegion;
 class String;
@@ -238,6 +239,9 @@ public:
 				const Int row, const Float fPad,  const Int iChan,  
 				const SkyJones::SizeType) = 0;
 
+
+
+  virtual Int support (const CoordinateSystem& cs)=0;
 
   // Summarize the Voltage Pattern;
   // For PBMath1D, list nValues worth of the PB array
