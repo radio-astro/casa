@@ -1,4 +1,4 @@
-//# PrecTimer.cc: Timing facility
+//# PrecTimer.cc: Precision timer to measure elapsed times in a cumulative way
 //# Copyright (C) 2006
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PrecTimer.cc 19252M 2008-08-12 20:30:34Z (local) $
+//# $Id: PrecTimer.cc 20444 2008-11-28 10:56:27Z gervandiepen $
 
 #include <casa/OS/PrecTimer.h>
 #include <casa/BasicSL/String.h>
@@ -34,11 +34,6 @@
 #include <casa/Exceptions/Error.h>
 #include <cstdlib>
 #include <cstring>
-
-#if defined __APPLE__
-#include <sys/sysctl.h>
-#include <sys/types.h>
-#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -62,30 +57,27 @@ double PrecTimer::get_CPU_speed_in_MHz()
     infile.getline(buffer, 256);
 
 #if defined __PPC__
-    if (strncmp("timebase", buffer, 8) == 0
-    && (colon = strchr(buffer, ':')) != 0) {
+    if (strcmp("cpu\t\t: 450 Blue Gene/P DD2", buffer) == 0) {
+      return 850.0;
+    }
+    if (strcmp("machine\t\t: Blue Gene", buffer) == 0) {
+      return 700.0;
+    }
+    if (strncmp("timebase", buffer, 8) == 0  &&
+        (colon = strchr(buffer, ':')) != 0) {
       return atof(colon + 2) / 1e6;
     }
 #else
-    if (strncmp("cpu MHz", buffer, 7) == 0
-    && (colon = strchr(buffer, ':')) != 0) {
+    if (strncmp("cpu MHz", buffer, 7) == 0  &&
+        (colon = strchr(buffer, ':')) != 0) {
       return atof(colon + 2);
     }
 #endif
   }
 
   return 0.0;
-#elif defined __blrts__ // BlueGene/L
-  return 700.0;
-#elif defined __APPLE__ // Macintosh
-  int mib[2] = { CTL_HW, HW_CPU_FREQ };
-  double result = 0;
-  size_t size = sizeof(result);
-
-  if( sysctl(mib, 2, &result, &size, NULL, 0) != -1)
-    return result / 1000000;
 #else
-#warning unsupported architecture
+#warning partially supported architecture
   return 0.0;
 #endif
 }
@@ -107,17 +99,21 @@ void PrecTimer::show() const
 
 void PrecTimer::show (ostream& os) const
 {
-  if (CPU_speed_in_MHz == 0) {
-    os << "could not determine CPU speed\n";
-  } else if (count > 0) {
-    double total = static_cast<double>(total_time);
-    os << "avg = ";
-    print_time (os, total / static_cast<double>(count));
-    os << ", total = ";
-    print_time (os, total);
-    os << ", count = " << count << '\n';
-  } else {
+  if (count == 0) {
     os << "not used\n";
+  } else {
+    double total = static_cast<double>(total_time);
+    if (CPU_speed_in_MHz == 0) {
+      os << "avg = " << total / static_cast<double>(count);
+      os << ", total = " << total_time << " cycles";
+    } else {
+      total /= 1e6 * CPU_speed_in_MHz;
+      os << "avg = ";
+      print_time(os, total / static_cast<double>(count));
+      os << ", total = ";
+      print_time(os, total);
+    }
+    os << ", count = " << setw(9) << count << endl;
   }
 }
 

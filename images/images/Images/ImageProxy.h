@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageProxy.h 20440 2008-11-25 10:34:08Z gervandiepen $
+//# $Id: ImageProxy.h 20453 2008-12-01 14:09:57Z gervandiepen $
 
 #ifndef IMAGES_IMAGEPROXY_H
 #define IMAGES_IMAGEPROXY_H
@@ -53,20 +53,15 @@ namespace casa {
     // Default constructor is needed for Boost-Python.
     ImageProxy();
 
-    // Construct from a ValueHolder which can contain two types of values.
-    // <ol>
-    //  <li> A string is an image name or image expression which is opened
-    //       using ImageOpener.
-    //  <li> An Array of Float or Complex is a temporary image which gets
-    //       default coordinates attached to it.
-    // </ol>
-    ImageProxy (const ValueHolder& name, const String& mask,
-                const vector<ImageProxy>& images);
-
     // Construct from the concatenation of the images along the axis.
     // The axis must be given as a Fortran-array axis.
     // All images must be of the same data type.
     ImageProxy (const Vector<String>& names, Int axis);
+
+    // Construct from a string that contains an image name or image expression.
+    // It is opened using ImageOpener.
+    ImageProxy (const String& name, const String& mask,
+                const vector<ImageProxy>& images);
 
     // Construct from the concatenation of the image objects along the axis.
     // The axis must be given as a Fortran-array axis.
@@ -75,6 +70,41 @@ namespace casa {
     //# different number of arguments (for Boost-Python).
     ImageProxy (const vector<ImageProxy>& images, Int axis,
                 Int dummy1=0, Int dummy2=0);
+
+    // Construct from a ValueHolder containing an Array of Float or Complex.
+    // If the name is empty it is created as a temporary image, otherwise
+    // as a PagedImage or HDF5Image.
+    // If the coordinates record is empty, default coordinates are used.
+    // A mask is created if the mask name or mask value is not empty.
+    ImageProxy (const ValueHolder& values,
+                const ValueHolder& mask,
+                const Record& coordinates,
+                const String& imageName = String(),
+                Bool overwrite = True,
+                Bool asHDF5 = False,
+                const String& maskName = String(),
+                const IPosition& tileShape = IPosition());
+
+    // Construct from a shape.
+    // If the name is empty it is created as a temporary image, otherwise
+    // as a PagedImage or HDF5Image.
+    // If the coordinates record is empty, default coordinates are used.
+    // A mask is created if the mask name is not empty.
+    ImageProxy (const IPosition& shape,
+                const ValueHolder& value,
+                const Record& coordinates,
+                const String& imageName = String(),
+                Bool overwrite = True,
+                Bool asHDF5 = False,
+                const String& maskName = String(),
+                const IPosition& tileShape = IPosition(),
+                Int dummy=0);
+
+    // Copy constructor (reference semantics).
+    ImageProxy (const ImageProxy&);
+
+    // Assignment (reference semantics).
+    ImageProxy& operator= (const ImageProxy&);
 
      ~ImageProxy();
 
@@ -123,6 +153,13 @@ namespace casa {
                   const IPosition& blc,
                   const IPosition& inc);
 
+    // Put a chunk of the mask.
+    // The mask will be created if not present yet.
+    // That will not be done if the entire mask is True.
+    void putMask (const ValueHolder& value,
+                  const IPosition& blc,
+                  const IPosition& inc);
+
     // Does the image have a read or write lock?
     Bool hasLock (Bool writeLock = False);
 
@@ -164,10 +201,10 @@ namespace casa {
 
     // Write the image to an image file with the given name.
     // An exception is thrown if the name is the name of an already open image.
-    ImageProxy copy (const String& fileName, Bool overwrite=True,
-                     Bool hdf5=False,
-                     Bool copyMask=True, const String& newMaskName=String(),
-                     const IPosition& newTileShape=IPosition()) const;
+    void saveAs (const String& fileName, Bool overwrite=True,
+                 Bool hdf5=False,
+                 Bool copyMask=True, const String& newMaskName=String(),
+                 const IPosition& newTileShape=IPosition()) const;
 
     // Return the statistics for the given axes.
     // E.g. fn axes 0,1 is given in a 3-dim image, the statistics are calculated
@@ -178,10 +215,10 @@ namespace casa {
     // Robust statistics (Median, MedAbsDevMed, and Quartile) can be returned
     // too.
     Record statistics (const Vector<Int>& axes,
-                                   const String& mask,
-                                   const ValueHolder& minMaxValues,
-                                   Bool exclude = False,
-                                   Bool robust = False) const;
+                       const String& mask,
+                       const ValueHolder& minMaxValues,
+                       Bool exclude = False,
+                       Bool robust = False) const;
 
     // Regrid the image on the given axes to the given coordinate system.
     // The output is stored in the given file; it no file name is given a
@@ -251,17 +288,17 @@ namespace casa {
     void openImage (const String& name, const String& mask,
                     const vector<ImageProxy>& images);
 
-    // Make a TempImage from an array
-    //<group>
-    void makeImage (const Array<Float>& array);
-    void makeImage (const Array<Double>& array);
-    void makeImage (const Array<Complex>& array);
-    void makeImage (const Array<DComplex>& array);
-    // </group>
+    // Make an image from an array or shape.
+    template<typename T>
+    void makeImage (const Array<T>& array, const Array<Bool>& mask,
+                    const IPosition& shape, const Record& coordinates,
+                    const String& fileName, Bool asHDF5,
+                    const String& maskName,
+                    const IPosition& tileShape);
 
     // Form a concatenated image.
     // <group>
-    void concatImages (const std::vector<ImageProxy>& images, Int axis);
+    void concatImages         (const std::vector<ImageProxy>& images, Int axis);
     void concatImagesFloat    (const std::vector<ImageProxy>& images, Int axis);
     void concatImagesDouble   (const std::vector<ImageProxy>& images, Int axis);
     void concatImagesComplex  (const std::vector<ImageProxy>& images, Int axis);
@@ -275,29 +312,36 @@ namespace casa {
     void centreRefPix (CoordinateSystem& cSys, 
                        const IPosition& shape) const;
 
+    // Put the mask and create it if needed.
+    template<typename T>
+    void doPutMask (ImageInterface<T>& image,
+                    const ValueHolder& value,
+                    const IPosition& blc,
+                    const IPosition& inc);
+
     // Copy the image to an image (PagedImage or HDF5Image) with the given name.
     // A new tile shape can be given.
     // If the image is masked, the mask can be copied as well.
     template <typename T>
-    ImageInterface<T>* copyImage (const String& fileName,
-                                  Bool hdf5, Bool copyMask,
-                                  const String& newMaskName, 
-                                  const IPosition& newTileShape,
-                                  const ImageInterface<T>& image) const;
+    void saveImage (const String& fileName,
+                    Bool hdf5, Bool copyMask,
+                    const String& newMaskName, 
+                    const IPosition& newTileShape,
+                    const ImageInterface<T>& image) const;
 
     // Form a tiled shape from the current shape and a possible new tile shape.
     TiledShape makeTiledShape (const IPosition& newTileShape,
                                const IPosition& shape,
-                               const IPosition& oldTileShape) const;
+                               const IPosition& oldTileShape=IPosition()) const;
 
     // Calculate the statistics.
     template<typename T>
     Record makeStatistics (const ImageInterface<T>& image,
-                                       const Vector<Int>& axes,
-                                       const String& mask,
-                                       const ValueHolder& minMaxValues,
-                                       Bool exclude,
-                                       Bool robust) const;
+                           const Vector<Int>& axes,
+                           const String& mask,
+                           const ValueHolder& minMaxValues,
+                           Bool exclude,
+                           Bool robust) const;
 
     // Do the actual regridding.
     template<typename T>

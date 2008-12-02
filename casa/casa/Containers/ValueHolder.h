@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolder.h 20358 2008-06-23 11:39:32Z gervandiepen $
+//# $Id: ValueHolder.h 20450 2008-11-28 12:52:51Z gervandiepen $
 
 
 #ifndef CASA_VALUEHOLDER_H
@@ -98,6 +98,9 @@ public:
   explicit ValueHolder (const Array<String>& value);
   explicit ValueHolder (const Record& value);
   // </group>
+
+  // Create an empty N-dim array.
+  ValueHolder (uInt ndim, Bool dummy);
 
   // Create a ValueHolder from a ValueHolderRep.
   // It takes over the pointer and deletes it in the destructor.

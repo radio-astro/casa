@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMath2.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tArrayMath2.cc 20446 2008-11-28 11:01:33Z gervandiepen $
 
 //# Includes
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Utilities/Assert.h>

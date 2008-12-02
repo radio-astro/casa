@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolderRep.h 19381 2006-04-18 09:17:37Z gvandiep $
+//# $Id: ValueHolderRep.h 20450 2008-11-28 12:52:51Z gervandiepen $
 
 
 #ifndef CASA_VALUEHOLDERREP_H
@@ -92,6 +92,9 @@ public:
   explicit ValueHolderRep (const Record& value);
   // </group>
 
+  // Create an empty N-dim array.
+  ValueHolderRep (uInt ndim, Bool dummy);
+
   // Destructor.
   ~ValueHolderRep();
 
@@ -155,6 +158,7 @@ private:
 
 
   Int      itsCount;
+  uInt     itsNdim;
   DataType itsType;
   union {
     Bool   itsBool;
