@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PrecTimer.cc 20444 2008-11-28 10:56:27Z gervandiepen $
+//# $Id: PrecTimer.cc 20462 2008-12-03 10:01:56Z gervandiepen $
 
 #include <casa/OS/PrecTimer.h>
 #include <casa/BasicSL/String.h>
@@ -34,6 +34,11 @@
 #include <casa/Exceptions/Error.h>
 #include <cstdlib>
 #include <cstring>
+
+#if defined __APPLE__
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -47,7 +52,7 @@ double PrecTimer::get_CPU_speed_in_MHz()
   AlwaysAssert(sizeof(int) == 4, AipsError);
   AlwaysAssert(sizeof(long long) == 8, AipsError);
 
-#if defined __linux__ && \
+#if (defined __linux__ || __APPLE__) &&                                 \
     (defined __i386__ || defined __x86_64__ || defined __ia64__ || defined __PPC__) && \
     (defined __GNUC__ || defined __INTEL_COMPILER || defined __PATHSCALE__ || defined __xlC__)
   ifstream infile("/proc/cpuinfo");
@@ -67,7 +72,14 @@ double PrecTimer::get_CPU_speed_in_MHz()
         (colon = strchr(buffer, ':')) != 0) {
       return atof(colon + 2) / 1e6;
     }
-#else
+#elif defined __APPLE__ // Macintosh
+    int mib[2] = { CTL_HW, HW_CPU_FREQ };
+    double result = 0;
+    size_t size = sizeof(result);
+    if( sysctl(mib, 2, &result, &size, NULL, 0) != -1) {
+      return result / 1e6;
+    }
+ #else
     if (strncmp("cpu MHz", buffer, 7) == 0  &&
         (colon = strchr(buffer, ':')) != 0) {
       return atof(colon + 2);
