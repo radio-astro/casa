@@ -1,4 +1,4 @@
-//# Exp.cc: Implementation of Exp (tabulated exponential) class
+//# ExpCache.cc: Implementation of ExpCache (tabulated exponential) class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,20 +25,20 @@
 //#
 //# $Id$
 
-#if !defined(EXP_H)
-#define EXP_H
+#if !defined(EXP_CACHE_H)
+#define EXP_CACHE_H
 
 #include <stdlib.h>
 #include <math.h>
 
 namespace casa
 {
-template<class T> class Exp
+template<class T> class ExpCache
 {
 public:
-  Exp() {EStep=0; ETable=NULL;Size=0;};
-  Exp(int n, T Step) {EStep=Size=0;ETable=NULL;Build(n,Step);};
-  ~Exp() {if (ETable) free(ETable);};
+  ExpCache() {EStep=0; ETable=NULL;Size=0;};
+  ExpCache(int n, T Step) {EStep=Size=0;ETable=NULL;Build(n,Step);};
+  ~ExpCache() {if (ETable) free(ETable);};
 
   inline void build(int n, T Step)
   {

@@ -34,7 +34,7 @@
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
 #include <synthesis/MeasurementComponents/CExp.new3.h>
-#include <synthesis/MeasurementComponents/Exp.h>
+//#include <synthesis/MeasurementComponents/Exp.h>
 #include <images/Images/TempImage.h>
 #include <casa/Exceptions.h>
 #include <msvis/MSVis/VisBuffer.h>

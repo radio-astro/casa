@@ -77,7 +77,7 @@
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/Exp.h>
+//#include <synthesis/MeasurementComponents/Exp.h>
 #include <synthesis/MeasurementComponents/CExp.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>

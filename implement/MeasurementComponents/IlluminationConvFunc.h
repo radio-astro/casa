@@ -31,7 +31,7 @@
 
 #include <casa/Exceptions.h>
 #include <synthesis/MeasurementComponents/TabulatedConvFunc.h>
-#include <synthesis/MeasurementComponents/Exp.h>
+#include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.new3.h>
 
 namespace casa{
@@ -72,7 +72,7 @@ namespace casa{
 			     );
 		  
   private:
-    Exp<CF_TYPE> ExpTable;
+    ExpCache<CF_TYPE> ExpTable;
     CExp3<CF_TYPE> CExpTable;
     Double sigma, pa_p;
     Bool expTableReady,cexpTableReady,sigmaReady;
