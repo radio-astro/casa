@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FrequencyAligner.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id$
 
 #ifndef COORDINATES_FREQUENCYALIGNER_H
 #define COORDINATES_FREQUENCYALIGNER_H
@@ -31,9 +31,9 @@
 
 //# Includes
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MeasRef.h>
 #include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MeasRef.h>
+#include <measures/Measures/MeasConvert.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
 namespace casa {
@@ -56,8 +56,10 @@ class String;
 // </reviewed>
 //
 // <prerequisite>
-//   <li> <linkto class=InterpolateArray1D>InterpoateArray1D</linkto>
-//   <li> <linkto class=Array>Array</linkto>
+// <list>
+//   <item> <linkto class=InterpolateArray1D>InterpoateArray1D</linkto>
+//   <item> <linkto class=Array>Array</linkto>
+// </list>
 // </prerequisite>
 //// <synopsis> 
 // Spectra are converted to the specified reference frame and aligned at 
@@ -201,7 +203,7 @@ private:
 
 
 } //# End namespace casa
-#ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <coordinates/Coordinates/FrequencyAligner.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <coordinates/Coordinates/FrequencyAligner.cc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 #endif
