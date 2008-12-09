@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsInput.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id$
 
 #ifndef MS_MSFITSINPUT_H
 #define MS_MSFITSINPUT_H
@@ -32,6 +32,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Block.h>
+#include <casa/Containers/Record.h>
+#include <fits/FITS/fits.h>
 #include <fits/FITS/hdu.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -278,6 +280,10 @@ private:
   Double restfreq_p;
   Bool addSourceTable_p;
   LogIO itsLog;
+  Record header;
+  Double refFreq_p;
+  Bool useAltrval;
+  Vector<Double> chanFreq_p;
 };
 
 

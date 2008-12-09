@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.h 20224 2008-01-25 07:49:45Z gervandiepen $
+//# $Id$
 
 #ifndef MS_MSFITSOUTPUT_H
 #define MS_MSFITSOUTPUT_H
@@ -66,7 +66,7 @@ public:
 private:
   // Write the main table.
   static FitsOutput *writeMain(Int& refPixelFreq, Double& refFreq,
-			       Double& refFreq1, Double& chanbw,
+			       Double& chanbw,
 			       const String& outFITSFile,
 			       const MeasurementSet& rawms,
 			       const String& column,
