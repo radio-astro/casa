@@ -24,15 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 20265 2008-02-25 23:42:27Z gervandiepen $
+//# $Id$
+
+//#include <casa/version.h>
 
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <lattices/Lattices/MaskedLatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
-#include <fits/FITS/hdu.h>
 #include <fits/FITS/fitsio.h>
+#include <fits/FITS/hdu.h>
 #include <fits/FITS/FITSDateUtil.h>
 #include <fits/FITS/FITSKeywordUtil.h>
 #include <fits/FITS/FITSHistoryUtil.h>
@@ -44,7 +46,6 @@
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayIO.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/BasicMath/Math.h>
@@ -754,7 +755,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 // ORIGIN
 //
     ostringstream buffer;
-    buffer << "casacore version  trunk";
+    buffer << "CASA version casacore ";
+    // VersionInfo::report(buffer);
     header.define("ORIGIN", String(buffer));
 
     // Set up the FITS header
@@ -1384,8 +1386,11 @@ Unit ImageFITSConverter::getBrightnessUnit (RecordInterface& header, LogIO& os)
                 
              u = UnitMap::fromFITS(Unit(unitString));
          } else {
-             os << "FITS unit " << unitString << " unknown to CASA - ignoring."
-                << LogIO::POST;
+	     UnitMap::putUser("\""+unitString+"\"", UnitVal::UnitVal(1.0, UnitDim::Dnon), "\""+unitString+"\"");
+	     os << LogIO::WARN << "FITS unit \"" << unitString << "\" unknown to CASA - will treat it as non-dimensional."
+		<< LogIO::POST;
+	     u.setName("\""+unitString+"\"");
+	     u.setValue(UnitVal::UnitVal(1.0, UnitDim::Dnon));
          }
       }
       header.removeField("bunit");
@@ -1394,27 +1399,27 @@ Unit ImageFITSConverter::getBrightnessUnit (RecordInterface& header, LogIO& os)
 }
 
 
-Unit ImageFITSConverter::getBrightnessUnitOld (RecordInterface& header, LogIO& os)
-{
-   Unit u;
-   if (header.isDefined("bunit") && header.dataType("bunit") == TpString) {
-      String unitString;
-      header.get("bunit", unitString);
-      header.removeField("bunit");
-      UnitMap::addFITS();
-      if (UnitVal::check(unitString)) {
+// Unit ImageFITSConverter::getBrightnessUnitOld (RecordInterface& header, LogIO& os)
+// {
+//    Unit u;
+//    if (header.isDefined("bunit") && header.dataType("bunit") == TpString) {
+//       String unitString;
+//       header.get("bunit", unitString);
+//       header.removeField("bunit");
+//       UnitMap::addFITS();
+//       if (UnitVal::check(unitString)) {
 
-// Translate units from FITS units to true aips++ units
-// There is no scale factor in this translation.
+// // Translate units from FITS units to true aips++ units
+// // There is no scale factor in this translation.
 
-          u = UnitMap::fromFITS(Unit(unitString));
-      } else {
-          os << "FITS unit " << unitString << " unknown to CASA - ignoring."
-             << LogIO::POST;
-      }
-   }
-   return u;
-}
+//           u = UnitMap::fromFITS(Unit(unitString));
+//       } else {
+//           os << "FITS unit " << unitString << " unknown to CASA - ignoring."
+//              << LogIO::POST;
+//       }
+//    }
+//    return u;
+// }
 
 Bool ImageFITSConverter::extractMiscInfo (RecordInterface& miscInfo, const RecordInterface& header)
 //
