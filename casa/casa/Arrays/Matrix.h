@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Matrix.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id$
 
 #ifndef CASA_MATRIX_H
 #define CASA_MATRIX_H
@@ -173,7 +173,9 @@ public:
     T &operator()(uInt i1, uInt i2)
       {
 #if defined(AIPS_ARRAY_INDEX_CHECK)
-        this->validateIndex(i1, i2);   // Throws an exception on failure
+        IPosition index(2);
+        index(0) = i1; index(1) = i2;
+        this->validateIndex(index);   // Throws an exception on failure
 #endif
 	return this->contiguous_p ? this->begin_p[i1 + i2*yinc_p] :
 	                            this->begin_p[i1*xinc_p + i2*yinc_p];
@@ -182,7 +184,9 @@ public:
     const T &operator()(uInt i1, uInt i2) const
       {
 #if defined(AIPS_ARRAY_INDEX_CHECK)
-        this->validateIndex(i1, i2);   // Throws an exception on failure
+        IPosition index(2);
+        index(0) = i1; index(1) = i2;
+        this->validateIndex(index);   // Throws an exception on failure
 #endif
 	return this->contiguous_p ? this->begin_p[i1 + i2*yinc_p] :
                                     this->begin_p[i1*xinc_p + i2*yinc_p];

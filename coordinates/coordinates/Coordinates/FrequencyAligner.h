@@ -203,7 +203,7 @@ private:
 
 
 } //# End namespace casa
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <coordinates/Coordinates/FrequencyAligner.cc>
-#endif //# AIPS_NO_TEMPLATE_SRC
+#ifndef CASACORE_NO_AUTO_TEMPLATES
+#include <coordinates/Coordinates/FrequencyAligner.tcc>
+#endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
