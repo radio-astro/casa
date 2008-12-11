@@ -95,7 +95,6 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <synthesis/MeasurementEquations/MosaicSkyEquation.h>
-#include <synthesis/MeasurementEquations/WBSkyEquation.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementEquations/VisEquation.h>
@@ -113,7 +112,6 @@
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
-#include <synthesis/MeasurementComponents/WideBandFT.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
@@ -214,6 +212,7 @@ traceEvent(1,"Entering imager::defaults",25);
   stokes_p="I"; npol_p=1;
   nscales_p=5;
   ntaylor_p=2;
+  reffreq_p=1.4e+09;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
   dataMode_p="none";
@@ -3888,11 +3887,16 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
     else if (type=="pb"){
       if ( ! doVP_p ) {
-	this->unlock();
-	os << LogIO::SEVERE << 
-	  "Must invoke setvp() first in order to make its image" 
-	   << LogIO::EXCEPTION;
-	return False;
+        if( ftmachine_p == "pbwproject" ){
+	   os << LogIO::WARN << "Using pb from ft-machines" << LogIO::POST;
+	}
+	else{
+	  this->unlock();
+	  os << LogIO::SEVERE << 
+	    "Must invoke setvp() first in order to make its image" 
+	     << LogIO::EXCEPTION;
+	  return False;
+	}
       }
       CoordinateSystem coordsys;
       imagecoordinates(coordsys);
@@ -4608,22 +4612,24 @@ Bool Imager::clean(const String& algorithm,
 	doMultiFields_p = False;
 	os << "Using wide-field algorithm with Hogbom Clean" << LogIO::POST;
       }
-      else if (algorithm=="wb") {
+      else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
 	doWideBand_p = True;
+	if ( ftmachine_p != "ft" ) {
+	  os << LogIO::SEVERE << " MSMFS currently works only with the default ftmachine " << LogIO::POST;
+	  return False;
+	}
 	if (!scaleInfoValid_p) {
 	   this->unlock();
 	   os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
-	   sm_p = new WBCleanImageSkyModel();
+	   sm_p = new WBCleanImageSkyModel(ntaylor_p,1,reffreq_p);
 	}
 	if (scaleMethod_p=="uservector") {	
-	   sm_p = new WBCleanImageSkyModel(ntaylor_p,userScaleSizes_p);
+	   sm_p = new WBCleanImageSkyModel(ntaylor_p,userScaleSizes_p,reffreq_p);
 	} else {
-	   sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p);
+	   sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p,reffreq_p);
 	}
 	os << "Using multi frequency synthesis Algorithm" << LogIO::POST;
-	if(ftmachine_p!="wideband")
-	   os << LogIO::SEVERE << "Algorithm 'wb' needs 'wideband' FT Machine" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
       }
       else {
@@ -6205,9 +6211,10 @@ Bool Imager::setscales(const String& scaleMethod,
 };
 
 // Added for wb algo.
-Bool Imager::settaylorterms(const Int intaylor)
+Bool Imager::settaylorterms(const Int intaylor,const Double inreffreq)
 {
   ntaylor_p = intaylor;
+  reffreq_p = inreffreq;
   return True;
 };
 
@@ -7191,18 +7198,6 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
   }
   //
-  // Make WideBand FT machine (for multi-frequency-synthesis imaging)
-  //
-  else if (ftmachine_p == "wideband"){
-    os << "Performing multi frequency synthesis"
-       << LogIO::POST;
-    ft_p = new WideBandFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
-			padding);
-    AlwaysAssert(ft_p, AipsError);
-    cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
-  }
-  //
   // Make PBWProject FT machine (for non co-planar imaging with
   // antenna based PB corrections)
   //
@@ -7585,12 +7580,6 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	sm_p->mandateFluxScale(0);
       os << "Mosaicing single field with simple sky equation" << LogIO::POST;      
     }
-    // Multi Frequency Synthesis (wideband)
-    else if(doWideBand_p) {
-	se_p = new WBSkyEquation(*sm_p,*vs_p,*ft_p,*cft_p);
-	os << "Processing single field with Multi-Frequency Synthesis Sky Equation" << LogIO::POST;
-    }
-
     // Default
     else {
       setSkyEquation();
@@ -8544,14 +8533,14 @@ void Imager::setSkyEquation(){
   se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
 
   */
-  if (ft_p->name() == "PBWProjectFT")
-    {
-      logSink_p.clearLocally();
-      LogIO os(LogOrigin("imager", "setSkyEquation()"), logSink_p);
-      os << "Creating SkyEquation for PBWProjectFT" << LogIO::POST;
-     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
-    }
-  else
+//  if (ft_p->name() == "PBWProjectFT")
+//    {
+//      logSink_p.clearLocally();
+//      LogIO os(LogOrigin("imager", "setSkyEquation()"), logSink_p);
+//      os << "Creating SkyEquation for PBWProjectFT" << LogIO::POST;
+//     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
+//    }
+//  else
     se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
   return;
 }

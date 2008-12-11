@@ -244,7 +244,8 @@ class Imager
 		 const Vector<Float>& userScaleSizes);
   // Set the number of taylor series terms in the expansion of the
   // image as a function of frequency.
-  Bool settaylorterms(const Int intaylor);
+  Bool settaylorterms(const Int intaylor, 
+		      const Double inreffreq);
 
   // </group>
   
@@ -653,6 +654,7 @@ protected:
   String scaleMethod_p;   // "nscales"   or  "uservector"
   Int nscales_p;
   Int ntaylor_p;
+  Double reffreq_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
 

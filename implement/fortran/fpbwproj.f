@@ -119,7 +119,8 @@ c$$$     $     convfunc(convOrigin,convOrigin,1,1)
                lambda = c/freq(ichan)
 
                if((achan.ge.1).and.(achan.le.nchan).and.
-     $              (weight(ichan,irow).gt.0.0)) then
+c     $              (weight(ichan,irow).gt.0.0)) then
+     $              (weight(ichan,irow).ne.0.0)) then
                   call spbwproj(uvw(1,irow), dphase(irow), 
      $                 freq(ichan), c, scale, offset, sampling, 
      $                 pos, loc, off, phasor)

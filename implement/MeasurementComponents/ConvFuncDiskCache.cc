@@ -110,6 +110,17 @@ namespace casa{
 				      +x.getMesg()));
       }
   }
+  ConvFuncDiskCache& ConvFuncDiskCache::operator=(const ConvFuncDiskCache& other)
+  {
+    paList = other.paList;
+    Sampling = other.Sampling;
+    XSup = other.XSup;
+    YSup = other.YSup;
+    Dir = other.Dir;
+    cfPrefix = other.cfPrefix;
+    aux = other.aux;
+    return *this;
+  };
   //
   //-------------------------------------------------------------------------
   // Write the conv. functions from the mem. cache to the disk cache.
@@ -234,6 +245,7 @@ namespace casa{
 					    Int& which,
 					    Float &pa)
   {
+    if (paList.nelements()==0) initCache();
     Int i,NPA=paList.nelements(); Bool paFound=False;
     Float iPA, dPA;
     dPA = vpSJ.getParAngleTolerance().getValue("rad");
@@ -351,6 +363,7 @@ namespace casa{
     if (Dir.length() == 0) return;
     ostringstream name;
     name << Dir << "/avgPB";
+    cout << name.str() << endl;
     try
       {
 	PagedImage<Float> tmp(name.str().c_str());

@@ -762,7 +762,7 @@ namespace casa{
     */
       if (telescopeName=="VLA")
       {
-	if ((freq >=1.0E9) && (freq <=2.0E9))
+	if ((freq >=0.6E9) && (freq <=2.5E9))
 	  return BeamCalc_VLA_L;
 	else if ((freq >=2.0E9) && (freq <=4.0E9))
 	  return BeamCalc_EVLA_S;

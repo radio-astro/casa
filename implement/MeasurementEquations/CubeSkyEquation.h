@@ -81,7 +81,13 @@ class CubeSkyEquation : public SkyEquation {
   void sliceCube(SubImage<Float>*& slice,ImageInterface<Float>& image, Int cubeSlice, Int nCubeSlice);
   //frequency range from image
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,
-		    Int slice, Int nslice);
+		  Int slice, Int nslice);
+
+  //Bool resizeWorkArrays(Bool add);
+  Bool calcVisWeights(const VisBuffer& vb, Int modelindex);
+  Bool modifySpecModelVis(VisBuffer& vb, Int modelindex);
+  Matrix<Float> visweights_p;
+
  private:
   // if skyjones changed in get or put we need to tell put or get respectively
   // about it

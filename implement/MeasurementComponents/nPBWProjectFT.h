@@ -166,28 +166,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initialize transform to Visibility plane using the image
     // as a template. The image is loaded and Fourier transformed.
     
-    void initializeToVis(ImageInterface<Complex>& image,
+    virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
     // This version returns the gridded vis...should be used in conjunction 
     // with the version of 'get' that needs the gridded visdata 
-    void initializeToVis(ImageInterface<Complex>& image,
+    virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb, Array<Complex>& griddedVis,
 			 Vector<Double>& uvscale);
     
     // Finalize transform to Visibility plane: flushes the image
     // cache and shows statistics if it is being used.
-    void finalizeToVis();
+    virtual void finalizeToVis();
     
     // Initialize transform to Sky plane: initializes the image
-    void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+    virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 			 const VisBuffer& vb);
     
     // Finalize transform to Sky plane: flushes the image
     // cache and shows statistics if it is being used. DOES NOT
     // DO THE FINAL TRANSFORM!
-    void finalizeToSky();
+    virtual void finalizeToSky();
     
-    void initVisBuffer(VisBuffer& vb, Type whichVBColumn);
+    virtual void initVisBuffer(VisBuffer& vb, Type whichVBColumn);
     void initVisBuffer(VisBuffer& vb, Type whichVBColumn, Int row);
 
     // Get actual coherence from grid by degridding
@@ -249,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Get the final image: do the Fourier transform and
     // grid-correct, then optionally normalize by the summed weights
-    ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+    virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
     
     // Get the final weights image
     void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
@@ -265,9 +265,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  Bool changed(const VisBuffer& vb) {return vpSJ->changed(vb,1);};
     Bool changed(const VisBuffer& vb) {return False;}
     
-    Int findPointingOffsets(const VisBuffer&, Array<Float>&, Array<Float>&,
-			    Bool Evaluate=True);
-    Int findPointingOffsets(const VisBuffer&, Cube<Float>&,
+    virtual Int findPointingOffsets(const VisBuffer&, Array<Float>&, Array<Float>&,
+				    Bool Evaluate=True);
+    virtual Int findPointingOffsets(const VisBuffer&, Cube<Float>&,
 			    Array<Float>&, Array<Float>&,
 			    Bool Evaluate=True);
     MDirection::Convert makeCoordinateMachine(const VisBuffer&,
@@ -285,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       TempImage<Float>& PB,
       TempImage<Float>& avgPB);
     */
-    void makeAveragePB0(const VisBuffer& vb, 
+    virtual void makeAveragePB0(const VisBuffer& vb, 
 		       const ImageInterface<Complex>& image,
 		       Int& polInUse,
 		       TempImage<Float>& avgPB);
@@ -352,11 +352,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool isTiled;
     
     // Array lattice
-    Lattice<Complex> * arrayLattice;
+    //Lattice<Complex> * arrayLattice;
+    CountedPtr<Lattice<Complex> > arrayLattice;
     
     // Lattice. For non-tiled gridding, this will point to arrayLattice,
     //  whereas for tiled gridding, this points to the image
-    Lattice<Complex>* lattice;
+    //Lattice<Complex>* lattice;
+    CountedPtr<Lattice<Complex> > lattice;
     
     Float maxAbsData;
     
@@ -463,8 +465,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //----------------------------------------------------------------------
     //
-    void normalizeAvgPB();
-    void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
+    virtual void normalizeAvgPB();
+    virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 		       Cube<Complex>& visdata,
 		       IPosition& s,
 		       //Cube<Complex>& gradVisAzData,
@@ -481,7 +483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		       Array<Float>& decoffsets,
 		       Double area,
 		       Int& doGrad,Int paIndex);
-    void runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
+    virtual void runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
 		       const Complex& visdata_p,
 		       IPosition& s,
 		       //Cube<Complex>& gradVisAzData,

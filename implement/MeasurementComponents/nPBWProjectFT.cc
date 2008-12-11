@@ -78,7 +78,7 @@
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
-//#include <synthesis/MeasurementComponents/Exp.h>
+#include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
@@ -207,15 +207,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   nPBWProjectFT& nPBWProjectFT::operator=(const nPBWProjectFT& other)
   {
     if(this!=&other) {
+    // params from FTMachine
+    nAntenna_p=other.nAntenna_p;
+    mLocation_p=other.mLocation_p;
+    distance_p=other.distance_p;
+    lastFieldId_p=other.lastFieldId_p;
+    lastMSId_p=other.lastMSId_p;
+    nx=other.nx;
+    ny=other.ny;
+    npol=other.npol;
+    nchan=other.nchan;
+    nvischan=other.nvischan;
+    nvispol=other.nvispol;
+    chanMap.resize();
+    chanMap=other.chanMap;
+    polMap.resize();
+    polMap=other.polMap;
+    doUVWRotation_p=other.doUVWRotation_p;
+    freqFrameValid_p=other.freqFrameValid_p;
+    selectedSpw_p.resize();
+    selectedSpw_p=other.selectedSpw_p;
+    multiChanMap_p=other.multiChanMap_p;
+    padding_p=other.padding_p;
+    nVisChan_p.resize();
+    nVisChan_p=other.nVisChan_p;
+    spectralCoord_p=other.spectralCoord_p;
+    doConversion_p.resize();
+    doConversion_p=other.doConversion_p;
+    nWPlanes_p=other.nWPlanes_p;
+    imageCache=other.imageCache;
+    cachesize=other.cachesize;
+    tilesize=other.tilesize;
+    if(other.gridder==0)
+      gridder=0;
+    else{
+      uvScale.resize();
+      uvOffset.resize();
+      uvScale=other.uvScale;
+      uvOffset=other.uvOffset;
+      gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
+						     uvScale, uvOffset,
+						     "SF");
+    }
+
+    isTiled=other.isTiled;
+    //lattice=other.lattice;
+    //arrayLattice=other.arrayLattice;
+    lattice=0;
+    arrayLattice=0;
+
+    maxAbsData=other.maxAbsData;
+    centerLoc=other.centerLoc;
+    offsetLoc=other.offsetLoc;
+    pointingToImage=other.pointingToImage;
+    usezero_p=other.usezero_p;
+    //machineName_p=other.machineName_p;
+   // wpConvFunc_p=other.wpConvFunc_p;
+
+    // params from FTMachine
+
+      //      image=other.image;
+      uvwMachine_p=other.uvwMachine_p;
       padding_p=other.padding_p;
       nWPlanes_p=other.nWPlanes_p;
       imageCache=other.imageCache;
       cachesize=other.cachesize;
       tilesize=other.tilesize;
-      gridder=other.gridder;
+      //gridder=other.gridder;
       isTiled=other.isTiled;
-      lattice=other.lattice;
-      arrayLattice=other.arrayLattice;
+      //      lattice=other.lattice;
+      //lattice=0;
+      //      arrayLattice=other.arrayLattice;
+      //arrayLattice=0;
       maxAbsData=other.maxAbsData;
       centerLoc=other.centerLoc;
       offsetLoc=other.offsetLoc;
@@ -248,6 +311,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSampling=other.convSampling;
       convSize=other.convSize;
       cachesize=other.cachesize;
+
+      resetPBs=other.resetPBs;
+      pbNormalized=other.pbNormalized;
+      currentCFPA=other.currentCFPA;
+      cfStokes=other.cfStokes;
+      Area=other.Area;
+
     };
     return *this;
   };
@@ -352,8 +422,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     wConvSize=max(1, nWPlanes_p);
     if (!convFuncCacheReady) 
       {
-	convSupport.resize(wConvSize,1,1,True);
-	convSupport=0;
+	if (convSupport.shape()(0) != wConvSize)
+	  {
+	    convSupport.resize(wConvSize,1,1,True);
+	    convSupport=0;
+	  }
       }
     
     uvScale.resize(3);
@@ -441,7 +514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   nPBWProjectFT::~nPBWProjectFT() 
   {
       if(imageCache) delete imageCache; imageCache=0;
-      if(arrayLattice) delete arrayLattice; arrayLattice=0;
+      //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       if(gridder) delete gridder; gridder=0;
       
       Int NCF=convFuncCache.nelements();
@@ -1312,15 +1385,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cfCache.loadAvgPB(avgPB);
 // 	cfCache.cacheConvFunction(PAIndex, pa, convFunc, coords, convSize,
 // 				  convSupport,convSampling);
-	cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
+	if (avgPB.shape()(0) != 0) cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
       }
 
     {
       IPosition avgPBShape(avgPB.shape()), skyShape(image.shape());
+      logIO() <<"Shapes : " << avgPBShape << " , " << skyShape << LogIO::POST;
       if ((avgPBShape(0) != skyShape(0)) && // X-axis
 	  (avgPBShape(1) != skyShape(1)) && // Y-axis
 	  (avgPBShape(2) != skyShape(2)))   // Poln-axis
-	throw(AipsError("Sky and/or polarization shape of the avgPB and the sky model do not match."));
+	logIO() << LogIO::WARN << "Sky and/or polarization shape of the avgPB and the sky model do not match." << LogIO::POST;
+	///throw(AipsError("Sky and/or polarization shape of the avgPB and the sky model do not match."));
     }
     Int lastPASlot = PAIndex;
 
@@ -1797,18 +1872,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initialize the maps for polarization and channel. These maps
     // translate visibility indices into image indices
     //
+
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
     nchan = image->shape()(3);
     
     if(image->shape().product()>cachesize) isTiled=True;
-    else                                   isTiled=False;
+    else isTiled=False;
     //
     // If we are memory-based then read the image in and create an
     // ArrayLattice otherwise just use the PagedImage
     //
-    if(isTiled)  lattice=image;
+
+    ////if(isTiled)  lattice=image;
+
+    isTiled=False;
+
+    if(isTiled){
+    	lattice=CountedPtr<Lattice<Complex> > (image, False);
+    }
     else 
       {
 	IPosition gridShape(4, nx, ny, npol, nchan);
@@ -1823,12 +1906,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	IPosition start(4, 0);
 	griddedData(blc, trc) = image->getSlice(start, image->shape());
 	
-	if(arrayLattice) delete arrayLattice; arrayLattice=0;
+	//if(arrayLattice) delete arrayLattice; arrayLattice=0;
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
       }
     
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     
     logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
     
@@ -1868,6 +1951,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
 	  LatticeIterator<Complex> lix(*lattice, lsx);
 	  
+      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
+
 	  if ((avgPB.shape()(0) != nx) && // X-axis
 	      (avgPB.shape()(1) != ny))// Y-axis
 	    throw(AipsError("Sky shape of the avgPB and the sky model do not match."));
@@ -1961,6 +2046,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Now do the FFT2D in place
     //
+    {
+      Array<Complex> buf;
+      Bool isRef = lattice->get(buf);
+      //cerr << "####Peak in the comp. image = " << max(buf) << endl;
+    }
     LatticeFFT::cfft2d(*lattice);
     
 //     {
@@ -2052,18 +2142,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	imageCache->flush();
 	image->set(Complex(0.0));
-	lattice=image;
+	//lattice=image;
+    	  lattice=CountedPtr<Lattice<Complex> > (image, False);
       }
     else 
       {
 	IPosition gridShape(4, nx, ny, npol, nchan);
 	griddedData.resize(gridShape);
 	griddedData=Complex(0.0);
-	if(arrayLattice) delete arrayLattice; arrayLattice=0;
+	//if(arrayLattice) delete arrayLattice; arrayLattice=0;
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
       }
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     //  resetPBs = True; 
     //pbNormalized = False;
     PAIndex = -1;
@@ -2636,6 +2727,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int npa=convSupport.shape()(2),actualConvSize;
     Int paIndex_Fortran = paIndex; 
     actualConvSize = convFunc.shape()(0);
+
+    //cout << "Conv support in PUT : " << convSupport << endl;
     
     IPosition shp=convSupport.shape();
     
@@ -3505,7 +3598,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ImageInterface<Complex>& nPBWProjectFT::getImage(Matrix<Float>& weights,
 						  Bool normalize) 
   {
-    AlwaysAssert(lattice, AipsError);
+    //AlwaysAssert(lattice, AipsError);
     AlwaysAssert(image, AipsError);
     
     logIO() << "#########getimage########" << LogIO::DEBUGGING << LogIO::POST;
@@ -3607,7 +3700,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  		      PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
  		      if ((abs(PBCorrection(i))) >= pbLimit_p)
 			lix.rwVectorCursor()(i) /= PBCorrection(i);
- 		      else if (!makingPSF)
+	 	      else if (!makingPSF)
  			lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 		    }
 
@@ -3662,7 +3755,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Do the copy
 	    //
 	    image->put(griddedData(blc, trc));
-	    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+	    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
 	    griddedData.resize(IPosition(1,0));
 	  }
       }
@@ -3804,7 +3897,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	init(); 
 	
 	if(isTiled) 
-	  lattice=image;
+    	  lattice=CountedPtr<Lattice<Complex> > (image, False);
+	  //lattice=image;
 	else 
 	  {
 	    //
@@ -3822,12 +3916,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition trc(blc+image->shape()-stride);
 	    griddedData(blc, trc) = image->getSlice(start, image->shape());
 	    
-	    if(arrayLattice) delete arrayLattice; arrayLattice=0;
+	    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
 	    arrayLattice = new ArrayLattice<Complex>(griddedData);
 	    lattice=arrayLattice;
 	  }
 	
-	AlwaysAssert(lattice, AipsError);
+	//AlwaysAssert(lattice, AipsError);
 	AlwaysAssert(image, AipsError);
       };
     return retval;

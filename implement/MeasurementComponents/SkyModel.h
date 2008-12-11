@@ -142,6 +142,15 @@ public:
   // Number of models contained
   virtual Int numberOfModels() = 0;
 
+  // MFS : Number of taylor terms per model
+  virtual Int numberOfTaylorTerms() = 0;
+
+  // MFS : Reference Frequency
+  virtual Double getReferenceFrequency() = 0;
+
+  // MFS : Index of Taylor term in array of nmodels x ntaylorterms
+  virtual Int getTaylorIndex(Int index=0) = 0;
+
   // Is this SkyModel solveable?
   virtual Bool isSolveable(Int model=0) = 0;
 

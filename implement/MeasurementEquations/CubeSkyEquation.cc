@@ -51,6 +51,7 @@
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
+#include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
 
@@ -85,15 +86,19 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
 
   Int nmod=sm_->numberOfModels();
 
+  //if(sm_->getAlgorithm()=="MSMFS") 
+  if(sm_->numberOfTaylorTerms()>1) 
+  {
+     nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
+  }
+  //cout << "Setting nmod in CubeSkyEqn to : " << nmod << endl;
+
   //case of component ft only
   if(nmod==0)
     nmod=1;
   
   ftm_p.resize(nmod, True);
   iftm_p.resize(nmod, True);
-  
-    
-
 
   //make a distinct ift_ as gridding and degridding can occur simultaneously
   if(ft.name() == "MosaicFT"){
@@ -102,8 +107,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     //For mosaic ...outlier fields get normal GridFT's
+    
     MPosition loc=ift_->getLocation();
-    for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
+    for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
       iftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
     }
@@ -120,7 +126,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     // For now have all the fields have WProjectFt machines....
     //but should be seperated between GridFT's for the outliers and 
     //WProject for the facets.
-    for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
+    for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ft_));
       iftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ift_));
       // Give each pair of FTMachine a convolution function set to share
@@ -134,35 +140,36 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     ift_=new GridBoth(static_cast<GridBoth &>(ft));
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
-    if(sm_->numberOfModels() > 1){
+    if(nmod > 1){
       throw(AipsError("No multifield with joint gridding allowed"));
     }
   }
   else if(ft.name()== "PBWProjectFT"){
-//     ft_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
-//     ift_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
-//     ftm_p[0]=ft_;
-//     iftm_p[0]=ift_;
-//     iftm_p[0] = ift_=&ft;
-    iftm_p[0] = ftm_p[0] = ft_ = ift_ = &ft;
-    if(sm_->numberOfModels() > 1){
-      throw(AipsError("No multifield with pb-projection allowed"));
+     ft_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
+     ift_=new nPBWProjectFT(static_cast<nPBWProjectFT &>(ft));
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+       throw(AipsError("No multifield with pb-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ft_));
+      iftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ift_));
     }
   }
   else {
-    //    ft_=new GridFT(static_cast<GridFT &>(ft));
+    //ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
     ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
     iftm_p[0]=ift_;
-    for (Int k=1; k < (sm_->numberOfModels()); ++k){ 
+    for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new GridFT(static_cast<GridFT &>(*ft_));
       iftm_p[k]=new GridFT(static_cast<GridFT &>(*ift_));
     }
   }
 
-  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
-  imPutSlice_p.resize(sm_->numberOfModels(), True, False);
-  weightSlice_p.resize(sm_->numberOfModels(), True, False);
+  imGetSlice_p.resize(nmod, True, False);
+  imPutSlice_p.resize(nmod, True, False);
+  weightSlice_p.resize(nmod, True, False);
 
 }
 
@@ -332,7 +339,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
   
 
   Int nmodels=psfs.nelements();
-  LogIO os(LogOrigin("SkyEquation", "makeApproxPSF"));
+  LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
   ft_->setNoPadding(noModelCol_p);
   isPSFWork_p= True; // avoid PB correction etc for PSF estimation
   Bool doPSF=True;
@@ -362,6 +369,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     }
   }
 
+  
   Int nCubeSlice=1;
   isLargeCube(sm_->cImage(0), nCubeSlice);
   for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
@@ -410,7 +418,12 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     
     }
     else{
-      throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with a peak  being 0 or lesser !"));
+      if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+        os  << "PSF calculation resulted in a PSF with a peak  being 0 or lesser." << LogIO::POST;
+      }
+      else{
+	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with a peak  being 0 or lesser !"));
+      }
 
     }
   }
@@ -612,7 +625,8 @@ void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type
   Int nRow=vb.nRow();
   internalChangesPut_p=False;  // Does this VB change inside itself?
   firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
-  if(ftm_p[0]->name() != "MosaicFT"){
+  if((ftm_p[0]->name() != "MosaicFT") && 
+     (ftm_p[0]->name() != "PBWProjectFT")) {
     changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
   }
   //First ft machine change should be indicative
@@ -635,7 +649,14 @@ void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type
 	initializePutSlice(vb, cubeSlice, nCubeSlice);
       }
       for (Int model=0; model<sm_->numberOfModels(); ++model){
-	iftm_p[model]->put(vb, row, dopsf, col);
+	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	  calcVisWeights(vb,model);
+	  iftm_p[model]->put(vb, row, dopsf, col, visweights_p);
+	}
+	else{
+	  iftm_p[model]->put(vb, row, dopsf, col);
+	}
       }
     }
   }
@@ -652,12 +673,26 @@ void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type
     initializePutSlice(vb, cubeSlice, nCubeSlice);
     isBeginingOfSkyJonesCache_p=False;
     for (Int model=0; model<sm_->numberOfModels(); ++model){
-      iftm_p[model]->put(vb, -1, dopsf,col);
+	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	  calcVisWeights(vb,model);
+	  iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
+	}
+	else{
+	  iftm_p[model]->put(vb, -1, dopsf, col);
+	}
     }
   }
   else {
     for (Int model=0; model<sm_->numberOfModels(); ++model){
-      iftm_p[model]->put(vb, -1, dopsf, col);
+	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	  calcVisWeights(vb,model);
+	  iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
+	}
+	else{
+	  iftm_p[model]->put(vb, -1, dopsf, col);
+	}
     }
   }
   
@@ -715,6 +750,7 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int row, 
 					   Bool incremental, Int cubeSlice, 
 					   Int nCubeSlice){
+  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
      //the different apply...jones use ft_ and ift_
     ft_=&(*ftm_p[model]);
@@ -755,7 +791,8 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //slice=0;
 
   if(typeOfSlice==0){
-    Double memoryMB=HostInfo::memoryFree()/1024.0/(4.0*(sm_->numberOfModels()));
+    //Double memoryMB=HostInfo::memoryFree()/1024.0/(4.0*(sm_->numberOfModels()));
+    Double memoryMB=HostInfo::memoryTotal()/1024.0/(4.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
@@ -805,7 +842,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   // avoid this if possible.
   internalChangesGet_p=False;  // Does this VB change inside itself?
   firstOneChangesGet_p=False;  // Has this VB changed from the previous one?
-  if(ftm_p[0]->name()!="MosaicFT"){
+  if((ftm_p[0]->name()!="MosaicFT") &&
+     (ftm_p[0]->name() != "PBWProjectFT")) {
     changedSkyJonesLogic(result, firstOneChangesGet_p, internalChangesGet_p);
   } 
   if(internalChangesGet_p || internalChangesPut_p) {
@@ -824,6 +862,10 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       if(incremental || (nmodels > 1)){
 	for (Int model=0; model < nmodels; ++model){
 	  ftm_p[model]->get(vb,row);
+	  //if(sm_->getAlgorithm()=="MSMFS"){/* MFS */
+          if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	    modifySpecModelVis(vb,model);
+	  }
 	  refvb.reference(vb.modelVisCube().xyPlane(row));
 	  refres.reference(result.modelVisCube().xyPlane(row));
 	  refres += refvb;
@@ -846,6 +888,10 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     if(incremental || (nmodels > 1)){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
+	//if(sm_->getAlgorithm()=="MSMFS"){/* MFS */
+        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	  modifySpecModelVis(vb,model);
+	}
 	result.modelVisCube()+=vb.modelVisCube();
       }
     }
@@ -856,6 +902,10 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     if(incremental || (nmodels >1)){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
+	//if(sm_->getAlgorithm()=="MSMFS")/* MFS */
+        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	  modifySpecModelVis(vb,model);
+	}
 	result.modelVisCube()+=vb.modelVisCube();
       }
     }
@@ -908,6 +958,63 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     
   }
 
+  /* MFSCode */
+  Bool CubeSkyEquation::calcVisWeights(const VisBuffer& vb, Int modelindex)
+  { 
+    Int taylor = sm_->getTaylorIndex(modelindex);
 
+    // make sure shape of visweights_p is correct - same as vb.imagingWeight()
+    if( taylor == 0 ) 
+    {
+       visweights_p = vb.imagingWeight();
+    }
+    else
+    {
+       Float freq=0.0,mulfactor=1.0;
+       Vector<Double> selfreqlist(vb.frequency());
+       Double reffreq = sm_->getReferenceFrequency();
+    
+       for (Int row=0; row<vb.nRow(); row++) 
+       for (Int chn=0; chn<vb.nChannel(); chn++) 
+       {
+	    freq = selfreqlist(IPosition(1,chn));
+	    mulfactor = ((freq-reffreq)/reffreq);
+	    
+	    visweights_p(chn,row) = (vb.imagingWeight())(chn,row) * pow(mulfactor,taylor);
+	    
+       }
+    }
+
+    return True;
+  }
+	  
+  /* MFSCode */
+  Bool CubeSkyEquation::modifySpecModelVis(VisBuffer& vb, Int modelindex)
+  { 
+    Int taylor = sm_->getTaylorIndex(modelindex);
+    
+    if( taylor == 0 ){ return True; }
+    else
+    {
+       Float freq=0.0,mulfactor=1.0;
+       Vector<Double> selfreqlist(vb.frequency());
+       Double reffreq = sm_->getReferenceFrequency();
+//       Cube<Complex> modelvis = vb.modelVisCube();
+
+       for (uInt pol=0; pol<(vb.modelVisCube()).shape()[0]; pol++) 
+       for (uInt chn=0; chn<vb.nChannel(); chn++) 
+       for (uInt row=0; row<vb.nRow(); row++) 
+       {
+	    freq = selfreqlist(IPosition(1,chn));
+	    mulfactor = ((freq-reffreq)/reffreq);
+	    
+//	    modelvis(pol,chn,row) *= pow(mulfactor,taylor);
+	    (vb.modelVisCube())(pol,chn,row) *= pow(mulfactor,taylor);
+       }
+      // vb.modelVisCube() = modelvis;
+    }
+
+    return True;
+  }
 
 } //# NAMESPACE CASA - END

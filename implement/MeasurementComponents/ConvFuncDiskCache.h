@@ -108,6 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     ConvFuncDiskCache():paList(),XSup(),YSup(), cfPrefix("CF"), aux("aux.dat") {};
+    ConvFuncDiskCache& operator=(const ConvFuncDiskCache& other);
     ~ConvFuncDiskCache() {};
     void setCacheDir(const char *dir) {Dir = dir;}
     void initCache();

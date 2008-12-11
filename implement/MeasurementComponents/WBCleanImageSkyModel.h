@@ -33,6 +33,7 @@
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <lattices/Lattices/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/MultiTermLatticeCleaner.h>
 #include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -92,145 +93,74 @@ public:
 
   // Create a WBCleanImageSkyModel - default scale size = 1 pixel
   WBCleanImageSkyModel();
-  WBCleanImageSkyModel(const Int ntaylor,const Int nscales);
-  WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>& userScaleSizes);
+  WBCleanImageSkyModel(const Int ntaylor,const Int nscales,const Double reffreq);
+  WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>& userScaleSizes, const Double reffreq);
 
   // destructor
   ~WBCleanImageSkyModel();
 
   // Solve for this SkyModel
-   Bool solve (SkyEquation& se);
-  Bool solveResiduals(SkyEquation& se, Float &maxres, IPosition &maxip);
+  Bool solve (SkyEquation& se);
   Bool copyLatToImInt(TempLattice<Float>& lat, ImageInterface<Float>& im);
   Bool copyImIntToLat(TempLattice<Float>& lat, ImageInterface<Float>& im);
- 
-  // Complex image (needed for e.g. RR,RL,LR,LL)
-//   ImageInterface<Complex>& cImage1(Int model=0);
-//   ImageInterface<Float>& image1(Int model=0);
-//   ImageInterface<Float>& deltaImage1(Int model=0);
-//   ImageInterface<Float>& gS1(Int model=0);
-//   ImageInterface<Float>& PSF1(Int model=0);
-   
-   ImageInterface<Float>& PSFspec(Int model=0, Int taylor=1);
-   ImageInterface<Float>& gSspec(Int model=0, Int taylor=1);
-   ImageInterface<Complex>& cImagespec(Int model=0, Int taylor=1);
-   ImageInterface<Float>& imagespec(Int model=0, Int taylor=1);
-   ImageInterface<Float>& deltaImagespec(Int model=0, Int taylor=1);
   
+//  Int nmodels_p; // Number of image models = nfields * ntaylor
   Int ntaylor_p; // Number of terms in the Taylor expansion to use.
+//  Int nfields_p; // Number of image fields/pointings.
   Int nscales_p; // Number of scales to use for the multiscale part.
   
-  Float useRefFrequency_p;
+  Double refFrequency_p;
 
-//  PtrBlock<ImageInterface<Complex> * > cimage1_p;
-//  PtrBlock<ImageInterface<Float> * > image1_p;
-//  PtrBlock<TempImage<Float> * > deltaimage1_p;
-//  PtrBlock<TempImage<Float> * > gS1_p;
-//  PtrBlock<TempImage<Float> * > psf1_p;
-  
-  PtrBlock<TempImage<Float>* > psfspec_p;
-  PtrBlock<TempImage<Float>* > gSspec_p;
-  PtrBlock<ImageInterface<Complex> * > cimagespec_p;
-  PtrBlock<ImageInterface<Float> * > imagespec_p;
-  PtrBlock<TempImage<Float>* > deltaimagespec_p;
+//   Int add(ImageInterface<Float>& iimage, const Int maxNumXfr=100);
+//   Bool addResidual(Int thismodel, ImageInterface<Float>& iresidual);
+//   void initializeGradients();
+   Bool solveResiduals(SkyEquation& se);
+   Bool makeNewtonRaphsonStep(SkyEquation& se, Bool incremental=False, Bool modelToMS=False);
 
-   //Int add(ImageInterface<Float>& image,ImageInterface<Float>& image1, const Int maxNumXfr=100);
-   Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
-   void initializeGradients();
+   Int numberOfTaylorTerms(){return ntaylor_p;};
+   Double getReferenceFrequency(){return refFrequency_p;};
+
+   // Major axis for ordering : Taylor
+   Int getModelIndex(uInt model, uInt taylor){return taylor * (nfields_p) + (model);};
+   Int getTaylorIndex(uInt index){return Int(index/nfields_p);};
+   Int getFieldIndex(uInt index){return index%nfields_p;};
+
+   // Major axis for ordering : Models
+   //inline Int getModelIndex(uInt model, uInt taylor){return model * (ntaylor_p) + (taylor);};
+   //inline Int getTaylorIndex(uInt index){return index%ntaylor_p;};
+   //inline Int getModelIndex(uInt index){return index/ntaylor_p;};
  
    Vector<String> imageNames;
    
 private:
-  // Dirty image and image mask
-  TempLattice<Float>* dirty_p;
-  TempLattice<Complex>* dirtyFT_p;
-  TempLattice<Float>* mask_p;
-  TempLattice<Float>* fftmask_p;
-  
+
+  PtrBlock<MultiTermLatticeCleaner<Float>* > lc_p;
+   
   Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
   Vector<Float> scaleBias_p; // Vector of scale biases !!
-  Vector<Float> totalScaleFlux_p; // Vector of total scale fluxes.
-  Vector<Float> totalTaylorFlux_p; // Vector of total flux in each taylor term.
-  Float weightScaleFactor_p;
   Float maxPsf_p;
 
   IPosition gip,imshape;
-  Bool donePSF_p,donePSP_p,doneCONV_p;
-  Int nx,ny,npol_p,nchan;
+  Bool donePSF_p;
+  Int nx,ny;
   
-  // h(s) [nx,ny,nscales]
-  PtrBlock<TempLattice<Float>* > vecScales_p; 
-  PtrBlock<TempLattice<Complex>* > vecScalesFT_p; 
-  
-  // B_k  [nx,ny,ntaylor]
-  PtrBlock<TempLattice<Float>* > vecPsf_p; 
-  PtrBlock<TempLattice<Complex>* > vecPsfFT_p; 
- 
-  // M_k [nx,ny,ntaylor]
-  //PtrBlock<TempLattice<Float>* > vecModel_p; 
-  
-  // A_{smn} = B_{sm} * B{sn} [nx,ny,ntaylor,ntaylor,nscales,nscales]
-  // A_{s1s2mn} = B_{s1m} * B{s2n} [nx,ny,ntaylor,ntaylor,nscales,nscales]
-  PtrBlock<TempLattice<Float>* > cubeA_p; 
-  PtrBlock<LatticeIterator<Float>* > itercubeA_p;
-  
-  // R_{sk} = I_D * B_{sk} [nx,ny,ntaylor,nscales]
-  PtrBlock<TempLattice<Float>* > matR_p; 
-  PtrBlock<LatticeIterator<Float>* > itermatR_p;
-  
-  // a_{sk} = Solution vectors. [nx,ny,ntaylor,nscales]
-  PtrBlock<TempLattice<Float>* > matCoeffs_p; 
-  PtrBlock<LatticeIterator<Float>* > itermatCoeffs_p;
-
   // Memory to be allocated per TempLattice
   Double memoryMB_p;
-  
-  // Solve [A][Coeffs] = [I_D * B]
-  // Shape of A : [ntaylor,ntaylor]
-  PtrBlock<Matrix<Double>*> matA_p;    // 2D matrix to be inverted.
-  PtrBlock<Matrix<Double>*> invMatA_p; // Inverse of matA_p;
-
-  TempLattice<Complex>* cWork_p;
-  TempLattice<Float>* tWork_p;
-  LatticeIterator<Float>* itertWork_p;
-  
-  LatticeExprNode len_p;
-
-  Float lambda_p;
   
   LogIO os;
   
   void initVars();
   
-  Int numberOfTempLattices(Int nscales,Int ntaylor);
-  Int manageMemory(Bool allocate);
   Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
   Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
-//  Float modifyWeights(SkyEquation& se, Float power, Bool direction);
+  Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
 
-  Int makeScale(Lattice<Float>& scale, const Float& scaleSize);
-  Float spheroidal(Float nu);
+  Bool resizeWorkArrays(Int length);
   
   Int makeSpectralPSFs(SkyEquation& se);
   Bool findMaxAbsLattice(const TempLattice<Float>& masklat,const Lattice<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs, Bool flip=False);
   Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
-  Int calcWeightScaleFactor(SkyEquation& se);
-  Int setupMasks();
-  Int setupBlobs();
-  Int readInModels();
-  Int computeFluxLimit(Float &fluxlimit, Float threshold);
-  
-  Int computeMatrixA();
-  Int computeRHS();
-  Int solveMatrixEqn(Int scale);
- 
-  Int computePenaltyFunction(Int scale, Int totaliters, Float &loopgain, Bool choosespec);
- 
-  Int updateSolution(IPosition globalmaxpos, Int maxscaleindex, Float loopgain);
-  
-  Int IND2(Int taylor,Int scale);
-  Int IND4(Int taylor1, Int taylor2, Int scale1, Int scale2);
   
   Timer tmr1,tmr2;
   Int adbg;
