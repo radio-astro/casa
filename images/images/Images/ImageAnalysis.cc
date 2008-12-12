@@ -6534,7 +6534,11 @@ ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite, const 
   bool rstat(false);
   *itsLog << LogOrigin("ImageAnalysis", "maketestimage");
   try {
+#ifndef CASA_USECASAPATH
     String var (EnvironmentVariable::get("AIPSPATH"));
+#else
+    String var (EnvironmentVariable::get("CASAPATH"));
+#endif
     if (!var.empty()) {
       String fields[4];
       Int num = split(var, fields, 4, String(" "));
@@ -6552,13 +6556,24 @@ ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite, const 
 					     whichhdu,zeroblanks,overwrite,
 					     oldparser);
       } else {
+#ifndef CASA_USECASAPATH
 	*itsLog << LogIO::WARN
 		<< "Environment variable AIPSPATH=["
 		<< var << "] malformed." << LogIO::POST;
+#else
+	*itsLog << LogIO::WARN
+		<< "Environment variable CASAPATH=["
+		<< var << "] malformed." << LogIO::POST;
+#endif
       };
     } else {
+#ifndef CASA_USECASAPATH
       *itsLog << LogIO::WARN << "Environment variable AIPSPATH undefined."
 	      << LogIO::POST;
+#else
+      *itsLog << LogIO::WARN << "Environment variable CASAPATH undefined."
+	      << LogIO::POST;
+#endif
     }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
