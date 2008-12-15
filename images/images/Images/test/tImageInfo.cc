@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tImageInfo.cc 19154 2005-12-12 11:24:48Z nkilleen $
+//# $Id$
 
 #include <images/Images/ImageInfo.h>
 
@@ -155,8 +155,6 @@ try {
     Vector<String> error2;
     AlwaysAssertExit(mii4.fromFITS(error2, header));
     equal(mii4, mii3);
-//    AlwaysAssertExit(mii4.fromFITSOld(error2, header));
-//    equal(mii4, mii3);
 //
 // output stream
 //

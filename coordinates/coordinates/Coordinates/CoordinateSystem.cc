@@ -2654,22 +2654,6 @@ Bool CoordinateSystem::toFITSHeader(RecordInterface &header,
 
 
 
-
-// Bool CoordinateSystem::fromFITSHeaderOld(Int& stokesFITSValue, 
-//                                       CoordinateSystem &cSysOut, 
-// 				      const RecordInterface &header,
-//                                       const IPosition& shape,
-// 				      Bool oneRelative,
-// 				      Char prefix)
-// {
-//     FITSCoordinateUtil fcu;
-//     return fcu.fromFITSHeaderOld (stokesFITSValue, cSysOut, header,
-//                                shape, oneRelative, prefix);
-// }
-
-
-
-
 Bool CoordinateSystem::fromFITSHeader (Int& stokesFITSValue, 
                                        CoordinateSystem& cSysOut, 
                                        RecordInterface& recHeader,

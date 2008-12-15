@@ -134,13 +134,6 @@ public:
                         const Vector<String>& header,
                         const IPosition& shape,
                         uInt which=0) const;
-// Old version
-//    Bool fromFITSHeaderOld(Int& stokesFITSValue,
-//                        CoordinateSystem &coordsys,
-//                        const RecordInterface &header,
-//                        const IPosition& shape,
-//                        Bool oneRelative,
-//                        Char prefix = 'c');
     //</group>
 
 

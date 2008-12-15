@@ -79,7 +79,7 @@ class ImageAnalysis
     Bool imagefromfits(const String& outfile, const String& infile, 
 		       const Int whichrep = 0, const Int whichhdu = 0, 
 		       const Bool zeroblanks = False, 
-		       const Bool overwrite = False, const Bool old = False);
+		       const Bool overwrite = False);
 
     Bool imagefromforeign(const String& outfile, const String& infile, 
 			  const String& format, const Bool overwrite = False);
@@ -451,8 +451,7 @@ class ImageAnalysis
 					     const Int whichrep = 0,
 					     const Int whichhdu = 0, 
 					     const Bool zeroblanks = False, 
-					     const Bool overwrite = False,
-					     const Bool old = False);
+					     const Bool overwrite = False);
 
     Record* echo(Record& v, const Bool godeep = False);
 

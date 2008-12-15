@@ -55,7 +55,6 @@ int main(int argc, char **argv)
     inp.create("overwrite", "True", "Allow output to be overwritten?",
                 "Bool");
     inp.create("zero", "False", "Zero blanks?", "Bool");
-    //    inp.create("old", "False", "Old FITS parser?", "Bool");
     inp.readArguments(argc, argv);
 
     Bool overwrite=inp.getBool("overwrite");
@@ -73,18 +72,10 @@ int main(int argc, char **argv)
     Bool ok=False;
     uInt whichRep = 0;
     uInt whichHDU = 0;
-//    if (oldParser) {
-//       ok = ImageFITSConverter::FITSToImageOld(pOutImage, error, outFile,
-//                                              fitsFile, whichHDU,
-//                                              HostInfo::memoryFree()/1024,
-//                                              overwrite, zeroBlanks);
-//    } else {
     ok = ImageFITSConverter::FITSToImage(pOutImage, error, outFile,
 					 fitsFile, whichRep, whichHDU, 
 					 HostInfo::memoryFree()/1024,
 					 overwrite, zeroBlanks);
-//    }
-//
     LogIO os(LogOrigin("fits2image", "main()", WHERE));
     if (!ok) {
         os << LogIO::SEVERE << error << LogIO::EXCEPTION;

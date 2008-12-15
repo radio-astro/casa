@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CoordinateSystem.h 19816 2006-12-22 05:00:30Z gvandiep $
+//# $Id$
 
 
 #ifndef COORDINATES_COORDINATESYSTEM_H
@@ -742,13 +742,6 @@ public:
 			       const Vector<String>& header,
                                const IPosition& shape,
                                uInt which=0);
-// Old version
-//    static Bool fromFITSHeaderOld(Int& stokesFITSValue, 
-//                               CoordinateSystem &coordsys, 
-//			       const RecordInterface &header,
-//                               const IPosition& shape,
-//			       Bool oneRelative,
-//			       Char prefix = 'c');
 			       
 
 // List all header information.  By default, the reference
