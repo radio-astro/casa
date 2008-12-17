@@ -5263,18 +5263,22 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
 	    //
+	    Float cutoffval=minPB_p*minPB_p;
+	    if(ft_p->name()!="MosaicFT")
+	      cutoffval=minPB_p;
+
 	    if (sm_p->doFluxScale(thismodel)) {
 	      if(scaleType_p=="NONE"){
-		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
 		restored.copyData(le);
-		LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+		LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
 
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < minPB_p*minPB_p, 
+	      LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 					  False, True));
 	      ImageRegion outreg=restored.makeMask("mask0", False, True);
 	      LCRegion& outmask=outreg.asMask();
@@ -5323,6 +5327,18 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
         if (sm_p->doFluxScale(thismodel)) {
 	  answer = True;
           fluxScale.copyData(sm_p->fluxScale(thismodel));
+	  Float cutoffval=minPB_p*minPB_p;
+	  if(ft_p->name()!="MosaicFT")
+	    cutoffval=minPB_p;
+	  LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
+				       False, True));
+	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);
+	  LCRegion& outmask=outreg.asMask();
+	  outmask.copyData(lemask);
+	  fluxScale.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
+	  fluxScale.setDefaultMask("mask0");
+
+
         } else {
 	  answer = False;
           os << "No flux scale available (or required) for model " << thismodel << LogIO::POST;
@@ -8256,16 +8272,18 @@ void Imager::makeVisSet(VisSet* & vs, MeasurementSet& ms,
     sort[1] = MS::ARRAY_ID;
     sort[2] = MS::DATA_DESC_ID;
     sort[3] = MS::TIME;
+ 
   }
   //else use default sort order
-
+  else{
+    sort.resize(4);
+    sort[0] = MS::ARRAY_ID;
+    sort[1] = MS::FIELD_ID;
+    sort[2] = MS::DATA_DESC_ID;
+    sort[3] = MS::TIME;
+  }
   Matrix<Int> noselection;
   Double timeInterval=0;
-  sort.resize(4);
-  sort[0] = MS::ARRAY_ID;
-  sort[1] = MS::FIELD_ID;
-  sort[2] = MS::DATA_DESC_ID;
-  sort[3] = MS::TIME;
   vs = new VisSet(ms,sort,noselection,timeInterval,compress);
 
 }
@@ -8282,14 +8300,17 @@ void Imager::makeVisSet(MeasurementSet& ms,
     sort[3] = MS::TIME;
   }
   //else use default sort order
-
+  else{
+  
+    sort.resize(4);
+    sort[0] = MS::ARRAY_ID;
+    sort[1] = MS::FIELD_ID;
+    sort[2] = MS::DATA_DESC_ID;
+    sort[3] = MS::TIME;
+  }
   Matrix<Int> noselection;
   Double timeInterval=0;
-  sort.resize(4);
-  sort[0] = MS::ARRAY_ID;
-  sort[1] = MS::FIELD_ID;
-  sort[2] = MS::DATA_DESC_ID;
-  sort[3] = MS::TIME;
+
   VisSet vs(ms,sort,noselection,timeInterval,compress);
 
 }

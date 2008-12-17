@@ -1193,6 +1193,7 @@ void SkyEquation::finalizePut(const VisBuffer& vb, Int model, Bool& isCopy) {
   applySkyJonesSquare(vb, -1, sm_->weight(model), sm_->work(model),
 		      sm_->ggS(model));
 
+
   // 4. Finally, we add the statistics
   sm_->addStatistics(sumwt, chisq);
 }
@@ -1471,7 +1472,7 @@ void SkyEquation::applySkyJonesSquare(const VisBuffer& vb, Int row,
   // of the weight.
   ift_->getWeightImage(work, weights);
    // Apply SkyJones as needed
-  if(!isPSFWork_p && (ft_->name() != "MosaicFT") ){
+  if((ft_->name() != "MosaicFT") ){
     if(ej_) ej_->applySquare(work,work,vb,row);
     if(dj_) dj_->applySquare(work,work,vb,row);
     if(tj_) tj_->applySquare(work,work,vb,row);
@@ -1502,41 +1503,22 @@ Bool SkyEquation::ok() {
 
 void SkyEquation::scaleImage(Int model)
 {
-  if ((scaleType_p != "NONE" && sm_->doFluxScale(model)) 
-      //|| (ft_->name() == "MosaicFT") ) {
-      ){
-    LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/(sm_->fluxScale(model))) );
-      sm_->image(model).copyData(latticeExpr);
-    }  
-  else if(ft_->name() == "MosaicFT"){
+  if (sm_->doFluxScale(model)){  
+    LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/((sm_->fluxScale(model)))) );
+    sm_->image(model).copyData(latticeExpr);
     
-    sm_->image(model).copyData( (LatticeExpr<Float>)
-				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
-				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
-
   }
-
 };
 
 void SkyEquation::unScaleImage(Int model)
 {
 
-    if ( (scaleType_p != "NONE" && sm_->doFluxScale(model)) 
-	 ){/*
-      sm_->image(model).copyData( (LatticeExpr<Float>)
-				  (iif(sm_->fluxScale(model) <= (0.0), 0.0,
-				       ((sm_->image(model))/(sm_->fluxScale(model))) )) );
-	   */
-      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
-      sm_->image(model).copyData(latticeExpr);
-      
-    }
-    else if(ft_->name() == "MosaicFT"){
-     
-      LatticeExpr<Float> latticeExpr( sm_->image(model) * sm_->fluxScale(model) );
-      sm_->image(model).copyData(latticeExpr);
-    }
+  if ( sm_->doFluxScale(model)){
 
+    LatticeExpr<Float> latticeExpr( sm_->image(model) * (sm_->fluxScale(model)) );
+    sm_->image(model).copyData(latticeExpr);
+        
+  }
 };
 
 void SkyEquation::scaleImage(Int model, Bool incremental)
@@ -1559,42 +1541,20 @@ void SkyEquation::unScaleImage(Int model, Bool incremental)
 
 void SkyEquation::scaleDeltaImage(Int model)
 {
-    if ((scaleType_p != "NONE" && sm_->doFluxScale(model) ) 
-	){
-      /*
-      LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
-      sm_->deltaImage(model).copyData(latticeExpr);
-      */
-      sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
-				       (iif(sm_->fluxScale(model) <= (0.0), 0.0,
-					    ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
-    }
-    else if(ft_->name() == "MosaicFT"){
-      sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
-				       (iif(sm_->fluxScale(model) <= (0.0), 0.0,
-					    ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
-
-    }
-    
+  if ((sm_->doFluxScale(model))){
+    sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
+				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
+					  ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
+  }
   
 };
 
 void SkyEquation::unScaleDeltaImage(Int model)
 {
-    if ( (scaleType_p != "NONE" && sm_->doFluxScale(model))
-	 ){/*
-    sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
-				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
-				      ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
-	   */
-       LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
-      sm_->deltaImage(model).copyData(latticeExpr);
-    }
-    else if(ft_->name() == "MosaicFT"){
-      LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * sm_->fluxScale(model) );
-      sm_->deltaImage(model).copyData(latticeExpr);
-    }
-  
+  if ( (sm_->doFluxScale(model))){
+    LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * (sm_->fluxScale(model)) );
+    sm_->deltaImage(model).copyData(latticeExpr);
+  } 
 };
 
 void SkyEquation::fixImageScale()
@@ -1615,50 +1575,71 @@ void SkyEquation::fixImageScale()
       ggSMax =  max(ggSMax,LEN.getFloat());
     }
 
-    Float ggSMin1 = ggSMax * constPB_p * constPB_p;
-    Float ggSMin2 = ggSMax * minPB_p * minPB_p;
+    Float ggSMin1;
+    Float ggSMin2;
+    
+    ggSMin1 = ggSMax * constPB_p * constPB_p;
+    ggSMin2 = ggSMax * minPB_p * minPB_p;
+ 
 
-   
+    /*Don't print this for now
     if (scaleType_p == "SAULT") {
 	os << "Using SAULT image plane weighting" << LogIO::POST;
     }
     else {
 	os << "Using No image plane weighting" << LogIO::POST;
     }
+    */
 	
     for (Int model=0;model<sm_->numberOfModels();model++) {
-      
-      if (scaleType_p == "SAULT") {
-	sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
-	// Adjust flux scale to account for ggS being truncated at ggSMin1
-	// Below ggSMin2, set flux scale to 0.0
-	// FluxScale * image => true brightness distribution, but
-	// noise increases at edge.
-	// if ggS < ggSMin2, set to Zero;
-	// if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
-	// if ggS > ggSMin1, set to 1.0
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					(iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					     ((sm_->ggS(model))/ggSMin1) )) );
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					(iif(sm_->ggS(model) > (ggSMin1), 1.0,
-					     (sm_->fluxScale(model)) )) );
-	// truncate ggS at ggSMin1
-	sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				  (iif(sm_->ggS(model) < (ggSMin1), ggSMin1, 
-				       sm_->ggS(model)) )
-				  );
-      } else {
+      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+      if ((ft_->name()!="MosaicFT")) {
+	if(scaleType_p=="SAULT"){
+	  
+	  // Adjust flux scale to account for ggS being truncated at ggSMin1
+	  // Below ggSMin2, set flux scale to 0.0
+	  // FluxScale * image => true brightness distribution, but
+	  // noise increases at edge.
+	  // if ggS < ggSMin2, set to Zero;
+	  // if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
+	  // if ggS > ggSMin1, set to 1.0
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))/ggSMin1) )) );
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) > (ggSMin1), 1.0,
+					       (sm_->fluxScale(model)) )) );
+	  // truncate ggS at ggSMin1
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+				    (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
+					 sm_->ggS(model)) )
+				    );
+	}
 
+	else{
+
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))/ggSMax) )) );
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))*ggSMax) )) );
+
+	}
+
+      } else {
+	/*
 	if(ft_->name() != "MosaicFT"){
 	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 1.0 );
 	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				    (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
-					 sm_->ggS(model)) ));
+	  			    (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
+	  				 sm_->ggS(model)) ));
+	 
+
 	}
 	else{
 
-	  
+	*/
 	 
 
 	  Int nXX=sm_->ggS(model).shape()(0);
@@ -1690,13 +1671,29 @@ void SkyEquation::fixImageScale()
 		ggSSub.copyData( (LatticeExpr<Float>) 
 				 (iif(ggSSub < (ggSMin2), 0.0, 
 				      planeMax) ));
+
+
 	      }
 	    }
 	  }
 	  
-	}	
+	  //}	
       }
+    
+      //because for usual ft machines a applySJoneInv is done on the gS
+      //in the finalizeput stage...need to understand if its necessary
+      /*need to understand that square business
+      if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
+	sm_->gS(model).copyData( (LatticeExpr<Float>) 
+				 (iif(sm_->fluxScale(model) > 0.0, 
+				      ((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
+
+
+      }
+      */
+      ///
     }
+
   }
 }
 

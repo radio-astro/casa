@@ -271,7 +271,7 @@ void  CubeSkyEquation::predict(Bool incremental) {
     ft_=&(*ftm_p[model]);
     unScaleImage(model, incremental);
   }
-  ft_==&(*ftm_p[0]);
+  ft_=&(*ftm_p[0]);
 
   //lets return original selection back to iterator
   if(changedVI)
@@ -403,9 +403,39 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
   sm_->finalizeGradients();
   fixImageScale();
   for(Int model=0; model < nmodels; ++model){
-    LatticeExpr<Float> le(iif(sm_->ggS(model)>(0.0),
-			      (sm_->gS(model)/sm_->ggS(model)), 0.0));
-    psfs[model]->copyData(le);
+    {
+      //Normalize the gS image
+      Int nXX=sm_->ggS(model).shape()(0);
+      Int nYY=sm_->ggS(model).shape()(1);
+      Int npola= sm_->ggS(model).shape()(2);
+      Int nchana= sm_->ggS(model).shape()(3);
+      IPosition blc(4,nXX, nYY, npola, nchana);
+      IPosition trc(4, nXX, nYY, npola, nchana);
+      blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
+      //max weights per plane
+      for (Int j=0; j < npola; ++j){
+	for (Int k=0; k < nchana ; ++k){
+	  
+	  blc(2)=j; trc(2)=j;
+	  blc(3)=k; trc(3)=k;
+	  Slicer sl(blc, trc, Slicer::endIsLast);
+	  SubImage<Float> gSSub(sm_->gS(model), sl, False);
+	  SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
+	  SubImage<Float> psfSub(*(psfs[model]), sl, True);
+	  Float planeMax;
+	  LatticeExprNode LEN = max( ggSSub );
+	  planeMax =  LEN.getFloat();
+	  if(planeMax !=0){
+	    psfSub.copyData( (LatticeExpr<Float>) 
+			     (iif(ggSSub > (0.0), 
+				  (gSSub/planeMax),0.0)));
+	    
+	  }
+	}
+      }
+      
+      //
+    }
     LatticeExprNode maxPSF=max(*psfs[model]);
     Float maxpsf=maxPSF.getFloat();
     if(abs(maxpsf-1.0) > 1e-3) {
@@ -1001,9 +1031,9 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
        Double reffreq = sm_->getReferenceFrequency();
 //       Cube<Complex> modelvis = vb.modelVisCube();
 
-       for (uInt pol=0; pol<(vb.modelVisCube()).shape()[0]; pol++) 
-       for (uInt chn=0; chn<vb.nChannel(); chn++) 
-       for (uInt row=0; row<vb.nRow(); row++) 
+       for (uInt pol=0; pol< uInt((vb.modelVisCube()).shape()[0]); pol++) 
+	 for (uInt chn=0; chn< uInt(vb.nChannel()); chn++) 
+	   for (uInt row=0; row< uInt(vb.nRow()); row++) 
        {
 	    freq = selfreqlist(IPosition(1,chn));
 	    mulfactor = ((freq-reffreq)/reffreq);
