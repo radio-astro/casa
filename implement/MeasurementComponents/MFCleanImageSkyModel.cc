@@ -120,12 +120,13 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       IPosition trc(PSF(model).shape()-1);
       blc(2) = 0;  trc(2) = 0;
       blc(3) = 0;  trc(3) = 0;
-      
+
+      Float maxMaxPSF=max(PSF(model)).getFloat();
       SubLattice<Float> subPSF;
       Int k =0;
       Int numchan= PSF(model).shape()(3);
       //PSF of first non zero plane
-      while(psfmax(model) < 0.1 && k< numchan){
+      while(psfmax(model) < (0.8*maxMaxPSF) && k< numchan){
         blc(3)= k;
 	trc(3)=k;
 	LCBox onePlane(blc, trc, PSF(model).shape());
