@@ -305,15 +305,36 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
   centered=(abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
 
   /////////////////////
-  //cout << "nx " << nx << " ny " << ny << " xpos " << xpos << " ypos " << ypos << " peak " << peak << endl;
+  //  cout << "nx " << nx << " ny " << ny << " xpos " << xpos << " ypos " << ypos << " peak " << peak << endl;
   //PagedImage<Float> thisScreen(psfs[0]->shape(), psfs[0]->coordinates(), "PSF__.psf");
   //thisScreen.copyData(*(psfs[0]));
 
 
 
   ///////////////////////////////
-  if(centered)
+  if(centered){
+    //for cubes some of the planes may not have a central peak
+    Int nchana= (psfs[0])->shape()(3);
+    if(nchana > 1){
+      IPosition blc(4,nx, ny, 0, nchana);
+      IPosition trc(4, nx, ny, 0, nchana);
+      blc(0)=0; blc(1)=0; trc(0)=nx-1; trc(1)=ny-1;
+      Array<Float> goodplane(psfplane.reform(IPosition(4, nx,ny,1,1)));
+      for (Int k=0; k < nchana ; ++k){
+	blc(3)=k; trc(3)=k;
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	SubImage<Float> psfSub(*(psfs[0]), sl, True);
+	Float planeMax;
+	LatticeExprNode LEN = max( psfSub );
+	planeMax =  LEN.getFloat();
+	if( (planeMax >0.0) && (planeMax < 0.8 *peak)){
+	  psfSub.put(goodplane);
+	  
+	}
+      }
+    }
     return;
+  }
   //lets back up the ftmachines
   MosaicFT *ft_back= new MosaicFT(static_cast<MosaicFT &>(*ftm_p[0]));
   MosaicFT *ift_back = new MosaicFT(static_cast<MosaicFT &>(*iftm_p[0]));
