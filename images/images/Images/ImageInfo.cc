@@ -459,9 +459,13 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
     if (header.isDefined("bmaj") && header.isDefined("bmin") &&
        header.isDefined("bpa")) {
 //
-	DataType typeMaj = header.dataType("bmaj");
-	DataType typeMin = header.dataType("bmin");
-	DataType typePA = header.dataType("bpa");
+	const RecordInterface& subRec0 = header.asRecord("bmaj");
+	const RecordInterface& subRec1 = header.asRecord("bmin");
+	const RecordInterface& subRec2 = header.asRecord("bpa");
+
+	DataType typeMaj = subRec0.dataType(0);
+	DataType typeMin = subRec1.dataType(0);
+	DataType typePA = subRec2.dataType(0);
 //
 	Bool ok = (typeMaj==TpDouble || typeMaj==TpFloat) &&
                 (typeMin==TpDouble || typeMin==TpFloat) &&
@@ -469,9 +473,9 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
 //
 	if (ok) {
 	    Double bmaj, bmin, bpa;
-	    header.get("bmaj", bmaj);
-	    header.get("bmin", bmin);
-	    header.get("bpa", bpa);
+	    subRec0.get(0, bmaj);
+	    subRec1.get(0, bmin);
+	    subRec2.get(0, bpa);
 //   
 	    // Assume FITS standard unit "degrees"
 	    Unit unit(String("deg"));
@@ -492,9 +496,10 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
     }
 //
     if (header.isDefined("btype")) {
-	if (header.dataType("btype")==TpString) {
+	const RecordInterface& subRec = header.asRecord("btype");
+	if (subRec.dataType(0)==TpString) {
 	    String type;
-	    header.get("btype", type);
+	    subRec.get(0, type);
 	    
 // We are going to cope with aips++ values and Miriad values
 // For Miriad there are a few extra ones (which we put on the Stokes
@@ -517,9 +522,10 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
     }
 //
     if (header.isDefined("object")) {
-	if (header.dataType("object")==TpString) {
+	const RecordInterface& subRec = header.asRecord("object");      
+	if (subRec.dataType(0)==TpString || subRec.dataType(0)==TpArrayChar) {
 	    String objectName;
-	    header.get("object", objectName);
+	    subRec.get(0, objectName);
 	    setObjectName(objectName);
 	}  else {
 	    error(1) = "OBJECT field is not of type String";
