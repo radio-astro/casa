@@ -124,7 +124,7 @@ class Imager
 		   Bool useSymmetricBeam=True);
   Bool makePBImage(const CoordinateSystem& imageCoord, 
 		   const String& telescopeName, const String& diskPBName, 
-		   Bool useSymmetricBeam=True);
+		   Bool useSymmetricBeam=True, Double dishdiam=-1.0);
   
   Bool makePBImage(const CoordinateSystem& imageCoord, 
 		   const Table& vpTable, const String& diskPBName);

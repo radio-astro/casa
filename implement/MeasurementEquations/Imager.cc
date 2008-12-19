@@ -3911,7 +3911,9 @@ Bool Imager::makeimage(const String& type, const String& image,
 	  telescope_p=coordsys.obsInfo().telescope();
 	}
 	this->unlock();
-        return this->makePBImage(coordsys, telescope_p, image);
+	ROMSAntennaColumns ac(ms_p->antenna());
+	Double dishDiam=ac.dishDiameter()(0);
+        return this->makePBImage(coordsys, telescope_p, image, False, dishDiam);
       }
       else{
 	Table vpTable(vpTableStr_p);
@@ -8372,7 +8374,9 @@ Bool Imager::makePBImage(ImageInterface<Float>& pbImage,
 Bool Imager::makePBImage(const CoordinateSystem& imageCoord, 
 			 const String& telescopeName, 
 			 const String& diskPBName, 
-			 Bool useSymmetricBeam){
+			 Bool useSymmetricBeam, Double diam){
+
+  LogIO os(LogOrigin("Imager", "makePBImage()", WHERE));
   Int spectralIndex=imageCoord.findCoordinate(Coordinate::SPECTRAL);
   SpectralCoordinate
     spectralCoord=imageCoord.spectralCoordinate(spectralIndex);
@@ -8385,7 +8389,22 @@ Bool Imager::makePBImage(const CoordinateSystem& imageCoord,
   Double freq  = spectralWorld(0);
   Quantity qFreq( freq, "Hz" );
   String telName=telescopeName;
-  PBMath myPB(telName, useSymmetricBeam, qFreq);
+  PBMath::CommonPB whichPB;
+  PBMath::enumerateCommonPB(telName, whichPB);  
+  PBMath myPB;
+  if(whichPB!=PBMath::UNKNOWN && whichPB!=PBMath::NONE){
+    
+    myPB=PBMath(telName, useSymmetricBeam, qFreq);
+  }
+  else if(diam > 0.0){
+    myPB=PBMath(diam,useSymmetricBeam, qFreq);
+  }
+  else{
+    os << LogIO::WARN << "Telescope " << telName << " is not known\n "
+       << "Not making the PB  image" 
+       << LogIO::POST;
+    return False; 
+  }
   return makePBImage(imageCoord, myPB, diskPBName);
 
 }

@@ -156,6 +156,9 @@ public:
   PBMath(String& telescopeName, Bool useSymmetricBeam=False, 
 	 Quantity freq=Quantity(0.0, "Hz"));
 
+  //Make a PB by dish diameter
+  PBMath(Double dishDiam, Bool useSymmetricBeam, Quantity freq);
+
   // Make a PB from a RecordInterface
   explicit PBMath(const RecordInterface& myrec);
 
@@ -426,6 +429,9 @@ private:
   //Function to initialize the state of the tool
   void initByTelescope(PBMath::CommonPB myPBType, Bool useSymmetricBeam=False, 
 		       Double frequency=0.0);
+
+  //Function to initialize the by dish diameter 
+  void initByDiameter(Double diam, Bool useSymmetricBeam, Double freq); 
 
   // </group>
 

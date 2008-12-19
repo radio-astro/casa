@@ -146,18 +146,28 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
 	// The VLA, the ATNF, and WSRT have frequency - dependent PB models
 	Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");
       
-	if(telescope_p==" ") {
-	  os  << "Telescope name is blank : cannot find correct primary beam model" << LogIO::EXCEPTION;
+	if((telescope_p==" ") || (telescope_p=="")) {
+	  whichPB=PBMath::UNKNOWN;
 	}
 	else {
 	  PBMath::whichCommonPBtoUse( telescope_p, freq, band, whichPB, commonPBName );
 	}
-     
-	{
-	  
-	  PBMath  myPBMath(telescope_p, False, freq );
-	  setPBMath (telescope_p, myPBMath);
+   
+	if(whichPB != PBMath::UNKNOWN){
+	    
+	    PBMath  myPBMath(telescope_p, False, freq );
+	    setPBMath (telescope_p, myPBMath);
 	}
+	else{
+	  //lets do it by diameter
+	  Double diam=msc.antenna().dishDiameter()(0);
+	  PBMath myPBMath(diam, False, freq);
+	  setPBMath(telescope_p, myPBMath);
+
+	}
+
+
+
       }
     }
   }

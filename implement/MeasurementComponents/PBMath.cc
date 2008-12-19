@@ -274,6 +274,11 @@ PBMath::PBMath(String& telescopeName, Bool useSymmetricBeam, Quantity freq){
 
 }
 
+PBMath::PBMath(Double dishDiam, Bool useSymmetricBeam, Quantity freq){
+
+  initByDiameter(dishDiam, useSymmetricBeam, freq.getValue("Hz"));
+
+}
 
 // Explicitly call each letter class's constructor
 // PBClass is for cases where we cannot distinquish the
@@ -951,6 +956,40 @@ PBMath::getMDirection(const RecordInterface& rec, const String& item,
   returnedMDirection = h.asMDirection();
   return True;
 };
+
+
+void PBMath::initByDiameter(Double diameter, Bool useSymmetricBeam, 
+			    Double frequency){
+
+  // This attempts to reproduce the AIRY pattern VLA PB
+  Vector<Float> vlanum(19);
+  vlanum(0) = 1.000000;
+  vlanum(1) = 0.997634;
+  vlanum(2) = 0.972516;
+  vlanum(3) = 0.913722;
+  vlanum(4) = 0.837871;
+  vlanum(5) = 0.750356;
+  vlanum(6) = 0.651549;
+  vlanum(7) = 0.549903;
+  vlanum(8) = 0.449083;
+  vlanum(9) = 0.352819;
+  vlanum(10) = 0.266025;
+  vlanum(11) = 0.190533;
+  vlanum(12) = 0.128047;
+  vlanum(13) = 0.0794855;
+  vlanum(14) = 0.0438381;
+  vlanum(15) = 0.0201386;
+  vlanum(16) = 0.0065117;
+  vlanum(17) = 0.000690041;
+  vlanum(18) = 8.87288e-05;
+
+  Double scalesize = 1.1998662 * 25.0/diameter;
+  pb_pointer_p = new PBMath1DNumeric(vlanum, Quantity(scalesize,"'"), 
+				     Quantity(43.0,"GHz"), False);
+
+
+
+}
 
 void PBMath::initByTelescope(PBMath::CommonPB myPBType, 
 			     Bool useSymmetricBeam, 
