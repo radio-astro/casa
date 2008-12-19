@@ -150,7 +150,7 @@ private:
                                Vector<Double>& crval,
                                Vector<Double>& crpix,
                                Vector<Double>& cdelt,
-                               Vector<Double>& crota,
+                               //   Vector<Double>& crota,
 			       //   Vector<Double>& projp,
                                Vector<Double>& pvi_ma,
                                Vector<String>& ctype,

@@ -167,12 +167,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // axes removed, it will be linearized here.
 
 	Double longPole, latPole;
-	Vector<Double> crval, crpix, cdelt, pvi_ma, crota;
+	Vector<Double> crval, crpix, cdelt, pvi_ma;
+	// crota is deprecated for FITS output
+	//	Vector<Double> crota;
 	Vector<String> ctype, cunit;
 	Matrix<Double> pc;
 	Bool isNCP = False;
 	if (!generateFITSKeywords (os, isNCP, longPole, latPole, crval, crpix, 
-				   cdelt, crota,  
+				   cdelt, 
+				   // crota,  
 				   pvi_ma, ctype, cunit, pc, 
 				   coordsys, skyCoord, longAxis, latAxis, 
 				   specAxis, stokesAxis, writeWCS,
@@ -261,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	header.define(sprefix + "type", ctype);
 	header.define(sprefix + "rval", crval);
 	header.define(sprefix + "delt", cdelt);
-	header.define(sprefix + "rota", crota);
+	//	header.define(sprefix + "rota", crota);
 	header.define(sprefix + "rpix", crpix);
 	header.define(sprefix + "unit", cunit);
 
@@ -381,7 +384,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						   Vector<Double>& crval,
 						   Vector<Double>& crpix,
 						   Vector<Double>& cdelt,
-						   Vector<Double>& crota,
+						   // Vector<Double>& crota,
 						   Vector<Double>& pvi_ma,
 						   Vector<String>& ctype,
 						   Vector<String>& cunit,
@@ -453,25 +456,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 	pc = cSys.linearTransform();
 
-// crota: See Greisen and Calabretta "Converting Previous Formats"
-
-	crota.resize(n);
-	crota = 0;
-	if (longAxis >= 0 && latAxis >= 0) {
-	    Double rholong = atan2(pc(latAxis, longAxis)*C::pi/180.0,
-				   pc(longAxis, longAxis)*C::pi/180.0)*180.0/C::pi;
-	    Double rholat = atan2(-pc(longAxis, latAxis)*C::pi/180.0,
-				  pc(latAxis, latAxis)*C::pi/180.0)*180.0/C::pi;
-	    crota[latAxis] = (rholong + rholat)/2.0;
-	    if (!casa::near(rholong, rholat)) {
-		os << LogIO::WARN << sprefix + "rota is not very accurate." 
-		   <<  " PC matrix is not a pure rotation.";
-		if (!writeWCS) {
-		    os << endl << "Consider writing the DRAFT WCS convention to avoid losing information.";
-		}
-		os << LogIO::POST;
-	    }
-	}
 	return True;
     }
 

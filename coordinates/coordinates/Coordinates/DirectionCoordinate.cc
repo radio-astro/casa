@@ -534,14 +534,9 @@ Vector<Double> DirectionCoordinate::referenceValue() const
 
 Vector<Double> DirectionCoordinate::increment() const
 {
-    Double d0,d1;
     Vector<Double> cdelt(2);
     cdelt[0] = wcs_p.cdelt[0];
     cdelt[1] = wcs_p.cdelt[1];            // degrees
-    d0 = wcs_p.pc[0]*wcs_p.cdelt[0] + wcs_p.pc[1]*wcs_p.cdelt[1];
-    d1 = wcs_p.pc[2]*wcs_p.cdelt[0] + wcs_p.pc[3]*wcs_p.cdelt[1];
-    cdelt[0]=d0; cdelt[1]=d1;
-    //    wcsprt(&wcs_p);
     toCurrent(cdelt);
     return cdelt;
 }
