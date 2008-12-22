@@ -458,11 +458,17 @@ namespace casa{
     //    cerr << inShape << " " << ndx << endl;
     
     Vector<Int> inStokes,outStokes;
-    Int index,s;
+    Int index,s,index1;
     index = inImg.coordinates().findCoordinate(Coordinate::STOKES);
     inStokes = inImg.coordinates().stokesCoordinate(index).stokes();
     index = outImg.coordinates().findCoordinate(Coordinate::STOKES);
     outStokes = outImg.coordinates().stokesCoordinate(index).stokes();
+    index = outImg.coordinates().findCoordinate(Coordinate::SPECTRAL);
+    index1 = inImg.coordinates().findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate inSpectralCoords = inImg.coordinates().spectralCoordinate(index1);
+    CoordinateSystem outCS = outImg.coordinates();
+    outCS.replaceCoordinate(inSpectralCoords,index);
+
     ndx(3)=0;
     for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++) // The poln axes
       {

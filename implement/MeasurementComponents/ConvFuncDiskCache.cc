@@ -363,7 +363,7 @@ namespace casa{
     if (Dir.length() == 0) return;
     ostringstream name;
     name << Dir << "/avgPB";
-    cout << name.str() << endl;
+    //    cout << name.str() << endl;
     try
       {
 	PagedImage<Float> tmp(name.str().c_str());
