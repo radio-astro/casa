@@ -37,7 +37,7 @@ C
      $     chanmap, polmap,polused,sumwt,
      $     ant1, ant2, nant, scanno, sigma,raoff, decoff,area,
      $     dograd,dopointingcorrection,npa,paindex,cfmap,conjcfmap,
-     $     currentCFPA,actualPA)
+     $     currentCFPA,actualPA,cfRefFreq)
 
 
       implicit none
@@ -47,7 +47,7 @@ C
       complex values(nvispol, nvischan, nrow)
       complex grid(nx, ny, npol, nchan)
       double precision uvw(3, nrow), freq(nvischan), c, scale(3),
-     $     offset(3),currentCFPA,actualPA
+     $     offset(3),currentCFPA,actualPA,cfRefFreq
       double precision dphase(nrow), uvdist
       complex phasor
       integer flag(nvispol, nvischan, nrow)
@@ -322,7 +322,7 @@ C
      $     chanmap, polmap,polused, ant1, ant2, nant, 
      $     scanno, sigma, raoff, decoff,area,dograd,
      $     dopointingcorrection,npa,paindex,cfmap,conjcfmap,
-     $     currentCFPA,actualPA)
+     $     currentCFPA,actualPA,cfRefFreq)
 
       implicit none
       integer nx, ny, npol, nchan, nvispol, nvischan, nrow,polused
@@ -331,7 +331,7 @@ C
       complex values(nvispol, nvischan, nrow)
       complex grid(nx, ny, npol, nchan)
       double precision uvw(3, nrow), freq(nvischan), c, scale(3),
-     $     offset(3),currentCFPA,actualPA, dPA, sDPA, cDPA
+     $     offset(3),currentCFPA,actualPA, dPA, sDPA, cDPA,cfRefFreq
       double precision dphase(nrow), uvdist
       complex phasor
       integer flag(nvispol, nvischan, nrow)
@@ -508,7 +508,7 @@ C
      $     wconvsize, convfunc, chanmap, polmap,polused,ant1,ant2,nant, 
      $     scanno, sigma, raoff, decoff,area,dograd,
      $     dopointingcorrection,npa,paindex,cfmap,conjcfmap,
-     $     currentCFPA,actualPA)
+     $     currentCFPA,actualPA,cfRefFreq)
 
       implicit none
       integer nx, ny, npol, nchan, nvispol, nvischan, nrow,polused
@@ -519,7 +519,7 @@ C
       complex gelvalues(nvispol, nvischan, nrow)
       complex grid(nx, ny, npol, nchan)
       double precision uvw(3, nrow), freq(nvischan), c, scale(3),
-     $     offset(3),currentCFPA,actualPA, dPA, sDPA, cDPA
+     $     offset(3),currentCFPA,actualPA, dPA, sDPA, cDPA,cfRefFreq
       double precision dphase(nrow), uvdist
       complex phasor
       integer flag(nvispol, nvischan, nrow)
