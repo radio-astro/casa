@@ -50,6 +50,7 @@
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
+#include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>
@@ -154,6 +155,18 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
      for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ft_));
       iftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ift_));
+    }
+  }
+  else if(ft.name()== "PBMosaicFT"){
+     ft_=new PBMosaicFT(static_cast<PBMosaicFT &>(ft));
+     ift_=new PBMosaicFT(static_cast<PBMosaicFT &>(ft));
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+       throw(AipsError("No multifield with pb-mosaic allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ft_));
+      iftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ift_));
     }
   }
   else {

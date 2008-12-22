@@ -112,6 +112,7 @@
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
+#include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
 #include <synthesis/MeasurementComponents/SimpCompGridMachine.h>
@@ -7286,6 +7287,76 @@ Bool Imager::createFTMachine()
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
+  }
+  else if (ftmachine_p == "pbmosaic"){
+
+    if (wprojPlanes_p<=1)
+      {
+	os << LogIO::NORMAL
+	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	   << LogIO::POST;
+	os << "Performing pb-mosaic"
+	   << LogIO::POST;
+      }
+    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+      {
+	os << LogIO::WARN
+	   << "No. of w-planes set too low for W projection - recommend at least 128"
+	   << LogIO::POST;
+	os << "Performing pb + w-plane projection"
+	   << LogIO::POST;
+      }
+
+    if(!gvp_p) 
+      {
+	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
+	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
+      }
+    ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
+			  cfCacheDirName_p, True /*doPointing*/, doPBCorr, 
+			  tile_p, paStep_p, pbLimit_p, True);
+    ((PBMosaicFT *)ft_p)->setObservatoryLocation(mLocation_p);
+    //
+    // Explicit type casing to ft_p does not look good.  It does not
+    // pick up the setPAIncrement() method of PBWProjectFT without
+    // this
+    //
+    ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    if (doPointing) 
+      {
+	try
+	  {
+	    // Warn users we are have temporarily disabled pointing cal
+	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
+	    //  TBD: Bring this up-to-date with new VisCal mechanisms
+	    epJ = new EPJones(*vs_p, *ms_p);
+	    RecordDesc applyRecDesc;
+	    applyRecDesc.addField("table", TpString);
+	    applyRecDesc.addField("interp",TpString);
+	    Record applyRec(applyRecDesc);
+	    applyRec.define("table",epJTableName_p);
+	    applyRec.define("interp", "nearest");
+	    epJ->setApply(applyRec);
+	    ((nPBWProjectFT *)ft_p)->setEPJones(epJ);
+	  }
+	catch(AipsError& x)
+	  {
+	    //
+	    // Add some more useful info. to the message and translate
+	    // the generic AipsError exception object to a more specific
+	    // SynthesisError object.
+	    //
+	    String mesg = x.getMesg();
+	    mesg += ". Error in loading pointing offset table.";
+	    SynthesisError err(mesg);
+	    throw(err);
+	  }
+      }
+    AlwaysAssert(ft_p, AipsError);
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+
   }
   else if(ftmachine_p=="both") {
       
