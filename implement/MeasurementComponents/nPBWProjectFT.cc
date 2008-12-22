@@ -238,6 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imageCache=other.imageCache;
     cachesize=other.cachesize;
     tilesize=other.tilesize;
+    cfRefFreq_p = other.cfRefFreq_p;
     if(other.gridder==0)
       gridder=0;
     else{
@@ -949,7 +950,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     noOfPASteps++;
     NAnt=1;
-    
+   
+    logIO() << " Shape of localPB Cube : " << twoDPBShape << LogIO::POST;
+    logIO() << " Shape of avgPB Cube : " << theavgPB.shape() << LogIO::POST;
+
     for(Int ant=0;ant<NAnt;ant++)
       { //Ant loop
 	{
@@ -958,7 +962,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(ndx(1)=0; ndx(1)<twoDPBShape(1); ndx(1)++)
 	      //	     for(ndx(2)=0; ndx(2)<polInUse; ndx(2)++)
 	      for(ndx(2)=0; ndx(2)<twoDPBShape(2); ndx(2)++)
-		localTwoDPB.putAt(Complex((localPB(ndx)),0.0),ndx);
+	       for(ndx(3)=0; ndx(3)<twoDPBShape(3); ndx(3)++)
+		  localTwoDPB.putAt(Complex((localPB(ndx)),0.0),ndx);
+		///localTwoDPB.putAt(Complex((localPB(ndx)),0.0),ndx);
 	}
 	//
 	// If antenna pointing errors are not applied, no shifting
@@ -980,6 +986,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //	 if (makingPSF)
 	  {
 	    IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
+	    for(ndx(3)=0,avgNDX(3)=0;ndx(3)<fs(3);ndx(3)++,avgNDX(3)++)
+	    {
 	    for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
 	      {
 		for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
@@ -991,11 +999,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      if (fbuf(avgNDX) > peak) peak=fbuf(avgNDX);
 		    }
 	      }
+	    }
 	  }
 	  if (!isRefF) theavgPB.put(fbuf);
 	  pbPeaks += peak;
 	}
       }
+    theavgPB.setCoordinateInfo(localPB.coordinates());
   }
   //
   //---------------------------------------------------------------
@@ -1390,7 +1400,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     {
       IPosition avgPBShape(avgPB.shape()), skyShape(image.shape());
-      logIO() <<"Shapes : " << avgPBShape << " , " << skyShape << LogIO::POST;
+      //      logIO() <<"Shapes : " << avgPBShape << " , " << skyShape << LogIO::POST;
       if ((avgPBShape(0) != skyShape(0)) && // X-axis
 	  (avgPBShape(1) != skyShape(1)) && // Y-axis
 	  (avgPBShape(2) != skyShape(2)))   // Poln-axis
@@ -1662,6 +1672,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	*/
 	vlaPB.applyPB(twoDPB, vb, bandID_p);
+	CoordinateSystem cs=twoDPB.coordinates();
+	Int index= twoDPB.coordinates().findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate SpCS = twoDPB.coordinates().spectralCoordinate(index);
+
+	cfRefFreq_p=SpCS.referenceValue()(0);
 //         Bool isRefPB;  
 //         Array<Complex> pbBuf;
 // 	isRefPB = twoDPB.get(pbBuf);
@@ -1867,6 +1882,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makingPSF = False;
     initMaps(vb);
     
+    //    cout << "Do PB Correction from initializeToVis : " << doPBCorrection << endl;
+
     findConvFunction(*image, vb);
     //  
     // Initialize the maps for polarization and channel. These maps
@@ -1951,7 +1968,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
 	  LatticeIterator<Complex> lix(*lattice, lsx);
 	  
-      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
+	  //      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
 
 	  if ((avgPB.shape()(0) != nx) && // X-axis
 	      (avgPB.shape()(1) != ny))// Y-axis
@@ -2266,7 +2283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Int *paIndex,
 		  Int *CFMap,
 		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA);
+		  Double *currentCFPA, Double *actualPA,Double *cfRefFreq_p);
     void dpbwproj(Double *uvw,
 		  Double *dphase,
 		  Complex *values,
@@ -2306,7 +2323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Int *paIndex,
 		  Int *CFMap,
 		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA);
+		  Double *currentCFPA, Double *actualPA, Double *cfRefFreq_p);
     void dpbwgrad(Double *uvw,
 		  Double *dphase,
 		  Complex *values,
@@ -2349,7 +2366,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Int *paIndex,
 		  Int *CFMap,
 		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA);
+		  Double *currentCFPA, Double *actualPA, Double *cfRefFreq_p);
   }
   //
   //----------------------------------------------------------------------
@@ -2479,7 +2496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     CFMap_p,
 	     ConjCFMap_p,
 	     &currentCFPA
-	     ,&actualPA
+	     ,&actualPA,&cfRefFreq_p
 	     );
     
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
@@ -2621,7 +2638,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     CFMap_p,
 	     ConjCFMap_p,
 	     &currentCFPA
-	     ,&actualPA
+	     ,&actualPA,&cfRefFreq_p
 	     );
 
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
@@ -2781,7 +2798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     CFMap_p,
 	     ConjCFMap_p,
 	     &currentCFPA
-	     ,&actualPA
+	     ,&actualPA,&cfRefFreq_p
 	     );
     
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));

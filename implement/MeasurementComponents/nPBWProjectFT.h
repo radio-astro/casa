@@ -461,6 +461,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ParAngleChangeDetector paChangeDetector;
     Vector<Int> cfStokes;
     Vector<Complex> Area;
+    Double cfRefFreq_p;
     //    VLACalcIlluminationConvFunc vlaPB;
     //
     //----------------------------------------------------------------------
