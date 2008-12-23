@@ -89,7 +89,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 				 const VisBuffer& vb);
-    virtual String name(){ return "PBMosaicFT";};
 
   private:
     Complex nApertures;
