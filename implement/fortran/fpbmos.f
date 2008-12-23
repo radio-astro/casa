@@ -81,7 +81,7 @@ C
       
       double precision griduvw(2),dPA, cDPA,sDPA
       double precision mysigma, ra1,ra2,dec1,dec2
-      double precision sigma,area,lambda
+      double precision sigma,area,lambda,cfscale
       complex pcwt, pdcwt1, pdcwt2,tt
       integer nant, scanno, ant1(nrow), ant2(nrow)
       integer convOrigin
@@ -102,7 +102,6 @@ C
       end if
       
       dPA = -(currentCFPA - actualPA)
-      dPA=0
       cDPA = cos(dPA)
       sDPA = sin(dPA)
       
@@ -114,6 +113,7 @@ C
                achan=chanmap(ichan)+1
                
                lambda = c/freq(ichan)
+               cfscale = cfRefFreq/freq(ichan)
                
                if((achan.ge.1).and.(achan.le.nchan).and.
      $              (weight(ichan,irow).ne.0.0)) then
@@ -122,6 +122,7 @@ C
      $                 pos, loc, off, phasor)
                   iloc(3)=max(1, min(wconvsize, loc(3)))
                   rsupport=support(iloc(3),1,paindex)
+		  rsupport = nint( (rsupport / cfscale)+0.5 )
                   if (opbmos(nx, ny, wconvsize, loc, rsupport)) then
                      PolnPlane=polused+1
                      
@@ -145,9 +146,11 @@ C
                            cnorm=0.0
                            do iy=-rsupport,rsupport
                               iloc(2)=(iy*sampling+off(2))
+     $                                  * cfscale
                               iv = iloc(2)
                               do ix=-rsupport,rsupport
                                  iloc(1)=(ix*sampling+off(1))
+     $                                  * cfscale
                                  iu = iloc(1)
                                  if (mreindex(iu,iv,iloc(1),iloc(2),
      $                                sDPA,cDPA,
@@ -198,9 +201,11 @@ c     $                                      *weight(ichan,irow)
                            pbdone=pbdone+1
                            do iy=-rsupport,rsupport
                               iloc(2)=(iy*sampling+off(2))
+     $                                  * cfscale
                               iv = iloc(2)
                               do ix=-rsupport,rsupport
                                  iloc(1)=(ix*sampling+off(1))
+     $                                  * cfscale
                                  
                                  iu = iloc(1)
                                  
@@ -318,7 +323,7 @@ C
       integer nant, scanno, ant1(nrow), ant2(nrow),dograd,
      $     dopointingcorrection
       real raoff(nant), decoff(nant)
-      double precision sigma,area,lambda
+      double precision sigma,area,lambda,cfscale
       
       complex nvalue
       
@@ -357,7 +362,6 @@ C
 C     
       
       dPA = -(currentCFPA - actualPA)
-      dPA=0
       cDPA = cos(dPA)
       sDPA = sin(dPA)
       convOrigin = (convsize-1)/2
@@ -368,12 +372,14 @@ C
                achan=chanmap(ichan)+1
                
                lambda = c/freq(ichan)
+               cfscale = cfRefFreq/freq(ichan)
                
                if((achan.ge.1).and.(achan.le.nchan)) then
                   call spbmos(uvw(1,irow), dphase(irow), freq(ichan), c,
      $                 scale, offset, sampling, pos, loc, off, phasor)
                   iloc(3)=max(1, min(wconvsize, loc(3)))
                   rsupport=support(iloc(3),1,paindex)
+		  rsupport = nint( (rsupport / cfscale)+0.5 )
                   if (opbmos(nx, ny, wconvsize, loc, rsupport)) then
                      PolnPlane=0
                      
@@ -390,10 +396,12 @@ C
                            
                            do iy=-rsupport,rsupport
                               iloc(2)=1+(iy*sampling+off(2))+convOrigin
+			      iloc(2) = iloc(2) * cfscale
                               iv = (iy*sampling+off(2))
                               do ix=-rsupport,rsupport
                                  iloc(1)=1+(ix*sampling+off(1))
      $                                +convOrigin
+                                 iloc(1) = iloc(1) * cfscale
                                  iu = (ix*sampling+off(1))
                                  
                                  if(mreindex(iu,iv,iloc(1),iloc(2),
@@ -477,7 +485,7 @@ C
       integer nant, scanno, ant1(nrow), ant2(nrow),dograd,
      $     dopointingcorrection
       real raoff(nant), decoff(nant)
-      double precision sigma,area,lambda
+      double precision sigma,area,lambda,cfscale
       
       complex nvalue,ngazvalue,ngelvalue
       
@@ -526,12 +534,14 @@ C
                achan=chanmap(ichan)+1
                
                lambda = c/freq(ichan)
+               cfscale = cfRefFreq/freq(ichan)
                
                if((achan.ge.1).and.(achan.le.nchan)) then
                   call spbmos(uvw(1,irow), dphase(irow), freq(ichan), c,
      $                 scale, offset, sampling, pos, loc, off, phasor)
                   iloc(3)=max(1, min(wconvsize, loc(3)))
                   rsupport=support(iloc(3),1,paindex)
+		  rsupport = nint( (rsupport / cfscale)+0.5 )
                   if (opbmos(nx, ny, wconvsize, loc, rsupport)) then
                      
                      do ipol=1, nvispol
@@ -554,10 +564,12 @@ C
                            
                            do iy=-rsupport,rsupport
                               iloc(2)=1+(iy*sampling+off(2))+convOrigin
+			      iloc(2) = iloc(2) * cfscale
                               iv=(iy*sampling+off(2))
                               do ix=-rsupport,rsupport
                                  iloc(1)=1+(ix*sampling+off(1))
      $                                +convOrigin
+     				 iloc(1) = iloc(1) * cfscale
                                  iu=(ix*sampling+off(1))
                                  
                                  if(mreindex(iu,iv,iloc(1),iloc(2),
@@ -667,7 +679,7 @@ C
       integer nant, scanno, ant1(nrow), ant2(nrow),dograd,
      $     dopointingcorrection
       real raoff(nant), decoff(nant)
-      double precision sigma,area,lambda
+      double precision sigma,area,lambda,cfscale
 
       complex nvalue
 
@@ -719,12 +731,14 @@ C
             achan=chanmap(ichan)+1
 
             lambda = c/freq(ichan)
+	    cfscale = cfRefFreq/freq(ichan)
 
             if((achan.ge.1).and.(achan.le.nchan)) then
                call spbmos(uvw(1,irow), dphase(irow), freq(ichan), c,
      $              scale, offset, sampling, pos, loc, off, phasor)
                iloc(3)=max(1, min(wconvsize, loc(3)))
                rsupport=support(iloc(3),1,paindex)
+		  rsupport = nint( (rsupport / cfscale)+0.5 )
                if (opbmos(nx, ny, wconvsize, loc, rsupport)) then
 C                  PolnPlane=polused+1
                   PolnPlane=0
@@ -761,9 +775,11 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
 
                         do iy=-rsupport,rsupport
                            iloc(2)=1+(iy*sampling+off(2))+convOrigin
+			   iloc(2) = iloc(2) * cfscale
                            iv = (iy*sampling+off(2))
                            do ix=-rsupport,rsupport
                               iloc(1)=1+(ix*sampling+off(1))+convOrigin
+			      iloc(1) = iloc(1) * cfscale
                               iu = (ix*sampling+off(1))
 
                               if(reindex(iu,iv,iloc(1),iloc(2),
