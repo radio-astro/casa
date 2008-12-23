@@ -118,7 +118,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool searchConvFunction(const VisBuffer& vb, ParAngleChangeDetector& vpSJ, 
 			    Int& which, Float &pa);
     Bool loadConvFunction(Int where, Int Nx, PtrBlock < Array<Complex> *> & convFuncCache,
-			  Cube<Int> &convSupport, Vector<Float>& convSampling);
+			  Cube<Int> &convSupport, Vector<Float>& convSampling,
+			  Double& cfRefFreq);
     void finalize();
     void finalize(ImageInterface<Float>& avgPB);
     void loadAvgPB(ImageInterface<Float>& avgPB);

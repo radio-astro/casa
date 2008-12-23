@@ -393,7 +393,8 @@ namespace casa{
   Bool ConvFuncDiskCache::loadConvFunction(Int where, Int Nw, 
 					   PtrBlock < Array<Complex> *> &convFuncCache,
 					   Cube<Int> &convSupport,
-					   Vector<Float>& convSampling)
+					   Vector<Float>& convSampling,
+					   Double& cfRefFreq)
   {
     if (Dir.length() == 0) return False;
     if (where < (Int)convFuncCache.nelements() && (convFuncCache[where] != NULL)) return False;
@@ -423,6 +424,10 @@ namespace casa{
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());
+	    Int index= tmp.coordinates().findCoordinate(Coordinate::SPECTRAL);
+	    SpectralCoordinate spCS = tmp.coordinates().spectralCoordinate(index);
+
+	    cfRefFreq=spCS.referenceValue()(0);
 	
 	    wConvSize = Nw;
 	    polInUse = tmp.shape()(2);
