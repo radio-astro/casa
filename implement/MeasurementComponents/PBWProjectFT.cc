@@ -769,7 +769,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Vector<Float> sampling;
 	PAIndex=i;
-	if (cfCache.loadConvFunction(i,Nw,convFuncCache,convSupport,sampling))
+	if (cfCache.loadConvFunction(i,Nw,convFuncCache,convSupport,sampling,cfRefFreq_p))
 	  {
 	    convSampling = (Int)sampling[0];
 	    convFunc.reference(*convFuncCache[PAIndex]);

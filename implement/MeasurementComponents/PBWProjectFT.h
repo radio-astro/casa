@@ -447,6 +447,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Float> paList;
     ConvFuncDiskCache cfCache;
     Double currentCFPA;
+    Double cfRefFreq_p;
     ParAngleChangeDetector paChangeDetector;
     //    VLACalcIlluminationConvFunc vlaPB;
     //
