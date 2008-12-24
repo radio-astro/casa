@@ -4041,12 +4041,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(pbShape(1) != skyShape(1)) && // Y-axis
 	(pbShape(2) != skyShape(2)))   // Poln-axis
       {
-	logIO() << LogIO::WARN << "Sky and/or polarization shape of the avgPB "
-		<< "and the sky model do not match." << LogIO::POST;
+	throw(AipsError("Sky and/or polarization shape of the avgPB "
+			"and the sky model do not match."));
+// 	logIO() << LogIO::WARN << "Sky and/or polarization shape of the avgPB "
+// 		<< "and the sky model do not match." << LogIO::POST;
 	return False;
       }
     return True;
-    ///throw(AipsError("Sky and/or polarization shape of the avgPB and the sky model do not match."));
     
   }
 
