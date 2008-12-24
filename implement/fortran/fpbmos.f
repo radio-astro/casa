@@ -65,7 +65,7 @@ C
      $     cwt
       
       real norm
-      complex cnorm
+      complex cnorm,tcnorm
       real wt
       
       logical opbmos,mreindex
@@ -144,6 +144,7 @@ C
                            norm=0.0
                            cnorm=cmplx(1.0,0.0)
                            cnorm=0.0
+                           tcnorm=0.0
                            do iy=-rsupport,rsupport
                               iloc(2)=(iy*sampling+off(2))
      $                                  * cfscale
@@ -270,17 +271,19 @@ c$$$     $                                      imag(cwt),apol,achan
      $                                      /cnorm
                                     end if
 c                                    norm=norm+abs(cwt)*conjg(pcwt)
+                                    tcnorm=tcnorm+(cwt/cnorm)
 c     cnorm=cnorm+cwt
                                  endif
                               end do
                            end do
-c$$$                           sumwt(apol,achan)=sumwt(apol,achan)+
-c$$$     $                          weight(ichan,irow)*norm
+                           norm=real(tcnorm)
+                           sumwt(apol,achan)=sumwt(apol,achan)+
+     $                          weight(ichan,irow)*norm
 C     
 C     Use the following for PBMOS
 C     
-                           sumwt(apol,achan)=sumwt(apol,achan)+
-     $                          weight(ichan,irow)
+c$$$                           sumwt(apol,achan)=sumwt(apol,achan)+
+c$$$     $                          weight(ichan,irow)
                         end if
                      end do
 c     else
