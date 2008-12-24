@@ -450,18 +450,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  if (!doPBCorrection) 		  avgPBVec=1.0;
 		  for(int i=0;i<PBCorrection.shape();i++)
 		    {
-		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
-		      //		      PBCorrection(i)=(avgPBVec(i))*sincConv(i)*sincConv(iy);
-		      if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
-			lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i)*pbNorm;
-		      else 
-			lix.rwVectorCursor()(i) /= pbNorm;
+		      //
+		      // This with PS functions
+		      //
+// 		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+// 		      //		      PBCorrection(i)=(avgPBVec(i))*sincConv(i)*sincConv(iy);
+// 		      if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
+// 			lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i); //*pbNorm
+// 		      else 
+// 			lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);//pbNorm;
+		      //
+		      // This without the PS functions
+		      //
+ 		      PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
+ 		      if ((abs(PBCorrection(i))) >= pbLimit_p)
+			lix.rwVectorCursor()(i) /= PBCorrection(i);
+	 	      else if (!makingPSF)
+ 			lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 		    }
 
 		  if(normalize) 
 		    {
-		      //		      Complex rnorm(Float(inx)*Float(iny)/(weights(pol,chan)));
-		      Complex rnorm(Float(inx)*Float(iny)/peakAvgPB/nApertures);
+		      Complex rnorm(Float(inx)*Float(iny)/(weights(pol,chan)));
+		      //		      Complex rnorm(Float(inx)*Float(iny)/peakAvgPB/nApertures);
 		      lix.rwCursor()*=rnorm;
 		    }
 		  else 
