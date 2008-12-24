@@ -1398,15 +1398,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (avgPB.shape()(0) != 0) cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
       }
 
-    {
-      IPosition avgPBShape(avgPB.shape()), skyShape(image.shape());
-      //      logIO() <<"Shapes : " << avgPBShape << " , " << skyShape << LogIO::POST;
-      if ((avgPBShape(0) != skyShape(0)) && // X-axis
-	  (avgPBShape(1) != skyShape(1)) && // Y-axis
-	  (avgPBShape(2) != skyShape(2)))   // Poln-axis
-	logIO() << LogIO::WARN << "Sky and/or polarization shape of the avgPB and the sky model do not match." << LogIO::POST;
-	///throw(AipsError("Sky and/or polarization shape of the avgPB and the sky model do not match."));
-    }
+    verifyShapes(avgPB.shape(), image.shape());
+
     Int lastPASlot = PAIndex;
 
     if (paChangeDetector.changed(vb,0)) paChangeDetector.update(vb,0);
@@ -1963,18 +1956,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     }
       normalizeAvgPB();
       
-	  IPosition cursorShape(4, nx, 1, 1, 1);
-	  IPosition axisPath(4, 0, 1, 2, 3);
-	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-	  LatticeIterator<Complex> lix(*lattice, lsx);
+      IPosition cursorShape(4, nx, 1, 1, 1);
+      IPosition axisPath(4, 0, 1, 2, 3);
+      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+      LatticeIterator<Complex> lix(*lattice, lsx);
 	  
-	  //      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
+      //      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
 
-	  if ((avgPB.shape()(0) != nx) && // X-axis
-	      (avgPB.shape()(1) != ny))// Y-axis
-	    throw(AipsError("Sky shape of the avgPB and the sky model do not match."));
-	  LatticeStepper lpb(avgPB.shape(),cursorShape,axisPath);
-	  LatticeIterator<Float> lipb(avgPB, lpb);
+      verifyShapes(avgPB.shape(), image->shape());
+      /*
+	if ((avgPB.shape()(0) != nx) && // X-axis
+	(avgPB.shape()(1) != ny))// Y-axis
+	throw(AipsError("Sky shape of the avgPB and the sky model do not match."));
+      */
+      LatticeStepper lpb(avgPB.shape(),cursorShape,axisPath);
+      LatticeIterator<Float> lipb(avgPB, lpb);
 
       Vector<Complex> griddedVis;
       //
@@ -4038,5 +4034,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     paChangeDetector.setTolerance(paIncrement);
   }
+
+  Bool nPBWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
+  {
+    if ((pbShape(0) != skyShape(0)) && // X-axis
+	(pbShape(1) != skyShape(1)) && // Y-axis
+	(pbShape(2) != skyShape(2)))   // Poln-axis
+      {
+	logIO() << LogIO::WARN << "Sky and/or polarization shape of the avgPB "
+		<< "and the sky model do not match." << LogIO::POST;
+	return False;
+      }
+    return True;
+    ///throw(AipsError("Sky and/or polarization shape of the avgPB and the sky model do not match."));
+    
+  }
+
 } //# NAMESPACE CASA - END
 

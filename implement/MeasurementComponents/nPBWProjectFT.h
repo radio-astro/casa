@@ -34,7 +34,6 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -305,6 +304,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<Int>& getPolMap() {return polMap;};
     virtual String name(){ return "PBWProjectFT";};
+    virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Float>& sky)
+    {return verifyShapes(pb.shape(),sky.shape());}
+    virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Complex>& sky)
+    {return verifyShapes(pb.shape(),sky.shape());}
+    virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
   protected:
     
     // Padding in FFT
