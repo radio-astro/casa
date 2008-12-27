@@ -73,10 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ~PBMosaicFT() {};
 
-    void makeAveragePB0(const VisBuffer& vb, 
- 		       const ImageInterface<Complex>& image,
- 		       Int& polInUse,
- 		       TempImage<Float>& avgPB);
+    Bool makeAveragePB0(const VisBuffer& vb, 
+			const ImageInterface<Complex>& image,
+			Int& polInUse,
+			TempImage<Float>& avgPB);
     Int findPointingOffsets(const VisBuffer& vb, 
 			    Array<Float> &l_off,
 			    Array<Float> &m_off,

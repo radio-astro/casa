@@ -284,7 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       TempImage<Float>& PB,
       TempImage<Float>& avgPB);
     */
-    virtual void makeAveragePB0(const VisBuffer& vb, 
+    virtual Bool makeAveragePB0(const VisBuffer& vb, 
 		       const ImageInterface<Complex>& image,
 		       Int& polInUse,
 		       TempImage<Float>& avgPB);

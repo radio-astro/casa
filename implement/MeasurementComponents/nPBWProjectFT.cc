@@ -318,7 +318,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       currentCFPA=other.currentCFPA;
       cfStokes=other.cfStokes;
       Area=other.Area;
-
+      avgPB = other.avgPB;
     };
     return *this;
   };
@@ -890,11 +890,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void nPBWProjectFT::makeAveragePB0(const VisBuffer& vb, 
-				   const ImageInterface<Complex>& image,
-				   Int& polInUse,
-				   //TempImage<Float>& thesquintPB,
-				   TempImage<Float>& theavgPB)
+  Bool nPBWProjectFT::makeAveragePB0(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     Int& polInUse,
+				     //TempImage<Float>& thesquintPB,
+				     TempImage<Float>& theavgPB)
   {
     TempImage<Float> localPB;
     
@@ -1006,6 +1006,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
     theavgPB.setCoordinateInfo(localPB.coordinates());
+    return True; // i.e., an average PB was made and is in the mem. cache
   }
   //
   //---------------------------------------------------------------
@@ -1330,7 +1331,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float pa;
     Int cfSource=locateConvFunction(wConvSize, polInUse, vb, pa);
     currentCFPA = pa;
-    
+    Bool pbMade=False;
     if (cfSource==1) // CF found and loaded from the disk cache
       {
 	polInUse = convFunc.shape()(3);
@@ -1345,7 +1346,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	    throw(err);
 	    logIO() << "Average PB does not exist in the cache.  Making a fresh one."
 		    << LogIO::NORMAL << LogIO::POST;
-	    makeAveragePB0(vb, image, polInUse, avgPB);
+	    pbMade=makeAveragePB0(vb, image, polInUse, avgPB);
 	    pbNormalized=False; normalizeAvgPB(); pbNormalized=True;
 	  }
       }
@@ -1382,7 +1383,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    << "Average PB does not exist in the cache.  Making a fresh one." 
 		    << LogIO::NORMAL 
 		    << LogIO::POST;
-	    makeAveragePB0(vb, image, polInUse,avgPB);
+	    pbMade=makeAveragePB0(vb, image, polInUse,avgPB);
 	  }
 
 	//	makeAveragePB(vb, image, polInUse,avgPB);
@@ -1395,7 +1396,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cfCache.loadAvgPB(avgPB);
 // 	cfCache.cacheConvFunction(PAIndex, pa, convFunc, coords, convSize,
 // 				  convSupport,convSampling);
-	if (avgPB.shape()(0) != 0) cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
+	if (pbMade) cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
       }
 
     verifyShapes(avgPB.shape(), image.shape());
@@ -1964,6 +1965,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      logIO() <<"Shapes : " << avgPB.shape() << LogIO::POST;
 
       verifyShapes(avgPB.shape(), image->shape());
+//       {
+// 	String name("avgPB.inv.im");
+// 	storeImg(name,avgPB);
+//       }
       /*
 	if ((avgPB.shape()(0) != nx) && // X-axis
 	(avgPB.shape()(1) != ny))// Y-axis

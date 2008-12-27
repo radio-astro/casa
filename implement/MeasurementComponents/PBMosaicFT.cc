@@ -233,7 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Add field offsets to the pointing errors.
     //
-    Float dayHr=2*3.1415926;
+    Float dayHr=2*3.141592653589793116;
     MVDirection ref(directionCoord.referenceValue()(0),
 		    directionCoord.referenceValue()(1)),
       vbDir(vb.direction1()(0).getAngle().getValue()(0),
@@ -241,8 +241,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Quantity sep=ref.separation(vbDir);
     //    cerr << sep << endl;
-    l_off = l_off - (Float)(directionCoord.referenceValue()(0)-dayHr-vb.direction1()(0).getAngle().getValue()(0));
-    m_off = m_off - (Float)(directionCoord.referenceValue()(1)-vb.direction1()(0).getAngle().getValue()(1));
+    l_off = l_off - (Float)(directionCoord.referenceValue()(0) -
+			    dayHr-vb.direction1()(0).getAngle().getValue()(0));
+    m_off = m_off - (Float)(directionCoord.referenceValue()(1) -
+			    vb.direction1()(0).getAngle().getValue()(1));
 
     static int ttt=0;
     static int fieldID=-1;
@@ -294,12 +296,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void PBMosaicFT::makeAveragePB0(const VisBuffer& vb, 
-				 const ImageInterface<Complex>& image,
-				 Int& polInUse,
-				 TempImage<Float>& theavgPB)
+  Bool PBMosaicFT::makeAveragePB0(const VisBuffer& vb, 
+				  const ImageInterface<Complex>& image,
+				  Int& polInUse,
+				  TempImage<Float>& theavgPB)
   {
-    if (!resetPBs) return;
+    Bool pbMade=False;
+    if (!resetPBs) return pbMade;
     //
     // If this is the first time, resize the average PB
     //
@@ -313,6 +316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pbPeaks.set(0.0);
 	resetPBs=False;
       }
+    return pbMade;
   }
   //
   //--------------------------------------------------------------------------------
@@ -336,7 +340,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     logIO() << "#########getimage########" << LogIO::DEBUGGING << LogIO::POST;
     
-    logIO() << LogOrigin("nPBWProjectFT", "getImage") << LogIO::NORMAL;
+    logIO() << LogOrigin("PBMosaicFT", "getImage") << LogIO::NORMAL;
     
     weights.resize(sumWeight.shape());
     
@@ -348,9 +352,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(max(weights)==0.0) 
       {
 	if(normalize) logIO() << LogIO::SEVERE
-			      << "No useful data in nPBWProjectFT: weights all zero"
+			      << "No useful data in PBMosaicFT: weights all zero"
 			      << LogIO::POST;
-	else logIO() << LogIO::WARN << "No useful data in nPBWProjectFT: weights all zero"
+	else logIO() << LogIO::WARN << "No useful data in PBMosaicFT: weights all zero"
 		     << LogIO::POST;
       }
     else
@@ -372,9 +376,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	avgPB.resize(cavgPB.shape()); 
 	avgPB.setCoordinateInfo(cavgPB.coordinates());
 	//	cavgPB.put(cavgPB.get()/(nApertures*sum(cavgPB.get())));
-	cout << "Sum cavgPB = " << (Complex)sum(cavgPB.get()) << " "
-	     << nApertures
-	     << endl;
+// 	cout << "Sum cavgPB = " << (Complex)sum(cavgPB.get()) << " "
+// 	     << nApertures
+// 	     << endl;
 	{
 	  String name("cavgPB.im");
 	  storeImg(name,cavgPB);
@@ -387,20 +391,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	Complex maxPB = max(cavgPB.get());
 	//	Complex maxPB=nApertures;
 	//	avgPB.copyData(LatticeExpr<Float>(abs(sqrt(cavgPB/maxPB))));
-	cout << "max(cavgPB) = " << max(cavgPB.get()) << endl;
+// 	cout << "max(cavgPB) = " << max(cavgPB.get()) << endl;
 	IPosition origin(cavgPB.shape());
 	origin(0) /= 2; origin(1) /=2;
-	cout << origin-1 << endl;
-	cout << "cavPB(Origin) = " << cavgPB.get()(origin-1) << endl;
+// 	cout << origin-1 << endl;
+// 	cout << "cavPB(Origin) = " << cavgPB.get()(origin-1) << endl;
 	avgPB.copyData(LatticeExpr<Float>(abs((cavgPB/pbNorm))));
 	peakAvgPB = max(avgPB.get());
-	cout << "max(avgPB) = " << peakAvgPB << endl;
+// 	cout << "max(avgPB) = " << peakAvgPB << endl;
 	{
-	  cout << "Sum of weights = " << sumWeight << endl;
+// 	  cout << "Sum of weights = " << sumWeight << endl;
 	  String name("avgPB.im");
 	  storeImg(name,avgPB);
 	}
 	resetPBs=False;
+	cfCache.finalize(avgPB);
 	//	cavgPB.resize(IPosition(1,0));
       }
 	
@@ -1062,10 +1067,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cavgPB.put(cavgPB.get()+avgPB_p);
     //    nApertures += iarea;
     //    cavgPB.put(cavgPB.get()+avgPB_p*iarea/(Complex(iSumWt(0,0),0)));
-    cout << "Area under cavgPB_i = " << iarea 
-	 << " " << vb.spectralWindow() << " " << vb.fieldId() 
-	 << nApertures
-	 << endl;
+//     cout << "Area under cavgPB_i = " << iarea 
+// 	 << " " << vb.spectralWindow() << " " << vb.fieldId() 
+// 	 << nApertures
+// 	 << endl;
 //     if (max(avgPB_p) > 0)
 //       {
 // 	String name("ttt.im");
