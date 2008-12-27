@@ -292,7 +292,7 @@ c     else
             end do
          end if
       end do
-      write(*,*) sumwt(1,1),norm,cnorm
+cccc      write(*,*) sumwt(1,1),norm,cnorm
       return
       end
 C     
