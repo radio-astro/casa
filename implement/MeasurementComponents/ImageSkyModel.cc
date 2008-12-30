@@ -299,7 +299,7 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
 
-  if(model>0&&(cimage_p[model-1])) cimage_p[model-1]->tempClose();
+  //if(model>0&&(cimage_p[model-1])) cimage_p[model-1]->tempClose();
 
   Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
   if(cimage_p[model]==0) {
@@ -407,7 +407,7 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
 
-  if(model>0&&(psf_p[model-1])) psf_p[model-1]->tempClose();
+  //if(model>0&&(psf_p[model-1])) psf_p[model-1]->tempClose();
 
   Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
   if(psf_p[model]==0) {
@@ -453,7 +453,7 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
 
-  if(model>0&&(gS_p[model-1])) gS_p[model-1]->tempClose();
+  //if(model>0&&(gS_p[model-1])) gS_p[model-1]->tempClose();
 
   if(gS_p[model]==0) {
     Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
@@ -470,7 +470,7 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
 {
   AlwaysAssert(nmodels_p>0, AipsError);
 
-  if(model>0&&(ggS_p[model-1])) ggS_p[model-1]->tempClose();
+  //if(model>0&&(ggS_p[model-1])) ggS_p[model-1]->tempClose();
 
   if(ggS_p[model]==0) {
     Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
@@ -489,7 +489,7 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
 {
   AlwaysAssert(nmodels_p>0, AipsError);
 
-  if(model>0&&(fluxScale_p[model-1])) fluxScale_p[model-1]->tempClose();
+  //  if(model>0&&(fluxScale_p[model-1])) fluxScale_p[model-1]->tempClose();
 
   if(fluxScale_p[model]==0) {
     Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
@@ -512,7 +512,7 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
 
-  if(model>0&&(work_p[model-1])) work_p[model-1]->tempClose();
+  //  if(model>0&&(work_p[model-1])) work_p[model-1]->tempClose();
 
   if(work_p[model]==0) {
     Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
@@ -531,7 +531,7 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
 
-  if(model>0&&(deltaimage_p[model-1])) deltaimage_p[model-1]->tempClose();
+  // if(model>0&&(deltaimage_p[model-1])) deltaimage_p[model-1]->tempClose();
 
   if(deltaimage_p[model]==0) {
     Double memoryMB=HostInfo::memoryFree()/1024/(MEMFACTOR*maxnmodels_p);
