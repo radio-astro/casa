@@ -488,6 +488,18 @@ PBMath::applyPB(const ImageInterface<Complex>& in,
   return pb_pointer_p->applyPB(in, out, sp, parAngle, doSquint, inverse, cutoff, forward);
 };
 
+
+ImageInterface<Float>& 
+PBMath::applyPB(const ImageInterface<Float>& in,
+		ImageInterface<Float>& out,
+		const MDirection& sp,
+		const Quantity parAngle,
+		const BeamSquint::SquintType doSquint,
+		Float cutoff)
+{
+  return pb_pointer_p->applyPB(in, out, sp, parAngle, doSquint, cutoff);
+};
+
 ImageInterface<Float>& 
 PBMath::applyPB2(const ImageInterface<Float>& in,
 		 ImageInterface<Float>& out,

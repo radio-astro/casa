@@ -274,6 +274,14 @@ public:
 				   Float cutoff = 0.01,
 				   Bool forward = True);
 
+  ImageInterface<Float>& applyPB(const ImageInterface<Float>& in,
+				   ImageInterface<Float>& out,
+				   const MDirection& sp,
+				   const Quantity parAngle = Quantity(0.0,"deg"),
+				   const BeamSquint::SquintType doSquint = BeamSquint::NONE,
+				   Float cutoff = 0.01);
+
+
   ImageInterface<Float>& applyPB2(const ImageInterface<Float>& in,
 				  ImageInterface<Float>& out,
 				  const MDirection& sp,

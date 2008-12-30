@@ -116,6 +116,10 @@ public:
 				 ImageInterface<Complex>& out,
 				 const VisBuffer& vb, Int row,
 				 Bool forward=True);
+  ImageInterface<Float>& apply(const ImageInterface<Float>& in,
+				     ImageInterface<Float>& out,
+				     const VisBuffer& vb, Int row);
+
   ImageInterface<Float>& applySquare(const ImageInterface<Float>& in,
 				     ImageInterface<Float>& out,
 				     const VisBuffer& vb, Int row);

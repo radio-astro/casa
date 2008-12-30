@@ -360,6 +360,28 @@ BeamSkyJones::apply(const ImageInterface<Complex>& in,
   }
 }; 
 
+
+ImageInterface<Float>& 
+BeamSkyJones::apply(const ImageInterface<Float>& in,
+			  ImageInterface<Float>& out,
+			  const VisBuffer& vb, Int row){
+  if(changed(vb, row)) update(vb, row);
+  hasBeenApplied=True;
+  // now lastUpdateIndex?_p are valid
+  
+  if (lastUpdateIndex1_p!=lastUpdateIndex2_p) 
+    throw(AipsError("BeamSkyJones::apply(Image...) - can only treat homogeneous PB case"));
+  else {
+    PBMath myPBMath; 
+    if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
+      return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
+			      Quantity(lastParallacticAngles_p[lastUpdateIndex1_p],"rad"),
+			      doSquint_p, threshold());
+    else 
+      throw(AipsError("BeamSkyJones::apply(Image...)!!! - PBMath not found"));
+  }
+
+}
 ImageInterface<Float>& 
 BeamSkyJones::applySquare(const ImageInterface<Float>& in,
 			  ImageInterface<Float>& out,
