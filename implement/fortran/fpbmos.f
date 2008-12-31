@@ -184,7 +184,7 @@ C
                                        cwt=(convfunc(iloc(1),
      $                                      iloc(2), iloc(3),
      $                                      PolnPlane))
-                                       pcwt=conjg(pcwt)
+c                                       pcwt=conjg(pcwt)
                                     end if
 c                                    cwt = cwt * pcwt
                                     if (dopsf .eq. 1) then
@@ -566,14 +566,14 @@ C
                            pcwt=cmplx(1.0,0.0)
                            
                            do iy=-rsupport,rsupport
-                              iloc(2)=1+(iy*sampling+off(2))+convOrigin
-			      iloc(2) = iloc(2) * cfscale
-                              iv=(iy*sampling+off(2))
+c                              iloc(2)=1+(iy*sampling+off(2))+convOrigin
+			      iloc(2) = (iy*sampling+off(2)) * cfscale
+                              iv=iloc(2)
                               do ix=-rsupport,rsupport
-                                 iloc(1)=1+(ix*sampling+off(1))
-     $                                +convOrigin
-     				 iloc(1) = iloc(1) * cfscale
-                                 iu=(ix*sampling+off(1))
+c$$$                                 iloc(1)=1+(ix*sampling+off(1))
+c$$$     $                                +convOrigin
+     				 iloc(1) = (ix*sampling+off(1))*cfscale
+                                 iu=iloc(1)
                                  
                                  if(mreindex(iu,iv,iloc(1),iloc(2),
      $                                sDPA,cDPA, convOrigin, convSize)) 
@@ -777,16 +777,16 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
                         pcwt=cmplx(1.0,0.0)
 
                         do iy=-rsupport,rsupport
-                           iloc(2)=1+(iy*sampling+off(2))+convOrigin
-			   iloc(2) = iloc(2) * cfscale
-                           iv = (iy*sampling+off(2))
+c                           iloc(2)=1+(iy*sampling+off(2))+convOrigin
+                           iloc(2) = (iy*sampling+off(2))*cfscale
+                           iv = iloc(2)
                            do ix=-rsupport,rsupport
-                              iloc(1)=1+(ix*sampling+off(1))+convOrigin
-			      iloc(1) = iloc(1) * cfscale
-                              iu = (ix*sampling+off(1))
+c                              iloc(1)=1+(ix*sampling+off(1))+convOrigin
+			      iloc(1) = (ix*sampling+off(2))*cfscale
+                              iu = iloc(1)
 
                               if(reindex(iu,iv,iloc(1),iloc(2),
-     $                             sDPA,cDPA, convOrigin, convSize)) 
+     $                             sDPA,cDPA, convOrigin, convSize))
      $                             then
 
                                  if (dopointingcorrection .eq. 1) then
@@ -807,11 +807,11 @@ C The following after feed_x -> -feed_x and PA -> PA + PI/2
                                  if(uvw(3,irow).gt.0.0) then
                                     cwt=conjg(convfunc(iloc(1),
      $                                   iloc(2), iloc(3),ConjPlane))
-                                    pcwt = (pcwt)
+                                    pcwt = conjg(pcwt)
                                  else
                                     cwt=(convfunc(iloc(1),
      $                                   iloc(2), iloc(3),PolnPlane))
-                                    pcwt = (pcwt)
+c                                    pcwt = (pcwt)
                                  endif
                                  nvalue=nvalue+(cwt)*(pcwt)*
      $                              grid(loc(1)+ix,loc(2)+iy,apol,achan)
@@ -827,7 +827,7 @@ c                           write(*,*)
 c                        norm(apol) = norm(apol)/abs(norm(apol))
                         values(ipol,ichan,irow)=
      $                       nvalue*conjg(phasor)
-c     $                       /norm(apol)
+     $                       /norm(apol)
 c$$$                        write (*,*) ipol,ichan,irow,values(ipol,ichan,
 c$$$     $                       irow),nvalue,norm(apol)
 c$$$                  stop
