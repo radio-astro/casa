@@ -7250,7 +7250,7 @@ Bool Imager::createFTMachine()
                             cfCacheDirName_p, doPointing, doPBCorr,
                              tile_p, paStep_p, pbLimit_p, True);
     //
-    // Explicit type casing to ft_p does not look good.  It does not
+    // Explicit type casting of ft_p does not look good.  It does not
     // pick up the setPAIncrement() method of PBWProjectFT without
     // this
     //
@@ -7317,7 +7317,7 @@ Bool Imager::createFTMachine()
 			  tile_p, paStep_p, pbLimit_p, True);
     ((PBMosaicFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
-    // Explicit type casing to ft_p does not look good.  It does not
+    // Explicit type casting of ft_p does not look good.  It does not
     // pick up the setPAIncrement() method of PBWProjectFT without
     // this
     //
