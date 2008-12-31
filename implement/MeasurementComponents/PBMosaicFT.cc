@@ -240,11 +240,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    vb.direction1()(0).getAngle().getValue()(1));
     
     Quantity sep=ref.separation(vbDir);
-    //    cerr << sep << endl;
-    l_off = l_off - (Float)(directionCoord.referenceValue()(0) -
-			    dayHr-vb.direction1()(0).getAngle().getValue()(0));
-    m_off = m_off - (Float)(directionCoord.referenceValue()(1) -
-			    vb.direction1()(0).getAngle().getValue()(1));
+    //    cerr << "Seperation = " << sep << endl;
+    if (0)
+      {
+	l_off = l_off - (Float)(directionCoord.referenceValue()(0) -
+				dayHr-vb.direction1()(0).getAngle().getValue()(0));
+	m_off = m_off - (Float)(directionCoord.referenceValue()(1) -
+				vb.direction1()(0).getAngle().getValue()(1));
+      }
 
     static int ttt=0;
     static int fieldID=-1;
@@ -278,8 +281,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 	      << (Float)(directionCoord.referenceValue()(1)) << endl;
 // 	 cout << vb.direction1()(0).getAngle().getValue()(0) << " "
 // 	      << vb.direction1()(0).getAngle().getValue()(1) << endl;
-	cout << offsets0 << endl;
-	cout << offsets1 << endl;
+	cout << l_off << endl;
+	cout << m_off << endl;
        }
      ttt++;
     return NAnt;
@@ -291,7 +294,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // We accumulated normalized PBs.  So don't normalize the average
     // PB.
-    pbNormalized = True;
+    pbNormalized = False;
+    
   }
   //
   //---------------------------------------------------------------
@@ -311,10 +315,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	theavgPB.resize(image.shape()); 
 	theavgPB.setCoordinateInfo(image.coordinates());
 	theavgPB.set(0.0);
-	noOfPASteps = 0;
+	noOfPASteps = 1;
 	pbPeaks.resize(theavgPB.shape()(2));
 	pbPeaks.set(0.0);
 	resetPBs=False;
+	pbNormalized=False;
       }
     return pbMade;
   }
@@ -370,44 +375,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeFFT::cfft2d(*lattice,False);
 
 	Float peakAvgPB;
-    if (!avgPBReady)
-      {
-	avgPBReady=True;
-	avgPB.resize(cavgPB.shape()); 
-	avgPB.setCoordinateInfo(cavgPB.coordinates());
-	//	cavgPB.put(cavgPB.get()/(nApertures*sum(cavgPB.get())));
-// 	cout << "Sum cavgPB = " << (Complex)sum(cavgPB.get()) << " "
+	if (!avgPBReady)
+	  {
+	    avgPBReady=True;
+	    avgPB.resize(griddedWeights.shape()); 
+	    avgPB.setCoordinateInfo(griddedWeights.coordinates());
+	//	griddedWeights.put(griddedWeights.get()/(nApertures*sum(griddedWeights.get())));
+// 	cout << "Sum griddedWeights = " << (Complex)sum(griddedWeights.get()) << " "
 // 	     << nApertures
 // 	     << endl;
-	{
-	  String name("cavgPB.im");
-	  storeImg(name,cavgPB);
-	}
-	//	Complex maxPB=(Complex)sum(cavgPB.get());
-	pbNorm = (Float)abs(sum(cavgPB.get()));
-	LatticeFFT::cfft2d(cavgPB);
+
+// 	{
+// 	  String name("griddedWeights.im");
+// 	  storeImg(name,griddedWeights);
+// 	}
+	//	Complex maxPB=(Complex)sum(griddedWeights.get());
+	//	pbNorm = (Float)abs(sum(griddedWeights.get()));
+	    LatticeFFT::cfft2d(griddedWeights);
+
+	/*
 	Complex maxPB=Complex(1,0);
 	//	Complex maxPB = sumWeight(0,0);
-	//	Complex maxPB = max(cavgPB.get());
+	//	Complex maxPB = max(griddedWeights.get());
 	//	Complex maxPB=nApertures;
-	//	avgPB.copyData(LatticeExpr<Float>(abs(sqrt(cavgPB/maxPB))));
-// 	cout << "max(cavgPB) = " << max(cavgPB.get()) << endl;
-	IPosition origin(cavgPB.shape());
+	//	avgPB.copyData(LatticeExpr<Float>(abs(sqrt(griddedWeights/maxPB))));
+	// 	cout << "max(griddedWeights) = " << max(griddedWeights.get()) << endl;
+	IPosition origin(griddedWeights.shape());
 	origin(0) /= 2; origin(1) /=2;
-// 	cout << origin-1 << endl;
-// 	cout << "cavPB(Origin) = " << cavgPB.get()(origin-1) << endl;
-	avgPB.copyData(LatticeExpr<Float>(abs((cavgPB/pbNorm))));
-	peakAvgPB = max(avgPB.get());
-// 	cout << "max(avgPB) = " << peakAvgPB << endl;
-	{
-// 	  cout << "Sum of weights = " << sumWeight << endl;
-	  String name("avgPB.im");
-	  storeImg(name,avgPB);
-	}
-	resetPBs=False;
-	cfCache.finalize(avgPB);
-	//	cavgPB.resize(IPosition(1,0));
-      }
+	// 	cout << origin-1 << endl;
+	// 	cout << "cavPB(Origin) = " << griddedWeights.get()(origin-1) << endl;
+	*/
+
+	//	avgPB.copyData(LatticeExpr<Float>(abs((griddedWeights/pbNorm))));
+	    avgPB.copyData(LatticeExpr<Float>(abs((griddedWeights))));
+	//	peakAvgPB = max(avgPB.get());
+	// 	cout << "max(avgPB) = " << peakAvgPB << endl;
+	    pbNormalized=False;
+	    nPBWProjectFT::normalizeAvgPB();
+// 	{
+//  	  cout << "Sum of weights = " << sumWeight << endl;
+// 	  String name("avgPB.im");
+// 	  storeImg(name,avgPB);
+// 	}
+	    resetPBs=False;
+	    cfCache.finalize(avgPB);
+	//	griddedWeights.resize(IPosition(1,0));
+	  }
 	
 	//
 	// Apply the gridding correction
@@ -467,7 +480,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      //
 		      // This without the PS functions
 		      //
- 		      PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
+ 		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
  		      if ((abs(PBCorrection(i))) >= pbLimit_p)
 			lix.rwVectorCursor()(i) /= PBCorrection(i);
 	 	      else if (!makingPSF)
@@ -568,44 +581,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int *avgPBReady,
 		Complex *avgPB, Double *cfRefFreq_p);
     void dpbmos(Double *uvw,
-		  Double *dphase,
-		  Complex *values,
-		  Int *nvispol,
-		  Int *nvischan,
-		  const Int *flag,
-		  const Int *rflag,
-		  Int *nrow,
-		  Int *rownum,
-		  Double *scale,
-		  Double *offset,
-		  const Complex *grid,
-		  Int *nx,
-		  Int *ny,
-		  Int *npol,
-		  Int *nchan,
-		  const Double *freq,
-		  const Double *c,
-		  Int *support,
-		  Int *convsize,
-		  Int *sampling,
-		  Int *wconvsize,
-		  Complex *convfunc,
-		  Int *chanmap,
-		  Int *polmap,
-		  Int *polused,
-		  Int *ant1, 
-		  Int *ant2, 
-		  Int *nant, 
-		  Int *scanno,
-		  Double *sigma, 
-		  Float *raoff, Float *decoff,
-		  Double *area, 
-		  Int *dograd,
-		  Int *doPointingCorrection,
-		  Int *nPA,
-		  Int *paIndex,
-		  Int *CFMap,
-		  Int *ConjCFMap,
+		Double *dphase,
+		Complex *values,
+		Int *nvispol,
+		Int *nvischan,
+		const Int *flag,
+		const Int *rflag,
+		Int *nrow,
+		Int *rownum,
+		Double *scale,
+		Double *offset,
+		const Complex *grid,
+		Int *nx,
+		Int *ny,
+		Int *npol,
+		Int *nchan,
+		const Double *freq,
+		const Double *c,
+		Int *support,
+		Int *convsize,
+		Int *sampling,
+		Int *wconvsize,
+		Complex *convfunc,
+		Int *chanmap,
+		Int *polmap,
+		Int *polused,
+		Int *ant1, 
+		Int *ant2, 
+		Int *nant, 
+		Int *scanno,
+		Double *sigma, 
+		Float *raoff, Float *decoff,
+		Double *area, 
+		Int *dograd,
+		Int *doPointingCorrection,
+		Int *nPA,
+		Int *paIndex,
+		Int *CFMap,
+		Int *ConjCFMap,
 		Double *currentCFPA, Double *actualPA, Double *cfRefFreq_p);
     void dpbwgrad(Double *uvw,
 		  Double *dphase,
@@ -655,20 +668,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------
   //
   void PBMosaicFT::runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
-				   Cube<Complex>& visdata,
-				   IPosition& s,
-				   Int& Conj,
-				   Cube<Int>& flags,Vector<Int>& rowFlags,
-				   Int& rownr,Vector<Double>& actualOffset,
-				   Array<Complex>* dataPtr,
-				   Int& aNx, Int& aNy, Int& npol, Int& nchan,
-				   VisBuffer& vb,Int& Nant_p, Int& scanNo,
-				   Double& sigma,
-				   Array<Float>& l_off,
-				   Array<Float>& m_off,
-				   Double area,
-				   Int& doGrad,
-				   Int paIndex)
+				 Cube<Complex>& visdata,
+				 IPosition& s,
+				 Int& Conj,
+				 Cube<Int>& flags,Vector<Int>& rowFlags,
+				 Int& rownr,Vector<Double>& actualOffset,
+				 Array<Complex>* dataPtr,
+				 Int& aNx, Int& aNy, Int& npol, Int& nchan,
+				 VisBuffer& vb,Int& Nant_p, Int& scanNo,
+				 Double& sigma,
+				 Array<Float>& l_off,
+				 Array<Float>& m_off,
+				 Double area,
+				 Int& doGrad,
+				 Int paIndex)
   {
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
@@ -728,47 +741,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
     dpbmos(uvw_p,
-	     dphase_p,
-	     visdata_p,
-	     &s(0),
-	     &s(1),
-	     flags_p,
-	     rowFlags_p,
-	     &s(2),
-	     &rownr,
-	     uvScale_p,
-	     actualOffset_p,
-	     dataPtr_p,
-	     &aNx,
-	     &aNy,
-	     &npol,
-	     &nchan,
-	     vb_freq_p,
-	     &C::c,
-	     convSupport_p,
-	     &actualConvSize,
-	     &convSampling,
-	     &wConvSize,
-	     f_convFunc_p,
-	     chanMap_p,
-	     polMap_p,
-	     &polInUse,
-	     vb_ant1_p,
-	     vb_ant2_p,
-	     &Nant_p,
-	     &scanNo,
-	     &sigma,
-	     l_off_p, m_off_p,
-	     &area,
-	     &doGrad,
-	     &alwaysDoPointing,
-	     &npa,
-	     &paIndex_Fortran,
-	     CFMap_p,
-	     ConjCFMap_p,
-	     &currentCFPA
+	   dphase_p,
+	   visdata_p,
+	   &s(0),
+	   &s(1),
+	   flags_p,
+	   rowFlags_p,
+	   &s(2),
+	   &rownr,
+	   uvScale_p,
+	   actualOffset_p,
+	   dataPtr_p,
+	   &aNx,
+	   &aNy,
+	   &npol,
+	   &nchan,
+	   vb_freq_p,
+	   &C::c,
+	   convSupport_p,
+	   &actualConvSize,
+	   &convSampling,
+	   &wConvSize,
+	   f_convFunc_p,
+	   chanMap_p,
+	   polMap_p,
+	   &polInUse,
+	   vb_ant1_p,
+	   vb_ant2_p,
+	   &Nant_p,
+	   &scanNo,
+	   &sigma,
+	   l_off_p, m_off_p,
+	   &area,
+	   &doGrad,
+	   &alwaysDoPointing,
+	   &npa,
+	   &paIndex_Fortran,
+	   CFMap_p,
+	   ConjCFMap_p,
+	   &currentCFPA
 	   ,&actualPA, &cfRefFreq_p
-	     );
+	   );
     
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
     CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
@@ -795,22 +808,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------
   //
   void PBMosaicFT::runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
-				       Cube<Complex>& visdata,
-				       IPosition& s,
-				       Cube<Complex>& gradVisAzData,
-				       Cube<Complex>& gradVisElData,
-				       Int& Conj,
-				       Cube<Int>& flags,Vector<Int>& rowFlags,
-				       Int& rownr,Vector<Double>& actualOffset,
-				       Array<Complex>* dataPtr,
-				       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-				       VisBuffer& vb,Int& Nant_p, Int& scanNo,
-				       Double& sigma,
-				       Array<Float>& l_off,
-				       Array<Float>& m_off,
-				       Double area,
-				       Int& doGrad,
-				       Int paIndex)
+				     Cube<Complex>& visdata,
+				     IPosition& s,
+				     Cube<Complex>& gradVisAzData,
+				     Cube<Complex>& gradVisElData,
+				     Int& Conj,
+				     Cube<Int>& flags,Vector<Int>& rowFlags,
+				     Int& rownr,Vector<Double>& actualOffset,
+				     Array<Complex>* dataPtr,
+				     Int& aNx, Int& aNy, Int& npol, Int& nchan,
+				     VisBuffer& vb,Int& Nant_p, Int& scanNo,
+				     Double& sigma,
+				     Array<Float>& l_off,
+				     Array<Float>& m_off,
+				     Double area,
+				     Int& doGrad,
+				     Int paIndex)
   {
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
@@ -975,8 +988,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool tmp;
     isumwt_p        = iSumWt.getStorage(tmp);
 
-    //    Array<Complex> avgPB_p(cavgPB.get());
-    Array<Complex> avgPB_p(cavgPB.shape());
+    //    Array<Complex> avgPB_p(griddedWeights.get());
+    Array<Complex> avgPB_p(griddedWeights.shape());
     avgPB_p=Complex(0,0);
     avgPBPtr        = avgPB_p.getStorage(deleteThem(AVGPBPTR));
     
@@ -1064,21 +1077,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    nApertures+=((sum(avgPB_p)/iSumWt(0,0)));
     nApertures+=Complex(1.0,0.0);
     Complex iarea = sum(avgPB_p);
-    cavgPB.put(cavgPB.get()+avgPB_p);
+    griddedWeights.put(griddedWeights.get()+avgPB_p);
     //    nApertures += iarea;
-    //    cavgPB.put(cavgPB.get()+avgPB_p*iarea/(Complex(iSumWt(0,0),0)));
-//     cout << "Area under cavgPB_i = " << iarea 
+    //    griddedWeights.put(griddedWeights.get()+avgPB_p*iarea/(Complex(iSumWt(0,0),0)));
+//     cout << "Area under griddedWeights_i = " << iarea 
 // 	 << " " << vb.spectralWindow() << " " << vb.fieldId() 
 // 	 << nApertures
 // 	 << endl;
 //     if (max(avgPB_p) > 0)
 //       {
 // 	String name("ttt.im");
-// 	storeImg(name,cavgPB);
+// 	storeImg(name,griddedWeights);
 // 	exit(0);
 //       }
 //     cout << max(avgPB_p) << " " << min(avgPB_p) << endl;
-//     cout << max(cavgPB.get()) << " " << min(cavgPB.get()) << endl;
+//     cout << max(griddedWeights.get()) << " " << min(griddedWeights.get()) << endl;
   }
   //
   //---------------------------------------------------------------
@@ -1127,11 +1140,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PAIndex = -1;
     if (resetPBs)
       {
-	cavgPB.resize(iimage.shape()); 
-	cavgPB.setCoordinateInfo(iimage.coordinates());
-	cavgPB.set(0.0);
-	noOfPASteps = 0;
-	pbPeaks.resize(cavgPB.shape()(2));
+	griddedWeights.resize(iimage.shape()); 
+	griddedWeights.setCoordinateInfo(iimage.coordinates());
+	griddedWeights.set(0.0);
+	noOfPASteps = 1;
+	pbPeaks.resize(griddedWeights.shape()(2));
 	pbPeaks.set(0.0);
 	resetPBs=False;
       }

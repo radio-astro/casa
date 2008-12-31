@@ -97,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Complex nApertures;
     Vector<Int> fieldIds_p;
     Bool avgPBReady;
-    TempImage<Complex> cavgPB;
+    TempImage<Complex> griddedWeights;
     Float pbNorm;
     virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 		       Cube<Complex>& visdata,
