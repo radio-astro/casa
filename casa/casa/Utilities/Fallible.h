@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Fallible.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Fallible.h 20475 2008-12-19 08:22:38Z gervandiepen $
 
 #ifndef CASA_FALLIBLE_H
 #define CASA_FALLIBLE_H
@@ -60,7 +60,7 @@ void AccessInvalidFallibleObject();
 // </etymology>
 
 // <synopsis> 
-// This class resembles the one in <cite>Scientific and Engineering C++</cite>
+// This class resembles the one in <em>Scientific and Engineering C++</em>
 // by Barton and Nackman. While it was written with that book closed, the
 // class is simple enough that resemblances likely remain.
 //

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSAntennaGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSAntennaGram; grammar for antenna command lines
 
@@ -45,8 +45,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSAntennaGram.ycc"                  // bison output
-#include "MSAntennaGram.lcc"                  // flex output
+#include "MSAntennaGram.ycc"                  // flex output
+#include "MSAntennaGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSAntennaGramwrap()

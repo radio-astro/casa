@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.cc 20022 2007-03-14 04:57:14Z gervandiepen $
+//# $Id: RecordGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // RecordGram; grammar for record command lines
 
@@ -47,8 +47,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "RecordGram.ycc"                  // bison output
-#include "RecordGram.lcc"                  // flex output
+#include "RecordGram.ycc"                  // flex output
+#include "RecordGram.lcc"                  // bison output
 
 
 // Define the yywrap function for flex.

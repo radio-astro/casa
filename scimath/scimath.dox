@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: scimath.dox 20158 2007-11-08 00:15:26Z Malte.Marquarding $
+//# $Id: scimath.dox 20475 2008-12-19 08:22:38Z gervandiepen $
 
 namespace casa {
 
@@ -31,11 +31,11 @@ namespace casa {
 //
 // The scimath package contains the basic mathematical modules of AIPS++.
 // <ul>
-//  <li> <a href="group__Functionals.html">Functionals</a>:
+//  <li> <a href="group__Functionals__module.html">Functionals</a>:
 //    n-dimensional functions with automatic differentation.
-//  <li> <a href="group__Fitting.html">Fitting</a>:
+//  <li> <a href="group__Fitting__module.html">Fitting</a>:
 //    linear and non-linear fitting to parameters or Functionals.
-//  <li> <a href="group__Mathematics.html">Mathematics</a>:
+//  <li> <a href="group__Mathematics__module.html">Mathematics</a>:
 //    FFT, convolution, 2-dim interpolation, random numbers.
 // </ul>
 

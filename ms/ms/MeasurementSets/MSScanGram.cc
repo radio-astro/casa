@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSScanGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSScanGram; grammar for scan command lines
 
@@ -41,8 +41,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSScanGram.ycc"                  // bison output
-#include "MSScanGram.lcc"                  // flex output
+#include "MSScanGram.ycc"                  // flex output
+#include "MSScanGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSScanGramwrap()

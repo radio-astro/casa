@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSTimeGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSTimeGram; grammar for time command lines
 
@@ -44,9 +44,9 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSTimeGram.ycc"                  // bison output
+#include "MSTimeGram.ycc"                  // flex output
 #define yy_scan_chars yy_scan_chars_MSTimeGram
-#include "MSTimeGram.lcc"                  // flex output
+#include "MSTimeGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSTimeGramwrap()

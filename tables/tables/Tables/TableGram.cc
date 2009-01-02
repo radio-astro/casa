@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableGram.cc 19865 2007-02-13 05:26:06Z gervandiepen $
+//# $Id: TableGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // TableGram; grammar for table command lines
 
@@ -48,8 +48,8 @@
 //# So undefine WHERE first.
 #undef WHERE
 #include <casa/stdlib.h>
-#include "TableGram.ycc"                  // bison output
-#include "TableGram.lcc"                  // flex output
+#include "TableGram.ycc"                  // flex output
+#include "TableGram.lcc"                  // bison output
 
 
 // Define the yywrap function for flex.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCorrGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSCorrGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSCorrGram; grammar for corr command lines
 
@@ -43,8 +43,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSCorrGram.ycc"                  // bison output
-#include "MSCorrGram.lcc"                  // flex output
+#include "MSCorrGram.ycc"                  // flex output
+#include "MSCorrGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSCorrGramwrap()

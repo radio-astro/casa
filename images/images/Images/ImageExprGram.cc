@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprGram.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ImageExprGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // ImageExprGram; grammar for image command lines
 
@@ -42,8 +42,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "ImageExprGram.ycc"                  // bison output
-#include "ImageExprGram.lcc"                  // flex output
+#include "ImageExprGram.ycc"                  // flex output
+#include "ImageExprGram.lcc"                  // bison output
 
 
 

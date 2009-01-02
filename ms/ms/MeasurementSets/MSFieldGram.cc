@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFieldGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSFieldGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSUvDistGram; grammar for field command lines
 
@@ -47,8 +47,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSFieldGram.ycc"                  // bison output
-#include "MSFieldGram.lcc"                  // flex output
+#include "MSFieldGram.ycc"                  // flex output
+#include "MSFieldGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSFieldGramwrap()

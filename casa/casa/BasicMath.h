@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BasicMath.h 20435 2008-11-20 06:53:55Z gervandiepen $
+//# $Id: BasicMath.h 20475 2008-12-19 08:22:38Z gervandiepen $
 
 
 #ifndef CASA_BASICMATH_H
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  <li> Class <linkto class=Functional:description>
 //       Functional</linkto>
 //       to map a domain object into a range object.
-//  <li> Functions <linkto group="Math.h#Math.h interface for AIPS++>
+//  <li> Functions <linkto group="Math.h#Math interface for casacore>
 //       Math</linkto>
 //       to interface to math.h and other scalar math functions.
 //  <li> Class <linkto class=Random:description>

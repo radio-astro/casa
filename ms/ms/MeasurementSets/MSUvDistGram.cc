@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistGram.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: MSUvDistGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
 
 // MSUvDistGram; grammar for UV distribution command lines
 
@@ -46,8 +46,8 @@
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
 #include <casa/stdlib.h>
-#include "MSUvDistGram.ycc"                  // bison output
-#include "MSUvDistGram.lcc"                  // flex output
+#include "MSUvDistGram.ycc"                  // flex output
+#include "MSUvDistGram.lcc"                  // bison output
 
 // Define the yywrap function for flex.
 int MSUvDistGramwrap()

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: Math.h 20475 2008-12-19 08:22:38Z gervandiepen $
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
@@ -133,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </srcblock>
 // </synopsis>
 
-// <group name="Math.h interface for AIPS++">
+// <group name="Math interface for casacore">
 
 // Returns f1**f2. The Double precision version is defined in the standard
 // library. But many compilers are not good enough to automatically do the type

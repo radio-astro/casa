@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 20395 2008-09-09 07:21:18Z gervandiepen $
+//# $Id: TableProxy.cc 20473 2008-12-19 08:18:36Z gervandiepen $
 
 
 #include <tables/Tables/TableProxy.h>
@@ -103,8 +103,9 @@ TableProxy::TableProxy (const String& tableName,
   if (!makeTableDesc (tableDesc, tabdesc, message)) {
     throw TableError (tableName + " failed: " + message);
   }
-  // Try to create the table.
-  SetupNewTable newtab(tableName, tabdesc, Table::New);
+  // Try to create the table (scratch if no table name given).
+  SetupNewTable newtab(tableName, tabdesc,
+                       tableName.empty()  ?  Table::Scratch : Table::New);
   // Apply a possible dminfo object.
   newtab.bindCreate (dmInfo);
   table_p = Table (newtab, type, makeLockOptions(lockOptions),
@@ -295,16 +296,15 @@ TableProxy TableProxy::copy (const String& newTableName,
 			     Bool noRows)
 {
   Table::EndianFormat endOpt = makeEndianFormat (endianFormat);
-  // Always deepcopy if dminfo is not empty or if no rows are copied.
+  // Always valuecopy if dminfo is not empty or if no rows are copied.
   if (dminfo.nfields() > 0  ||  noRows) {
-    deepCopy = True;
     valueCopy = True;
   }
   Table outtab;
   if (toMemory) {
     outtab = table_p.copyToMemoryTable (newTableName, noRows);
   } else {
-    if (deepCopy) {
+    if (deepCopy || valueCopy) {
       table_p.deepCopy (newTableName, dminfo, Table::New, valueCopy,
 			endOpt, noRows);
     } else {

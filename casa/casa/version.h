@@ -1,5 +1,5 @@
-//# tables.dox: doxygen description of tables package
-//# Copyright (C) 2005
+//# version.h: Get casacore version
+//# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,20 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tables.dox 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: version.h 20479 2008-12-29 11:14:26Z gervandiepen $
 
-namespace casa {
+#ifndef CASA_VERSION_H
+#define CASA_VERSION_H
 
-// \defgroup tables tables package (libcasa_tables)
-//
-// The tables package contains the core modules for the AIPS++ Table System:
-// <ul>
-//  <li> <a href="group__Tables__module.html">Tables</a>:
-//   data base like tables with an advanced query language (TaQL).
-//  <li> <a href="group__TablePlot__module.html">TablePlot</a>:
-//   plot table columns or expressions of them.
-//  <li> <a href="group__LogTables__module.html">LogTables</a>:
-//   store log messages in tables.
-// </ul>
+#include <string>
 
-}
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+  // Get the casacore version.
+  const std::string getVersion();
+
+} //# NAMESPACE CASA - END
+
+#endif

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: images.dox 20287 2008-03-13 13:20:30Z gervandiepen $
+//# $Id: images.dox 20475 2008-12-19 08:22:38Z gervandiepen $
 
 namespace casa {
 
@@ -43,6 +43,6 @@ namespace casa {
 // </ul>
 //
 // It is built on top of the
-// <a href="group__lattices.html">lattices</a> module.
+// <a href="group__Lattices__module.html">lattices</a> module.
 
 }

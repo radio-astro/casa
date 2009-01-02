@@ -1,23 +1,38 @@
+//# ImageAnalysis.h: Image analysis and handling tool
+//# Copyright (C) 2007
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This program is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU General Public License as published by the Free
+//# Software Foundation; either version 2 of the License, or (at your option)
+//# any later version.
+//#
+//# This program is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with this program; if not, write to the Free Software Foundation, Inc.,
+//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
 
 #ifndef _IMAGEANALYSIS__H__
 #define _IMAGEANALYSIS__H__
 
 
-
-// put includes here
+//# put includes here
 #include <lattices/LatticeMath/Fit2D.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Arrays/AxesSpecifier.h>
-namespace casa {
 
-/**
- * image component class 
- *
- * // TODO: WRITE YOUR DESCRIPTION HERE! 
- *
- * @author
- * @version 
- **/
+namespace casa {
 
 class DirectionCoordinate;
 class LogIO;
@@ -40,7 +55,14 @@ template<class T> class SubLattice;
 template<class T> class SubImage;
 template<class T> class Vector;
 
+// <summary>
+// Image analysis and handling tool
+// </summary>
 
+// <synopsis>
+// This the casapy image tool.
+// One time it should be merged with pyrap's image tool ImageProxy.
+// </synopsis>
 
 class ImageAnalysis
 {

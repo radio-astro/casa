@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 20428 2008-11-17 13:47:12Z gervandiepen $
+//# $Id: Complex.h 20475 2008-12-19 08:22:38Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -155,7 +155,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# </todo>
 
 // <group name="Complex_desc">
-// </group>
 
 // <summary>Complex NaN and Infinity</summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -192,6 +191,7 @@ Bool isNaN (const DComplex& val);
 void setNaN(DComplex& val);
 Bool isInf (const DComplex& val);
 void setInf(DComplex& val);
+// </group>
 
 // <summary> DComplex comparisons </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -320,6 +320,8 @@ DComplex erf(const DComplex &in);
 Complex erf(const Complex &in);
 DComplex erfc(const DComplex &in);
 Complex erfc(const Complex &in);
+// </group>
+
 // </group>
 
 } //# NAMESPACE CASA - END
