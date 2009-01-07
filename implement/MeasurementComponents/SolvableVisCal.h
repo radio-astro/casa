@@ -199,7 +199,7 @@ public:
   virtual void differentiate(VisBuffer& vb,          // vb.visCube() has the obs. data.  vb.modelVisCube() will receive the residuals
                              VisBuffer& dV0  ,       // 1st. Derivative w.r.t. first parameter
                              VisBuffer& dV1,         // 1st. Derivative w.r.t. second parameter
-                             Matrix<Bool>& Vflg){};
+                             Matrix<Bool>& Vflg){ throw(AipsError("Invalid use of differentiate(vb,dV0,dv1)")); };
 
 
   // Differentiate VB model w.r.t. Source parameters
@@ -268,6 +268,10 @@ public:
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
 		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
 		       const String& listfile="",const Int& pagerows=50)=0;
+
+  // Handle external channel mask
+  inline void setChanMask(PtrBlock<Vector<Bool>*>& chanmask) { chanmask_=&chanmask; };
+  void applyChanMask(VisBuffer& vb);
 
 protected:
 
@@ -395,6 +399,9 @@ private:
 
   Vector<Complex> srcPolPar_;
 
+  // A _pointer_ to the external channel mask
+  PtrBlock<Vector<Bool>*> *chanmask_;
+
   // LogIO
   LogIO logsink_p;
 
@@ -433,6 +440,8 @@ public:
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow)
 			     Matrix<Bool>& Vflg) { throw(AipsError("NYI")); };
+  using SolvableVisCal::differentiate;
+
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
 		       Array<Complex>& dV) {throw(AipsError("NYI")); };
@@ -554,6 +563,7 @@ public:
 			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
 			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow,2)
 			     Matrix<Bool>& Vflg);
+  using SolvableVisMueller::differentiate;
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        

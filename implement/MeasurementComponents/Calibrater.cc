@@ -32,6 +32,7 @@
 #include <tables/Tables/TableParse.h>
 
 #include <casa/Arrays/ArrayUtil.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSFieldIndex.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -90,6 +91,7 @@ Calibrater::~Calibrater()
   cleanup();
   if (ms_p)   delete ms_p;   ms_p=0;
   if (hist_p) delete hist_p; hist_p=0;
+
 }
 
 LogIO& Calibrater::logSink() {return sink_p;};
@@ -158,6 +160,8 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
     Double timeInterval=0;
     vs_p=new VisSet(*ms_p,nosort,noselection,timeInterval,compress);
 
+    // Size-up the chanmask PB
+    initChanMask();
 
     // Initialize the weights if the scratch columns
     // were just created
@@ -200,6 +204,18 @@ Bool Calibrater::initCalSet(const Int& calSet)
   //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL3;
 
   if (vs_p) {
+
+  /*
+    Block<Int> columns;
+    // include scan iteration, for more optimal iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    vs_p->resetVisIter(columns,0.0);
+  */
     vs_p->initCalSet(calSet);
     return True;
   }
@@ -1036,6 +1052,9 @@ Bool Calibrater::cleanup() {
   // Delete the VisCals
   reset();
 
+  // Delete chanmask
+  initChanMask();
+
   // Delete derived dataset stuff
   if(vs_p) delete vs_p; vs_p=0;
   if(mssel_p) delete mssel_p; mssel_p=0;
@@ -1281,6 +1300,9 @@ Bool Calibrater::solve() {
     applystate();
     solvestate();
 
+    // Set the channel mask
+    svc_p->setChanMask(chanmask_);
+
     // Generally use standard solver
     if (svc_p->standardSolve())
       //      standardSolve();   // old way
@@ -1347,6 +1369,9 @@ Bool Calibrater::standardSolve3() {
 	
 	// Force read of the field Id
 	vb.fieldId();
+
+	// Apply the channel mask (~no-op, if unnecessary)
+	svc_p->applyChanMask(vb);
 
 	// This forces the data/model/wt I/O, and applies
 	//   any prior calibrations
@@ -2564,6 +2589,8 @@ Bool Calibrater::listCal(const String& infile,
 
 void Calibrater::selectChannel(const String& spw) {
 
+  // Initialize the chanmask_
+  initChanMask();
 
   Matrix<Int> chansel = getChanIdx(spw);
   uInt nselspw=chansel.nrow();
@@ -2584,40 +2611,60 @@ void Calibrater::selectChannel(const String& spw) {
       chansel.column(3)=1;
     }
 
-    Vector<Bool> spwdone(vs_p->numberSpw(),False);
+    Int nspw=vs_p->numberSpw();
+    Vector<Int> nChan0;
+    nChan0 = vs_p->numberChan();
+
+    Vector<Int> uspw(chansel.column(0));
+    Vector<Int> ustart(chansel.column(1));
+    Vector<Int> uend(chansel.column(2));
+
+    Vector<Int> start(nspw,INT_MAX);
+    Vector<Int> end(nspw,-INT_MAX);
     logSink() << LogIO::NORMAL;
     for (uInt i=0;i<nselspw;++i) {
       
-      Int& spw=chansel(i,0);
+      Int& spw=uspw(i);
 
-      if (!spwdone(spw)) {
+      // Initialize this spw mask, if necessary (def = masked)
+      if (!chanmask_[spw])
+      	chanmask_[spw]=new Vector<Bool>(nChan0(spw),True);
+
+      // revise net start/end/nchan
+      start(spw)=min(start(spw),ustart(i));
+      end(spw)=max(end(spw),uend(i));
+      Int nchan=end(spw)-start(spw)+1;  // net inclusive nchan
+
+      // User's 
+      Int step=chansel(i,3);
+      Int unchan=uend(i)-ustart(i)+1;
+      
+      // Update the mask (False = valid)
+      (*chanmask_[spw])(Slice(ustart(i),unchan))=False;
+
+
+      logSink() << ".  Spw " << spw << ":"
+		<< ustart(i) << "~" << uend(i) 
+		<< " (" << uend(i)-ustart(i)+1 << " channels,"
+		<< " step by " << step << ")"
+		<< endl;
+
+  /*
+      cout << i << " " << spw << " {" 
+	   << start(spw) << " [" << ustart(i) << " " 
+	   << uend(i) << "] " << end(spw) << "}" << endl;
+      cout << "chanmask = ";
+      for (Int j=0;j<nChan0(spw);++j) cout << (*chanmask_[spw])(j);
+      cout << endl << endl;
+  */
 	
-	spwdone(spw)=True;
+      // Call via VisSet (avoid call to VisIter::origin)
+      vs_p->selectChannel(1,start(spw),nchan,step,spw,False);
 	
-	Int nchan=chansel(i,2)-chansel(i,1)+1;
-	Int& start=chansel(i,1);
-	Int& end=chansel(i,2);
-	Int& step=chansel(i,3);
-	
-	logSink() << ".  Spw " << spw << ":"
-		  << start << "~" << end 
-		  << " (" << nchan << " channels,"
-		  << " step by " << step << ")"
-		  << endl;
-	
-	// Call via VisSet (avoid call to VisIter::origin)
-	vs_p->selectChannel(1,start,nchan,step,spw,False);
-	
-      }
-      else {
-	logSink() << LogIO::POST;
-	throw(AipsError("Data selection for calibration supports only one channel selection per spw."));
-      }
     } // i
+    logSink() << LogIO::POST;
 
   } // non-triv spw selection
-  logSink() << LogIO::POST;
-
 
   // For testing:
   if (False) {
@@ -2637,6 +2684,19 @@ void Calibrater::selectChannel(const String& spw) {
     }
   }
 
+}
+
+void Calibrater::initChanMask() {
+
+  for (uInt i=0;i<chanmask_.nelements();++i) 
+    if (chanmask_[i])
+      delete chanmask_[i];
+  if (vs_p) {
+    chanmask_.resize(vs_p->numberSpw(),True,True);
+    chanmask_=NULL;
+  }
+  else 
+    throw(AipsError("Trouble sizing chanmask!"));
 
 }
 

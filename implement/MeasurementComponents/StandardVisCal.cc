@@ -1163,6 +1163,9 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
         // Force read of the field Id
         vb.fieldId();
 
+	// Apply the channel mask
+	this->applyChanMask(vb);
+
         // This forces the data/model/wt I/O, and applies
         //   any prior calibrations
         ve.collapse(vb);

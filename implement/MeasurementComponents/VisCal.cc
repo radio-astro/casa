@@ -730,11 +730,11 @@ void VisMueller::syncMueller(const Bool& doInv) {
   }
   else {
     // Make local matrix element cache the correct size:
-    currMElem().resize(muellerType(),nChanMat(),nCalMat());
+    currMElem().resize(muellerNPar(this->muellerType()),nChanMat(),nCalMat());
     currMElem().unique();    // Ensure uniqueness!
 
     // OK is the shape of the M matrix itself
-    currMElemOK().resize(muellerType(),nChanMat(),nCalMat());
+    currMElemOK().resize(muellerNPar(this->muellerType()),nChanMat(),nCalMat());
     currMElemOK().unique();
     currMElemOK()=False;
     

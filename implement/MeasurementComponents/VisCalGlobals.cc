@@ -31,6 +31,7 @@
 #include <synthesis/MeasurementComponents/BPoly.h>
 #include <synthesis/MeasurementComponents/EJones.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/MeasurementComponents/AMueller.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -104,6 +105,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 
   else if (uptype=="M" || uptype=="M MUELLER")
     return new MMueller(vs);
+
+  else if (uptype=="A" || uptype=="A MUELLER")
+    return new AMueller(vs);
 
   else if (uptype=="MF" || uptype=="MF MUELLER")
     return new MfMueller(vs);

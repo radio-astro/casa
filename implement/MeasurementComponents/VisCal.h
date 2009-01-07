@@ -53,7 +53,7 @@ public:
 
   // Allowed types of VisCal matrices
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
-  enum Type{Test=0,M,K,B,G,J,D,X,C,P,E,T,F};
+  enum Type{Test=0,M,K,B,G,J,D,X,C,P,E,T,F,A};
 
   // Enumeration of parameter types (Complex, Real, or Both)
   enum ParType{Co,Re,CoRe};

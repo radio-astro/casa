@@ -324,6 +324,9 @@ class Calibrater
   // Select on channel using MSSelection
   void selectChannel(const String& spw);
 
+  // Channel mask services
+  void initChanMask();
+
   // Select on channel in the VisSet
   void selectChannel(const String& mode, 
 		     const Int& nchan, const Int& start, const Int& step,
@@ -386,6 +389,9 @@ class Calibrater
   Int histLockCounter_p;
   MSHistoryHandler *hist_p;
   Table historytab_p;
+
+  // channel masking 
+  PtrBlock<Vector<Bool>*> chanmask_;
 
 };
 

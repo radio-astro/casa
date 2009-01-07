@@ -83,7 +83,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveParOK_(vs.numberSpw(),NULL),
   solveParErr_(vs.numberSpw(),NULL),
   solveParSNR_(vs.numberSpw(),NULL),
-  srcPolPar_()
+  srcPolPar_(),
+  chanmask_(NULL)
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -118,7 +119,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveParOK_(1,NULL),
   solveParErr_(1,NULL),
   solveParSNR_(1,NULL),
-  srcPolPar_()
+  srcPolPar_(),
+  chanmask_(NULL)
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -276,6 +278,7 @@ void SolvableVisCal::setApply(const Record& apply) {
   // TBD: move spwmap to VisCal version?
 
   indgen(spwMap());
+  Bool autoFanOut(False);
   if (apply.isDefined("spwmap")) {
     Vector<Int> spwmap(apply.asArrayInt("spwmap"));
     if (allGE(spwmap,0)) {
@@ -287,6 +290,8 @@ void SolvableVisCal::setApply(const Record& apply) {
       // TBD: Report non-trivial spwmap to logger.
       //      cout << "Note: spwMap() = " << spwMap() << endl;
     }
+    else if (spwmap(0)==-999)
+      autoFanOut=True;
   }
 
   AlwaysAssert(allGE(spwMap(),0),AipsError);
@@ -305,6 +310,17 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Create CalSet, from table
   //  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
   makeCalSet();
+
+  // Handle possible global spw fan-out
+  if (autoFanOut) {
+    // Use first valid spw for all spws
+    Int ispw=0;
+    while (!cs().spwOK()(ispw)) ++ispw;
+    spwMap()=ispw;
+    logSink() << "Using automatic calibration fan-out of spw = " << ispw
+	      << " for " << typeName()
+	      << LogIO::POST;
+  }
 
   // These come from CalSet now, but will eventually come from CalInterp
 
@@ -1905,7 +1921,37 @@ void SolvableVisCal::verifyCalTable(const String& caltablename) {
   }
 }
 
+void SolvableVisCal::applyChanMask(VisBuffer& vb) {
 
+  if (!chanmask_)
+    throw(AipsError("Channel mask is unset!"));
+
+  // A reference to de-referenced pointer
+  PtrBlock<Vector<Bool>*>& chmask(*chanmask_);
+
+  Int spw=vb.spectralWindow();
+  Int chan0=vb.channel()(0);
+  Int nchan=vb.nChannel();
+  if (chmask.nelements()==uInt(nSpw()) &&
+      chmask[spw] &&
+      sum((*chmask[spw])(Slice(chan0,nchan))) > 0 ) {
+    // There are some channels to mask...
+    Vector<Bool> fr(vb.flagRow());
+    Matrix<Bool> f(vb.flag());
+    Vector<Bool> fc;
+    Vector<Bool> chm((*(*chanmask_)[spw])(Slice(chan0,nchan)));
+    for (Int irow=0;irow<vb.nRow();++irow)
+      if (!fr(irow)) {
+	fc.reference(f.column(irow));
+	fc = fc||chm;
+	
+	//	cout << irow << ": ";
+	//	for (Int j=0;j<nchan;++j) cout << fc(j);
+	//	cout << endl;
+	
+      }
+  }
+}
 
 
 // **********************************************************
@@ -2015,7 +2061,7 @@ void SolvableVisMueller::syncDiffMueller() {
     // Ensure trivial matrices ready
     initTrivDM();
   else {
-    diffMElem().resize(IPosition(4,muellerType(),nPar(),nChanMat(),nCalMat()));
+    diffMElem().resize(IPosition(4,muellerNPar(muellerType()),nPar(),nChanMat(),nCalMat()));
     diffMElem().unique();
     invalidateDM();
 
