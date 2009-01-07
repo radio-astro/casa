@@ -205,7 +205,6 @@ Bool Calibrater::initCalSet(const Int& calSet)
 
   if (vs_p) {
 
-  /*
     Block<Int> columns;
     // include scan iteration, for more optimal iteration
     columns.resize(5);
@@ -215,7 +214,7 @@ Bool Calibrater::initCalSet(const Int& calSet)
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
     vs_p->resetVisIter(columns,0.0);
-  */
+
     vs_p->initCalSet(calSet);
     return True;
   }
