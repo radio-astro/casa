@@ -344,6 +344,56 @@ void MuellerScal::zero() {
 }
 
 
+// Constructor
+AddMuellerDiag2::AddMuellerDiag2() : MuellerDiag2() {}
+ 
+void AddMuellerDiag2::invert() {
+
+  // "invert" means "negate" for additive term
+
+  if (!ok_) throw(AipsError("Illegal use of AddMuellerDiag2::invert."));
+
+  mi_=m_;
+  oki_=ok_;
+  for (Int i=0;i<2;++i,++mi_,++oki_) 
+    if ((*oki_))
+      (*mi_)*=-1.0;  // negate
+    else {
+      (*mi_) = Complex(0.0);
+      (*oki_) = False;
+    }
+  
+}
+
+// In-place multiply onto a VisVector: optimized Diag2 version
+void AddMuellerDiag2::apply(VisVector& v) {
+
+  // "apply" means "add" for additive term
+
+  switch (v.type()) {
+  case VisVector::Four: 
+    // Apply of "corners-only" Mueller to VisVector 4-vector (x-hands zeroed)
+    v.v_[0]+=m_[0];   // add
+    v.v_[1]*=0.0;
+    v.v_[2]*=0.0;
+    v.v_[3]+=m_[1];   // add
+    break;
+  case VisVector::Two: 
+    // Element-by-element apply of "corners-only" Mueller to VisVector 2-vector
+    for (Int i=0;i<2;++i) v.v_[i]+=m_[i]; // add
+    break;
+  case VisVector::One: {
+    // Mueller corner element used as scalar (pol-sensitivity TBD)
+    v.v_[0]+=(*m_);  // add
+    break;
+  }
+  }
+ 
+}
+
+
+
+
 // GLOBALS---------------------------
 
 Mueller* createMueller(const Mueller::MuellerType& mtype) {
@@ -358,6 +408,9 @@ Mueller* createMueller(const Mueller::MuellerType& mtype) {
   case Mueller::Diag2:
     m = new MuellerDiag2();
     break;
+  case Mueller::AddDiag2:
+    m = new AddMuellerDiag2();
+    break;
   case Mueller::Scalar:
     m = new MuellerScal();
     break;
@@ -366,6 +419,7 @@ Mueller* createMueller(const Mueller::MuellerType& mtype) {
 }
 
 // Return the enum for from an int
+/* 
 Mueller::MuellerType muellerType(const Int& n) {
   switch (n) {
   case 1:
@@ -378,10 +432,10 @@ Mueller::MuellerType muellerType(const Int& n) {
     return Mueller::General;
   default:
     throw(AipsError("Bad MuellerType."));
-
   }
-
 }
+*/
+
 Mueller::MuellerType muellerType(const Jones::JonesType& jtype,const VisVector::VisType& vtype) {
   switch(jtype) {
   case Jones::General:
@@ -407,6 +461,10 @@ Mueller::MuellerType muellerType(const Jones::JonesType& jtype,const VisVector::
   case Jones::Scalar:
     return Mueller::Scalar;
     break;
+  default:
+    // can't reach here
+    throw(AipsError("Cannot figure out Mueller algebra from Jones algebra"));
+
   }
   // Signature consistency (can't reach here)
   return Mueller::General;
@@ -439,6 +497,10 @@ ostream& operator<<(ostream& os, const Mueller& mat) {
     break;
   case Mueller::Diag2:
     cout << "Diag2 Mueller: " << endl;
+    cout << " [" << *mi++ << ", " << *mi << "]";
+    break;
+  case Mueller::AddDiag2:
+    cout << "AddDiag2 Mueller: " << endl;
     cout << " [" << *mi++ << ", " << *mi << "]";
     break;
   case Mueller::Scalar:

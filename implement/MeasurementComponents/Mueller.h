@@ -41,7 +41,7 @@ class Mueller {
   
 public:
   
-  enum MuellerType{General=16,Diagonal=4,Diag2=2,Scalar=1};
+  enum MuellerType{AddDiag2=5,General=4,Diagonal=3,Diag2=2,Scalar=1};
  
   // Construct 
   Mueller();
@@ -51,6 +51,7 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::General; };
+  inline virtual uInt typesize() const { return 16; };
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { m0_=&mat; origin(); };
@@ -59,12 +60,12 @@ public:
   // Reset to origin
   inline void origin() {m_=m0_;ok_=ok0_;};
   
-  // Increment to next vector (according to type)
-  inline void operator++()    { m_+=type(); if (ok_) ok_+=type();};
-  inline void operator++(int) { m_+=type(); if (ok_) ok_+=type();};
+  // Increment to next vector (according to len)
+  inline void operator++()    { m_+=typesize(); if (ok_) ok_+=typesize();};
+  inline void operator++(int) { m_+=typesize(); if (ok_) ok_+=typesize();};
 
-  // Advance step matrices forward (according to type)
-  inline void advance(const Int& step) { m_+=(step*type()); if (ok_) ok_+=(step*type());};
+  // Advance step matrices forward (according to len)
+  inline void advance(const Int& step) { m_+=(step*typesize()); if (ok_) ok_+=(step*typesize());};
 
   // Formation from Jones matrix outer product: General version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -122,7 +123,8 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Diagonal; };
-  
+  inline virtual uInt typesize() const { return 4; };
+
   // Formation from Jones matrix outer product: optimized Diagonal version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
   
@@ -158,6 +160,7 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Diag2; };
+  inline virtual uInt typesize() const { return 2; };
 
   // Formation from Jones matrix outer product: optimized Diag2 version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -195,6 +198,7 @@ public:
 
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Scalar; }
+  inline virtual uInt typesize() const { return 1; };
 
   // Formation from Jones matrix outer product: optimized Scalar version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -219,13 +223,65 @@ private:
 
 };
 
+class AddMuellerDiag2 : public MuellerDiag2 {
+  
+public:
+
+  // Construct 
+  AddMuellerDiag2();
+
+  // Dtor
+  virtual ~AddMuellerDiag2() {};
+  
+  // Return type id
+  inline virtual MuellerType type() const { return Mueller::AddDiag2; };
+
+  // In-place invert
+  virtual void invert();
+
+  // In-place multiply onto a VisVector: optimized Diag2 version
+  virtual void apply(VisVector& v);
+  using MuellerDiag2::apply;
+
+protected:
+  
+  // Default/Copy ctors are protected 
+  AddMuellerDiag2(const AddMuellerDiag2& mat);
+  
+};
+
+
+
+
 // Globals
 
 // Factory method
 Mueller* createMueller(const Mueller::MuellerType& mtype);
 
 // Return Mueller type according to Int
-Mueller::MuellerType muellerType(const Int& n);
+//Mueller::MuellerType muellerType(const Int& n);
+
+// Return parameter count according to type
+inline Int muellerNPar(const Mueller::MuellerType& mtype) {
+  switch (mtype) {
+  case Mueller::General:
+    return 16;
+    break;
+  case Mueller::Diagonal:
+    return 4;
+    break;
+  case Mueller::Diag2:
+  case Mueller::AddDiag2:
+    return 2;
+    break;
+  case Mueller::Scalar:
+    return 1;
+    break;
+  }
+  // must return something (shouldn't reach here)
+  return 0;
+}
+    
 
 // Return Mueller type according to underlying Jones and VisVector types
 Mueller::MuellerType muellerType(const Jones::JonesType& jtype, const VisVector::VisType& vtype);
