@@ -276,6 +276,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       makeNewtonRaphsonStep(se, False);
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
+
+
     if(numberIterations() < 1){
       // Why waste the time to set up
       return True;
@@ -428,7 +430,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		for (Int iy=0;iy<ny;iy++) {
 		  for (Int ix=0;ix<nx;ix++) {
 		    for (Int pol=0;pol<npol;pol++) {
-		      resid(ix,iy,pol)*=weight(ix,iy,pol);
+		      //resid(ix,iy,pol)*=weight(ix,iy,pol);
 		      if(weight(ix,iy,pol)>0.0001) {
 			wmask(ix,iy)=1.0;
 		      }
@@ -477,6 +479,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
 		  ///Need to go
+		  /*
 		  for (Int iy=0;iy<ny;iy++) {
 		    for (Int ix=0;ix<nx;ix++) {
 		      for (Int pol=0;pol<npol;pol++) {
@@ -486,7 +489,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		      }
 		    }
 		  }
-		  deltaimageli.rwCursor()=step.addDegenerate(1);     	  
+		  deltaimageli.rwCursor()=step.addDegenerate(1);    
+		  */ 	  
 		  /////
 		  imageli.rwCursor()+=deltaimageli.cursor();
 		  psfli.cursor().freeStorage (lpsf_data, delete_itp);
@@ -529,7 +533,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  cleaner.getModel(deltaimageli.rwCursor());
 		  /////Need to go
-		  
+		  /*
 		  Cube<Float> step(deltaimageli.rwCursor().nonDegenerate(3));
 		  for (Int iy=0;iy<ny;iy++) {
 		    for (Int ix=0;ix<nx;ix++) {
@@ -541,7 +545,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		    }
 		  }
 		  
-		  deltaimageli.rwCursor()=step.addDegenerate(1);	  
+		  deltaimageli.rwCursor()=step.addDegenerate(1);
+		  */	  
 		  /////
 		  imageli.rwCursor()+=deltaimageli.cursor();
 		  eqn.residual(imageStepli.rwCursor(), cleaner);

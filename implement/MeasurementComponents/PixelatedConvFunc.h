@@ -51,7 +51,7 @@ namespace casa{
       cache.resize(shape);
     };
 
-    virtual T getValue(Vector<T>& coord, Vector<T>& offset) {};
+    virtual T getValue(Vector<T>& coord, Vector<T>& offset) { return (T)(1.0);};
   private:
     Int nDim;
     IPosition shape;

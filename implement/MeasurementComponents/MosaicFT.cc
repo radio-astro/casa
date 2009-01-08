@@ -643,12 +643,12 @@ Array<Complex>* MosaicFT::getDataPointer(const IPosition& centerLoc2D,
 
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
-#define gmosft gmosft_
-#define dmosft dmosft_
+#define gmos gmos_
+#define dmos dmos_
 #endif
 
 extern "C" { 
-  void gmosft(const Double*,
+  void gmos(const Double*,
 	      Double*,
 	      const Complex*,
 	      Int*,
@@ -680,7 +680,7 @@ extern "C" {
 	      Int*,
               Int*,
               Int*);
-  void dmosft(const Double*,
+  void dmos(const Double*,
 	      Double*,
 	      Complex*,
 	      Int*,
@@ -902,7 +902,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     const Complex *convstor=convFunc.getStorage(convcopy);
     Bool weightcopy;
     Complex *gridwgtstor=griddedWeight.getStorage(weightcopy);
-    gmosft(uvwstor,
+    gmos(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
 	   &s(0),
@@ -1044,7 +1044,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
       }
       IPosition s(vb.modelVisCube().shape());
-      dmosft(uvw.getStorage(del),
+      dmos(uvw.getStorage(del),
 	     dphase.getStorage(del),
 	     vb.modelVisCube().getStorage(del),
 	     &s(0),
@@ -1084,7 +1084,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
      Bool convcopy;
      const Complex *convstor=convFunc.getStorage(convcopy);
      IPosition s(vb.modelVisCube().shape());
-     dmosft(uvwstor,
+     dmos(uvwstor,
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s(0),
@@ -1183,7 +1183,7 @@ void MosaicFT::get(VisBuffer& vb, Cube<Complex>& modelVis,
   
   Bool del;
   IPosition s(modelVis.shape());
-  dmosft(uvw.getStorage(del),
+  dmos(uvw.getStorage(del),
 	 dphase.getStorage(del),
 	 modelVis.getStorage(del),
 	 &s(0),
@@ -1310,12 +1310,23 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
   
   weights.resize(sumWeight.shape());
   convertArray(weights,sumWeight);
-
+  /*
+  weightImage.copyData((LatticeExpr<Float>) 
+		       (iif((pbConvFunc_p->getFluxScaleImage()) > (0.0), 
+			    (*skyCoverage_p),0.0)));
+  */
   weightImage.copyData(*skyCoverage_p);
 
  
 
 }
+
+void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
+
+  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage());
+
+}
+
 
 Bool MosaicFT::toRecord(String& error, RecordInterface& outRec, 
 			Bool withImage) {

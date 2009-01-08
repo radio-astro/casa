@@ -171,6 +171,10 @@ public:
   // Get the final weights image
   virtual void getWeightImage(ImageInterface<Float>&, Matrix<Float>&) = 0;
 
+  // Get a flux (divide by this to get a flux density correct image) 
+  // image if there is one
+  virtual void getFluxImage(ImageInterface<Float>& image){};
+
   // Make the entire image
   virtual void makeImage(FTMachine::Type type,
 			 VisSet& vs,

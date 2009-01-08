@@ -58,6 +58,7 @@ namespace casa{
   template<class T> class Matrix;
   class VisBuffer;
   class SkyJones;
+  class CoordinateSystem;
 
   class SimplePBConvFunc : public PixelatedConvFunc<Complex>
     {
@@ -75,9 +76,6 @@ namespace casa{
 			    Matrix<Complex>& convFunc, 
 			    Matrix<Complex>& weightConvFunc, Int& convsize,
 				    Int& convSupport){};
-
-
-      
       
       ////Returns the convfunctions in the Cubes...the Matrix rowChanMap maps 
       // the vb.row and channel 
@@ -90,20 +88,31 @@ namespace casa{
 				    Vector<Int>& convsize,
 				    Vector<Int>& convSupport,
 				    Vector<Int>& rowChanMap);
+      ImageInterface<Float>&  getFluxScaleImage();
 
       virtual void setSkyJones(SkyJones* sj);
 
     protected:
       SkyJones* sj_p;
+      TempImage<Float> fluxScale_p;
+      Int nx_p; 
+      Int ny_p;
+      Int nchan_p;
+      Int npol_p;
+      CoordinateSystem csys_p;
 
     private:
       Bool checkPBOfField(const VisBuffer& vb);
+      void addPBToFlux(const VisBuffer& vb);
       SimpleOrderedMap <String, Int> convFunctionMap_p;
       Int actualConvIndex_p;
       PBMathInterface::PBClass pbClass_p;
 
       Matrix<Complex> convFunc_p;
       Matrix<Complex> weightConvFunc_p;
+      Matrix<Complex> convSave_p;
+      Matrix<Complex> weightSave_p;
+      Bool doneMainConv_p;
       Int convSize_p; 
       Int convSupport_p;
       //These are cubes for multiple PA
@@ -113,6 +122,7 @@ namespace casa{
       Block<CountedPtr<Vector<Int> > > convSizes_p;
       Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
 
+      
     };
 };// end of namespace
 #endif

@@ -152,14 +152,15 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
 	else {
 	  PBMath::whichCommonPBtoUse( telescope_p, freq, band, whichPB, commonPBName );
 	}
-   
+	
 	if(whichPB != PBMath::UNKNOWN){
-	    
+	  os << "PB used " << commonPBName << LogIO::POST;
 	    PBMath  myPBMath(telescope_p, False, freq );
 	    setPBMath (telescope_p, myPBMath);
 	}
 	else{
 	  //lets do it by diameter
+	  os << "PB used determined from dish-diameter" << LogIO::POST;
 	  Double diam=msc.antenna().dishDiameter()(0);
 	  PBMath myPBMath(diam, False, freq);
 	  setPBMath(telescope_p, myPBMath);

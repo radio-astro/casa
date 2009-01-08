@@ -203,6 +203,10 @@ public:
   // Get the final weights image
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
+  // Get a flux (divide by this to get a flux density correct image) 
+  // image if there is one
+  virtual void getFluxImage(ImageInterface<Float>& image);
+
   // Save and restore the MosaicFT to and from a record
   Bool toRecord(String& error, RecordInterface& outRec, 
 		Bool withImage=False);
