@@ -46,6 +46,7 @@ class CubeSkyEquation : public SkyEquation {
   virtual ~CubeSkyEquation();
   virtual void predict(Bool incremental=False);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
+  
   virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
   virtual void putSlice(const VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
@@ -64,11 +65,15 @@ class CubeSkyEquation : public SkyEquation {
   //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
   void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
 
+  //Get the flux scale that the ftmachines have if they have
+  virtual void getFluxImage(Int model);
+
  protected:
 
   //Different versions of psf making
   void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
   void makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs);
+  virtual void fixImageScale();
   Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
   Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;
   Block<Matrix<Float> >weightSlice_p;

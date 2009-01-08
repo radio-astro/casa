@@ -94,7 +94,6 @@
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSummary.h>
-#include <synthesis/MeasurementEquations/MosaicSkyEquation.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementEquations/VisEquation.h>
@@ -5266,11 +5265,12 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
 	    //
-	    Float cutoffval=minPB_p*minPB_p;
-	    if(ft_p->name()!="MosaicFT")
-	      cutoffval=minPB_p;
+	    Float cutoffval=minPB_p;
+	    if(ft_p->name()=="MosaicFT")
+	      cutoffval=minPB_p*minPB_p;
 
 	    if (sm_p->doFluxScale(thismodel)) {
+	      se_p->getFluxImage(thismodel);
 	      if(scaleType_p=="NONE"){
 		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
@@ -5330,9 +5330,9 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
         if (sm_p->doFluxScale(thismodel)) {
 	  answer = True;
           fluxScale.copyData(sm_p->fluxScale(thismodel));
-	  Float cutoffval=minPB_p*minPB_p;
-	  if(ft_p->name()!="MosaicFT")
-	    cutoffval=minPB_p;
+	  Float cutoffval=minPB_p;
+	  if(ft_p->name()=="MosaicFT")
+	    cutoffval=minPB_p*minPB_p;
 	  LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 				       False, True));
 	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);

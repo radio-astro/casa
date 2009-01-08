@@ -1503,8 +1503,10 @@ Bool SkyEquation::ok() {
 
 void SkyEquation::scaleImage(Int model)
 {
+  
   if (sm_->doFluxScale(model)){  
-    LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/((sm_->fluxScale(model)))) );
+
+    LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/(sm_->fluxScale(model))) );
     sm_->image(model).copyData(latticeExpr);
     
   }
@@ -1549,6 +1551,13 @@ void SkyEquation::scaleDeltaImage(Int model)
   
 };
 
+void SkyEquation::getFluxImage(Int model){
+  if ((sm_->doFluxScale(model))){
+    ft_->getFluxImage(sm_->fluxScale(model)); 
+  }
+
+}
+
 void SkyEquation::unScaleDeltaImage(Int model)
 {
   if ( (sm_->doFluxScale(model))){
@@ -1575,12 +1584,13 @@ void SkyEquation::fixImageScale()
       ggSMax =  max(ggSMax,LEN.getFloat());
     }
 
+    ggSMax_p=ggSMax;
     Float ggSMin1;
     Float ggSMin2;
     
     ggSMin1 = ggSMax * constPB_p * constPB_p;
     ggSMin2 = ggSMax * minPB_p * minPB_p;
- 
+    
 
     /*Don't print this for now
     if (scaleType_p == "SAULT") {
@@ -1641,7 +1651,7 @@ void SkyEquation::fixImageScale()
 
 	*/
 	 
-
+	
 	  Int nXX=sm_->ggS(model).shape()(0);
 	  Int nYY=sm_->ggS(model).shape()(1);
 	  Int npola= sm_->ggS(model).shape()(2);
@@ -1671,12 +1681,21 @@ void SkyEquation::fixImageScale()
 		ggSSub.copyData( (LatticeExpr<Float>) 
 				 (iif(ggSSub < (ggSMin2), 0.0, 
 				      planeMax) ));
-
+	
+	
 
 	      }
 	    }
+
 	  }
-	  
+	
+	  /*
+	    ft_->getFluxImage(sm_->fluxScale(model));
+	
+	    sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+	    (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       (sm_->ggS(model)) )) );
+	  */
 	  //}	
       }
     

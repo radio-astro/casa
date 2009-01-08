@@ -222,6 +222,9 @@ public:
   
   // Return the name of the underlying MeasurementSet
   virtual String associatedMSName();
+
+  //assign the Skymodel flux scale  the flux scale that the ftmachines have if they have
+  virtual void getFluxImage(Int model);
   
  protected:
 
@@ -376,7 +379,7 @@ public:
   // Workspace
   // <group>
   Float chisq, sumwt;
-  Matrix<Float> sggS;
+  Float ggSMax_p;
   // </group>
 
   LogSink logSink_p;

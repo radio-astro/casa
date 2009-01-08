@@ -620,7 +620,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   }
   ft_=&(*ftm_p[0]);
 
-  fixImageScale();
+  this->fixImageScale();
   //lets return original selection back to iterator
   if(changedVI)
     vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
@@ -682,6 +682,12 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   vb_p.updateCoordInfo();
 }
 
+void CubeSkyEquation::getFluxImage(Int model){
+  if ((sm_->doFluxScale(model)) && (ftm_p.nelements() > uInt(model))){
+    ftm_p[model]->getFluxImage(sm_->fluxScale(model)); 
+  }
+
+}
 
 void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
@@ -1080,5 +1086,157 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 
     return True;
   }
+
+
+void CubeSkyEquation::fixImageScale()
+{
+  LogIO os(LogOrigin("CubeSkyEquation", "fixImageScale"));
+
+  // make a minimum value to ggS
+  // This has the same effect as Sault Weighting, but 
+  // is implemented somewhat differently.
+  // We also keep the fluxScale(mod) images around to
+  // undo the weighting.
+  Float ggSMax=0.0;
+  for (Int model=0;model<sm_->numberOfModels();model++) {
+    
+    LatticeExprNode LEN = max( sm_->ggS(model) );
+    ggSMax =  max(ggSMax,LEN.getFloat());
+  }
+  ggSMax_p=ggSMax;
+  Float ggSMin1;
+  Float ggSMin2;
+  
+  ggSMin1 = ggSMax * constPB_p * constPB_p;
+  ggSMin2 = ggSMax * minPB_p * minPB_p;
+    
+  for (Int model=0;model<sm_->numberOfModels();model++) {
+    if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
+      
+      
+
+    /*Don't print this for now
+      if (scaleType_p == "SAULT") {
+      os << "Using SAULT image plane weighting" << LogIO::POST;
+    }
+    else {
+    os << "Using No image plane weighting" << LogIO::POST;
+    }
+    */
+    sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+    if ((ftm_p[model]->name()!="MosaicFT")) {
+      if(scaleType_p=="SAULT"){
+	
+	  // Adjust flux scale to account for ggS being truncated at ggSMin1
+	  // Below ggSMin2, set flux scale to 0.0
+	  // FluxScale * image => true brightness distribution, but
+	  // noise increases at edge.
+	  // if ggS < ggSMin2, set to Zero;
+	  // if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
+	  // if ggS > ggSMin1, set to 1.0
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))/ggSMin1) )) );
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) > (ggSMin1), 1.0,
+					       (sm_->fluxScale(model)) )) );
+	  // truncate ggS at ggSMin1
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+				    (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
+					 sm_->ggS(model)) )
+				    );
+	}
+
+	else{
+
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))/ggSMax) )) );
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))*ggSMax) )) );
+
+	}
+
+      } else {
+	/*
+	if(ft_->name() != "MosaicFT"){
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 1.0 );
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+	  			    (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
+	  				 sm_->ggS(model)) ));
+	 
+
+	}
+	else{
+
+	*/
+	 
+	
+	  Int nXX=sm_->ggS(model).shape()(0);
+	  Int nYY=sm_->ggS(model).shape()(1);
+	  Int npola= sm_->ggS(model).shape()(2);
+	  Int nchana= sm_->ggS(model).shape()(3);
+	  IPosition blc(4,nXX, nYY, npola, nchana);
+	  IPosition trc(4, nXX, nYY, npola, nchana);
+	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
+
+
+	  //Those damn weights per plane can be wildly different so 
+	  //deal with it properly here
+	  for (Int j=0; j < npola; ++j){
+	    for (Int k=0; k < nchana ; ++k){
+	      
+	      blc(2)=j; trc(2)=j;
+	      blc(3)=k; trc(3)=k;
+	      Slicer sl(blc, trc, Slicer::endIsLast);
+	      SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
+	      SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
+	      Float planeMax;
+	      LatticeExprNode LEN = max( ggSSub );
+	      planeMax =  LEN.getFloat();
+	      if(planeMax !=0){
+		fscalesub.copyData( (LatticeExpr<Float>) 
+				    (iif(ggSSub < (ggSMin2), 
+					 0.0, (ggSSub/planeMax))));
+		ggSSub.copyData( (LatticeExpr<Float>) 
+				 (iif(ggSSub < (ggSMin2), 0.0, 
+				      (planeMax))));
+	
+	
+
+	      }
+	    }
+
+	  }
+	  /*
+	    
+	  ftm_p[model]->getFluxImage(sm_->fluxScale(model));
+	  
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					  (sm_->ggS(model)/ggSMax) )) );
+
+	  */
+	  //}	
+      }
+    
+      //because for usual ft machines a applySJoneInv is done on the gS
+      //in the finalizeput stage...need to understand if its necessary
+      /*need to understand that square business
+      if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
+	sm_->gS(model).copyData( (LatticeExpr<Float>) 
+				 (iif(sm_->fluxScale(model) > 0.0, 
+				      ((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
+
+
+      }
+      */
+      ///
+    }
+
+  }
+}
+
 
 } //# NAMESPACE CASA - END
