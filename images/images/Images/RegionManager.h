@@ -23,13 +23,12 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-#ifndef _REGIONMANAGER__H__
-#define _REGIONMANAGER__H__
+
+#ifndef IMAGES_REGIONMANAGER_H
+#define IMAGES_REGIONMANAGER_H
 
 #include <lattices/Lattices/RegionType.h>
 #include <tables/Tables/Table.h>
-
-// put includes here
 
 
 namespace casa {

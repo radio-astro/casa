@@ -24,11 +24,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: ProgressMeter.cc 20458 2008-12-02 12:49:56Z gervandiepen $
 
 
 #include <time.h>
-#include <fstream.h>
+#include <casa/fstream.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Block.h>

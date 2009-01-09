@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Arrays.h 19848 2007-02-12 04:43:35Z Malte.Marquarding $
+//# $Id: Arrays.h 20455 2008-12-02 12:45:20Z gervandiepen $
 
 #ifndef CASA_ARRAYS_H
 #define CASA_ARRAYS_H
@@ -42,6 +42,7 @@
 #include <casa/Arrays/VectorIter.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -116,6 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li>
 // <linkto group="ArrayMath.h#Array mathematical operations">Mathematical</linkto>,
 // <linkto group="ArrayLogical.h#Array logical operations">logical</linkto>,
+// <linkto group="ArrayPartMath.h#Array partial operations">chunked mathematical and logical</linkto>,
 // <linkto group="ArrayIO.h#Array IO">IO</linkto>,
 // and other useful operations are provided for
 // Arrays and MaskedArrays.

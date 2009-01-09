@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Record2.cc 19609 2006-09-14 03:31:16Z gvandiep $
+//# $Id: Record2.cc 20456 2008-12-02 12:47:32Z gervandiepen $
 
 #include <casa/Containers/Record.h>
 #include <casa/Containers/ValueHolder.h>
@@ -148,6 +148,10 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
     break;
   case TpRecord:
     defineRecord (id, value.asRecord());
+    break;
+  case TpOther:
+    // An untyped array is handled as an Int array.
+    define (id, value.asArrayInt());
     break;
   default:
     throw AipsError ("Record::defineFromValueHolder - unknown data type");

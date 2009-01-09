@@ -86,59 +86,18 @@ Bool Interpolate2D::interpLinear(T &result,
 
   // 2x2 starting from [i,j]
   // mask==True is a good pixel
-  if (i < si && j < sj) {
-     if (maskPtr &&
-       (!(*maskPtr)(i,j)   || !(*maskPtr)(i+1,j) ||
-        !(*maskPtr)(i,j+1) || !(*maskPtr)(i+1,j+1))) {
-         // if any of the 4 pixels is bad then...
-
-         // Don't give up like before:   return False;
-         // But use remaining 1-3 good pixels in the weighted
-         // average.
-
-         Double TT = where[0] - i;
-         Double UU = where[1] - j;
-         Double weight = 0;
-
-	 const Double threshold = 0.5;
-         // lower weight threshold for the acceptable support,
-         // in order to avoid "division by zero" noise
-
-         result = 0;
-         if ((*maskPtr)(i,j)) {
-             result += (1.0-TT)*(1.0-UU)*data(i,j);
-             weight += (1.0-TT)*(1.0-UU);
-         }
-         if ((*maskPtr)(i+1,j)) {
-             result += TT*(1.0-UU)*data(i+1,j);
-             weight += TT*(1.0-UU);
-         }
-         if ((*maskPtr)(i+1,j+1)) {
-             result +=  TT*UU*data(i+1,j+1);
-             weight +=  TT*UU;
-         }
-         if ((*maskPtr)(i,j+1)) {
-             result += (1.0-TT)*UU*data(i,j+1);
-             weight += (1.0-TT)*UU;
-         }
-         
-         if (weight > threshold) {
-             result = result / weight;
-             return True;
-         }
-         else {
-             return False;
-         }
-     }
-     else {
-         Double TT = where[0] - i;
-         Double UU = where[1] - j;
-	 result = (1.0-TT)*(1.0-UU)*data(i,j) +
-	     TT*(1.0-UU)*data(i+1,j) +
-	     TT*UU*data(i+1,j+1) +
-	     (1.0-TT)*UU*data(i,j+1);
-	 return True;
-     }
+  if (i < si && j < sj) {                   
+    if (maskPtr) {
+      if (!(*maskPtr)(i,j) || !(*maskPtr)(i+1,j) ||
+	  !(*maskPtr)(i,j+1) || !(*maskPtr)(i+1,j+1)) return False;
+    }
+    Double TT = where[0] - i;
+    Double UU = where[1] - j;
+    result = (1.0-TT)*(1.0-UU)*data(i,j) +
+      TT*(1.0-UU)*data(i+1,j) +
+      TT*UU*data(i+1,j+1) +
+      (1.0-TT)*UU*data(i,j+1);
+    return True;
   } else return False;
 }
 
@@ -217,14 +176,15 @@ Bool Interpolate2D::interpCubic(T &result,
    Int i = Int(where[0]);
    Int j = Int(where[1]);
    
-   // Handle bad/masked pixels and edge (and beyond)
-   // by using linear.
+   // Handle edge (and beyond) by using linear.
    
-   if (i<=0 || i>=shape[0]-2 || j<=0 || j>=shape[1]-2 ||
-       anyBadMaskPixels(maskPtr, i-1, i+2, j-1, j+2)) {
-
+   if (i<=0 || i>=shape[0]-2 || j<=0 || j>=shape[1]-2) {
      return interpLinear<T>(result, where, data, maskPtr);
    }
+   
+   // Handle mask
+   
+   if (anyBadMaskPixels(maskPtr, i-1, i+2, j-1, j+2)) return False;
    
    // Do it
    

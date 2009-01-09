@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCache.cc 20251 2008-02-23 15:04:20Z gervandiepen $
+//# $Id$
 
 #include <tables/Tables/TableCache.h>
 #include <casa/Exceptions/Error.h>
@@ -65,21 +65,21 @@ void TableCache::define (const String& tableName, PlainTable* tab)
 
 void TableCache::remove (const String& tableName)
 {
-    // For static Table objects it is possible that the cache is
+    // For static Table objects it is possible that the TableCache is
     // deleted before the Table.
     // Therefore do not delete if the map is already empty
     // (otherwise an exception is thrown).
-    if (tableMap_p.ndefined() > 0) {
-      try {
-	tableMap_p.remove (tableName);
-      } catch (AipsError&) {
-	// Something strange has happened.
-	// Throwing an exception causes an immediate crash (probably by
-	// Table destructors).
-	// So write a message on stderr;
-	std::cerr << "Cannot remove the table from the table cache;"
-	  "suggest restarting" << std::endl;
-      }
+	// The isDefined guards against removing a nonexistant table
+    try{
+       if (tableMap_p.ndefined() > 0 && tableMap_p.isDefined(tableName)) {
+	   tableMap_p.remove (tableName);
+       }
+    } catch(AipsError x) {
+	    // Clearly something bad has happened here this is merely a band-aide.  The like thing to do
+	    // is wipe the Table cache.  Now for some reason the throw causes an immediate abort.
+		// throw AipsError("Can't remove the table from the table cache, suggest restarting");
+		std::cerr << "Can't remove the table " << tableName << " from the table cache, suggest restarting" << std:: endl;
+		//throw x;
     }
 }
 
