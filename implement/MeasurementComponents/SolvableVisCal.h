@@ -271,6 +271,7 @@ public:
 
   // Handle external channel mask
   inline void setChanMask(PtrBlock<Vector<Bool>*>& chanmask) { chanmask_=&chanmask; };
+  inline void clearChanMask() { chanmask_=NULL; };
   void applyChanMask(VisBuffer& vb);
 
 protected:

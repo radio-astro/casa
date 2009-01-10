@@ -1923,37 +1923,37 @@ void SolvableVisCal::verifyCalTable(const String& caltablename) {
 
 void SolvableVisCal::applyChanMask(VisBuffer& vb) {
 
-  if (!chanmask_)
-    throw(AipsError("Channel mask is unset!"));
+  if (chanmask_) {
 
-  // A reference to de-referenced pointer
-  PtrBlock<Vector<Bool>*>& chmask(*chanmask_);
-
-  Int spw=vb.spectralWindow();
-  Int chan0=vb.channel()(0);
-  Int nchan=vb.nChannel();
-  if (chmask.nelements()==uInt(nSpw()) &&
-      chmask[spw] &&
-      sum((*chmask[spw])(Slice(chan0,nchan))) > 0 ) {
-    // There are some channels to mask...
-    Vector<Bool> fr(vb.flagRow());
-    Matrix<Bool> f(vb.flag());
-    Vector<Bool> fc;
-    Vector<Bool> chm((*(*chanmask_)[spw])(Slice(chan0,nchan)));
-    for (Int irow=0;irow<vb.nRow();++irow)
-      if (!fr(irow)) {
-	fc.reference(f.column(irow));
-	fc = fc||chm;
-	
-	//	cout << irow << ": ";
-	//	for (Int j=0;j<nchan;++j) cout << fc(j);
-	//	cout << endl;
-	
-      }
+    // A reference to de-referenced pointer
+    PtrBlock<Vector<Bool>*>& chmask(*chanmask_);
+  
+    Int spw=vb.spectralWindow();
+    Int chan0=vb.channel()(0);
+    Int nchan=vb.nChannel();
+    if (chmask.nelements()==uInt(nSpw()) &&
+	chmask[spw] &&
+	sum((*chmask[spw])(Slice(chan0,nchan))) > 0 ) {
+      // There are some channels to mask...
+      Vector<Bool> fr(vb.flagRow());
+      Matrix<Bool> f(vb.flag());
+      Vector<Bool> fc;
+      Vector<Bool> chm((*(*chanmask_)[spw])(Slice(chan0,nchan)));
+      for (Int irow=0;irow<vb.nRow();++irow)
+	if (!fr(irow)) {
+	  fc.reference(f.column(irow));
+	  fc = fc||chm;
+	  
+	  //	cout << irow << ": ";
+	  //	for (Int j=0;j<nchan;++j) cout << fc(j);
+	  //	cout << endl;
+	  
+	}
+    }
   }
+
 }
-
-
+  
 // **********************************************************
 //  SolvableVisMueller Implementations
 //

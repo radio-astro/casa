@@ -1311,6 +1311,9 @@ Bool Calibrater::solve() {
     else
       svc_p->selfSolve(*vs_p,*ve_p);
 
+
+    svc_p->clearChanMask();
+
   } catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
 
@@ -2691,11 +2694,14 @@ void Calibrater::initChanMask() {
     if (chanmask_[i])
       delete chanmask_[i];
   if (vs_p) {
-    chanmask_.resize(vs_p->numberSpw(),True,True);
+    chanmask_.resize(vs_p->numberSpw(),True);
     chanmask_=NULL;
   }
-  else 
-    throw(AipsError("Trouble sizing chanmask!"));
+  else {
+    //    throw(AipsError("Trouble sizing chanmask!"));
+    // just don't support channel masking:
+    chanmask_.resize(0,True);
+  }
 
 }
 
