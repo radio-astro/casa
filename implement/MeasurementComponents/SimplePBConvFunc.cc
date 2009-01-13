@@ -57,7 +57,6 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
-#include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 
@@ -104,6 +103,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SimplePBConvFunc::setWeightImage(CountedPtr<TempImage<Float> >& wgtimage){
+    convWeightImage_p=wgtimage;
+
+  }
  
   void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
@@ -586,7 +589,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(MosaicFT& mosft){
+  ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(){
 
     if(!filledFluxScale_p){
       IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);

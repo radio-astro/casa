@@ -58,7 +58,6 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
-#include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -438,10 +437,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cout << "rowmap " << rowMap.nelements() << " min " << min(rowMap) << " max " << max(rowMap) << endl;
   }
 
-  ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(MosaicFT& ftmos){
+  ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(){
     if(!filledFluxScale_p){ 
       //The best flux image for a heterogenous array is the weighted coverage
-      fluxScale_p.copyData(*(ftmos.getConvWeightImage()));
+      fluxScale_p.copyData(*(convWeightImage_p));
       IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
       IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
       blc(0)=0; blc(1)=0; trc(0)=nx_p-1; trc(1)=ny_p-1;

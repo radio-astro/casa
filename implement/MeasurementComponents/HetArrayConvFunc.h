@@ -75,7 +75,7 @@ namespace casa{
 				  Vector<Int>& convSupport,
 				  Vector<Int>& rowMap);
 
-    virtual ImageInterface<Float>&  getFluxScaleImage(MosaicFT& ftmos);
+    virtual ImageInterface<Float>&  getFluxScaleImage();
     
     //----------------------------------------------
 

@@ -615,6 +615,10 @@ void MosaicFT::finalizeToSky()
       }
 
     }
+    //Store this image in the pbconvfunc object as
+    //it can be used for rescaling or shared by other ftmachines that use
+    //this pbconvfunc
+    pbConvFunc_p->setWeightImage(skyCoverage_p);
     delete convWeightImage_p;
     convWeightImage_p=0;
     doneWeightImage_p=True;
@@ -1323,7 +1327,7 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
-  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage(*this));
+  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage());
 
 }
 
