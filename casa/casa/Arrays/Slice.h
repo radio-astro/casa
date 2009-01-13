@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Slice.h 20482 2009-01-08 10:51:57Z gervandiepen $
 
 #ifndef CASA_SLICE_H
 #define CASA_SLICE_H
@@ -35,6 +35,11 @@
 #endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+//# Forward Declarations.
+class Slicer;
+class IPosition;
+template<class T> class Vector;
 
 // <summary> define a (start,length,increment) along an axis </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -105,6 +110,16 @@ public:
     // True, end() returns -1 (which is less than start(), which returns
     // zero  in that case).
     Int end() const;
+
+    // Check a vector of slices.
+    // If a vector of an axis is empty or missing, it is replaced by a Slice
+    // representing th entire axis.
+    // It checks if the Slices do not exceed the array shape.
+    // It returns the shape of the combined slices and fills th Slicer
+    // for the first array part defined by the slices.
+    static IPosition checkSlices (Vector<Vector<Slice> >& slices, Slicer& first,
+                                  const IPosition& shape);
+
 private:
     //# Inc of <0 is used as a private flag to mean that the whole axis is
     //# selected. Users are given a uInt in their interface, so they cannot
