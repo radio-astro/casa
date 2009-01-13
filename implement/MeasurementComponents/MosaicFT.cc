@@ -1323,11 +1323,13 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
-  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage());
+  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage(*this));
 
 }
 
-
+CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
+  return skyCoverage_p;
+}
 Bool MosaicFT::toRecord(String& error, RecordInterface& outRec, 
 			Bool withImage) {
   

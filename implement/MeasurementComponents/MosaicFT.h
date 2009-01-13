@@ -225,6 +225,8 @@ public:
   void setConvFunc(CountedPtr<SimplePBConvFunc>& pbconvFunc);
   CountedPtr<SimplePBConvFunc>& getConvFunc();
 
+  CountedPtr<TempImage<Float> >& getConvWeightImage();
+
   //reset weight image
   virtual void reset();
 

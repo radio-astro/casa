@@ -53,7 +53,7 @@ namespace casa{
   template<class T> class ImageInterface;
   template<class T> class Matrix;
   class VisBuffer;
-  
+  class MosaicFT;
   class HetArrayConvFunc : public SimplePBConvFunc
 
   {
@@ -74,6 +74,8 @@ namespace casa{
 				  Vector<Int>& convsize,
 				  Vector<Int>& convSupport,
 				  Vector<Int>& rowMap);
+
+    virtual ImageInterface<Float>&  getFluxScaleImage(MosaicFT& ftmos);
     
     //----------------------------------------------
 

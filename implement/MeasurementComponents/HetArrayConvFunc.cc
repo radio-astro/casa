@@ -40,6 +40,7 @@
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -57,19 +58,21 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
+#include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  HetArrayConvFunc::HetArrayConvFunc() : convFunctionMap_p(-1), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) 
+  HetArrayConvFunc::HetArrayConvFunc() : convFunctionMap_p(-1), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
   {
+    
     init(PBMathInterface::AIRY);
   }
 
   HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse):
     convFunctionMap_p(-1), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) 
   {
-
+    
     init(typeToUse);
 
   }
@@ -79,7 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void HetArrayConvFunc::init(const PBMathInterface::PBClass typeTouse){
-    
+    doneMainConv_p=False;
+    filledFluxScale_p=False;
     pbClass_p=typeTouse;
   }
 
@@ -140,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  Vector<Int>& rowMap)
   {
 
-
+    storeImageParams(iimage);
     findAntennaSizes(vb);
     uInt ndish=antMath_p.nelements();
     if(ndish==0)
@@ -229,7 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeFFT::cfft2d(pBScreen);
 	LatticeFFT::cfft2d(pB2Screen);
 	Int plane=0;
-	for (Int jj=0; jj < k; ++jj)
+	for (uInt jj=0; jj < k; ++jj)
 	  plane=plane+ndish-jj-1;
 	plane=plane+j;
 
@@ -377,6 +381,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    
       actualConvIndex_p=0;
+      fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+      filledFluxScale_p=False;
+      fluxScale_p.set(0.0);
       return False;
     }
     if(!convFunctionMap_p.isDefined(mapid)){
@@ -429,6 +436,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     //cout << "rowmap " << rowMap.nelements() << " min " << min(rowMap) << " max " << max(rowMap) << endl;
+  }
+
+  ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(MosaicFT& ftmos){
+    if(!filledFluxScale_p){ 
+      //The best flux image for a heterogenous array is the weighted coverage
+      fluxScale_p.copyData(*(ftmos.getConvWeightImage()));
+      IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
+      IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
+      blc(0)=0; blc(1)=0; trc(0)=nx_p-1; trc(1)=ny_p-1;
+      
+      for (Int j=0; j < npol_p; ++j){
+	for (Int k=0; k < nchan_p ; ++k){
+	  
+	  blc(2)=j; trc(2)=j;
+	  blc(3)=k; trc(3)=k;
+	  Slicer sl(blc, trc, Slicer::endIsLast);
+	  SubImage<Float> fscalesub(fluxScale_p, sl, True);
+	  Float planeMax;
+	  LatticeExprNode LEN = max( fscalesub );
+	  planeMax =  LEN.getFloat();
+	  if(planeMax !=0){
+	    fscalesub.copyData( (LatticeExpr<Float>) (fscalesub/planeMax));
+	    
+	  }
+	}
+      }
+
+      filledFluxScale_p=True;  
+    }
+    
+
+    return fluxScale_p;
+
   }
 
 

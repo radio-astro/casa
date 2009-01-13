@@ -59,6 +59,7 @@ namespace casa{
   class VisBuffer;
   class SkyJones;
   class CoordinateSystem;
+  class MosaicFT;
 
   class SimplePBConvFunc : public PixelatedConvFunc<Complex>
     {
@@ -88,10 +89,8 @@ namespace casa{
 				    Vector<Int>& convsize,
 				    Vector<Int>& convSupport,
 				    Vector<Int>& rowChanMap);
-      ImageInterface<Float>&  getFluxScaleImage();
-
+      virtual ImageInterface<Float>&  getFluxScaleImage(MosaicFT& ftmos);
       virtual void setSkyJones(SkyJones* sj);
-
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
@@ -100,7 +99,9 @@ namespace casa{
       Int nchan_p;
       Int npol_p;
       CoordinateSystem csys_p;
-
+      Bool filledFluxScale_p;
+      Bool doneMainConv_p;
+      virtual void storeImageParams(const ImageInterface<Complex>& iimage);
     private:
       Bool checkPBOfField(const VisBuffer& vb);
       void addPBToFlux(const VisBuffer& vb);
@@ -112,7 +113,6 @@ namespace casa{
       Matrix<Complex> weightConvFunc_p;
       Matrix<Complex> convSave_p;
       Matrix<Complex> weightSave_p;
-      Bool doneMainConv_p;
       Int convSize_p; 
       Int convSupport_p;
       //These are cubes for multiple PA

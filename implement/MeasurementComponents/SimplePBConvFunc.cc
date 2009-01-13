@@ -57,24 +57,23 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
-
+#include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),
+  SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),filledFluxScale_p(False),doneMainConv_p(False),
 					convFunctionMap_p(-1), 
-					 actualConvIndex_p(-1), 
-					 doneMainConv_p(False), convSize_p(0), 
+						actualConvIndex_p(-1), convSize_p(0), 
 							convSupport_p(0) {
     //
 
      pbClass_p=PBMathInterface::COMMONPB;
   }
 
-  SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): PixelatedConvFunc<Complex>(),convFunctionMap_p(-1),actualConvIndex_p(-1), doneMainConv_p(False), convSize_p(0), convSupport_p(0) {
+  SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),filledFluxScale_p(False),doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
     //
     pbClass_p=typeToUse;
 
@@ -85,17 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
-					  const VisBuffer& vb,
-					  const Int& convSampling,
-					  Cube<Complex>& convFunc, 
-					  Cube<Complex>& weightConvFunc, 
-					  Vector<Int>& convsize,
-					  Vector<Int>& convSupport,
-					  Vector<Int>& convFuncMap
-					  ){
-
-
+  void SimplePBConvFunc::storeImageParams(const ImageInterface<Complex>& iimage){
     if(nchan_p <= 0){
       csys_p=iimage.coordinates();
       Int coordIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
@@ -110,8 +99,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       coordIndex=csys_p.findCoordinate(Coordinate::STOKES);
       pixAxis=csys_p.pixelAxes(coordIndex)[0];
       npol_p=iimage.shape()(pixAxis);
-
+      
     }
+
+  }
+
+ 
+  void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
+					  const VisBuffer& vb,
+					  const Int& convSampling,
+					  Cube<Complex>& convFunc, 
+					  Cube<Complex>& weightConvFunc, 
+					  Vector<Int>& convsize,
+					  Vector<Int>& convSupport,
+					  Vector<Int>& convFuncMap
+					  ){
+
+
+    storeImageParams(iimage);
     //Only one plane in this version
     convFuncMap.resize();
     convFuncMap=Vector<Int>(vb.nRow(),0);
@@ -150,7 +155,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSize_p=4*(sj_p->support(vb, coords))*convSampling;
     }
     
-
 
     MDirection fieldDir=vb.direction1()(0);
 
@@ -552,6 +556,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convFunctionMap_p.define(mapid, 0);    
       actualConvIndex_p=0;
       fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+      filledFluxScale_p=False;
       fluxScale_p.set(0.0);
       return False;
     }
@@ -581,35 +586,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(){
+  ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(MosaicFT& mosft){
 
-    IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
-    IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
-    blc(0)=0; blc(1)=0; trc(0)=nx_p-1; trc(1)=ny_p-1;
-
-    for (Int j=0; j < npol_p; ++j){
-      for (Int k=0; k < nchan_p ; ++k){
-	
-	blc(2)=j; trc(2)=j;
-	blc(3)=k; trc(3)=k;
-	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Float> fscalesub(fluxScale_p, sl, True);
-	Float planeMax;
-	LatticeExprNode LEN = max( fscalesub );
-	planeMax =  LEN.getFloat();
-	if(planeMax !=0){
-	  fscalesub.copyData( (LatticeExpr<Float>) (fscalesub/planeMax));
+    if(!filledFluxScale_p){
+      IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
+      IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
+      blc(0)=0; blc(1)=0; trc(0)=nx_p-1; trc(1)=ny_p-1;
+      
+      for (Int j=0; j < npol_p; ++j){
+	for (Int k=0; k < nchan_p ; ++k){
 	  
+	  blc(2)=j; trc(2)=j;
+	  blc(3)=k; trc(3)=k;
+	  Slicer sl(blc, trc, Slicer::endIsLast);
+	  SubImage<Float> fscalesub(fluxScale_p, sl, True);
+	  Float planeMax;
+	  LatticeExprNode LEN = max( fscalesub );
+	  planeMax =  LEN.getFloat();
+	  if(planeMax !=0){
+	    fscalesub.copyData( (LatticeExpr<Float>) (fscalesub/planeMax));
+	    
+	  }
 	}
       }
+      /*
       if(0) {
 	ostringstream os2;
 	os2 << "ALL_" << "BEAMS" ;
 	PagedImage<Float> thisScreen2(fluxScale_p.shape(), fluxScale_p.coordinates(), String(os2));
 	thisScreen2.copyData(fluxScale_p);
       }
+      */
+
+      filledFluxScale_p=True;
     }
- 
+      
 
     return fluxScale_p;
   }
