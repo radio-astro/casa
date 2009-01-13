@@ -89,6 +89,8 @@ namespace casa{
 				    Vector<Int>& convSupport,
 				    Vector<Int>& rowChanMap);
       virtual ImageInterface<Float>&  getFluxScaleImage();
+      //This is a function to just store the final weight image
+      //as FT machines will share this object ...they can get share this too
       virtual void setWeightImage(CountedPtr<TempImage<Float> >& wgtimage);
 
       virtual void setSkyJones(SkyJones* sj);
