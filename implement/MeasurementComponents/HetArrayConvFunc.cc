@@ -35,6 +35,7 @@
 #include <casa/Arrays/Cube.h>
 #include <casa/Containers/SimOrdMap.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/CompositeNumber.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
@@ -171,78 +172,125 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem coords(iimage.coordinates());
     Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
     AlwaysAssert(directionIndex>=0, AipsError);
-    Int nx=iimage.shape()(directionIndex);
-    Int ny=iimage.shape()(directionIndex+1);
-    convSize_p=max(nx,ny)*convSampling;
+    // Set up the convolution function.
+    Int nx=nx_p;
+    Int ny=ny_p;
+    if(!doneMainConv_p){
+      Int support=0;
+      for (uInt ii=0; ii < ndish; ++ii){
+	support=max((antMath_p[ii])->support(coords), support);
+      }
+      convSize_p=2*support*convSampling;
+      CompositeNumber cn(convSize_p);
+      convSize_p=cn.nearestEven(convSize_p);
+    }
+    
+    MDirection fieldDir=vb.direction1()(0);
+    
     DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
-    Vector<Double> sampling;
-    sampling = dc.increment();
-    sampling*=Double(convSampling);
-    sampling(0)*=Double(nx)/Double(convSize_p);
-    sampling(1)*=Double(ny)/Double(convSize_p);
-    dc.setIncrement(sampling);
+    //where in the image in pixels is this pointing
+    Vector<Double> pixFieldDir(2);
+    dc.toPixel(pixFieldDir, fieldDir);
+    //shift from center
+    pixFieldDir(0)=pixFieldDir(0)- Double(nx)/2.0;
+    pixFieldDir(1)=pixFieldDir(1)- Double(ny)/2.0;
+    //phase gradient per pixel to apply
+    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
+    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
 
-    Vector<Double> unitVec(2);
-    unitVec=convSize_p/2;
-    dc.setReferencePixel(unitVec);
-    coords.replaceCoordinate(dc, directionIndex);
-    //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
+
+    if(!doneMainConv_p){
+      Vector<Double> sampling;
+      sampling = dc.increment();
+      sampling*=Double(convSampling);
+      sampling(0)*=Double(nx)/Double(convSize_p);
+      sampling(1)*=Double(ny)/Double(convSize_p);
+      dc.setIncrement(sampling);
+
+      Vector<Double> unitVec(2);
+      unitVec=convSize_p/2;
+      dc.setReferencePixel(unitVec);
+      //make sure we are using the same units
+      fieldDir.set(dc.worldAxisUnits()(0));
+      dc.setReferenceValue(fieldDir.getAngle().getValue());
+      coords.replaceCoordinate(dc, directionIndex);
     
-    IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
-    TempImage<Complex> twoDPB(pbShape, coords);    
+      IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
+      TempImage<Complex> twoDPB(pbShape, coords);    
     
-    convFunc_p.resize(convSize_p, convSize_p, ndishpair);
-    convFunc_p=0.0;
-    weightConvFunc_p.resize(convSize_p, convSize_p, ndishpair);
-    weightConvFunc_p=0.0;
+      convFunc_p.resize(convSize_p, convSize_p, ndishpair);
+      convFunc_p=0.0;
+      weightConvFunc_p.resize(convSize_p, convSize_p, ndishpair);
+      weightConvFunc_p=0.0;
     
   
-    TempImage<Complex> pBScreen(pbShape, coords);
-    TempImage<Complex> pB2Screen(pbShape, coords);
-    IPosition start(4, 0, 0, 0, 0);
-    convSupport_p.resize(ndishpair);
-    for (uInt k=0; k < ndish; ++k){
+      TempImage<Complex> pBScreen(pbShape, coords);
+      TempImage<Complex> pB2Screen(pbShape, coords);
+      IPosition start(4, 0, 0, 0, 0);
+      convSupport_p.resize(ndishpair);
+      for (uInt k=0; k < ndish; ++k){
       
-      for (uInt j =k ; j < ndish; ++j){
+	for (uInt j =k ; j < ndish; ++j){
 	
-	Matrix<Complex> screen(convSize_p, convSize_p);
-	screen=1.0;
-	pBScreen.putSlice(screen, start);
+	  Matrix<Complex> screen(convSize_p, convSize_p);
+	  screen=1.0;
+	  pBScreen.putSlice(screen, start);
+	  //one antenna 
+	  (antMath_p[k])->applyVP(pBScreen, pBScreen, vb.direction1()(0));
+	  //Then the other
+	  (antMath_p[j])->applyVP(pBScreen, pBScreen, vb.direction2()(0));
+	  //*****************
+	  //if(0){
+	  //  ostringstream os1;
+	  //  os1 << "PB_field_" << vb.fieldId() << "_antpair_" << k <<"_"<<j ;
+	  //  PagedImage<Float> thisScreen(pbShape, coords, String(os1));
+	  //  LatticeExpr<Float> le(abs(pBScreen));
+	  //  thisScreen.copyData(le);
+	  //
+	  //	}
+	  //*****************
+	  Matrix<Complex> screenoo(convSize_p, convSize_p);
+	  screenoo.set(1.0);
+	  pB2Screen.putSlice(screenoo, start);
 	//one antenna 
-	(antMath_p[k])->applyVP(pBScreen, pBScreen, vb.direction1()(0));
-	//Then the other
-	(antMath_p[j])->applyVP(pBScreen, pBScreen, vb.direction2()(0));
-	//*****************
-	//if(0){
-	//  ostringstream os1;
-	//  os1 << "PB_field_" << vb.fieldId() << "_antpair_" << k <<"_"<<j ;
-	//  PagedImage<Float> thisScreen(pbShape, coords, String(os1));
-	//  LatticeExpr<Float> le(abs(pBScreen));
-	//  thisScreen.copyData(le);
-	//
-	//	}
-	//*****************
-	Matrix<Complex> screenoo(convSize_p, convSize_p);
-	screenoo.set(1.0);
-	pB2Screen.putSlice(screenoo, start);
-	//one antenna 
-	(antMath_p[k])->applyPB(pB2Screen, pB2Screen, vb.direction1()(0));
-	//Then the other
-	(antMath_p[j])->applyPB(pB2Screen, pB2Screen, vb.direction2()(0));
-	LatticeFFT::cfft2d(pBScreen);
-	LatticeFFT::cfft2d(pB2Screen);
-	Int plane=0;
-	for (uInt jj=0; jj < k; ++jj)
-	  plane=plane+ndish-jj-1;
-	plane=plane+j;
+	  (antMath_p[k])->applyPB(pB2Screen, pB2Screen, vb.direction1()(0));
+	  //Then the other
+	  (antMath_p[j])->applyPB(pB2Screen, pB2Screen, vb.direction2()(0));
+	  LatticeFFT::cfft2d(pBScreen);
+	  LatticeFFT::cfft2d(pB2Screen);
+	  Int plane=0;
+	  for (uInt jj=0; jj < k; ++jj)
+	    plane=plane+ndish-jj-1;
+	  plane=plane+j;
 
-	convFunc_p.xyPlane(plane)=pBScreen.get(True);
-	weightConvFunc_p.xyPlane(plane)=pB2Screen.get(True);
-	
-	supportAndNormalize(plane, convSampling);
-
+	  convFunc_p.xyPlane(plane)=pBScreen.get(True);
+	  weightConvFunc_p.xyPlane(plane)=pB2Screen.get(True);
+	  
+	  supportAndNormalize(plane, convSampling);
+	  
+	}
+      
       }
-      
+
+
+      doneMainConv_p=True;
+      convSave_p.resize();
+      weightSave_p.resize();
+      convSave_p=convFunc_p;
+      weightSave_p=weightConvFunc_p;
+      Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
+      if(newConvSize < convSize_p){
+	IPosition blc(3, (convSize_p/2)-(newConvSize/2),
+		      (convSize_p/2)-(newConvSize/2),0);
+	IPosition trc(3, (convSize_p/2)+(newConvSize/2-1),
+		      (convSize_p/2)+(newConvSize/2-1), ndishpair-1);
+	convSave_p.resize(newConvSize, newConvSize, ndishpair);
+	convSave_p=convFunc_p(blc,trc);
+	convSize_p=newConvSize;
+	weightSave_p.resize(newConvSize, newConvSize, ndishpair);
+	weightSave_p=weightConvFunc_p(blc,trc);
+      }
+
     }
     /*
     rowMap.resize(vb.nRow());
@@ -264,32 +312,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(ndishpair);
     (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
     convSizes_p[actualConvIndex_p]=new Vector<Int> (ndishpair);
-    Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
-    //NEED to chop this right ...and in the centre
-    if(newConvSize < convSize_p){
-      IPosition blc(3, (convSize_p/2)-(newConvSize/2),
-		    (convSize_p/2)-(newConvSize/2),0);
-      IPosition trc(3, (convSize_p/2)+(newConvSize/2-1),
-		    (convSize_p/2)+(newConvSize/2-1), ndishpair-1);
-      convFunctions_p[actualConvIndex_p]->resize(newConvSize, newConvSize, ndishpair);
-      *(convFunctions_p[actualConvIndex_p])=convFunc_p(blc,trc);
-      convSize_p=newConvSize;
-      convWeights_p[actualConvIndex_p]->resize(newConvSize, newConvSize, ndishpair);
-      *(convWeights_p[actualConvIndex_p])=weightConvFunc_p(blc,trc);
+    
+    convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
+    *(convFunctions_p[actualConvIndex_p])=convSave_p; 
+    convWeights_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
+    *(convWeights_p[actualConvIndex_p])=weightSave_p;
+
+
+    //Apply the shift phase gradient
+
+    for (Int iy=0;iy<convSize_p;iy++) { 
+      Complex phy(cos(Double(iy-convSize_p/2)*pixFieldDir(1)),sin(Double(iy-convSize_p/2)*pixFieldDir(1))) ;
+      for (Int ix=0;ix<convSize_p;ix++) {
+	Complex phx(cos(Double(ix-convSize_p/2)*pixFieldDir(0)),sin(Double(ix-convSize_p/2)*pixFieldDir(0))) ;
+	for(Int iz=0; iz <ndishpair; ++iz){
+	  (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)= (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
+	  (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)= (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
+	}
+      }
     }
-      //For now all have the same size convsize;
-      convSizes_p[actualConvIndex_p]->set(convSize_p);
+    
+    //For now all have the same size convsize;
+    convSizes_p[actualConvIndex_p]->set(convSize_p);
+    
+    //We have to get the references right now
+    convFunc_p.resize();
+    convFunc_p.reference(*convFunctions_p[actualConvIndex_p]);
+    weightConvFunc_p.resize();
+    weightConvFunc_p.reference(*convWeights_p[actualConvIndex_p]);
 
-      //We have to get the references right now
-      convFunc_p.resize();
-      convFunc_p.reference(*convFunctions_p[actualConvIndex_p]);
-      weightConvFunc_p.resize();
-      weightConvFunc_p.reference(*convWeights_p[actualConvIndex_p]);
-
-      convFunc.reference(convFunc_p);
-      weightConvFunc.reference(weightConvFunc_p);
-      convsize=*convSizes_p[actualConvIndex_p];
-      convSupport=convSupport_p;
+    convFunc.reference(convFunc_p);
+    weightConvFunc.reference(weightConvFunc_p);
+    convsize=*convSizes_p[actualConvIndex_p];
+    convSupport=convSupport_p;
 
 
   }
@@ -349,7 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	IPosition blc(2, -convSupport*convSampling+convSize_p/2, -convSupport*convSampling+convSize_p/2);
 	IPosition trc(2, convSupport*convSampling+convSize_p/2, convSupport*convSampling+convSize_p/2);
 	
-	pbSum=abs(sum(convFunc_p.xyPlane(plane)(blc,trc)));
+	pbSum=real(sum(convFunc_p.xyPlane(plane)(blc,trc)));
 	if(pbSum>0.0) {
 	  (convFunc_p.xyPlane(plane))=convFunc_p.xyPlane(plane)*Complex(1.0/pbSum,0.0);
 	  (weightConvFunc_p.xyPlane(plane)) =(weightConvFunc_p.xyPlane(plane))*Complex(1.0/pbSum,0.0);

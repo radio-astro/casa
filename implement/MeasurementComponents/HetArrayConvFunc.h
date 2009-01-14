@@ -96,6 +96,8 @@ namespace casa{
       Int actualConvIndex_p;
       Cube<Complex> convFunc_p;
       Cube<Complex> weightConvFunc_p;
+      Cube<Complex> convSave_p;
+      Cube<Complex> weightSave_p;
       Int convSize_p; 
       Vector<Int> convSupport_p;
       Block <CountedPtr<Cube<Complex> > > convFunctions_p;
