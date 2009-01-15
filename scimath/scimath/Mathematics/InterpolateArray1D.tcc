@@ -27,6 +27,7 @@
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Cube.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/BasicMath/Math.h>
