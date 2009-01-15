@@ -295,7 +295,8 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setCycleFactor(cycleFactor_p);
 		  cleaner.setMaxNumPix(32*1024);
 		  cleaner.setChoose(False);
-		  cleaner.setSpeedup(cycleSpeedup_p);
+		  if(cycleSpeedup_p >1)
+		    cleaner.setSpeedup(cycleSpeedup_p);
 		  //Be a bit more conservative with pathologically bad PSFs
 		  if(maxSidelobe > 0.5)
 		    cleaner.setMaxNumberMinorIterations(5);
