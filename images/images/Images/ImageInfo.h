@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageInfo.h 19152 2005-12-12 11:22:43Z nkilleen $
+//# $Id: ImageInfo.h 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #ifndef IMAGES_IMAGEINFO_H
 #define IMAGES_IMAGEINFO_H

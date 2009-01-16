@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functors.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: Functors.h 20488 2009-01-16 08:21:17Z gervandiepen $
 
 #ifndef CASA_FUNCTORS_H
 #define CASA_FUNCTORS_H
@@ -37,8 +37,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // It is functionally equivalent to std::transform where the first and result
   // iterator are the same, but it is faster for non-trivial iterators.
   template<typename InputIterator1, typename InputIterator2, typename BinaryOperator>
-  void transformInPlace (InputIterator1 first1, InputIterator1 last1,
-                         InputIterator2 first2, BinaryOperator op)
+  inline void transformInPlace (InputIterator1 first1, InputIterator1 last1,
+                                InputIterator2 first2, BinaryOperator op)
   {
     for (; first1!=last1; ++first1, ++first2) {
       *first1 = op(*first1, *first2);
@@ -49,8 +49,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // It is functionally equivalent to std::transform where the first and result
   // iterator are the same, but it is faster for non-trivial iterators.
   template<typename InputIterator1, typename UnaryOperator>
-  void transformInPlace (InputIterator1 first1, InputIterator1 last1,
-                         UnaryOperator op)
+  inline void transformInPlace (InputIterator1 first1, InputIterator1 last1,
+                                UnaryOperator op)
   {
     for (; first1!=last1; ++first1) {
       *first1 = op(*first1);

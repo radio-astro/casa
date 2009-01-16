@@ -24,7 +24,7 @@
 *                            520 Edgemont Road
 *                            Charlottesville, VA 22903-2475 USA
 *
-*     $Id$
+*     $Id: fmosft.f 20491 2009-01-16 08:33:56Z gervandiepen $
 *-----------------------------------------------------------------------
 C
 C Grid a number of visibility records

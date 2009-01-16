@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: FITSImage.h 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #ifndef IMAGES_FITSIMAGE_H
 #define IMAGES_FITSIMAGE_H

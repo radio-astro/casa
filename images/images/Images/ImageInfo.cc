@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: ImageInfo.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #include <images/Images/ImageInfo.h>
 #include <casa/Exceptions/Error.h>

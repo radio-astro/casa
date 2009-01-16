@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSFitsOutput.h 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #ifndef MS_MSFITSOUTPUT_H
 #define MS_MSFITSOUTPUT_H

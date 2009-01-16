@@ -29,6 +29,7 @@
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
 
+#define CASACORE_NOEXIT 1
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

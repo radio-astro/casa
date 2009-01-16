@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aipsrc.cc 20220 2008-01-23 13:29:17Z gervandiepen $
+//# $Id: Aipsrc.cc 20490 2009-01-16 08:30:02Z gervandiepen $
 
 //# Includes
 
@@ -157,11 +157,10 @@ const String &Aipsrc::fillAips(const String &nam) {
  
     String aipsPath;
     if (extAipsPath.empty()) {
-#ifdef CASA_USECASAPATH
       aipsPath = EnvironmentVariable::get("CASAPATH");
-#else
-      aipsPath = EnvironmentVariable::get("AIPSPATH");
-#endif
+      if (aipsPath.empty()) {
+        aipsPath = EnvironmentVariable::get("AIPSPATH");
+      }
     } else { 
       aipsPath = extAipsPath;
     }

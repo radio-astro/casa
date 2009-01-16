@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: ImageFITS2Converter.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 
 //#include <casa/version.h>
 

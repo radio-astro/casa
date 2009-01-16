@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSSpectralUtil.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tFITSSpectralUtil.cc 20487 2009-01-14 04:56:08Z Malte.Marquarding $
 
 //# Includes
 #include <fits/FITS/FITSSpectralUtil.h>
@@ -81,7 +81,7 @@ int main()
 	    // Paper III or its successor is formally adopted.
 	    FITSKeywordUtil::
 		addComment(header,
-		   "AIPS++ non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL");
+		   "casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL");
 	}
 	
 	// dummy primary header axes

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFunctors.cc 20445 2008-11-28 10:57:46Z gervandiepen $
+//# $Id: tFunctors.cc 20486 2009-01-12 13:25:34Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/BasicMath/Functors.h>
@@ -31,6 +31,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 #include <vector>
+#include <algorithm>
 
 
 using namespace casa;

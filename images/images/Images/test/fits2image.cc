@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: fits2image.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/System/Aipsrc.h>

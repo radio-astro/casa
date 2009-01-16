@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: LatticeCleaner.h 20491 2009-01-16 08:33:56Z gervandiepen $
 
 #ifndef LATTICES_LATTICECLEANER_H
 #define LATTICES_LATTICECLEANER_H

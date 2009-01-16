@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.h 19075 2005-11-14 17:40:07Z kgolap $
+//# $Id: fits.h 20493 2009-01-16 10:51:43Z gervandiepen $
 
 # if !defined(AIPS_FITS)
 # define AIPS_FITS
@@ -362,7 +362,7 @@ class ReservedFitsKeyword {
     private:
 # endif
 	FITS::ReservedName name_;
-	char *aname_;
+	const char *aname_;
 	int namesize_;
 	FITS::ValueType type_;
 	Bool isindexed_; // 0 = NOT INDEXED, 1 = INDEXED
