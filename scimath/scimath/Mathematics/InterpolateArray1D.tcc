@@ -234,7 +234,7 @@ const uInt ndim = yin.ndim();
      youtPtrs[i]=pyout+i;
     youtFlagPtrs[i]=pyoutFlags+i;
   }
-  interpolatePtr(youtPtrs, youtFlagPtrs, na, nb, nc, xout, xin, yinPtrs,
+  interpolateyPtr(youtPtrs, youtFlagPtrs, na, nb, nc, xout, xin, yinPtrs,
                  yinFlagPtrs, method, goodIsTrue, extrapolate);
   yin.freeStorage(pyin,deleteYin);
   yinFlags.freeStorage(pyinFlags,deleteYinFlags);
