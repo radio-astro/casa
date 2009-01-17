@@ -1,0 +1,724 @@
+<ui version="4.0" >
+ <class>Format</class>
+ <widget class="QWidget" name="Format" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>541</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Format</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <property name="margin" >
+    <number>9</number>
+   </property>
+   <property name="spacing" >
+    <number>3</number>
+   </property>
+   <item>
+    <layout class="QGridLayout" >
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <property name="spacing" >
+      <number>3</number>
+     </property>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="label_3" >
+       <property name="sizePolicy" >
+        <sizepolicy>
+         <hsizetype>0</hsizetype>
+         <vsizetype>0</vsizetype>
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" >
+      <widget class="QLabel" name="label" >
+       <property name="sizePolicy" >
+        <sizepolicy>
+         <hsizetype>0</hsizetype>
+         <vsizetype>0</vsizetype>
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>Field:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>71</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLabel" name="typeLabel" >
+       <property name="text" >
+        <string>[ type ]</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLabel" name="fieldLabel" >
+       <property name="text" >
+        <string>[ field ]</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="formatBox" >
+     <property name="sizePolicy" >
+      <sizepolicy>
+       <hsizetype>0</hsizetype>
+       <vsizetype>0</vsizetype>
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title" >
+      <string>Format</string>
+     </property>
+     <layout class="QVBoxLayout" >
+      <property name="margin" >
+       <number>3</number>
+      </property>
+      <property name="spacing" >
+       <number>3</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="noneLabel" >
+        <property name="text" >
+         <string>No format options.</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="decimalFrame" >
+        <property name="frameShape" >
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow" >
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth" >
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" >
+         <property name="margin" >
+          <number>9</number>
+         </property>
+         <property name="spacing" >
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_2" >
+           <property name="text" >
+            <string>Decimal Places:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="unlimitedCheckBox" >
+           <property name="text" >
+            <string>Unlimited</string>
+           </property>
+           <property name="checked" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="decimalsSpinBox" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="wrapping" >
+            <bool>true</bool>
+           </property>
+           <property name="frame" >
+            <bool>true</bool>
+           </property>
+           <property name="buttonSymbols" >
+            <enum>QAbstractSpinBox::PlusMinus</enum>
+           </property>
+           <property name="maximum" >
+            <number>64</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>121</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="sfFrame" >
+        <property name="frameShape" >
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow" >
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth" >
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" >
+         <property name="margin" >
+          <number>9</number>
+         </property>
+         <property name="spacing" >
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="QCheckBox" name="sfCheckBox" >
+           <property name="text" >
+            <string>Scientific Format</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="boolFrame" >
+        <property name="frameShape" >
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow" >
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth" >
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" >
+         <property name="margin" >
+          <number>9</number>
+         </property>
+         <property name="spacing" >
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="boolTrueFalse" >
+           <property name="text" >
+            <string>true/false</string>
+           </property>
+           <property name="checked" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="boolTF" >
+           <property name="text" >
+            <string>T/F</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="bool10" >
+           <property name="text" >
+            <string>1/0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="boolDefault" >
+           <property name="text" >
+            <string>default</string>
+           </property>
+           <property name="checked" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="dateFrame" >
+        <property name="frameShape" >
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow" >
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth" >
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" >
+         <property name="margin" >
+          <number>9</number>
+         </property>
+         <property name="spacing" >
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="dateEdit" >
+           <property name="sizePolicy" >
+            <sizepolicy>
+             <hsizetype>0</hsizetype>
+             <vsizetype>0</vsizetype>
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>200</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text" >
+            <string>%y-%m-%d-%h:%n:%s</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_6" >
+           <property name="text" >
+            <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:8pt; font-style:italic;">%y year, %m month, %d day, %h hour, %n minute, %s second&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>16</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="vectorFrame" >
+        <property name="frameShape" >
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow" >
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth" >
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" >
+         <property name="margin" >
+          <number>9</number>
+         </property>
+         <property name="spacing" >
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_4" >
+           <property name="text" >
+            <string>Vector Display Threshold:  1 row x </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="vectorSpinBox" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="maximum" >
+            <number>15</number>
+           </property>
+           <property name="minimum" >
+            <number>0</number>
+           </property>
+           <property name="value" >
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_5" >
+           <property name="text" >
+            <string>columns, or: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="vectorCheckBox" >
+           <property name="text" >
+            <string>Unlimited</string>
+           </property>
+           <property name="checked" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7" >
+           <property name="text" >
+            <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:8pt; font-style:italic;">(only applies to 1D arrays)&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="fontBox" >
+     <property name="title" >
+      <string>Font</string>
+     </property>
+     <layout class="QGridLayout" >
+      <property name="margin" >
+       <number>3</number>
+      </property>
+      <property name="spacing" >
+       <number>3</number>
+      </property>
+      <item row="1" column="0" >
+       <widget class="QCheckBox" name="allCheckBox" >
+        <property name="text" >
+         <string>Apply to All</string>
+        </property>
+        <property name="checked" >
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" >
+       <widget class="QListWidget" name="listWidget" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item rowspan="2" row="0" column="1" >
+       <layout class="QGridLayout" >
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <property name="spacing" >
+         <number>3</number>
+        </property>
+        <item row="0" column="6" >
+         <widget class="QCheckBox" name="italicsBox" >
+          <property name="text" >
+           <string>Italics</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" colspan="2" >
+         <widget class="QSpinBox" name="fontSizeSpinner" >
+          <property name="maximum" >
+           <number>72</number>
+          </property>
+          <property name="minimum" >
+           <number>8</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" colspan="2" >
+         <widget class="QPushButton" name="colorButton" >
+          <property name="text" >
+           <string>Change Color</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2" >
+         <widget class="QFontComboBox" name="fontChooser" />
+        </item>
+        <item row="1" column="0" >
+         <widget class="QLineEdit" name="colorEdit" >
+          <property name="text" >
+           <string>#000000</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4" colspan="2" >
+         <widget class="QCheckBox" name="boldBox" >
+          <property name="text" >
+           <string>Bold</string>
+          </property>
+          <property name="tristate" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" colspan="2" >
+         <widget class="QCheckBox" name="underlineBox" >
+          <property name="text" >
+           <string>Underline</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="8" >
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>381</width>
+            <height>51</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="5" colspan="3" >
+         <widget class="QCheckBox" name="strikethroughBox" >
+          <property name="text" >
+           <string>Strikethrough</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="7" >
+         <spacer>
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" >
+           <size>
+            <width>16</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <property name="spacing" >
+      <number>3</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>171</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setButton" >
+       <property name="text" >
+        <string>Set Format</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearButton" >
+       <property name="text" >
+        <string>Clear Format</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_3" >
+       <property name="text" >
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>unlimitedCheckBox</tabstop>
+  <tabstop>decimalsSpinBox</tabstop>
+  <tabstop>sfCheckBox</tabstop>
+  <tabstop>boolTrueFalse</tabstop>
+  <tabstop>boolTF</tabstop>
+  <tabstop>bool10</tabstop>
+  <tabstop>boolDefault</tabstop>
+  <tabstop>dateEdit</tabstop>
+  <tabstop>vectorSpinBox</tabstop>
+  <tabstop>vectorCheckBox</tabstop>
+  <tabstop>listWidget</tabstop>
+  <tabstop>allCheckBox</tabstop>
+  <tabstop>fontChooser</tabstop>
+  <tabstop>fontSizeSpinner</tabstop>
+  <tabstop>boldBox</tabstop>
+  <tabstop>italicsBox</tabstop>
+  <tabstop>colorEdit</tabstop>
+  <tabstop>colorButton</tabstop>
+  <tabstop>underlineBox</tabstop>
+  <tabstop>strikethroughBox</tabstop>
+  <tabstop>setButton</tabstop>
+  <tabstop>clearButton</tabstop>
+  <tabstop>pushButton_3</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>unlimitedCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>decimalsSpinBox</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>110</x>
+     <y>109</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>205</x>
+     <y>109</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_3</sender>
+   <signal>clicked()</signal>
+   <receiver>Format</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>508</x>
+     <y>399</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>428</x>
+     <y>337</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>allCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>listWidget</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>50</x>
+     <y>362</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>48</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>vectorCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>vectorSpinBox</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>311</x>
+     <y>222</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>207</x>
+     <y>225</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

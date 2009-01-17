@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface to ia.imagecalc(), but ...    -->
+<!-- we use the standard region selection rather then use     -->
+<!-- the selection methods allowed in the lattice expression  -->
+<!-- language.  Although we don't stop the users from trying. -->
+<!--                                                          -->
+<!-- TODO                                                     -->
+<!--   - Crystal wanted different masks for different inputs  -->
+<!--     but unlikely that its really needed.                 -->
+<!--   - Add an "overwrite" output file parameter             -->
+<!--   - Add polygon and circle region selection              -->
+<!--   - In general bring data selection to the full level    -->
+<!--     proposed.                                            -->
+
+<task type="function" name="immath">
+
+<shortdescription>Perform math operations on images</shortdescription>
+
+<description> math on images
+NOTE TO SELF: Cut and paste from LEL the list of operators/funcs/...
+</description>
+
+<input>
+	<param type="string" name="outfile">
+		<description>File where the output is saved</description>
+		<value></value>
+		<example>outfile=&quot;newimage&quot;</example>
+	</param>
+
+	<param type="string" name="mode">
+		<description>mode for math operation (evalexpr, spix, pola, poli)</description>
+		<value>evalexpr</value>
+                <allowed kind="enum">
+                <value>evalexpr</value>
+                <value>spix</value>
+                <value>pola</value>
+                <value>poli</value>
+                </allowed>
+		<example>'evalexpr', 'spix', 'pola', or 'poli' </example>
+	</param>
+
+	<param type="string" name="expr" subparam="true">
+		<description>Mathematical expression using images</description>
+		<value></value>
+		<example>expr='&quot;sin(image1.im)+(image2.im*2)+real(image3.im)&quot;'</example>
+	</param>
+
+        <param type="stringArray" name="imagename" subparam="true">
+                <description>a list of input images </description>
+                <value></value>
+        </param>
+
+        <param type="string" name="sigma" subparam="true">
+                <description>standard deviation of noise for debiasing</description>
+                <value>0.0mJy/beam</value>
+        </param>
+
+   	<param type="string" name="mask">
+        	<description>Mask to be applied to the images</description>
+        	<value></value>
+    	</param>
+
+    	<param type="string" name="region">
+        	<description>File path which contains an Image Region</description>
+        	<value></value>
+    	</param>
+
+    	<param type="string" name="box">
+        	<description>Select one or more box regions in the input images</description>
+        	<value></value>
+    	</param>
+
+    	<param type="string" name="chans" >
+		<description>Select the channel(spectral) range</description>
+    		<value></value>
+		<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
+		<example>1.4km/s             # above the given velocity</example>
+        	<example>!1~5                # Select all but the ange of channel numbers</example>
+    	</param >
+
+    	<param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <value></value>
+	    <example>stokes='IQ'</example>
+	    <example>stokes='RR,LL'</example>
+    	</param>
+
+	<constraints>
+                <when param="mode">
+                    <equals value="evalexpr">
+                        <default param="expr"><value>""</value></default>
+                    </equals>
+                    <equals value="spix">
+                        <default param="imagename"><value>""</value></default>
+                    </equals>
+                    <equals value="pola">
+                        <default param="imagename"><value>""</value></default>
+                    </equals>
+                    <equals value="poli">
+                        <default param="imagename"><value>""</value></default>
+                        <default param="sigma"><value>"0.0mJy/beam"</value></default>
+                    </equals>
+                </when>
+
+
+	</constraints>
+</input>
+
+<returns type="void"/>
+
+<example>
+    This task evaluates mathematical expresions involving existing
+    image files. The results of the expression are stored in the 
+    supplied output file.  Options are available to specify mathematical 
+    expression directly or use pre-defined expression for calculation of 
+    spectral index image, and polarization intensity and position angle 
+    images. The mage file names imbedded in the expression or specified in 
+    the imagename parameter for the pre-defined calculations may be native CASA 
+    or FITS files but no others. See the various import tasks for converting 
+    other image files to CASA image files.
+
+    WARNING: The output file is overwritten, any data that was in
+             the file will be lost as a result of this operation.
+
+    NOTE: Index values for axes start at 0 for the box and chans
+          parameters, but at 1 when used with the indexin function
+          in expression. Use the imhead task to see the range of
+          values for each axes.
+    
+
+    Keyword arguments:
+    outfile -- The file where the results of the image calculations 
+		are stored
+	    Default: none;  Example: outfile='results.im'
+    mode -- mode for mathematical operation
+            Default: evalexpr
+            Options: 'evalexpr' : evalulate a mathematical expression defined in 'expr' 
+                     'spix' : spectalindex image 
+                     'pola' : polarization position angle image 
+                     'poli' : polarization intesity image 
+      &gt;&gt;&gt; mode expandable parameters
+            expr -- (for mode='evalexpr') A mathematical expression, with image file names.
+	      image file names must be enclosed in double quotes (&quot;)
+	      Default: none 
+	      Example: expr='min(&quot;image2.im&quot;)+(2*max(&quot;image1.im&quot;))'
+            imagename -- (for mode='spix','pola','poli') input image names        
+              Default: none;
+              Examples: mode='spix'; imagename=['image1.im','image2.im'] will calculate 
+                       an image of log(S1/S2)/log(f1/f2), where S1 and S2 are fluxes and 
+                       f1 and f2 are frequencies
+                       mode='pola'; imagename=['imageQ.im','imageU.im'] will calculate 
+                       an image of polarization angle distribution, where imageQ.im and 
+                       imageU.im are Stokes Q and U images, respectively. Calculate 0.5*arctan(U/Q).
+                       mode='poli'; imagename=['imageQ.im','imageU.im','imageV.im'] will calculate
+                       total polarization intensity image, where imageQ.im, imageU.im, imageV.im
+                       are Stokes Q, U, and V images, respectively.
+            sigma - (for mode='poli') standard deviation of noise of Stokes images with unit such as
+                    Jy/beam to correct for bias 
+              Default: '0.0Jy/beam' (= no debiasing)
+    mask -- Name of mask applied to each image in the calculation
+            Default '' means no mask;  Example: mask='orion.mask'.  
+    region -- File path to an ImageRegion file.
+            An ImageRegion file can be created with the CASA
+            viewer's region manager.  Typically ImageRegion files
+            will have the suffix '.rgn'.  If a region file is given
+            then the box, chans, and stokes selections whill be 
+            ignored.
+            Default: none
+            Example: region='myimage.im.rgn'
+    box --  A box region on the directional plane
+	    Only pixel values acceptable at this time.
+	    Default: none (whole 2-D plane);  Example: box='10,10,50,50'
+    chans -- channel numbers, velocity, and/or frequency
+	    Only channel numbers acceptable at this time.
+	    Default: none (all);  Example: chans='3~20'   
+    stokes -- Stokes parameters to image, may or may not be separated
+            by commas but best if you use commas.
+            Default: none (all); Example: stokes='IQUV';
+            Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+
+    Available functions in the <i>expr</i> and <i>mask</i> paramters:
+    PI(), E(), SIN(), SINH(), ASIN(), COS(), COSH(), TAN(), TANH(),
+    ATAN(), EXP(), LOG(), LOG10(), POW(), SQRT(), COMPLEX(), CONJ()
+    REAL(), IMAG(), ABS(), ARG(), PHASE(), AMPLITUDE(), MIN(), MAX()
+    ROUND(), ISGN(), FLOOR(), CEIL(), REBIN(), SPECTRALINDEX(), PA(), 
+    IIF(), INDEXIN(), REPLACE(), ...
+
+    For a full description of the allowed syntax see the 
+    Lattice Expression Language (LEL) documentation on the at:
+    http://aips2.nrao.edu/docs/notes/223/223.html
+
+    NOTE: where indexing and axis numbering are used in the above
+    functions they are 1-based, ie. numbering starts at 1.
+
+
+    Examples:
+    # Double all values in an image.
+    immath( expr='&quot;myimage.im&quot;*2', outfile='double.im' )
+
+    # Taking the sin of an image and adding it to another
+    # Note that the images need to be the same size
+    immath(expr='SIN(&quot;image2.im&quot;)+&quot;image1.im&quot;',outfile='newImage.im')
+
+    # Adding only the plane associated with the 'V' stokes value and
+    # the 1st channel together in two images
+    immath(expr='&quot;image1&quot;+&quot;image2&quot;',chans='1',stokes='V')
+
+
+    # Selecting a single plane (5th channel), of the 3-D cube and  
+    # adding it to the original image.  In this example the 2-D plane
+    # gets expanded out and the values are applied to each plane in the 
+    # 3-D cube. 
+    default('immath')
+    outfile='chanFive.im'
+    expr='&quot;ngc7538.image&quot;
+    chans='5'
+    go
+    default('immath')    
+    outfile='ngc7538_chanFive.im'
+    expr='&quot;ngc7538.image&quot;+&quot;chanFive.im&quot;'
+    go
+
+    # Selecting and saving the inner 3/4 of an image for channels 40,42,44
+    # as well as channels less than 10
+    default('immath')
+    expr='&quot;my_image.im&quot;'
+    box='25,25,123,123'
+    chans='&lt;10;40,42,44'
+    outfile='my_image_inner.im' )
+    go
+
+    # Dividing an image by another, making sure we aren't dividing by zero
+    default('immath')
+    expr='&quot;orion.image&quot;/iif(&quot;my.image&quot;==0,1.0,&quot;my.image&quot;)'
+    outfile='my_orion.image'
+    go
+
+    # Applying a mask to all of the images in the expression
+    default('immath')
+    expr='(&quot;ngc7538.image&quot;*10)+&quot;ngc7538_clean.image&quot;'
+    mask='&quot;ngc7538.mask&quot;'
+    outfile='really_noisy_ngc7538.image'
+    go
+
+
+    # Applying a pixel mask contained in the image information
+    default('immath')
+    expr='&quot;ngc5921.image&quot;*10&quot;'
+    mask='mask(&quot;ngc5921.mask&quot;)'
+    outfile='ngc5921.masked.image'
+    go
+
+    # Creating a Polarization Itensity image from an [Q, U, V] image.
+    default('immath')
+    outfile='Q.im'; expr='&quot;3C138_pcal&quot;'; stokes='Q'; go();
+    outfile='U.im'; expr='&quot;3C138_pcal&quot;'; stokes='U'; go();
+    outfile='V.im'; expr='&quot;3C138_pcal&quot;'; stokes='V'; go();
+    #
+    outfile='pol_intensity'
+    stokes=''
+    expr='sqrt(&quot;Q.im&quot;*&quot;Q.im&quot; + &quot;U.im&quot;*&quot;U.im&quot; + &quot;V.im&quot;*&quot;V.im&quot; )'
+    go
+    # or using pre-defined expression 
+    default('immath')
+    outfile='pol_intensity'
+    mode='poli' 
+    imagename=['Q.im','U.im','V.im']
+    go
+
+    # Creating a polarization position angle image 
+    default('immath')
+    outfile='pol_angle.im'
+    mode='pola'
+    imagename=['Q.im','U.im'] # order of the two Stokes images does not matter 
+    go 
+
+    # Creating a spectral index image from the images at two different observing frequencies
+    default('immath')
+    outfile='mySource_sp.im'
+    mode='spix'
+    imagename=['mySource_5GHz.im','mySource_8GHz.im']
+    go
+    
+     
+</example>
+
+</task>
+
+</casaxml>
+

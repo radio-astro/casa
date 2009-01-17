@@ -1,0 +1,331 @@
+<ui version="4.0" >
+ <class>PlotterWindow</class>
+ <widget class="QMainWindow" name="PlotterWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>PlotMS</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset resource="PlotMSPlotter.qrc" >:/images/images/plotms.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QVBoxLayout" >
+    <property name="spacing" >
+     <number>0</number>
+    </property>
+    <property name="leftMargin" >
+     <number>0</number>
+    </property>
+    <property name="topMargin" >
+     <number>0</number>
+    </property>
+    <property name="rightMargin" >
+     <number>0</number>
+    </property>
+    <property name="bottomMargin" >
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QFrame" name="frame" >
+      <property name="frameShape" >
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow" >
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionQuit" />
+   </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuDocks" >
+     <property name="title" >
+      <string>Docks</string>
+     </property>
+     <addaction name="actionOptionsDock" />
+     <addaction name="actionToolsDock" />
+    </widget>
+    <widget class="QMenu" name="menuToolBars" >
+     <property name="title" >
+      <string>ToolBars</string>
+     </property>
+     <addaction name="actionDocksToolBar" />
+     <addaction name="actionActionsToolBar" />
+    </widget>
+    <addaction name="menuDocks" />
+    <addaction name="menuToolBars" />
+   </widget>
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout" />
+    <addaction name="actionAboutQt" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menuView" />
+   <addaction name="menuHelp" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <widget class="QToolBar" name="dockToolBar" >
+   <property name="windowTitle" >
+    <string>Tools</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOptionsDock" />
+   <addaction name="actionToolsDock" />
+  </widget>
+  <widget class="QToolBar" name="actionsToolBar" >
+   <property name="windowTitle" >
+    <string>toolBar_2</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionMarkRegions" />
+   <addaction name="actionClearRegions" />
+   <addaction name="actionFlag" />
+   <addaction name="actionUnflag" />
+   <addaction name="actionLocate" />
+   <addaction name="separator" />
+   <addaction name="actionPrevIter" />
+   <addaction name="actionNextIter" />
+   <addaction name="actionApplyIter" />
+  </widget>
+  <action name="actionQuit" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/quit.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Quit</string>
+   </property>
+  </action>
+  <action name="actionOptionsDock" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/options_dock.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Options Dock</string>
+   </property>
+  </action>
+  <action name="actionMarkRegions" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/mark.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Mark Regions</string>
+   </property>
+  </action>
+  <action name="actionClearRegions" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/clear.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Clear Regions</string>
+   </property>
+  </action>
+  <action name="actionFlag" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/flag.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Flag</string>
+   </property>
+  </action>
+  <action name="actionUnflag" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/unflag.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Unflag</string>
+   </property>
+  </action>
+  <action name="actionLocate" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/locate.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Locate</string>
+   </property>
+  </action>
+  <action name="actionNextIter" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/next.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Next Iteration</string>
+   </property>
+  </action>
+  <action name="actionPrevIter" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/buttons/images/prev.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Previous Iteration</string>
+   </property>
+  </action>
+  <action name="actionApplyIter" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Apply to All</string>
+   </property>
+  </action>
+  <action name="actionDocksToolBar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/dock_toolbar.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Docks ToolBar</string>
+   </property>
+  </action>
+  <action name="actionActionsToolBar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/actions_toolbar.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Actions ToolBar</string>
+   </property>
+  </action>
+  <action name="actionToolsDock" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/tools_dock.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Tools Dock</string>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/about.png</iconset>
+   </property>
+   <property name="text" >
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionAboutQt" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/about_qt.png</iconset>
+   </property>
+   <property name="text" >
+    <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionHoldRelease" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Hold Drawing</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="PlotMSPlotter.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>PlotterWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionActionsToolBar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionsToolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>399</x>
+     <y>558</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDocksToolBar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockToolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>61</x>
+     <y>577</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

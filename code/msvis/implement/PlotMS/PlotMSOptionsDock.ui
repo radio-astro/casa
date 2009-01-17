@@ -1,0 +1,905 @@
+<ui version="4.0" >
+ <class>OptionsDock</class>
+ <widget class="QWidget" name="OptionsDock" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>353</width>
+    <height>410</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>PlotMS Options Dock</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <property name="spacing" >
+    <number>3</number>
+   </property>
+   <property name="leftMargin" >
+    <number>3</number>
+   </property>
+   <property name="topMargin" >
+    <number>3</number>
+   </property>
+   <property name="rightMargin" >
+    <number>3</number>
+   </property>
+   <property name="bottomMargin" >
+    <number>3</number>
+   </property>
+   <item>
+    <widget class="QToolBox" name="itsToolBox" >
+     <property name="currentIndex" >
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="windowOptionsPage" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>306</width>
+        <height>108</height>
+       </rect>
+      </property>
+      <attribute name="label" >
+       <string>Window Options</string>
+      </attribute>
+      <layout class="QVBoxLayout" >
+       <property name="spacing" >
+        <number>3</number>
+       </property>
+       <property name="leftMargin" >
+        <number>3</number>
+       </property>
+       <property name="topMargin" >
+        <number>3</number>
+       </property>
+       <property name="rightMargin" >
+        <number>3</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>3</number>
+       </property>
+       <item>
+        <layout class="QHBoxLayout" >
+         <property name="spacing" >
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="QSpinBox" name="WOrows" >
+           <property name="minimum" >
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="WOrowsLabel" >
+           <property name="text" >
+            <string>row(s) x</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="WOcols" >
+           <property name="minimum" >
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="WOcolsLabel" >
+           <property name="text" >
+            <string>columns.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QFrame" name="WOspacingFrame" >
+         <property name="frameShape" >
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" >
+          <property name="spacing" >
+           <number>3</number>
+          </property>
+          <property name="leftMargin" >
+           <number>0</number>
+          </property>
+          <property name="topMargin" >
+           <number>0</number>
+          </property>
+          <property name="rightMargin" >
+           <number>0</number>
+          </property>
+          <property name="bottomMargin" >
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="WOspacingLabel" >
+            <property name="text" >
+             <string>Grid Spacing:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="WOspacing" />
+          </item>
+          <item>
+           <widget class="QLabel" name="label_3" >
+            <property name="text" >
+             <string>px.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer>
+            <property name="orientation" >
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" >
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="plottingParametersPage" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>332</width>
+        <height>199</height>
+       </rect>
+      </property>
+      <attribute name="label" >
+       <string>Plotting Parameters</string>
+      </attribute>
+      <layout class="QVBoxLayout" >
+       <property name="spacing" >
+        <number>3</number>
+       </property>
+       <property name="leftMargin" >
+        <number>3</number>
+       </property>
+       <property name="topMargin" >
+        <number>3</number>
+       </property>
+       <property name="rightMargin" >
+        <number>3</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QFrame" name="PPframe" >
+         <property name="frameShape" >
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" >
+          <property name="spacing" >
+           <number>3</number>
+          </property>
+          <property name="leftMargin" >
+           <number>0</number>
+          </property>
+          <property name="topMargin" >
+           <number>0</number>
+          </property>
+          <property name="rightMargin" >
+           <number>0</number>
+          </property>
+          <property name="bottomMargin" >
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" >
+            <property name="spacing" >
+             <number>3</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_7" >
+              <property name="text" >
+               <string>Row:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="PProw" />
+            </item>
+            <item>
+             <widget class="QLabel" name="label_6" >
+              <property name="text" >
+               <string>   Column:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="PPcol" />
+            </item>
+            <item>
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line" >
+            <property name="orientation" >
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" >
+         <property name="horizontalSpacing" >
+          <number>3</number>
+         </property>
+         <property name="verticalSpacing" >
+          <number>3</number>
+         </property>
+         <item row="0" column="0" >
+          <widget class="QLabel" name="PPMSLabel" >
+           <property name="text" >
+            <string>MS:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>3</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="PPMSEdit" />
+           </item>
+           <item>
+            <widget class="QPushButton" name="PPMSBrowseButton" >
+             <property name="text" >
+              <string>Browse</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0" >
+          <widget class="QLabel" name="PPxAxisLabel" >
+           <property name="text" >
+            <string>X Axis:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="PPxAxisChooser" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Fixed" hsizetype="MinimumExpanding" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="PPxDataLabel" >
+             <property name="text" >
+              <string>   Data:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="PPxDataChooser" />
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>401</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0" >
+          <widget class="QLabel" name="PPyAxisLabel" >
+           <property name="text" >
+            <string>Y Axis:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="PPyAxisChooser" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Fixed" hsizetype="MinimumExpanding" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="PPyDataLabel" >
+             <property name="text" >
+              <string>   Data:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="PPyDataChooser" />
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>401</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0" >
+          <widget class="QLabel" name="PPMSSelLabel" >
+           <property name="text" >
+            <string>Select:</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" >
+          <widget class="QTreeWidget" name="PPMSSelWidget" >
+           <column>
+            <property name="text" >
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text" >
+             <string>Value</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="canvasOptionsPage" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>239</width>
+        <height>138</height>
+       </rect>
+      </property>
+      <attribute name="label" >
+       <string>Canvas Options</string>
+      </attribute>
+      <layout class="QVBoxLayout" >
+       <property name="spacing" >
+        <number>3</number>
+       </property>
+       <property name="leftMargin" >
+        <number>0</number>
+       </property>
+       <property name="topMargin" >
+        <number>0</number>
+       </property>
+       <property name="rightMargin" >
+        <number>0</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QFrame" name="COframe" >
+         <property name="frameShape" >
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" >
+          <property name="spacing" >
+           <number>3</number>
+          </property>
+          <property name="leftMargin" >
+           <number>0</number>
+          </property>
+          <property name="topMargin" >
+           <number>0</number>
+          </property>
+          <property name="rightMargin" >
+           <number>0</number>
+          </property>
+          <property name="bottomMargin" >
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" >
+            <property name="spacing" >
+             <number>3</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_12" >
+              <property name="text" >
+               <string>Row:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="COrow" />
+            </item>
+            <item>
+             <widget class="QLabel" name="label_13" >
+              <property name="text" >
+               <string>   Column:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="COcol" />
+            </item>
+            <item>
+             <spacer>
+              <property name="orientation" >
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" >
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_5" >
+            <property name="orientation" >
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" >
+         <property name="bottomMargin" >
+          <number>0</number>
+         </property>
+         <property name="horizontalSpacing" >
+          <number>3</number>
+         </property>
+         <property name="verticalSpacing" >
+          <number>3</number>
+         </property>
+         <item row="0" column="0" >
+          <widget class="QLabel" name="COtitleLabel" >
+           <property name="text" >
+            <string>Title:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" >
+          <widget class="QLineEdit" name="COtitleEdit" />
+         </item>
+         <item row="1" column="0" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QCheckBox" name="COxAxis" >
+             <property name="text" >
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="COxAxisLabel" >
+             <property name="text" >
+              <string>X-Axis  </string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>3</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="COxGridLabel" >
+             <property name="text" >
+              <string>   Grid:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="COxGridMajor" >
+             <property name="text" >
+              <string>Major</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="COxGridMinor" >
+             <property name="text" >
+              <string>Minor</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QCheckBox" name="COyAxis" >
+             <property name="text" >
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="COyAxisLabel" >
+             <property name="text" >
+              <string>Y-Axis  </string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>3</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="COyGridLabel" >
+             <property name="text" >
+              <string>   Grid:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="COyGridMajor" >
+             <property name="text" >
+              <string>Major</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="COyGridMinor" >
+             <property name="text" >
+              <string>Minor</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="1" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="COlegendChooser" >
+             <property name="enabled" >
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0" >
+          <layout class="QHBoxLayout" >
+           <property name="spacing" >
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QCheckBox" name="COlegendBox" >
+             <property name="text" >
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="COlegendLabel" >
+             <property name="text" >
+              <string>Legend</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>81</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>0</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="itsApplyButton" >
+       <property name="text" >
+        <string>Apply</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>PProw</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>COrow</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>72</x>
+     <y>81</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>87</x>
+     <y>123</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>PPcol</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>COcol</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>192</x>
+     <y>81</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>207</x>
+     <y>123</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>COrow</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>PProw</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>87</x>
+     <y>123</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>72</x>
+     <y>81</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>COcol</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>COcol</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>207</x>
+     <y>123</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>207</x>
+     <y>123</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>COlegendBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>COlegendChooser</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>15</x>
+     <y>235</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>89</x>
+     <y>233</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

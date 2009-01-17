@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="find">
+	<shortdescription>Find string in tasks, task names, parameter names:</shortdescription>
+	<description>
+
+	Lists the following:
+		1) All of the task names that have the string
+		2) All of the tasks whose  contents (e.g., documentation,
+		parameters, etc) have the string
+		3) All of the parameter names that have the string
+
+	</description>
+	<input>
+		<param type="string" name="matchstring">
+			<description>String to match in the documentation</description>
+			<value></value>
+		</param>
+	</input>
+
+<example>
+
+       Find string in tasks, task names, parameter names:
+
+	Lists the following:
+		1) All of the task names that have the string
+		2) All of the tasks whose  contents (e.g., documentation,
+		parameters, etc) have the string
+		3) All of the parameter names that have the string
+
+       Keyword arguments:
+       matchstring -- String to match in the documentation
+               default: ''; example: matchstring='vis'
+ </example>
+ </task>
+ </casaxml>

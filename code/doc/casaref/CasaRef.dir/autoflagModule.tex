@@ -1,0 +1,182 @@
+%% Copyright (C) 1999,2000,2001
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+
+\begin{ahmodule}{autoflag}{Module for automatic flagging of synthesis data}
+\ahinclude{autoflag.g}
+
+\begin{ahdescription}
+
+The {\tt autoflag} module provides automatic synthesis flagging capabilities
+within \aipspp. The primary purpose of this module is to flag data
+inside a MeasurementSet using a number of different algorithms and heuristics.
+
+The facilities of the {\tt autoflag} module are made available in Glish by
+including the following script:
+
+\begin{verbatim}
+- include 'autoflag.g'
+T
+\end{verbatim}
+
+where a hyphen precedes user input. The Glish response is indicated
+without the prompt.
+
+An {\tt autoflag} tool is created and attached to a specified
+measurement set as indicated in the following example:
+
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+\end{verbatim}
+
+A variety of algorithms (called {\em methods} in this context) can be applied
+for any given {\tt autoflag} tool. A setdata method allows a user to apply 
+set\em methods \/\tt to the whole measurement set with default parameters or 
+to a subset of the measurement set by specifying parameters. Individual 
+methods are set up in advance by calling Glish functions of the tool, 
+i.e.: {\tt af.set\em method\/\tt(\em parameters\/\tt)}.  Afterwards, a call 
+to {\tt af.run(\em options\/)} actually applies all the specified methods
+simultaneously. Here is an example:
+
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+- af.setdata()
+- af.settimemed(thr=6,hw=5)
+Added method 1: timemed (TimeMedian)
+   *thr         = 6
+   *hw          = 5
+    rowthr      = 10
+    rowhw       = 6
+    column      = DATA
+    expr        = ABS I
+    debug       = F
+    fignore     = F
+T
+- af.setuvbin(nbins=100,thr=.01)
+Added method 2: uvbin (UVBinner)
+   *thr         = 0.01
+   *nbins       = 100
+    plotchan    = F
+    econoplot   = T
+    column      = DATA
+    expr        = ABS I
+    fignore     = F
+T
+- af.settimemed(thr=5,hw=5,expr="- ABS XX YY")
+Added method 3: timemed (TimeMedian)
+    thr         = 5
+   *hw          = 5
+    rowthr      = 10
+    rowhw       = 6
+    column      = DATA
+   *expr        = - ABS XX YY
+    debug       = F
+    fignore     = F
+T
+- af.run(trial=T)
+   lots of interesting messages
+-
+\end{verbatim}
+
+Here, three methods -- a {\em UV binner} and two {\em time-median filters} --
+ are set up and executed. Note the following crucial points:
+
+\begin{itemize} 
+
+\item The {\tt set{\em method}\/()} functions respond with a summary of the
+parameters with which the method will be run. All parameter have reasonable
+defaults. Parameters for which you have specified an explicit non-default 
+value are marked with an ``{\tt *}'' symbol.
+
+\item You may set up multiple instances of a method, using different 
+parameters for each instance. In the above example, two {\tt timemed} methods
+ are set up.
+The first one is applied to $|I|$ , the second one -- to $|XX|-|YY|$.
+
+\item Most methods perform flagging based on some real value derived from a set
+of complex correlations, e.g. $|I|$, or $|XX|-|YY|$. You can specify how the
+value is derived by using the {\tt expr} parameter. This parameter is either a
+string or an array of strings. A single string will be automatically split at
+whitespace, so {\tt "ABS XX"} and {\tt 'ABS XX'} are fully equivalent.
+Currently, the following types of expressions are recognized: 
+
+\begin{description}
+\item[{\tt\em func CC}]~~--- real function of a complex correlation. E.g. {\tt "ABS XX"} for
+$|XX|$.
+
+\item[{\tt +/-\em\ func C1 C2}]~~--- sum/difference of functions of two correlations. E.g. 
+{\tt "- ABS RR LL"} for $|RR|-|LL|$.
+
+\item[{\tt\em func\tt\ +/-\em\ C1 C2}]~~--- function of a sum/difference of 
+two correlations. E.g.
+{\tt "ARG - XX YY"} for $\arg({XX-YY})$.
+
+\item[{\tt\em func\tt\ I}]~~--- {\tt I} is used to specify Stokes $I$. 
+Depending on polarization frame, it is equivalent to either $XX+YY$ or $RR+LL$.
+$|I|$ ({\tt "ABS I"}) is in fact the default expression for all methods.
+
+\end{description}
+
+The following functions are currently recognized: {\tt ABS}, {\tt ARG}, {\tt
+RE}, {\tt IM}, {\tt NORM}. Any correlations present in the measurement set are
+recognized. 
+
+\item The {\tt column} parameter specifies which measurement set column to use.
+Possible values are {\tt DATA}, {\tt MODEL} or {\tt CORR} for corrected data.
+
+\item All methods by default honor pre-existing flags (as determined by the
+FLAG and FLAGROW columns), in the sense that flagged values are omitted from
+all calculations. Methods may be asked to ignore existing flags via the {\tt
+fignore} parameter. The {\tt reset} option to  {\tt autoflag.run} clears
+all pre-existing flags prior to a flagging run.
+
+\item For each flagging run, {\tt autoflag} will automatically produce a
+graphical  {\em flagging report}, consisting of a summary and several plots
+showing the distribution of flags by baseline, antenna, frequency, time, etc.
+By default, this report is written in PostScript format to a file named {\tt
+flagreport.ps}. However, the {\tt devfile} parameter of {\tt autoflag.run()}
+can be used to redirect this output to a different file or a different PGPlot
+device.
+
+\item If your measurement set contains different fields and/or spectral windows
+(or, more generally, different data description IDs), {\tt autoflag} will
+automatically treat it as a set of disjoint chunks. Flagging is performed
+independently within each chunk (i.e. independently for each spectral window,
+field, etc.)
+
+\item {\tt autoflag} will attempt to manage its memory consumption to stay
+roughly within the meximum physical memory specified in your .aipsrc file. 
+If you find your system swapping to disk when running {\tt autoflag}, you can
+improve performance by using a reduced memory setting. Conversely, if a lot of
+memory remains free during an {\tt autoflag} run, performance may be improced by
+increasing the setting.
+
+\end{itemize}
+
+\end{ahdescription}
+
+\input{autoflag.htex}
+
+\end{ahmodule}

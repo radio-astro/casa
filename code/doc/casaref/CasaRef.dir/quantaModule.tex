@@ -1,0 +1,366 @@
+%% Copyright (C) 1999,2000,2001,2002,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+
+\begin{ahmodule}{quanta}{Units and quantities handling}
+
+%%\ahinclude{quanta.g}
+
+\ahkeyword{units}{}
+\ahkeyword{quanta}{}
+\ahkeyword{quantities}{}
+
+
+\begin{ahdescription}
+
+\bigskip
+
+{\it Introduction}
+
+A quantity is a value with a unit.  For example, '5km/s', or '20Jy/pc2'. 
+This module (the {\mf quanta} module) enables you to create and
+manipulate such quantities.  The types of functionality provided are:
+
+\begin{itemize}
+\item {\em Conversion} - Conversion of quantities  to different units
+\item {\em Calculation} - Calculations with quantities
+%%\item {\em GUI} A GUI interface is also provided
+\end{itemize}
+
+%%To access the {\mf quanta} module, include the the {\em quanta.g}
+%%script.  This will create a default Quanta \tool\ called {\stf dq.}.  
+%%
+%%
+%%\begin{verbatim}
+%%- include 'quanta.g'
+%%- dq.type()             # Default tool created for you
+%%quanta
+%%\end{verbatim}
+%%
+%%The Quanta \tool\ has no state (it doesn't remember anything), so there
+%%is generally no need to create your own \tool.  Just use the default
+%%one.  However, if you do require one, perhaps in a script, then use the {\cf
+%%quanta} constructor to make one. 
+%%
+%%\begin{verbatim}
+%%- include 'quanta.g';
+%%- myqt := quanta();
+%%- myqt.type();  
+%%quanta
+%%\end{verbatim}
+
+The Quanta \tool\ manipulates quantities.  A quantity is stored as a
+record with two fields.  These fields are named `value' and
+`unit'.  As well as simple scalar quantites, one can also create
+quantities as vectors or arrays.  For example, you may have a vector of
+values, which all have the same unit - there is no need to store a copy
+of the unit for each value. Access to the individual fields of a quantum
+should always be by using the {\em getvalue} and {\em getunit} methods,
+especially since the internal names can change or be not accessable at some
+stage. 
+
+
+\begin{ahexample}
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 1 \t----"
+print qa.quantity(5.4, 'km/s')
+#{'value': 5.4000000000000004, 'unit': 'km/s'}
+q1 = qa.quantity([8.57132661e+09, 1.71426532e+10], 'km/s')
+print qa.convert(q1, 'pc/h');
+#{'value': array([ 1.,  2.]), 'unit': 'pc/h'}
+#
+"""
+\end{verbatim}
+
+In the first example, we make a simple scalar quantity.
+You can see that the quantity (which is actually a record)
+has fields `value' and `unit'.   
+
+In the second example, we make a vector quantity and then
+convert it from units of km/s to pc/h.
+
+\end{ahexample}
+
+\begin{ahexample}
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 2 \t----"
+print qa.quantity('5.4km/s')          
+#{'value': 5.4000000000000004, 'unit': 'km/s'}
+print qa.quantity(qa.unit('5.4km/s')) 
+#{'value': 5.4000000000000004, 'unit': 'km/s'}
+#
+"""
+\end{verbatim} 
+
+In the first example, the value and unit were combined into one string
+(just saves a bit of typing).  The second example shows that the
+function {\stff unit} is an alias for {\stff quantity}, and that you can
+create a quantity from another quantity. 
+
+\end{ahexample} 
+
+\begin{ahexample}
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 3 \t----"
+q1 = qa.unit("5s 5.4km/s")	
+print len(q1)
+#2
+print q1['*0']
+# {'unit': 's', 'value': 5.0}
+print q1['*1']
+# {'unit': 'km/s', 'value': 5.4000000000000004}
+#
+\end{verbatim} 
+
+Here we make a vector quantity by using the string vector.  You can
+see that the resultant quantity record is of length 2 and that each
+field of that vector quantity is a scalar quantity.  So you see that
+'q1' itself does not have fields `value' and `unit', only the
+elements of 'q1' have that.
+
+\end{ahexample} 
+
+\begin{ahexample}
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 4 \t----"
+q1 = qa.unit('5km');
+q2 = qa.unit('200m');
+print qa.canonical(qa.add(q1,q2))
+#{'value': 5200.0, 'unit': 'm'}
+#
+"""
+\end{verbatim} 
+
+Here we make two quantities with consistent but different units,
+add them together and then convert the result to canonical units.
+
+\end{ahexample} 
+
+
+\begin{ahexample}
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 5 \t----"
+q1 = qa.quantity('6rad');
+q2 = qa.quantity('3deg');
+print qa.compare(q1,q2)
+#True
+print qa.compare(q1,qa.unit('3km'))
+#False
+#
+"""
+\end{verbatim} 
+
+Here we compare the dimensionality of the units of two
+quantities.
+
+
+\end{ahexample} 
+
+
+%%\begin{ahexample}
+%%\begin{verbatim}-
+%%
+%%#
+%%print "\t----\t Module Ex  \t----"
+%%# q1 = qa.unit(array("5s 5.4km/s", 3, 2))
+%%#len(q1)
+%%#6 
+%%- q1[1]
+%%[value=5, unit=s] 
+%%- q1[2]
+%%[value=5.4, unit=km/s] 
+%%- q1[6]
+%%[value=5.4, unit=km/s] 
+%%- q1::
+%%[id=quant, shape=[3 2] ] 
+%%#
+%%\end{verbatim}
+%%
+%%Here we fill a quantity with a 2-dimensional array.  In this case, the
+%%array is an array of strings.  and its shape is [3,2].  We see that the
+%%resultant quantity is a vector of length 6 (it does not preserve the
+%%array shape here).  However, we see that the shape attribute 
+%%of the quantity does preserve the original array shape though
+%%(see below for more information about attributes).
+%%
+%%\end{ahexample}
+
+
+\bigskip
+{\it Constants, time and angle formatting}
+
+If you would like to see all the possible constants known to the Quanta
+\tool\ you can issue the command {\cf print qa.map('const')}.  You can get the
+value of any constant in that list with a command such as
+
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 6 \t----"
+boltzmann = qa.constants('k')
+print 'Boltzmann constant is ', boltzmann
+#Boltzmann constant is  {'value': 1.3806577987510647e-23, 'unit': 'J/K'}
+#
+"""
+\end{verbatim}
+
+
+There are some extra handy ways you can manipulate strings when you are
+dealing with times or angles.  The following list shows special strings
+and string formats which you can input to the {\stff quantity} function. 
+Something in square brackets is optional.  There are examples after the
+list. 
+
+\begin{itemize}
+	\item time: [+-]hh:mm:ss.t... -- This is the preferred time format (trailing fields can
+             be omitted)
+	\item time: [+-]hhHmmMss.t..[S]  -- This is an alternative time format (HMS case
+                  insensitive, trailing second fields can be omitted)
+	\item angle: [+-]dd.mm.ss.t..  -- This is the preferred angle format (trailing fields
+                  after second priod can be omitted; dd.. is valid)
+	\item angle: [+-]ddDmmMss.t...[S] -- This is an alternative angle format (DMS case
+                  insensitive, trailing fields can be omitted after M)
+
+	\item today -- The special string ``today'' gives the UTC time at the instant the command was issued. 
+	\item today/time -- The special string ``today'' plus the specified time string gives the UTC time 
+              at the specified instant
+	\item yyyy/mm/dd[/time] -- gives the UTC time at the specified instant
+	\item dd[-]mmm[-][cc]yy[/time] -- gives the UTC time at the specified instant in calendat style notation
+               (23-jun-1999)
+
+
+\end{itemize}
+
+Note that the standard unit for degrees is 'deg', and for days 'd'. 
+Formatting is done in such a way that it interprets a 'd' as degrees if
+preceded by a value without a period and if any value following it is
+terminated with an 'm'.  In other cases 'days' are assumed.  Here are
+some examples. 
+
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 7 \t----"
+print qa.quantity('today')
+#{'value': 54178.87156457176, 'unit': 'd'}
+print qa.quantity('5jul1998')
+#{'value': 50999.0, 'unit': 'd'}
+print qa.quantity('5jul1998/12:')
+#{'value': 50999.5, 'unit': 'd'}
+print qa.quantity('-30.12.2')
+#{'value': -30.200555555555557, 'unit': 'deg'}
+print qa.quantity('2:2:10')
+#{'value': 30.541666666666668, 'unit': 'deg'}
+print qa.unit('23h3m2.2s')  
+#{'value': 345.75916666666666, 'unit': 'deg'}
+#
+"""
+\end{verbatim}
+
+Angles and times can often be used interchangeably.  Special functions
+({\cf qa.totime()} and {\cf qa.toangle()}) are available to make them in
+the right units for the purpose.  E.g.  {\cf qa.sin(time)} gives an
+error, whereas {\cf qa.sin(qa.toangle(time))} works ok.  See
+%%\ahlink{units}{quanta:quanta.gui} for more information on units and
+%%quantities, and 
+the \ahlink{map}{quanta:quanta.map} function for pre-defined units.  
+
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 8 \t----"
+a = qa.quantity('today');                     # 1
+print a
+#{'value': 54178.871564641202, 'unit': 'd'}
+b = qa.toangle(a);                            # 2
+print b
+#{'value': 340415.88977452344, 'unit': 'rad'}
+print qa.angle(qa.norm(qa.toangle(a)));       # 3
+#-046.14.12
+print qa.angle(qa.norm(qa.toangle(a), 0));    # 4
+#+313.45.48
+print qa.sub('today',a);                      # 5
+#{'value': 1.1576048564165831e-08, 'unit': 'd'}
+#
+print "Last example! Exiting ..."
+exit()
+"""
+\end{verbatim}
+
+\begin{enumerate}
+   \item Get the time now
+   \item Get the time as an angle
+   \item Get the time as a normalised angle (-pi to +pi) and show as dms
+   \item Get the time as a normalised angle (0 to 2pi) and show as dms
+   \item Get time since creation of a
+\end{enumerate}
+
+
+
+
+%%\bigskip
+%%{\it Attributes}
+%%
+%%Quantities (that is, the record) have attributes attached to
+%%them.  All quantities have the attribute called `id' which has the
+%%string value `quant'.  This can be used to identify that a record is in
+%%fact a valid quantity.  When you make quantities from arrays, you will
+%%generally find an attribute called ``shape'' attached to the quantity
+%%indicating what shape the array was.  Attributes are accessed via the
+%%``::'' operator. 
+%%
+%%\begin{ahexample}
+%%\begin{verbatim}
+%%#
+%%print "\t----\t Module Ex 7 \t----"
+%%#- q1 = qa.unit(array("5s 5.4km/s", 3, 2))
+%%#- length(q1)
+%%#6
+%%#- q1::
+%%#[id=quant, shape=[3 2] ] 
+%%#
+%%\end{verbatim}
+%%\end{ahexample}
+
+
+
+\end{ahdescription}
+
+\ahfuncs{}
+\ahobjs{}
+
+\input{quanta.htex}
+
+\end{ahmodule}

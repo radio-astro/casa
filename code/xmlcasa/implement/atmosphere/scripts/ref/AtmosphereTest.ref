@@ -1,0 +1,138 @@
+CASA Version 2.0 Rev 3119
+  Built on: Mon 2007/08/27 01:15:06 UTC
+
+___________________________________________________________
+Available tasks:
+
+   accum         exportfits      immoments       plotcal
+   almasimmos    exportuvfits    importasdm      plotxy
+   applycal      feather         importfits      (pointcal)
+   bandpass      filecatalog     importuvfits    regridimage
+   blcal         flagautocorr    importvla       restore
+   browsetable   flagdata        invert          setjy
+   clean         flagmanager     listcal         smoothcal
+   clearcal      fluxscale       listhistory     split
+   clearplot     fringecal       listobs         uvcontsub
+   clearstat     ft              makemask        uvmodelfit
+   concat        gaincal         mosaic          viewer
+   deconvolve    imhead          plotants
+ 
+Available tools:
+
+   cb (calibrater)     cp (cal plot)     fg (flagger)
+   ia (image analysis) im (imager)       me (measures)
+   mp (MS plot)        ms (MS)           qa (quanta)
+   sm (simulation      tb (table)        tp (table plot)
+ 
+   pl (pylab functions)
+   sd (ASAP functions - run asap_init() to import into CASA)
+
+___________________________________________________________________
+
+Help :   
+   help taskname          - Full help for task
+   help par.parametername - Full help for parameter name 
+   find string            - Find occurances of string in doc
+   tasklist               - Task list organized by catagory
+   taskhelp               - One line summary of available tasks
+   toolhelp               - One line summary of available tools
+   startup                - The start up screen
+
+___________________________________________________________________
+will execute script AtmosphereTest.py
+Activating auto-logging. Current session state plus future input saved.
+Filename       : ipython.log
+Mode           : backup
+Output logging : False
+Raw input log  : False
+Timestamping   : False
+State          : active
+WARNING: OUTPUT OF AtmosphereTest.py on 2007/08/31.
+WARNING: NOT DIRECTLY COMPARABLE TO ANY CURRENT TELCAL TEST OUTPUT.
+Test of constructor Atmosphere(altitude,temperature,pressure,maxAltitude,humidity,dTempdH,dP,dPm,h0,MIDLAT_SUMMER)
+BASIC ATMOSPHERIC PARAMETERS TO GENERATE REFERENCE ATMOSPHERIC PROFILE
+  
+Ground temperature T:         270.32 K
+Ground pressure P:            735.85 mb
+Relative humidity rh:         20 %
+Scale height h0:              2 km
+Pressure step dp:             5 mb
+Altitude alti:                2550 m
+Attitude top atm profile:     45 km
+Pressure step factor:         1.25 
+Tropospheric lapse rate:      -5.6 K/km
+Atmospheric type:             midlatSummer
+
+Built atmospheric profile with 25 layers.
+
+
+
+Test: getStartupWaterContent()
+Guessed water content:  1.60452168773 mm
+
+Test: getProfile()
+altitude	thickness	temperature	watermassdensity	pressure
+54.3006017011 	54.3006017011 	270.167958315 	0.000796044385639 	733.345738721
+122.625378922 	68.3247772212 	269.824607254 	0.000772010846975 	727.718290274
+208.744546228 	86.1191673054 	269.39216421 	0.000742770871522 	720.683163741
+317.531181954 	108.786635727 	268.846427961 	0.000707445902377 	711.887942184
+455.339314319 	137.808132365 	268.15596261 	0.00066514992841 	700.891784519
+630.547389654 	175.208075336 	267.279517229 	0.000615083739038 	687.143095692
+854.36375827 	223.816368616 	266.162248786 	0.000556686535481 	669.951437303
+1142.06574891 	287.701990639 	264.72999738 	0.000489861510132 	648.452073448
+1514.99460323 	372.928854322 	262.880231014 	0.00041528499004 	621.560956386
+2003.95458238 	488.959979147 	260.46694228 	0.000334786427667 	587.916947899
+2655.43740758 	651.482825197 	257.273702428 	0.000251736296734 	545.806040448
+3544.1548907 	888.717483124 	252.961141565 	0.000171285545574 	493.057312863
+4801.81890072 	1257.66401002 	246.951273384 	0.000100156768927 	426.884539736
+6697.6726578 	1895.85375708 	238.121423636 	4.55293515022e-05 	343.581040963
+7697.6726578 	1000.0 	229.563033116 	2.20738525752e-05 	286.234223712
+8697.6726578 	1000.0 	223.063033116 	1.33884683648e-05 	252.870520227
+10322.6726578 	1625.0 	214.513033116 	6.94584588625e-06 	207.546380359
+12322.6726578 	2000.0 	208.713033116 	2.80637542578e-06 	156.254791927
+14322.6726578 	2000.0 	208.213033116 	1.03240782335e-06 	113.820173959
+16322.6726578 	2000.0 	209.213033116 	3.79801613117e-07 	83.1868318906
+20072.6726578 	3750.0 	212.513033116 	9.02107902412e-08 	53.2945400581
+24072.6726578 	4000.0 	217.213033116 	1.29960965326e-08 	29.5339127106
+28072.6726578 	4000.0 	223.513033116 	1.75883040521e-09 	16.300184048
+32322.6726578 	4250.0 	232.363033116 	2.23610192669e-10 	9.01270214752
+38322.6726578 	6000.0 	244.713033116 	1.72429665592e-11 	4.465400318
+
+Test of initSpectralWindow()
+1 channel(s) in band 0
+
+Test: getOpacity()
+ - dryOpacity  0.021504719301 wetOpacity  0.01160118866 neper
+
+AbsCoeff getAbsCoeff() (3 first layers): 1.99016698616e-06 1.92097030574e-06 1.83722572287e-06
+
+Test of SkyBrightness calculations
+SkyBrightness = 21.7842521142 K  TEBB
+
+==========================================================
+Test with spectral data
+Test of initSpectralWindow
+2  bands  4 channels(s)
+Test: Opacity getOpacitySpec
+band 0
+ - dryOpacity  0.0221791761344  wet Opacity  0.0114361292804 mm-1
+ - dryOpacity  0.0220370837194  wet Opacity  0.0114690302914 mm-1
+ - dryOpacity  0.0218986868041  wet Opacity  0.0115019859005 mm-1
+ - dryOpacity  0.0217631311728  wet Opacity  0.0115349974494 mm-1
+band 1
+ - dryOpacity  0.0202185994064  wet Opacity  0.0119692753313 mm-1
+ - dryOpacity  0.0201185276878  wet Opacity  0.0120030795317 mm-1
+ - dryOpacity  0.0200185283213  wet Opacity  0.0120369407596 mm-1
+ - dryOpacity  0.0199207700793  wet Opacity  0.0120708595408 mm-1
+
+Test of SkyBrightness calculations
+Band 0  channel  0 TebbSky =  21.8595800388 K
+Band 0  channel  1 TebbSky =  21.8420113612 K
+Band 0  channel  2 TebbSky =  21.8257255965 K
+Band 0  channel  3 TebbSky =  21.8104559691 K
+Band 1  channel  0 TebbSky =  21.6916727736 K
+Band 1  channel  1 TebbSky =  21.6892486826 K
+Band 1  channel  2 TebbSky =  21.6869750396 K
+Band 1  channel  3 TebbSky =  21.6855216543 K
+
+leaving casapy...

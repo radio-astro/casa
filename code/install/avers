@@ -1,0 +1,178 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# avers: Report CASA version information
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1992,1993,1994,1995,2001
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning CASA should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: CASA Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: avers [-b | -l | -r | R]
+#-----------------------------------------------------------------------------
+# Report CASA version information.
+#
+# Options:
+#   -b     Report the last version installed in short format (default).
+#
+#   -l     Report the following version and time information in long format:
+#             1) Version last installed.
+#             2) Version & time of completion of last slave RCS update.
+#             3) Version & time of completion of last code update.
+#             4) Version & time of completion of last system rebuild.
+#             5) Version currently available in Socorro.
+#
+#   -r     Report the last version installed in release format (default).
+#
+#   -R     Report the last version installed in release format with date.
+#
+# Status return values:
+#    0:  success
+#    1:  usage error
+#    2:  CASAPATH not defined
+#
+# Notes:
+#    1) 
+#
+# Original: 1992/09/17 by Mark Calabretta, ATNF
+# $Id$
+#=============================================================================
+# Initialize
+#-----------------------------------------------------------------------------
+# Parse command input.
+  MODE=release
+
+  while [ "$#" -gt 0 ]
+  do
+     case $1 in
+        -b)
+           MODE="brief"
+           ;;
+        -l)
+           MODE="long"
+           ;;
+        -r)
+           MODE="release"
+           ;;
+        -R)
+           MODE="release_date"
+           ;;
+        *)
+           echo "Usage: avers [-b | -l | -r | -R]"
+           exit 1
+           ;;
+     esac
+
+     [ "$2" = "" ] && break
+
+     shift
+  done
+
+# Check that CASAPATH is defined.
+  if [ "$CASAPATH" = "" ]
+  then
+     echo "avers: CASAPATH is undefined, abort!"
+     exit 2
+  fi
+
+# Get CASA directory names.
+  AIPSROOT=`echo $CASAPATH | awk '{ print $1 }'`
+  AIPSARCH=`echo $CASAPATH | awk '{ print $1 "/" $2 }'`
+  AIPSCODE=$AIPSROOT/code
+
+
+#-----------------------------------------------------------------------------
+# Report version information.
+#-----------------------------------------------------------------------------
+# Last version installed (not all installations will have slave or code
+# directories).
+  if [ -f "$AIPSCODE/VERSION" ]
+  then
+     if [ "$MODE" = brief ]
+     then
+        cat $AIPSCODE/VERSION
+     elif [ "$MODE" = release ]
+     then
+        cat $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+     elif [ "$MODE" = release_date ]
+     then
+        rdate=`cat $AIPCODE/VERSION | awk '{print $3}'`
+        cat $AIPCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        echo "Dated: $rdate"
+     else
+        echo "Master:" `cat $AIPSCODE/VERSION`
+     fi
+  elif [ -f "$AIPSARCH/VERSION" ]
+  then
+     if [ "$MODE" = brief ]
+     then
+        cat $AIPSARCH/VERSION
+     elif [ "$MODE" = release ]
+     then
+        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+     elif [ "$MODE" = release_date ]
+     then
+        rdate=`cat $AIPARCH/VERSION | awk '{print $3}'`
+        cat $AIPARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        echo "Dated: $rdate"
+     else
+        echo "Master:" `cat $AIPSARCH/VERSION`
+     fi
+  else
+     if [ "$MODE" = brief ]
+     then
+        echo "($AIPSARCH/VERSION not found)"
+     elif [ "$MODE" = release ]
+     then
+        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+     elif [ "$MODE" = release_date ]
+     then
+        rdate=`cat $AIPARCH/VERSION | awk '{print $3}'`
+        cat $AIPARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        echo "Dated: $rdate"
+     else
+        echo "Master: ($AIPSARCH/VERSION not found)"
+     fi
+  fi
+
+# Quit now in brief or release mode.
+  [ "$MODE" = brief ] && exit 0
+  [ "$MODE" = release ] && exit 0
+  [ "$MODE" = release_date ] && exit 0
+
+  if [ -f "$AIPSCODE/LOGFILE" ]
+  then
+#    Code installation.
+     echo "  Code:" `sed -n 1p $AIPSCODE/LOGFILE`
+  fi
+
+  if [ -f "$AIPSARCH/LOGFILE" ]
+  then
+#    System installation.
+     echo "System:" `sed -n 1p $AIPSARCH/LOGFILE`
+  fi
+
+# Finish off with the current time.
+  echo "  Time:          " `adate`
+
+  exit 0

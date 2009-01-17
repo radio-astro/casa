@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/actions" >
+        <file>images/about.png</file>
+        <file>images/about_qt.png</file>
+        <file>images/actions_toolbar.png</file>
+        <file>images/dock_toolbar.png</file>
+        <file>images/options_dock.png</file>
+        <file>images/tools_dock.png</file>
+    </qresource>
+    <qresource prefix="/buttons" >
+        <file>images/clear.png</file>
+        <file>images/flag.png</file>
+        <file>images/locate.png</file>
+        <file>images/mark.png</file>
+        <file>images/next.png</file>
+        <file>images/prev.png</file>
+        <file>images/quit.png</file>
+        <file>images/unflag.png</file>
+    </qresource>
+    <qresource prefix="/images" >
+        <file>images/plotms.png</file>
+    </qresource>
+</RCC>

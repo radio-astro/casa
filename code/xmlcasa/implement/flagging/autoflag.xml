@@ -1,0 +1,1165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+        <tool name="autoflag" module="autoflag">
+<code>
+	<include>xmlcasa/flagging/autoflag_forward.h</include>
+<private>
+	#include &lt;xmlcasa/flagging/autoflag_private.h&gt;
+</private>
+</code>
+        <shortdescription>Automatic synthesis flagging</shortdescription>
+       
+<description>
+An {\tt autoflag} tool performs automatic synthesis flagging operations
+within \aipspp. A separate {\tt autoflag} tool  needs to be created
+for each separate measurement set for which processing is to be
+performed.  
+</description>
+
+
+
+ 
+   <method type="constructor" name="autoflag">
+   <shortdescription>Construct an autoflag tool from a
+MeasurementSet</shortdescription>
+   
+<description>
+Create an {\tt autoflag} tool, and attach it to a specified measurement
+set.
+</description>
+<input>
+
+     <param type="unknown" name="msname">
+     <description>Measurement set to be processed</description>
+     <value>Table name</value>
+     <choice>none</choice>
+     </param>
+</input>
+<returns type="unknown">autoflag tool</returns>
+<example>
+\begin{verbatim}
+af:=autoflag('3C273XC1.MS')      
+\end{verbatim}
+</example>
+</method>
+
+   <method type="function" name="settimemed">
+   <shortdescription>Sets up the time-median flagging method</shortdescription>
+   
+<description> 
+
+The {\tt timemed} method uses a median-in-time filter. It works by computing a
+sliding median of some value $d_{cbt}$ (where $c$ is frequency channel, $b$ is
+baseline, and $t$ is time slot), as specified by the {\tt expr} parameter (see 
+the general \htmlref{autoflag module description} {autoflag} for details
+of how {\tt expr} determines $d$.) The sliding median is computed  in time, on
+a per-channel, per-baseline basis: 
+
+\[ 
+m_{cbt} = {\rm median}\lbrace d_{cbt'}, \mbox{~where~} |t'-t| \leq\delta \rbrace 
+\]
+
+(where $\delta$ is given by the {\tt hw} parameter.) Then, a median absolute deviation
+(MAD) of the data with respect to the median is computed on a per-row basis:
+
+\[ 
+M_{bt} = {\rm median}\lbrace |d_{cbt}-m_{cbt}|, \mbox{~for all~} c\rbrace
+\]
+
+(For single-channel data, $M_{bt}\equiv m_{0bt}$.) $M_{bt}$ is then smoothed 
+by applying a sliding median in time:
+
+\[
+\tilde M_{bt} = {\rm median}\lbrace M_{bt'}, \mbox{~where~} |t'-t| \leq 
+\tilde\delta \rbrace 
+\]
+
+(where $\tilde\delta$ is given by the {\tt rowhw} parameter.) All points where
+
+\[
+|d_{cbt}-m_{cbt}|&gt;\theta\tilde M_{bt}
+\] 
+
+are then flagged. The threshold level $\theta$ is given by the {\tt thr}
+parameter.
+
+In addition, {\tt timemed} can also flag entire rows based on their MAD. This
+ is only performed for line data (specifically, when there are at least 10 
+channels per row), and may be explicitly disabled by specifying {\tt norow=T}.
+ To do this, it first computes a per-baseline MAD of the MAD:
+
+\[ 
+\hat M_b = {\rm median}\lbrace |M_{bt}-\tilde M_{bt}|, \mbox{~for all~} 
+t\rbrace
+\]
+
+and flags rows where $|M_{bt}-\tilde M_{bt}|&gt;\hat\theta\hat M_b$, where
+$\hat\theta$ is given by the {\tt rowthr} parameter.
+
+{\tt Timemed} will iterate over the measurement set -- and compute $m_{cbt}$
+--  only once. Existing flags are taken into account at this time (unless {\tt
+fignore} is specified). MADs are then computed and recomputed iteratively,
+dropping flagged points and rows, until convergence is achieved (i.e. no more
+flags are raised). Since $m_{cbt}$ is {\bf not} recomputed as new flags are
+raised, running this method a second time may sometimes be of use.
+
+</description>
+<input>
+
+     <param type="double" name="thr">
+     <description>Flagging threshold</description>
+     <value>5.0</value>
+     </param>
+
+     <param type="int" name="hw">
+     <description>Half-window for the sliding median, if time slots is less than 
+4 times half window, ignoring this chunk</description>
+     <value>10</value>
+     </param>
+
+     <param type="double" name="rowthr">
+     <description>Row flagging threshold</description>
+     <value>10.0</value>
+     </param>
+
+     <param type="int" name="rowhw">
+     <description>Half-window for the sliding median of the MAD</description>
+     <value>10</value>
+     </param>
+
+     <param type="bool" name="norow">
+     <description>Disable row flagging</description>
+     <value>false</value>
+     </param>
+
+     <param type="string" name="column">
+     <description>Which column to base flagging on</description>
+     <value>MODEL</value>
+     <value>CORR</value>
+     <value>DATA</value>
+     </param>
+
+     <param type="string" name="expr">
+     <description>Expression to use</description>
+     <value>ABS I</value>
+     </param>
+
+     <param type="bool" name="fignore">
+     <description>Ignore existing flags</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+- af.setdata()
+- af.settimemed(thr=5,hw=5,expr="- ABS RR LL")
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="setnewtimemed">
+   <shortdescription>Sets up the new time-median flagging method</shortdescription>
+   
+<description> 
+
+The {\tt newtimemed} method uses a median-in-time filter. It follows the 
+procedure of timemed but considering a median value from all time slots in a 
+chunk.
+
+The median is computed on a per-channel, per-baseline basis. The {\tt thr} 
+parameter multiplying the standard deviation of the data in a chunk sets the 
+threshold for flagging. If the {\tt thr} parameter is specified 
+(e.g. {\tt thr} = 3), all points with greater than three standard deviations 
+away from the median are flagged. 
+
+</description>
+<input>
+
+     <param type="double" name="thr">
+     <description>Flagging threshold</description>
+     <value>3.0</value>
+     </param>
+
+     <param type="string" name="column">
+     <description>Which column to base flagging on</description>
+     <value>MODEL</value>
+     <value>CORR</value>
+     <value>DATA</value>
+     </param>
+
+     <param type="string" name="expr">
+     <description>Expression to use</description>
+     <value>ABS I</value>
+     </param>
+
+     <param type="bool" name="fignore">
+     <description>Ignore existing flags</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af:=autoflag('H031121.MS')
+- af.setdata()
+- af.setnewtimemed(thr=5, expr="ABS RR")
+- af.run()
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="setdata">
+   <shortdescription>Set the data parameters selection for subsequent 
+processing</shortdescription>
+   
+<description>
+This setup function selects which data are to be used 
+subsequently. After invocation of setdata, only the selected subset of data
+are operated on. 
+
+Data can be selected by field ids, spectral window ids, channels, velocities.
+The selection is controlled by the mode argument:
+
+\begin{description}
+\item[fieldids]  Selection in field ids.
+\item[spwids]    Selection in spectral window ids.
+\item[channel]   Selection in channels using the nchan, start and step
+arguments. 
+\item[velocity]  Selection in radio velocity, using the nchan, mstart
+and mstep arguments.
+\end{description}
+
+Spectral window ids must be specified for the channel and velocity modes.
+ 
+For channel mode, the other fields have the following meaning:
+
+\begin{description}
+\item[nchan]   is the number of output channels. It
+defaults to 1, or the number of input channels.
+\item[start] is the first channel from input dataset that is to be used.
+It defaults to 1 (i.e. first channel).
+\item[step] gives the increment between selected input channels. 
+\end{description}
+
+The channels are centered on velocities: start, start+step,
+start+2*step, etc.  
+
+Examples for choosing the parameters for setdata.
+\begin{verbatim}
+af.setdata(mode='fieldids',fieldid=1);
+\end{verbatim}
+\begin{verbatim}
+af.setdata(mode='spwids',spwid=1);
+\end{verbatim}
+\begin{verbatim}
+af.setdata(mode='spwids &amp; fieldids',spwid=1, fieldid=1);
+\end{verbatim}
+\begin{verbatim}
+af.setdata(mode='channel', nchan=64, start=1, step=1, spwid=1)
+\end{verbatim}
+For velocity modes, the mstart and mstep are the start and step velocities 
+as strings.
+\begin{verbatim}
+af.setdata(mode='velocity', nchan=64, mstart='20km/s', mstep='-80m/s', spwid=1)
+\end{verbatim}
+For multi-spectral window selection, the data can be selected as follows
+\begin{verbatim}
+af.setdata(mode='channel', nchan=[20,30], start=[1,1], step=[1,1],
+             spwid=[1,2])
+\end{verbatim}
+The above means that you would make a data selection of 20 channels
+(starting from 1 steping 1) from the first spectral window and 30
+channels (starting from 1 steping 1) from the second spectral window.
+</description>
+
+\begin{description}
+\item[Note:] Current autoflag setdata implementation does not support cumulative set data. For example, instead of doing 
+\begin{verbatim}
+af.setdata(mode='spwids', spwid=1) 
+af.setdata(mode='fieldids', fieldid=1) 
+\end{verbatim}
+The input should be 
+\begin{verbatim}
+af.setdata(mode='spwids &amp; fieldids', spwid=1, fieldid=1)
+\end{verbatim}
+\end{description}
+
+<input>
+
+     <param type="string" name="mode">
+     <description>Type of processing: fieldids, spwids, channel or velocity</description>
+     <value>spwids</value>
+     <value>channel</value>
+     <value>velocity</value>
+     <value>fieldids</value>
+     <value>none</value>
+     </param>
+
+     <param type="intArray" name="nchan">
+     <description>Number of channels to select</description>
+     <value>1</value>
+     </param>
+
+     <param type="intArray" name="start">
+     <description>Start channels (0-relative)</description>
+     <value>0</value>
+     </param>
+
+     <param type="intArray" name="step">
+     <description>Step in channel number</description>
+     <value>1</value>
+     </param>
+
+     <param type="double" name="mstart" units="m/s">
+     <description>Start velocity (e.g. '20Km/s')</description>
+     <value>0.0</value>
+     </param>
+
+     <param type="double" name="mstep" units="m/s">
+     <description>Step in velocity (e.g. '100m/s'</description>
+     <value>0.0</value>
+     </param>
+
+     <param type="intArray" name="spwid">
+     <description>Spectral Window Ids (0 relative) to select</description>
+     <value type="vector"></value>
+     </param>
+
+     <param type="intArray" name="fieldid">
+     <description>Field Ids (0 relative) to select</description>
+     <value type="vector"></value>
+     </param>
+
+     <param type="string" name="msselect">
+     <description>TQL select string applied as a logical "and" with the other selections</description>
+     <value></value>
+     </param>
+
+     <param type="bool" name="async">
+     <description>Run asynchronously in the background?</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+af:=autoflag('testdata.ms');
+af.setdata(mode='channel',nchan=64,start=1,step=1,spwid=1,msselect=
+'SCAN_NUMBER &lt; 5')
+af.setselect(quack=[13,2],unflag=T);
+af.run();
+af.resetall();
+af.summary();
+af.setuvbin(thr=.01);
+af.run();
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="setfreqmed">
+   <shortdescription>Sets up the freq-median flagging method</shortdescription>
+   
+<description>
+
+The {\tt freqmed} method uses a median-in-frequency filter. It is very similar to
+{\tt timemed}, except that it is based on a sliding median in frequency:
+
+\[ 
+m_{cbt} = {\rm median}\lbrace d_{c\prime bt}, \mbox{~where~} |c\prime-c| \leq \delta \rbrace 
+\]
+
+In all other respects this method is identical to {\tt timemed}, hence we refer you
+you to the \htmlref{{\tt settimemed} description}{autoflag:autoflag.settimemed} for 
+all details.
+
+</description>
+<input>
+
+     <param type="double" name="thr">
+     <description>Flagging threshold</description>
+     <value>5.0</value>
+     </param>
+
+     <param type="int" name="hw">
+     <description>Half-window for the sliding median</description>
+     <value>10</value>
+     </param>
+
+     <param type="double" name="rowthr">
+     <description>Row flagging threshold</description>
+     <value>10.0</value>
+     </param>
+
+     <param type="int" name="rowhw">
+     <description>Half-window for the sliding median of the MAD</description>
+     <value>10</value>
+     </param>
+
+     <param type="string" name="column">
+     <description>Which column to base flagging on</description>
+     <value>MODEL"</value>
+     <value>CORR"</value>
+     <value>DATA</value>
+     </param>
+
+     <param type="string" name="expr">
+     <description>Expression to use</description>
+     <value>ABS I`</value>
+     </param>
+
+     <param type="bool" name="fignore">
+     <description>Ignore existing flags</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+- af.setdata()
+- af.setfreqmed(thr=5,hw=5,expr="- ABS RR LL")
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="setsprej">
+   <shortdescription>Sets up the spectral rejection flagging method</shortdescription>
+   
+<description> 
+
+The {\tt sprej} method works by fitting a user-specified segment of the
+spectrum (presumably, the continuum) by a polynomial. It then flags entire rows
+based on the chi-square statistic of the fit, in a manner similar to {\tt
+timemed}. Please refer to \htmlref{{\tt
+setimemed}}{autoflag:autoflag.settimemed}  for detailed math, substituting
+$\chi^2_{bt}$ for $M_{bt}$. The value that is actually fitted  is specified via
+the {\tt expr} parameter (see  the general \htmlref{autoflag module}{autoflag
+module} description for details).
+
+The segement to be fitted can be specified as a range of channel indices
+(1-based) or frequencies. Frequencies may be given as string measures ({\tt
+"1.4GHz"}) or float values (units of MHz assumed). A vector of two values
+[C1,C2] specifies the segment from C1 to C2, inclusive. Several disjoint
+segments may be specified with a 2N vector or a (2,N) matrix.
+
+For a measurement set containing multiple spectral windows, you can set the
+{\tt region} argument to a record of records, with each sub-record containing
+{\tt spwid} and {\tt fq} and/or {\tt chan} fields, specifying the segments of
+a specific spectral window. See examples below.
+
+</description>
+<input>
+
+     <param type="int" name="ndeg">
+     <description>Number of degrees for polynomial</description>
+     <value>2</value>
+     </param>
+
+     <param type="double" name="rowthr">
+     <description>Flagging threshold, in MADs of $\chi^2$</description>
+     <value>5.0</value>
+     </param>
+
+     <param type="int" name="rowhw">
+     <description>Half-window for the sliding median</description>
+     <value>6</value>
+     </param>
+
+     <param type="bool" name="norow">
+     <description>Disable row flagging</description>
+     <value>false</value>
+     </param>
+
+     <param type="int" name="spwid">
+     <description>Spectral window number (0-based), or -1 for 
+all windows</description>
+     <value>-1 </value>
+     </param>
+     <param type="intArray" name="chan">
+     <description>Range of channels (0-based). Either ``fq'' or ``chan'' must be
+specified, 2N or (2,N).</description>
+     <value type="vector">
+     <value>-1</value>
+     <value>-1</value>
+     </value>
+     </param>
+
+     <param type="any" name="region">
+	     <any type="record"/>
+     <description>A compound spectral segment specification (see
+example)</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="column">
+     <description>Which column to base flagging on</description>
+     <value>MODEL</value>
+     <value>CORR"</value>
+     <value>DATA</value>
+     </param>
+
+     <param type="string" name="expr">
+     <description>Expression to use</description>
+     <value>ABS I</value>
+     </param>
+
+     <param type="bool" name="fignore">
+     <description>Ignore existing flags</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+- af.setdata()
+# use segments 807-807.5 and 809-809.5 MHz for fitting
+- af.setsprej(fq=[807,807.5,809,809.5)) 
+...
+# use channels 10-20 and 30-40
+- af.setsprej(chan=[[10,20],[30,40]])
+...
+# use different segements in different spectral windows
+- region := [=]
+- region[1] := [ spwid=1,fq="1.4GHz 1.401GHz" ]
+- region[2] := [ spwid=2,chan=[10,20] ]
+- region[3] := [ spwid=4,chan=[50,60] ]
+- af.setsprej(region=region)
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="setuvbin">
+   <shortdescription>Sets up the UV Binner flagging method</shortdescription>
+   
+<description>
+
+The {\tt uvbin} method works by binning the data on a {\em value} vs.
+UV-distance plane ({\em value} is determined by the {\tt expr} parameter -- see
+the general \htmlref{autoflag module description}{autoflag} for a description
+of this mechanism.) Data in underpopulated bins is then flagged. 
+
+The cut-off point for flagging may be expressed in one of two ways:
+
+\begin{itemize} 
+
+\item If the {\tt maxpop} parameter is specified (e.g. {\tt maxpop=4}), all
+bins with less than {\tt maxpop} points are flagged. 
+
+\item If the {\tt thr} parameter is specified, a probability cut-off is
+selected. This is done as follows. The cumulative probability $p(N)$, defined
+as the probability for a given point to reside in a bin of a population $\le
+N$, is first computed. All bins of population $N$, where $p(N)&lt;${\tt thr}, 
+are then flagged.
+
+In simpler terms, using {\tt thr=0.01} will flag up to 1\% of your data
+points, beginning with the least populous bins. I.e., first the single-point
+bins are flagged, then the 2-point bins, and so on, up to the $N-1$-point
+bins, where $N$ is such that flagging the $N$-point bins would exceed 1\% of all
+data points. 
+
+\item When both {\tt maxpop} and {\tt thr} are specified, {\tt uvbin} will
+use the higher of the two resulting cut-offs. 
+
+\end{itemize}
+
+{\tt Uvbin} can be asked to produce a value vs. UV-distance plot, and a plot of
+$p(N)$. These plots are attached to the flagging report. Uuse of the {\tt
+econoplot} mode is recommended when dealing with medium-to-large data sets,
+for significant reduction in plot file size and printing time.
+
+</description>
+<input>
+
+     <param type="double" name="thr">
+     <description>Population cut-off, as $p(N)$ value.</description>
+     <value>0.0</value>
+     </param>
+
+     <param type="int" name="minpop">
+     <description>Population cut-off, as minimum bin count. Either thr or
+maxpop must be specified, or both.</description>
+     <value>0</value>
+     </param>
+
+     <param type="intArray" name="nbins">
+     <description>Number of bins (one number for both axes, or separate for
+UV, value)</description>
+     <value>50</value>
+     </param>
+
+     <param type="int" name="plotchan">
+     <description>Channel number (0-based) to plot, T for middle channel, or -1 for no
+plot</description>
+     <value>-1</value>
+     </param>
+
+     <param type="bool" name="econoplot">
+     <description>Produce an economical plot (crowded bins are not resolved)</description>
+     <value>false</value>
+     </param>
+
+     <param type="string" name="column">
+     <description>Which column to base flagging on</description>
+     <value>MODEL</value>
+     <value>CORR</value>
+     <value>DATA</value>
+     </param>
+
+     <param type="string" name="expr">
+     <description>Expression to use</description>
+     <value>ABS I</value>
+     </param>
+
+     <param type="bool" name="fignore">
+     <description>Ignore existing flags</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af:=autoflag('3C273XC1.MS')
+- af.setdata()
+- af.setuvbin(nbins=[50,100],expr="- ABS RR LL",plotchan=40,econoplot=T)
+\end{verbatim}
+</example>
+</method>
+ 
+   <method type="function" name="open">
+   <shortdescription>Attaches tool to another measurement set</shortdescription>
+   
+<description>
+
+This function will detach the tool from a measurement set, and
+attach it to a another one. All flagging methods specified via
+{\tt set{\em method}()} calls are preserved.
+
+</description>
+<input>
+
+     <param type="string" name="msname">
+     <description>Measurement set to be processed</description>
+     <value></value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+af.open('3C273XC1.MS)
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="run">
+   <shortdescription>Executes a flagging run</shortdescription>
+   
+<description>
+
+This function will perform a flagging run utilizing methods configured by prior
+{\tt set{\em method}()} calls. It has a number of optional parameters affecting
+various aspects of the flagging process:
+
+\begin{itemize}
+
+\item {\tt Run} will optionaly produce a graphical flagging report (plots
+of flag density per baseline, antenna, time, etc.), both on-screen and in a
+file. Either option may be turned on or off. To redirect hardcopy output, 
+the  {\tt devfile} argument may be set to a filename for PostScript output, 
+or  to a full PGPlot device specification (``file/device'').
+
+\item The {\tt globparm} argument allows you to set parameters that are ``global'' to
+all methods. For example, using {\tt globparm=$\lbrack$hw=10,fignore=T$\rbrack$} will cause
+{\bf all} methods to use the given values for the {\tt hw} and {\tt fignore}
+parameters, unless another value was explicitly set in the {\tt set{\em method}()}
+call. In other words, {\tt globparm} takes precedence over default values, 
+but not over {\tt set{\em method}()} arguments.
+
+\item When using {\tt trial}, flagging is performed and flagging reports are
+generated without writing the results back into the measurement set.
+
+\item The {\tt reset} option clears all pre-existing flags from the FLAG and
+FLAGROW columns of the measurement set prior to running the methods. If {\tt
+trial} is specified as well, the MS is not modified, but all methods run as if
+all flags were clear to begin with (in fact, {\tt reset} and {\tt trial} together is
+equivalent to  {\tt globparm=$\lbrack$fignore=T$\rbrack$}.)
+
+\end{itemize}
+
+</description>
+<input>
+
+     <param type="any" name="globparm">
+	     <any type="record"/>
+     <description>Record of global method parameters</description>
+     <value></value>
+     </param>
+
+     <param type="int" name="plotscr">
+     <description>Number of plots per window for on-screen flagging
+report, or default for no report</description>
+     <value>0</value>
+     </param>
+
+     <param type="int" name="plotdev">
+     <description>Number of plots per page in hardcopy flagging report, 
+0 for no report</description>
+     <value>0</value>
+     </param>
+
+     <param type="string" name="devfile">
+     <description>File or PGPlot device for hardcopy report</description>
+     <value>flagreport.ps/ps</value>
+     </param>
+
+     <param type="bool" name="reset">
+     <description>Reset pre-existing flags before running</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="trial">
+     <description>Do a trial run only</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+af:=autoflag('3C273XC1.MS)
+af.setdata();
+...
+af.setselect(autocorr=T,quack=[240,120])
+...
+af.setuvbin(thr=.01)
+...
+af.run()
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="summary">
+   <shortdescription>Prints a summary of active methods</shortdescription>
+   
+<description>
+
+This function prints a summary of the methods that have been
+enabled via {\tt set{\em method}()}, along with their parameters.
+Non-default values are marked with an ``*'' symbol.
+
+</description>
+
+
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af.summary()
+Measurement set: test.MS2
+Methods set up:
+1: uvbin (UVBinner):
+    thr         = 0.001
+    nbins       = 50
+    plotchan    = F
+    econoplot   = T
+    column      = DATA
+    expr        = + ABS XX YY
+    fignore     = F
+...
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="help">
+   <shortdescription>Prints help on available flagging methods</shortdescription>
+   
+<description>
+
+This function prints a summary of the available flagging methods
+and their parameters. Use {\tt help()} with no arguments to get help
+of all methods, or {\tt help("method  names")} for specific ones.
+
+</description>
+<input>
+     <param type="string" name="names">
+     <description>Names of methods (all methods, if omitted)</description>
+     <value></value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+af.help()
+af.help("timemed freqmed")
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="reset">
+   <shortdescription>Disables specific flagging methods</shortdescription>
+   
+<description>
+
+This function disables methods previously set up by calls to
+{\tt set{\em method}()}. You can specify methods by name, in which case all
+instances of that method are disabled, or by number (call {\tt  summary()} first
+to look up numbers).
+
+The function takes any number of arguments. Each argument may be a string, a
+method number, or an array of such. Calling {\tt reset()} with no arguments
+produces a fail; you should use {\tt resetall()} if you want to reset all methods.
+
+</description>
+<input>
+
+     <param type="stringArray" name="methods">
+     <description>Names or numbers of methods</description>
+     <value></value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af.reset("timemed freqmed")
+Reset 3 method(s), 3 remaining
+T
+- af.reset(1,3)
+Reset 2 method(s), 3 remaining
+T
+-
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="resetall">
+   <shortdescription>Disables all flagging methods</shortdescription>
+   
+<description>
+
+This function disables all methods previously set up by calls to
+{\tt set{\em method}()}. 
+
+</description>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af.resetall()
+All methods reset
+T
+-
+\end{verbatim}
+</example>
+</method>
+
+<method type="function" name="setspwid">
+	<shortdescription>Set spectral window ID</shortdescription>
+	<description>
+		Longer description of set method
+	</description>
+<input>
+<param type="intArray" name="spwid">
+	<description>Spectral window numbers or -1 for all</description>
+<value>-1</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setfield">
+	<shortdescription>Set Fields to flag</shortdescription>
+	<description>
+		Longer description of set method
+	</description>
+<input>
+<param type="any" name="field">
+	<any type="variant"/>
+<description>Field names or numbers (0-based), or [\/] or false for all</description>
+<value>false</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setfreqs">
+	<shortdescription>Set frequency to flag</shortdescription>
+	<description>
+		Defaults to all frequencies if not set
+	</description>
+<input>
+<param type="doubleArray" name="freqs" units="MHz">
+<description>Range(s) of frequencies or  -1 for all</description>
+<value>-1.0</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setchans">
+	<shortdescription>Set channels to flag</shortdescription>
+	<description>
+Defaults to all channels if not set
+The channels are 0 indexed! If the channel you want to flag is
+256 in Glish it is 255 in Protopipe
+	</description>
+<input>
+<param type="intArray" name="chan">
+<description>Range(s) of channels (1-based), or -1 for all</description>
+<value>-1</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setcorr">
+	<shortdescription>Set correlations to flag</shortdescription>
+	<description>
+		Defaults to all correlations if not set
+	</description>
+<input>
+<param type="stringArray" name="corr">
+<description>Correlations (by name, e.g. ``XX YY''), or [\/] or F for all</description>
+<value>/</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setantenna">
+	<shortdescription>Set antenna(s) by name to flag</shortdescription>
+	<description>
+Defaults to all antennas if not set
+Only one of these routines can be used
+The integer antenna ids are 0 indexed!, If the antenna you
+want to flag is 4 in Glish it is 3 in ProtoPipe.
+	</description>
+<input>
+<param type="stringArray" name="ant">
+<description>Antennas by name or [\/] or F for all</description>
+<value>/</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setantennaID">
+	<shortdescription>Set antennas(s) by id to flag</shortdescription>
+	<description>
+		Defaults to all antennas if not set
+		Only one of these routines can be used
+		The integer antenna ids are 0 indexed!, If the antenna you
+		want to flag is 4 in Glish it is 3 in ProtoPipe.
+	</description>
+<input>
+<param type="intArray" name="antID">
+<description>Antennas by number or -1 for all</description>
+<value>-1</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setbaseline">
+	<shortdescription>Set baseline to flag</shortdescription>
+	<description>
+		Defaults to all baselines if not set
+	</description>
+<input>
+<param type="intArray" name="baseline">
+<description>Baselines, or -1 for all</description>
+<value>-1</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="settimerange">
+	<shortdescription>Set time ranges to flag</shortdescription>
+	<description>
+		defaults to all time ranges if not set
+	</description>
+<input>
+<param type="stringArray" name="timerange">
+<description>Time ranges, as MJDs or date strings, or [\/] or F for all</description>
+<value>/</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setautocorrelation">
+	<shortdescription>Set whether to flag autocorrelation </shortdescription>
+	<description>
+	  flag autocorrelations?
+	</description>
+<input>
+<param type="bool" name="autocorr">
+<description>Flag autocorrelations</description>
+<value>false</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="settimeslot">
+	<shortdescription>set which timeslots to flag</shortdescription>
+	<description>
+		Flag the specified time slots with an uncertainty of dtime
+		         Reasonable defaults:
+			              dtime = 10.0
+	</description>
+<input>
+<param type="stringArray" name="timeslot">
+<description>Flag specific time slots. Specifies center time as MJDs or date strings</description>
+<value></value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setdtime">
+	<shortdescription>Set the uncertainty for timeslot flagging</shortdescription>
+	<description>
+		dtime = 10.0 seems reasonable
+	</description>
+<input>
+<param type="double" name="dtime">
+<description>Tolerance of timeslot parameter, in seconds</description>
+<value>10</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setclip">
+	<shortdescription>Set the clip range</shortdescription>
+	<description>
+		Flag data outside the specified region
+	</description>
+<input>
+<param type="any" name="clip">
+<any type="record"/>
+<value>
+	<value name="name" type="string">NewTimeMedian</value>
+	<value name="column" type="string" comment="Use column: DATA or MODEL or CORR">DATA</value>
+	<value name="expr" type="string" comment="Expression for deriving value">+ ABS XX YY</value>
+	<value name="thr" type="double" comment="Probability cut-off">5.0</value>
+</value>
+<description>Flag values outside a specific range</description>
+<value></value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setflagrange">
+	<shortdescription>set the flag range</shortdescription>
+	<description>
+		Flag data inside the specified region
+	</description>
+<input>
+<param type="any" name="flagrange">
+<any type="record"/>
+<description>Flag values within a specific range</description>
+<value></value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setquack">
+	<shortdescription>Get rid of data at the beginning of scans (VLA only)</shortdescription>
+	<description>
+	Get rid of bad data at the beginning of scans
+	For VLA data only
+	Reasonable defaults
+	scaninterval = 30.0
+	deltatime = 10.0
+	</description>
+<input>
+<param type="doubleArray" name="quack">
+<description>Flag VLA quacks -- scan interval and quack length, in seconds</description>
+<value type="vector">
+<value>0.0</value>
+<value>0.0</value>
+</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setunflag">
+	<shortdescription>Unflag data rather than flag it</shortdescription>
+	<description>
+		Unflag data rather than flag it
+	</description>
+<input>
+<param type="bool" name="unflag">
+<description>Clear flags instead of setting them</description>
+<value>false</value>
+</param>
+</input>
+<returns type="bool"/>
+</method>
+
+<method type="function" name="setnewselector">
+	<shortdescription>Make a new selector used by autoflag</shortdescription>
+	<description>
+		Make a new selector used by autoflag
+	</description>
+<returns type="bool"/>
+</method>
+
+   <method type="function" name="close">
+	   <shortdescription>Close the ms used by autoflag tool</shortdescription>
+   
+<description>
+
+This function destroys the autoflag tool.
+
+</description>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af.close()
+T
+-
+\end{verbatim}
+</example>
+</method>
+   <method type="function" name="done">
+   <shortdescription>Destroys the autoflag tool</shortdescription>
+   
+<description>
+
+This function destroys the autoflag tool.
+
+</description>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- af.done()
+T
+-
+\end{verbatim}
+</example>
+</method>
+
+</tool>
+
+</casaxml>

@@ -1,0 +1,3 @@
+namespace casa {
+	class LogIO;
+}

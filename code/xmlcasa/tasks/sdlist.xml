@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdlist -->
+
+<task type="function" name="sdlist" startup="false">
+
+  <shortdescription>ASAP SD task: list summary of single dish data</shortdescription>
+
+  <description>
+        ASAP SD listing task: list summary of the single dish data
+
+        Modified 2008-02-01 TT
+        Task Version 2007-03-04 STM
+</description>
+
+  <input>
+
+    <param type="string" name="sdfile"  mustexist="true">
+
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="bool" name="scanaverage">
+            <description>average integs within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="listfile">
+	    <description>Name of output file for summary list</description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+        Keyword arguments:
+        sdfile -- name of input SD dataset
+        scanaverage -- average integrations within scans
+                options: (bool) True,False
+                default: False
+                example: if True, this happens in read-in
+                         For GBT, set False!
+        listfile -- Name of output file for summary list
+                default: '' (no output file)
+                example: 'mysd_summary.txt'
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+
+
+        DESCRIPTION:
+
+        Task sdlist lists the scan summary of the dataset after importing
+        as a scantable into ASAP.  It will optionally output this summary
+        as file.
+
+        Note that if your PAGER environment variable is set to 'less' and
+        you have set the 'verbose' ASAP environment variable to True
+        (the default), then the screen version of the summary will page.
+        You can disable this for sdlist by setting
+        sd.rcParams['verbose']=False
+        before running sdlist.  Set it back afterwards if you want lots
+        of information.
+
+  </example>
+
+</task>
+
+</casaxml>

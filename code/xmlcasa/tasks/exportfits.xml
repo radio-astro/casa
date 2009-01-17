@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="exportfits" async="true">
+<shortdescription>Convert a CASA image to a FITS file</shortdescription>
+<description>
+CASA-produced images can be written to disk for transporting
+to other software packages.  No subimaging of the fits image
+can be made with this task.
+</description>
+<input>
+	<param type="string" name="imagename" mustexist="true">
+		<description>Name of input CASA image</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="fitsimage">
+		<description>Name of output image FITS file</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="velocity">
+		<description>Use velocity (rather than frequency) as spectral axis</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="optical">
+		<description>Use the optical (rather than radio) velocity convention</description>
+		<value>False</value>
+	</param>
+
+	<param type="int" name="bitpix">
+		<description>Bits per pixel</description>
+		<value>-32</value>
+		<allowed kind="enum">
+			<value>-32</value>
+			<value>16</value>
+		</allowed>
+	</param>
+
+	<param type="any" name="minpix">
+		<description>Minimum pixel value</description>
+		<any type="variant" limittypes="int double"/>
+		<value type="int">0</value>
+	</param>
+
+	<param type="any" name="maxpix">
+		<any type="variant" limittypes="int double"/>
+		<description>Maximum pixel value</description>
+		<value type="int">0</value>
+	</param>
+
+	<param type="bool" name="overwrite" >
+		<description>Overwrite pre-existing imagename</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="dropdeg" >
+		<description>Drop degenerate axes?</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="deglast" >
+		<description>Put degenerate axes last in header?</description>
+		<value>True</value>
+	</param>
+
+</input>
+<example>
+
+	CASA-produced images can be written to disk for transporting
+	to other software packages.  No subimaging of the fits image
+	can be made with this task.
+
+	Keyword arguments:
+	imagename -- Name of input CASA image
+		default: none; example: imagename='3C273XC1.image'
+	fitsimage -- Name of ouput image FITS file
+		default: none; example='3C273XC1.fits'
+	velocity -- Use velocity (rather than frequency) as spectral axis
+		default: False
+	optical -- Use the optical (rather than radio) velocity convention
+		default: False;
+	bitpix -- Bits per pixel
+		default: -32 (floating point)
+		&lt;Options: -32 (floating point), 16 (integer)&gt;
+	minpix -- Minimum pixel value
+		default: 0 = autoscale
+	maxpix -- Maximum pixel value
+		default: 0 = autoscale
+	overwrite -- Overwrite pre-existing imagename
+		default=False; example: overwrite=True
+	dropdeg -- Drop degenerate axes?
+		default: False; example: dropdeg=True
+	deglast -- Put degenerate axes last in header?
+		default: True; example: deglast=False
+        async --  Run asynchronously
+                default = true; recommended.
+</example> 
+
+</task>
+</casaxml>

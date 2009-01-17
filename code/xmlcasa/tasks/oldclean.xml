@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for clean -->
+<!-- This does the equivalent of -->
+<!-- imgr:=imager('anyfile.ms'); -->
+<!-- imgr.setdata(mode='channel',nchan=100,start=1,step=1,fieldid=1) -->
+<!-- imgr.setimage(nx=512,ny=,cellx='1arcsec',celly='1arcsec',stokes='I',-->
+<!--               mode='channel',start=35,step=1,nchan=40, -->
+<!--               fieldid=[1]) -->
+<!-- imgr.weight('natural'); -->
+<!-- imgr.clean(algorithm='csclean',niter=500,model='field1') -->
+
+<task type="function" name="oldclean">
+
+  <shortdescription>Deconvolve an image with selected algorithm</shortdescription>
+
+  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+
+  <input>
+
+    <param type="string" name="vis" kind="ms" mustexist="true">
+    <description>name of input visibility file</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="imagename">
+	    <description>Pre-name of output images</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="mode">
+	    <description>Type of selection (mfs, channel, velocity, frequency)</description>
+	    <value>mfs</value>
+	    <allowed kind="enum">
+	    <value>mfs</value>
+	    <value>channel</value>
+	    <value>velocity</value>
+	    <value>frequency</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="alg">
+    <description>Algorithm to use (clark, hogbom, csclean, multiscale) </description>
+    <value>clark</value>
+    <allowed kind="enum">
+	    <value>clark</value>
+	    <value>hogbom</value>
+	    <value>csclean</value>
+	    <value>multiscale</value>
+    </allowed>
+    </param>
+
+    <param type="int" name="niter">
+    <description>Maximum number of iterations</description>
+    <value>500</value>
+    </param>
+
+    <param type="double" name="gain">
+	    <description>Loop gain for cleaning</description>
+	    <value>0.1</value>
+    </param>
+
+    <param type="double" name="threshold" units="mJy">
+	    <description>Flux level (+units) to stop cleaning</description>
+	    <value>0.0</value>
+    </param>
+
+    <param type="stringArray" name="mask">
+	    <description>Name of mask image used in cleaning</description>
+	    <value></value>
+    </param>
+
+    <param type="any" name="cleanbox">
+	    <description>clean box regions or file name or \'interactive\'</description>
+	    <any type="variant"/>
+	    <value type="record"/>
+    </param>
+
+    <param type="int" name="nchan" subparam="true">
+	    <description>Number of channels (planes) in output image</description>
+	    <value>1</value>
+    </param>
+
+    <param type="any" name="start" subparam="true">
+	    <description>First channel in input to use</description>
+	    <any type="variant"/>
+	    <value type="int">0</value>
+    </param>
+
+    <param type="any" name="width" subparam="true">
+	    <description>Number of input channels to average</description>
+	    <any type="variant"/>
+	    <value type="int">1</value>
+    </param>
+
+
+    <param type="intArray" name="imsize">
+	    <description>x and y image size in pixels, symmetric for single value</description>
+	    <value type="vector">
+    <value>256</value><value>256</value>
+	    </value>
+    </param>
+
+    <param type="doubleArray" name="cell" units="arcsec">
+    <description>x and y cell size. default unit radians</description>
+    <value type="vector"><value>1.0</value><value>1.0</value></value>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (eg I,IV, QU,IQUV)</description>
+	    <value>I</value>
+    <allowed kind="enum">
+	    <value>I</value>
+	    <value>IV</value>
+	    <value>QU</value>
+	    <value>IQUV</value>
+	    <value>RR</value>
+	    <value>LL</value>
+	    <value>RRLL</value>
+	    <value>XX</value>
+	    <value>YY</value>
+	    <value>XXYY</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="field">
+    <description>Field Name</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="spw">
+	    <description>Spectral windows:channels: \'\' is all </description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+
+    <param type="string" name="weighting">
+    <description>Weighting to apply to visibilities</description>
+    <value>natural</value>
+    <allowed kind="enum">
+	    <value>natural</value>
+	    <value>uniform</value>
+	    <value>briggs</value>
+	    <value>radial</value>
+	    <value>superuniform</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="rmode" subparam='true'>
+	    <description>Robustness mode (see help clean)</description>
+	    <value>norm</value>
+    <allowed kind="enum">
+	    <value>none</value>
+	    <value>norm</value>
+	    <value>abs</value>
+    </allowed>
+    </param>
+
+    <param type="double" name="robust" subparam='true'>
+	    <description>Briggs robustness parameter</description>
+	    <value>0.0</value>
+	    <allowed kind="range">
+	    <value range="min">-2.0</value>
+	    <value range="max">2.0</value>
+    </allowed>
+    </param>
+
+    <param type="bool" name="uvfilter">
+	    <description>Apply additional filtering/uv tapering of the visibilities.</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="uvfilterbmaj" subparam="true">
+	    <description>Major axis of filter (arcseconds)</description>
+	    <value>1.0</value>
+    </param>
+
+    <param type="double" name="uvfilterbmin" subparam="true">
+	    <description>Minor axis of filter (arcseconds)</description>
+	    <value>1.0</value>
+    </param>
+
+    <param type="double" name="uvfilterbpa" subparam="true">
+	    <description>Position angle of filter (arcseconds)</description>
+	    <value>0.0</value>
+    </param>
+
+    <param type="string" name="timerange">
+	    <description>Range of time to select from data</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="restfreq">
+	    <description>rest frequency to assign to image (see help)</description>
+	    <value></value>
+    </param>
+
+    <param type="double" name="noise" units="Jy" subparam='true'>
+	    <description>noise parameter for briggs weighting when rmode=\'abs\'</description>
+	    <value>0.0</value>
+    </param>
+
+    <param type="int" name="npixels" subparam='true'>
+	    <description>number of pixels for superuniform or briggs weighting</description>
+	    <value>0</value>
+    </param>
+
+    <param type="intArray" name="scales" subparam="true">
+	    <description>resolutions in pixel units</description>
+	    <value type="vector">
+	    <value>0</value><value>3</value><value>10</value>
+    </value>
+    </param>
+
+    <param type="int" name="npercycle" subparam='true'>
+	    <description>Number of iterations before interactive prompt</description>
+	    <value>100</value>
+    </param>
+
+    <param type="any" name="phasecenter">
+	    <description>Image phase center: position or field index</description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+
+    <constraints>
+	    <when param="mode">
+		<equals value="mfs"/>
+		<equals value="channel">
+			<default param="nchan"><value>1</value></default>
+			<default param="start"><value>0</value>
+			    <description>first input channel to use</description>
+			</default>
+			<default param="width"><value>1</value></default>
+		</equals>
+	        <equals value="velocity">
+			<default param="nchan"><value>1</value></default>
+			<default param="start"><value type="string">0.0km/s</value>
+			    <description>Velocity of first image channel: e.g \'0.0km/s\'</description>
+		    </default>
+		    <default param="width"><value type="string">1km/s</value>
+			    <description>image channel width in velocity units: e.g \'-1.0km/s\'</description>
+		    </default>
+	        </equals>
+	        <equals value="frequency">
+			<default param="nchan"><value>1</value></default>
+			<default param="start"><value type="string">1.4GHz</value>
+			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
+		    </default>
+		    <default param="width"><value type="string">10kHz</value>
+			    <description>Image channel width in frequency units: e.g \'1.0kHz\'</description>
+		    </default>
+	        </equals>
+	    </when>
+	    <when param="alg">
+	          <equals value="clark"/>
+	          <equals value="hogbom"/>
+	          <equals value="csclark"/>
+	          <equals value="multiscale">
+		    <default param="scales"><value type="vector"><value>0</value>
+				    <value>3</value><value>10</value></value>
+	                </default>
+                  </equals>
+	    </when>
+	    <when param="weighting">
+		<equals value="natural"/>
+	        <equals value="uniform"/>
+	        <equals value="briggs">
+			<default param="rmode"><value type="string">norm</value></default>
+			<default param="robust"><value>0.0</value></default>
+			<default param="noise"><value>0.0</value></default>
+			<default param="npixels"><value>0</value>
+			    <description>number of pixels to determine uv-cell size 0=&gt; field of view</description>
+		    </default>
+	        </equals>
+	        <equals value="superuniform">
+			<default param="npixels"><value>0</value>
+			    <description>number of pixels to determine uv-cell size 0=&gt; +/-3pixels</description>
+		    </default>
+	        </equals>
+            </when>
+	    <when param="uvfilter">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="uvfilterbmaj"><value>1.0</value></default>
+			<default param="uvfilterbmin"><value>1.0</value></default>
+			<default param="uvfilterbpa"><value>0.0</value></default>
+	        </equals>
+            </when>
+	    <when param="cleanbox">
+		<equals type="variant" value="[]">
+		      <value type="vector"></value>
+		</equals>
+		<equals type="string" value="interactive">
+		      <default param="npercycle"><value>100</value></default>
+	        </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+
+
+    Three types of point-source deconvolution, as well as multi-scale
+    deconvolution, are available.  A continuum image (mfs) is produced
+    by gridding together all spectral data.   Individual channels or
+    groups of channels can also be images and then placed in an output
+    image cube.
+
+    The cleaning regions can be specified by an input mask image, from a
+    file containing rectangular regions, or interactively as the
+    deconvolution progresses.
+
+    The clean task only uses the "corrected" datacolumn which is made
+    from the "data" data column using applycal with the appropriate
+    calibration tables.  Many Stokes combinations are available.
+
+    Keyword arguments:
+    vis -- Name of input visibility file:
+            default: none; example: vis='n5921.ms'
+    imagename -- Pre-name of output images:
+            default: none; example: imagename='m2'
+            output images are:
+              m2.image; cleaned and restored image, NOT corrected for pb
+              m2.model; image of clean components
+              m2.residual; image of residuals
+              m2.interactive.mask; image containing interactive mask or
+              m2.cleanbox.mask; image containing cleanbox mask
+    mode -- Frequency Specification:
+	    NOTE: See examples below:
+            default: 'mfs'
+              mode = 'mfs' means produce one image from all specified data.
+              mode = 'channel'; Use with nchan, start, width to specify
+                      output image cube.  See examples below
+              mode = 'velocity', means channels are specified in velocity.
+	      mode = 'frequency', means channels are specified in frequency.
+       &gt;&gt;&gt; mode expandable parameters (for modes other than 'mfs')
+            Start, width are given in units of channels, frequency or velocity
+               as indicated by mode.
+            nchan -- Number of channels (planes) in output image
+              default: 1; example: nchan=3
+            start -- Start input channel (relative-0)
+              default=0; example: start=5
+            width -- Output channel width (&gt;1 indicates channel averaging)
+              default=1; example: width=4
+        examples:
+            spw = '0,1'; mode = 'mfs'
+               will produce one image made from all channels in spw 0 and 1
+            spw='0:5~28^2'; mode = 'mfs' 
+               will produce one image made with channels (5,7,9,...,25,27)
+            spw = '0'; mode = 'channel': nchan=3; start=5; width=4
+               will produce an image with 3 output planes
+               plane 1 contains data from channels (5+6+7+8)
+               plane 2 contains data from channels (9+10+11+12)
+               plane 3 contains data from channels (13+14+15+16)
+            spw = '0:0~63^3'; mode=chann; nchan=21; start = 0; width = 1
+               will produce an image with 20 output planes
+               Plane 1 contains data from channel 0
+               Plane 2 contains date from channel 2
+               Plane 21 contains data from channel 61
+            spw = '0:0~40^2'; mode = 'channel'; nchan = 3; start = 5; width = 4
+               will produce an image with three output planes
+               plane 1 contains channels (5,7)
+               plane 2 contains channels (13,15)
+               plane 3 contains channels (21,23)
+    alg -- Algorithm to use (expandable):
+            default: 'clark': Options: 'clark','hogbom','csclean','multiscale'
+            'hogbom' Image based clean.  Does not go back to uv data
+                     Only inner quarter of image is cleaned
+            'clark' Cleans using gridded uv data.  Only inner quarter of
+		    image is cleaned
+            'csclean' is Cotton-Schwab and can clean most of image area.
+            'multiscale' cleans with several resolutions using hobgom clean.
+                  Currently much slower than single resolution clean and not
+                  recommended.  For extended sources, try single resolution
+                  clean with tight interactive mask and clean very deeply.
+       &gt;&gt;&gt; Multiscale expandable parameter
+            scales  -- in pixel numbers; the size of components to deconvolve
+              default = [0,3,10]
+              recommended sizes are 0 (point), 3 (points per clean beam), and
+                10 (about a factor of three lower resolution)
+    niter -- Maximum number of clean components:
+            default: 500; example: niter=2500
+            niter = 0 provides dirty image
+            Note:  You can restart a clean by simply using the same inputs.
+              The clean will continue for niter more iterations.  All files
+              are overwritten.
+    gain -- Loop gain for cleaning:
+            default: 0.1; example: gain=0.5
+    threshold -- Level (default in Jy) to stop cleaning:
+            default: 0.0; example: threshold='0.02mJy'.
+            Cleaning will end when the largest residual point in the mask
+              region becomes less than threshold.
+    mask -- Name of mask image used for CLEANing
+            default '' means no mask;
+              example: mask='orion.mask'.  
+	    It is often useful to provide a mask from a previous interactive
+            clean session for a new clean.  The mask image shape must be the
+            same for the new clean.
+    cleanbox -- Cleaning region:
+            default: [] defaults to inner quarter of image
+            Three specification types:
+            (a) 'interactive' allows the user to build the cleaning
+                 mask interactively using the viewer.  The viewer will 
+                 appear every npercycle interation, but modify as needed
+		 The final interactive maks is saved in the file
+		 imagename_interactive.mask.
+            (b) Explicit pixel ranges
+                example: cleanbox=[110,110,150,145]
+                clean region with blc=110,100; trc=150,145 (pixel values)
+                Only one clean region can be given this way.
+            (c) Filename with pixel values with ascii format:
+                &lt;fieldindex blc-x blc-y trc-x trc-y&gt; on each line
+                1  45  66  123 124
+                2  23 100  300 340
+      &gt;&gt;&gt; 'interactive' expandable parameter 
+            npercycle -- this is the number of iterations between each clean 
+	    to update mask interactively. Set to about niter/5, can also
+            be changed interactively.               
+
+    imsize -- Image size in pixels (x,y)
+            default = [256,256]; example: imsize=[350,350]
+            imsize = 500 is equivalent to [500,500]
+    cell -- Cell angular size (x,y)
+            default= none;
+            example: cell=['0.5arcsec,'0.5arcsec'] or
+            cell=['1arcmin', '1arcmin']
+            cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
+              cell = '2' makes default cell size of 2 radians!
+    stokes -- Stokes parameters to image
+            default='I'; example: stokes='IQUV';
+            Options: 'I','IV','QU','IQUV','RR','LL','RRLL','XX','YY','XXYY'  
+    field -- Select field using field id(s) or field name(s).
+              ['go listobs' to obtain the list id's or names]
+            default: '':all fields (watch out for multisource data sets!)
+            If field string is a non-negative integer, it is assumed to 
+	       be a field index; otherwise, it is assumed to be a field name
+            field='0~2'; field ids 0,1,2
+            field='0,4,5~7'; field ids 0,4,5,6,7
+            field='3C286,3C295'; field named 3C286 and 3C295
+            field = '3,4C*'; field id 3, all names starting with 4C
+    phasecenter -- direction measure  or fieldid for the image center
+            default: ''; =&gt;center is the direction of the first field
+	    specified in field in the field list.
+            example: phasecenter='6'
+            or phasecenter='J2000 19h30m00.0 -40d00m00.0'
+    spw -- Select spectral window/channels 
+              type 'help par.selection' for more examples.
+	   NOTE: This selects the data passed as the INPUT to mode
+           default: ''=all spectral windows and channels
+           This parameter interacts with mode='channel'  See examples
+             under mode.
+             spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+             spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+             spw='0:5~61'; spw 0, channels 5 to 61, INCLUSIVE
+             spw='*:5~61'; all spw with channels 5 to 61
+             spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+             spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+             spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+                       NOTE ';' to separate channel selections
+             spw='0:0~10^2,1:20~30^5'; spw 0, channels 0,2,4,6,8,10,
+                   spw 1, channels 20,25,30
+    weighting -- Weighting to apply to visibilities:
+            default='natural'; example: weighting='uniform';
+            Options: 'natural','uniform','briggs','radial', 'superuniform'
+       &gt;&gt;&gt; Weighting expandable parameters
+            For weighting='briggs'
+              SEE Reference Manual--imager--imager.weight. 
+              rmode -- Robustness mode (for use with Brigg's weighting)
+                default='norm'; example='abs';
+                Options: 'norm','abs','none'
+              robust -- Brigg's robustness parameter
+                default=0.0; example: robust=0.5;
+                Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
+              noise -- noise parameter to use for rmode='abs' in
+              briggs weighting
+                example noise='1.0mJy
+            For superuniform/briggs weighting
+              npixels -- number of pixels to determine uv-cell size
+	      for weight calculation
+                example noise='1.0mJy
+    uvfilter -- Apply additional filtering/uv tapering of the visibilities.
+            defalt=False; example: uvfilter=True 
+       &gt;&gt;&gt; uvfilter expandable parameters
+            uvfilterbmaj -- Major axis of filter (arcseconds)
+              default=1.; example: uvfilterbmaj=12.
+            uvfilterbmin -- Minor axis of filter (arcseconds)
+              default=1.; example: uvfilterbmin=12.
+            uvfilterbpa -- Position angle of filter (degrees)
+              default=0.' example: uvfilterbpa=57.
+            NOTE: taper in (klambda) is roughly (uvfilterbmaj/200)  
+    timerange  -- Time range:
+            default = '' (all); examples,
+            selectime = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+            Note: if YYYY/MM/DD is missing datr defaults to first day in data set
+            timerange='09:14:0~09:54:0' picks 40 min on first day
+            timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
+            timerange='09:44:00' data within one integration of time
+            timerange='&gt;10:24:00' data after this time
+     restfreq -- Specify rest frequency to use for image
+            default=''
+	    Occasionally it is necessary to set this (for example some VLA
+	    spectral line data).  For example for
+            NH_3 (1,1) put restfreq='23.694496GHz'
+     async --  Run asynchronously
+            default = false; do not run asychronously
+
+
+
+
+
+
+
+  </example>
+
+</task>
+
+</casaxml>

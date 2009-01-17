@@ -1,0 +1,227 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+
+
+<SCRIPT LANGUAGE = "JavaScript1.2"
+src="../javascripts/menu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2"
+src="../javascripts/aipsmenu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2">
+<!--
+ // Function need to place directory relative to docs tree.
+ aMenu = new aipsMenu("..", "#00009C");
+ function onLoad() {
+    if (document.layers) {
+        aMenu.loadMenus();
+    }
+ }
+//-->
+</SCRIPT>
+
+
+     </HEAD>
+
+
+    <TITLE>AIPS++ QAG (27-Aug-1998--12:18)</TITLE>
+    <!-- Created by: Wim Brouw, 27-Aug-1998--12:18 -->
+    <!-- Changed by: Wim Brouw, 28-Aug-1998--08:42 -->
+    <!-- Navigation Buttons added: K. Weatherall 14-Sep-1998 -->
+    <!-- New javascript snippets added K.Weatherall 08-Jun-1999 -->
+
+
+ 
+<body background="../gif/watermark.gif" bgcolor="#ffffff" text="#000000"
+link="#cc0f0f" vlink="#00009c">
+
+<table bgcolor="#00009C" cellpadding=4 cellspacing=0 border=0 width=600
+height=25>
+<tr><td>
+<a href="../gettingstarted.html"
+onMouseOver="aMenu.showAipsMenu('gsMenu')">
+<font size=2 face=helvetica  color="#ffffff">
+<b>Getting Started</b></a></td>
+<td>
+<a href="../user/documentation.html"
+onMouseOver="aMenu.showAipsMenu('userMenu')">
+<font size=2 face=helvetica color="#ffdd00">
+<b>Documentation</b></a></td>
+<td>
+<a href="../glish/glish.html"
+onMouseOver="aMenu.showAipsMenu('glishMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Glish</b></a></td>
+<td>
+<a href="../learnmore.html"
+onMouseOver="aMenu.showAipsMenu('learnMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Learn More</b></a></td>
+<td>
+<a href="../programmer/programmer.html"
+onMouseOver="aMenu.showAipsMenu('progMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Programming</b></a></td>
+<td>
+<a href="../contactus/contactus.html"
+onMouseOver="aMenu.showAipsMenu('commMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Contact Us</b></a>
+</td></tr></table>
+<table border=0 width=600>
+<tr><td><img src="../gif/aipslogo.gif">
+</td><td><font size=2 face=helvetica color="cc0f0f"><b>VERSIONID<b></font>
+</td><td valign=middle>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../newsletters/index.html"><img src="../gif/tri2.gif" border=0> 
+ <b>News</a></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../faq/faq.html"><img src="../gif/tri2.gif" border=0>  <b>FAQ</a
+></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../search/search.html"><img src="../gif/tri2.gif" border=0>  <b>
+Search</a></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a href="../aips++.html"><img
+src="../gif/tri2.gif" border=0>  <b>Home</a
+></font></b><P>
+
+</td></tr></table>
+<BR>
+
+<p>
+
+<font size="+3" face=helvetica><b>AIPS++ QAG</b></font><br>
+<hr>
+<p>
+    The <font face=helvetica>AIPS++</font> <I>Quality Assurance Group</I> 
+has been instituted to:
+<MENU>
+  <LI> Ensure a tested C++ class environment </LI>
+  <LI> Ensure a unified coding style and structure </LI>
+  <LI> Test applications that are part of the <font face=helvetica>
+AIPS++</font>
+  user package</LI>
+</MENU>
+
+The QAG can be reached by  <A HREF="mailto:aips2-cop@nrao.edu">email</A>.
+
+The main interaction with the QAG is by <font face=helvetica>AIPS++</font>
+programmers. In the following the main rules for <font
+face=helvetica>AIPS++</font> code adhering rules are given. The links
+indicated are in most cases only valid if you are working in development
+environment.
+  
+<H2>Code copping</H2>
+
+Code to be included in the standard <font face=helvetica>AIPS++</font> code
+and application library has to be <I>code copped</I> before it will be
+included. Code that is meant for one of the consortium packages will, in
+general, not beed to be copped, although it is expected to follow the
+standard rules for style, provision of help, and overall directory
+structure. It will not hurt if consortium code is sent to the code-cop as
+well, to have it checked for obvious divergence from the rules.
+
+A programmer is expected to announce to the 
+<A HREF="mailto:aips2-cop@nrao.edu">code-cop</A> the availability of a new 
+piece
+of code (be it a C++ class or program, a module or program in another
+language, or a Glish or other script. A reviewer of the code will be found.
+
+
+<H2>Coding rules</H2>
+
+The coding and code review rules can be found in:
+<MENU>
+  <LI> The <A HREF="../notes/167/167.html">Standards and Guidelines</A> note
+ for C++ programmers </LI>
+  <LI> The <A HREF="../../code/install/codedevl/template-review-cc">C++
+review guidelines template</A> </LI>
+  <LI> The <A HREF="../../code/install/codedevl/template-review-glish">
+  Glish review guidelines</A> </LI>
+  <LI> The <A HREF="../../code/install/codedevl/template-gui-guidelines">
+  GUI guidelines</A> </LI>
+  <LI> Templates are do-it-yourself. Template definitions are all contained in 
+    <I>template</I> files. The rules can be found in a 
+    <A HREF="../notes/196/196.html">note</A>. Some more information is
+  available in the <A HREF="../reference/System/System.html">System
+ manual</A> (look for reident, duplicates, used, unused in the code development
+part, for template instantiation in the System generation part and for 
+templates in the index.  </LI>
+<LI><A HREF="../programmer/srcfiletemplates.html">Source-File Templates</a></LI>
+  <LI> For most of the <font face=helvetica>AIPS++</font> programming
+elements templates exists. It is strongly recommended to always use a template
+ as the base for your efforts. Templates exist for:
+ <MENU>
+   <LI> <A HREF="../../code/install/codedevl/template-class-h">
+C++ header</A> files
+     <LI> <A HREF="../../code/install/codedevl/template-class-cc"> 
+C++ class </A>definition files</LI> 
+     <LI> <A HREF="../../code/install/codedevl/template-module-h">
+C++ module </A>headers </LI>
+     <LI> <A HREF="../../code/install/codedevl/template-global-functions-h">
+	    C++ global functions</A> header file</LI>
+     <LI> <A HREF="../../code/install/codedevl/template-c">
+C definition</A> file (header as per C++ header) </LI>
+     <LI> <A HREF="../../code/install/codedevl/template-main-cc">
+	    C++ main</A> program </LI>
+     <LI> <A HREF="../../code/install/codedevl/template-subroutine-f">
+	    Fortran</A> subroutine</LI>
+     <LI><A HREF="../../code/install/codedevl/template-module-help">
+Module help</A> for application</LI>
+     <LI> <A HREF="../../code/install/codedevl/template-object-help">
+Object help</A> for application</LI>
+     <LI> <A HREF="../../code/install/codedevl/template-function-help">
+Function help</A> for application</LI>
+     <LI> <A HREF="../../code/install/codedevl/templateglishobj.g">
+Glish object</A> script code (not fully up-to-date)</LI>
+     <LI> <A HREF="../../code/install/codedevl/template-review-cc">
+C++ review</A> guidelines</LI>
+     <LI> <A HREF="../../code/install/codedevl/template-review-glish">
+Glish review</A> guidelines</LI></LI>
+ </MENU>
+ <LI> Details on the writing of applications (solely in Glish or
+ with Distributed Objects) are in
+ <A HREF="../notes/197/197.html">Note 197</A>.</LI>
+ <LI> The details on the user help system are in
+   <A HREF="../notes/215/215.html">Note 215</A>.</LI> </LI></MENU>
+
+Some effort is made through the copping process, and by some effort by the
+ rules boss, to enforce the rules. However, they will only work with the 
+help of the programmers. Do not hesitate to ask clarification from the
+<A HREF="mailto:aips2-cop@nrao.edu">QAG</A> or the current
+<A HREF="mailto:Wim.Brouw@csiro.au">rules boss</A>.
+
+Changes to the rules are initiated by making a formal
+<A HREF="../../code/install/codedevl/template-change-proposal">
+change-proposal</A>.
+
+
+<H2>Testing</H2>
+
+Test programs for C++ programs and applications (mostly Glish scripts), are
+regularly run on a variety of platforms (at least weekly on SUN-Solaris with
+ the GNU gcc or ecgs compiler. Providing test programs for your application
+is one of the main ways to ensure an as bug-free as possible
+<font face=helvetica>AIPS++</font> environment.
+
+Questions about the test procedures or about special requirements for your code
+can be directed to the <A HREF="mailto:aips2-cop@nrao.edu">QAG</A> or the
+current <A HREF="mailto:jmcmulli@nrao.edu">chief tester</A>.
+
+
+<HR>
+<P></P>
+    <EM>Last modified:  5-Sep-2001--08:51</EM>
+  </BODY>
+</HTML>
+
+
+
+
+ 
+ 
+
+
+
+
+

@@ -1,0 +1,186 @@
+#-----------------------------------------------------------------------------
+# makefile.pkg: Generic AIPS++ package makefile
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1995,1996
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# This GNU makefile is included by other AIPS++ makefiles and is not intended
+# for stand-alone use.
+#
+# Original: 1995/03/07 by Mark Calabretta, ATNF
+# $Id$
+#=============================================================================
+
+# AIPS++ fundamentals.
+#---------------------
+AIPSROOT := $(word 1, $(CASAPATH))
+AIPSARCH := $(AIPSROOT)/$(word 2, $(CASAPATH))
+include $(AIPSARCH)/makedefs
+AIPSGCODE := $(AIPSROOT)/gcode_$(word 2, $(CASAPATH))
+
+# Do not include template source files.
+#--------------------------------------
+#CPPOPT += -DAIPS_NO_TEMPLATE_SRC
+#CPPDBG += -DAIPS_NO_TEMPLATE_SRC
+
+# Package subdirectories.
+#------------------------
+PCKGINST := $(CODEDIR)/install
+PCKGIMPD := $(CODEDIR)/implement
+PCKGFTND := $(CODEDIR)/fortran
+PCKGAPSD := $(CODEDIR)/apps
+PCKGXMLD := $(CODEDIR)/xml
+
+MAKEINST := $(filter $(PCKGINST), $(CODESUBS))
+MAKEIMPD := $(filter $(PCKGIMPD), $(CODESUBS))
+MAKEFTND := $(filter $(PCKGFTND), $(CODESUBS))
+MAKEAPSD := $(filter $(PCKGAPSD), $(CODESUBS))
+MAKEXMLD := $(filter $(PCKGXMLD), $(CODESUBS))
+
+MAKEAUXD := $(filter-out $(PCKGINST) $(PCKGIMPD) $(PCKGFTND) $(PCKGAPSD) $(PCKGXMLD), $(CODESUBS))
+
+PYSHAREDOBJ := $(AIPSARCH)/python/$(PYTHONVER)/casac.so
+
+
+# Static and static pattern rules.
+#---------------------------------
+.PHONY : bin lib pythonlib version
+
+allsys : $(MAKEINST) framework $(MAKEAUXD) $(MAKEFTND) $(MAKEIMPD) $(MAKEAPSD) $(MAKEXMLD) $(PYSHAREDOBJ) updatelib casac
+
+.cleansys ::
+	-$Q $(RM) -r $(ARCHTMPD)/$(PACKAGE)
+	$(RM) -r $(AIPSGCODE)/$(ARCH) $(AIPSGCODE)/*.idl $(AIPSGCODE)/*.xml
+
+lib : $(MAKEIMPD) $(MAKEFTND) ;
+
+pythonlib : $(MAKEXMLD) ;
+
+bin : $(MAKEAPSD) ;
+
+docscan docextr runtests :
+	-@ if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	      echo "" ; \
+	      echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/implement $@ ; \
+	   else \
+	      echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"implement ; \
+	   fi
+	 @ $(MAKE) -C implement NODEP=1 $@ 
+
+gencode helpfiles :
+	-@ if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	      echo "" ; \
+	      echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/tasks $@ ; \
+	      echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/tools $@ ; \
+	   else \
+	      echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"tools ; \
+	   fi
+	   @ if [ -d $(CODEDIR)/tools ] ; then \
+	       $(MAKE) -C tools NODEP=1 $@  ;\
+           fi
+	   @ if [ -d $(CODEDIR)/tasks ] ; then \
+	       $(MAKE) -C tasks NODEP=1 $@  ; \
+           fi
+
+
+updatelib :
+	@ cd $(AIPSGCODE)/Python_Converter ; \
+        $(PYTHON) setup.py build ; \
+        amkdir $(AIPSARCH)/python/$(PYTHONVER) ; \
+        cp build/lib*/casac.so $(AIPSARCH)/python/$(PYTHONVER)
+
+casac :
+	@ cd $(AIPSGCODE)/Python_Converter ; \
+	rm build/lib*/casac.so ; \
+        $(PYTHON) setup.py build ; \
+        amkdir $(AIPSARCH)/python/$(PYTHONVER) ; \
+        cp build/lib*/casac.so $(AIPSARCH)/python/$(PYTHONVER)
+
+componentslib :
+	@ cd $(AIPSGCODE) ;\
+	$(CCMTOOLSBIND)/ccmtools c++local c++python --overwrite --coda=$(AIPSXMLCODE)/xml/conversions.xml -o $(AIPSGCODE) -I$(AIPSGCODE) $(AIPSGCODE)/casa*.idl ;\
+        mksetupdotpy.sh casac; \
+        cd $(AIPSGCODE)/Python_Converter ; \
+        $(PYTHON) setup.py build ; \
+        amkdir $(AIPSARCH)/python/$(PYTHONVER) ; \
+        cp build/lib*/casac.so $(AIPSARCH)/python/$(PYTHONVER)/casac.so
+
+framework : 
+	@ amkdir -p ug=rwx,g+s,o=rx -v $(AIPSGCODE)
+	$(MAKE) -C $(AIPSCODE)/xmlcasa/idl
+
+$(AIPSGCODE)/Python_Converter/casac_python.cc : 
+	@ cd $(AIPSGCODE) ;\
+	$(CCMTOOLSBIND)/ccmtools c++local c++python --overwrite --coda=$(AIPSXMLCODE)/xml/conversions.xml -o $(AIPSGCODE) -I$(AIPSGCODE) $(AIPSGCODE)/basicVecs.idl ;\
+	$(CCMTOOLSBIND)/ccmtools c++local c++python --overwrite --coda=$(AIPSXMLCODE)/xml/conversions.xml -o $(AIPSGCODE) -I$(AIPSGCODE) $(AIPSGCODE)/casatypes.idl ;\
+	$(CCMTOOLSBIND)/ccmtools c++local c++python --overwrite --coda=$(AIPSXMLCODE)/xml/conversions.xml -o $(AIPSGCODE) -I$(AIPSGCODE) $(AIPSGCODE)/complex.idl
+
+$(AIPSARCH)/python/$(PYTHONVER)/casac.so : $(AIPSGCODE)/Python_Converter/casac_python.cc
+	@ cd $(AIPSGCODE) ;\
+	$(CCMTOOLSBIND)/ccmtools c++local c++python --overwrite --coda=$(AIPSXMLCODE)/xml/conversions.xml -o $(AIPSGCODE) -I$(AIPSGCODE) $(AIPSGCODE)/casa*.idl ;\
+        mksetupdotpy.sh casac; \
+        cd $(AIPSGCODE)/Python_Converter ; \
+        $(PYTHON) setup.py build ; \
+        amkdir $(AIPSARCH)/python/$(PYTHONVER) ; \
+        cp build/lib*/casac.so $(AIPSARCH)/python/$(PYTHONVER)/casac.so
+
+show_local :
+	-@ echo ""
+	-@ echo "Variables defined in the package makefile"
+	-@ echo "========================================="
+	-@ echo ""
+	-@ echo "System"
+	-@ echo "------"
+	-@ echo "PCKGINST=$(PCKGINST)"
+	-@ echo "PCKGIMPD=$(PCKGIMPD)"
+	-@ echo "PCKGFTND=$(PCKGFTND)"
+	-@ echo "PCKGAPSD=$(PCKGAPSD)"
+	-@ echo "PCKGXMLD=$(PCKGXMLD)"
+	-@ echo ""
+	-@ echo "MAKEINST=$(MAKEINST)"
+	-@ echo "MAKEIMPD=$(MAKEIMPD)"
+	-@ echo "MAKEFTND=$(MAKEFTND)"
+	-@ echo "MAKEAPSD=$(MAKEAPSD)"
+	-@ echo "MAKEXMLD=$(MAKEXMLD)"
+	-@ echo ""
+	-@ echo "MAKEAUXD=$(MAKEAUXD)"
+
+help ::
+	-@ echo ""
+	-@ echo "Targets defined in the package makefile"
+	-@ echo "======================================="
+	-@ echo ""
+	-@ echo "System"
+	-@ echo "------"
+	-@ echo "componentslib: Remake the entire casac python library."
+	-@ echo "    updatelib: Update the casac python library, no ccmtools."
+	-@ echo "          lib: initiate 'gmake allsys' in the implement"
+	-@ echo "               and fortran subdirectories."
+	-@ echo "          bin: initiate 'gmake allsys' in the apps"
+	-@ echo "               subdirectory."
+	-@ echo "      docscan: scan C++ sources for class information."
+	-@ echo "      docextr: extract documentation from the C++ sources."
+	-@ echo "     runtests: run all test programs."

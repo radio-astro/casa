@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- Documentation here.                                                -->
+
+<task type="function" name="vishead">
+
+<shortdescription> List, Get, and Put data in a measurement set </shortdescription>
+
+<description>
+
+This task allows the user to manipulate some common data items in a measurement
+set.  The action of the task is determined primarily by the 'mode' keyword.
+Currently, three possible values are allowed for mode:
+
+list --- list data in a MS
+get  --- get a specified datum from the MS
+put  --- put a specified value into the MS
+
+Keywords for get and put data:
+  'telescope'
+  'observer'
+  (more to come...)
+
+Input Parameters:
+
+vis  --- Name of input visibility file
+         ex: vis='my.ms'
+
+mode --- Mode of operation for vishead
+         ex: mode=''->'summary'; mode='get'
+
+    hditem  --- keyword to get or put in the MS (used in get/put mode only)
+                ex: hditem='telescope'
+
+    hdvalue --- value to be put in the MS (used in put mode only)
+                ex: hdvalue=array(['MyTelescope'])
+
+</description>
+
+<input>
+    <param type="string" name="vis" mustexist="true">
+        <description>Name of input visibility file</description>
+        <value></value>
+        <example>vis='ngc5921.ms'</example>
+    </param>
+
+    <param type="string" name="mode">
+        <description>options: summary, get, put </description>
+        <allowed kind="enum">
+            <value>summary</value>
+            <value>get</value>
+            <value>put</value>
+            <value></value> 
+        <!--<value>list</value>
+            <value>add</value>
+            <value>del</value>-->
+        </allowed>
+        <value>summary</value>
+        <example>mode=''->'summary'; mode='get'</example>
+    </param>
+
+    <param type="string" name="hditem" subparam="true">
+        <description>keyword to get/put</description>
+        <value></value>
+        <example>hditem='telescope'; see help for list of keywords</example>
+    </param>
+
+    <param type="any" name="hdvalue" subparam="true">
+        <any type="variant"/>
+        <description>value of hditem</description>
+        <value type="string"></value>
+        <example>hdvalue=['VLA','BIMA']</example>
+    </param>
+
+    <constraints>
+          <when param="mode">
+             <equals type="string" value="summary"/>
+             <equals type="string" value="get">
+                   <default param="hditem"><value type="string"/></default>
+             </equals>
+             <equals type="string" value="put">
+                   <default param="hditem"><value type="string"/></default>
+                   <default param="hdvalue"><value type="string"/></default>
+             </equals>
+          </when>
+    </constraints>
+
+</input>
+
+<example>
+
+hdvalue = vishead(vis='my.ms',mode='get',hditem='telescope')
+hdvalue[0] = ['MyTelescope']
+vishead(vis='my.ms',mode='put',hditem='telescope',hdvalue=hdvalue)
+
+</example>
+
+</task>
+
+</casaxml>

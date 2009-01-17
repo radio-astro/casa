@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="flagdata">
+	<shortdescription> All purpose flagging task based on selections</shortdescription>
+	<description>
+        The task will select a subset of data explicitly for flagging,
+        quacking, clipping, and autocorrelation flagging. Unflagging is
+        also available.
+
+	In a dual polarization data set, each polarization can be flagged
+	separately.  However, at present the calibration and imaging will
+	only use data with both parallel hands unflagged.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of file to visualize</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="mode">
+			<description>Mode (manualflag,autoflag,summary,quack)</description>
+			<value>manualflag</value>
+			<allowed kind="enum">
+			<value>manualflag</value>
+			<value>autoflag</value>
+			<value>summary</value>
+			<value>quack</value>
+		        </allowed>
+		</param>
+
+		<param type="string" name="antenna">
+			<description>antenna/baseline</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="spw">
+			<description>spectral-window/frequency/channel</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="correlation">
+			<description>Select data based on correlation</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="field">
+			<description>field names or indices</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="uvrange">
+			<description>uv range (def=meters)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="timerange">
+			<description>time range</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="scan">
+			<description>scan number</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="feed">
+			<description>feed number - NOT ENABLED</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="array">
+			<description>array</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="clipexpr" subparam="true">
+			<description>Expression to clip on</description>
+			<value>ABS RR</value>
+		</param>
+
+		<param type="doubleArray" name="clipminmax" subparam="true">
+			<description>Range to use for clipping</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="clipcolumn" subparam="true">
+			<description>Data column to use for clipping</description>
+			 <value>DATA</value>
+			<allowed kind="enum">
+			   <value>DATA</value>
+			   <value>CORRECTED</value>
+			   <value>MODEL</value>
+			</allowed>
+		</param>
+
+		<param type="bool" name="clipoutside" subparam="true">
+			<description>Clip outside the range, or within it</description>
+			<value>True</value>
+		</param>
+
+		<param type="double" name="quackinterval" subparam="true">
+			<description>Quack n seconds from scan beginning</description>
+			<value>0.0</value>
+		</param>
+
+		<param type="bool" name="autocorr" subparam="true">
+			<description>Flag autocorrelations</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="unflag" subparam="true">
+			<description>Unflag the data specified</description>
+			<value>False</value>
+		</param>
+
+		<param type="string" name="algorithm" subparam="true">
+			<description>Autoflag algorithm (timemed,freqmed)</description>
+			<value>timemed</value>
+			<allowed kind="enum">
+			<value>timemed</value>
+			<value>freqmed</value>
+		        </allowed>
+		</param>
+
+		<param type="string" name="column" subparam="true">
+			<description>Data column to operate on.</description>
+			<value>DATA</value>
+			<allowed kind="enum">
+			<value>DATA</value>
+			<value>CORRECTED</value>
+			<value>MODEL</value>
+		        </allowed>
+		</param>
+
+		<param type="string" name="expr" subparam="true">
+			<description>Expression to flag on</description>
+			<value>ABS RR</value>
+		</param>
+
+		<param type="double" name="thr" subparam="true">
+			<description>Flagging threshold (n sigma)</description>
+			<value>5.0</value>
+		</param>
+
+		<param type="int" name="window" subparam="true">
+			<description>Sliding median filter width</description>
+			<value>10</value>
+		</param>
+		<constraints>
+			<when param="mode">
+				<equals value="manualflag">
+					<default param="autocorr"><value type="bool">False</value></default>
+					<default param="unflag"><value type="bool">False</value></default>
+					<default param="clipexpr"><value type="string">ABS RR</value></default>
+					<default param="clipminmax"><value type="vector"/></default>
+					<default param="clipcolumn"><value type="string">DATA</value></default>
+					<default param="clipoutside"><value type="bool">True</value></default>
+				</equals>
+				<equals value="autoflag">
+					<default param="algorithm"><value type="string">timemed</value></default>
+					<default param="column"><value type="string">DATA</value></default>
+					<default param="expr"><value type="string">ABS RR</value></default>
+					<default param="thr"><value type="double">5.0</value></default>
+					<default param="window"><value type="int">10</value></default>
+				</equals>
+				<equals value="quack">
+					<default param="autocorr"><value type="bool">False</value></default>
+					<default param="unflag"><value type="bool">False</value></default>
+					<default param="quackinterval"><value type="double">0.0</value></default>
+				</equals>
+				<equals value="summary"/>
+			</when>
+		</constraints>
+	</input>
+<returns type="void"/>
+
+<example>
+
+        The task will select a subset of data explicitly for flagging,
+        quacking, clipping, and autocorrelation flagging. Unflagging is
+        also available.
+
+	In a dual polarization data set, each polarization can be flagged
+	separately.  However, at present the calibration and imaging will
+	only use data with both parallel hands unflagged.
+
+        Keyword arguments:
+        vis -- Name of input visibility file
+                default: none example: vis='ngc5921.ms'
+        antenna -- Select data based on baseline
+                default: '' (all); example: antenna='5&amp;6' baseline 5-6
+                antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
+                antenna='5' # all baselines with antenna 5
+                antenna='5,6' # all baselines with antennas 5 and 6
+        spw -- Select data based on spectral window and channels
+                default: '' (all); example: spw='1'
+                spw='&lt;2' #spectral windows less than 2
+                spw='&gt;1' #spectral windows greater than 1
+                spw='0:0~10' # first 10 channels from spw 0
+                spw='0:0~5;56~60' # multiple separated channel chunks.
+        correlation -- Correlation types
+                default: '' (all);
+                example: correlation='RR,LL'
+        field -- Select data based on field id(s) or name(s)
+                default: '' (all); example: field='1'
+                field='0~2' # field ids inclusive from 0 to 2
+                field='3C*' # all field names starting with 3C
+        uvrange -- Select data within uvrange (default units meters)
+                default: '' (all); example:
+                uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lamgda
+                uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
+                uvrange='0~1000km'; uvrange in kilometers
+        timerange  -- Select data based on time range:
+                default = '' (all); example,
+                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                Note: YYYY/MM/DD can be dropped as needed:
+                timerange='09:14:0~09:54:0' # this time range
+                timerange='09:44:00' # data within one integration of time
+                timerange='&gt;10:24:00' # data after this time
+                timerange='09:44:00+00:13:00' #data 13 minutes after time
+        scan -- Select data based on scan number
+                default: '' (all); example: scan='&gt;3'
+        feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        array -- Selection based on the antenna array
+        mode -- Mode of operation.
+                options: 'manualflag','autoflag','summary','quack'
+
+        --- MANUALFLAG option does data-selected flagging, autocorrelation
+	      flagging and/or clipping.
+
+	   Direct flagging of data will occur if
+	             autocorr = F; unflag = F; clipminmax = []
+		     
+	   Other flagging options can be used with:
+        autocorr -- Flag autocorrelations 
+                default: False
+                options: True,False
+        unflag -- Unflag the data
+                default: False (i.e. flag); example: unflag=True
+        clipexpr -- Clip using the following:
+                default: 'ABS RR'; example: clipexpr='RE XX'
+                Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
+		          'I','XX','YY','RR','LL'
+        clipminmax -- Range of data (Jy) that will NOT be flagged
+                default: [] means do not use clip option
+                example: [0.0,1.5]
+        clipcolumn -- Column to use for clipping.
+                default: 'DATA'
+                options: 'DATA','CORRECTED','MODEL'
+        clipoutside -- Clip OUTSIDE the range ?
+                default: True
+                example: False -&gt; flag data WITHIN the range.
+
+        --- QUACK option removes specified part of scan beginning
+        quackinterval -- Time in seconds from scan beginning to flag
+                Make time slightly small than desired time
+        unflag -- Unflag the data
+                default =&gt; False (quack as indicated)
+                           True (unquack)
+        autocorr -- Flag autocorrelations (independent option)
+                default =&gt; False
+
+        -- SUMMARY option lists number of rows and data points flagged
+
+        No subparameters
+
+        -- AUTOFLAG option runs an automatic program for removing outliers.
+	            It is still under development and not recommended.
+        algorithm -- autoflag algorithm name
+                default: 'timemed'
+                options: 'timemed','freqmed'
+        column -- the column on which to operate (DATA, CORRECTED, MODEL)
+        expr -- expression to use for flagging option
+                default: 'ABS RR'; example: expr='RE XX'
+                Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
+		     'I','XX','YY','RR','LL'
+
+        thr -- flagging threshold as a multiple of standard-deviation ( n sigma )
+        window -- half width for sliding window median filters.  The size should be
+	          about the number of integration in a scan, or the number of
+		  spectral channels.
+
+
+ </example>
+ </task>
+ </casaxml>

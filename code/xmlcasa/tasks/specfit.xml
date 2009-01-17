@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface to ia.fitpolynomial           -->
+<!--                               ia.fitallprofiles          -->
+<!--                               ia.fitprofile              -->
+<!-- TODO                                                     -->
+<!--  - decide if we want to add the following params:        -->
+<!--         axis                                             -->
+<task type="function" name="specfit">
+
+<shortdescription>Fit 1-dimentional profile(s) or polynomial(s) to an image or image region</shortdescription>
+
+<description>
+</description>
+
+<input>
+    <param type="string" name="imagename" mustexist="true" >
+    	<description>Name of the input image</description>
+    	<value></value>
+        <example>imagenam='ngc5921_task.image'</example>
+    </param>
+
+    <param type="string" name="mode">
+	<description>Mode the task is operating in, which are:\
+             single: fits a 1-D model to a single profile\
+             all:    fits a 1-D models to all profiles\
+             poly:   fits 1-D polynomeials to profiles</description>
+	<value>single</value>
+	<allowed kind="enum">
+		<value>poly</value>
+		<value>all</value>
+		<value>single</value>
+        </allowed>
+    </param>
+
+    <param type="int" name="fitorder" >
+    	<description>Order of the polynomial used in the fitting</description>
+    	<value>0</value>
+        <example>fitorder=2</example>
+    </param>
+
+    <param type="int" name="ngauss" >
+    	<description>Number of Gaussian elements used.</description>
+    	<value>1</value>
+        <example>ngauss=3</example>
+    </param>
+
+    <param type="string" name="box">
+        <description>Select one or more box regions in the input images</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="stokes">
+	<description>Stokes params to image (I,IV,IQU,IQUV)</description>
+        <value></value>
+	<example>stokes='IQ'</example>
+	<example>stokes='RR,LL'</example>
+    </param>
+
+    <param type="string" name="mask">
+        <description>Mask to be applied to the images</description>
+        <value></value>
+    </param>
+
+    <param type="boolean" name="estimate">
+        <description>In single profile fitting, create an estimate instead\
+         of doing the fit.</description>
+        <value>False</value>
+    </param>
+
+    <param type="string" name="estfile">
+        <description>A file containing an intial estimate of the fit.\
+        Estimates are allowed on single profile fits only.</description>
+        <value></value>
+    </param>
+
+
+    <param type="string" name="sigmafile">
+	<description>Input image weight file.</description>
+	<value></value>
+    </param>
+
+
+    <param type="string" name="fitfile">
+	<description>Output fitted image</description>
+	<value></value>
+    </param>
+
+
+    <param type="string" name="residualfile">
+	<description>Output fitted image or estimated profile when the\
+        an estimate is requested in single profile mode.</description>
+	<value></value>
+    </param>
+
+    <constraints>
+	<when param="mode">
+	    <equals value="single">
+		<default param="ngauss"><value>1</value></default>
+		<default param="estfile"><value>""</value></default>
+		<default param="estimate"><value>False</value></default>
+            </equals>
+	    <equals value="all">
+		<default param="ngauss"><value>1</value></default>
+            </equals>
+	    <equals value="poly"/>
+        </when>
+    </constraints>
+</input>
+
+<returns type="void"/>
+
+<example>
+</example>
+
+</task>
+
+</casaxml>
+

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="listobs">
+	<shortdescription>List data set summary in the logger</shortdescription>
+	<description>
+       List data set summary in the logger:
+
+       Lists following properties of a measurement set:
+       scan list, field list, spectral window list with
+       correlators, antenna locations, ms table information.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+		</param>
+
+		<param type="bool" name="verbose">
+			<description></description>
+			<value>True</value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+       List data set summary in the logger:
+
+       Lists following properties of a measurement set:
+       scan list, field list, spectral window list with
+       correlators, antenna locations, ms table information.
+
+       Keyword arguments:
+       vis -- Name of input visibility file
+               default: none. example: vis='ngc5921.ms'
+       verbose -- level of detail
+             verbose=True: (default); scan and antenna lists
+             verbose=False: less information
+
+      Additional comments:  The simplest way to obtain a hard copy
+      of the output is: 1) Open a file in your favorite editor;
+      2) Cut relevant portion of message log.  You may have to use
+      cntr-O to store the text; 3) Paste text in the editor window.
+
+      You can also copy the ascii text from the end of the casapy.log
+      file in the working directory.
+ </example>
+ </task>
+ </casaxml>
