@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dVirtColEng.cc 18125 2004-12-07 21:12:11Z wyoung $
+//# $Id: dVirtColEng.cc 20500 2009-01-19 08:11:03Z gervandiepen $
 
 //# Define a main program to allow compalition and linking by the make system.
 //# The variable is set in tVirtColEng.cc to skip it.
@@ -208,11 +208,11 @@ void DummyVirtualScalar::getdoubleV (uInt rownr, double* dataPtr)
 
 void DummyVirtualScalar::put (uInt rownr, const double& data)
 {
-    column_p->put (rownr, data / scale_p);
+    column_p->put (rownr, Int(data / scale_p));
 }
 void DummyVirtualScalar::putdoubleV (uInt rownr, const double* dataPtr)
 {
-    column_p->put (rownr, *dataPtr / scale_p);
+    column_p->put (rownr, Int(*dataPtr / scale_p));
 }
 
 

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSMainEnums.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSMainEnums.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef MS_MSMAINENUMS_H
 #define MS_MSMAINENUMS_H
@@ -268,7 +268,7 @@ public:
     MS_VERSION,
     // Observation subtable. Project, observer, schedule.
     OBSERVATION,
-    // Pointing information subtable..
+    // Pointing information subtable.
     POINTING,
     // Polarization setup information subtable.
     POLARIZATION,

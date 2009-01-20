@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: InterpolateArray1D.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: InterpolateArray1D.tcc 20499 2009-01-19 08:10:19Z gervandiepen $
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Arrays/Vector.h>
@@ -235,7 +235,7 @@ const uInt ndim = yin.ndim();
     youtFlagPtrs[i]=pyoutFlags+i;
   }
   interpolateyPtr(youtPtrs, youtFlagPtrs, na, nb, nc, xout, xin, yinPtrs,
-                 yinFlagPtrs, method, goodIsTrue, extrapolate);
+                  yinFlagPtrs, method, goodIsTrue, extrapolate);
   yin.freeStorage(pyin,deleteYin);
   yinFlags.freeStorage(pyinFlags,deleteYinFlags);
   yout.putStorage(pyout,deleteYout);

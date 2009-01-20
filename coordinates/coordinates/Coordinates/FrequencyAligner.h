@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FrequencyAligner.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: FrequencyAligner.h 20494 2009-01-16 15:29:27Z gervandiepen $
 
 #ifndef COORDINATES_FREQUENCYALIGNER_H
 #define COORDINATES_FREQUENCYALIGNER_H
@@ -56,12 +56,11 @@ class String;
 // </reviewed>
 //
 // <prerequisite>
-// <list>
-//   <item> <linkto class=InterpolateArray1D>InterpoateArray1D</linkto>
-//   <item> <linkto class=Array>Array</linkto>
-// </list>
+//   <li> <linkto class=InterpolateArray1D>InterpoateArray1D</linkto>
+//   <li> <linkto class=Array>Array</linkto>
 // </prerequisite>
-//// <synopsis> 
+
+// <synopsis> 
 // Spectra are converted to the specified reference frame and aligned at 
 // a specified instant in time.
 //

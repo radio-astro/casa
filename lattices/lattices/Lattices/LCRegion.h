@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCRegion.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LCRegion.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef LATTICES_LCREGION_H
 #define LATTICES_LCREGION_H
@@ -208,7 +208,7 @@ protected:
 				 const Slicer& boundingBox);
     // </group>
 
-    // Do the actual translate in a derived class..
+    // Do the actual translate in a derived class.
     virtual LCRegion* doTranslate (const Vector<Float>& translateVector,
 				   const IPosition& newLatticeShape) const = 0;
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNode.h 20384 2008-08-13 05:53:00Z gervandiepen $
+//# $Id: TaQLNode.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_TAQLNODE_H
 #define TABLES_TAQLNODE_H
@@ -58,7 +58,7 @@ class TaQLSelectNodeRep;
 //# Classes you should understand before using this one.
 //   <li> <linkto group=TableGram.h#TableGramFunctions>TableGram</linkto>
 //   <li> Note 199 describing
-//        <a href="http://www.astron.nl/aips++/docs/notes/199/199.html">
+//        <a href="../notes/199.html">
 //        TaQL</a>
 // </prerequisite>
 

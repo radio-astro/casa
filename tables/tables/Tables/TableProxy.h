@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.h 20238 2008-02-11 13:44:45Z gervandiepen $
+//# $Id: TableProxy.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_TABLEPROXY_H
 #define TABLES_TABLEPROXY_H
@@ -121,7 +121,7 @@ public:
 	      const Record& lockOptions,
 	      int option);
 
-  // Create a table with given name and description, etc..
+  // Create a table with given name and description, etc.
   TableProxy (const String& tableName,
 	      const Record& lockOptions,
 	      const String& endianFormat,

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ISMColumn.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: ISMColumn.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_ISMCOLUMN_H
 #define TABLES_ISMCOLUMN_H
@@ -140,7 +140,7 @@ public:
     // Let the column object initialize itself for an existing table.
     virtual void getFile (uInt nrrow);
 
-    // Flush and optionally fsync the data..
+    // Flush and optionally fsync the data.
     // This is meant for a derived class.
     virtual Bool flush (uInt nrrow, Bool fsync);
 

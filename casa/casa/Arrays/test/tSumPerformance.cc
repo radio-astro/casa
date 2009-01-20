@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSumPerformance.cc 20376 2008-07-09 13:32:02Z gervandiepen $
+//# $Id: tSumPerformance.cc 20496 2009-01-19 02:10:53Z Malte.Marquarding $
 
 #include <casa/Arrays/Array.h>
 #include <casa/BasicSL/Complex.h>
@@ -106,7 +106,7 @@ void doIt()
 {
   T s=0;
   Array<T> arr(IPosition(3,1000,1000,100));
-  arr=1.;
+  arr=T(1.);
   arr(IPosition(3,999,999,10)) = -int(arr.nelements()) + 1;   // makes sum 0
   std::cout<< arr(IPosition(3,999,999,10)) << std::endl;
   // Add in old ArrayMath way.

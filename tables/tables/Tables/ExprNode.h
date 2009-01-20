@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.h 20407 2008-10-14 14:00:50Z gervandiepen $
+//# $Id: ExprNode.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_EXPRNODE_H
 #define TABLES_EXPRNODE_H
@@ -426,7 +426,7 @@ class TableExprNode;
 //# Classes you should understand before using this one.
 //   <li> <linkto class=Table>Table</linkto>
 //   <li> Note 199 describing
-//        <a href="http://www.astron.nl/aips++/docs/notes/199/199.html">
+//        <a href="../notes/199.html">
 //        TaQL</a>
 // </prerequisite>
 

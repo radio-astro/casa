@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefRows.h 20238 2008-02-11 13:44:45Z gervandiepen $
+//# $Id: RefRows.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_REFROWS_H
 #define TABLES_REFROWS_H
@@ -227,7 +227,7 @@ public:
     void next();
     // </group>
 
-    // Get the current slice start, end, or increment..
+    // Get the current slice start, end, or increment.
     // <group>
     uInt sliceStart() const
         { return itsStart; }

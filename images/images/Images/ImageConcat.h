@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageConcat.h 20410 2008-10-20 09:00:06Z gervandiepen $
+//# $Id: ImageConcat.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef IMAGES_IMAGECONCAT_H
 #define IMAGES_IMAGECONCAT_H
@@ -174,7 +174,7 @@ public:
    uInt imageDim() const
      { return latticeConcat_p.latticeDim(); }
 
-// Handle the (un)locking and syncing, etc..
+// Handle the (un)locking and syncing, etc.
 // <group>
    virtual Bool lock (FileLocker::LockType, uInt nattempts);
    virtual void unlock();

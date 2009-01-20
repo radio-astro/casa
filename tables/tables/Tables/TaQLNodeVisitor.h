@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeVisitor.h 20384 2008-08-13 05:53:00Z gervandiepen $
+//# $Id: TaQLNodeVisitor.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_TAQLNODEVISITOR_H
 #define TABLES_TAQLNODEVISITOR_H
@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# Classes you should understand before using this one.
 //   <li> <linkto class=TaQLNode>TaQLNode</linkto>
 //   <li> Note 199 describing
-//        <a href="http://www.astron.nl/aips++/docs/notes/199/199.html">
+//        <a href="../notes/199.html">
 //        TaQL</a>
 // </prerequisite>
 

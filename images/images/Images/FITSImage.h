@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImage.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: FITSImage.h 20495 2009-01-19 00:50:41Z Malte.Marquarding $
 
 #ifndef IMAGES_FITSIMAGE_H
 #define IMAGES_FITSIMAGE_H
@@ -38,7 +38,9 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/DataType.h>
 
-#define WCSLIB_GETWCSTAB
+#ifndef WCSLIB_GETWCSTAB
+ #define WCSLIB_GETWCSTAB
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -64,10 +66,8 @@ class FitsInput;
 // </reviewed>
 
 // <prerequisite>
-// <list>
-//   <item> <linkto class=ImageInterface>ImageInterface</linkto>
-//   <item> <linkto class=FITSMask>FITSMask</linkto>
-// </list>
+//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=FITSMask>FITSMask</linkto>
 // </prerequisite>
 
 // <etymology>

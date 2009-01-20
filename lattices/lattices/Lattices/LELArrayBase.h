@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELArrayBase.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LELArrayBase.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef LATTICES_LELARRAYBASE_H
 #define LATTICES_LELARRAYBASE_H
@@ -69,7 +69,7 @@ public:
    LELArrayBase (const Array<Bool>& mask)
        : itsMaskPtr(new Array<Bool>(mask)) {}
 
-// Copy constructor (reference semantics)..
+// Copy constructor (reference semantics).
    LELArrayBase (const LELArrayBase& other);
 
    ~LELArrayBase();

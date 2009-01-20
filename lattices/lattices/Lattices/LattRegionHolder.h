@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LattRegionHolder.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LattRegionHolder.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef LATTICES_LATTREGIONHOLDER_H
 #define LATTICES_LATTREGIONHOLDER_H
@@ -117,7 +117,7 @@ public:
     Bool operator!=(const LattRegionHolder& other) const;
     // </group>
 
-    // Test if the underlying region is an LCRegion, etc..
+    // Test if the underlying region is an LCRegion, etc.
     // <group>
     Bool isLCRegion() const;
     Bool isLCSlicer() const;

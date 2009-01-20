@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slicer.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: Slicer.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef CASA_SLICER_H
 #define CASA_SLICER_H
@@ -388,7 +388,7 @@ public:
     // Report the defined stride.
     const IPosition& stride() const;
 
-    // Report the length of the resulting axes..
+    // Report the length of the resulting axes.
     const IPosition& length() const;
 
     // Are all values fixed (i.e., no MimicSource given)?
