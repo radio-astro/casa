@@ -221,10 +221,10 @@ const uInt ndim = yin.ndim();
   Range* pyout=yout.getStorage(deleteYout);
   Bool* pyoutFlags=youtFlags.getStorage(deleteYoutFlags);
 
-  PtrBlock<const Range*> yinPtrs(nxin);
-  PtrBlock<const Bool*> yinFlagPtrs(nxin);
-  PtrBlock<Range*> youtPtrs(nxout);
-  PtrBlock<Bool*> youtFlagPtrs(nxout);
+  PtrBlock<const Range*> yinPtrs(na*nb*nc);
+  PtrBlock<const Bool*> yinFlagPtrs(na*nb*nc);
+  PtrBlock<Range*> youtPtrs(na*nxout*nc);
+  PtrBlock<Bool*> youtFlagPtrs(na*nxout*nc);
   Int i;
   for (i=0; i<(na*nb*nc); i++) {
     yinPtrs[i]=pyin+i;
@@ -743,8 +743,8 @@ void InterpolateArray1D<Domain,Range>::interpolateyPtr(PtrBlock<Range*>& yout,
               h = i + j*na + k*na*nxout;
               Int xind1 = i + ind1*na + k*na*nb;
               Int xind2 = i + ind2*na + k*na*nb;
-             yout[h][0] = yin[xind1][0] + frac * (yin[xind2][0] - yin[xind1][0]);
-             youtFlags[h][0] = ( discard ? flag :
+              yout[h][0] = yin[xind1][0] + frac * (yin[xind2][0] - yin[xind1][0]);
+              youtFlags[h][0] = ( discard ? flag :
                                  yinFlags[xind1][0] || yinFlags[xind2][0]);
             }
           }
