@@ -277,6 +277,7 @@ traceEvent(1,"Entering imager::defaults",25);
   useModelCol_p=True;  
   freqFrameValid_p=False;
   doTrackSource_p=False;
+  freqInterpMethod_p="linear";
   logSink_p=LogSink(LogMessage::NORMAL, False);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
@@ -2332,7 +2333,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
-			const Float& pbLimit)
+			const Float& pbLimit, const String& interpMeth)
 {
 
 #ifdef PABLO_IO
@@ -2378,6 +2379,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   cfCacheDirName_p = cfCacheDirName;
   paStep_p = paStep;
   pbLimit_p = pbLimit;
+  freqInterpMethod_p=interpMeth;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -7438,6 +7440,7 @@ Bool Imager::createFTMachine()
     
   }
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+  ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){
     ft_p->setMovingSource(trackDir_p);
   }
