@@ -41,6 +41,7 @@
 #include <casa/Containers/Block.h>
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -224,6 +225,9 @@ public:
   //reset stuff in an FTMachine
   virtual void reset(){};
 
+  //set frequency interpolation type
+  virtual void setFreqInterpolation(const String& method);
+
 protected:
 
   LogIO logIO_p;
@@ -293,11 +297,41 @@ protected:
   //redo all spw chan match especially if ms has changed underneath 
   Bool matchAllSpwChans(const VisBuffer& vb);
 
+  //interpolate visibility data of vb to grid frequency definition
+  //flag will be set the one as described in interpolateArray1D
+  //return False if no interpolation is done...for e.g for nearest case
+  virtual Bool interpolateFrequencyTogrid(const VisBuffer& vb, 
+					  const Matrix<Float>& wt,
+					  Cube<Complex>& data, 
+					  Cube<Int>& flag,
+					  Matrix<Float>& weight,
+					  FTMachine::Type type=FTMachine::OBSERVED ); 
+  //degridded data interpolated back onto visibilities
+  virtual Bool interpolateFrequencyFromgrid(VisBuffer& vb, 
+					    Cube<Complex>& data,
+					    FTMachine::Type type=FTMachine::MODEL );
+  
+
+  //Interpolate visibilities to be degridded upon
+  virtual void getInterpolateArrays(const VisBuffer& vb,
+				    Cube<Complex>& data, Cube<Int>& flag);
+
 
   // Private variables needed for spectral frame conversion 
   SpectralCoordinate spectralCoord_p;
   Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
+  Vector<Float> imageFreq_p;
+  InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
+ private:
+  //Some temporary wasteful function for swapping axes because we don't 
+  //Interpolation along the second axis...will need to implement 
+  //interpolation on y axis of a cube. 
+  
+  void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+  void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
+
+
 };
 
 } //# NAMESPACE CASA - END

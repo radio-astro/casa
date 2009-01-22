@@ -50,9 +50,11 @@
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
+#include <casa/Arrays/ArrayIter.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
+#include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
@@ -75,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
-			 freqFrameValid_p(False)
+			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour)
 {
 }
 
@@ -193,6 +195,23 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   AlwaysAssert(spectralIndex>-1, AipsError);
   spectralCoord_p=coords.spectralCoordinate(spectralIndex);
 
+  //Store the image/grid channels freq values
+  {
+    Int chanNumbre=image->shape()(3);
+    Vector<Double> pixindex(chanNumbre);
+    imageFreq_p.resize(chanNumbre);
+    Vector<Double> tempStorFreq(chanNumbre);
+    indgen(pixindex);
+    pixindex=pixindex+0.5;
+    for (Int ll=0; ll< chanNumbre; ++ll){
+      if( !spectralCoord_p.toWorld(tempStorFreq(ll), pixindex(ll))){
+	logIO() << "Cannot get imageFreq " << LogIO::EXCEPTION;
+	
+      }
+    }
+     convertArray(imageFreq_p,tempStorFreq);
+  }
+
   //Destroy any conversion layer Freq coord if freqframe is not valid
   if(!freqFrameValid_p){
     MFrequency::Types imageFreqType=spectralCoord_p.frequencySystem();
@@ -298,8 +317,185 @@ FTMachine::~FTMachine()
  if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
 }
 
+Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
+					     const Matrix<Float>& wt,
+					     Cube<Complex>& data, 
+					     Cube<Int>& flags, 
+					     Matrix<Float>& weight, 
+					     FTMachine::Type type){
+
+    Cube<Complex> origdata;
+    Vector<Float> visFreq(vb.frequency().nelements());
+
+    convertArray(visFreq, vb.frequency());
+
+    if(type==FTMachine::MODEL){
+      origdata.reference(vb.modelVisCube());
+    }
+    else if(type==FTMachine::CORRECTED){
+      origdata.reference(vb.correctedVisCube());
+    }
+    else if(type==FTMachine::OBSERVED){
+      origdata.reference(vb.visCube());
+    }
+    else if(type==FTMachine::PSF){
+      // make sure its a size 0 data ...psf
+      //so avoid reading any data from disk 
+      origdata.resize();
+      
+    }
+    else{
+      throw(AipsError("Don't know which column is being regridded"));
+    }
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour) || (vb.nChannel()==1)){
+      data.reference(origdata);
+      flags.resize(vb.flagCube().shape());
+      flags=0;
+      flags(vb.flagCube())=True;
+      weight.reference(wt);
+      return False;
+    }
+
+    
+
+    
+    Cube<Bool>flag;
+
+    if(type != FTMachine::PSF){
+      //if(freqInterpMethod_p != InterpolateArray1D<Float, Complex>::linear){
+      if(1){
+
+	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
+    //2 swap of axes needed
+	Cube<Complex> flipdata;
+	Cube<Bool> flipflag;
+	swapyz(flipflag,vb.flagCube());
+	swapyz(flipdata,origdata);
+	InterpolateArray1D<Float,Complex>::
+	  interpolate(data,flag,imageFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
+	flipdata.resize();
+	swapyz(flipdata,data);
+	data.resize();
+	data.reference(flipdata);
+	flipflag.resize();
+	swapyz(flipflag,flag);
+	flag.resize();     
+	flag.reference(flipflag);
+      }
+      else{
+
+	InterpolateArray1D<Float,Complex>::
+	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+      }
+    }
+    else{
+      //For now don't read data to just interpolate flags...need a interpolate 
+      //flag only function
+      flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
+      flag.set(False);
+      ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
+      ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
+      Int channum=0;
+      Float step=imageFreq_p[1]-imageFreq_p[0];
+      Float origstep=visFreq[1]-visFreq[0];
+      while (!iter.pastEnd()){
+	Int closest=Int((imageFreq_p[channum]+step)/origstep);
+	if(closest <0) closest=0;
+	if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
+        origiter.origin();
+	for (Int k=0; k < closest; ++k)
+	  origiter.next();
+	iter.array()=iter.array()+origiter.array();
+	iter.next();
+	++channum;
+      }
+
+    }
+   
+    Matrix<Float> flipweight;
+    flipweight=transpose(wt);
+    InterpolateArray1D<Float,Float>::interpolate(weight,imageFreq_p,visFreq,flipweight,freqInterpMethod_p);
+    
+    flipweight.resize();
+    flipweight=transpose(weight);    
+    weight.resize();
+    weight.reference(flipweight);
+    
+    
+    flags.resize(flag.shape());
+    flags=0;
+    flags(flag)=True;
 
 
+    chanMap.resize(imageFreq_p.nelements());
+    indgen(chanMap);
+    
+
+
+    return True;
+  }
+
+  void FTMachine::getInterpolateArrays(const VisBuffer& vb,
+				       Cube<Complex>& data, Cube<Int>& flags){
+
+
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)||  (vb.nChannel()==1)){
+      data.reference(vb.modelVisCube());
+      flags.resize(vb.flagCube().shape());
+      flags=0;
+      flags(vb.flagCube())=True;
+      return;
+    }
+
+    data.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
+    flags.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
+    data.set(Complex(0.0,0.0));
+    flags.set(0);
+    chanMap.resize(imageFreq_p.nelements());
+    indgen(chanMap);
+
+
+  }
+
+  Bool FTMachine::interpolateFrequencyFromgrid(VisBuffer& vb, 
+					     Cube<Complex>& data, 
+					     FTMachine::Type type){
+
+    Cube<Complex> *origdata;
+    Vector<Float> visFreq(vb.frequency().nelements());
+
+    convertArray(visFreq, vb.frequency());
+
+    if(type==FTMachine::MODEL){
+      origdata=&(vb.modelVisCube());
+    }
+    else if(type==FTMachine::CORRECTED){
+      origdata=&(vb.correctedVisCube());
+    }
+    else{
+      origdata=&(vb.visCube());
+    }
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)){
+      origdata->reference(data);
+      return False;
+    }
+
+    //Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
+    //2 swap of axes needed
+    Cube<Complex> flipgrid;
+    flipgrid.resize();
+    swapyz(flipgrid,data);
+
+    Cube<Complex> flipdata((origdata->shape())(0),(origdata->shape())(2),
+			   (origdata->shape())(1)) ;
+    flipdata.set(Complex(0.0));
+    InterpolateArray1D<Float,Complex>::
+     interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
+    swapyz(vb.modelVisCube(),flipdata);
+
+
+    return True;
+  }
 void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 			  const VisBuffer& vb)
 {
@@ -725,6 +921,73 @@ void FTMachine::setMovingSource(const MDirection& mdir){
 
 }
 
+void FTMachine::setFreqInterpolation(const String& method){
+
+  String meth=method;
+  meth.downcase();
+  if(meth.contains("linear")){
+    freqInterpMethod_p=InterpolateArray1D<Float,Complex>::linear;
+  }
+  else if(meth.contains("splin")){
+    freqInterpMethod_p=InterpolateArray1D<Float,Complex>::spline;  
+  }	    
+  else if(meth.contains("cub")){
+    freqInterpMethod_p=InterpolateArray1D<Float,Complex>::cubic;
+  }
+  else{
+    freqInterpMethod_p=InterpolateArray1D<Float,Complex>::nearestNeighbour;
+  }
+
+
+
+}
+
+
+// helper function to swap the y and z axes of a Cube
+  void FTMachine::swapyz(Cube<Complex>& out, const Cube<Complex>& in)
+{
+  IPosition inShape=in.shape();
+  uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
+  //resize breaks  references...so out better have the right shape 
+  //if references is not to be broken
+  if(out.nelements()==0)
+    out.resize(nxx,nyy,nzz);
+  Bool deleteIn,deleteOut;
+  const Complex* pin = in.getStorage(deleteIn);
+  Complex* pout = out.getStorage(deleteOut);
+  uInt i=0, zOffset=0;
+  for (uInt iz=0; iz<nzz; ++iz, zOffset+=nxx) {
+    Int yOffset=zOffset;
+    for (uInt iy=0; iy<nyy; ++iy, yOffset+=nxx*nzz) {
+      for (uInt ix=0; ix<nxx; ++ix){ 
+	pout[i++] = pin[ix+yOffset];
+      }
+    }
+  }
+  out.putStorage(pout,deleteOut);
+  in.freeStorage(pin,deleteIn);
+}
+
+// helper function to swap the y and z axes of a Cube
+  void FTMachine::swapyz(Cube<Bool>& out, const Cube<Bool>& in)
+{
+  IPosition inShape=in.shape();
+  uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
+  if(out.nelements()==0)
+    out.resize(nxx,nyy,nzz);
+  Bool deleteIn,deleteOut;
+  const Bool* pin = in.getStorage(deleteIn);
+  Bool* pout = out.getStorage(deleteOut);
+  uInt i=0, zOffset=0;
+  for (uInt iz=0; iz<nzz; iz++, zOffset+=nxx) {
+    Int yOffset=zOffset;
+    for (uInt iy=0; iy<nyy; iy++, yOffset+=nxx*nzz) {
+      for (uInt ix=0; ix<nxx; ix++) pout[i++] = pin[ix+yOffset];
+    }
+  }
+  out.putStorage(pout,deleteOut);
+  in.freeStorage(pin,deleteIn);
+}
 
 
 } //# NAMESPACE CASA - END

@@ -184,6 +184,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
+    freqInterpMethod_p=other.freqInterpMethod_p;
   };
   return *this;
 };
@@ -645,37 +646,45 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   gridOk(gridder->cSupport()(0));
 
+  //Check if ms has changed then cache new spw and chan selection
+  if(vb.newMS())
+    matchAllSpwChans(vb);
+  
+  //Here we redo the match or use previous match
+  
+  //Channel matching for the actual spectral window of buffer
+  if(doConversion_p[vb.spectralWindow()]){
+    matchChannel(vb.spectralWindow(), vb);
+  }
+  else{
+    chanMap.resize();
+    chanMap=multiChanMap_p[vb.spectralWindow()];
+  }
 
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
     imagingweight=&imwght;
   else
     imagingweight=&(vb.imagingWeight());
+  
+  if(dopsf) type=FTMachine::PSF;
+
+  Cube<Complex> data;
+  //Fortran gridder need the flag as ints 
+  Cube<Int> flags;
+  Matrix<Float> elWeight;
+  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+
+
+
   Bool iswgtCopy;
   const Float *wgtStorage;
-  wgtStorage=imagingweight->getStorage(iswgtCopy);
-
-  const Cube<Complex> *data;
-  data=0;
-  if(!dopsf){
-    if(type==FTMachine::MODEL){
-      data=&(vb.modelVisCube());
-    }
-    else if(type==FTMachine::CORRECTED){
-      data=&(vb.correctedVisCube());
-    }
-    else{
-      data=&(vb.visCube());
-    }
-  }
+  wgtStorage=elWeight.getStorage(iswgtCopy);
+  
   Bool isCopy;
   const Complex *datStorage;
-
-
-
-
   if(!dopsf)
-    datStorage=data->getStorage(isCopy);
+    datStorage=data.getStorage(isCopy);
   else
     datStorage=0;
   // If row is -1 then we pass through all rows
@@ -712,9 +721,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int idopsf=0;
   if(dopsf) idopsf=1;
 
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
+  
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
@@ -726,20 +733,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   
 
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
   
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
 
 
   if(isTiled) {
@@ -839,7 +833,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
 
   if(!dopsf)
-    data->freeStorage(datStorage, isCopy);
+    data.freeStorage(datStorage, isCopy);
   imagingweight->freeStorage(wgtStorage,iswgtCopy);
 
 }
@@ -1002,9 +996,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
+  
 
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())
@@ -1023,6 +1015,13 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
 
 
+  Cube<Complex> data;
+  Cube<Int> flags;
+  getInterpolateArrays(vb, data, flags);
+
+  Complex *datStorage;
+  Bool isCopy;
+  datStorage=data.getStorage(isCopy);
   
 
   Vector<Int> rowFlags(vb.nRow());
@@ -1093,9 +1092,8 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
-    Bool isCopy;
-    Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
-    IPosition s(vb.modelVisCube().shape());
+    
+    IPosition s(data.shape());
     dgridft(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
@@ -1119,9 +1117,10 @@ void GridFT::get(VisBuffer& vb, Int row)
 	    gridder->cFunction().getStorage(del),
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del));
-    vb.modelVisCube().putStorage(datStorage, isCopy);
+    
+    data.putStorage(datStorage, isCopy);
   }
-
+  interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 
 }
 
