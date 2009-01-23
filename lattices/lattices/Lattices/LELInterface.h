@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELInterface.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LELInterface.h 20508 2009-01-20 11:09:47Z gervandiepen $
 
 #ifndef LATTICES_LELINTERFACE_H
 #define LATTICES_LELINTERFACE_H
@@ -74,7 +74,7 @@ class Slicer;
 //
 //  A description of the implementation details of these classes can
 //  be found in
-//  <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+//  <a href="../notes/216.html">Note 216</a>
 //
 //  This class, LELInterface,  is the abstract base class for all of 
 //  the letter classes.  Its purpose is to declare the interface inherited 

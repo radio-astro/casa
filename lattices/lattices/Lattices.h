@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lattices.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: Lattices.h 20508 2009-01-20 11:09:47Z gervandiepen $
 
 #ifndef LATTICES_LATTICES_H
 #define LATTICES_LATTICES_H
@@ -172,7 +172,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </srcblock>
 //
 //   <li>The <linkto class="HDF5Lattice">HDF5Lattice</linkto> class stores its
-//   data on disk in HDF5 format. It works in the same way as PagedArray.
+//   data on disk in <a href="http://www.hdfgroup.org/HDF5">HDF5</a> format.
+//   It works in the same way as PagedArray.
 //
 //  </ul>
 //
@@ -378,7 +379,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  only once, on a get of the first part of the lattice expression.
 //  <br> Note that a lattice expression is not writable, thus using
 //  the put function on such a lattice results in an exception.
-//  <br> <a href="http://www.astron.nl/aips++/docs/notes/223">Note 223</a>
+//  <br> <a href="../notes/223.html">Note 223</a>
 //  gives a more detailed
 //  explanation of the capabilities of LEL (Lattice Expression Language).
 //  <p>
