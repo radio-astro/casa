@@ -296,7 +296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			"There is no axis with type DEC or LAT. Cannot identify latitude axis for WCS."
 			" Will assume axis 2 as default." <<
 			LogIO::POST;
-		    header.define("pv2_", pvi_ma);		}
+		}
 		else {
 		    ostringstream oss;
 		    oss << "pv" << theLatAxisNum+1 << "_"; // numbers are start at 1 in WCS
@@ -519,6 +519,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		char tmp[hsize];
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[15]='-'; tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
+		all = all.append(tmp);
+		os << LogIO::WARN
+		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
+	    } else if (hsize >= 19 &&	  // change 'OBSFREQ' to 'RESTFRQ'
+		       header[i][0]=='O' && header[i][1]=='B' && header[i][2]=='S' &&
+		       header[i][3]=='F' && header[i][4]=='R' &&
+		       header[i][5]=='E' && header[i][6]=='Q' &&
+		       header[i][7]==' ') {
+		char tmp[hsize];
+		strncpy(tmp,header[i].c_str(),hsize+1);
+		tmp[0]='R'; tmp[1]='E'; tmp[2]='S'; tmp[3]='T';
+		tmp[4]='F'; tmp[5]='R'; tmp[6]='Q'; tmp[7]=' ';
 		all = all.append(tmp);
 		os << LogIO::WARN
 		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
