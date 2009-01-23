@@ -201,6 +201,7 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
+    freqInterpMethod_p=other.freqInterpMethod_p;
   };
   return *this;
 };
@@ -431,16 +432,6 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 }
 
 
-void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
-			       const VisBuffer& vb,
-			       Array<Complex>& griddedVis,
-			       Vector<Double>& uvscale){
-  
-  initializeToVis(iimage, vb);
-  griddedVis.assign(griddedData); //using the copy for storage
-  uvscale.assign(uvScale);
-  
-}
 
 void WProjectFT::finalizeToVis()
 {
@@ -608,28 +599,48 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		     FTMachine::Type type, const Matrix<Float>& imwght )
 {
   
+
+   //Check if ms has changed then cache new spw and chan selection
+  if(vb.newMS())
+    matchAllSpwChans(vb);
+  
+  //Here we redo the match or use previous match
+  
+  //Channel matching for the actual spectral window of buffer
+  if(doConversion_p[vb.spectralWindow()]){
+    matchChannel(vb.spectralWindow(), vb);
+  }
+  else{
+    chanMap.resize();
+    chanMap=multiChanMap_p[vb.spectralWindow()];
+  }
+  
+
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
     imagingweight=&imwght;
   else
     imagingweight=&(vb.imagingWeight());
+
+  if(dopsf) type=FTMachine::PSF;
+
+  Cube<Complex> data;
+  //Fortran gridder need the flag as ints 
+  Cube<Int> flags;
+  Matrix<Float> elWeight;
+  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+  
+  
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=imagingweight->getStorage(iswgtCopy);
 
-  const Cube<Complex> *data;
-  if(type==FTMachine::MODEL){
-    data=&(vb.modelVisCube());
-  }
-  else if(type==FTMachine::CORRECTED){
-    data=&(vb.correctedVisCube());
-  }
-  else{
-    data=&(vb.visCube());
-  }
 
   Bool isCopy;
-  const Complex *datStorage=data->getStorage(isCopy);
+  const Complex *datStorage=0;
+
+  if(!dopsf)
+    datStorage=data.getStorage(isCopy);
 
 
   // If row is -1 then we pass through all rows
@@ -670,10 +681,6 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int idopsf=0;
   if(dopsf) idopsf=1;
   
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
-  
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
   rowFlags(vb.flagRow())=True;
@@ -683,21 +690,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     }
   }
   
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
-  
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
-  
+ 
   if(isTiled) {
     
     Double invLambdaC=vb.frequency()(0)/C::c;
@@ -806,8 +799,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     convFunc.freeStorage(convstor, convcopy);
   }
   
-
-  data->freeStorage(datStorage, isCopy);
+  if(!dopsf)
+    data.freeStorage(datStorage, isCopy);
   imagingweight->freeStorage(wgtStorage,iswgtCopy);
 }
 
@@ -845,12 +838,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 
   // This is the convention for dphase
   // dphase*=-1.0;
-
-  
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
-  
+ 
   
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())
@@ -866,6 +854,15 @@ void WProjectFT::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
   
+
+  Cube<Complex> data;
+  Cube<Int> flags;
+  getInterpolateArrays(vb, data, flags);
+
+  Complex *datStorage;
+  Bool isCopy;
+  datStorage=data.getStorage(isCopy);
+
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
   rowFlags(vb.flagRow())=True;
@@ -909,10 +906,10 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 	}
 	actualOffset(2)=uvOffset(2);
-	IPosition s(vb.modelVisCube().shape());
+	IPosition s(data.shape());
 	dwproj(uvw.getStorage(del),
 	       dphase.getStorage(del),
-	       vb.modelVisCube().getStorage(del),
+	       datStorage,
 	       &s(0),
 	       &s(1),
 	       flags.getStorage(del),
@@ -941,8 +938,6 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
-    Bool isCopy;
-    Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
     Bool uvwcopy; 
     const Double *uvwstor=uvw.getStorage(uvwcopy);
     Bool gridcopy;
@@ -975,110 +970,16 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	   convstor,
 	   chanMap.getStorage(del),
 	   polMap.getStorage(del));
-    vb.modelVisCube().putStorage(datStorage, isCopy);
+    data.putStorage(datStorage, isCopy);
     uvw.freeStorage(uvwstor, uvwcopy);
     griddedData.freeStorage(gridstor, gridcopy);
     convFunc.freeStorage(convstor, convcopy);
   }
 
+  interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
  
 }
 
-void WProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
-		   Array<Complex>& griddedVis, Vector<Double>& scale,
-		   Int row)
-{
-  
-  Int nX=griddedVis.shape()(0);
-  Int nY=griddedVis.shape()(1);
-  Vector<Double> offset(2);
-  offset(0)=Double(nX)/2.0;
-  offset(1)=Double(nY)/2.0;
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if (row==-1) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-    //   modelVis.set(Complex(0.0,0.0));
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-    //  modelVis.xyPlane(row)=Complex(0.0,0.0);
-  }
-  
-  // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
-  }
-  
-  rotateUVW(uvw, dphase, vb);
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-  
-  // This is the convention for dphase
-  dphase*=-1.0;
-
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
-  
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
-  
-  Vector<Int> rowFlags(vb.nRow());
-  rowFlags=0;
-  rowFlags(vb.flagRow())=True;
-  if(!usezero_p) {
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    }
-  }
-  
-  Bool del;
-  IPosition s(modelVis.shape());
-  dwproj(uvw.getStorage(del),
-	 dphase.getStorage(del),
-	 modelVis.getStorage(del),
-	 &s(0),
-	 &s(1),
-	 flags.getStorage(del),
-	 rowFlags.getStorage(del),
-	 &s(2),
-	 &row,
-	 scale.getStorage(del),
-	 offset.getStorage(del),
-	 griddedVis.getStorage(del),
-	 &nX,
-	 &nY,
-	 &npol,
-	 &nchan,
-	 vb.frequency().getStorage(del),
-	 &C::c,
-	 convSupport.getStorage(del),
-	 &convSize,
-	 &convSampling,
-	 &wConvSize,
-	 convFunc.getStorage(del),
-	 chanMap.getStorage(del),
-	 polMap.getStorage(del));
-  
-}
 
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and

@@ -158,12 +158,7 @@ public:
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
-  // This version returns the gridded vis...should be used in conjunction 
-  // with the version of 'get' that needs the gridded visdata 
-  void initializeToVis(ImageInterface<Complex>& image,
-		       const VisBuffer& vb, Array<Complex>& griddedVis,
-		       Vector<Double>& uvscale, UVWMachine* &uvwMachine);
-
+  
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
@@ -172,27 +167,15 @@ public:
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
 
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
-		       const VisBuffer& vb, Vector<Double>& uvscale,
-		       UVWMachine* & uvwmachine);
-
+  
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
   void finalizeToSky();
 
-  void finalizeToSky(ImageInterface<Complex>& iimage);
 
   // Get actual coherence from grid by degridding
   void get(VisBuffer& vb, Int row=-1);
-
-  // Get the coherence from grid return it in the degrid 
-  // is used especially when scratch columns are not 
-  // present in ms.
-  virtual void get(VisBuffer& vb, Cube<Complex>& degrid, 
-		   Array<Complex>& griddedVis, Vector<Double>& scale, 
-		   UVWMachine *uvwMachine,
-		   Int row=-1);
 
 
   // Put coherence to grid by gridding.
@@ -200,10 +183,7 @@ public:
 	   FTMachine::Type type=FTMachine::OBSERVED, 
 	   const Matrix<Float>& imwght=Matrix<Float>(0,0));
 
-  void put(const VisBuffer& vb, TempImage<Complex>& iimage, 
-	   Vector<Double>& scale, Int row=-1, UVWMachine *uvwMachine=0, 
-	   Bool dopsf=False);
-
+  
   // Make the entire image
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,

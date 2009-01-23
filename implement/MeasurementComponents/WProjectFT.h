@@ -166,11 +166,7 @@ public:
   void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
   // This version returns the gridded vis...should be used in conjunction 
-  // with the version of 'get' that needs the gridded visdata 
-  void initializeToVis(ImageInterface<Complex>& image,
-		       const VisBuffer& vb, Array<Complex>& griddedVis,
-		       Vector<Double>& uvscale);
-
+  
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
@@ -186,13 +182,6 @@ public:
 
   // Get actual coherence from grid by degridding
   void get(VisBuffer& vb, Int row=-1);
-
-  // Get the coherence from grid return it in the degrid 
-  // is used especially when scratch columns are not 
-  // present in ms.
-  void get(VisBuffer& vb, Cube<Complex>& degrid, 
-		   Array<Complex>& griddedVis, Vector<Double>& scale, 
-		   Int row=-1);
 
 
   // Put coherence to grid by gridding.

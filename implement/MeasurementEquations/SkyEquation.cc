@@ -312,7 +312,7 @@ void SkyEquation::gradientsChiSquared(Bool incremental, Bool commitModel) {
     else{
       // For now use corrected_data...
       ft_->setNoPadding(True);
-      fullGradientsChiSquared(incremental, True);
+      cout << "This mode is gone...we should not be coming here" << endl;
     }
   }
   else {
@@ -398,126 +398,6 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental) {
 
 //----------------------------------------------------------------------
 
-//----------------------------------------------------------------------
-void SkyEquation::fullGradientsChiSquared(Bool incremental, 
-					  Bool useCorrectedData) {
-
-  AlwaysAssert(ok(),AipsError);
-
-
-  PtrBlock<Array<Complex>* > griddedVis;
-  PtrBlock<UVWMachine *> uvwMachines;
-  griddedVis.resize(sm_->numberOfModels());
-  uvwMachines.resize(sm_->numberOfModels());
-  Block<Vector<Double> > uvscale;
-  uvscale.resize(sm_->numberOfModels());
-  // initialize to get all the models
-
-  modelIsEmpty_p.resize(sm_->numberOfModels());
-  
-
-
-  ROVisIter& vi(vs_->iter());
-  checkVisIterNumRows(vi);
-  VisBuffer vb(vi);
-  vi.originChunks();
-  vi.origin();
-
-  for (Int model=0;model<sm_->numberOfModels(); ++model){
-    modelIsEmpty_p(model)=sm_->isEmpty(model);
-    griddedVis[model]=new Array<Complex> ();
-    uvwMachines[model]=NULL;
-    if(!modelIsEmpty_p(model)){
-      initializeGet(vb, 0, model, *(griddedVis[model]), 
-		  uvscale[model], uvwMachines[model], incremental); 
-    }
-  }
-  sumwt = 0.0;
-  chisq = 0.0;
-
-  // Initialize the gradients
-  sm_->initializeGradients();
-
-
-    // Reset the various SkyJones
-  resetSkyJones();
-  
-  Bool isCopy=False;
-    // Loop over all models in SkyModel
-  for (Int model=0;model<sm_->numberOfModels();model++) {
-
-    if(sm_->isSolveable(model)) {
-
-      
-      // Initialize 
-
-      ///hmm this scale image is totally useless here as the only the complex
-      //grid is used here
-      //scaleImage(model, incremental);
-
-      vi.originChunks();
-      vi.origin();
-
-      // Change the model polarization frame
-      if(vb.polFrame()==MSIter::Linear) {
-	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::LINEAR);
-      }
-      else {
-	StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					  SkyModel::CIRCULAR);
-      }
-      initializePut(vb, model,  
-		    uvscale[model],uvwMachines[model]);
-    }
-  }   
-  Int cohDone=0;
-      
-  ostringstream modelName;modelName    <<"Making Residual-Vis";
-  ProgressMeter pm(1.0, Double(vs_->numberCoh()),
-		       modelName, "", "", "", True);
-  // Loop over the visibilities, putting VisBuffers
-  
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin(); vi.more(); vi++) {
-      Cube<Complex> modelVis(vb.visCube().shape());
-      modelVis.set(Complex(0,0));
-      get(vb, griddedVis, modelVis, uvscale, uvwMachines, incremental);
-      Cube<Complex> origVis;
-      if(useCorrectedData){
-	modelVis-=vb.correctedVisCube();
-      }
-      else{
-	modelVis-=vb.visCube();
-      }
-      vb.setVisCube(modelVis);
-      for (Int model=0; model<sm_->numberOfModels();model++) {
-	put(vb, model, uvscale[model], uvwMachines[model]);
-      }
-      cohDone+=vb.nRow();
-      pm.update(Double(cohDone));
-    }
-  }
-  // Do the transform, apply the SkyJones transformation
-  // and sum the statistics for this model
-  for (Int model=0; model<sm_->numberOfModels();model++) {
-	 finalizePut(vb_p, model, isCopy);
-	 //      see comment on scaleImage ...unnecessary
-	 //	 unScaleImage(model, incremental);
-  }
-  
-  fixImageScale();
-  
-  // Finish off any calculations needed internal to SkyModel
-  sm_->finalizeGradients();
- 
-  for (Int model=0;model<sm_->numberOfModels();model++){
-    delete griddedVis[model];
-    delete uvwMachines[model];
-  }
-    
-      
-}
 
 //----------------------------------------------------------------------
 
@@ -810,22 +690,7 @@ void SkyEquation::initializeGet(const VisBuffer& vb, Int row, Int model,
   ft_->initializeToVis(sm_->cImage(model),vb);
 }
 //
-void SkyEquation::initializeGet(const VisBuffer& vb, Int row, Int model, 
-				Array<Complex>& griddedVis, 
-				Vector<Double>& uvscale,
-				UVWMachine* & uvwmachine,
-				Bool incremental) {
 
-  AlwaysAssert(ok(),AipsError);
-  if(incremental) {
-    applySkyJones(vb, row, sm_->deltaImage(model), sm_->cImage(model));
-  }
-  else {
-    applySkyJones(vb, row, sm_->image(model), sm_->cImage(model));
-  }
-  ft_->initializeToVis(sm_->cImage(model),vb, griddedVis, uvscale, uvwmachine);
-
-}
 // Add the sky visibility for this coherence sample
 VisBuffer& SkyEquation::get(VisBuffer& result, Int model,
 			    Bool incremental) {
@@ -974,68 +839,6 @@ VisBuffer& SkyEquation::get(VisBuffer& result,
   return result;
 }
 
-Bool SkyEquation::get(VisBuffer& vb, 
-		      PtrBlock< Array<Complex> *>& griddedVis, 
-		      Cube<Complex>& modelVis, 
-		      Block< Vector<Double> >& uvscale,
-		      PtrBlock<UVWMachine *>& uvwMachines,
-		      Bool& incremental){
-
-
-
-  AlwaysAssert(ok(),AipsError);
-  
-  Int nRow=vb.nRow();
-  
-  Bool FTChanged=changedFTMachine(vb);
-
-  Cube<Complex> currVis(modelVis.shape());
-
-  // we might need to recompute the "sky" for every single row, but we
-  // avoid this if possible.
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
-  changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
-  for (Int model=0; model < sm_->numberOfModels(); ++model){
-    if(!modelIsEmpty_p(model)){
-      if(internalChanges) {
-	// Yes there are changes within this buffer: go row by row.
-	// This will automatically catch a change in the FTMachine so
-	// we don't have to check for that.
-	for (Int row=0; row<nRow; row++) {
-	  finalizeGet();
-	  // Need to implement these 'gets' especially for 
-	  // FTMosaic machines
-	  initializeGet(vb, row, model, *(griddedVis[model]), 
-			uvscale[model], uvwMachines[model], incremental);
-	  ft_->get(vb, currVis, *(griddedVis[model]), uvscale[model], 
-		   uvwMachines[model], row);
-	}
-      }
-      else if (FTChanged||firstOneChanges) {
-	// This buffer has changed wrt the previous buffer, but
-	// this buffer has no changes within it. Again we don't need to
-      // check for the FTMachine changing.
-	finalizeGet();
-	initializeGet(vb, 0, model, *(griddedVis[model]), 
-		       uvscale[model], uvwMachines[model], incremental);
-	ft_->get(vb, currVis, *(griddedVis[model]), uvscale[model], 
-		 uvwMachines[model]);
-      }
-      else {
-	ft_->get(vb, currVis, *(griddedVis[model]), uvscale[model], 
-		 uvwMachines[model]);
-      }
-      
-      modelVis+=currVis;
-
-    }
-  }
-
-  return True;
-
-}
-
 
 // Corrupt a SkyComponent
 SkyComponent& SkyEquation::applySkyJones(SkyComponent& corruptedComponent,
@@ -1054,15 +857,6 @@ SkyComponent& SkyEquation::applySkyJones(SkyComponent& corruptedComponent,
 void SkyEquation::initializePut(const VisBuffer& vb, Int model) {
   AlwaysAssert(ok(),AipsError);
   ift_->initializeToSky(sm_->cImage(model),sm_->weight(model),vb);
-  assertSkyJones(vb, -1);
-  vb_p.assign(vb, False);
-  vb_p.updateCoordInfo();
-}
-void SkyEquation::initializePut(const VisBuffer& vb, Int model, 
-				Vector<Double>& uvscale, UVWMachine* & uvwmachine) {
-  AlwaysAssert(ok(),AipsError);
-  ift_->initializeToSky(sm_->cImage(model),sm_->weight(model),vb, uvscale, 
-			uvwmachine);
   assertSkyJones(vb, -1);
   vb_p.assign(vb, False);
   vb_p.updateCoordInfo();
@@ -1114,43 +908,6 @@ void SkyEquation::put(const VisBuffer & vb, Int model, Bool dopsf, FTMachine::Ty
 }
 
 
-void SkyEquation::put(const VisBuffer & vb, Int model, Vector<Double>& scale, 
-		      UVWMachine *uvwMachine, Bool dopsf) {
-
-  AlwaysAssert(ok(),AipsError);
-
-  Bool IFTChanged=changedIFTMachine(vb);
-
-  TempImage<Complex> * imageGrid;
-  imageGrid = (TempImage<Complex> *) &(sm_->cImage(model));
-
-  // we might need to recompute the "sky" for every single row, but we
-  // avoid this if possible.
-  Int nRow=vb.nRow();
-  Bool internalChanges=False;  // Does this VB change inside itself?
-  Bool firstOneChanges=False;  // Has this VB changed from the previous one?
-  changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
-  if(internalChanges) {
-    // Yes there are changes: go row by row. 
-    for (Int row=0; row<nRow; row++) {
-      if(IFTChanged||changedSkyJones(vb,row)) {
-	// Need to apply the SkyJones from the previous row
-	// and finish off before starting with this row
-	finalizePut(vb_p, model);  
-	initializePut(vb, model);
-      }
-      ift_->put(vb, *imageGrid, scale, row, uvwMachine, dopsf);
-    }
-  }
-  else if (IFTChanged||firstOneChanges) {
-    finalizePut(vb_p, model);      
-    initializePut(vb, model);
-    ift_->put(vb, *imageGrid, scale, -1, uvwMachine, dopsf);
-  }
-  else {
-    ift_->put(vb, *imageGrid, scale, -1, uvwMachine, dopsf);
-  }
-}
 
 
 void SkyEquation::finalizePut(const VisBuffer& vb, Int model) {
@@ -1176,27 +933,6 @@ void SkyEquation::finalizePut(const VisBuffer& vb, Int model) {
 }
 
 
-void SkyEquation::finalizePut(const VisBuffer& vb, Int model, Bool& isCopy) {
-
-  // Actually do the transform. Update weights as we do so.
-  ift_->finalizeToSky(sm_->cImage(model));
-  // 1. Now get the (unnormalized) image and add the 
-  // weight to the summed weight
-  Matrix<Float> delta;
-  sm_->cImage(model).copyData(ift_->getImage(delta, False));
-  sm_->weight(model)+=delta;
-  // 2. Apply the SkyJones and add to grad chisquared
-  applySkyJonesInv(vb, -1, sm_->cImage(model), sm_->work(model),
-		   sm_->gS(model));
-
-  // 3. Apply the square of the SkyJones and add this to gradgrad chisquared
-  applySkyJonesSquare(vb, -1, sm_->weight(model), sm_->work(model),
-		      sm_->ggS(model));
-
-
-  // 4. Finally, we add the statistics
-  sm_->addStatistics(sumwt, chisq);
-}
 
 
 void SkyEquation::initializePutXFR(const VisBuffer& vb, Int model,
