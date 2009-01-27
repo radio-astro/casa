@@ -568,6 +568,10 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
+
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
     imagingweight=&imwght;
@@ -741,7 +745,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
-  imagingweight->freeStorage(wgtStorage,iswgtCopy);
+  elWeight.freeStorage(wgtStorage,iswgtCopy);
 
 }
 
@@ -797,6 +801,9 @@ void GridFT::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
 
   Cube<Complex> data;
   Cube<Int> flags;

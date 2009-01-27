@@ -653,6 +653,9 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap.resize();
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
 
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
@@ -672,7 +675,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Bool iswgtCopy;
   const Float *wgtStorage;
-  wgtStorage=imagingweight->getStorage(iswgtCopy);
+  wgtStorage=elWeight.getStorage(iswgtCopy);
 
   Bool isCopy;
   const Complex *datStorage=0;
@@ -786,7 +789,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
-  imagingweight->freeStorage(wgtStorage,iswgtCopy);
+  elWeight.freeStorage(wgtStorage,iswgtCopy);
 
 }
 
@@ -827,6 +830,9 @@ void SDGrid::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
   Cube<Complex> data;
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);

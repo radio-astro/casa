@@ -306,6 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cfStokes=other.cfStokes;
 	Area=other.Area;
 	avgPB = other.avgPB;
+	freqInterpMethod_p=other.freqInterpMethod_p;
       };
     return *this;
   };
@@ -1731,18 +1732,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void nPBWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
-				     const VisBuffer& vb,
-				     Array<Complex>& griddedVis,
-				     Vector<Double>& uvscale)
-  {
-    initializeToVis(iimage, vb);
-    griddedVis.assign(griddedData); //using the copy for storage
-    uvscale.assign(uvScale);
-  }
-  //
-  //---------------------------------------------------------------
-  //
   void nPBWProjectFT::finalizeToVis()
   {
     logIO() << "##########finalizeToVis()###########" << LogIO::DEBUGGING << LogIO::POST;
@@ -2457,6 +2446,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makingPSF=dopsf;
     if(dopsf) idopsf=1;
     
+    //Check if ms has changed then cache new spw and chan selection
+    if(vb.newMS())
+    matchAllSpwChans(vb);
+    
+    //Here we redo the match or use previous match
+    
+    //Channel matching for the actual spectral window of buffer
+    if(doConversion_p[vb.spectralWindow()]){
+      matchChannel(vb.spectralWindow(), vb);
+    }
+    else{
+      chanMap.resize();
+      chanMap=multiChanMap_p[vb.spectralWindow()];
+    }
+    
+    //No point in reading data if its not matching in frequency
+    if(max(chanMap)==-1)
+      return;
+
+
     findConvFunction(*image, vb);
     
 
@@ -2466,16 +2475,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       imagingweight=&(vb.imagingWeight());
 
-    const Cube<Complex> *data;
-    if(type==FTMachine::MODEL)
-      data=&(vb.modelVisCube());
-    else if(type==FTMachine::CORRECTED)
-      data=&(vb.correctedVisCube());
-    else
-      data=&(vb.visCube());
-    
+    if(dopsf) type=FTMachine::PSF;
+    Cube<Complex> data;
+    //Fortran gridder need the flag as ints 
+    Cube<Int> flags;
+    Matrix<Float> elWeight;
+    interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+
+
+
     Bool isCopy;
-    const casa::Complex *datStorage=data->getStorage(isCopy);
+    const casa::Complex *datStorage=data.getStorage(isCopy);
     Int NAnt = 0;
 
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
@@ -2520,9 +2530,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is the convention for dphase
     dphase*=-1.0;
     
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
@@ -2530,21 +2537,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!usezero_p) 
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);  
-    
-    //Here we redo the match or use previous match
-    
-    //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
-    
+
+
     if(isTiled) 
       {// Tiled Version
 	Double invLambdaC=vb.frequency()(0)/C::c;
@@ -2590,7 +2584,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int tmpPAI=PAIndex+1;
 		if (dopsf) doPSF=1; else doPSF=0;
 		runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-			      *imagingweight,rownr,actualOffset,
+			      elWeight,rownr,actualOffset,
 			      *dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
 			      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
 	      }
@@ -2607,13 +2601,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	Int tmpPAI=PAIndex+1;
 	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-		      *imagingweight,
+		      elWeight,
 		      row,uvOffset,
 		      griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
       }
     
-    data->freeStorage(datStorage, isCopy);
+    data.freeStorage(datStorage, isCopy);
   }
   //
   //----------------------------------------------------------------------
@@ -3022,25 +3016,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dphase*=-1.0;
     
     
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
+
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
       matchAllSpwChans(vb);
     
     //Here we redo the match or use previous match
-    //
+    
     //Channel matching for the actual spectral window of buffer
-    //
-    if(doConversion_p[vb.spectralWindow()])
+    if(doConversion_p[vb.spectralWindow()]){
       matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+    }
+    else{
+      chanMap.resize();
+      chanMap=multiChanMap_p[vb.spectralWindow()];
+    }
+    //No point in reading data if its not matching in frequency
+    if(max(chanMap)==-1)
+      return;
+
+    Cube<Complex> data;
+    Cube<Int> flags;
+    getInterpolateArrays(vb, data, flags);
+    
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
@@ -3086,12 +3084,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 		
 		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
+		IPosition s(data.shape());
 		
 		Int Conj=0,doGrad=0,ScanNo=0;
 		Double area=1.0;
 		
-		runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,rownr,
+		runFortranGet(uvw,dphase,data,s,Conj,flags,rowFlags,rownr,
 			      actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
 			      l_offsets,m_offsets,area,doGrad,PAIndex+1);
 	      }
@@ -3100,11 +3098,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
 	
-	IPosition s(vb.modelVisCube().shape());
+	IPosition s(data.shape());
 	Int Conj=0,doGrad=0,ScanNo=0;
 	Double area=1.0;
 	
-	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+	runFortranGet(uvw,dphase,data,s,Conj,flags,rowFlags,row,
 		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		      l_offsets,m_offsets,area,doGrad,PAIndex+1);
 	/*
@@ -3128,95 +3126,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	junk++;
 	*/
       }
-  }
-  //
-  //---------------------------------------------------------------
-  //
-  void nPBWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
-			 Array<Complex>& griddedVis, Vector<Double>& scale,
-			 Int row)
-  {
-    Int nX=griddedVis.shape()(0);
-    Int nY=griddedVis.shape()(1);
-    Vector<Double> offset(2);
-    offset(0)=Double(nX)/2.0;
-    offset(1)=Double(nY)/2.0;
-    // If row is -1 then we pass through all rows
-    Int startRow, endRow, nRow;
-    if (row==-1) 
-      {
-	nRow=vb.nRow();
-	startRow=0;
-	endRow=nRow-1;
-	modelVis.set(Complex(0.0,0.0));
-      } 
-    else 
-      {
-	nRow=1;
-	startRow=row;
-	endRow=row;
-	modelVis.xyPlane(row)=Complex(0.0,0.0);
-      }
-    
-    Int NAnt=0;
-    
-    if (doPointing) 
-      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,True);
-    
-    
-    //  
-    // Get the uvws in a form that Fortran can use
-    //
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //
-    //NEGATING to correct for an image inversion problem
-    //
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
-    
-    rotateUVW(uvw, dphase, vb);
-    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-    
-    // This is the convention for dphase
-    dphase*=-1.0;
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
-    //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
-    
-    //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    
-    IPosition s(modelVis.shape());
-    Int Conj=0,doGrad=0,ScanNo=0;
-    Double area=1.0;
-    
-    runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
-		  offset,&griddedVis,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-		  l_offsets,m_offsets,area,doGrad,PAIndex+1);
+    interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
+
   }
   //
   //---------------------------------------------------------------

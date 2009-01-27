@@ -399,8 +399,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       Float step=imageFreq_p[1]-imageFreq_p[0];
       Float origstep=visFreq[1]-visFreq[0];
       while (!iter.pastEnd()){
-	Int closest=Int((imageFreq_p[channum]+step)/origstep);
-	if(closest <0) closest=0;
+	Int closest=Int((imageFreq_p[channum]+step-visFreq[0])/origstep);
+	if(closest <0) closest=0;	
 	if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
 	for (Int k=0; k < closest; ++k)
@@ -420,7 +420,6 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     flipweight=transpose(weight);    
     weight.resize();
     weight.reference(flipweight);
-    
     
     flags.resize(flag.shape());
     flags=0;

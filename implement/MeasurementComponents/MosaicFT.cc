@@ -724,14 +724,20 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
+
+
   findConvFunction(*image, vb);
 
   const Matrix<Float> *imagingweight;
-  if(imwght.nelements()>0)
+  if(imwght.nelements()>0){
     imagingweight=&imwght;
-  else
+  }
+  else{
     imagingweight=&(vb.imagingWeight());
-  
+  }
   
 
 
@@ -746,7 +752,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Bool iswgtCopy;
   const Float *wgtStorage;
-  wgtStorage=imagingweight->getStorage(iswgtCopy);
+  wgtStorage=elWeight.getStorage(iswgtCopy);
 
 
   Int nConvFunc=convFunc.shape()(2);
@@ -936,7 +942,9 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
-  imagingweight->freeStorage(wgtStorage,iswgtCopy);
+  elWeight.freeStorage(wgtStorage,iswgtCopy);
+
+
 
 }
 
@@ -993,6 +1001,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
     chanMap.resize();
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
 
   Cube<Complex> data;
   Cube<Int> flags;
@@ -1074,8 +1085,6 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   else {
     Bool del;
-     Bool isCopy;
-     Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
      Bool uvwcopy; 
      const Double *uvwstor=uvw.getStorage(uvwcopy);
      Bool gridcopy;
