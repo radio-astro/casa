@@ -230,6 +230,8 @@ void FTMachine::initMaps(const VisBuffer& vb) {
 
 
   nvischan  = vb.frequency().nelements();
+  interpVisFreq_p.resize();
+  interpVisFreq_p=vb.frequency();
   if(selectedSpw_p.nelements() < 1){
     Vector<Int> myspw(1);
     myspw[0]=vb.spectralWindow();
@@ -353,6 +355,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flags=0;
       flags(vb.flagCube())=True;
       weight.reference(wt);
+      interpVisFreq_p.resize();
+      interpVisFreq_p=vb.frequency();
       return False;
     }
 
@@ -424,7 +428,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     flags.resize(flag.shape());
     flags=0;
     flags(flag)=True;
-
+    interpVisFreq_p.resize(imageFreq_p.nelements());
+    convertArray(interpVisFreq_p, imageFreq_p);
 
     chanMap.resize(imageFreq_p.nelements());
     indgen(chanMap);
@@ -443,6 +448,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flags.resize(vb.flagCube().shape());
       flags=0;
       flags(vb.flagCube())=True;
+      interpVisFreq_p.resize();
+      interpVisFreq_p=vb.frequency();
       return;
     }
 
@@ -450,6 +457,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     flags.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
     data.set(Complex(0.0,0.0));
     flags.set(0);
+    interpVisFreq_p.resize(imageFreq_p.nelements());
+    convertArray(interpVisFreq_p, imageFreq_p);
     chanMap.resize(imageFreq_p.nelements());
     indgen(chanMap);
 

@@ -322,6 +322,7 @@ protected:
   Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
   Vector<Float> imageFreq_p;
+  Vector<Double> interpVisFreq_p;
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
