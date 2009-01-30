@@ -199,7 +199,7 @@ MIRLIB := $(MIROBJ)
 	bison -p $(basename $(notdir $<)) -o $@ $<
 
 t% : t%.cc
-	$(C++) -I$(DESTDIR)/include/casacore $(INC) -o $@ $< -L$(DESTDIR)/lib -lcasa
+	$(C++) -I$(DESTDIR)/include/casacore $(INC) -o $@ $< -L$(DESTDIR)/lib -lcasa_casa
 
 ###
 ###  libcasacore
@@ -239,10 +239,10 @@ components: coordinates tables $(DESTDIR)/lib/libcasa_components.$(SO)
 
 $(DESTDIR)/lib/libcasa_components.$(SO): $(COMPONENTSLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcoordinates -lmeasures -lscimath -lfits -ltables -lcasa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcoordinates -lmeasures -lscimath -lfits -ltables -lcasa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -253,10 +253,10 @@ coordinates: measures fits $(DESTDIR)/lib/libcasa_coordinates.$(SO)
 
 $(DESTDIR)/lib/libcasa_coordinates.$(SO): $(COORDINATESLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -lscimath -lfits -ltables -lcasa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -lscimath -lfits -ltables -lcasa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -267,10 +267,10 @@ lattices: scimath $(DESTDIR)/lib/libcasa_lattices.$(SO)
 
 $(DESTDIR)/lib/libcasa_lattices.$(SO): $(LATTICESLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -ltables -lscimath -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -ltables -lscimath -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -281,10 +281,10 @@ images: components lattices fits mirlib $(DESTDIR)/lib/libcasa_images.$(SO)
 
 $(DESTDIR)/lib/libcasa_images.$(SO): $(IMAGESLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcomponents -lcoordinates -lmeasures -lscimath -lfits -llattices -ltables -lcasa -lcfitsio -lmir -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcomponents -lcoordinates -lmeasures -lscimath -lfits -llattices -ltables -lcasa -lcfitsio -lmir -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -295,33 +295,33 @@ tables: casa $(DESTDIR)/lib/libcasa_tables.$(SO)
 
 $(DESTDIR)/lib/libcasa_tables.$(SO): $(TABLESLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_casa
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_casa
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 ###
 ###  scimath
 ###
-scimath: casa $(DESTDIR)/lib/libcasa_scimath.$(SO) $(DESTDIR)/lib/libcasa_scimath_f.$(SO)
+scimath: casa $(DESTDIR)/lib/libcasa_scimath.$(SO)
 
-$(DESTDIR)/lib/libcasa_scimath.$(SO): $(SCIMATHLIB)
+$(DESTDIR)/lib/libcasa_scimath.$(SO): $(SCIMATHLIB) $(DESTDIR)/lib/libcasa_scimath_f.$(SO)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(DESTDIR)/lib/libcasa_scimath_f.$(SO): $(SCIMATHFLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -329,23 +329,23 @@ endif
 ###
 ###  measures
 ###
-measures: scimath tables $(DESTDIR)/lib/libcasa_measures.$(SO) $(DESTDIR)/lib/libcasa_measures_f.$(SO)
+measures: scimath tables $(DESTDIR)/lib/libcasa_measures.$(SO)
 
-$(DESTDIR)/lib/libcasa_measures.$(SO):  $(MEASURESLIB)
+$(DESTDIR)/lib/libcasa_measures.$(SO):  $(MEASURESLIB) $(DESTDIR)/lib/libcasa_measures_f.$(SO)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(DESTDIR)/lib/libcasa_measures_f.$(SO):  $(MEASURESFLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -356,10 +356,10 @@ ms: measures tables $(DESTDIR)/lib/libcasa_ms.$(SO)
 
 $(DESTDIR)/lib/libcasa_ms.$(SO): $(MSLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -ltables -lscimath -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -ltables -lscimath -lcasa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -371,10 +371,10 @@ fits: scimath tables $(DESTDIR)/lib/libcasa_fits.$(SO)
 
 $(DESTDIR)/lib/libcasa_fits.$(SO): $(FITSLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -ltables -lcasa -lcfitsio $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lmeasures -ltables -lcasa -lcfitsio $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -385,10 +385,10 @@ msfits: ms fits $(DESTDIR)/lib/libcasa_msfits.$(SO)
 
 $(DESTDIR)/lib/libcasa_msfits.$(SO): $(MSFITSLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lms -lmeasures -ltables -lfits -lcasa -lcfitsio -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_fits -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lms -lmeasures -ltables -lfits -lcasa -lcfitsio -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_fits -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
