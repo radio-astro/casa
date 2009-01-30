@@ -138,14 +138,18 @@ TABLESLIB := tables/tables/Tables/RecordGram.lcc tables/tables/Tables/RecordGram
 ###          -> (blas)
 SCIMATHCC := $(shell find scimath -type f -name '*.cc' | egrep -v '/test/|/apps/')
 SCIMATHF := $(shell find scimath -type f -name '*.f' | egrep -v '/test/|/apps/')
-SCIMATHOBJ := $(SCIMATHCC:%.cc=%.o) $(SCIMATHF:%.f=%.o)
+SCIMATHOBJ := $(SCIMATHCC:%.cc=%.o)
+SCIMATHFOBJ := $(SCIMATHF:%.f=%.o)
 SCIMATHLIB := $(SCIMATHOBJ)
+SCIMATHFLIB := $(SCIMATHFOBJ)
 ###  measures -> scimath -> casa
 ###           -> tables  -> casa
 MEASURESCC := $(shell find measures -type f -name '*.cc' | egrep -v '/test/|/apps/')
 MEASURESF := $(shell find measures -type f -name '*.f' | egrep -v '/test/|/apps/')
-MEASURESOBJ := $(MEASURESCC:%.cc=%.o) $(MEASURESF:%.f=%.o)
+MEASURESOBJ := $(MEASURESCC:%.cc=%.o)
+MEASURESFOBJ := $(MEASURESF:%.f=%.o)
 MEASURESLIB := $(MEASURESOBJ)
+MEASURESFLIB := $(MEASURESFOBJ)
 ###  fits -> measures  -> scimath -> casa
 ###       -> tables    -> casa
 ###       -> (cfitsio)
@@ -203,8 +207,9 @@ t% : t%.cc
 libcasacore: $(DESTDIR)/lib/libcasacore.$(SO)
 
 $(DESTDIR)/lib/libcasacore.$(SO): $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) \
-					$(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) $(MEASURESLIB) \
-					$(FITSLIB) $(MSLIB) $(MSFITSLIB) $(MIRLIB)
+					$(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) $(SCIMATHFLIB) \
+					$(MEASURESLIB) $(MEASURESFLIB) $(FITSLIB) $(MSLIB) \
+					$(MSFITSLIB) $(MIRLIB)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -300,7 +305,7 @@ endif
 ###
 ###  scimath
 ###
-scimath: casa $(DESTDIR)/lib/libcasa_scimath.$(SO)
+scimath: casa $(DESTDIR)/lib/libcasa_scimath.$(SO) $(DESTDIR)/lib/libcasa_scimath_f.$(SO)
 
 $(DESTDIR)/lib/libcasa_scimath.$(SO): $(SCIMATHLIB)
 ifeq "$(OS)" "darwin"
@@ -311,12 +316,31 @@ ifeq "$(OS)" "linux"
 endif
 	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
+$(DESTDIR)/lib/libcasa_scimath_f.$(SO): $(SCIMATHFLIB)
+ifeq "$(OS)" "darwin"
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+endif
+ifeq "$(OS)" "linux"
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lcasa -llapack -lblas $(FC_LIB)
+endif
+	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
+
+
 ###
 ###  measures
 ###
-measures: scimath tables $(DESTDIR)/lib/libcasa_measures.$(SO)
+measures: scimath tables $(DESTDIR)/lib/libcasa_measures.$(SO) $(DESTDIR)/lib/libcasa_measures_f.$(SO)
 
 $(DESTDIR)/lib/libcasa_measures.$(SO):  $(MEASURESLIB)
+ifeq "$(OS)" "darwin"
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+endif
+ifeq "$(OS)" "linux"
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
+endif
+	cd $(DESTDIR)/lib && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
+
+$(DESTDIR)/lib/libcasa_measures_f.$(SO):  $(MEASURESFLIB)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(DESTDIR)/lib -lscimath -ltables -lcasa $(FC_LIB)
 endif
