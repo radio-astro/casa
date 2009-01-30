@@ -1237,11 +1237,40 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
-  fluxImage.copyData(pbConvFunc_p->getFluxScaleImage());
+  IPosition inShape=(pbConvFunc_p->getFluxScaleImage()).shape();
+  IPosition outShape=fluxImage.shape();
+  if(outShape==inShape){
+    fluxImage.copyData(pbConvFunc_p->getFluxScaleImage());
+  }
+  else if((outShape(0)==inShape(0)) && (outShape(1)==inShape(1)) 
+	  && (outShape(2)==inShape(2))){
+    //case where CubeSkyEquation is chunking...copy the first pol-cube
+    IPosition cursorShape(4, inShape(0), inShape(1), inShape(2), 1);
+    IPosition axisPath(4, 0, 1, 2, 3);
+    LatticeStepper lsout(outShape, cursorShape, axisPath);
+    LatticeStepper lsin(inShape, cursorShape, axisPath);
+    LatticeIterator<Float> liout(fluxImage, lsout);
+    RO_LatticeIterator<Float> liin(pbConvFunc_p->getFluxScaleImage(), lsin);
+    liin.reset();
+    for(liout.reset();!liout.atEnd();liout++) {
+      if(inShape(2)==1)
+	liout.woMatrixCursor()=liin.matrixCursor();
+      else
+	liout.woCubeCursor()=liin.cubeCursor();
+    }
+
+
+  }
+  else{
+    //Should not reach here but the we're getting old
+    cout << "Bad case of shape mismatch in flux image shape" << endl;
+  }
 
 }
 
 CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
+  if(!doneWeightImage_p)
+    finalizeToSky();
   return skyCoverage_p;
 }
 Bool MosaicFT::toRecord(String& error, RecordInterface& outRec, 

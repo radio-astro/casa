@@ -404,12 +404,15 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       Float origstep=visFreq[1]-visFreq[0];
       while (!iter.pastEnd()){
 	Int closest=Int((imageFreq_p[channum]+step-visFreq[0])/origstep);
-	if(closest <0) closest=0;	
-	if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
+	//if(closest <0) closest=0;	
+	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
-	for (Int k=0; k < closest; ++k)
-	  origiter.next();
-	iter.array()=iter.array()+origiter.array();
+	if((closest >=0) && (closest <  vb.nChannel())){
+	  for (Int k=0; k < closest; ++k){
+	    origiter.next();
+	  }
+	  iter.array()=iter.array()+origiter.array();
+	}
 	iter.next();
 	++channum;
       }
@@ -457,6 +460,22 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     flags.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
     data.set(Complex(0.0,0.0));
     flags.set(0);
+    //no need to degrid channels that does map over this vb
+    Int maxchan=max(chanMap);
+    for (uInt k =0 ; k < chanMap.nelements() ; ++k){
+      if(chanMap(k)==-1)
+	chanMap(k)=maxchan;
+    }
+    Int minchan=min(chanMap);
+    if(minchan==maxchan)
+      minchan=-1;
+
+    for (uInt k =0 ; k < minchan ; ++k){
+	flags.xzPlane(k).set(1);
+    }
+    for(uInt k=maxchan+1; k< chanMap.nelements(); ++k){
+      flags.xzPlane(k).set(1);
+    }
     interpVisFreq_p.resize(imageFreq_p.nelements());
     convertArray(interpVisFreq_p, imageFreq_p);
     chanMap.resize(imageFreq_p.nelements());
