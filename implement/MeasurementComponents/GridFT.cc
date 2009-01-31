@@ -202,6 +202,7 @@ void GridFT::init() {
 
   ok();
 
+  /* hardwiring isTiled is False
   // Padding is possible only for non-tiled processing
   if((padding_p*padding_p*image->shape().product())>cachesize) {
     isTiled=True;
@@ -211,6 +212,7 @@ void GridFT::init() {
     nchan = image->shape()(3);
   }
   else {
+  */
     // We are padding.
     isTiled=False;
     if(!noPadding_p){
@@ -224,7 +226,7 @@ void GridFT::init() {
     }
     npol  = image->shape()(2);
     nchan = image->shape()(3);
-  }
+    // }
 
   sumWeight.resize(npol, nchan);
 
@@ -294,29 +296,9 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
-  if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-  else {
-    // We are padding.
-    isTiled=False;
-    CompositeNumber cn(uInt(image->shape()(0)*2));
-    if(!noPadding_p){
-      nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-      ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-    }
-    else{
-      nx    = image->shape()(0);
-      ny    = image->shape()(1);
-    }
-      
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
+  
+
+  
 
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
@@ -406,32 +388,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   initMaps(vb);
 
 
-  // Need to reset nx, ny for padding
-  // Padding is possible only for non-tiled processing
-  if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-  else {
-    // We are padding.
-    isTiled=False;
-    CompositeNumber cn(uInt(image->shape()(0)*2));    
-    if (!noPadding_p){
-      nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-      ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-    }
-    else{
-
-      nx    = image->shape()(0);
-      ny    = image->shape()(1);
-    }
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-
+  
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
   weight=0.0;
@@ -446,8 +403,9 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
+    griddedData2.resize(gridShape);
     griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    griddedData2=DComplex(0.0);
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
@@ -491,12 +449,12 @@ Array<Complex>* GridFT::getDataPointer(const IPosition& centerLoc2D,
 
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
-#define ggridft ggridft_
-#define dgridft dgridft_
+#define ggrid ggrid_
+#define dgrid dgrid_
 #endif
 
 extern "C" { 
-   void ggridft(Double*,
+   void ggrid(Double*,
                 Double*,
 		const Complex*,
                 Int*,
@@ -509,7 +467,7 @@ extern "C" {
 		Int*,
 		Double*,
 		Double*,
-		Complex*,
+		DComplex*,
                 Int*,
 		Int*,
 		Int *,
@@ -522,7 +480,7 @@ extern "C" {
 		Int*,
 		Int*,
 		Double*);
-   void dgridft(Double*,
+   void dgrid(Double*,
                 Double*,
 		Complex*,
                 Int*,
@@ -648,6 +606,10 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
 
   if(isTiled) {
+    cout << "Should not reach here " << endl;
+    //should remove the istiled mode all together
+    /*
+      
     Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -708,13 +670,14 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		sumWeight.getStorage(del));
       }
     }
+    */
   }
   else {
     Bool del;
     IPosition s(flags.shape());
     Bool gridcopy;
-    Complex *gridstor=griddedData.getStorage(gridcopy);
-    ggridft(uvw.getStorage(del),
+    DComplex *gridstor=griddedData2.getStorage(gridcopy);
+    ggrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s(0),
@@ -732,7 +695,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    &ny,
 	    &npol,
 	    &nchan,
-	    vb.frequency().getStorage(del),
+	    interpVisFreq_p.getStorage(del),
 	    &C::c,
 	    &(gridder->cSupport()(0)),
 	    &(gridder->cSampling()),
@@ -740,7 +703,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del),
 	    sumWeight.getStorage(del));
-    griddedData.putStorage(gridstor, gridcopy);
+    griddedData2.putStorage(gridstor, gridcopy);
   }
 
   if(!dopsf)
@@ -824,6 +787,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
   
   if(isTiled) {
+    /*
     Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -879,12 +843,13 @@ void GridFT::get(VisBuffer& vb, Int row)
 		polMap.getStorage(del));
       }
     }
-  }
+      */
+    }
   else {
     Bool del;
     
     IPosition s(data.shape());
-    dgridft(uvw.getStorage(del),
+    dgrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s(0),
@@ -900,7 +865,7 @@ void GridFT::get(VisBuffer& vb, Int row)
 	    &ny,
 	    &npol,
 	    &nchan,
-	    vb.frequency().getStorage(del),
+	    interpVisFreq_p.getStorage(del),
 	    &C::c,
 	    &(gridder->cSupport()(0)),
 	    &(gridder->cSampling()),
@@ -941,8 +906,14 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     
+
+  
+    convertArray(griddedData, griddedData2);
+    //Don't need the double-prec grid anymore...
+    griddedData2.resize();
     // x and y transforms
     LatticeFFT::cfft2d(*lattice,False);
+    
     
 
     {
@@ -1128,7 +1099,7 @@ Bool GridFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc) = image->getSlice(start, image->shape());
+      griddedData(blc, trc)=image->getSlice(start, image->shape());
       
       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);

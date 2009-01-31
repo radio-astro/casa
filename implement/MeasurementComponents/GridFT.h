@@ -257,6 +257,7 @@ protected:
 
   // Array for non-tiled gridding
   Array<Complex> griddedData;
+  Array<DComplex> griddedData2;
 
   Int priorCacheSize;
 

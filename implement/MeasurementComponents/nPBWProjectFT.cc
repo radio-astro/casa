@@ -2046,7 +2046,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
     actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
     dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
+    vb_freq_p       = interpVisFreq_p.getStorage(deleteThem(VBFREQ));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
     f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
@@ -2124,7 +2124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
     dataPtr->freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
+    interpVisFreq_p.freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     convSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
     convFunc.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
@@ -2338,7 +2338,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
     actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
     dataPtr_p       = dataPtr.getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = (Double *)(vb.frequency().getStorage(deleteThem(VBFREQ)));
+    vb_freq_p       = (Double *)(interpVisFreq_p.getStorage(deleteThem(VBFREQ)));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
     f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
@@ -2424,7 +2424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
     dataPtr.freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
+    interpVisFreq_p.freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     convSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
     convFunc.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
