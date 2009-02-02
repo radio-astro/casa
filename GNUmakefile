@@ -58,6 +58,8 @@ ifeq "$(DESTDIR)" ""
 DESTDIR := $(CASAARCH)
 ifeq "$(DESTDIR)" ""
 DESTDIR := $(shell pwd)/build
+else
+INC += -I$(CASAARCH)/include
 endif
 endif
 
