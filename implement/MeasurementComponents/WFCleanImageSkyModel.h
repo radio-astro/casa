@@ -34,7 +34,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
-class WFSkyEquation;
 template <class T> class SubImage;
 
 // <summary> 
