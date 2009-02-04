@@ -166,7 +166,7 @@ Deconvolver &Deconvolver::operator=(const Deconvolver &other)
   if (convolver_p && this != &other) {
     *convolver_p = *(other.convolver_p);
   }
-  if (cleaner_p && this != &other) {
+  if ((!cleaner_p.null()) && this != &other) {
     *cleaner_p = *(other.cleaner_p);
   }
   if (pgplotter_p && this != &other) {
@@ -185,10 +185,11 @@ Deconvolver::~Deconvolver()
     delete convolver_p;
   }
   convolver_p = 0;
-  if (cleaner_p) {
+  /*if (cleaner_p) {
     delete cleaner_p;
   }
   cleaner_p = 0;
+  */
   if (dirty_p) {
     delete dirty_p;
   }
@@ -287,7 +288,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf)
 	latConvEqn_p = 0;
 	
 	os << "Making Lattice cleaner" << LogIO::POST;
-	if (cleaner_p) delete cleaner_p;
+	//if (cleaner_p) delete cleaner_p;
 	if(nchan_p<=1){
 	  cleaner_p = new LatticeCleaner<Float>(*psf_p, *dirty_p);
 	  convolver_p = new LatticeConvolver<Float>(*psf_p);
@@ -319,7 +320,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf)
 	  }
 	  
 	}
-	AlwaysAssert(cleaner_p, AipsError);
+	AlwaysAssert(!cleaner_p.null(), AipsError);
 	
 	return True;
 
@@ -399,7 +400,7 @@ Bool Deconvolver::close()
   if (convolver_p) delete convolver_p; convolver_p = 0;
   if (residEqn_p) delete  residEqn_p;  residEqn_p = 0;
   if (latConvEqn_p) delete latConvEqn_p; latConvEqn_p = 0;
-  if (cleaner_p) delete cleaner_p; cleaner_p = 0;
+  //if (cleaner_p) delete cleaner_p; cleaner_p = 0;
 
   return True;
 }
@@ -1090,6 +1091,43 @@ Bool Deconvolver::clarkclean(const Int niter,
 };
 
 
+
+Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
+			const Float gain, const Quantity& threshold, 
+			const Bool displayProgress){
+
+  LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
+
+  if((algorithm=="msclean")||(algorithm=="fullmsclean" || algorithm=="multiscale" || algorithm=="fullmultiscale")) {
+    os << "Cleaning image using multi-scale algorithm" << LogIO::POST;
+    if(!scalesValid_p) {
+      os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
+      return False;
+    }
+    cleaner_p->setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
+  }
+  else if (algorithm=="hogbom") {
+    if(!scalesValid_p) {
+      Vector<Float> dummy;
+      setscales("nscales", 1, dummy);
+    }
+    cleaner_p->setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
+  } else {
+    os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
+    return False;
+  }
+
+  
+
+
+  if(algorithm=="fullmsclean" || algorithm=="fullmultiscale") {
+    os << "Cleaning full image using multi-scale algorithm" << LogIO::POST;
+    cleaner_p->ignoreCenterBox(True);
+  }
+
+  return True;
+
+}
 // Clean algorithm
 Bool Deconvolver::clean(const String& algorithm, const Int niter,
 			const Float gain, const Quantity& threshold, 
@@ -1108,6 +1146,8 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
       return False;
     }
+    Int psfnchan=psf_p->shape()(chanAxis_p);
+    Int masknchan=0;
   
     String imagename(model);
     // Make first image with the required shape and coordinates only if
@@ -1128,73 +1168,63 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
 
     PagedImage<Float> modelImage(imagename);
 
-    AlwaysAssert(cleaner_p, AipsError);
+    AlwaysAssert(!cleaner_p.null(), AipsError);
 
-    if((algorithm=="msclean")||(algorithm=="fullmsclean" || algorithm=="multiscale" || algorithm=="fullmultiscale")) {
-      os << "Cleaning image using multi-scale algorithm" << LogIO::POST;
-      if(!scalesValid_p) {
-	os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
-	return False;
-      }
-      cleaner_p->setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
-    }
-    else if (algorithm=="hogbom") {
-      if(!scalesValid_p) {
-	Vector<Float> dummy;
-        setscales("nscales", 1, dummy);
-      }
-      cleaner_p->setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
-    } else {
-      os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
+    if(!setupLatCleaner(algorithm, niter, gain, threshold, displayProgress))
       return False;
-    }
-
-    PagedImage<Float> *mask_p = 0;
+    
+    PagedImage<Float> *maskim = 0;
     // Deal with mask
     if (mask != "") {
       if( Table::isReadable(mask)) {
-	mask_p = new PagedImage<Float>(mask);
-	AlwaysAssert(mask_p, AipsError);
-	cleaner_p->setMask(*mask_p);
+	maskim = new PagedImage<Float>(mask);
+	AlwaysAssert(maskim, AipsError);
+	masknchan=maskim->shape()(chanAxis_p);
+	if(masknchan==1)
+	  cleaner_p->setMask(*maskim);
       } else {
 	os << LogIO::SEVERE << "Mask "<< mask<<" is not readable" << LogIO::POST;
       }
     }
     Bool result=False;
 
-    if(algorithm=="fullmsclean" || algorithm=="fullmultiscale") {
-      os << "Cleaning full image using multi-scale algorithm" << LogIO::POST;
-      cleaner_p->ignoreCenterBox(True);
-    }
+    
 
     if(nchan_p >= 1){
     
       for( Int k=0; k< nchan_p; ++k){
 	os << "Cleaning channel " << k+1 << LogIO::POST;
 	SubImage<Float> subModel;
+	IPosition blc;
+	IPosition trc;
 	if(npol_p > 0 ){
-	  IPosition blc(4,0,0,0,0);
+	  blc=IPosition (4,0,0,0,0);
 	  blc(chanAxis_p)=k;
 	  blc(polAxis_p)=0;
-	  IPosition trc(4, nx_p-1, ny_p-1, 0, 0);
+	  trc=IPosition(4, nx_p-1, ny_p-1, 0, 0);
 	  trc(chanAxis_p)=k;
 	  trc(polAxis_p)=npol_p-1;
-	  Slicer sl(blc, trc, Slicer::endIsLast);
-	  SubImage<Float> dirtySub(*dirty_p, sl, True);
-	  subModel= SubImage<Float> (modelImage, sl, True);
-	  SubImage<Float> psfSub(*psf_p, sl, True);
-	  cleaner_p->update(dirtySub);
 	}
 	else{
-	  IPosition blc(3, 0, 0, 0);
-	  IPosition trc(3, nx_p-1, ny_p-1, 0);
-	  Slicer sl(blc, trc, Slicer::endIsLast);
-	  SubImage<Float> dirtySub(*dirty_p, sl, True);
-	  subModel= SubImage<Float> (modelImage, sl, True);
-	  SubImage<Float> psfSub(*psf_p, sl, True);
-	  cleaner_p = new LatticeCleaner<Float>(psfSub, dirtySub);
-	  cleaner_p->update(dirtySub);
+	  blc=IPosition(3, 0, 0, k);
+	  trc=IPosition(3, nx_p-1, ny_p-1, k);
 	}
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	SubImage<Float> dirtySub(*dirty_p, sl, True);
+	subModel= SubImage<Float> (modelImage, sl, True);
+	if((psfnchan>1) && (psfnchan==nchan_p)){
+	  SubImage<Float> psfSub(*psf_p, sl, False);
+	  cleaner_p=new LatticeCleaner<Float>(psfSub, dirtySub);
+	  setupLatCleaner(algorithm, niter, gain, threshold, displayProgress);
+	}
+	if(maskim !=0 && (masknchan >1) && (masknchan==nchan_p)){
+	  SubImage<Float> maskSub(*maskim, sl, False);
+	  cleaner_p->setMask(maskSub);
+	  
+	}
+	cleaner_p->update(dirtySub);
+	
+      
        LatticeCleanProgress * cpp = 0;
        if (displayProgress) {
 	 getPGPlotter(False);
@@ -1217,7 +1247,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     }
     dirty_p->table().unlock();
     psf_p->table().unlock();
-    if (mask_p) delete mask_p;    
+    if (maskim) delete maskim;    
 
     return result;
   } catch (AipsError x) {
@@ -1842,7 +1872,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
 {
   LogIO os(LogOrigin("Deconvolver", "setscales()", WHERE));
 
-  AlwaysAssert(cleaner_p, AipsError);
+  AlwaysAssert(!cleaner_p.null(), AipsError);
 
   Vector<Double> cells = psf_p->coordinates().increment();
   os << "Cell size = " << abs(cells(0)/C::arcsec) << LogIO::POST;

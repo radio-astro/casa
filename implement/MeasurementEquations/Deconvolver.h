@@ -286,13 +286,19 @@ private:
   void checkMask(ImageInterface<Float>& maskimage, Int& xbeg, Int& xend, 
 		 Int& ybeg, Int& yend);
 
+
+  // setup lattice cleaner
+  Bool setupLatCleaner(const String& algorithm,
+		       const Int niter, const Float gain, const Quantity& threshold, 
+		       const Bool displayProgress);
+
   PagedImage<Float>* dirty_p;
   PagedImage<Float>* psf_p;
 
   LatticeConvolver<Float>* convolver_p;
   ResidualEquation<Lattice<Float> >* residEqn_p;
   LatConvEquation* latConvEqn_p;
-  LatticeCleaner<Float>* cleaner_p;
+  CountedPtr <LatticeCleaner<Float> > cleaner_p;
 
   Bool scalesValid_p;
 
