@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: RefTable.cc 20519 2009-02-05 13:39:01Z gervandiepen $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>
@@ -478,14 +478,31 @@ Bool RefTable::isWritable() const
     return baseTabPtr_p->isWritable();
 }
 
+void RefTable::copyRefTable (const String& newName, int tableOption)
+{
+    prepareCopyRename (newName, tableOption);
+    // Save state, write, and restore state.
+    Bool changed = changed_p;
+    Int option   = option_p;
+    String name  = name_p;
+    changed_p = True;
+    option_p  = tableOption;
+    name_p    = newName;
+    writeRefTable (False);
+    changed_p = changed;
+    option_p  = option;
+    name_p    = name;
+    madeDir_p = False;
+}
+
 void RefTable::copy (const String& newName, int tableOption) const
 {
+    // If not persistent, make the copy by writing the table.
     if (!madeDir_p) {
-        throw TableError
-	  ("RefTable::copy: an unsaved table cannot be shallowly copied; "
-	   "make a deep copy or save the table first");
+        const_cast<RefTable*>(this)->copyRefTable (newName, tableOption);
+    } else {
+        BaseTable::copy (newName, tableOption);
     }
-    BaseTable::copy (newName, tableOption);
 }
 
 void RefTable::deepCopy (const String& newName,

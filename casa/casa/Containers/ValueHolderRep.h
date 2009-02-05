@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolderRep.h 20450 2008-11-28 12:52:51Z gervandiepen $
+//# $Id: ValueHolderRep.h 20517 2009-02-05 11:45:34Z gervandiepen $
 
 
 #ifndef CASA_VALUEHOLDERREP_H
@@ -33,6 +33,7 @@
 //# Includes
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>
+#include <iosfwd>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -142,10 +143,7 @@ public:
   static ValueHolderRep* fromRecord (const Record& rec, const RecordFieldId&);
 
   //# Write the ValueHolderRep to an output stream.
-  //# friend AipsIO& operator<< (AipsIO& os, const ValueHolderRep& vh);
-
-  //# Read the ValueHolderRep from an input stream.
-  //# friend AipsIO& operator>> (AipsIO& os, ValueHolderRep& vh);
+  std::ostream& write (std::ostream& os) const;
 
 private:
   // Forbid copy ctor and assignment.
