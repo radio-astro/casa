@@ -563,18 +563,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int ctrl = -2;
 	int status = wcspih(pChar2, nkeys, relax, ctrl, &nrej, &nwcs, &wcsPtr);
 	if (status!=0) {
-//      os << LogIO::WARN << "wcs FITS parse error with error " << wcspih_errmsg[status] << LogIO::POST;
 	    os << LogIO::SEVERE << "wcs FITS parse error with error code " << status << LogIO::POST;
 	    return False;
 	}
-	if (which >= uInt(nwcs)) {
-	    os << LogIO::SEVERE << "Specified Coordinate Representation is out of range - number available is " << nwcs << LogIO::POST;
+	if (uInt(nwcs) == 0) {
+	    os << LogIO::WARN << "No WCS compliant coordinate representation found. Will try to continue ..." << LogIO::POST;
+	    cardsToRecord (os, recHeader, pChar2);
 	    return False;
+	}
+	else if (which >= uInt(nwcs)) {
+	    os << LogIO::SEVERE << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
 	}
 
 // Put the rest of the header into a Record for subsequent use
-
 	cardsToRecord (os, recHeader, pChar2);
+
 
 // Add FITS units to system
 
