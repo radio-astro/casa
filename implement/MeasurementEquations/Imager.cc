@@ -2122,6 +2122,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       //check if we can find channel selection in the spw string
       Matrix<Int> chanselmat=thisSelection.getChanList();
       if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+
 	dataMode_p="channel";
 	dataStep_p.resize(dataspectralwindowids_p.nelements());
 	dataStart_p.resize(dataspectralwindowids_p.nelements());
@@ -2131,7 +2132,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  if(dataStep_p[k] < 1)
 	    dataStep_p[k]=1;
 	  dataStart_p[k]=chanselmat.row(k)(1);
-	  dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k]+1;
+	  dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k])/Double(dataStep_p[k])))+1;
+
 	  if(dataNchan_p[k]<1)
 	    dataNchan_p[k]=1;	  
 	}
@@ -5281,7 +5283,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
-
+		
 	      //Setting the bit-mask for mosaic image
 	      LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
 					  False, True));

@@ -246,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if(dataStep_p[k] < 1)
 	      dataStep_p[k]=1;
 	    dataStart_p[k]=chanselmat.row(k)(1);
-	    dataNchan_p[k]=(chanselmat.row(k)(2)-dataStart_p[k]+1)/dataStep_p[k]+1;
+	    dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k]))/Double(dataStep_p[k]))+1;
 	    if(dataNchan_p[k]<1)
 	      dataNchan_p[k]=1;	  
 	  }
