@@ -18,6 +18,7 @@ using namespace std;
 
 #ifdef AIPS_USEATM
 #include <ATM/ATMSkyStatus.h>
+#include <ATM/ATMTypeName.h>
 using namespace atm;
 #endif
 
