@@ -1104,6 +1104,7 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
       os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
       return False;
     }
+    cleaner_p->setscales(scaleSizes_p);
     cleaner_p->setcontrol(CleanEnums::MULTISCALE, niter, gain, threshold);
   }
   else if (algorithm=="hogbom") {
@@ -1111,6 +1112,7 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
       Vector<Float> dummy;
       setscales("nscales", 1, dummy);
     }
+    cleaner_p->setscales(scaleSizes_p);
     cleaner_p->setcontrol(CleanEnums::HOGBOM, niter, gain, threshold);
   } else {
     os << LogIO::SEVERE << "Unknown algorithm: " << algorithm << LogIO::POST;
@@ -1877,7 +1879,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
   Vector<Double> cells = psf_p->coordinates().increment();
   os << "Cell size = " << abs(cells(0)/C::arcsec) << LogIO::POST;
   AlwaysAssert (cells(0)!=0.0, AipsError);
-
+  scaleSizes_p.resize();
   if (scaleMethod == "nscales") {
     Int nscales=inscales;
 
@@ -1900,6 +1902,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
       os << "scale " << scale+1 << " = " << scaleSizes(scale)
 	 << " pixels" << LogIO::POST;
     }  
+    scaleSizes_p=scaleSizes;
     cleaner_p->setscales(scaleSizes);   
     scalesValid_p=True;
 
@@ -1914,6 +1917,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
       os << "scale " << scale+1 << " = " << userScaleSizes(scale)
 	 << " pixels" << LogIO::POST;
     }
+    scaleSizes_p=userScaleSizes;
     cleaner_p->setscales(userScaleSizes);   
     scalesValid_p=True;
 

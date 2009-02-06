@@ -313,6 +313,7 @@ private:
 
   Vector<Float> itsTotalFluxScale;
   Float itsTotalFlux;
+  Vector<Float> scaleSizes_p;
 
 
   PGPlotter* pgplotter_p;
