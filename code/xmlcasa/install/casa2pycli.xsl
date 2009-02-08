@@ -41,7 +41,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
     rkey = None
 
     def __init__(self) :
-       self.__class__ = </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_</xsl:text>
+       self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)
+       self.__doc__ = self.__call__.__doc__</xsl:text>
 <xsl:text>
 
     def result(self, key=None):
@@ -170,18 +171,20 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         """
         import paramgui
 
-	if useGlobals:
-            a=inspect.stack()
-            stacklevel=0
-            for k in range(len(a)):
-              if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                  stacklevel=k
-                  break
-            paramgui.setGlobals(sys._getframe(stacklevel).f_globals)
+        a=inspect.stack()
+        stacklevel=0
+        for k in range(len(a)):
+          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
+            stacklevel=k
+            break
+        myf = sys._getframe(stacklevel).f_globals
+
+        if useGlobals:
+            paramgui.setGlobals(myf)
         else:
             paramgui.setGlobals({})
 
-        paramgui.runTask(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, _ip)
+        paramgui.runTask(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, myf['_ip'])
         paramgui.setGlobals({})
 
 #

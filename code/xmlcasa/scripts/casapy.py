@@ -792,18 +792,25 @@ if ipython:
         script=casapy_flags.index('-c')
         scriptindex=script+1
         print 'will execute script',casapy_flags[scriptindex]
-        ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.ipython_casa','-c','execfile("'+casapy_flags[scriptindex]+'")'], user_ns=globals() )
+        if os.path.exists( home+'/.casa/ipython/ipy_user_conf.py' ) :
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython','-c','execfile("'+casapy_flags[scriptindex]+'")'], user_ns=globals() )
+        else:
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',home+'/.casa/ipython','-c','execfile("'+casapy_flags[scriptindex]+'")'], user_ns=globals() )
     except ValueError,e:
-        ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.ipython_casa','-c','execfile("'+fullpath+'")'], user_ns=globals() )
+        if os.path.exists( home+'/.casa/ipython/ipy_user_conf.py' ) :
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
+        else:
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
+        ipshell.IP.runlines('execfile("'+fullpath+'")')
 
-#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.ipython_casa'], user_ns=globals() )
+#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
 casalog.setlogfile(thelogfile)
 casalog.showconsole(showconsole)
 casalog.version()
 
 import shutil
 if ipython:
-    ipshell.mainloop(0)
+    ipshell.mainloop( )
     for pid in logpid: 
         #print 'pid: ',pid
         os.kill(pid,9)

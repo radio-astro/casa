@@ -184,7 +184,7 @@ String TBConstants::DOT_CASAPY_DIR = "";
 String TBConstants::dotCasapyDir() {
     if(DOT_CASAPY_DIR.empty()) {
         DOT_CASAPY_DIR = qPrintable(QDir::homePath());
-        DOT_CASAPY_DIR += "/.casapy/";
+        DOT_CASAPY_DIR += "/.casa/";
     }
     return DOT_CASAPY_DIR;
 }

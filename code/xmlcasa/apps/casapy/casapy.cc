@@ -41,6 +41,37 @@
 #include <ostream>
 #include <casa/System/Aipsrc.h>
 
+//
+//  helper function to create ~/.casa/ipython/security
+//
+static int make_it_a_dir( const char *path ) {
+    struct stat buf;
+    if ( stat( path, &buf ) == 0 ) {
+	if ( ! S_ISDIR(buf.st_mode) ) {
+	    char *savepath = (char*) malloc(sizeof(char) * (strlen(path) + 12));
+	    int count = 0;
+
+	    do {
+		count += 1;
+		sprintf( savepath, "%s_SAV%03d", path, count );
+	    } while ( stat( savepath, &buf ) == 0 );
+
+	    if ( rename( path, savepath ) != 0 ) {
+		return 1;
+	    }
+	    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
+		return 1;
+	    }
+	    free(savepath);
+	}
+    } else {
+	if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
 int main( int argc, char **argv ) {
 
     static const char file_separator = '/';
@@ -223,6 +254,60 @@ int main( int argc, char **argv ) {
     } else {
 	path= strdup("");
     }
+
+    //
+    //  setup ~/.casa/ state directory...
+    //  ----------------------------------------------------------------------
+    char *homepath = getenv( "HOME" );
+    if ( ! homepath ) {
+	std::cerr << "error: 'HOME' environment variable is not set" << std::endl;
+	std::cerr << "       please set it to your home directory." << std::endl;
+	exit(1);
+    }
+
+    char *ipythonpath = (char *) malloc(sizeof(char) * (strlen(homepath) + 50));
+    char *ipythonenv = (char *) malloc(sizeof(char) * (strlen(homepath) + 30));
+    if ( ! ipythonpath || ! ipythonenv ) {
+	std::cerr << "error: failed allocation (ipythonpath)" << std::endl;
+	exit(1);
+    }
+
+    sprintf( ipythonenv, "IPYTHONDIR=%s/.casa/ipython", homepath );
+    putenv( ipythonenv );
+    
+    struct stat rcstats;
+    sprintf( ipythonpath, "%s/.casa/ipython/security", homepath );
+    if ( stat(ipythonpath, &rcstats) != 0 ) {
+	if ( stat( homepath, &rcstats ) != 0 ) {
+	    std::cerr << "error: your home directory '" << homepath << "'" << std::endl;
+	    std::cerr << "       does not exist, please create it." << std::endl;
+	    exit(1);
+	}
+	sprintf( ipythonpath, "%s/.casa", homepath );
+	if ( make_it_a_dir( ipythonpath ) != 0 ) {
+	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
+	    exit(1);
+	}
+	sprintf( ipythonpath, "%s/.casa/ipython", homepath );
+	if ( make_it_a_dir( ipythonpath ) != 0 ) {
+	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
+	    exit(1);
+	}
+	sprintf( ipythonpath, "%s/.casa/ipython/security", homepath );
+	if ( make_it_a_dir( ipythonpath ) != 0 ) {
+	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
+	    exit(1);
+	}
+    } else {
+	if ( make_it_a_dir( ipythonpath ) != 0 ) {
+	    std::cerr << "error: could not create '" << ipythonpath << "'" << std::endl;
+	    exit(1);
+	}
+    }
+
+    free(ipythonpath);
+    //  ----------------------------------------------------------------------
+    //
 
     std::cout << "CASA Version ";
     casa::VersionInfo::report(std::cout);

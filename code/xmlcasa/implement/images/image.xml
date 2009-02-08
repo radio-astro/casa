@@ -423,7 +423,7 @@ in order to access the image.   For example:
 """
 #
 print "\t----\t Intro Ex 2 \t----"
-pathname=os.environ.get("AIPSPATH") # Assumes environment variable is set
+pathname=os.environ.get("CASAPATH") # Assumes environment variable is set
 pathname=pathname.split()[0]
 datapath1=pathname+"/data/demo/Images/imagetestimage.fits"
 datapath2=pathname+"/data/demo/Images/test_image"

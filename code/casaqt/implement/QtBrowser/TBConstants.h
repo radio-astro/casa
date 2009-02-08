@@ -211,7 +211,7 @@ public:
     // and then returns the stored result on subsequent calls.
     static String aipspath();
 
-    // Returns the absolute path of the ~/.casapy directory.  This value is
+    // Returns the absolute path of the ~/.casa directory.  This value is
     // retrieved from the environment variables the first time it is called,
     // and then returns the stored result on subsequent calls.
     static String dotCasapyDir();
@@ -594,7 +594,7 @@ private:
     // Common string in the TBConnection defaults.
     static const String OPEN_PAGE;
 
-    // Holds the absolute location of the ~/.casapy directory.
+    // Holds the absolute location of the ~/.casa directory.
     static String DOT_CASAPY_DIR;
 };
 

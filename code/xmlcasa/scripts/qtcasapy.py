@@ -1397,7 +1397,7 @@ sys.argv.append('LightBG')
 sys.argv.append('-logfile')
 sys.argv.append('ipython.log')
 sys.argv.append('-ipythondir')
-sys.argv.append(os.environ['HOME']+'/.casapy')
+sys.argv.append(os.environ['HOME']+'/.casa/ipython')
 
 #ipshell = IPython.Shell.IPShell( argv=['-pylab', '-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log'], user_ns=globals() )
 #ipshell.mainloop()
