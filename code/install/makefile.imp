@@ -489,7 +489,7 @@ $(LIBCASADBG)(version.o) : $(AIPSCODE)/VERSION
            echo "$(basename $(@F)) (dbg)" ; \
            $(C++) $(CPPDBG) $(C++DBG) -c -o version.o version.cc ; \
            $(AR) r $(LIBCASADBG) version.o; \
-           updatelib -f casa; \
+           updatelib -f xmlcasa; \
            $(RM) version.cc
 	-@ $(TIMER)
 
@@ -499,7 +499,7 @@ $(LIBCASAOPT)(version.o) : $(AIPSCODE)/VERSION
            echo "$(basename $(@F)) (opt)" ; \
            $(C++) $(CPPOPT) $(C++OPT) -c -o version.o version.cc ; \
            $(AR) r $(LIBCASAOPT) version.o; \
-           updatelib -f casa; \
+           updatelib -f xmlcasa; \
            $(RM) version.cc
 	-@ $(TIMER)
 
