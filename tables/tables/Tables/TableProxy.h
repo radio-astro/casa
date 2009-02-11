@@ -238,6 +238,15 @@ public:
 		   const Record& dminfo,
 		   Bool noRows);
 
+  // Write the table to an ASCII file
+  // (approximately the inverse of the from-ASCII-contructor)
+  Bool toasciifmt(const String& asciifile, 
+		  const String& headerfile, 
+		  const Vector<String>& columns, 
+		  const String& sep,
+		  String& message);
+
+
   // Copy rows from one table to another.
   // If startOut<0, it is set to the end of the output table.
   void copyRows (TableProxy& out,

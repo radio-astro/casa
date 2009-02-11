@@ -315,6 +315,261 @@ TableProxy TableProxy::copy (const String& newTableName,
   return TableProxy(outtab);
 }
 
+Bool TableProxy::toasciifmt(const String& asciifile, 
+			    const String& headerfile, 
+			    const Vector<String>& columns, 
+			    const String& sep,
+			    String & message)
+{
+
+    Bool rstat(False);
+
+    // determine separator
+    String theSep = " ";
+    if(sep.size() == 1){
+      theSep = sep;
+    }
+	    
+    Vector<String> atmp;
+    if(columns.size()>0 && columns(0)!=""){ // got columns?
+	atmp = columns;
+    }
+    else {  // if not, output all columns
+	atmp = columnNames();
+    }
+	    
+    int ncols = atmp.size();
+    String tolerated_errors;
+    if(ncols > 0){
+	
+	// analyse the columns
+	Bool col_is_good[ncols];
+	String col_type[ncols];
+	Bool col_is_empty[ncols];
+	for(int j=0; j<ncols; j++){
+	    col_is_good[j] = True;
+	    Int col_ndim = 1;
+	    Vector<Int> col_dims;
+	    DataType valtyp;
+	    ValueHolder value;		
+	    Record col_desc;
+	    ostringstream oss;
+
+	    try {
+		col_desc = getColumnDescription(atmp(j),False);
+		if (col_desc.isDefined("ndim")){ // is it an array?
+		    try { 
+			value = getCell(atmp(j), 0);
+			col_desc.get("ndim", col_ndim);
+			if (col_desc.isDefined("shape")){ // get the dimensions from the shape if possible
+			    col_desc.get("shape",col_dims);
+			}
+			else if(col_ndim>1){ // no shape exists but we may test a value
+			    IPosition col_shape;
+			    switch(value.dataType()) {
+			    case TpArrayComplex:
+			    case TpArrayDComplex:
+				col_shape= (value.asArrayComplex()).shape();
+				col_ndim = (value.asArrayComplex()).ndim();
+				break;
+			    case TpArrayString:
+				col_shape= (value.asArrayString()).shape();
+				col_ndim = (value.asArrayString()).ndim();
+				break;
+			    case TpArrayBool:
+			    case TpArrayUChar:
+			    case TpArrayShort:
+			    case TpArrayInt:
+			    case TpArrayFloat:
+			    case TpArrayDouble:
+				col_shape= (value.asArrayBool()).shape();
+				col_ndim = (value.asArrayBool()).ndim();
+				break;
+			    default:
+				throw; 
+				break;
+			    }
+			    col_dims = col_shape.asVector();
+			}
+		    }
+		    catch (AipsError y) {
+			tolerated_errors = tolerated_errors 
+			    + "Column " + atmp(j) + " was ignored because it contained an array with undefined shape.\n";
+			col_is_good[j] = False;
+			continue;
+		    }
+		}
+		else {
+		    value = getCell(atmp(j), 0);
+		}
+	    } catch ( AipsError y ) {
+		tolerated_errors = tolerated_errors 
+		    + "Column " + atmp(j) + " was ignored because it doesn't exist or contains invalid data.\n";
+		col_is_good[j] = False;
+		continue;
+	    }
+	    
+	    // implement the type naming convention as in constructor from ascii()
+	    valtyp = value.dataType();
+	    switch(valtyp) {
+	    case TpBool:
+	    case TpArrayBool:
+		oss << "B";
+		break;
+	    case TpUChar:
+	    case TpShort:
+	    case TpArrayUChar:
+	    case TpArrayShort:
+		oss << "S";
+		break;
+	    case TpInt:
+	    case TpArrayInt:
+		oss << "I";
+		break;
+	    case TpFloat:
+	    case TpArrayFloat:
+		oss << "R";
+		break;
+	    case TpDouble:
+	    case TpArrayDouble:
+		oss << "D";
+		break;
+	    case TpComplex:
+	    case TpArrayComplex:
+		oss << "X";
+		break;
+	    case TpDComplex:
+	    case TpArrayDComplex:
+		oss << "DX";
+		break;
+	    case TpString:
+	    case TpArrayString:
+		oss << "A";
+		break;
+	    case TpRecord:
+		oss << "Record";
+		break;
+	    case TpOther:
+		oss << "Other";
+		break;
+	    default:
+		oss << "Unknown";
+		break;
+	    }
+	    switch(valtyp) { // add dimensions of array
+	    case TpArrayBool:
+	    case TpArrayUChar:
+	    case TpArrayShort:
+	    case TpArrayInt:
+	    case TpArrayFloat:
+	    case TpArrayDouble:
+	    case TpArrayComplex:
+	    case TpArrayDComplex:
+	    case TpArrayString:
+		if(col_dims.size()>0){
+		    for(int i=0; i<col_ndim; i++){
+			oss << col_dims(i);
+			if(i<col_ndim-1){
+			    oss << ",";
+			}
+		    }
+		}
+		else { // if this happens there is a bug getColumnDescription or further upstream
+		    oss << "?";
+		}
+		break;
+	    default:
+		break;
+	    } // end switch	    
+	    col_type[j] = oss.str();
+	} // end for(j=0 ...
+	
+	// determine last good column 
+	int last_good_col(0);
+	for(int i=0; i<ncols; i++){
+	    if(col_is_good[i]){
+		last_good_col = i;
+	    }
+	}
+	
+	std::ofstream ofs, ofs2;
+	std::ofstream *ofsp;
+	ofs.open(asciifile.c_str(), ofstream::out);
+	if(!ofs){
+	    throw TableError("Error opening file '"+asciifile+"'");
+	}
+	
+	ofsp = &ofs; // header output to same file as data
+	if(!headerfile.empty() && (headerfile != asciifile)){
+	    ofs2.open(headerfile.c_str(), ofstream::out);
+	    if(!ofs2){
+		throw TableError("Error opening file '"+headerfile+"'");
+	    }
+	    ofsp = &ofs2; // redirect header output to header file
+	}
+	
+	// output the format
+	//  - column names
+	for(int i=0; i<ncols; i++){
+	    if(col_is_good[i]){
+		*ofsp << atmp(i);
+		if(i<last_good_col){
+		    *ofsp << theSep;
+		}
+	    }
+	}
+	*ofsp << std::endl;
+	//  - data types
+	for(int i=0; i<ncols; i++){
+	    if(col_is_good[i]){
+		*ofsp << col_type[i];
+		if(i<last_good_col){
+		    *ofsp << theSep;
+		}
+	    }
+	}
+	*ofsp << std::endl;
+	
+	if(!headerfile.empty()){
+	    ofs2.close();
+	}
+	
+	// output the data
+	for(int i=0; i<nrows(); i++){
+	    for(int j=0; j<ncols; j++){
+		if(col_is_good[j]){
+		    ValueHolder value = getCell(atmp(j), i);
+		    try {
+			if(col_type[j] == "A"){ // special treatment for strings because they may contain separators
+			    ofs << "\"" << value << "\"";
+			}
+			else {
+			    ofs << value;
+			}
+			if(j<last_good_col){
+			    ofs << theSep;
+			}
+		    } catch( AipsError y ) {
+			throw TableError( "Error writing Column " + atmp(j) + " row " + i ); 
+		    }			
+		}
+	    }
+	    ofs << std::endl;
+	} // end for(i ...
+	ofs.close();
+	if(tolerated_errors.size()>0){
+	    message = "Table was written to file " + asciifile + " but:\n" + tolerated_errors;
+	}
+	else {
+	    rstat = True;
+	}
+    }// end if ncols > 0
+    
+    return rstat;
+}
+
+
+
 void TableProxy::copyRows (TableProxy& out,
 			   Int startIn,
 			   Int startOut,
