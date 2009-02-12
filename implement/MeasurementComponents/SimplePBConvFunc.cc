@@ -396,8 +396,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Float minAbsConvFunc=min(amplitude(convFunc_p));
       convSupport_p=-1;
       Bool found=False;
-      Bool found2=True;
-      Int trial2=0;
+      //Bool found2=True;
+      //Int trial2=0;
       Int trial=0;
       for (trial=convSize_p/2-2;trial>0;trial--) {
 	//Searching down a diagonal

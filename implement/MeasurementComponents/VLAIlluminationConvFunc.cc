@@ -383,8 +383,8 @@ namespace casa{
       std::complex<double> aperture;
       ImageRegrid<Float> ir;
       IPosition ndx2d(2,0,0);
-      char Roter[6] = {'-','|','/','-','\\','|'};
-      int RotNdx=0;
+      //char Roter[6] = {'-','|','/','-','\\','|'};
+      //int RotNdx=0;
       for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++)    // The Poln. axes
 	{
 	  //

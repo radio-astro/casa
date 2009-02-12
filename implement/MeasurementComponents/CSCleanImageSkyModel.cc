@@ -532,11 +532,11 @@ Float CSCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter )
   uInt nyc = 0;
   Float amax = 0.0;
   Vector<Float> amax2;
+  /*
   Int kounter=0;
   Float amin=1e9;
   Float amin2=1e9;
   Bool toggle=False;
-  /*
   for (uInt ix = 0; ix < nx; ix++) {
     for (uInt iy = 0; iy < ny; iy++) {
       if(arr(IPosition(4, ix, iy, 0, 0)) < amin){

@@ -177,7 +177,7 @@ Int directionIndex=cs.findCoordinate(Coordinate::DIRECTION);
 
 
   // maximumRadius_p: maximum radius at 1 GHz frequency
-  Double delta = maximumRadius_p.getValue("rad") *  1.0e+9 / freq;
+  //Double delta = maximumRadius_p.getValue("rad") *  1.0e+9 / freq;
 
 
   //Number of pix at freq
