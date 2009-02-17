@@ -17,13 +17,6 @@
 #   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-##
-## installation builds:
-##
-## gmake DESTDIR=`echo $CASAPATH | sed 's|\([^ ]*\)[ ][ ]*.*$|\1|'` ARCH=`echo $CASAPATH | sed 's|[^ ]*[ ][ ]*\([^ ]*\).*$|\1|'` setup
-## gmake DESTDIR=`echo $CASAPATH | sed 's|\([^ ]*\)[ ][ ]*.*$|\1|'` ARCH=`echo $CASAPATH | sed 's|[^ ]*[ ][ ]*\([^ ]*\).*$|\1|'`
-##
-
 -include makedefs
 
 C++ := c++
@@ -38,11 +31,7 @@ FFLAGS := -O2
 DESTDIR := 
 ARCH := 
 
-INSTALLDIR := $(DESTDIR)
-
-VERSION:=0.3.0
-
-LIBDIR := $(INSTALLDIR)/lib
+VERSION:=$(shell head -1 VERSION | perl -pe "s|^(\S+).*|\$$1|" | tee /tmp/foo )
 
 OS := $(shell uname | tr 'A-Z' 'a-z')
 ifeq "$(OS)" "darwin"
@@ -65,13 +54,20 @@ endif
 ## setup DESTDIR
 ##
 ifeq "$(DESTDIR)" ""
-DESTDIR := $(CASAARCH)
+DESTDIR := $(shell echo $$CASAPATH | perl -pe "s|(\S+).*|\$$1|")
 ifeq "$(DESTDIR)" ""
 DESTDIR := $(shell pwd)/build
 else
+ifeq "$(ARCH)" ""
+ARCH := $(shell echo $$CASAPATH | perl -pe "s|\S+\s+(\S+).*|\$$1|")
+endif
 INC += -I$(CASAARCH)/include
 endif
 endif
+
+INSTALLDIR := $(DESTDIR)
+
+LIBDIR := $(INSTALLDIR)/lib
 
 ##
 ## setup fortran compiler
