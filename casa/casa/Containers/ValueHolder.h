@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolder.h 20518 2009-02-05 13:34:30Z gervandiepen $
+//# $Id$
 
 
 #ifndef CASA_VALUEHOLDER_H
@@ -196,12 +196,10 @@ public:
   // Construct the object from the value in a record.
   static ValueHolder fromRecord (const Record&, const RecordFieldId&);
 
-  //# Write the ValueHolder to an output stream.
+  // Write the ValueHolder to an output stream.
+  // Arrays are written as normal arrays using ArrayIO.h. 
   friend std::ostream& operator<< (std::ostream& os, const ValueHolder& vh)
     { return vh.itsRep->write (os); }
-
-  //# Read the ValueHolder from an input stream.
-  //# friend AipsIO& operator>> (AipsIO& os, ValueHolder& vh);
 
 private:
   ValueHolderRep* itsRep;

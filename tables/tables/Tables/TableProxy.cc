@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 20473 2008-12-19 08:18:36Z gervandiepen $
+//# $Id$
 
 
 #include <tables/Tables/TableProxy.h>
@@ -282,6 +282,359 @@ Bool TableProxy::isMultiUsed (Bool checkSubTables)
   return table_p.isMultiUsed (checkSubTables);
 }
 
+String TableProxy::toAscii (const String& asciiFile, 
+                            const String& headerFile, 
+                            const Vector<String>& columns, 
+                            const String& sep,
+                            const Vector<Int>& precision,
+                            Bool useBrackets)
+{
+  // Possible warning message.
+  String message;
+  // Determine separator
+  String theSep(sep);
+  if (sep.empty()) {
+    theSep = " ";
+  }
+  // Determine names of columns to write.
+  Vector<String> colNames(columns);
+  if (columns.empty() || columns(0).empty()) {
+    // No columns given, so use all.
+    colNames.assign (columnNames());
+  }
+  Int ncols = colNames.size();
+  // Analyse the columns.
+  vector<Bool>   col_is_good(ncols);
+  vector<String> col_type(ncols);
+  Int last_good_col = 0;
+  for (Int j=0; j<ncols; j++) {
+    col_is_good[j] = getColInfo (colNames[j], useBrackets,
+                                 col_type[j], message);
+    // Remember last good column 
+    if (col_is_good[j]) {
+      last_good_col = j;
+    }
+  }
+  // Open the output files.
+  // Determine if header info is in separate file.
+  std::ofstream ofs, ofs2;
+  std::ofstream *ofsp;
+  ofs.open (asciiFile.c_str(), ofstream::out);
+  if (!ofs) {
+    throw TableError("TableProxy::toAscii - error opening file '"
+                     + asciiFile + "'");
+  }
+  ofsp = &ofs;     // set initially header output to same file as data
+  if (!headerFile.empty() && (headerFile != asciiFile)) {
+    ofs2.open (headerFile.c_str(), ofstream::out);
+    if (!ofs2) {
+      throw TableError("TableProxy::toAscii - error opening file '" +
+                       headerFile + "'");
+    }
+    ofsp = &ofs2;  // redirect header output to separate header file
+  }
+  // Write the format into the header file.
+  //  - column names
+  for (Int i=0; i<ncols; i++) {
+    if (col_is_good[i]) {
+      *ofsp << colNames[i];
+      if (i<last_good_col) {
+        *ofsp << theSep;
+      }
+    }
+  }
+  *ofsp << endl;
+  //  - data types
+  for (Int i=0; i<ncols; i++) {
+    if (col_is_good[i]) {
+      *ofsp << col_type[i];
+      if (i<last_good_col) {
+        *ofsp << theSep;
+      }
+    }
+  }
+  *ofsp << endl;
+  // Close headerfile if needed.
+  if (ofsp == &ofs2) {
+    ofs2.close();
+  }
+  // Write the data
+  for (Int i=0; i<nrows(); i++) {
+    for (Int j=0; j<ncols; j++) {
+      Int prec = (j < precision.size()  ?  precision[j] : 0);
+      if (col_is_good[j]) {
+        printValueHolder (getCell(colNames[j], i), ofs, theSep,
+                          prec, useBrackets);
+        if (j < last_good_col) {
+          ofs << theSep;
+        }
+      }
+    }
+    ofs << endl;
+  }
+
+  ofs.close();
+  return message;
+}
+
+// Get the column info for output.
+Bool TableProxy::getColInfo (const String& colName, Bool useBrackets,
+                             String& colType, String& message)
+{
+  Bool good = True;
+  ColumnDesc colDesc(table_p.tableDesc().columnDesc (colName));
+  // Ignore columns containing Records or variable shaped arrays
+  // if not using brackets.
+  if (!useBrackets) {
+    if (colDesc.dataType() == TpRecord) {
+      message += "Column " + colName + " contains Record values.\n";
+      good = False;
+    } else if (! colDesc.isFixedShape()) {
+      message += "Column " + colName +
+        " possibly contains variable shaped arrays.\n";
+      good = False;
+    }
+  }
+  if (good) {
+    ostringstream oss;
+    // Implement the type naming convention as in class ReadTableAscii.
+    switch (colDesc.dataType()) {
+    case TpBool:
+      oss << "B";
+      break;
+    case TpUChar:
+    case TpShort:
+      oss << "S";
+      break;
+    case TpInt:
+      oss << "I";
+      break;
+    case TpFloat:
+      oss << "R";
+      break;
+    case TpDouble:
+      oss << "D";
+      break;
+    case TpComplex:
+      oss << "X";
+      break;
+    case TpDComplex:
+      oss << "DX";
+      break;
+    case TpString:
+      oss << "A";
+      break;
+    case TpRecord:
+      oss << "REC";
+      break;
+    default:
+      message += "Column " + colName +
+        " ignored because it contains values with an unknown type.\n";
+      good = False;
+      break;
+    }
+    // Append the type with the array shape. Use [] if brackets are to be used.
+    // If variable shape, use the shape of the first row.
+    if (colDesc.isArray()) {
+      if (useBrackets) {
+        oss << "[]";
+      } else {
+        IPosition col_shape;
+        if (colDesc.isFixedShape()) {
+          col_shape = colDesc.shape();
+        } else {
+          col_shape = ROTableColumn(table_p, colName).shape(0);
+        }
+        for (Int i=0; i<col_shape.size(); ++i) {
+          if (i > 0) {
+            oss << ",";
+          }
+          oss << col_shape[i];
+        }
+      }
+    }
+    colType = oss.str();
+  }
+  return good;
+}
+
+void TableProxy::printValueHolder (const ValueHolder& vh, ostream& os,
+                                   const String& sep, Int prec,
+                                   bool useBrackets) const
+{
+  Int defPrec = 16;
+  switch (vh.dataType()) {
+  case TpBool:
+    os << vh.asBool();
+    break;
+  case TpUChar:
+  case TpShort:
+  case TpInt:
+    os << vh.asInt();
+    break;
+  case TpFloat:
+    defPrec = 7;
+  case TpDouble:
+    {
+      // set precision; set it back at the end.
+      if (prec <= 0) prec = defPrec;
+      streamsize oldPrec = os.precision(prec);
+      os << vh.asDouble();
+      os.precision (oldPrec);
+    }
+    break;
+  case TpComplex:
+    defPrec = 7;
+  case TpDComplex:
+    {
+      // set precision; set it back at the end.
+      if (prec <= 0) prec = defPrec;
+      streamsize oldPrec = os.precision(prec);
+      os << vh.asDComplex();
+      os.precision (oldPrec);
+    }
+    break;
+  case TpString:
+    os << '"' << vh.asString() << '"';
+    break;
+  case TpArrayBool:
+    {
+      Array<Bool> arr = vh.asArrayBool();
+      if (useBrackets) {
+        printArray (arr, os, sep, String());
+      } else {
+        for (Array<Bool>::const_iterator iter=arr.begin();
+             iter!=arr.end(); ++iter) {
+          if (iter != arr.begin()) {
+            os << sep;
+          }
+          os << *iter;
+        }
+      }
+    }
+    break;
+  case TpArrayUChar:
+  case TpArrayShort:
+  case TpArrayInt:
+    {
+      Array<Int> arr = vh.asArrayInt();
+      if (useBrackets) {
+        printArray (arr, os, sep, String());
+      } else {
+        for (Array<Int>::const_iterator iter=arr.begin();
+             iter!=arr.end(); ++iter) {
+          if (iter != arr.begin()) {
+            os << sep;
+          }
+          os << *iter;
+        }
+      }
+    }
+    break;
+  case TpArrayFloat:
+    defPrec = 7;
+  case TpArrayDouble:
+    {
+      // set precision; set it back at the end.
+      if (prec <= 0) prec = defPrec;
+      streamsize oldPrec = os.precision(prec);
+      Array<Double> arr = vh.asArrayDouble();
+      if (useBrackets) {
+        printArray (arr, os, sep, String());
+      } else {
+        for (Array<Double>::const_iterator iter=arr.begin();
+             iter!=arr.end(); ++iter) {
+          if (iter != arr.begin()) {
+            os << sep;
+          }
+          os << *iter;
+        }
+      }
+      os.precision (oldPrec);
+    }
+    break;
+  case TpArrayComplex:
+    defPrec = 7;
+  case TpArrayDComplex:
+    {
+      // set precision; set it back at the end.
+      if (prec <= 0) prec = defPrec;
+      streamsize oldPrec = os.precision(prec);
+      Array<DComplex> arr = vh.asArrayDComplex();
+      if (useBrackets) {
+        printArray (arr, os, sep, String());
+      } else {
+        for (Array<DComplex>::const_iterator iter=arr.begin();
+             iter!=arr.end(); ++iter) {
+          if (iter != arr.begin()) {
+            os << sep;
+          }
+          os << *iter;
+        }
+      }
+      os.precision (oldPrec);
+    }
+    break;
+  case TpArrayString:
+    {
+      Array<String> arr = vh.asArrayString();
+      if (useBrackets) {
+        printArray (arr, os, sep, "\"");
+      } else {
+        for (Array<String>::const_iterator iter=arr.begin();
+             iter!=arr.end(); ++iter) {
+          if (iter != arr.begin()) {
+            os << sep;
+          }
+          os << '"' << *iter << '"';
+        }
+      }
+    }
+    break;
+  case TpRecord:
+    os << '{' << vh.asRecord() << '}';
+    break;
+  default:
+    throw AipsError ("ValueHolder::write - unknown data type");
+    break;
+  }
+}
+
+template<typename T>
+void TableProxy::printArray (const Array<T>& arr, ostream& os,
+                             const String& sep, const String& quote) const
+{
+  const IPosition& shp = arr.shape();
+  uInt ndim = shp.size();
+  IPosition pos(shp.size(), 0);
+  typename Array<T>::const_iterator iter = arr.begin();
+  typename Array<T>::const_iterator iterend = arr.end();
+  if(iter==iterend){
+    os << '[]';
+  }
+  else {
+    uInt i = ndim;
+    while (True) {
+      for (uInt j=0; j<i; ++j) {
+	os << '[';
+      }
+      os << quote << *iter << quote;
+      ++iter;
+      for (i=0; i<ndim; ++i) {
+	if (++pos[i] < shp[i]) {
+	  break;
+	}
+	os << ']';
+	pos[i] = 0;
+      }
+      if (i == ndim) {
+	break;
+      }
+      os << sep;
+    }
+  }// end if
+}
+
 void TableProxy::rename (const String& newTableName)
 {
   table_p.rename (newTableName, Table::New);
@@ -314,261 +667,6 @@ TableProxy TableProxy::copy (const String& newTableName,
   }
   return TableProxy(outtab);
 }
-
-Bool TableProxy::toasciifmt(const String& asciifile, 
-			    const String& headerfile, 
-			    const Vector<String>& columns, 
-			    const String& sep,
-			    String & message)
-{
-
-    Bool rstat(False);
-
-    // determine separator
-    String theSep = " ";
-    if(sep.size() == 1){
-      theSep = sep;
-    }
-	    
-    Vector<String> atmp;
-    if(columns.size()>0 && columns(0)!=""){ // got columns?
-	atmp = columns;
-    }
-    else {  // if not, output all columns
-	atmp = columnNames();
-    }
-	    
-    int ncols = atmp.size();
-    String tolerated_errors;
-    if(ncols > 0){
-	
-	// analyse the columns
-	Bool col_is_good[ncols];
-	String col_type[ncols];
-	Bool col_is_empty[ncols];
-	for(int j=0; j<ncols; j++){
-	    col_is_good[j] = True;
-	    Int col_ndim = 1;
-	    Vector<Int> col_dims;
-	    DataType valtyp;
-	    ValueHolder value;		
-	    Record col_desc;
-	    ostringstream oss;
-
-	    try {
-		col_desc = getColumnDescription(atmp(j),False);
-		if (col_desc.isDefined("ndim")){ // is it an array?
-		    try { 
-			value = getCell(atmp(j), 0);
-			col_desc.get("ndim", col_ndim);
-			if (col_desc.isDefined("shape")){ // get the dimensions from the shape if possible
-			    col_desc.get("shape",col_dims);
-			}
-			else if(col_ndim>1){ // no shape exists but we may test a value
-			    IPosition col_shape;
-			    switch(value.dataType()) {
-			    case TpArrayComplex:
-			    case TpArrayDComplex:
-				col_shape= (value.asArrayComplex()).shape();
-				col_ndim = (value.asArrayComplex()).ndim();
-				break;
-			    case TpArrayString:
-				col_shape= (value.asArrayString()).shape();
-				col_ndim = (value.asArrayString()).ndim();
-				break;
-			    case TpArrayBool:
-			    case TpArrayUChar:
-			    case TpArrayShort:
-			    case TpArrayInt:
-			    case TpArrayFloat:
-			    case TpArrayDouble:
-				col_shape= (value.asArrayBool()).shape();
-				col_ndim = (value.asArrayBool()).ndim();
-				break;
-			    default:
-				throw; 
-				break;
-			    }
-			    col_dims = col_shape.asVector();
-			}
-		    }
-		    catch (AipsError y) {
-			tolerated_errors = tolerated_errors 
-			    + "Column " + atmp(j) + " was ignored because it contained an array with undefined shape.\n";
-			col_is_good[j] = False;
-			continue;
-		    }
-		}
-		else {
-		    value = getCell(atmp(j), 0);
-		}
-	    } catch ( AipsError y ) {
-		tolerated_errors = tolerated_errors 
-		    + "Column " + atmp(j) + " was ignored because it doesn't exist or contains invalid data.\n";
-		col_is_good[j] = False;
-		continue;
-	    }
-	    
-	    // implement the type naming convention as in constructor from ascii()
-	    valtyp = value.dataType();
-	    switch(valtyp) {
-	    case TpBool:
-	    case TpArrayBool:
-		oss << "B";
-		break;
-	    case TpUChar:
-	    case TpShort:
-	    case TpArrayUChar:
-	    case TpArrayShort:
-		oss << "S";
-		break;
-	    case TpInt:
-	    case TpArrayInt:
-		oss << "I";
-		break;
-	    case TpFloat:
-	    case TpArrayFloat:
-		oss << "R";
-		break;
-	    case TpDouble:
-	    case TpArrayDouble:
-		oss << "D";
-		break;
-	    case TpComplex:
-	    case TpArrayComplex:
-		oss << "X";
-		break;
-	    case TpDComplex:
-	    case TpArrayDComplex:
-		oss << "DX";
-		break;
-	    case TpString:
-	    case TpArrayString:
-		oss << "A";
-		break;
-	    case TpRecord:
-		oss << "Record";
-		break;
-	    case TpOther:
-		oss << "Other";
-		break;
-	    default:
-		oss << "Unknown";
-		break;
-	    }
-	    switch(valtyp) { // add dimensions of array
-	    case TpArrayBool:
-	    case TpArrayUChar:
-	    case TpArrayShort:
-	    case TpArrayInt:
-	    case TpArrayFloat:
-	    case TpArrayDouble:
-	    case TpArrayComplex:
-	    case TpArrayDComplex:
-	    case TpArrayString:
-		if(col_dims.size()>0){
-		    for(int i=0; i<col_ndim; i++){
-			oss << col_dims(i);
-			if(i<col_ndim-1){
-			    oss << ",";
-			}
-		    }
-		}
-		else { // if this happens there is a bug getColumnDescription or further upstream
-		    oss << "?";
-		}
-		break;
-	    default:
-		break;
-	    } // end switch	    
-	    col_type[j] = oss.str();
-	} // end for(j=0 ...
-	
-	// determine last good column 
-	int last_good_col(0);
-	for(int i=0; i<ncols; i++){
-	    if(col_is_good[i]){
-		last_good_col = i;
-	    }
-	}
-	
-	std::ofstream ofs, ofs2;
-	std::ofstream *ofsp;
-	ofs.open(asciifile.c_str(), ofstream::out);
-	if(!ofs){
-	    throw TableError("Error opening file '"+asciifile+"'");
-	}
-	
-	ofsp = &ofs; // header output to same file as data
-	if(!headerfile.empty() && (headerfile != asciifile)){
-	    ofs2.open(headerfile.c_str(), ofstream::out);
-	    if(!ofs2){
-		throw TableError("Error opening file '"+headerfile+"'");
-	    }
-	    ofsp = &ofs2; // redirect header output to header file
-	}
-	
-	// output the format
-	//  - column names
-	for(int i=0; i<ncols; i++){
-	    if(col_is_good[i]){
-		*ofsp << atmp(i);
-		if(i<last_good_col){
-		    *ofsp << theSep;
-		}
-	    }
-	}
-	*ofsp << std::endl;
-	//  - data types
-	for(int i=0; i<ncols; i++){
-	    if(col_is_good[i]){
-		*ofsp << col_type[i];
-		if(i<last_good_col){
-		    *ofsp << theSep;
-		}
-	    }
-	}
-	*ofsp << std::endl;
-	
-	if(!headerfile.empty()){
-	    ofs2.close();
-	}
-	
-	// output the data
-	for(int i=0; i<nrows(); i++){
-	    for(int j=0; j<ncols; j++){
-		if(col_is_good[j]){
-		    ValueHolder value = getCell(atmp(j), i);
-		    try {
-			if(col_type[j] == "A"){ // special treatment for strings because they may contain separators
-			    ofs << "\"" << value << "\"";
-			}
-			else {
-			    ofs << value;
-			}
-			if(j<last_good_col){
-			    ofs << theSep;
-			}
-		    } catch( AipsError y ) {
-			throw TableError( "Error writing Column " + atmp(j) + " row " + i ); 
-		    }			
-		}
-	    }
-	    ofs << std::endl;
-	} // end for(i ...
-	ofs.close();
-	if(tolerated_errors.size()>0){
-	    message = "Table was written to file " + asciifile + " but:\n" + tolerated_errors;
-	}
-	else {
-	    rstat = True;
-	}
-    }// end if ncols > 0
-    
-    return rstat;
-}
-
-
 
 void TableProxy::copyRows (TableProxy& out,
 			   Int startIn,

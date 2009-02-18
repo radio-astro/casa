@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolderRep.cc 20517 2009-02-05 11:45:34Z gervandiepen $
+//# $Id$
 
 
 #include <casa/Containers/ValueHolderRep.h>
