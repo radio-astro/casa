@@ -523,9 +523,6 @@ ifeq "$(OS)" "linux"
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
-clean:
-	rm -f `find . -type f -name '*.lcc'` `find . -type f -name '*.ycc'`
-
 setup:
 	mkdir -p $(DESTDIR)/include/casacore
 ifneq "$(ARCH)" ""
@@ -562,3 +559,79 @@ TCASA := $(basename $(TCASACC | perl -pe 's|^[^/]+/||'))
 
 casatest: $(TCASA)
 
+cleancasa:
+	@rm -f $(CASALIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(CASALIB_PATH))
+
+cleancore:
+	@rm -f $(CORELIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(CORELIB_PATH))
+
+cleancomponents:
+	@rm -f $(COMPONENTSLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(COMPONENTSLIB_PATH))
+
+cleancoordinates:
+	@rm -f $(COORDINATESLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(COORDINATESLIB_PATH))
+
+cleanlattices:
+	@rm -f $(LATTICESLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(LATTICESLIB_PATH))
+
+cleanimages:
+	@rm -f $(IMAGESLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(IMAGESLIB_PATH))
+
+cleantables:
+	@rm -f $(TABLESLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(TABLESLIB_PATH))
+
+cleanscimath:
+	@rm -f $(SCIMATHLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(SCIMATHLIB_PATH))
+	@rm -f $(SCIMATHFLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(SCIMATHFLIB_PATH))
+
+cleanmeasures:
+	@rm -f $(MEASURESLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(MEASURESLIB_PATH))
+	@rm -f $(MEASURESFLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(MEASURESFLIB_PATH))
+
+cleanfits:
+	@rm -f $(FITSLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(FITSLIB_PATH))
+
+cleanms:
+	@rm -f $(MSLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(MSLIB_PATH))
+
+cleanmsfits:
+	@rm -f $(MSFITSLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(MSFITSLIB_PATH))
+
+cleanmir:
+	@rm -f $(MIRLIB_PATH)
+	@rm -f $(subst .$(VERSION),,$(MIRLIB_PATH))
+
+cleaninc:
+	rm -rf $(DESTDIR)/include/casacore
+
+ifneq "$(ARCH)" ""
+clean: cleanmir cleanmsfits cleanms cleanfits cleanmeasures \
+	cleanscimath cleantables cleanimages cleanlattices \
+	cleancoordinates cleancomponents cleancore cleancasa \
+	cleaninc
+	@rm -f $(shell find . -type f -name '*.lcc') $(shell find . -type f -name '*.ycc')
+	@rm -rf $(shell find . -type f -name '*.o' | grep $(ARCH) | perl -pe "s|/[^/]+\\.o$$||" | sort -u)
+	@echo finished cleaning up...
+else
+clean: cleanmir cleanmsfits cleanms cleanfits cleanmeasures \
+	cleanscimath cleantables cleanimages cleanlattices \
+	cleancoordinates cleancomponents cleancore cleancasa \
+	cleaninc
+	@rm -f `find . -type f -name '*.lcc'` `find . -type f -name '*.ycc'`
+	@rm -rf $(shell find . -type f -name '*.o')
+	@echo finished cleaning up...
+endif
