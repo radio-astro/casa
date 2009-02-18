@@ -631,7 +631,7 @@ clean: cleanmir cleanmsfits cleanms cleanfits cleanmeasures \
 	cleanscimath cleantables cleanimages cleanlattices \
 	cleancoordinates cleancomponents cleancore cleancasa \
 	cleaninc
-	@rm -f `find . -type f -name '*.lcc'` `find . -type f -name '*.ycc'`
+	@rm -f $(shell find . -type f -name '*.lcc') $(shell find . -type f -name '*.ycc')
 	@rm -rf $(shell find . -type f -name '*.o')
 	@echo finished cleaning up...
 endif
