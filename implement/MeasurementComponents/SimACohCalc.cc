@@ -128,7 +128,7 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
 	
 	tsys = trx_k * sqrt(exp(tau_p * airmass1)) * sqrt(exp(tau_p * airmass2)) 
 	  + tatmos_k * 
-	  (sqrt(exp(-tau_p * airmass1))*sqrt(exp(-tau_p * airmass2)) - spillefficiency_p)
+	  (sqrt(exp(tau_p * airmass1))*sqrt(exp(tau_p * airmass2)) - spillefficiency_p)
 	  + tcmb_k;
       
 	sigma = fact * tsys / diam1 / diam2 / sqrt( deltaNu * tint );
