@@ -18,6 +18,9 @@
 #
 
 -include makedefs
+CASAROOT := $(word 1, $(CASAPATH))
+CASAARCH := $(CASAROOT)/$(word 2, $(CASAPATH))
+CASADATA := $(CASAROOT)/data
 
 C++ := c++
 CXXFLAGS := -O2
@@ -105,6 +108,7 @@ endif
 ###              -> coordinates -> (cfitsio)
 ###                             -> (wcs)
 ###                             -> measures  -> scimath   -> casa
+###                                                       -> (fftw)
 ###                                                       -> (lapack)
 ###                                                       -> (blas)
 COMPONENTSCC := $(shell find components -type f -name '*.cc' | egrep -v '/test/|/apps/')
@@ -117,6 +121,7 @@ COMPONENTSLIB := $(COMPONENTSOBJ)
 COMPONENTSLIB_PATH := $(DESTDIR)/lib/libcasa_components.$(SO)
 endif
 ###  coordinates -> measures  -> scimath -> casa
+###                                      -> (fftw)
 ###                                      -> (lapack)
 ###                                      -> (blas)
 ###              -> fits      -> tables  -> casa
@@ -133,6 +138,7 @@ COORDINATESLIB_PATH := $(DESTDIR)/lib/libcasa_coordinates.$(SO)
 endif
 ###  lattices -> tables  -> casa
 ###           -> scimath -> casa
+###                      -> (fftw)
 ###                      -> (lapack)
 ###                      -> (blas)
 LATTICESCC := $(shell find lattices -type f -name '*.cc' | egrep -v '/test/|/apps/')
@@ -147,6 +153,7 @@ endif
 ###  images      -> mirlib
 ###              -> lattices -> tables         -> casa
 ###                          -> scimath        -> casa
+###                                            -> (fftw)
 ###                                            -> (lapack)
 ###                                            -> (blas)
 ###              -> fits        -> measures    -> scimath -> casa
@@ -156,6 +163,7 @@ endif
 ###                             -> coordinates -> (cfitsio)
 ###                                            -> (wcs)
 ###                                            -> measures  -> scimath   -> casa
+###                                                                      -> (fftw)
 ###                                                                      -> (lapack)
 ###                                                                      -> (blas)
 ###         
@@ -185,6 +193,7 @@ TABLESLIB := tables/tables/Tables/RecordGram.lcc tables/tables/Tables/RecordGram
 TABLESLIB_PATH := $(DESTDIR)/lib/libcasa_tables.$(SO)
 endif
 ###  scimath -> casa
+###          -> (fftw)
 ###          -> (lapack)
 ###          -> (blas)
 SCIMATHCC := $(shell find scimath -type f -name '*.cc' | egrep -v '/test/|/apps/')
@@ -232,6 +241,7 @@ FITSLIB := $(FITSOBJ)
 FITSLIB_PATH := $(DESTDIR)/lib/libcasa_fits.$(SO)
 endif
 ###  ms -> measures  -> scimath -> casa
+###                             -> (fftw)
 ###                             -> (lapack)
 ###                             -> (blas)
 MSCC := $(shell find ms -type f -name '*.cc' | egrep -v '/test/|/apps/')
@@ -425,19 +435,19 @@ scimath: casa $(SCIMATHLIB_PATH)
 
 $(SCIMATHLIB_PATH): $(SCIMATHLIB) $(SCIMATHFLIB_PATH)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas $(FC_LIB)
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(SCIMATHFLIB_PATH): $(SCIMATHFLIB)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas $(FC_LIB)
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 

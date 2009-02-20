@@ -15,6 +15,12 @@ opts.Add(("lapacklibdir", "The lapack library location", None))
 opts.Add(("lapacklib",
           "The lapack library name (e.g. for specialized AMD libraries",
           None))
+opts.Add(("fftwroot", 
+          "The root directory where fftw is installed", None))
+opts.Add(("fftwlibdir", "The fftw library location", None))
+opts.Add(("fftwlib",
+          "The fftw library name (e.g. for specialized AMD libraries",
+          None))
 opts.Add(("blasroot", 
           "The root directory where blas is installed", None))
 opts.Add(("blaslibdir", "The blas library location", None))
@@ -62,17 +68,27 @@ env["ASSAYCOM"] = os.path.join(env["casashrdir"][0], "casacore_assay")
 if not env.GetOption('clean'):
     conf = Configure(env)
     conf.env.CheckFortran(conf)
-    # test for blas/lapack
+
+    # test for blas/lapack/fftw
+
     blasname = conf.env.get("blaslib", "blas").split(",")
     conf.env.AddCustomPackage("blas")
     blasname.reverse()
     for b in blasname:
         if not conf.CheckLib(b, autoadd=0): Exit(1)
         conf.env.PrependUnique(LIBS=b)
+
     lapackname = conf.env.get("lapacklib", "lapack").split(",")
     conf.env.AddCustomPackage("lapack")
     lapackname.reverse()
     for l in lapackname:
+        if not conf.CheckLib(l, autoadd=0): Exit(1)
+        conf.env.PrependUnique(LIBS=l)
+
+    fftwname = conf.env.get("fftwlib", "fftw3f_threads,fftw3_threads,fftw3f,fftw3").split(",")
+    conf.env.AddCustomPackage("fftw")
+    fftwname.reverse()
+    for l in fftwname:
         if not conf.CheckLib(l, autoadd=0): Exit(1)
         conf.env.PrependUnique(LIBS=l)
     env = conf.Finish()
