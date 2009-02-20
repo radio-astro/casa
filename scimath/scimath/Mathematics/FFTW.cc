@@ -42,6 +42,8 @@
 
 namespace casa {
 
+  Bool FFTW::is_initialized_fftw = False;
+
   FFTW::FFTW()
   {
     itsPlanR2Cf = NULL;
@@ -52,28 +54,33 @@ namespace casa {
     itsPlanC2CF = NULL;
     itsPlanC2CBf = NULL;
     itsPlanC2CB = NULL;
-    
-    int numCPUs = HostInfo::numCPUs();
-    int nthreads;
-    if (numCPUs <= 1) {
-      nthreads = 1;
+
+    if (!is_initialized_fftw) {
+      int numCPUs = HostInfo::numCPUs();
+      int nthreads;
+      if (numCPUs <= 1) {
+	nthreads = 1;
+      }
+      else {
+	nthreads = numCPUs;
+      }
+      
+      //    std::cout << "init threads " << fftwf_init_threads() << std::endl;
+      //    std::cout << "init threads " << fftw_init_threads() << std::endl;
+      fftwf_init_threads();
+      fftw_init_threads();
+      fftwf_plan_with_nthreads(nthreads);
+      fftw_plan_with_nthreads(nthreads);
+
+      is_initialized_fftw = True;
     }
-    else {
-      nthreads = numCPUs;
-    }
+    //    std::cerr << "will use " << nthreads << " threads " << std::endl;
+
+    //flags = FFTW_ESTIMATE;  
     
-    //std::cout << "init threads " << fftw_init_threads() << std::endl;
-    fftwf_plan_with_nthreads(nthreads);
-    fftw_plan_with_nthreads(nthreads);
-    
-    //std::cerr << "will use " << nthreads << " threads " << std::endl;
-    
-    flags = FFTW_ESTIMATE;  
-    
-    //flags = FFTW_MEASURE;   std::cerr << "Will FFTW_MEASURE..." << std::endl;
-    //flags = FFTW_PATIENT;
-    
-    // TODO: use wisdom
+    flags = FFTW_MEASURE;  // std::cerr << "Will FFTW_MEASURE..." << std::endl;
+    //flags = FFTW_PATIENT;   std::cerr << "Will FFTW_PATIENT..." << std::endl;
+    //flags = FFTW_EXHAUSTIVE;   std::cerr << "Will FFTW_EXHAUSTIVE..." << std::endl;
   }
 
   FFTW::~FFTW() {
@@ -127,13 +134,13 @@ namespace casa {
 				     flags);
 
   }
+
   void FFTW::plan_c2r(const IPosition &size, DComplex *in, Double *out) {
     itsPlanC2R = fftw_plan_dft_c2r(size.nelements(),
 				   size.storage(),
 				   reinterpret_cast<fftw_complex *>(in), 
 				   out,
 				   flags);
-
   }
 
   void FFTW::plan_c2c_forward(const IPosition &size, DComplex *in) {
@@ -169,7 +176,7 @@ namespace casa {
 				  reinterpret_cast<fftwf_complex *>(in), 
 				  FFTW_BACKWARD, flags);
   }
-    
+
   void FFTW::r2c(const IPosition &size, Float *in, Complex *out) 
   {
     // the parameters are used only in order to overload this function

@@ -71,19 +71,23 @@ public:
   void c2c(const IPosition &size, DComplex *in, Bool forward);
 
  private:
-    fftwf_plan itsPlanR2Cf;
-    fftw_plan itsPlanR2C;
+  fftwf_plan itsPlanR2Cf;
+  fftw_plan itsPlanR2C;
+  
+  fftwf_plan itsPlanC2Rf;
+  fftw_plan itsPlanC2R;
+  
+  fftwf_plan itsPlanC2CFf;   // forward
+  fftw_plan itsPlanC2CF;
+  
+  fftwf_plan itsPlanC2CBf;   // backward
+  fftw_plan itsPlanC2CB;
+  
+  unsigned flags;
 
-    fftwf_plan itsPlanC2Rf;
-    fftw_plan itsPlanC2R;
-
-    fftwf_plan itsPlanC2CFf;   // forward
-    fftw_plan itsPlanC2CF;
-
-    fftwf_plan itsPlanC2CBf;   // backward
-    fftw_plan itsPlanC2CB;
-
-    unsigned flags;
+  static Bool is_initialized_fftw;  // FFTW needs initialization
+                                    // only once per process
+                                    // not once per object
 };    
     
 } //# NAMESPACE CASA - END
