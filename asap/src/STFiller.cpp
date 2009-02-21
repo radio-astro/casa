@@ -73,7 +73,7 @@ STFiller::~STFiller()
   close();
 }
 
-void STFiller::open( const std::string& filename, int whichIF, int whichBeam )
+void STFiller::open( const std::string& filename, int whichIF, int whichBeam, casa::Bool getPt )
 {
   if (table_.null())  {
     table_ = new Scantable();
@@ -210,7 +210,7 @@ void STFiller::open( const std::string& filename, int whichIF, int whichBeam )
   }
   Vector<Int> start(nIF_, 1);
   Vector<Int> end(nIF_, 0);
-  reader_->select(beams, ifs, start, end, ref, True, haveXPol_[0], False);
+  reader_->select(beams, ifs, start, end, ref, True, haveXPol_[0], False, getPt);
   table_->setHeader(*header_);
   //For MS, add the location of POINTING of the input MS so one get
   //pointing data from there, if necessary.
@@ -455,16 +455,16 @@ void STFiller::openNRO( int whichIF, int whichBeam )
        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
        << ")" << endl ;
   //
-  if ( nreader_->open() != 0 ) {
-    throw( AipsError( "Error while opening file "+filename_ ) ) ;
-  }
+//   if ( nreader_->open() != 0 ) {
+//     throw( AipsError( "Error while opening file "+filename_ ) ) ;
+//   }
 
   isNRO_ = true ;
 
   // store data into  NROHeader and NRODataset
-  if ( nreader_->readHeader() != 0 ) {
-    throw( AipsError( "Error while reading file "+filename_ ) ) ;
-  }
+  //if ( nreader_->readHeader() != 0 ) {
+  //throw( AipsError( "Error while reading file "+filename_ ) ) ;
+  //}
 
   // get header data
   NROHeader *nheader =  nreader_->getHeader() ;
@@ -472,7 +472,7 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   // fill STHeader
   header_ = new STHeader() ;
 
-  header_->nchan = nreader_->getSpectrum( 0 ).size() ; 
+  header_->nchan = nheader->getNUMCH() ; 
   header_->npol = nreader_->getPolarizationNum() ;
   header_->observer = nheader->getOBSVR() ;
   header_->project = nheader->getPROJ() ;
@@ -491,8 +491,13 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     header_->equinox = 1950.0 ;
   else if ( strncmp( eq, "J2000", 5 ) == 0 ) 
     header_->equinox = 2000.0 ;
-  header_->freqref = nheader->getVREF() ;
-  header_->reffreq = nheader->getF0CAL()[0] ;
+//   char *vref = nheader->getVREF() ;
+//   if ( strncmp( vref, "LSR", 3 ) == 0 ) {
+//     strcat( vref, "K" ) ;
+//   }
+//   header_->freqref = vref ;
+  nreader_->getData( 0 ) ;
+  header_->reffreq = nreader_->getData()->FREQ0 ;
   header_->bandwidth = nheader->getBEBW()[0] ;
   header_->utc = nreader_->getStartTime() ;
   header_->fluxunit = "K" ;
@@ -551,6 +556,9 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   table_->setHeader( *header_ ) ;
 
   // DEBUG
+  //cout << "STFiller::openNRO() Velocity Definition = " << nheader->getVDEF() << endl ;
+
+  // DEBUG
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
@@ -568,8 +576,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
 
 int STFiller::readNRO()
 {
-  //return 0 ;
-
   // DEBUG
   time_t t0 ;
   time( &t0 ) ;
@@ -583,19 +589,21 @@ int STFiller::readNRO()
   //
 
   // get header
-  //vector<NRODataset *> data = nreader_->getData() ;
   NROHeader *h = nreader_->getHeader() ;
 
   // fill row
   uInt id ;
   uInt imax = nreader_->getRowNum() ;
-  //uInt imax = 30 ;
+  vector< vector<double > > freqs ;
   uInt i = 0 ;
   int count = 0 ;
   for ( i = 0 ; i < imax ; i++ ) {
-    NRODataset *d = nreader_->getData( i ) ;
+    if( nreader_->getData( i ) != 0 ) {
+      cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
+      return -1 ;
+    }
+    NRODataset *d = nreader_->getData() ;
 
-    //char *scanType = d->getSCANTP() ;
     char *scanType = d->SCANTP ;
     Int srcType = -1 ;
     if ( strncmp( scanType, "ON", 2 ) == 0 ) {
@@ -655,11 +663,39 @@ int STFiller::readNRO()
       RecordFieldPtr<uInt> ifCol(rec, "IFNO") ;
       RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID") ;
       vector<double> fqs = nreader_->getFrequencies( i ) ;
-      id = table_->frequencies().addEntry( Double( fqs[0] ),
-                                           Double( fqs[1] ),
-                                           Double( fqs[2] ) ) ;
-      *mfreqidCol = id ;
-      *ifCol = id ;
+      //cout << "STFiller::readNRO()  fqs[1] = " << fqs[1] << endl ;
+      if ( freqs.size() == 0 ) {
+        id = table_->frequencies().addEntry( Double( fqs[0] ),
+                                             Double( fqs[1] ),
+                                             Double( fqs[2] ) ) ;
+        *mfreqidCol = id ;
+        *ifCol = id ;
+        freqs.push_back( fqs ) ;
+      }
+      else {
+        int iadd = -1 ;
+        for ( uInt iif = 0 ; iif < freqs.size() ; iif++ ) {
+          //cout << "STFiller::readNRO()  freqs[" << iif << "][1] = " << freqs[iif][1] << endl ;
+          double fdiff = abs( freqs[iif][1] - fqs[1] ) / freqs[iif][1] ;
+          //cout << "STFiller::readNRO()  fdiff = " << fdiff << endl ;
+          if ( fdiff < 1.0e-8 ) {
+            iadd = iif ;
+            break ;
+          }
+        }
+        if ( iadd == -1 ) {
+          id = table_->frequencies().addEntry( Double( fqs[0] ),
+                                               Double( fqs[1] ),
+                                               Double( fqs[2] ) ) ;
+          *mfreqidCol = id ;
+          *ifCol = id ;
+          freqs.push_back( fqs ) ;
+        }
+        else {
+          *mfreqidCol = iadd ;
+          *ifCol = iadd ;
+        }
+      }
       RecordFieldPtr<uInt> molidCol(rec, "MOLECULE_ID") ;
       Vector<Double> restfreq( IPosition( 1, 1 ) ) ;
       restfreq( 0 ) = d->FREQ0 ;
@@ -713,6 +749,10 @@ int STFiller::readNRO()
     else {
       count++ ;
     }
+    // DEBUG
+    //int rownum = nreader_->getRowNum() ;
+    //cout << "STFiller::readNRO() Finished row " << i << "/" << rownum << endl ;
+    //
   }
 
   // DEBUG

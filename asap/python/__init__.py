@@ -360,10 +360,10 @@ if rcParams['useplotter']:
     except ImportError:
 	print "Matplotlib not installed. No plotting available"
 
-__date__ = '$Date: 2008-12-18 01:36:57 -0700 (Thu, 18 Dec 2008) $'.split()[1]
+__date__ = '$Date: 2009-02-02 09:50:25 -0700 (Mon, 02 Feb 2009) $'.split()[1]
 __version__  = '2.2.0 alma'
 # nrao casapy specific, get revision number
-__revision__ = ' unknown '
+#__revision__ = ' unknown '
 casapath=os.environ["CASAPATH"].split()
 revinfo=casapath[0]+'/'+casapath[1]+'/python/2.5/asap/svninfo.txt'
 if os.path.isfile(revinfo):
@@ -372,6 +372,8 @@ if os.path.isfile(revinfo):
     revsionno=f.readline()
     f.close()
     __revision__ = revsionno.rstrip()
+else:
+    __revision__ = ' unknown '
 
 def is_ipython():
     return '__IP' in dir(sys.modules["__main__"])

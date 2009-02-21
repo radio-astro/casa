@@ -81,6 +81,7 @@ class interactivemask:
 			xmin, xmax = panel['axes'].get_xlim()
 			marg = 0.05*(xmax-xmin)
 			panel['axes'].set_xlim(xmin-marg, xmax+marg)
+		self._p.show()
                 self._plot_mask()
 
 		print ''
@@ -203,17 +204,17 @@ class interactivemask:
 			for polygon in self._polygons: polygon.remove()
 			self._polygons=[]
 		# Plot new polygons
-                if len(msks) < 1: return
-                npanel=len(self._p.subplots)
-                j=-1
-                for iloop in range(len(msks)*npanel):
-			i = iloop % len(msks)
-			if  i == 0 : j += 1
-			if len(ifs) > 1:
-				for k in xrange(len(ifs)-1):
-					self._polygons.append(self._p.subplots[j]['axes'].axvspan(projs[k][i][0],projs[k][i][1],facecolor='#aaaaaa'))			
-			self._polygons.append(self._p.subplots[j]['axes'].axvspan(msks[i][0],msks[i][1],facecolor='yellow'))
-		self._p.show()
+		if len(msks) > 0:
+			npanel=len(self._p.subplots)
+			j=-1
+			for iloop in range(len(msks)*npanel):
+				i = iloop % len(msks)
+				if  i == 0 : j += 1
+				if len(ifs) > 1:
+					for k in xrange(len(ifs)-1):
+						self._polygons.append(self._p.subplots[j]['axes'].axvspan(projs[k][i][0],projs[k][i][1],facecolor='#aaaaaa'))			
+				self._polygons.append(self._p.subplots[j]['axes'].axvspan(msks[i][0],msks[i][1],facecolor='yellow'))
+		self._p.canvas.draw()
 
 	def get_mask(self):
 		"""

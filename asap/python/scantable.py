@@ -11,7 +11,7 @@ class scantable(Scantable):
         The ASAP container for scans
     """
 
-    def __init__(self, filename, average=None, unit=None):
+    def __init__(self, filename, average=None, unit=None, getpt=None):
         """
         Create a scantable from a saved one or make a reference
         Parameters:
@@ -32,6 +32,8 @@ class scantable(Scantable):
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
+        if getpt is None:
+            getpt = False
         varlist = vars()
         from asap._asap import stmath
         self._math = stmath()
@@ -57,7 +59,8 @@ class scantable(Scantable):
                         Scantable.__init__(self, filename, ondisk)
                         if unit is not None:
                             self.set_fluxunit(unit)
-                        self.set_freqframe(rcParams['scantable.freqframe'])
+                        # do not reset to the default freqframe
+                        #self.set_freqframe(rcParams['scantable.freqframe'])
                     else:
                         msg = "The given file '%s'is not a valid " \
                               "asap table." % (filename)
@@ -67,10 +70,10 @@ class scantable(Scantable):
                         else:
                             raise IOError(msg)
                 else:
-                    self._fill([filename], unit, average)
+                    self._fill([filename], unit, average, getpt)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
-                self._fill(filename, unit, average)
+                self._fill(filename, unit, average, getpt)
         self._add_history("scantable", varlist)
         print_log()
 
@@ -1889,7 +1892,7 @@ class scantable(Scantable):
         nchans = filter(lambda t: t > 0, nchans)
         return (sum(nchans)/len(nchans) == nchans[0])
 
-    def _fill(self, names, unit, average):
+    def _fill(self, names, unit, average, getpt):
         import os
         from asap._asap import stfiller
         first = True
@@ -1914,7 +1917,7 @@ class scantable(Scantable):
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             print_log()
-            r._open(name, -1, -1)
+            r._open(name, -1, -1, getpt)
             r._read()
             #tbl = r._getdata()
             if average:
