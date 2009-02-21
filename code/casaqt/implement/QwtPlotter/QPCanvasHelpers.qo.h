@@ -213,6 +213,13 @@ protected:
     // etc.).
     void setDrawLayers(bool main, bool layer);
     
+    // Hold/Release drawing.
+    // <group>
+    bool drawingIsHeld() const;
+    void holdDrawing();
+    void releaseDrawing();
+    // </group>
+    
     // Compounds a call to setDrawLayers(drawMain, drawLayer), replot(), and
     // setDrawLayers(true, true).  For common uses.
     void replot(bool drawMain, bool drawLayer);
@@ -230,6 +237,7 @@ private:
     // Layer draw flags.
     bool m_drawMain;
     bool m_drawLayer;
+    bool m_drawingHeld;
     
     // Layer pixmaps.
     QPixmap m_main;

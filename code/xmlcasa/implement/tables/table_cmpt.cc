@@ -14,21 +14,28 @@
 #include <iostream>
 #include <xmlcasa/tables/table_cmpt.h>
 #include <casa/aips.h>
+#include <tables/Tables/IncrementalStMan.h>
+#include <tables/Tables/MemoryStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableLock.h>
+#include <fits/FITS/FITSTable.h>
+#include <fits/FITS/SDFITSTable.h>
+#include <casa/Inputs/Input.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/OS/File.h>
 #include <xmlcasa/utils/stdBaseInterface.h>
 //begin modification
 //july 4 2007
 #include <xmlcasa/xerces/asdmCasaXMLUtil.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableIter.h>
+#include <tables/Tables/TableRow.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
@@ -140,6 +147,104 @@ table::close()
  }
  return rstat;
 }
+casac::table* 
+table::fromfits(const std::string& tablename, const std::string& fitsfile, const int whichhdu, const std::string& storage, const std::string& convention, const bool nomodify, const bool ack){
+
+  casac::table *rstat(0);
+  try {
+
+    String inputFilename =String(fitsfile);
+    String outputFilename = String(tablename);
+    String storageManagerType = String(storage);
+    Int whichHDU = whichhdu;
+    String conv=String(convention);
+    conv.downcase();
+    
+    Bool sdfits = conv.contains("sdfi");
+
+    storageManagerType.downcase();
+
+    Bool useIncrSM;
+    if (storageManagerType == String("incremental")) {
+      useIncrSM = True;
+    } else 	if ((storageManagerType == String("standard"))||(storageManagerType == String("memory"))) {
+      useIncrSM = False;
+
+
+    } else {
+      throw(AipsError(storageManagerType+String("  is not a valid storage manager")));  
+    }
+
+    if (whichHDU < 1) {
+      throw(AipsError("whichHDU is not valid, must be >= 1"));
+    }
+
+    File inputFile(inputFilename);
+    if (! inputFile.isReadable()) {
+      
+      throw(AipsError(inputFilename+String(" is not readable")));
+    }
+
+    // construct the FITS table of the appropriate type
+    FITSTable *infits = 0;
+    if (sdfits) {
+      infits = new SDFITSTable(inputFilename, whichHDU);
+    } else {
+      infits = new FITSTable(inputFilename, whichHDU);
+    }
+    AlwaysAssert(infits, AipsError);
+    if (!infits->isValid()) {
+      throw(AipsError("The indicated FITS file does not have a valid binary table at HDU requested")); 
+    }
+
+    TableDesc td(FITSTabular::tableDesc(*infits));
+    // if sdfits, remove any TDIM columns from td, FITSTable takes care of interpreting them
+    // and if sdfits is true, that most likely means we don't want to see them
+    
+    if (sdfits) {
+      Vector<String> cols(td.columnNames());
+      for (uInt i=0;i<cols.nelements();i++) {
+	if (cols(i).matches(Regex("^TDIM.*"))) {
+	  td.removeColumn(cols(i));
+	}
+      }
+    }
+	    
+    SetupNewTable newtab(outputFilename, td, Table::NewNoReplace);
+    if (useIncrSM) {
+      IncrementalStMan stman("ISM");
+      newtab.bindAll(stman);
+    }
+    else if(storageManagerType == String("memory")){
+      MemoryStMan stman("MemSt");
+      newtab.bindAll(stman);
+    }
+    Table tab(newtab, TableLock::AutoNoReadLocking, infits->nrow());
+    TableRow row(tab);
+    uInt rownr = 0;
+    
+    while (rownr < tab.nrow()) {
+      row.putMatchingFields(rownr, TableRecord(infits->currentRow()));
+      infits->next();
+      rownr++;
+    }
+    
+    tab.flush();
+    TableProxy *tb = new casa::TableProxy(tab);
+    rstat = new casac::table(tb);
+    cout << "done." << endl;
+
+
+    
+    
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+
+}
+
 
 casac::table*
 table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject)
@@ -384,16 +489,35 @@ table::name()
 bool
 table::toasciifmt(const std::string& asciifile, const std::string& headerfile, const std::vector<std::string>& columns, const std::string& sep)
 {
+    Bool rstat(False);
+    try {
+	if(!itsTable){
+	    *itsLog << LogIO::WARN << "toasciifmt: No table specified, please open first" << LogIO::POST;
+	}
+	else if(asciifile.empty()){
+	    *itsLog << LogIO::WARN << "toasciifmt: No output file specified" << LogIO::POST;
+	}
+	else {
+	    String message;
+	    Vector<Int> precision; // optional vector describing the output precision for each column in "columns"
+	                           // - leave empty for now to use default precision
+	    Bool useBrackets(True); // use bracket format for array output by default
+	    message = itsTable->toAscii(String(asciifile), String(headerfile), toVectorString(columns), 
+					String(sep), precision, useBrackets);
+	    if(message.size() > 0){
+		*itsLog << LogIO::WARN << "toasciifmt: " << message << LogIO::POST;
+	    }
+	    else {
+	      rstat = True;
+	    }
+		
+	}	    
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+    }
+    return rstat;
 
- Bool rstat(False);
- try {
-	      *itsLog << LogIO::WARN << "toascifmt not implemented" << LogIO::POST;
- } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
- }
- return rstat;
-    // TODO : IMPLEMENT ME HERE !
 }
 
 ::casac::table*

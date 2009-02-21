@@ -1,0 +1,14 @@
+1 -  FTSRetrievalTest: 1st guess water vapor0.848326
+1 -  FTSRetrievalTest: Reading FTS data file...
+1 -  FTSRetrievalTest: ...done 
+1 -  FTSRetrievalTest: Creating SpectralGrid object...
+1 -  FTSRetrievalTest: ...done
+1 -  FTSRetrievalTest: Creating  RefractiveIndexProfile object...(this is the time consuming part because absoprtion coefficients for 1225 different frequencies and 19 atmospheric layers have to be calculated.
+1 -  FTSRetrievalTest: ...done
+1 -  FTSRetrievalTest: Creating  SkyStatus object...
+1 -  FTSRetrievalTest: ...done
+1 -  FTSRetrievalTest: Number of spectral windows: 1
+1 -  FTSRetrievalTest: Number of FTS frequencies:  1225
+1 -  FTSRetrievalTest: Performing Water Vapor Retrieval
+1 -  FTSRetrievalTest: Retrieved zenith water vapor column from data between 450 and 920 GHz: 0.335819 mm 
+1 -  FTSRetrievalTest: Retrieved zenith water vapor column using the whole spectrum:          1.07295 mm 

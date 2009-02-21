@@ -126,6 +126,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                 Full description of the syntax can be found at
                 http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
+
         region -- File path to an ImageRegion file.
                 Default: none; Example: region=&quot;myimage.im.rgn&quot;
                   Not yet implemented

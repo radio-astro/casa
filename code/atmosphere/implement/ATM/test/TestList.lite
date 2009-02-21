@@ -1,0 +1,11 @@
+1 LengthTest Length.sh
+# 2 WVRRetrievalTest WVRRetrieval.sh
+3 FTSRetrievalTest FTSRetrieval.sh
+4 SkyStatusTest SkyStatus.sh
+5 RefractiveIndexProfileTest RefractiveIndexProfile.sh
+6 AtmProfileTest AtmProfile.sh
+7 SpectralGridTest SpectralGrid.sh
+8 AtmTypeTest AtmType.sh
+9 AtmosphereTypeTest AtmosphereType.sh
+# 10 testError ATMError.sh
+11 ApexTest Apex.sh

@@ -128,6 +128,23 @@ bool TBTableDriverDirect::canWrite() {
     return m_table.hasLock(FileLocker::Write);
 }
 
+bool TBTableDriverDirect::tryWriteLock() {
+    if(!m_table.lock(FileLocker::Write, 1)) return false;
+    try {
+        m_table.reopenRW();
+        return true;
+    } catch(...) {
+        releaseWriteLock();
+        return false;
+    }
+}
+
+bool TBTableDriverDirect::releaseWriteLock() {
+    if(!m_table.hasLock(FileLocker::Write)) return true; // nothing to release
+    m_table.unlock(); // release write lock
+    return m_table.lock(FileLocker::Read); // re-acquire read lock
+}
+
 Result TBTableDriverDirect::loadRows(int start, int num, bool full,
                                      vector<String>* f, bool parsedata,
                                      ProgressHelper* pp) {
@@ -323,11 +340,14 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
     }
     
     // Update writable vector
-    table.reopenRW();
-    writable.resize(fields.size());
-    for(unsigned int i = 0; i < fields.size(); i++) {
-        writable[i] = table.isColumnWritable(fields[i]->getName());
-    }
+    writable.clear();
+    writable.resize(fields.size(), false);
+    try {
+        table.reopenRW();
+        for(unsigned int i = 0; i < fields.size(); i++) {
+            writable[i] = table.isColumnWritable(fields[i]->getName());
+        }
+    } catch(...) { }
 
     // Update subtable rows
     if(subtableCount != subtableRows.size()) {
@@ -698,7 +718,8 @@ Result TBTableDriverDirect::editData(unsigned int row, unsigned int col,
 }
 
 int TBTableDriverDirect::totalRowsOf(String location) {
-    return m_table.nrow();
+    if(location == m_table.tableName()) return m_table.nrow();
+    else return Table(location).nrow();
 }
 
 Result TBTableDriverDirect::insertRows(int n) {

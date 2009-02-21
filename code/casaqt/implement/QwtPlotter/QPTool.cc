@@ -88,17 +88,13 @@ void QPPanTool::handleMouseEvent(const PlotEvent& event) {
     
     // handle wheel
     if((w = dynamic_cast<const PlotWheelEvent*>(&event)) != NULL) {
-        PlotRegion r = m_stack->moveAndReturn(w->delta());
-        m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                m_stack->currentYAxis());
+        m_canvas->canvasAxesStackMove(w->delta());
         notifyWatchers();
         
     // handle right-click
     } else if((c = dynamic_cast<const PlotClickEvent*>(&event)) != NULL &&
             c->button() == PlotClickEvent::CONTEXT) {
-        PlotRegion r = m_stack->moveAndReturn(0);
-        m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                m_stack->currentYAxis());
+        m_canvas->canvasAxesStackMove(0);
         notifyWatchers();
         
         // cursor niceness

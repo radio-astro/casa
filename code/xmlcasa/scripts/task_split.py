@@ -48,11 +48,14 @@ def split(vis,outputvis,datacolumn, field,spw,width,antenna,timebin,timerange,sc
                         ms.open(vis,False) #nomodify=False to enable writing
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
-		if(spw=='') :
+		if os.path.exists(outputvis):
+			raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
+		
+		if(spw==''):
 			spw='*'
 		if((timebin=='0s') or (timebin=='0')):
 			timebin='-1s'
-		##take of digit without units ...assume seconds
+		## Accept digits without units ...assume seconds
 		timebin=qa.convert(qa.quantity(timebin),'s')['value']
 		timebin=str(timebin)+'s'
 		if(type(width)==str):
@@ -72,6 +75,10 @@ def split(vis,outputvis,datacolumn, field,spw,width,antenna,timebin,timerange,sc
 			except:
 				
 				raise TypeError, 'parameter width is invalid..using 1'
+
+		if(type(antenna) == list):
+			antenna = ', '.join([str(ant) for ant in antenna])
+			
 		ms.split(outputms=outputvis,field=field,spw=spw, step=width, baseline=antenna,timebin=timebin,time=timerange,whichcol=datacolumn, scan=scan, uvrange=uvrange)
 		#ms.close()
 		# Write history to output MS

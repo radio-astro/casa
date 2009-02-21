@@ -122,7 +122,8 @@ class PKSreader
         const Vector<Int>  refChan,
         const Bool getSpectra = True,
         const Bool getXPol    = False,
-        const Bool getFeedPos = False) = 0;
+        const Bool getFeedPos = False,
+        const Bool getPointing = False) = 0;
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -189,7 +190,7 @@ class PKSreader
     virtual void close() = 0;
 
   protected:
-    Bool   cGetFeedPos, cGetSpectra, cGetXPol;
+    Bool   cGetFeedPos, cGetSpectra, cGetXPol, cGetPointing;
 
     Vector<uInt> cNChan, cNPol;
     Vector<Bool> cHaveXPol;

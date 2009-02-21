@@ -69,4 +69,5 @@ from uvcontsub import *
 from uvmodelfit import *
 from uvsub import *
 from viewer import *
+from vishead import *
 from widefield import *

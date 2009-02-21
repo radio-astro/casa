@@ -7,6 +7,7 @@
 # Updated      STM 2008-06-11 (Beta Patch 2.0)                           #
 #    Uses new clean task                                                 #
 # Updated      STM 2008-06-18 (Beta Patch 2.0) Format as regression      #
+# Updated      STM 2008-09-17 (Beta Patch 3.0) Use imval task            #
 #                                                                        #
 ##########################################################################
 
@@ -14,31 +15,32 @@ import time
 import os
 import pickle
 
+pathname=os.environ.get('CASAPATH').split()[0]
+
 # 
-#=====================================================================
-#
-# This script may have some interactive commands: scriptmode = True
-# if you are running it and want it to stop during interactive parts.
-
-scriptmode = True
-
-# Enable benchmarking?
-benchmarking = True
-
-# This name is the prefix all input (script,regression) files
-scriptprefix = 'polcal_20080224_cband_regression'
-
 #=====================================================================
 # SET UP THE SCRIPT CONTROL PARAMETERS HERE
 #=====================================================================
 #
 # Set up some useful variables to control subsequent actions:
 
-pathname=os.environ.get('CASAPATH').split()[0]
+# This script may have some interactive commands: scriptmode = True
+# if you are running it and want it to stop during interactive parts.
+scriptmode = True
+
+# Enable benchmarking?
+benchmarking = True
 
 # This name will prefix all output files
 prefix = 'polcal_20080224.cband.regression'
 
+# This name is the prefix all input (script,regression) files
+#regressdir=pathname + '/data/tutorial/VLA/Polcal/
+regressdir = './'
+scriptprefix = 'polcal_20080224_cband_regression'
+
+#=====================================================================
+#
 # Clean up old files
 os.system('rm -rf '+prefix+'*')
 
@@ -59,6 +61,8 @@ importmode = 'vla'               # 'vla','fits','ms'
 # NOTE: This file may be obtained from the CASA repository:
 # http://casa.nrao.edu/Data/VLA/Polcal/POLCA_20080224_1
 datafile = ['POLCA_20080224_1']
+datafile = pathname + '/data/regression/polcal/20080224_cband/POLCA_20080224_1'
+
 #
 # If from export set these:
 exportproject = 'POLCA'
@@ -78,10 +82,11 @@ ptable = prefix + '.pcal'
 xtable = prefix + '.polx'
 
 # Flagging:
-myquackinterval = 14.0        # if >0 then quack scan beginnings
+#myquackinterval = 14.0        # if >0 then quack scan beginnings
+myquackinterval = 20.0        # if >0 then quack scan beginnings
 # Flagging these antennas (if blank then no flagging)
 # NOTE: This script uses NEW names, so VLA ants are VAxx
-flagants = ''
+flagants = 'EA04'
 #flagants = 'EA*'             # keep only VLA antennas
 #flagants = 'VA*'             # keep only EVLA antennas
 
@@ -449,7 +454,7 @@ if ( myquackinterval > 0.0 ):
     #
     # First quack the data
     #
-    print '--Flagdata--'
+    print '--Flagdata (scan starts)--'
     default('flagdata')
     
     print "Quacking scan beginnings using interval "+str(myquackinterval)
@@ -481,10 +486,9 @@ if ( myquackinterval > 0.0 ):
     saveinputs('flagmanager',prefix+'.flagmanager.quack.saved')
     flagmanager()
 
-
 #
 if (flagants != '' and not flagants.isspace() ):
-    print '--Flagdata--'
+    print '--Flagdata (antennas)--'
     default('flagdata')
     
     print "Flag all data to AN "+flagants
@@ -515,6 +519,40 @@ if (flagants != '' and not flagants.isspace() ):
     saveinputs('flagmanager',prefix+'.flagmanager.ants.saved')
     flagmanager()
 
+flagtimes = '19:06:50~19:06:57,19:21:17~19:21:20'
+#
+if (flagtimes != '' and not flagtimes.isspace() ):
+    print '--Flagdata (timerange)--'
+    default('flagdata')
+    
+    print "Flag timeranges "+flagtimes
+    
+    vis = msfile
+    correlation = ''
+    field = ''
+    spw = usespw
+    mode = 'manualflag'
+    antenna = ''
+    timerange = flagtimes
+    
+    saveinputs('flagdata',prefix+'.flagdata.times.saved')
+    flagdata()
+    
+    #
+    # Use Flagmanager to save a copy of the flags so far
+    #
+    default('flagmanager')
+    
+    print "Now will use flagmanager to save the flags"
+    
+    vis = msfile
+    mode = 'save'
+    versionname = 'timeflags'
+    comment = 'flag '+flagtimes
+    merge = 'replace'
+    
+    saveinputs('flagmanager',prefix+'.flagmanager.times.saved')
+    flagmanager()
 
 if benchmarking:
     flag2time=time.time()
@@ -1124,19 +1162,23 @@ spw = ''
 
 selectdata=True
 
-xaxis = 'uvdist'
-
 interactive=False
 
 correlation='RR LL'
+xaxis = 'time'
 yaxis = 'amp'
-figfile = prefix+'.split.'+field+'.uvplot.amp.png'
-saveinputs('plotxy',prefix+'.plotxy.'+field+'.amp.saved')
+figfile = prefix+'.split.'+field+'.plotxy.amptime.png'
+saveinputs('plotxy',prefix+'.plotxy.'+field+'.amptime.saved')
+plotxy()
+
+xaxis = 'uvdist'
+figfile = prefix+'.split.'+field+'.plotxy.ampuv.png'
+saveinputs('plotxy',prefix+'.plotxy.'+field+'.ampuv.saved')
 plotxy()
 
 correlation='RL LR'
 yaxis = 'phase'
-figfile = prefix+'.split.'+field+'.uvplot.rlphase.png'
+figfile = prefix+'.split.'+field+'.plotxy.rlphaseuv.png'
 saveinputs('plotxy',prefix+'.plotxy.'+field+'.rlphase.saved')
 plotxy()
 
@@ -1145,14 +1187,20 @@ if ( polcalfield != fluxcalfield ):
     field = polcalfield
 
     correlation='RR LL'
+    xaxis = 'time'
     yaxis = 'amp'
-    figfile = prefix+'.split.'+field+'.uvplot.amp.png'
-    saveinputs('plotxy',prefix+'.plotxy.'+field+'.amp.saved')
+    figfile = prefix+'.split.'+field+'.plotxy.amptime.png'
+    saveinputs('plotxy',prefix+'.plotxy.'+field+'.amptime.saved')
+    plotxy()
+
+    xaxis = 'uvdist'
+    figfile = prefix+'.split.'+field+'.plotxy.ampuv.png'
+    saveinputs('plotxy',prefix+'.plotxy.'+field+'.ampuv.saved')
     plotxy()
     
     correlation='RL LR'
     yaxis = 'phase'
-    figfile = prefix+'.split.'+field+'.uvplot.rlphase.png'
+    figfile = prefix+'.split.'+field+'.plotxy.rlphaseuv.png'
     saveinputs('plotxy',prefix+'.plotxy.'+field+'.rlphase.saved')
     plotxy()
 
@@ -1294,33 +1342,43 @@ for src in srclist:
         spwmodel['integ'] = spwsum
         spwmodel['model'] = spwmod
 
-        # Use ia tool for pixel values in the restored image
+        # Use imval task or ia tool for pixel values in the restored image
         imagename = clnimage1
         # Get image values at the reference pixel
         spwref = {}
-        ia.open(imagename)
+        #ia.open(imagename)
         #
         # Stokes I
-        ipix = ia.pixelvalue()
-        # Get reference pixel
-        xref = ipix['pixel'][0]
-        yref = ipix['pixel'][1]
-        iflx = ipix['value']['value']
+        # Get reference pixel using imhead in list mode
+        myhead = imhead(imagename,'list')
+        xref = int(myhead['crpix1'])
+        yref = int(myhead['crpix2'])
+        #ipix = ia.pixelvalue()
+        #iflx = ipix['value']['value']
+        refbox = str(xref)+','+str(yref)+','+str(xref)+','+str(yref)
+        ipix = imval(imagename,box=refbox,stokes='I')
+        iflx = ipix['data'][0]
         spwref['I'] = iflx
         #
         # Stokes Q
-        qpix = ia.pixelvalue([xref,yref,1,0])
-        qflx = qpix['value']['value']
+        #qpix = ia.pixelvalue([xref,yref,1,0])
+        #qflx = qpix['value']['value']
+        qpix = imval(imagename,box=refbox,stokes='Q')
+        qflx = qpix['data'][0]
         spwref['Q'] = qflx
         #
         # Stokes U
-        upix = ia.pixelvalue([xref,yref,2,0])
-        uflx = upix['value']['value']
+        #upix = ia.pixelvalue([xref,yref,2,0])
+        #uflx = upix['value']['value']
+        upix = imval(imagename,box=refbox,stokes='U')
+        uflx = upix['data'][0]
         spwref['U'] = uflx
         #
         # Stokes V
-        vpix = ia.pixelvalue([xref,yref,3,0])
-        vflx = vpix['value']['value']
+        #vpix = ia.pixelvalue([xref,yref,3,0])
+        #vflx = vpix['value']['value']
+        vpix = imval(imagename,box=refbox,stokes='V')
+        vflx = vpix['data'][0]
         spwref['V'] = vflx
         #
         # Polarization quantities
@@ -1340,30 +1398,37 @@ for src in srclist:
         # Pull the maxpos of I
         xref = spwstats['I']['maxpos'][0]
         yref = spwstats['I']['maxpos'][1]
+        refbox = str(xref)+','+str(yref)+','+str(xref)+','+str(yref)
         #
         # Stokes I
         iflx = spwstats['I']['max'][0]
         spwmax['I'] = iflx
         #
         # Stokes Q
-        qpix = ia.pixelvalue([xref,yref,1,0])
-        qflx = qpix['value']['value']
+        #qpix = ia.pixelvalue([xref,yref,1,0])
+        #qflx = qpix['value']['value']
+        qpix = imval(imagename,box=refbox,stokes='Q')
+        qflx = qpix['data'][0]
         spwmax['Q'] = qflx
         #
         # Stokes U
-        upix = ia.pixelvalue([xref,yref,2,0])
-        uflx = upix['value']['value']
+        #upix = ia.pixelvalue([xref,yref,2,0])
+        #uflx = upix['value']['value']
+        upix = imval(imagename,box=refbox,stokes='U')
+        uflx = upix['data'][0]
         spwmax['U'] = uflx
         #
         # Stokes V
-        vpix = ia.pixelvalue([xref,yref,3,0])
-        vflx = vpix['value']['value']
+        #vpix = ia.pixelvalue([xref,yref,3,0])
+        #vflx = vpix['value']['value']
+        vpix = imval(imagename,box=refbox,stokes='V')
+        vflx = vpix['data'][0]
         spwmax['V'] = vflx
         
         spwmax['xref'] = xref
         spwmax['yref'] = yref
         # Done with ia tool
-        ia.close()
+        #ia.close()
         
         spwmodel['refval'] = spwref
         spwmodel['maxval'] = spwmax
@@ -1389,7 +1454,7 @@ if benchmarking:
 
 regression = {}
 regressmodel = {}
-regressfile = scriptprefix + '.pickle'
+regressfile = regressdir + scriptprefix + '.pickle'
 
 try:
     fr = open(regressfile,'r')
@@ -1399,9 +1464,10 @@ else:
     u = pickle.Unpickler(fr)
     regression = u.load()
     fr.close()
-    print "Regression results filled from "+regressfile
+    print "Previous regression results filled from "+regressfile
+    
     if regression.has_key('results'):
-        print "Regression from version "+regression['version']+" on "+regression['date']
+        print "  on "+regression['host']+" for "+regression['version']+" at "+regression['date']
         regressmodel = regression['results']
     else:
         # Older version
@@ -1423,7 +1489,7 @@ logfile=open(outfile,'w')
 # Some date and version info
 myvers = casalog.version()
 myuser = os.getenv('USER')
-myhost = os.uname()[1]
+myhost = str( os.getenv('HOST') )
 mycwd = os.getcwd()
 myos = os.uname()
 
@@ -1461,6 +1527,10 @@ if ( polmodel.has_key(polxfield) ):
         print >>logfile,"R-L Phase Correction SPW "+spwid+" = %7.2f deg" % rlpcor_deg
     
 
+if regression.has_key('results'):
+    print >>logfile,""
+    print >>logfile,"Regression versus "+regression['version']+" on host "+regression['host']+" at "+regression['date']
+
 #
 #=====================================================================
 #
@@ -1488,7 +1558,7 @@ new_regression['dataset'] = 'VLA POLCAL 20080224'
 
 outpolmodel = {}
 
-regstate = True
+passfail = True
 for src in srclist:
 
     print "Source "+src+" :"
@@ -1559,7 +1629,7 @@ for src in srclist:
             else:
                 teststr = 'FAIL'
 
-            regstate = regstate & test
+            passfail = passfail & test
             
             print '  spw %s DIFF I = %7.3f P = %7.3f F = %7.4f X = %7.2f deg %s ' %\
                   (spwid,ipol_diff,ppol_diff,fpol_diff,rlpd_diff_deg,teststr)
@@ -1579,7 +1649,7 @@ for src in srclist:
 
 # Done with src
 if (regressmodel.has_key(src)):
-    if regstate:
+    if passfail:
         passfailstr = 'PASSED'
     else:
         passfailstr = 'FAILED'
@@ -1703,26 +1773,17 @@ print "Results are in "+outfile
 #
 # Now save stat dictionaries using Pickle
 #
-# First the clean results and the input pol models
-pickfile = prefix + '.pickle'
+pickfile = 'out.'+prefix + '.polmodel.'+datestring+'.pickle'
 f = open(pickfile,'w')
 p = pickle.Pickler(f)
+# The regression results for this run
+p.dump(new_regression)
+# Now the clean results and the input pol models
 p.dump(clnmodel)
 p.dump(polmodel)
 f.close()
 print ""
-print "Dictionaries clnmodel,polmodel saved in "+pickfile
-
-#
-# Now the output pol model for this run
-pickfile2 = 'out.'+prefix + '.polmodel.'+datestring+'.pickle'
-f2 = open(pickfile2,'w')
-p2 = pickle.Pickler(f2)
-p2.dump(new_regression)
-f2.close()
-
-print ""
-print "Dictionary new_regression saved in "+pickfile2
+print "Dictionaries new_regression,clnmodel,polmodel saved in "+pickfile
 print ""
 print "Use Pickle to retrieve these"
 print ""
@@ -1730,6 +1791,7 @@ print ""
 # e.g.
 # f = open(pickfile)
 # u = pickle.Unpickler(f)
+# regression = u.load()
 # clnmodel = u.load()
 # polmodel = u.load()
 # f.close()

@@ -32,6 +32,7 @@
 #include <graphics/GenericPlotter/PlotEventHandler.h>
 #include <graphics/GenericPlotter/PlotItem.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
+#include <graphics/GenericPlotter/PlotOperation.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotShape.h>
 #include <graphics/GenericPlotter/PlotTool.h>
@@ -76,6 +77,13 @@ public:
     static String legendPosition(LegendPosition p); 
     static LegendPosition legendPosition(String p, bool* ok = NULL);
     // </group>
+    
+    // Indicates whether the given legend position is internal to the canvas or
+    // not.
+    static bool legendPositionIsInternal(LegendPosition p);
+    
+    // Convenient access to draw operation name.
+    static const String OPERATION_DRAW;
     
     
     // Non-Static //
@@ -388,6 +396,12 @@ public:
     virtual PlotStandardMouseToolGroupPtr standardMouseTools() = 0;
     
     
+    // Operation Methods //
+    
+    // Returns a mutex appropriate for this implementation.
+    virtual PlotMutexPtr mutex() const = 0;
+    
+    
     // Event Handler Methods //
     
     // register the given select event handler.
@@ -501,15 +515,29 @@ public:
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL);
     // </group>
     
+    // Convenience method for showing/hiding two axes at once.
+    virtual void showAxes(PlotAxis xAxis, PlotAxis yAxis, bool show = true);
+    
+    // Convenience method for showing/hiding all four axes at once.
+    virtual void showAxes(bool show = true);
+    
     // Returns the displayed ranges of the given axes, in world coordinates.
     virtual PlotRegion axesRanges(PlotAxis xAxis, PlotAxis yAxis) const;
+    
+    // See setAxisRange(PlotAxis, double, double).
+    virtual void setAxisRange(PlotAxis axis, const pair<double,double>& range);
     
     // Sets the displayed ranges of the given axes, in world coordinates.
     // Implies setAxesAutoRescale(false), and does NOT reset tool stacks since
     // the tools may be using this method.  It is recommended that subclasses
     // reimplement this to be more efficient.
+    // <group>
     virtual void setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
-                               PlotAxis yAxis, double yFrom, double yTo);
+                               PlotAxis yAxis, double yFrom, double yTo);    
+    virtual void setAxesRanges(PlotAxis xAxis,
+            const pair<double, double>& xRange, PlotAxis yAxis,
+            const pair<double, double>& yRange);
+    // </group>
     
     // Sets the displayed range of the given axes. Implies
     // setAxesAutoRescale(false),  and does NOT reset tool stacks since the
@@ -527,9 +555,18 @@ public:
     // </group>
     
     // Returns a single PlotAxesStack associated with this canvas.  Note that
-    // the canvas doesn't modify/use this stack AT ALL; it is expressly for
-    // outside tools/classes/etc to have a single stack per canvas.
+    // the canvas itself doesn't modify/use this stack AT ALL; it is expressly
+    // for outside tools/classes/etc to have a single stack per canvas.
     virtual PlotAxesStack& canvasAxesStack() const;
+    
+    // Convenience method to move along the PlotAxesStack associated with this
+    // canvas (see canvasAxesStack()).  Calls the stack's moveAndReturn method,
+    // and then sets the axes ranges to the returned PlotRegion.  If delta is
+    // 0, the stack is moved to its base; otherwise it moves forward or
+    // backward from the current stack index (see
+    // PlotAxesStack::moveAndReturn()).  Returns true if the operation
+    // succeeded, false otherwise (for invalid delta).
+    virtual bool canvasAxesStackMove(int delta);
     
     // Convenience methods for most common Cartesian axes cases.
     // <group>
@@ -537,6 +574,9 @@ public:
                                    bool hideNormalAxis = true);
     virtual void showCartesianAxes(bool show = true, bool hideNormal = true);
     // </group>
+    
+    // Convenience method for clearing labels from all axes.
+    virtual void clearAxesLabels();
     
     // Convenience method for setting axis font.
     virtual void setAxisFont(PlotAxis axis, const PlotFontPtr font);
@@ -701,6 +741,13 @@ public:
     
     // Convenience method for setting legend font.
     virtual void setLegendFont(const PlotFontPtr font);
+    
+    // Returns a PlotOperation object that can be used to track drawing
+    // progress across threads.
+    // <group>
+    virtual PlotOperationPtr operationDraw() const;
+    virtual PlotOperationPtr operationDraw(PlotMutexPtr mutex) const;
+    // </group>
     
 protected:
     // Provides children access to PlotTool friend methods.

@@ -98,9 +98,17 @@ UVRowMapper(HA,sin_dec!=0 ? atan2(UVW(1)/sin_dec,UVW(0))/C::pi*180 : 0 );
 
 // these arrays define a mapping between column names and cube mappers
 const String 
-       COL_ID[] = { "OBS","DATA","MODEL","CORR","RES","RES_CORR","RES_OBS","RES_DATA"};
+       COL_ID[] = { "OBS", "DATA", "MODEL",
+		    "CORR", "CORRECTED",
+		    "RES",
+		    "RES_CORR", "RES_CORRECTED",
+		    "RES_OBS", "RES_DATA"};
 const RFDataMapper::CubeMapperFunc 
-       COL_MAP[] = { &CubeMapObs,&CubeMapObs,&CubeMapModel,&CubeMapCorrected,&CubeMapResCorrected,&CubeMapResCorrected,&CubeMapResObs,&CubeMapResObs};
+       COL_MAP[] = { &CubeMapObs, &CubeMapObs, &CubeMapModel,
+		     &CubeMapCorrected, &CubeMapCorrected,
+		     &CubeMapResCorrected,
+		     &CubeMapResCorrected, &CubeMapResCorrected,
+		     &CubeMapResObs, &CubeMapResObs};
 
 // -----------------------------------------------------------------------
 // RFDataMapper::getCubeMapper
@@ -112,9 +120,10 @@ RFDataMapper::CubeMapperFunc RFDataMapper::getCubeMapper( const String &column,B
   if( !column.length() )
     return COL_MAP[0];
   String col( upcase(column) );
-  for( uInt i=0; i<sizeof(COL_ID)/sizeof(COL_ID[0]); i++ )
+  for( uInt i=0; i<sizeof(COL_ID)/sizeof(COL_ID[0]); i++ ) {
     if( col.matches(COL_ID[i]) )
       return COL_MAP[i];
+  }
   if( throw_excp )
     throw( AipsError("DataMapper: unknown column "+column) );
   return NULL;
@@ -168,6 +177,7 @@ RFDataMapper::RFDataMapper ( const Vector<String> &expr0,const String &defcol )
     absof = True;
     el = el.after(3);
   }
+
   if( el == "U" )
     rowmapper = absof ? &RFDataMapper::AbsU_RowMapper : &RFDataMapper::U_RowMapper;
   else if( el == "V" )
@@ -201,17 +211,21 @@ RFDataMapper::RFDataMapper ( const Vector<String> &expr0,const String &defcol )
   }
 // at this point, it must be a valid correlation expression
   String column(defcol);
+
 // see if expression starts with a non-empty column specification, if so,
 // remember the column, and shift it out of the expression vector
   CubeMapperFunc cm = getCubeMapper(expr(0));
+
   if( cm && expr(0).length() )
   {
     column = expr(0);
     expr = expr(Slice(1,expr.nelements()-1));
   }
+
 // check if it parses to a valid DDMapper expression
   ddm = DDFunc::getMapper(expr_desc,expr);
 // valid expression? Set ourselves up as a correlation mapper then
+
   if( ddm )
   {
     if( !cm ) // set column from defcol if not set above
@@ -219,8 +233,10 @@ RFDataMapper::RFDataMapper ( const Vector<String> &expr0,const String &defcol )
     cubemap = cm;
     desc = (column.length() ? "("+upcase(column)+")" : String("") )+expr_desc;
     mytype = MAPCORR;
+
     return;
   }
+
 // invalid expression, so throw an exception
   String s;
   for( uInt i=0; i<expr.nelements(); i++ )

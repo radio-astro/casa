@@ -271,6 +271,7 @@ bool TBBrowser::findRuleAvailable(int index) {
 void TBBrowser::find() {
     TBFilterRules* findDialog = new TBFilterRules(currentlySelectedTable(),
                                                   this);
+    findDialog->renameForSearch(true);
     connect(findDialog, SIGNAL(runRequested(
             TBFilterRuleSequence*, TBFilterRules*)),
             this,SLOT(findRulesEntered(TBFilterRuleSequence*,TBFilterRules*)));

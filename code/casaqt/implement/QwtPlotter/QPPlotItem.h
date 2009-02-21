@@ -103,6 +103,12 @@ public:
     // Implements PlotItem::yAxis().
     virtual PlotAxis yAxis() const;
     
+    // Implements PlotItem::setXAxis().
+    virtual void setXAxis(PlotAxis x);
+    
+    // Implements PlotItem::setYAxis().
+    virtual void setYAxis(PlotAxis y);
+    
     
     // ABSTRACT METHODS //
     
@@ -118,13 +124,6 @@ protected:
     
     // Which layer this item is in.
     PlotCanvasLayer m_layer;
-    
-    
-    // Implements PlotItem::setXAxis().
-    virtual void setXAxis(PlotAxis x);
-    
-    // Implements PlotItem::setYAxis().
-    virtual void setYAxis(PlotAxis y);
     
     // Provides access to QwtPlotItem's attach and detach methods for QPCanvas.
     // <group>

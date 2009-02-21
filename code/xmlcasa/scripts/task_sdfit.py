@@ -231,7 +231,7 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                     else:
                             "No starting guesses available"
 
-            elif ( specunit_now == 'channel' ):
+            else:
                     # Fit mode AUTO and in channel mode
                     print "Trying AUTO mode - find line channel regions"
                     if ( len(maskline) > 0 ):
@@ -275,6 +275,10 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                         for i in range(nlines[irow]):
                             lo = ll[2*i]
                             up = ll[2*i+1]
+                            if specunit == 'km/s':
+                                    tmp=lo
+                                    lo=up
+                                    up=tmp
                             llisttmp = llisttmp + [[lo,up]]
                         linelist.append(llisttmp)
                     # Done with linefinder
@@ -282,20 +286,6 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                     #print "Finished linefinder, found ",nlines,"lines"
                     doguess = True
                     del fl
-            else:
-                    # Fit mode AUTO and NOT in channel mode
-                    print "Trying AUTO mode"
-                    if ( len(maskline) > 0 ):
-                            # There is a user-supplied mask for lines
-                            s.set_unit('channel')
-                            linemask=s.create_mask(maskline,invert=invertmask)
-                            s.set_unit(specunit_now)
-                            domask = True
-                    else:
-                            domask = False
-                    # A single region
-                    nlines = 1
-                    doguess = False
 
             # If we have line regions, get starting guesses
             linemax=[]
@@ -304,7 +294,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             if ( doguess ):
                     # For each line get guess of max, cen and estimated equivalent width (sum/max)
                     for irow in range(s.nrow()):
-                        if( fitmode=='auto' and specunit_now=='channel' ):
+                        print "start ", irow
+                        if( fitmode=='auto' ):
                                 # in auto mode, linelist will be determined
                                 # for each spectra
                                 llist=linelist[irow]
@@ -317,7 +308,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             eqwt=[]
                             cent=[]
                             for x in llist:
-                                    msk = s.create_mask(x)
+                                    print x
+                                    msk = s.create_mask(x, row=irow)
                                     #maxl = s.stats('max',msk)[irow]
                                     #suml = s.stats('sum',msk)[irow]
                                     maxl = s._math._stats(s,msk,'max')[irow]
@@ -325,6 +317,10 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
 
                                     if ( maxl != 0.0 ):
                                             eqw = suml/maxl
+                                            if ( s.get_unit() != 'channel' ):
+                                                    xx=s._getabcissa(irow)
+                                                    dbw=abs(xx[1]-xx[0])
+                                                    eqw = eqw * dbw
                                     else:
                                             eqw = 0.0
                                     cen = 0.5*(x[0] + x[1])

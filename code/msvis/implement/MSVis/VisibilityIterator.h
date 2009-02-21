@@ -329,8 +329,8 @@ public:
   IPosition visibilityShape() const;
 
   // Return u,v and w (in meters)
-  Vector<RigidVector<Double,3> >& 
-  uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
+  Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
+  Matrix<Double>& uvwMat(Matrix<Double>& uvwmat) const;
 
   // Return weight
   Vector<Float>& weight(Vector<Float>& wt) const;

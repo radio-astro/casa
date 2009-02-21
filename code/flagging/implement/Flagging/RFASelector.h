@@ -80,6 +80,9 @@ public:
   virtual String getDesc ();
   static const RecordInterface & getDefaults ();
 
+  Bool fortestingonly_parseMinMax( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 );
+  void fortestingonly_parseClipField( const RecordInterface &spec,Bool clip );
+
 protected:
   typedef struct ClipInfo {
       RFDataMapper *mapper; 

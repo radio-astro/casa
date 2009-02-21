@@ -1,260 +1,161 @@
-# for the love of god don't use tabs in python code!
-#
-# revisions
-# date   author change
-# 20071030 rr    change mosaic center choices onto hex grid
-#                It would also be nice to check whether those directions are
-#                 1. within the modelimage or hull of components,
-#                 2. above the elevation limit
-#                before producing any visibilities.
-# 20080417 rr+ri fix xmlization, remove rmode parameter
-# 20080505 ri thermal noise, clearer xmlized parameters
-# 20080529 ri switch to newclean and other xml nastiness fixed.
-# 20080601 ri at least partially fix mom0 maps to prevent crashing on simulated cubes.
-
-# TODO: Find timerange when at least one of the inputs is up, limit the
+# (partial) TODO list - also search for XXX in the code
+# Find timerange when at least one of the inputs is up, limit the
 #       observing time to it, and warn or abort (printing the valid
 #       timerange) depending on how badly the user missed it.
-# TODO: midpoint freq of band instead of startfreq
-# TODO: look for antenna list in default repository also
-# TODO: allow user to report statistics in J/ybm instead of Jy/arcsec
+# look for antenna list in default repository also
+# allow user to report statistics in J/ybm instead of Jy/arcsec
+# Pad input image to a composite number of pixels on a side.  I don't
+#       know if it would speed things up much, but it would suppress a warning.
+#       Large primes are surprisingly common.
 
 
 
 import os
 from clean import clean_imp as clean
 from taskinit import *
+from simutil import *
 import pylab as pl
-
 import pdb
 
-def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, antennalist=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, async=None):
 
-    ##################some helper functions.
-    ##################keeping them inside almasimmos name space
-    ##################as nobody needs to know about them
-    def msg(s):
-        clr="\x1b[32m"
-        bw="\x1b[0m"
-        print clr+"[simmos] "+bw+s
-        casalog.post("")
-        casalog.post(s)
+def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=None, incell=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, async=None):
 
-    def mul_scal_qa(scal, q):
-        """
-        Returns the product of a dimensionless number scal and quantity q.
-        """
-        return qa.quantity(scal * q['value'], q['unit'])
-    
-    def calc_pointings(direction, spacing, imsize, cell, relmargin = 0.5):
-        """
-        If direction is a list, simply returns direction and the number of
-        pointings in it.
-        
-        Otherwise, returns a hexagonally packed list of pointings separated by
-        spacing and fitting inside an image specified by direction, imsize and
-        cell, and the number of pointings.  The hexagonal packing starts with a
-        horizontal row centered on direction, and the other rows alternate
-        being horizontally offset by a half spacing.  All of the pointings will
-        be within a rectangle relmargin * spacing smaller than the image on all
-        sides.
-        """
-        if type(direction) == list:
-            if len(direction) >1:
-                return len(direction), direction
+    # should just change this to an input parameter verbose.  it sets util.verbose below
+    debug=True
+
+
+
+
+# helper function to plot an image (optionally), and calculate its statistics
+# we could move this to the utility object and have that object contain an incell, but
+# it probably doesn't matter much, since we may want to use this with some other
+# cell value
+
+    def statim(image,plot=True,incell=None):
+        ia.open(image)
+        imunit=ia.summary()['header']['unit']            
+        if imunit == 'Jy/beam':
+            # stupid for dirty image:
+            if len(ia.restoringbeam())>0:
+                bm=ia.summary()['header']['restoringbeam']['restoringbeam']
+                toJyarcsec=1./(qa.convert(bm['major'],'arcsec')['value']*
+                               qa.convert(bm['minor'],'arcsec')['value']*pl.pi/4)
             else:
-                direction=direction[0]
-    
-        epoch, centx, centy = direction_splitter(direction)
-
-        spacing  = qa.quantity(spacing)
-        yspacing = mul_scal_qa(0.866025404, spacing)
-    
-        if type(cell) == list:
-            cellx, celly = map(qa.quantity, cell)
+                toJyarcsec=1.
+        elif imunit == 'Jy/pixel':
+            pix=ia.summary()['header']['incr']
+            toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
         else:
-            cellx = qa.quantity(cell)
-            celly = cellx
-        
-        ysize = mul_scal_qa(imsize[1], celly)
-        nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
-                                - 2.309401077 * relmargin))
+            msg("WARN: don't know image units for %s" % image,color="31")
+        stats=ia.statistics(robust=True)
+        im_max=stats['max']*toJyarcsec
+        im_min=stats['min']*toJyarcsec
+        imsize=ia.shape()[0:2]
+        reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
+        stats=ia.statistics(region=reg1)
+        im_rms=stats['rms']*toJyarcsec
+        if len(im_rms)==0: im_rms=0.
+        data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
+        data_array=pl.array(data_array)
+        tdata_array=pl.transpose(data_array)
+        ttrans_array=tdata_array.tolist()
+        ttrans_array.reverse()
+        if (plot):
+            csys=ia.coordsys()
+            pixsize= csys.increment()["numeric"][0:2]*180/pl.pi*3600 # to arcsec
+            if incell != None:
+                if type(incell)=='str':
+                    incell=qa.quantity(incell)
+                pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
+            if debug: msg("pixel size= %s" % pixsize,origin="statim")
+            xextent=imsize[0]*abs(pixsize[0])*0.5
+            xextent=[xextent,-xextent]
+            yextent=imsize[1]*abs(pixsize[1])*0.5
+            yextent=[-yextent,yextent]
+            # remove top .5% of pixels:
+            nbin=200
+            imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
+            ii=nbin-1
+            highcounts=imhist['counts'][ii]
+            while imhist['counts'][ii]>0.995*highcounts and ii>0: 
+                ii=ii-1
+            highvalue=imhist['values'][ii]
+            #
+            pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
+            ax=pl.gca()
+            l=ax.get_xticklabels()
+            pl.setp(l,fontsize="x-small")
+            l=ax.get_yticklabels()
+            pl.setp(l,fontsize="x-small")
+            pl.title(image,fontsize="x-small")
+            from matplotlib.font_manager import fontManager, FontProperties
+            font= FontProperties(size='x-small');
+            pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
+        ia.done()
+        return im_min,im_max,im_rms
 
-        xsize = mul_scal_qa(imsize[0], cellx)
-        availcols = 1 + qa.convert(qa.div(xsize, spacing),
-                                   '')['value'] - 2.0 * relmargin
-        ncols = int(pl.floor(availcols))
 
-        # By making the even rows shifted spacing/2 ahead, and possibly shorter,
-        # the top and bottom rows (nrows odd), are guaranteed to be short.
-        if availcols - ncols >= 0.5:                                # O O O
-            evencols = ncols                                    #  O O O
-            ncolstomin = 0.5 * (ncols - 0.5)
-        else:
-            evencols = ncols - 1                                #  O O 
-            ncolstomin = 0.5 * (ncols - 1)                      # O O O
-        pointings = []
 
-        # Start from the top because in the Southern hemisphere it sets first.
-        y = qa.add(centy, mul_scal_qa(0.5 * (nrows - 1), yspacing))
-        for row in xrange(0, nrows):         # xrange stops early.
-            xspacing = mul_scal_qa(1.0 / pl.cos(qa.convert(y, 'rad')['value']),
-                                   spacing)
-            ystr = qa.formxxx(y, format='dms')
-        
-            if row % 2:                             # Odd
-                xmin = qa.sub(centx, mul_scal_qa(ncolstomin, xspacing))
-                stopcolp1 = ncols
-            else:                                   # Even (including 0)
-                xmin = qa.sub(centx, mul_scal_qa(ncolstomin - 0.5,
-                                                 xspacing))
-                stopcolp1 = evencols
-            for col in xrange(0, stopcolp1):        # xrange stops early.
-                x = qa.formxxx(qa.add(xmin, mul_scal_qa(col, xspacing)),
-                               format='hms')
-                pointings.append("%s%s %s" % (epoch, x, ystr))
-            y = qa.sub(y, yspacing)
-        ####could not fit pointings then single pointing
-        if(len(pointings)==0):
-            pointings.append(direction)
-        msg("Using %i generated pointings:" % len(pointings))
-        return len(pointings), pointings
 
-    def average_direction(directions):
-        """
-        Returns the average of directions as a string, and relative offsets
-        """
-        epoch0, x, y = direction_splitter(directions[0])
-        i = 1
-        avgx = 0.0
-        avgy = 0.0
-        for drn in directions:
-            epoch, x, y = direction_splitter(drn)
-            x = x['value']
-            y = y['value']
-            if epoch != epoch0:                     # Paranoia
-                print "[simmos] WARN: precession not handled by average_direction()"
-            x = wrapang(x, avgx, 360.0)
-            avgx += (x - avgx) / i
-            avgy += (y - avgy) / i
-            i += 1
-        offsets=pl.zeros([2,i-1])
-        i=0
-        for drn in directions:
-            epoch, x, y = direction_splitter(drn)
-            x = x['value']
-            y = y['value']
-            x = wrapang(x, avgx, 360.0)
-            offsets[:,i]=[x-avgx,y-avgy]
-            i+=1
-        avgx = qa.toangle('%fdeg' % avgx)
-        avgy = qa.toangle('%fdeg' % avgy)
-        avgx = qa.formxxx(avgx, format='hms')
-        avgy = qa.formxxx(avgy, format='dms')
-        return "%s%s %s" % (epoch0, avgx, avgy), offsets
 
-    def direction_splitter(direction):
-        """
-        Given a direction, return its epoch, x, and y parts.  Epoch will be ''
-        if absent, or '%s ' % epoch if present.  x and y will be angle qa's in
-        degrees.
-        """
-        if type(direction) == list:
-            direction=direction[0]                
-        dirl = direction.split()
-        if len(dirl) == 3:
-            epoch = dirl[0] + ' '
-        else:
-            epoch = ''
-        x, y = map(qa.toangle, dirl[-2:])
-        return epoch, qa.convert(x, 'deg'), qa.convert(y, 'deg')
 
-    def wrapang(ang, target, period = 360.0):
-        """
-        Returns ang wrapped so that it is within +-period/2 of target.
-        """
-        dang       = ang - target
-        period     = pl.absolute(period)
-        halfperiod = 0.5 * period
-        if pl.absolute(dang) > halfperiod:
-            nwraps = pl.floor(0.5 + float(dang) / period)
-            ang -= nwraps * period
-        return ang
+    ############Begin of main function ############################################
 
-    def readantenna(antab=None):
-    ###Helper function to read 4 columns text antenna table X, Y, Z, Diam
-        f=open(antab)
-        line= '  '
-        stnx=[]
-        stny=[]
-        stnz=[]
-        stnd=[]
-        nant=0
-        line='    '
-        while (len(line)>0):
-            try: 
-                line=f.readline()
-                if (line.find('#')!=0):
-                ###ignoring line that has less than 4 elements
-                    if(len(line.split()) >3):
-                        splitline=line.split()
-                        stnx.append(float(splitline[0]))
-                        stny.append(float(splitline[1]))
-                        stnz.append(float(splitline[2]))
-                        stnd.append(float(splitline[3]))
-                        nant+=1                 
-            except:
-                break
 
-        f.close()
-        return (pl.array(stnx), pl.array(stny), pl.array(stnz), pl.array(stnd), nant)
-
-############End of helper functions
-
-############Begin of main function ############################################
-
-    casalog.origin('almasimmos')
+    casalog.origin('simmos')
    
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
-        print "[simmos] ERROR -- No sky input found.  At least one of modelimage or complist"
-        print "              must be set."
+        msg("ERROR -- No sky input found.  At least one of modelimage or complist must be set.",color="31")
         return
-
+    
     try:
-        # set up pointings
+        util=simutil(direction)
+        if debug: util.verbose=True
+        msg=util.msg
+        
 
-        nfld, pointings = calc_pointings(direction, pointingspacing,
-                                         imsize, cell, relmargin)
-        ave , off = average_direction(pointings)
+
+        ##################################################################
+        # set up pointings
+        # uses imsize*cell, or could use insize*incell I suppose
+
+        nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+        ave , off = util.average_direction(pointings)
         nbands = 1;    
         fband  = 'band'+startfreq
 
-      
         msfile=project+'.ms'
         
+
+        ##################################################################
+        # if needed, make a model image from the input clean component list
+
         if (modelimage == ''):
             if incell=="header":
-                print "\x1b[31m[simmos] Error: you want to use the model image header but haven't specified a model image\x1b[0m"
-                return
-
-            # 20090106 devel: should we be using incell since there is not
-            # an image?
-            msg("creating an image from your clean components")
+                incell=cell
+            # should we be using incell since there is not an image?
+            if debug: msg("creating an image from your clean components")
             modelimage=project+'.model.im'
             ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
-            ia.setbrightnessunit("Jy/pixel")
             cs=ia.coordsys()
-            epoch,ra,dec=direction_splitter(direction)
+            epoch,ra,dec=util.direction_splitter(direction)
             cs.setunits(['rad','rad','','Hz'])
-            cs.setincrement([incell,incell],'direction')
+            cell_rad=qa.convert(qa.quantity(incell),"rad")['value']
+            cs.setincrement([-cell_rad,cell_rad],'direction')
             cs.setreferencevalue([qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']],'direction')
             cs.setreferencevalue(startfreq,'spectral')
             ia.setcoordsys(cs.torecord())
             cl.open(complist)
+            ia.setbrightnessunit("Jy/pixel")
             ia.modify(cl.torecord(),subtract=False)
             cl.done()
             ia.done() # to make sure its saved to disk at the start
+        else:
+            if (complist != ''):
+                msg("WARNING: I can't use clean components AND an image yet - using image",color=31)
+        
             
+
 
         # open model image as ia tool "model"; leave open
         modelia=ia.newimagefromfile(modelimage)
@@ -269,9 +170,8 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             incelly=qa.quantity(incelly,'rad')
             # warn if incells are not square 
             if not incellx == incelly:
-                clrstr="\x1b[31m" #red
-                print clrstr+"Input pixels are not square!\x1b[0m"
-                print clrstr+("Using incell=incellx=%s\x1b[0m" % incellx)
+                msg("Input pixels are not square!",color="31")
+                msg("Using incell=incellx=%s" % incellx,color="31")
             incell=qa.convert(incellx,'arcsec')
         else:
             incellx=incell
@@ -283,57 +183,122 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             cell=incell
 
 
+        if debug: msg("imsize= %s" % imsize)
 
-        print "imsize=",imsize
 
 
-        # set up observatory
 
-#os.listdir(os.getenv("CASAPATH").split(' ')[0]+"/data/alma/")
-        stnx, stny, stnz, stnd, nant=readantenna(antennalist);
+        ##################################################################
+        # read antenna file:
+
+        stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
         antnames=[]
         for k in range(0,nant): antnames.append('A%02d'%k)
+        aveant=stnd.mean()
+
+
+
+
+        ##################################################################
+        # check inputs - need to add atmospheric window, better display of
+        # where the actual observation block lies on the ephemeris window
+        
+        if checkinputs=="yes" or checkinputs=="only":
+            currfignum=0
+            pl.figure(currfignum)
+            pl.ion()
+            pl.clf()
+            pl.subplot(121)
+            model_min,model_max, model_rms = statim(modelimage,plot=display,incell=incell)
+            lims=pl.xlim(),pl.ylim()
+            tt=pl.array(range(25))*pl.pi/12
+            pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
+            if max(max(lims)) > pb/2:
+                plotcolor='w'
+            else:
+                plotcolor='k'
+            for i in range(off.shape[1]):
+                pl.plot(pl.cos(tt)*pb/2+off[0,i]*3600,pl.sin(tt)*pb/2+off[1,i]*3600,plotcolor)
+            xlim=max(abs(pl.array(lims[0])))
+            ylim=max(abs(pl.array(lims[1])))
+            # show entire pb: (statim doesn't by default)
+            pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
+            pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])
+            pl.text(0,max([ylim,pb/2])*1.2,"regridded model:",horizontalalignment='center')
+            # ephemeris:
+            pl.subplot(222)
+            util.ephemeris(refdate)  # util already knows the direction from above
+            
+            pl.subplot(224)
+            pl.plot(range(2),'o')
+            ax=pl.gca()
+            l=ax.get_xticklabels()
+            pl.setp(l,fontsize="x-small")
+            l=ax.get_yticklabels()
+            pl.setp(l,fontsize="x-small")
+            pl.xlabel("coming soon",fontsize="x-small")
+            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.08,top=0.96,hspace=0.2,wspace=0.2)
+            
+            if checkinputs=="only":
+                return
+            else:
+                pl.figure(currfignum+1)
+
+
+
+
+
+        ##################################################################
+        # set up observatory, feeds, etc:
 
         sm.open(msfile)
-        posalma=me.observatory('ALMA')
-        ax=sum(stnx)/nant;
-        x= stnx-ax; 
-        ay=sum(stny)/nant;
-        y= stny-ay;
-        az=sum(stnz)/nant;
-        z= stnz-az;
+
+        # XXX cludge because ACA isn't in the data repo yet
+        if telescopename=="ACA":
+            posobs=me.observatory("ALMA")
+        else:
+            posobs=me.observatory(telescopename)
+        # XXX
+        
         diam=stnd;
-        sm.setconfig(telescopename='ALMA', x=x.tolist(), 
-                 y=y.tolist(), z=z.tolist(), 
+        sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                  dishdiameter=diam.tolist(), 
                  mount=['alt-az'], antname=antnames,
-                 coordsystem='local', referencelocation=posalma);
+                 coordsystem='global', referencelocation=posobs)
         sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
                    freqresolution=chanwidth, nchannels=nchan, 
-                   stokes='XX YY');
-        sm.setfeed(mode='perfect X Y',pol=['']);
-        sm.setlimits(shadowlimit=0.01, elevationlimit='10deg');
-        sm.setauto(0.0);
+                   stokes='XX YY')
+        sm.setfeed(mode='perfect X Y',pol=[''])
+        sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
+        sm.setauto(0.0)
         for k in range(0,nfld):
             src=project+'_%d'%k
             sm.setfield(sourcename=src, sourcedirection=pointings[k],
                     calcode="C", distance='0m')
-        reftime = me.epoch('TAI', refdate);
+        reftime = me.epoch('TAI', refdate)
         sm.settimes(integrationtime=integration, usehourangle=True, 
-                referencetime=reftime);
+                referencetime=reftime)
         for k in range(0,nfld) :
             src=project+'_%d'%k
             sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*k
             endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*(k+1)
-            # remember, this just creates blank uv entries
+            # this only creates blank uv entries
             sm.observe(sourcename=src, spwname=fband,
                    starttime=qa.quantity(sttime, "s"),
                    stoptime=qa.quantity(endtime, "s"));
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
+
+        # set imcenter to the center of the mosaic;  this is used in clean
+        # as the phase center, which could be nonideal if there is no
+        # pointing exactly in the middle of the mosaic.
         if type(direction) == list:
-            imcenter , foo = average_direction(direction)
+            imcenter , discard = util.average_direction(direction)
             msg("Using phasecenter " + imcenter)
+            if debug:
+                print direction
+                for dir in direction:
+                    msg("   "+dir)
         else:
             imcenter = direction
 
@@ -342,33 +307,87 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
 
 
 
-##################################################################
-### fit modelimage into a 4 coordinate image defined by the parameters
-### (ignoorecoord has been removed for now, for better or worse)
-### the area to predict really doesn't have to be the same size as the output
-### so we just have to set the input pixel size, and then create an output 
-### model image that's padded or trimmed as ness.
+
+
+
+        ##################################################################
+        # fit modelimage into a 4 coordinate image defined by the parameters
 
         if (modelimage != ''):
-            # modelia is open to the original input model from above
+            # modelia is already open with the original input model from above
             insize=modelia.shape()
 
             # first make a blank 4-dimensional image w/the right cell size
             modelimage4d=project+"."+modelimage+'.coord'
             im.open(msfile)    
             im.selectvis(field=range(nfld), spw=0)
+            # imcenter is the average of the desired pointings
+            # we put the phase center there, rather than at the
+            # reference direction for the input model (refdirection)
             im.defineimage(nx=insize[0], ny=insize[1], cellx=incellx, celly=incelly, phasecenter=imcenter)
             im.make(modelimage4d)
             im.close()
             im.done()
 
-            # scale to input Jy/arcsec
-            inbrightpix=inbright*(qa.quantity(incell)['value'])**2            
-            stats=modelia.statistics()
-            highvalue=stats['max']
-            scalefactor=inbrightpix/highvalue
+            if refdirection!=None:
+                if debug: msg("setting model image direction to "+refdirection)
+                if refdirection!="header":
+                    ia.open(modelimage4d)
+                    modelcs=ia.coordsys()
+                    if refdirection=="direction":
+                        epoch, ra, dec = util.direction_splitter(imcenter)
+                    else:
+                        epoch, ra, dec = util.direction_splitter(refdirection)
+                    ref=[0,0,0,0]
+                    raax=modelcs.findcoordinate("direction")['pixel'][0]
+                    ref[raax]=qa.convert(ra,modelcs.units()[raax])['value']
+                    deax=modelcs.findcoordinate("direction")['pixel'][1]
+                    ref[deax]=qa.convert(dec,modelcs.units()[deax])['value']
+                    spax=modelcs.findcoordinate("spectral")['pixel']
+                    ref[spax]=qa.convert(startfreq,modelcs.units()[spax])['value']
+                    ref[modelcs.findcoordinate("stokes")['pixel']]=1
+                    modelcs.setreferencevalue(ref)
+                    ia.setcoordsys(modelcs.torecord())
+                    ia.done()
+                    if debug: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
 
-#            pdb.set_trace()
+
+            if refpixel!=None:
+                if refpixel!="header":
+                    ia.open(modelimage4d)
+                    modelcs=ia.coordsys()
+                    if refpixel=="center":
+                        crpix=pl.array([insize[0]/2,insize[1]/2])
+                    else:
+                        # XXX this is pretty fragile code right now
+                        refpixel=refpixel.replace('[','')
+                        refpixel=refpixel.replace(']','')
+                        crpix=pl.array(refpixel.split(','))
+                    ref=[0,0,0,0]
+                    raax=modelcs.findcoordinate("direction")['pixel'][0]
+                    ref[raax]=float(crpix[0])
+                    deax=modelcs.findcoordinate("direction")['pixel'][1]
+                    ref[deax]=float(crpix[1])
+                    spax=modelcs.findcoordinate("spectral")['pixel']
+                    ref[spax]=0
+                    ref[modelcs.findcoordinate("stokes")['pixel']]=0
+                    if debug: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
+                    modelcs.setreferencepixel(ref)
+                    ia.setcoordsys(modelcs.torecord())
+                    ia.done()
+                
+
+            if inbright=="default":
+                scalefactor=1.
+            else:
+                # scale to input Jy/arcsec
+                if type(incell)==str:
+                    incell=qa.quantity(incell)
+                inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
+                stats=modelia.statistics()
+                highvalue=stats['max']
+                scalefactor=inbrightpix/highvalue
+
 
             # arr is the chunk of the input image
             arr=modelia.getchunk()*scalefactor;
@@ -413,7 +432,7 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
                 else:
                     arrin[:,:,:,0]=arrout[blc[0]:trc[0], blc[1]:trc[1], :]
             if(naxis==4):
-# input images with more than 1 channel need more testing!
+                # XXX input images with more than 1 channel need more testing!
                 if((arrout.shape[3]==arrin.shape[3]) and
                    (arrout.shape[2]==arrin.shape[2])):
                     blc[3]=0
@@ -429,12 +448,21 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             modelia.putchunk(arr2)
             modelia.done()
 
-# image should now have 4 axes and same size as output
-# at least in xy (check channels later)        
-            msg("predicting from "+modelimage4d)
+            # image should now have 4 axes and same size as output
+            # XXX at least in xy (check channels later)        
+
+
+
+
+
+            
+            ##################################################################
+            # do actual calculation of visibilities from the model image:
+
+            if debug: msg("predicting from "+modelimage4d)
             sm.predict(imagename=[modelimage4d], complist=complist)
             
-        else:   # we're doing just components
+        else:   # if we're doing only components
             sm.predict(complist=complist)
             
         sm.done()
@@ -443,16 +471,23 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
         msg('generation of measurement set ' + msfile + ' complete.')
 
 
-######################################################################
-# noisify_alma ; start with Apr 2008 Knee version (see helper functions)
+
+
+
+
+        ######################################################################
+        # noisify
 
         noise_any=False
     
         if noise_thermal:
+            if not (util.observatoryname == 'ALMA' or util.observatoryname == 'ACA'):
+                msg("WARNING: thermal noise only works properly for ALMA/ACA",color=31)
+                
             noise_any=True
 
-            import numpy
-            from math import exp
+            # import numpy
+            # from math import exp
 
             noisymsfile = project + ".noisy.ms"
             msg('adding thermal noise to ' + noisymsfile)
@@ -471,12 +506,12 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             epsilon = 25.  # micron surface rms
 
             startfreq_ghz=qa.convertfreq(qa.quantity(startfreq),'GHz')
-            eta_p = exp(-(4.0*3.1415926535*epsilon*startfreq_ghz.get("value")/2.99792458e5)**2)
-            msg('ruze phase efficiency = ' + str(eta_p))
+            eta_p = pl.exp(-(4.0*3.1415926535*epsilon*startfreq_ghz.get("value")/2.99792458e5)**2)
+            if debug: msg('ruze phase efficiency = ' + str(eta_p))
 
             # antenna efficiency
             eta_a = eta_p*eta_s*eta_b*eta_t
-            msg('antenna efficiency = ' + str(eta_a))
+            if debug: msg('antenna efficiency = ' + str(eta_a))
  
             # Ambient surface radiation temperature in K. 
             # FOR NOW, T_atm = T_ground = T_amb
@@ -488,18 +523,18 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             t_cmb = 2.275
             # Receiver radiation temperature in K. 
             # ALMA-40.00.00.00-001-A-SPE.pdf
-            freq0=[35,75,110,145,185,230,345,409,175,230]
+            freq0=[35,75,110,145,185,230,345,409,675,867]
             trx0=[17,30,37,51,65,83,147,196,175,230]
-            t_rx = numpy.interp([startfreq_ghz.get("value")],freq0,trx0)[0]
+            t_rx = pl.interp([startfreq_ghz.get("value")],freq0,trx0)[0]
 
             os.system("cp -r "+msfile+" "+noisymsfile)
-            # TODO check for and copy flagversions file as well
+            # XXX check for and copy flagversions file as well
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata();                # currently defaults to fld=0,spw=0
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             sm.setapply(type='TOPAC',opacity=tau0);  # arrange opac corruption
-            # TODO VERIFY that this is just an attenuation!
+            # XXX VERIFY that this is just an attenuation!
             sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,
                         tau=tau0,tatmos=t_amb,tcmb=t_cmb,
@@ -507,28 +542,32 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             sm.corrupt();
             sm.done();
 
-            msg("done corrupting with thermal noise")
+            if debug: msg("done corrupting with thermal noise")
+
             
-#TEST
-#        noise_phase=True
-#
-#        if noise_phase:
-#            # phase noise
-#            # noise_any=True
-#            noisycalfile = project + ".atmos.cal"
-#            casalog.post('adding phase noise to ' + noisycalfile)
-#            gaincal_defaults()
-#            # make cal file to be modified
-#            gaincal(vis=msfile,caltable=noisycalfile,solint=-1)
+        # not yet implemented:
+        #        noise_phase=True
+        #
+        #        if noise_phase:
+        #            # phase noise
+        #            # noise_any=True
+        #            noisycalfile = project + ".atmos.cal"
+        #            casalog.post('adding phase noise to ' + noisycalfile)
+        #            gaincal_defaults()
+        #            # make cal file to be modified
+        #            gaincal(vis=msfile,caltable=noisycalfile,solint=-1)
             
 
- #####################################################################
-# clean if desired, WILL use noisy image for further calculation if present!
-# do we want to invert the noiseless one anyway for comparison?
+
+
+
+
+
+        #####################################################################
+        # clean if desired, WILL use noisy image for further calculation if present!
+        # do we want to invert the noiseless one anyway for comparison?
 
         if noise_any:
-#            imgroot = project + '.noisy'
-# 20080525 shorter filenames
             imgroot = project 
             mstoimage = noisymsfile
         else:
@@ -536,9 +575,6 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             mstoimage = msfile
 
         if fidelity == True and psfmode == "none":
-#            msg("You can't calculate fidelity without imaging, so I'm making you a dirty image")
-#            psfmode="clark"
-#            niter=0
             msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.")
             fidelity=False
 
@@ -553,26 +589,47 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             else:
                 image=imgroot+'.clean'
                 msg("cleaning to "+image)
+            msg("using phase center="+imcenter)
         
             if uvtaper == False:
                 outertaper=[]
                 innertaper=[]
-                
-            clean(vis=msfile,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode="mosaic",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+
+            if casalog.version().split()[2].split('.')[1] <= 3:
+                # XXX 2.3.1 syntax:
+                clean(vis=msfile,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode="mosaic",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+                # XXX 2.4.0 syntax:
+            else:
+                clean(vis=msfile, imagename=image, field='', spw='', selectdata=False,
+                      timerange='', uvrange='', antenna='', scan='', mode="channel",
+                      interpolation='nearest', niter=niter, gain=0.1, threshold=threshold,
+                      psfmode=psfmode, imagermode="mosaic", ftmachine="mosaic",
+                      mosweight=False, scaletype="SAULT", multiscale=[],
+                      negcomponent=-1, interactive=False, mask=[], nchan=nchan,
+                      start=0, width=1, imsize=imsize, cell=cell, phasecenter=imcenter,
+                      restfreq='', stokes=stokes, weighting=weighting, robust=robust,
+                      uvtaper=uvtaper, outertaper=outertaper, innertaper=innertaper,
+                      modelimage='', restoringbeam=[''], pbcor=False, minpb=0.1,
+                      noise=noise, npixels=npixels, npercycle=100,
+                      cyclefactor=1.5, cyclespeedup=-1)
         else:
             image=imgroot
 
-# wtf?  __temp_model2
-# OSError: (66, 'Directory not empty')
 
-# need this filename whether or not we create the image
+
+
+        # need this filename whether or not we create the image
         modelregrid=project+"."+modelimage+".regrid"
 
+
+
+
+
+
+        #####################################################################
+        # prepare for diff and fidelity and display by making a moment 0 image
+
         if fidelity == True or display == True:
-        # now deal with the input image, and make sure we have flat/mom0
-        # versions of both to compare and calculate fidelity.
-        # we'll need the flat image for display whether or not we have 
-        # fidelity.  
 
             inspectax=incoordsys.findcoordinate('spectral')['pixel']
             innchan=insize[inspectax]
@@ -580,7 +637,7 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             # modelflat should be the moment zero of that
             modelflat=project+"."+modelimage+".mom0" 
             if innchan>1:
-                msg("creating moment zero input image")
+                if debug: msg("creating moment zero input image")
                 # actually run ia.moments
                 ia.open(modelimage4d)
                 ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
@@ -595,16 +652,18 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
                 ia.done()
                 os.system("rm -rf "+modelflat+".tmp")
 
+
             # flat output
             outflat=image+".mom0"
-        # should we really be calling this mom0, if we use the mean, or mom-1?
+            # should we really be calling this mom0, if we use the mean, or mom-1?
             if nchan>1:
                 # image is either .clean or .dirty
-                msg("creating moment zero output image")                
+                if debug: msg("creating moment zero output image")
                 ia.open(image+".image")
                 ia.moments(moments=[-1],outfile=outflat,overwrite=True)
                 ia.done()
-            else:            
+            else:
+                if debug: msg("flattening output image to "+outflat)
                 # just remove degenerate axes from image
                 ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
                 # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
@@ -618,7 +677,7 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             ia.open(outflat)
             outflatcoordsys=ia.coordsys()
             outflatshape=ia.shape()
-            ia.done()
+            ia.done()            
 
             # regrid flat input to flat output shape, for convolution, etc
             modelia.open(modelflat)
@@ -626,15 +685,16 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
                                   csys=outflatcoordsys.torecord(),shape=outflatshape)
             imrr.done()
 
-# should we also add the cclean image?  can we make an image from the cclist?
-# create it and then modelia.immath or some such
+            # XXX when we get to using both clean components and model image,
+            # we should add them together here if not before.
+            # modelia.immath
 
             modelia.done()
             outflatcoordsys.done()
             del outflatcoordsys
             del imrr
 
-            if innchan==1:
+            if innchan==1 and not debug:
                 os.system("rm -rf "+modelflat)  # no need to keep this
 
 
@@ -643,17 +703,23 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
 
 
 
-#####################################################################
-# fidelity  start with Knee version again
 
-#        if os.path.exists(modelimage) and display == True and psfmode != "none":
-        if os.path.exists(modelimage) and (fidelity == True or display == True):             # get beam from output clean image
+
+
+
+
+        #####################################################################
+        # fidelity  
+
+        if os.path.exists(modelimage) and (fidelity == True or display == True):
+            # get beam from output clean image
+            if debug: msg("getting beam from "+image+".image")
             ia.open(image+".image")
             beam=ia.restoringbeam()
             ia.done()
 
         if os.path.exists(modelimage) and fidelity == True: 
-            from math import sqrt
+            # from math import sqrt
             
             # Convolve model with beam.
             convolved = project + '.convolved.im'
@@ -669,83 +735,30 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
             ia.done()
+            maxdiff=diffstats['medabsdevmed']
+            if maxdiff!=maxdiff: maxdiff=0.
             # Make fidelity image.
             absdiff = imgroot + '.absdiff.im'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
-                                                          diffstats['medabsdevmed']/sqrt(2.0)), overwrite = True)
+                                                          maxdiff/pl.sqrt(2.0)), overwrite = True)
             fidelityim = imgroot + '.fidelity.im'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
             ia.done()
 
             msg("fidelity image calculated")
 
-# clean up moment zero maps if we don't need them anymore
-            if nchan==1:
-                os.system("rm -rf "+outflat)  # no need to keep this
+            # clean up moment zero maps if we don't need them anymore
+            if nchan==1 and not debug:
+                os.system("rm -rf "+outflat) 
 
 
- #####################################################################
-# display and stats;        
-        # we want stats etc calculated whether we do display or not
-        def statim(image,plot=True):
-# make this global later
-#            statunits=
-            ia.open(image)
-            imunit=ia.summary()['header']['unit']            
-            if imunit == 'Jy/beam':
-                # stupid for dirty image:
-                if len(ia.restoringbeam())>0:
-                    bm=ia.summary()['header']['restoringbeam']['restoringbeam']
-                    toJyarcsec=1./(qa.convert(bm['major'],'arcsec')['value']*
-                                   qa.convert(bm['minor'],'arcsec')['value']*pl.pi/4)
-                else:
-                    toJyarcsec=1.
-            elif imunit == 'Jy/pixel':
-                pix=ia.summary()['header']['incr']
-                toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
-            else:
-                print "WARN: don't know image units for %s" % image
-            stats=ia.statistics(robust=True)
-            im_max=stats['max']*toJyarcsec
-            im_min=stats['min']*toJyarcsec
-            imsize=ia.shape()[0:2]
-            reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
-            stats=ia.statistics(region=reg1)
-            im_rms=stats['rms']*toJyarcsec
-            if len(im_rms)==0: im_rms=0.
-            data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
-            data_array=pl.array(data_array)
-            tdata_array=pl.transpose(data_array)
-            ttrans_array=tdata_array.tolist()
-            ttrans_array.reverse()
-            if (plot):
-                csys=ia.coordsys()
-                pixsize= csys.increment()["numeric"][0:2]*180/pl.pi*3600 # to arcsec
-                xextent=imsize[0]*pixsize[0]*0.5
-                xextent=[xextent,-xextent]
-                yextent=imsize[1]*pixsize[1]*0.5
-                yextent=[-yextent,yextent]
-                # remove top .5% of pixels:
-                nbin=200
-                imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
-                ii=nbin-1
-                highcounts=imhist['counts'][ii]
-                while imhist['counts'][ii]>0.995*highcounts and ii>0: 
-                    ii=ii-1
-                highvalue=imhist['values'][ii]
-                #
-                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
-                ax=pl.gca()
-                l=ax.get_xticklabels()
-                pl.setp(l,fontsize="x-small")
-                l=ax.get_yticklabels()
-                pl.setp(l,fontsize="x-small")
-                pl.title(image,fontsize="x-small")
-                from matplotlib.font_manager import fontManager, FontProperties
-                font= FontProperties(size='x-small');
-                pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
-            ia.done()
-            return im_min,im_max,im_rms
+
+
+
+
+
+        #####################################################################
+        # display and statistics:
 
         # plot whichever image we have - preference is for noisy and cleaned
         if display:
@@ -767,17 +780,18 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
             # modelregrid might not exist if there's no display or fidelity
             if os.path.exists(modelregrid):
                 model_min,model_max, model_rms = statim(modelregrid,plot=display)
-            foo=pl.xlim(),pl.ylim()
+                xlim=max(pl.xlim())
+                ylim=max(pl.ylim())
             if (display):
                 tt=pl.array(range(25))*pl.pi/12
-                pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/12.*3600.*180/pl.pi
+                pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
+                # XXX change this to use tb.open(ms/POINTINGS)/direction
+                # and them make it a helper function
                 for i in range(off.shape[1]):
                     pl.plot(pl.cos(tt)*pb/2+off[0,i]*3600,pl.sin(tt)*pb/2+off[1,i]*3600,'w')
-                pl.xlim(max([foo[0],pb/2]))
-                pl.ylim(max([foo[1],pb/2]))
-        # else:
-        #    Maybe a restored complist should be presented, but that
-        #    would be so clean-centric.
+                pl.xlim([xlim,-xlim])
+                pl.ylim([-ylim,ylim])
+
             
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
@@ -788,17 +802,18 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
 
         if (display):
             tb.open(mstoimage)
-            foo=tb.getcol("UVW")
+            # XXX use rob's FFT of the PB instead
+            rawdata=tb.getcol("UVW")
             tb.done()
             if fidelity == True:
                 pl.subplot(235)
             else:
                 pl.subplot(223)
             pl.box()
-            maxbase=max([max(foo[0,]),max(foo[1,])])  # in m
+            maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
             klam_m=300/qa.convert(qa.quantity(startfreq),'GHz')['value']
-            pl.plot(foo[0,]/klam_m,foo[1,]/klam_m,',')
-            pl.plot(-foo[0,]/klam_m,-foo[1,]/klam_m,',')
+            pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+            pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
             ax=pl.gca()
             ax.yaxis.LABELPAD=-4
             l=ax.get_xticklabels()
@@ -814,17 +829,21 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
                     pl.subplot(236)
                 else:
                     pl.subplot(224)
-#                ia.open(imgroot+".convolved.im")
-#                #beam=ia.restoringbeam()
-#                ia.done()
+                # ia.open(imgroot+".convolved.im")
+                # beam=ia.restoringbeam()
+                # ia.done()
                 ia.open(image+".psf")
-                beam_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
+                beamcs=ia.coordsys()
+                beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                 pixsize=(qa.convert(qa.quantity(cell),'arcsec')['value'])
                 xextent=imsize[0]*pixsize*0.5
                 xextent=[xextent,-xextent]
                 yextent=imsize[1]*pixsize*0.5
                 yextent=[-yextent,yextent]
-                pl.imshow(beam_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent)
+                flipped_array=beam_array.transpose()
+                ttrans_array=flipped_array.tolist()
+                ttrans_array.reverse()
+                pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
                 pl.title(image+".psf",fontsize="x-small")
                 b=qa.convert(beam['major'],'arcsec')['value']
                 pl.xlim([-3*b,3*b])
@@ -844,26 +863,24 @@ def almasimmos(modelimage=None, incell=None, inbright=None, complist=None, anten
         
         # if not displaying still print stats:
         if psfmode != "none":
-            print 'Simulation rms: '+str(sim_rms)
-            print 'Simulation max: '+str(sim_max)
-            casalog.post('Simulation rms: '+str(sim_rms))
-            casalog.post('Simulation max: '+str(sim_max))
+            msg('Simulation rms: '+str(sim_rms),color="30")
+            msg('Simulation max: '+str(sim_max),color="30")
         
-#        if os.path.exists(modelregrid):
         if display == True or fidelity == True:
-            print 'Model rms: '+str(model_rms)
-            print 'Model max: '+str(model_max)
-            casalog.post('Model rms: '+str(model_rms))
-            casalog.post('Model max: '+str(model_max))
-            print 'Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value'])
-            casalog.post('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']))
+            msg('Model rms: '+str(model_rms),color="30")
+            msg('Model max: '+str(model_max),color="30")
+            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),color="30")
             
 
+
+
+
+
     except TypeError, e:
-        print "task_almasimmos -- TypeError: ", e
+        msg("task_simmos -- TypeError: %s" % e,color="red")
         return
     except ValueError, e:
-        print "task_almasimmos -- OptionError: ", e
+        print "task_simmos -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

@@ -380,6 +380,12 @@ TBFilterRules::TBFilterRules(TBTable* t, QWidget* parent): QDialog(parent),
 
 TBFilterRules::~TBFilterRules() { }
 
+
+void TBFilterRules::renameForSearch(bool isSearch) {
+    setWindowTitle(isSearch ? "Search Rules" : "Filter Rules");
+    runButton->setText(isSearch ? "Search" : "Run Filter");
+}
+
 // Private Slots //
 
 void TBFilterRules::runClicked() { emit runRequested(rules, this); }

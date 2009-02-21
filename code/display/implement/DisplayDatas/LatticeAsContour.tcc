@@ -47,7 +47,7 @@ LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
 				      const uInt yAxis, const uInt mAxis,
 				      const IPosition fixedPos) :
   LatticePADisplayData<T>(array, xAxis, yAxis, mAxis, fixedPos),
-  itsMinContour(0), itsMaxContour(0) {
+  itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
   setupElements();
   setDefaultOptions();
@@ -58,7 +58,7 @@ template <class T>
 LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
 				      const uInt yAxis) :
   LatticePADisplayData<T>(array, xAxis, yAxis),
-  itsMinContour(0), itsMaxContour(0) {
+  itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
   setupElements();
   setDefaultOptions();
@@ -71,7 +71,7 @@ LatticeAsContour<T>::LatticeAsContour(ImageInterface<T> *image,
 				      const uInt mAxis,
 				      const IPosition fixedPos) :
   LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
-  itsMinContour(0), itsMaxContour(0) {
+  itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
   setupElements();
   setDefaultOptions();
@@ -82,7 +82,7 @@ template <class T>
 LatticeAsContour<T>::LatticeAsContour(ImageInterface<T> *image,
 				      const uInt xAxis, const uInt yAxis) :
   LatticePADisplayData<T>(image, xAxis, yAxis),
-  itsMinContour(0), itsMaxContour(0) {
+  itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
   setupElements();
   setDefaultOptions();
@@ -93,8 +93,8 @@ LatticeAsContour<T>::~LatticeAsContour() {
   for (uInt i = 0; i < nelements(); i++) {
     delete ((LatticePADMContour<T> *)DDelement[i]);
   }
-  if(itsMinContour!=0) { delete itsMinContour; itsMinContour=0;  }
-  if(itsMaxContour!=0) { delete itsMaxContour; itsMaxContour=0;  }
+  if(itsBaseContour!=0) { delete itsBaseContour; itsBaseContour=0;  }
+  if(itsUnitContour!=0) { delete itsUnitContour; itsUnitContour=0;  }
 }
 
 // Oke, here we setup the elements using LatticePADMContour
@@ -134,14 +134,12 @@ void LatticeAsContour<T>::setDefaultOptions() {
   LatticePADisplayData<T>::setOptions(rec, recOut);
   getMinAndMax();	// (actually, this _computes_ and sets min and max.)
 
-  itsLevels.resize(5);  for(Int i=0; i<5; i++) itsLevels[i] = i;
-   
   setStdContourLimits_();
   
   AipsrcValue<Float>::find(itsLine,"display.contour.linewidth",0.5f);  
   itsDashNeg = True;
   itsDashPos = False;
-  Aipsrc::find(itsColor,"display.contour.color","foreground");  
+  Aipsrc::find(itsColor,"display.contour.color","foreground");
 }
 
 template <class T>
@@ -149,85 +147,105 @@ void LatticeAsContour<T>::constructParameters_() {
   // Construct user option DisplayParameters (for min/max contour.)
   // (To be used by constructors only.)
 
-  if(itsMinContour!=0) return;	// (already done).
+  if(itsBaseContour!=0) return;	// (already done).
   
-  itsMinContour = new DParameterRange<Float>("mincontour",
+  itsBaseContour = new DParameterRange<Float>("basecontour",
                   "Base Contour Level", 
                   "Actual contour level corresping to\n"
-		  "a '0' in the 'Levels' textbox.",
+		  "a '0' in the 'Relative Levels' textbox.",
 		  0., 1.,  .001,  0., 0.,	// (set for real below).
 	          "", True, True);
 
-  itsMaxContour = new DParameterRange<Float>("maxcontour",
-                  "Maximum Contour Level",
+  itsUnitContour = new DParameterRange<Float>("unitcontour",
+                  "Unit Contour Level",
 		  "Actual contour level corresping to to a '1' in\n"
-		  "the 'Levels' textbox (or to the maximum level\n"
-		  "entered there, whichever is greater.)", 
+		  "the 'Relative Levels' textbox.", 
 		  0., 1.,  .001,  1., 1.,	// (set for real below).
 	          "", True, True);  }
   
 
 template <class T>
 void LatticeAsContour<T>::setStdContourLimits_(Record* recOut) {
-  // Set standard limits/values for contour sliders.  If recOut is provided,
-  // they will be set onto it in a manner suitable for updating gui via
-  // setOptions.
+  // Set standard limits/values for contour sliders and relative levels.
+  // If recOut is provided, the defaults will be set onto it in the
+  // standard form used for updating the gui during/after setOptions().
   
-  // These heuristics for setting the default initial contour level bracket
-  // for the sliders (mincontour, maxcontour) could be improved.  Ideally,
-  // mincontour should be where the data begins to show above the noise;
-  // maxcontour should be the highest level where the contour would still
-  // be significantly visible (say about the 90th or 95th percentile.)
-  // Both determinations could take time and/or sophisticated code.
-  // The user can adjust this easily by eye afterward, but the biggest
-  // problem with this simple code is that wild outliers can make the
-  // range orders of magnitude too large and mess up slider resolution
-  // as a result.  Clipping min-maxcontour to a reasonable percentile
-  // bracket is advisable, but the computation (which involves sorting)
-  // would need to just sample large datasets, for efficiency.
+  // These heuristics could probably be improved.  This latest version
+  // is based on scientific input from Steve Myers.
   
   Float dmin=getDataMin(), dmax=getDataMax();
-  Float dmin2 = dmin;
-  if(dmin < 0. && dmax > 2.*(-dmin)) dmin2=0.;
-	// (data <0 assumed to be noise in this case)
-	// (btw, in this (typical) case, a good guess
-	//  for mincontour might be .5*(-dmin) ~= 1.5 or 2 * sigma...)
-  Float delta = abs(dmax - dmin2);
-  Float mincontour = dmin2 + .18 * delta;
-  Float maxcontour = dmin2 + .9 * delta;
+  Float absmax = max(abs(dmin), abs(dmax));
   
-  Float res = delta*.01;
+  
+  // Compute default values, limits and resolution for sliders.
+  
+  Float minLimit=dmin, maxLimit=dmax,
+         baseVal=dmin,  unitVal=dmax;
+  
+  Bool isIntensity = dataUnit() == Unit("Jy/beam");
+
+  if(isIntensity) {
+    minLimit=min(dmin, 0.); maxLimit=absmax;
+    baseVal=0.; unitVal=absmax;  }
+  
+  Float range = abs(maxLimit-minLimit);
+  Float res = range*.005;
   if(res<=0.) res = .001;
   else res = pow(10., floor(log10(res)));
 		// slider resolution (will be a power of ten.)
-  if(res<=0.) res = .001;	// (Safety... doubtful need).
   
-  if(maxcontour-mincontour > 2*res) {
-    mincontour = floor(mincontour/res + .5)*res;	// rounded to
-    maxcontour = floor(maxcontour/res + .5)*res;  }	// nearest res
-  
-  if(dmax-dmin > 2*res) {
-    dmin = -floor((-dmin/res))*res;		// rounded up
-    dmax =  floor(  dmax/res) *res;  }		// rounded down...
-  						// (to nearest res)
+  if(res<=0.) res = .001;	// (Safety... doubtful need/usefulness.)
   
   
-  itsMinContour->setMinimum(dmin);
-  itsMinContour->setMaximum(dmax);
-  itsMinContour->setResolution(res);
-  itsMinContour->setDefaultValue(mincontour);
-  itsMinContour->setValue(mincontour);
+  if(unitVal-baseVal > 2*res) {
+    baseVal = floor(baseVal/res + .5)*res;	// round to
+    unitVal = floor(unitVal/res + .5)*res;  }	// nearest res
   
-  itsMaxContour->setMinimum(dmin);
-  itsMaxContour->setMaximum(dmax);
-  itsMaxContour->setResolution(res);
-  itsMaxContour->setDefaultValue(maxcontour);
-  itsMaxContour->setValue(maxcontour);
-    
+  if(maxLimit-minLimit > 2*res) {
+    minLimit = floor(minLimit/res + .5)*res;
+    maxLimit = floor(maxLimit/res + .5) *res;  }
+
+  // Set standard relative levels:  [-.8 -.6 -.4 -.2  .2  .4 . 6 . 8]
+  
+  Vector<Float> rellevels(8);
+  for(Int i=0; i<4; i++) {
+    rellevels[i]   = .2*(i-4);
+    rellevels[i+4] = .2*(i+1);  }
+  
+  // Eliminate relative levels that will not be needed.
+  
+  Int nlevels = rellevels.size();
+  itsLevels.resize(nlevels);
+  Int j = 0;
+  Float delta = unitVal - baseVal;
+  for(Int i=0; i<nlevels; i++) {
+    Float abslevel = baseVal + rellevels[i]*delta;
+    if(abslevel>=dmin && abslevel<=dmax) itsLevels[j++] = rellevels[i];  }
+  itsLevels.resize(j, True);
+
+  // Post defaults to sliders
+  
+  itsBaseContour->setMinimum(minLimit);
+  itsBaseContour->setMaximum(maxLimit);
+  itsBaseContour->setResolution(res);
+  itsBaseContour->setDefaultValue(baseVal);
+  itsBaseContour->setValue(baseVal);
+  
+  itsUnitContour->setMinimum(minLimit);
+  itsUnitContour->setMaximum(maxLimit);
+  itsUnitContour->setResolution(res);
+  itsUnitContour->setDefaultValue(unitVal);
+  itsUnitContour->setValue(unitVal);
+
+
   if(recOut!=0) {
     Bool wholeRecord=True, overwrite=True;
-    itsMinContour->toRecord(*recOut, wholeRecord, overwrite);
-    itsMinContour->toRecord(*recOut, wholeRecord, overwrite);  }  }
+    itsBaseContour->toRecord(*recOut, wholeRecord, overwrite);
+    itsUnitContour->toRecord(*recOut, wholeRecord, overwrite);
+    Record levels;
+    levels.define("dlformat", "rellevels");
+    levels.define("value", itsLevels);
+    recOut->defineRecord("rellevels", levels);  }  }
   
   
          
@@ -241,21 +259,27 @@ Vector<Float> LatticeAsContour<T>::levels() {
   Vector<Float> rellevels(itsLevels);	// Entered (relative) levels.
   
   if(nlevels>0) {
-    Float min = itsMinContour->value(),		// 'slider' values.
-          max = itsMaxContour->value();
+    Float dmin=getDataMin(),
+          dmax=getDataMax();
     
-    Float delta = max - min;
+    Float baseVal = itsBaseContour->value(),	// 'slider' values.
+          unitVal = itsUnitContour->value();
     
-    Float reldelta = 1.;
+    Float delta = unitVal - baseVal;
+    
+    // The linear scaling: from [0, 1] -> [baseVal, unitVal]
+    // Relative levels that will outside data bounds are eliminated,
+    // for contouring efficiency.  (Similar code in setStdContourLimits_()
+    // above is just for tidiness in the defaults...)
+ 
+    Int j=0;
     for(Int i=0; i<nlevels; i++) {
-      if(reldelta<rellevels[i]) reldelta = rellevels[i];  }
-		// max of textbox (relative) levels and 1.
+      Float abslevel = baseVal + rellevels[i]*delta;
+      if(abslevel>=dmin && abslevel<=dmax) abslevels[j++] = abslevel;  }
     
-    // The linear scaling: from [0, max(1., rellevels)] -> [min, max]
+    abslevels.resize(j, True);
+    nlevels = abslevels.nelements();
     
-    for(Int i=0; i<nlevels; i++) {
-      abslevels[i] = min + rellevels[i]*delta/reldelta;  }
-
     // Assure the levels are sorted, for good measure.
     
     for(Int i=0; i<nlevels; i++) {
@@ -279,9 +303,9 @@ String LatticeAsContour<T>::levelString(Int prec) {
   if(prec<=0) {
     // Try to determine  a precision that is low enough not to
     // clutter up tracking.
-    Float absmax = max(abs(itsMinContour->minimum()),
-                       abs(itsMaxContour->maximum()));
-    Float res = itsMaxContour->resolution();
+    Float absmax = max(abs(itsBaseContour->minimum()),
+                       abs(itsUnitContour->maximum()));
+    Float res = itsUnitContour->resolution();
     if(absmax==0.) absmax = 1.;	// (safety)
     if(res<=0.)    res = .001;	// (safety)
     prec = max (2, ifloor(log10(absmax/res))+1);  }
@@ -329,15 +353,15 @@ Bool LatticeAsContour<T>::setOptions(Record &rec, Record &recOut) {
 
   Bool lvlChg=False;
   
-  if (rec.isDefined("levels")) {
-    DataType dtype = rec.dataType("levels");
+  if (rec.isDefined("rellevels")) {
+    DataType dtype = rec.dataType("rellevels");
     
     Record* valrec = &rec;
-    String fldnm = "levels";
+    String fldnm = "rellevels";
     Record subrec;
     
     if(dtype==TpRecord) {
-      subrec = rec.subRecord("levels");
+      subrec = rec.subRecord("rellevels");
       if(subrec.isDefined("value")) {
         valrec = &subrec;
         dtype = subrec.dataType("value");
@@ -399,14 +423,14 @@ Bool LatticeAsContour<T>::setOptions(Record &rec, Record &recOut) {
     }
   }
 
-  lvlChg = itsMinContour->fromRecord(rec) || lvlChg;
-  lvlChg = itsMaxContour->fromRecord(rec) || lvlChg;
+  lvlChg = itsBaseContour->fromRecord(rec) || lvlChg;
+  lvlChg = itsUnitContour->fromRecord(rec) || lvlChg;
   
   if(lvlChg) recOut.define("trackingchange", True);
 	// 'Signals' desire to update tracking info for this DD (where
 	// contour levels are also displayed).  (I wish we _could_ use true
-	// (Qt) signals on this level, and not have to wait for setOpts
-	// to signal stuff...)
+	// (Qt) signals on this level, and not have to wait for setOpts()
+	// calls in order to change things...)
 
   localchange = localchange || lvlChg;
   
@@ -423,29 +447,26 @@ Bool LatticeAsContour<T>::setOptions(Record &rec, Record &recOut) {
   return ret;
 }
 
+
 template <class T>
 Record LatticeAsContour<T>::getOptions() {
   Record rec = LatticePADisplayData<T>::getOptions();
 
   Record levels;
-  levels.define("dlformat", "levels");
-  levels.define("listname", "Contour Levels");
+  levels.define("dlformat", "rellevels");
+  levels.define("listname", "Relative Contour Levels");
   levels.define("ptype", "array");
-  Vector<Float> vlevels(5);
-  vlevels(0) = 1.0; vlevels(1) = 2.0; vlevels(2) = 3.0;
-  vlevels(3) = 4.0; vlevels(4) = 5.0;
-  levels.define("default", vlevels);
+  levels.define("default", itsLevels);
   levels.define("value", itsLevels);
   levels.define("allowunset", False);
-  levels.define("help", "These are relative contour levels.  They will be\n"
-                        "scaled linearly, from [0, 1] (or zero to the\n"
-			"maximum level entered here, if greater than one),\n"
-			"onto the 'real' contour level bracket as set\n"
-			"on the sliders.");
-  rec.defineRecord("levels", levels);
+  levels.define("help", "These are relative contour levels, which will be\n"
+                        "scaled linearly: 0 and 1 map to the actual contour\n"
+                        "levels set on the 'Base Contour Level' and\n"
+                        "'Unit Contour Level' sliders, respectively.");
+  rec.defineRecord("rellevels", levels);
 
-  itsMinContour->toRecord(rec);
-  itsMaxContour->toRecord(rec);
+  itsBaseContour->toRecord(rec);
+  itsUnitContour->toRecord(rec);
 
   Record line;
   line.define("dlformat", "line");
@@ -496,6 +517,7 @@ Record LatticeAsContour<T>::getOptions() {
 
   return rec;
 }
+
 
 } //# NAMESPACE CASA - END
 

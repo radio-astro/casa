@@ -14,9 +14,11 @@ def browsetable(tablename=None):
 	#Python script
 	try:
 		if (type(tablename)==str):
+		   t = tbtool.create()
 		   if (os.path.exists(tablename)):
-                        tb.open(tablename)
-		   tb.browse()
+                        t.open(tablename)
+		   t.browse()
+		   t.close()
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 	except Exception, instance:

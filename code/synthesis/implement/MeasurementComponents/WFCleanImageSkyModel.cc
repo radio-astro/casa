@@ -36,7 +36,6 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LCBox.h>
-#include <synthesis/MeasurementEquations/WFSkyEquation.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -261,35 +260,6 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
   return True;
 }
 
-/*
-void WFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se) {
-  LogIO os(LogOrigin("ImageSkyModel", "makeApproxPSFs"));
-
-  if(largeMem_p){
-
-    for (Int thismodel=0;thismodel<nmodels_p;thismodel++){
-      PSF(thismodel);
-    }
-    WFSkyEquation *wse;
-    wse = (WFSkyEquation *) &se;
-    wse->makeMultiApproxPSF(psf_p, nmodels_p);
-    donePSF_p=True;
-  }
-
-  for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
-    if(!largeMem_p){
-      se.makeApproxPSF(thismodel, PSF(thismodel)); 
-      donePSF_p=True;
-    }
-    beam(thismodel)=0.0;
-    if(!StokesImageUtil::FitGaussianPSF(PSF(thismodel),
-					beam(thismodel))) {
-      os << "Beam fit failed: using default" << LogIO::POST;
-      donePSF_p=False;
-    }
-  }
-}
-*/
 
 
 } //# NAMESPACE CASA - END

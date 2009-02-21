@@ -213,6 +213,10 @@ bool TBTable::canRead() { return driver->canRead(); }
 
 bool TBTable::canWrite() { return driver->canWrite(); }
 
+bool TBTable::tryWriteLock() { return driver->tryWriteLock(); }
+
+bool TBTable::releaseWriteLock() { return driver->releaseWriteLock(); }
+
 // Public Methods //
 
 Result TBTable::loadRows(int start, int number, bool full, vector<String>* cols,
@@ -517,14 +521,14 @@ int TBTable::totalRowsOf(String location) {
         return driver->totalRowsOf(location);
     } else {
         if(location[location.length() - 1] == '/')
-            location[location.length() - 1] = '\0';
+            location.erase(location.length() - 1, 1);
         int j = -1;
         for(unsigned int i = 0; i < keywords.size(); i++) {
             TBKeyword* kw = keywords.at(i);
             if(kw->getType() == TBConstants::TYPE_TABLE) {
                 j++;
                 String v = kw->getValue()->asString();
-                if(v[v.length() - 1] == '/') v[v.length() - 1] = '\0';
+                if(v[v.length() - 1] == '/') v.erase(v.length() - 1, 1);
                 if(v == location) break;
             }
         }

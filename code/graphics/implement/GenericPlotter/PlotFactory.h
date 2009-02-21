@@ -27,14 +27,15 @@
 #ifndef PLOTFACTORY_H_
 #define PLOTFACTORY_H_
 
-#include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/Plot.h>
-#include <graphics/GenericPlotter/Plotter.h>
-#include <graphics/GenericPlotter/PlotShape.h>
 #include <graphics/GenericPlotter/PlotAnnotation.h>
 #include <graphics/GenericPlotter/PlotCanvas.h>
-#include <graphics/GenericPlotter/PlotData.h>
 #include <graphics/GenericPlotter/PlotCanvasLayout.h>
+#include <graphics/GenericPlotter/PlotData.h>
+#include <graphics/GenericPlotter/PlotOperation.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
+#include <graphics/GenericPlotter/PlotShape.h>
+#include <graphics/GenericPlotter/Plotter.h>
 #include <graphics/GenericPlotter/PlotTool.h>
 
 #include <utility>
@@ -71,7 +72,8 @@ public:
     // the plotter.
     virtual PlotterPtr plotter(const String& windowTitle = "Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS) const = 0;
+            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            bool smartDelete = true) const = 0;
     
     // Return a new instance of a Plotter for this implementation, with the
     // given rows and columns of canvases and parameters.  The plotter's window
@@ -80,7 +82,8 @@ public:
     // of PlotLogger::MeasurementEvent) they are passed to the plotter.
     virtual PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
             const String& windowTitle = "Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS) const = 0;
+            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            bool smartDelete = true) const = 0;
     
     // Convenience method for creating a plotter with a single, given canvas.
     // The plotter's window title is set to the given.  If showGUI is true then
@@ -89,28 +92,31 @@ public:
     // to the plotter.
     virtual PlotterPtr plotter(PlotCanvasPtr canvas,
             const String& windowTitle = "Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS) {
-        PlotterPtr p= plotter(windowTitle, false, showGUI,logMeasurementFlags);
+            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            bool smartDelete = true) {
+        PlotterPtr p = plotter(windowTitle, false, showGUI,logMeasurementFlags,
+                               smartDelete);
         if(!canvas.null()) p->setCanvasLayout(new PlotLayoutSingle(canvas));
         return p;
     }
     
     // Return a new instance of a PlotCanvas for this implementation.
-    virtual PlotCanvasPtr canvas() const = 0;
+    virtual PlotCanvasPtr canvas(bool smartDelete = true) const = 0;
     
     // Return a new instance of a PlotPanel for this implementation.
-    virtual PlotPanelPtr panel() const = 0;
+    virtual PlotPanelPtr panel(bool smartDelete = true) const = 0;
     
     // Return a new instance of a PlotButton with the given text for this
     // implementation.  If isText is true, the given string should be
     // displayed on the button as text; otherwise it is a path to an image
     // file.  If toggleable is true, then a toggleable button is returned.
     virtual PlotButtonPtr button(const String& str, bool isText = true,
-                                 bool toggleable = false) const = 0;
+            bool toggleable = false, bool smartDelete = true) const = 0;
     
     // Return a new instance of a PlotCheckbox with the given text for this
     // implementation.
-    virtual PlotCheckboxPtr checkbox(const String& str) const = 0;
+    virtual PlotCheckboxPtr checkbox(const String& str,
+            bool smartDelete = true) const = 0;
     
     
     // Plot Objects //
@@ -123,45 +129,48 @@ public:
     // ErrorPlot.  If the given data is both masked and error, the returned
     // plot should be able to handle both as well.
     virtual ScatterPlotPtr scatterPlot(PlotPointDataPtr data,
-            const String& title = "Scatter Plot") const = 0;
+            const String& title = "Scatter Plot",
+            bool smartDelete = true) const = 0;
     
     // Convenience method for specialized scatter plot and data classes.  Since
     // the scatterPlot method should be able to handle the different subclasses
     // of data and return something of the proper type, this should be fine.
     // <group>
     virtual MaskedScatterPlotPtr maskedPlot(PlotMaskedPointDataPtr data,
-            const String& title = "Masked Plot") const {
-        return scatterPlot(data, title); }
+            const String& title = "Masked Plot", bool smartDelete= true) const{
+        return scatterPlot(data, title, smartDelete); }
     virtual ErrorPlotPtr errorPlot(PlotErrorDataPtr data,
-            const String& title = "Error Plot") const {
-        return scatterPlot(data, title); }
+            const String& title = "Error Plot", bool smartDelete= true) const {
+        return scatterPlot(data, title, smartDelete); }
     // </group>
     
     // Returns a new instance of a BarPlot for this implementation with the
     // given PlotPointData and optional title.
     virtual BarPlotPtr barPlot(PlotPointDataPtr data,
-                               const String& title = "Bar Plot") const = 0;
+            const String& title = "Bar Plot", bool smartDelete= true) const= 0;
     
     // Returns a new instance of a BarPlot set to use histogram data for this
     // implementation with the given PlotSinglePointData and number of bins.
     virtual BarPlotPtr histogramPlot(PlotSingleDataPtr data,
-            unsigned int numBins,
-            const String& title = "Histogram Plot") const {
-        return barPlot(new PlotHistogramData(data, numBins), title); }
+            unsigned int numBins, const String& title = "Histogram Plot",
+            bool smartDelete = true) const {
+        return barPlot(new PlotHistogramData(data,numBins),title,smartDelete);}
     
     // Returns a new instance of a RasterPlot for this implementation with the
     // given data and optional title and format.
     virtual RasterPlotPtr rasterPlot(PlotRasterDataPtr data,
             const String& title = "Raster Plot",
-            PlotRasterData::Format format = PlotRasterData::RGB32) const = 0;
+            PlotRasterData::Format format = PlotRasterData::RGB32,
+            bool smartDelete = true) const = 0;
     
     // Returns a new instance of a RasterPlot for this implementation with the
     // given data and contour levels and optional title and format.
     virtual RasterPlotPtr contourPlot(PlotRasterDataPtr data,
             const vector<double>& contours,
             const String& title = "Contour Plot",
-            PlotRasterData::Format format = PlotRasterData::RGB32) const {
-        RasterPlotPtr p = rasterPlot(data, title, format);
+            PlotRasterData::Format format = PlotRasterData::RGB32,
+            bool smartDelete = true) const {
+        RasterPlotPtr p = rasterPlot(data, title, format, smartDelete);
         p->setContourLines(contours);
         return p;
     }
@@ -169,17 +178,18 @@ public:
     // Returns a new instance of a RasterPlot for this implementation
     // interpreted as a spectrogram with the given data and optional title.
     virtual RasterPlotPtr spectrogramPlot(PlotRasterDataPtr data,
-            const String& title = "Spectrogram") const {
-        return rasterPlot(data, title, PlotRasterData::SPECTROGRAM);
-    }
+            const String& title = "Spectrogram", bool smartDelete= true) const{
+        return rasterPlot(data,title,PlotRasterData::SPECTROGRAM,smartDelete);}
     
     // Returns a new instance of a RasterPlot for this implementation
     // interpreted as a spectrogram with the given data and contour levels and
     // optional title.
     virtual RasterPlotPtr contouredSpectrogramPlot(PlotRasterDataPtr data,
             const vector<double>& cont,
-            const String& title = "Spectrogram Contours") const {
-        RasterPlotPtr p = rasterPlot(data, title, PlotRasterData::SPECTROGRAM);
+            const String& title = "Spectrogram Contours",
+            bool smartDelete = true) const {
+        RasterPlotPtr p = rasterPlot(data, title, PlotRasterData::SPECTROGRAM,
+                                     smartDelete);
         p->setContourLines(cont);
         return p;
     }
@@ -190,99 +200,105 @@ public:
     // Return a new instance of a PlotAnnotation for this implementation with
     // the given text and coordinates.
     virtual PlotAnnotationPtr annotation(const String& text,
-            const PlotCoordinate& coord) const = 0;
+            const PlotCoordinate& coord, bool smartDelete = true) const = 0;
     
     // Convenience method.
     virtual PlotAnnotationPtr annotation(const String& text, double x,
-            double y) const {
-        return annotation(text, PlotCoordinate(x, y, PlotCoordinate::WORLD));
+            double y, bool smartDelete = true) const {
+        return annotation(text, PlotCoordinate(x, y, PlotCoordinate::WORLD),
+                          smartDelete);
     }
     
     // Return a new instance of a PlotShapeRectangle for this implementation
     // with the given coordinates.
     virtual PlotShapeRectanglePtr shapeRectangle(const PlotCoordinate& upperLeft,
-            const PlotCoordinate& lowerRight) const = 0;
+            const PlotCoordinate& lowerRight, bool smartDelete= true) const= 0;
     
     // Convenience method.
     virtual PlotShapeRectanglePtr shapeRectangle(double left, double top,
-            double right, double bottom) const {
+            double right, double bottom, bool smartDelete = true) const {
         return shapeRectangle(PlotCoordinate(left, top, PlotCoordinate::WORLD),
-                         PlotCoordinate(right, bottom, PlotCoordinate::WORLD));
+                PlotCoordinate(right, bottom, PlotCoordinate::WORLD),
+                smartDelete);
     }
     
     // Return a new instance of a PlotShapeEllipse for this implementation
     // with the given coordinates and radii.
     virtual PlotShapeEllipsePtr shapeEllipse(const PlotCoordinate& center,
-            const PlotCoordinate& radii) const = 0;
+            const PlotCoordinate& radii, bool smartDelete = true) const = 0;
     
     // Convenience method.
     virtual PlotShapeEllipsePtr shapeEllipse(double x, double y,
-            double xRadius, double yRadius) const {
+            double xRadius, double yRadius, bool smartDelete = true) const {
         return shapeEllipse(PlotCoordinate(x, y, PlotCoordinate::WORLD),
-                      PlotCoordinate(xRadius, yRadius, PlotCoordinate::WORLD));
+                PlotCoordinate(xRadius, yRadius, PlotCoordinate::WORLD),
+                smartDelete);
     }
     
     // Return a new instance of a PlotShapePolygon for this implementation
     // with the given coordinates.
     virtual PlotShapePolygonPtr shapePolygon(
-            const vector<PlotCoordinate>& coords) const = 0;
+            const vector<PlotCoordinate>& coords,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
     virtual PlotShapePolygonPtr shapePolygon(const vector<double>& x,
-            const vector<double>& y) const {
+            const vector<double>& y, bool smartDelete = true) const {
         vector<PlotCoordinate> c(min((uInt)x.size(), (uInt)y.size()));
         for(unsigned int i = 0; i < c.size(); i++)
             c[i] = PlotCoordinate(x[i], y[i], PlotCoordinate::WORLD);
-        return shapePolygon(c);
+        return shapePolygon(c, smartDelete);
     }
     
     // Returns a new instance of a PlotShapeLine for this implementation
     // at the given location.
-    virtual PlotShapeLinePtr shapeLine(double location,
-                                       PlotAxis axis) const = 0;
+    virtual PlotShapeLinePtr shapeLine(double location, PlotAxis axis,
+            bool smartDelete = true) const = 0;
     
     // Returns a new instance of a PlotShapeArrow for this implementation
     // at the given coordinates with the given arrow style.
     virtual PlotShapeArrowPtr shapeArrow(const PlotCoordinate& from,
             const PlotCoordinate& to, PlotShapeArrow::Style fromArrow =
             PlotShapeArrow::NOARROW, PlotShapeArrow::Style toArrow =
-            PlotShapeArrow::V_ARROW) const = 0;
+            PlotShapeArrow::V_ARROW, bool smartDelete = true) const = 0;
     
     // Convenience methods.
     // <group>
     virtual PlotShapeArrowPtr shapeArrow(double fromX, double fromY,
             double toX, double toY, PlotShapeArrow::Style fromArrow =
             PlotShapeArrow::NOARROW, PlotShapeArrow::Style toArrow =
-            PlotShapeArrow::V_ARROW) const {
+            PlotShapeArrow::V_ARROW, bool smartDelete = true) const {
         return shapeArrow(PlotCoordinate(fromX, fromY, PlotCoordinate::WORLD),
                           PlotCoordinate(toX, toY, PlotCoordinate::WORLD),
-                          fromArrow, toArrow);
+                          fromArrow, toArrow, smartDelete);
     }
     virtual PlotShapeArrowPtr shapeLineSegment(const PlotCoordinate& from,
-            const PlotCoordinate& to) const {
+            const PlotCoordinate& to, bool smartDelete = true) const {
         return shapeArrow(from, to, PlotShapeArrow::NOARROW,
-                          PlotShapeArrow::NOARROW);
+                          PlotShapeArrow::NOARROW, smartDelete);
     }
     virtual PlotShapeArrowPtr shapeLineSegment(double fromX, double fromY,
-            double toX, double toY) const {
+            double toX, double toY, bool smartDelete = true) const {
         return shapeArrow(PlotCoordinate(fromX, fromY, PlotCoordinate::WORLD),
                           PlotCoordinate(toX, toY, PlotCoordinate::WORLD),
-                          PlotShapeArrow::NOARROW, PlotShapeArrow::NOARROW);
+                          PlotShapeArrow::NOARROW, PlotShapeArrow::NOARROW,
+                          smartDelete);
     }
     // </group>
     
     // Returns a new instance of a PlotShapePath for this implementation
     // with the given coordinates.
     virtual PlotShapePathPtr shapePath(
-            const vector<PlotCoordinate>& coords) const = 0;
+            const vector<PlotCoordinate>& coords,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
     virtual PlotShapePathPtr shapePath(const vector<double>& x,
-            const vector<double>& y) const {
+            const vector<double>& y, bool smartDelete = true) const {
         vector<PlotCoordinate> c(min((uInt)x.size(), (uInt)y.size()));
         for(unsigned int i = 0; i < c.size(); i++)
             c[i] = PlotCoordinate(x[i], y[i], PlotCoordinate::WORLD);
-        return shapePath(c);
+        return shapePath(c, smartDelete);
     }
     
     // Returns a new instance of a PlotShapeArc for this implementation
@@ -290,36 +306,41 @@ public:
     // angle.
     virtual PlotShapeArcPtr shapeArc(const PlotCoordinate& start,
             const PlotCoordinate& widthHeight, int startAngle,
-            int spanAngle) const = 0;    
+            int spanAngle, bool smartDelete = true) const = 0;    
     
     // Returns a new instance of a PlotPoint for this implementation at the
     // given coordinates.
-    virtual PlotPointPtr point(const PlotCoordinate& coord) const = 0;
+    virtual PlotPointPtr point(const PlotCoordinate& coord,
+            bool smartDelete = true) const = 0;
     
     // Convenience methods.
     // <group>
-    virtual PlotPointPtr point(double x, double y) const {
-        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD)); }
-    virtual PlotPointPtr point(float x, float y) const {
-        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD)); }
-    virtual PlotPointPtr point(int x, int y) const {
-        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD)); }
-    virtual PlotPointPtr point(unsigned int x, unsigned int y) const {
-        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD)); }
+    virtual PlotPointPtr point(double x, double y, bool smartDelete=true)const{
+        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD),smartDelete);}
+    virtual PlotPointPtr point(float x, float y, bool smartDelete= true) const{
+        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD),smartDelete);}
+    virtual PlotPointPtr point(int x, int y, bool smartDelete = true) const {
+        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD),smartDelete);}
+    virtual PlotPointPtr point(unsigned int x, unsigned int y,
+            bool smartDelete = true) const {
+        return point(PlotCoordinate(x, y, PlotCoordinate::WORLD),smartDelete);}
     // </group>
     
     
     // Customization Objects //
     
     // Color could be a name (i.e. "black") or a hex value (i.e. "000000").
-    virtual PlotColorPtr color(const String& color) const = 0;
+    virtual PlotColorPtr color(const String& color,
+            bool smartDelete = true) const = 0;
     
     // Make a copy of the given color for this implementation.
-    virtual PlotColorPtr color(const PlotColor& copy) const = 0;
+    virtual PlotColorPtr color(const PlotColor& copy,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
-    virtual PlotColorPtr color(const PlotColorPtr copy) const {
-        if(!copy.null()) return color(*copy);
+    virtual PlotColorPtr color(const PlotColorPtr copy,
+            bool smartDelete = true) const {
+        if(!copy.null()) return color(*copy, smartDelete);
         else             return copy;
     }
     
@@ -331,69 +352,80 @@ public:
     virtual PlotFontPtr font(const String& family = "Arial",
             double pointSize = 12, const String& color = "000000",
             bool bold = false, bool italics = false,
-            bool underline = false) const = 0;
+            bool underline = false, bool smartDelete = true) const = 0;
     
     // Make a copy of the given font for this implementation.
-    virtual PlotFontPtr font(const PlotFont& copy) const = 0;
+    virtual PlotFontPtr font(const PlotFont& copy,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
-    virtual PlotFontPtr font(const PlotFontPtr copy) const {
-        if(!copy.null()) return font(*copy);
+    virtual PlotFontPtr font(const PlotFontPtr copy,
+            bool smartDelete = true) const {
+        if(!copy.null()) return font(*copy, smartDelete);
         else             return copy;
     }
     
     // Returns a new area fill with the given color and pattern.  Color can
     // either be in hexadecimal form or name form.
     virtual PlotAreaFillPtr areaFill(const String& color,
-            PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) const = 0;
+            PlotAreaFill::Pattern pattern = PlotAreaFill::FILL,
+            bool smartDelete = true) const = 0;
     
     // Returns a copy of the given area fill for this implementation.
-    virtual PlotAreaFillPtr areaFill(const PlotAreaFill& copy) const = 0;
+    virtual PlotAreaFillPtr areaFill(const PlotAreaFill& copy,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
-    virtual PlotAreaFillPtr areaFill(const PlotAreaFillPtr copy) const {
-        if(!copy.null()) return areaFill(*copy);
+    virtual PlotAreaFillPtr areaFill(const PlotAreaFillPtr copy,
+            bool smartDelete = true) const {
+        if(!copy.null()) return areaFill(*copy, smartDelete);
         else             return copy;
     }
     
     // Returns a new line with the given color, style, and width.  Color can
     // either be in hexadecimal form or name form.
     virtual PlotLinePtr line(const String& color,
-                             PlotLine::Style style = PlotLine::SOLID,
-                             double width = 1.0) const = 0;
+            PlotLine::Style style = PlotLine::SOLID, double width = 1.0,
+            bool smartDelete = true) const = 0;
     
     // Make a copy of the given line for this implementation.
-    virtual PlotLinePtr line(const PlotLine& copy) const = 0;
+    virtual PlotLinePtr line(const PlotLine& copy,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
-    virtual PlotLinePtr line(const PlotLinePtr copy) const {
-        if(!copy.null()) return line(*copy);
+    virtual PlotLinePtr line(const PlotLinePtr copy,
+            bool smartDelete = true) const {
+        if(!copy.null()) return line(*copy, smartDelete);
         else             return copy;
     }
     
     // Returns a new symbol with the given style.
-    virtual PlotSymbolPtr symbol(PlotSymbol::Symbol style) const = 0;
+    virtual PlotSymbolPtr symbol(PlotSymbol::Symbol style,
+            bool smartDelete = true) const = 0;
     
     // Returns a new symbol with the given character.
-    virtual PlotSymbolPtr symbol(char sym) const {
-        PlotSymbolPtr s = symbol(PlotSymbol::CHARACTER);
+    virtual PlotSymbolPtr symbol(char sym, bool smartDelete = true) const {
+        PlotSymbolPtr s = symbol(PlotSymbol::CHARACTER, smartDelete);
         s->setSymbol(sym);
         return s;
     }
     
     // Return a new symbol with the given unicode #.
-    virtual PlotSymbolPtr uSymbol(unsigned short unicode) const {
-        PlotSymbolPtr s = symbol(PlotSymbol::CHARACTER);
+    virtual PlotSymbolPtr uSymbol(unsigned short unicode,
+            bool smartDelete = true) const {
+        PlotSymbolPtr s = symbol(PlotSymbol::CHARACTER, smartDelete);
         s->setUSymbol(unicode);
         return s;
     }
     
     // Make a copy of the given symbol for this implementation.
-    virtual PlotSymbolPtr symbol(const PlotSymbol& copy) const = 0;
+    virtual PlotSymbolPtr symbol(const PlotSymbol& copy,
+            bool smartDelete = true) const = 0;
     
     // Convenience method.
-    virtual PlotSymbolPtr symbol(const PlotSymbolPtr copy) const {
-        if(!copy.null()) return symbol(*copy);
+    virtual PlotSymbolPtr symbol(const PlotSymbolPtr copy,
+            bool smartDelete = true) const {
+        if(!copy.null()) return symbol(*copy, smartDelete);
         else             return copy;
     }
     
@@ -403,13 +435,14 @@ public:
     // Returns a standard mouse tool group for this implementation.
     virtual PlotStandardMouseToolGroupPtr standardMouseTools(
             PlotStandardMouseToolGroup::Tool activeTool =
-            PlotStandardMouseToolGroup::NONE) {
+            PlotStandardMouseToolGroup::NONE, bool smartDelete = true) const {
         PlotSelectToolPtr sel = selectTool();
         sel->setSelectLine(line("black", PlotLine::SOLID, 1.0));
         sel->setRectLine(line("black", PlotLine::SOLID, 1.0));
         sel->setRectFill(areaFill("black", PlotAreaFill::MESH3));
-        return new PlotStandardMouseToolGroup(sel, zoomTool(),
-                   panTool(), trackerTool(), activeTool);
+        return PlotStandardMouseToolGroupPtr(new PlotStandardMouseToolGroup(
+                sel, zoomTool(), panTool(), trackerTool(), activeTool),
+                smartDelete);
     }
     
     // Returns a standard mouse tool group for this implementation on the given
@@ -417,35 +450,48 @@ public:
     virtual PlotStandardMouseToolGroupPtr standardMouseTools(PlotAxis xAxis,
             PlotAxis yAxis, PlotCoordinate::System sys,
             PlotStandardMouseToolGroup::Tool activeTool =
-            PlotStandardMouseToolGroup::NONE) {
+            PlotStandardMouseToolGroup::NONE, bool smartDelete = true) const {
         PlotSelectToolPtr sel = selectTool(xAxis, yAxis, sys);
         sel->setSelectLine(line("black", PlotLine::SOLID, 1.0));
         sel->setRectLine(line("black", PlotLine::SOLID, 1.0));
         sel->setRectFill(areaFill("black", PlotAreaFill::MESH3));
-        return new PlotStandardMouseToolGroup(sel,
-                zoomTool(xAxis, yAxis, sys), panTool(xAxis, yAxis, sys),
-                trackerTool(xAxis, yAxis, sys), activeTool);
+        return PlotStandardMouseToolGroupPtr(new PlotStandardMouseToolGroup(
+                sel, zoomTool(xAxis, yAxis, sys), panTool(xAxis, yAxis, sys),
+                trackerTool(xAxis, yAxis, sys), activeTool), smartDelete);
     }
     
     // Returns tools for this implementation.  (Defaults to standard tools.)
     // <group>
-    virtual PlotSelectToolPtr selectTool() { return new PlotSelectTool(); }
-    virtual PlotZoomToolPtr zoomTool() { return new PlotZoomTool(); }
-    virtual PlotPanToolPtr panTool() { return new PlotPanTool(); }
-    virtual PlotTrackerToolPtr trackerTool() { return new PlotTrackerTool(); }
+    virtual PlotSelectToolPtr selectTool(bool smartDelete = true) const {
+        return PlotSelectToolPtr(new PlotSelectTool(), smartDelete); }
+    virtual PlotZoomToolPtr zoomTool(bool smartDelete = true) const { 
+        return PlotZoomToolPtr(new PlotZoomTool(), smartDelete); }
+    virtual PlotPanToolPtr panTool(bool smartDelete = true) const {
+        return PlotPanToolPtr(new PlotPanTool(), smartDelete); }
+    virtual PlotTrackerToolPtr trackerTool(bool smartDelete = true) const {
+        return PlotTrackerToolPtr(new PlotTrackerTool(), smartDelete); }
     virtual PlotSelectToolPtr selectTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system) {
-        return new PlotSelectTool(xAxis, yAxis, system); }
+            PlotCoordinate::System system, bool smartDelete = true) const {
+        return PlotSelectToolPtr(new PlotSelectTool(xAxis, yAxis, system),
+                smartDelete); }
     virtual PlotZoomToolPtr zoomTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system) {
-        return new PlotZoomTool(xAxis, yAxis, system); }
+            PlotCoordinate::System system, bool smartDelete = true) const {
+        return PlotZoomToolPtr(new PlotZoomTool(xAxis, yAxis, system),
+                smartDelete); }
     virtual PlotPanToolPtr panTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system) {
-        return new PlotPanTool(xAxis, yAxis, system); }
+            PlotCoordinate::System system, bool smartDelete = true) const {
+        return PlotPanToolPtr(new PlotPanTool(xAxis, yAxis, system), false); }
     virtual PlotTrackerToolPtr trackerTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system) {
-        return new PlotTrackerTool(xAxis, yAxis, system); }
+            PlotCoordinate::System system, bool smartDelete = true) const {
+        return PlotTrackerToolPtr(new PlotTrackerTool(xAxis, yAxis, system),
+                smartDelete); }
     // </group>
+    
+    
+    // Operations //
+    
+    // Returns a new PlotMutex for this implementation.
+    virtual PlotMutexPtr mutex(bool smartDelete = true) const = 0;
     
     
     // Data Objects //

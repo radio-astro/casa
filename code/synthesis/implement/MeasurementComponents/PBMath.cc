@@ -731,7 +731,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
 };
 
 
-// converts the enumrated type into a string
+// converts the enumerated type into a string
 void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
 {
 

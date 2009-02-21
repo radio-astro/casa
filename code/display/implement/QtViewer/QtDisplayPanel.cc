@@ -46,7 +46,9 @@
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <display/RegionShapes/RegionShape.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
-
+#include <images/Images/RegionManager.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Images/RegionHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -316,7 +318,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     if(printStats) qdd->printRegionStats(*imReg);	// stats.
     
     
-    if(!rgnSaved) {
+    //if(!rgnSaved) {
     
       // First DD to respond with a region -- save it.
       
@@ -326,7 +328,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
       emit newRegion(rgnImgPath_);
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
-      rgnSaved = True;  }
+      //   rgnSaved = True;  }
     
     
     delete imReg;  }  }  
@@ -490,7 +492,9 @@ void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister) {
     registerDD_(qdd);
     emit newRegisteredDD(qdd);  }
   
-  else emit newUnregisteredDD(qdd);  }
+  else emit newUnregisteredDD(qdd); 
+
+ }
 
 
 
@@ -571,7 +575,8 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
                   SLOT(refreshTracking_(QtDisplayData*)) );
 	// Triggers (non-mouse-event) tracking refresh for signaling dd.
 
-  
+  // have the name of the latest handy
+  rgnImgPath_ = qdd->path();
   qdd->registerNotice(this);	// Let QDD know.
     
   release();  }
@@ -636,7 +641,9 @@ void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
             
       release();
       
-      break;  }  }  }
+      break;  } 
+  } 
+}
 
 
 
@@ -773,28 +780,119 @@ String QtDisplayPanel::regionPathname(String origPath) {
   
   
   
-Bool QtDisplayPanel::saveLastRegion(String path) {
-  // Save the last region which was created (via an image DD) with the mouse.
-  // (i.e. the one stored in lastRgn_).  Return value indicates success.
-  // (The ImageRegion is transformed to a TableRecord, then saved via AipsIO).
-  
-  if(!hasRgn_) return False;	// (No region ever created here).
-  
-  try{
+  Bool QtDisplayPanel::saveLastRegion(String path) {
+    // Save the last region which was created (via an image DD) with the mouse.
+    // (i.e. the one stored in lastRgn_).  Return value indicates success.
+    // (The ImageRegion is transformed to a TableRecord, then saved via AipsIO).
     
-    AipsIO os(path, ByteIO::NewNoReplace);
+    if(!hasRgn_) return False;	// (No region ever created here).
     
-    os << lastRgn_.toRecord(path+".tbl");  }
-	// (I don't believe the 'tablename' parameter to toRecord() is
-	// actually used in most cases.  Just guessing at a plausible
-	// value to pass to it...).
-  
-  catch(...) { return False;  }
+    try{
+      
+      AipsIO os(path, ByteIO::NewNoReplace);
+      
+      os << lastRgn_.toRecord(path+".tbl");  }
+    // (I don't believe the 'tablename' parameter to toRecord() is
+    // actually used in most cases.  Just guessing at a plausible
+    // value to pass to it...).
     
-  return True;  }
+    catch(...) { return False;  }
+    
+    return True;  }
+  String QtDisplayPanel::saveRegionInImage(String regname, 
+					   const ImageRegion& imreg) {
+    // (The ImageRegion is stored in the image/table as a keyworrd).
+    
+    String retval="";
+    //if(!hasRgn_) return retval;	// (No region ever created here)
+    
+    try{
+      
+      //RegionManager regMan;
+      //retval=regMan.imageRegionToTable(rgnImgPath_, imreg, regname);
+      ListIter<QtDisplayData*> qdds(qdds_);
+      qdds.toEnd();
+      qdds--;
+      QtDisplayData* qdd = qdds.getRight();
+      if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())){
+	
+	(qdd->imageInterface())->defineRegion(regname, imreg, RegionHandler::Regions, True);
+      }
+
  
+    }
+    catch(...) { return String("");  }
+    
+    return retval; 
+  }
+
+  void QtDisplayPanel::removeRegionInImage(String regname) {
+    // (The ImageRegion is stored in the image/table as a keyworrd).
+    
+    try{
+      
+      
+      //RegionManager regMan;
+      //retval=regMan.imageRegionToTable(rgnImgPath_, imreg, regname);
+      ListIter<QtDisplayData*> qdds(qdds_);
+      qdds.toEnd();
+      qdds--;
+      QtDisplayData* qdd = qdds.getRight();
+      if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())){
+	
+	(qdd->imageInterface())->removeRegion(regname, RegionHandler::Any, False);
+      }
+
+ 
+    }
+    catch(...) { return;  }
+    
+  }
 
 
+  String QtDisplayPanel::listRegions() { 
+    String retval="";
+    try{
+      
+      RegionManager regMan;
+      Vector<String> regs=regMan.namesInTable(rgnImgPath_);
+      if(regs.nelements() > 0){
+	retval=regs[0];
+	for (uInt k=1; k < regs.nelements(); ++k){
+	  retval=retval+", "+regs[k];
+	}
+      }
+    }
+    catch(...) { return String("");  }
+    
+    return retval; 
+  }
+  Vector<String> QtDisplayPanel::listRegionsInImage(){
+    Vector<String> retval(0);
+    try{
+      
+      
+      retval.resize();
+      ListIter<QtDisplayData*> qdds(qdds_);
+      qdds.toEnd();
+      qdds--;
+      QtDisplayData* qdd = qdds.getRight();
+      if( qdd->imageInterface()){
+
+	//retval=regMan.namesInTable(rgnImgPath_);
+	retval=(qdd->imageInterface())->regionNames();
+      if(retval.shape()(0)==0)
+	retval=Vector<String>(0);
+      }
+    }
+    
+    catch(...) 
+      { return Vector<String>(0); 
+      }
+
+
+    return retval; 
+  }
 // HOLD AND RELEASE OF REFRESH.  
 
 // In order to draw, every call to hold()

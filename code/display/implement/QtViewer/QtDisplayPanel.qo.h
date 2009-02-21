@@ -213,6 +213,19 @@ class QtDisplayPanel : public QWidget,
   // (The ImageRegion is transformed to a TableRecord then saved via AipsIO).
   Bool saveLastRegion(String path);
   
+  // same as above except it is saved in the last registered image as a keyword
+
+  String saveRegionInImage(String regname, const ImageRegion& imreg);
+  
+  // Delete the region regname from last registered image
+  // does not care if its RegionHandler::Masks or  RegionHandler::Regions
+  void removeRegionInImage(String regname);
+  
+  // give the regions already stored in last dd image
+  // a coma separated list
+  String listRegions();
+  // a vector list
+  Vector<String> listRegionsInImage();
   
   // Set current extension policy to use to for (subsequent) image region
   // creation (and for printed region statistics):

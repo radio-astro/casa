@@ -723,12 +723,12 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
        mscat.concatenate(appendedMS);
     }
      {
-       String message = String(msfile) + " appended to " + itsMS->tableName();
+       String message = "Appended data from file " + String(msfile);
        ostringstream param;
        param << "msfile= " << msfile
              << " freqTol='" << casaQuantity(freqtol) << "' dirTol='" << casaQuantity(dirtol) << "'";
        String paramstr=param.str();
-       writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), msfile, "ms");
+       writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), ms::name(), "ms");
      }
      rstat = True;
    } catch (AipsError x) {

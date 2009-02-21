@@ -14,13 +14,14 @@ namespace casa {
 //    graphics/implementation/Plotter.h file,
 // 2) add a case statement to this function to return a
 //    new instance of the factory for that implementation.
-PlotFactoryPtr plotterImplementation(Plotter::Implementation which =
-                                     Plotter::DEFAULT);
+PlotFactoryPtr plotterImplementation(
+        Plotter::Implementation which =  Plotter::DEFAULT,
+        bool smartDelete = true);
 
 // The simplePlotter function is a global function
 // within the casa namespace.
-SimplePlotterPtr simplePlotter(Plotter::Implementation which =
-                               Plotter::DEFAULT);
+SimplePlotterPtr simplePlotter(Plotter::Implementation which= Plotter::DEFAULT,
+        bool smartDelete = true);
                                
 class PlotterImplementations {                               
 public:

@@ -184,6 +184,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
+    freqInterpMethod_p=other.freqInterpMethod_p;
   };
   return *this;
 };
@@ -201,6 +202,7 @@ void GridFT::init() {
 
   ok();
 
+  /* hardwiring isTiled is False
   // Padding is possible only for non-tiled processing
   if((padding_p*padding_p*image->shape().product())>cachesize) {
     isTiled=True;
@@ -210,6 +212,7 @@ void GridFT::init() {
     nchan = image->shape()(3);
   }
   else {
+  */
     // We are padding.
     isTiled=False;
     if(!noPadding_p){
@@ -223,7 +226,7 @@ void GridFT::init() {
     }
     npol  = image->shape()(2);
     nchan = image->shape()(3);
-  }
+    // }
 
   sumWeight.resize(npol, nchan);
 
@@ -293,29 +296,9 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
-  if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-  else {
-    // We are padding.
-    isTiled=False;
-    CompositeNumber cn(uInt(image->shape()(0)*2));
-    if(!noPadding_p){
-      nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-      ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-    }
-    else{
-      nx    = image->shape()(0);
-      ny    = image->shape()(1);
-    }
-      
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
+  
+
+  
 
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
@@ -372,23 +355,6 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 }
 
 
-void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
-			     const VisBuffer& vb, Array<Complex>& griddedVis,
-			     Vector<Double>& uvscale, 
-			     UVWMachine* &uvwmachine){
-
-
-
-  noPadding_p=True;
-  initializeToVis(iimage, vb);
-  griddedVis.resize(griddedData.shape());  
-  griddedVis=griddedData; //using the copy for storage
-  uvscale.resize(2);
-  uvscale=uvScale;
-  uvwmachine = new UVWMachine(*uvwMachine_p);
-
-}
-
 
 
 void GridFT::finalizeToVis()
@@ -422,32 +388,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   initMaps(vb);
 
 
-  // Need to reset nx, ny for padding
-  // Padding is possible only for non-tiled processing
-  if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-  else {
-    // We are padding.
-    isTiled=False;
-    CompositeNumber cn(uInt(image->shape()(0)*2));    
-    if (!noPadding_p){
-      nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-      ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-    }
-    else{
-
-      nx    = image->shape()(0);
-      ny    = image->shape()(1);
-    }
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
-  }
-
+  
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
   weight=0.0;
@@ -462,8 +403,9 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
+    griddedData2.resize(gridShape);
     griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    griddedData2=DComplex(0.0);
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
@@ -474,48 +416,6 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
 }
 
 
-void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
-			     Matrix<Float>& weight, const VisBuffer& vb,
-			     Vector<Double>& uvscale,
-			     UVWMachine* & uvwmachine)
-{
-  // image always points to the image
-  image=&iimage;
-
-  init();
-
-  // Initialize the maps for polarization and channel. These maps
-  // translate visibility indices into image indices
-  initMaps(vb);
-
-  isTiled=False;
-  noPadding_p=True;
-  nx    = image->shape()(0);
-  ny    = image->shape()(1);
-  npol  = image->shape()(2);
-  nchan = image->shape()(3);
- 
-
-  sumWeight=0.0;
-  weight.resize(sumWeight.shape());
-  weight=0.0;
-
-  iimage.get(griddedData, False);
-
-  if(uvwmachine == NULL){
-    uvwmachine = new UVWMachine(*uvwMachine_p);
-    uvscale.resize(2);
-    uvscale=uvScale;
-  }
-  /* if(arrayLattice) delete arrayLattice; arrayLattice=0;
-  arrayLattice = new ArrayLattice<Complex>(griddedData);
-  lattice=arrayLattice;
-
-
-  AlwaysAssert(lattice, AipsError);
-  */
-
-}
 
 void GridFT::finalizeToSky()
 {  
@@ -535,40 +435,6 @@ void GridFT::finalizeToSky()
 }
 
 
-void GridFT::finalizeToSky(ImageInterface<Complex>& iimage)
-{
-
-  if(isTiled){
-    iimage.get(griddedData, False);
-  }
-  else{
-     IPosition stride(4, 1);
-     IPosition blc(4, (nx-iimage.shape()(0)+(nx%2==0))/2, (ny-iimage.shape()(1)+(ny%2==0))/2, 0, 0);
-     IPosition trc(blc+iimage.shape()-stride);
-
-     IPosition start(4, 0);
-     griddedData(blc, trc) = iimage.getSlice(start, iimage.shape());
-
-  }
-
-  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-  arrayLattice = new ArrayLattice<Complex>(griddedData);
-  lattice=arrayLattice;
-  
-  //AlwaysAssert(lattice, AipsError);
-  // Now we flush the cache and report statistics
-  // For memory based, we don't write anything out yet.
-  if(isTiled) {
-    logIO() << LogOrigin("GridFT", "finalizeToSky")  << LogIO::NORMAL;
-
-    AlwaysAssert(image, AipsError);
-    AlwaysAssert(imageCache, AipsError);
-    imageCache->flush();
-    ostringstream o;
-    imageCache->showCacheStatistics(o);
-    logIO() << o.str() << LogIO::POST;
-  }
-}
 
 Array<Complex>* GridFT::getDataPointer(const IPosition& centerLoc2D,
 				       Bool readonly) {
@@ -583,12 +449,12 @@ Array<Complex>* GridFT::getDataPointer(const IPosition& centerLoc2D,
 
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
-#define ggridft ggridft_
-#define dgridft dgridft_
+#define ggrid ggrid_
+#define dgrid dgrid_
 #endif
 
 extern "C" { 
-   void ggridft(Double*,
+   void ggrid(Double*,
                 Double*,
 		const Complex*,
                 Int*,
@@ -601,7 +467,7 @@ extern "C" {
 		Int*,
 		Double*,
 		Double*,
-		Complex*,
+		DComplex*,
                 Int*,
 		Int*,
 		Int *,
@@ -614,7 +480,7 @@ extern "C" {
 		Int*,
 		Int*,
 		Double*);
-   void dgridft(Double*,
+   void dgrid(Double*,
                 Double*,
 		Complex*,
                 Int*,
@@ -645,37 +511,49 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   gridOk(gridder->cSupport()(0));
 
+  //Check if ms has changed then cache new spw and chan selection
+  if(vb.newMS())
+    matchAllSpwChans(vb);
+  
+  //Here we redo the match or use previous match
+  
+  //Channel matching for the actual spectral window of buffer
+  if(doConversion_p[vb.spectralWindow()]){
+    matchChannel(vb.spectralWindow(), vb);
+  }
+  else{
+    chanMap.resize();
+    chanMap=multiChanMap_p[vb.spectralWindow()];
+  }
+
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
 
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
     imagingweight=&imwght;
   else
     imagingweight=&(vb.imagingWeight());
+  
+  if(dopsf) type=FTMachine::PSF;
+
+  Cube<Complex> data;
+  //Fortran gridder need the flag as ints 
+  Cube<Int> flags;
+  Matrix<Float> elWeight;
+  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+
+
+
   Bool iswgtCopy;
   const Float *wgtStorage;
-  wgtStorage=imagingweight->getStorage(iswgtCopy);
-
-  const Cube<Complex> *data;
-  data=0;
-  if(!dopsf){
-    if(type==FTMachine::MODEL){
-      data=&(vb.modelVisCube());
-    }
-    else if(type==FTMachine::CORRECTED){
-      data=&(vb.correctedVisCube());
-    }
-    else{
-      data=&(vb.visCube());
-    }
-  }
+  wgtStorage=elWeight.getStorage(iswgtCopy);
+  
   Bool isCopy;
   const Complex *datStorage;
-
-
-
-
   if(!dopsf)
-    datStorage=data->getStorage(isCopy);
+    datStorage=data.getStorage(isCopy);
   else
     datStorage=0;
   // If row is -1 then we pass through all rows
@@ -712,9 +590,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int idopsf=0;
   if(dopsf) idopsf=1;
 
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
+  
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
@@ -726,23 +602,14 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   
 
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
   
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
 
 
   if(isTiled) {
+    cout << "Should not reach here " << endl;
+    //should remove the istiled mode all together
+    /*
+      
     Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -803,13 +670,14 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		sumWeight.getStorage(del));
       }
     }
+    */
   }
   else {
     Bool del;
     IPosition s(flags.shape());
     Bool gridcopy;
-    Complex *gridstor=griddedData.getStorage(gridcopy);
-    ggridft(uvw.getStorage(del),
+    DComplex *gridstor=griddedData2.getStorage(gridcopy);
+    ggrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s(0),
@@ -827,7 +695,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    &ny,
 	    &npol,
 	    &nchan,
-	    vb.frequency().getStorage(del),
+	    interpVisFreq_p.getStorage(del),
 	    &C::c,
 	    &(gridder->cSupport()(0)),
 	    &(gridder->cSampling()),
@@ -835,137 +703,13 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del),
 	    sumWeight.getStorage(del));
-    griddedData.putStorage(gridstor, gridcopy);
+    griddedData2.putStorage(gridstor, gridcopy);
   }
 
   if(!dopsf)
-    data->freeStorage(datStorage, isCopy);
-  imagingweight->freeStorage(wgtStorage,iswgtCopy);
+    data.freeStorage(datStorage, isCopy);
+  elWeight.freeStorage(wgtStorage,iswgtCopy);
 
-}
-
-void GridFT::put(const VisBuffer& vb, TempImage<Complex>& iimage, Vector<Double>& scale, Int row, UVWMachine * uvwMachine, 
-		 Bool dopsf){
-
-  usePut2_p=True;
-
-  UVWMachine *storedMachine;
-  storedMachine=uvwMachine_p;
-  if(uvwMachine){
-    uvwMachine_p=uvwMachine;
-  }
-
-
-  Bool refOfImage=iimage.canReferenceArray();
-  griddedData.resize();
-  iimage.get(griddedData);
-  Int nX=griddedData.shape()(0);
-  Int nY=griddedData.shape()(1);
-
-  gridOk(gridder->cSupport()(0));
-
-
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if (row==-1) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-  }
-
-  // Get the uvws in a form that Fortran can use and do that
-  // necessary phase rotation. On a Pentium Pro 200 MHz
-  // when null, this step takes about 50us per uvw point. This
-  // is just barely noticeable for Stokes I continuum and
-  // irrelevant for other cases.
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
-  }
-   
-  rotateUVW(uvw, dphase, vb);
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-
-  // Take care of translation of Bools to Integer
-  Int idopsf=0;
-  if(dopsf) idopsf=1;
-
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
-
-  Vector<Int> rowFlags(vb.nRow());
-  rowFlags=0;
-  rowFlags(vb.flagRow())=True;
-  if(!usezero_p) {
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    }
-  }
-
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
-  
-  
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
-
-
-
-  Bool del;
-  IPosition s(vb.visCube().shape());
-  ggridft(uvw.getStorage(del),
-	  dphase.getStorage(del),
-	  vb.visCube().getStorage(del),
-	  &s(0),
-	  &s(1),
-	  &idopsf,
-	  flags.getStorage(del),
-	  rowFlags.getStorage(del),
-	  vb.imagingWeight().getStorage(del),
-	  &s(2),
-	  &row,
-	  scale.getStorage(del),
-	  uvOffset.getStorage(del),
-	  griddedData.getStorage(del),
-	  &nX,
-	  &nY,
-	  &npol,
-	  &nchan,
-	  vb.frequency().getStorage(del),
-	  &C::c,
-	  &(gridder->cSupport()(0)),
-	  &(gridder->cSampling()),
-	  gridder->cFunction().getStorage(del),
-	  chanMap.getStorage(del),
-	  polMap.getStorage(del),
-	  sumWeight.getStorage(del));
-  
-  
-
-  if(!refOfImage){ iimage.put(griddedData);};
-
-  //restoring to its previous state
-  uvwMachine_p=storedMachine;
-  
 }
 
 
@@ -1002,9 +746,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
+  
 
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())
@@ -1022,7 +764,17 @@ void GridFT::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
 
+  Cube<Complex> data;
+  Cube<Int> flags;
+  getInterpolateArrays(vb, data, flags);
+
+  Complex *datStorage;
+  Bool isCopy;
+  datStorage=data.getStorage(isCopy);
   
 
   Vector<Int> rowFlags(vb.nRow());
@@ -1035,6 +787,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
   
   if(isTiled) {
+    /*
     Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -1090,13 +843,13 @@ void GridFT::get(VisBuffer& vb, Int row)
 		polMap.getStorage(del));
       }
     }
-  }
+      */
+    }
   else {
     Bool del;
-    Bool isCopy;
-    Complex *datStorage=vb.modelVisCube().getStorage(isCopy);
-    IPosition s(vb.modelVisCube().shape());
-    dgridft(uvw.getStorage(del),
+    
+    IPosition s(data.shape());
+    dgrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s(0),
@@ -1112,130 +865,20 @@ void GridFT::get(VisBuffer& vb, Int row)
 	    &ny,
 	    &npol,
 	    &nchan,
-	    vb.frequency().getStorage(del),
+	    interpVisFreq_p.getStorage(del),
 	    &C::c,
 	    &(gridder->cSupport()(0)),
 	    &(gridder->cSampling()),
 	    gridder->cFunction().getStorage(del),
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del));
-    vb.modelVisCube().putStorage(datStorage, isCopy);
+    
+    data.putStorage(datStorage, isCopy);
   }
-
+  interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 
 }
 
-void GridFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
-		 Array<Complex>& griddedVis, Vector<Double>& scale,
-		 UVWMachine *uvwMachine,
-		 Int row)
-{
-
-  gridOk(gridder->cSupport()(0));
-  Int nX=griddedVis.shape()(0);
-  Int nY=griddedVis.shape()(1);
-  Vector<Double> offset(2);
-  offset(0)=Double(nX)/2.0;
-  offset(1)=Double(nY)/2.0;
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if (row==-1) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-    //    modelVis.set(Complex(0.0,0.0));
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-    //   modelVis.xyPlane(row)=Complex(0.0,0.0);
-  }
-
-
-  UVWMachine * storedMachine;
-  storedMachine=uvwMachine_p;
-  if(uvwMachine){
-    uvwMachine_p=uvwMachine;
-
-  }
-
-  // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
-  }
-
-  rotateUVW(uvw, dphase, vb);
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-
-  Cube<Int> flags(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
-
-
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
-
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
-
-
-  
-
-  Vector<Int> rowFlags(vb.nRow());
-  rowFlags=0;
-  rowFlags(vb.flagRow())=True;
-  if(!usezero_p) {
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    }
-  }
-  
-    Bool del;
-    IPosition s(modelVis.shape());
-    dgridft(uvw.getStorage(del),
-	    dphase.getStorage(del),
-	    modelVis.getStorage(del),
-	    &s(0),
-	    &s(1),
-	    flags.getStorage(del),
-	    rowFlags.getStorage(del),
-	    &s(2),
-	    &row,
-	    scale.getStorage(del),
-	    offset.getStorage(del),
-	    griddedVis.getStorage(del),
-	    &nX,
-	    &nY,
-	    &npol,
-	    &nchan,
-	    vb.frequency().getStorage(del),
-	    &C::c,
-	    &(gridder->cSupport()(0)),
-	    &(gridder->cSampling()),
-	    gridder->cFunction().getStorage(del),
-	    chanMap.getStorage(del),
-	    polMap.getStorage(del));
-  
-
-    uvwMachine_p=storedMachine;
-
-
-}
 
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
@@ -1263,8 +906,14 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     
+
+  
+    convertArray(griddedData, griddedData2);
+    //Don't need the double-prec grid anymore...
+    griddedData2.resize();
     // x and y transforms
     LatticeFFT::cfft2d(*lattice,False);
+    
     
 
     {
@@ -1450,7 +1099,7 @@ Bool GridFT::fromRecord(String& error, const RecordInterface& inRec)
       IPosition start(4, 0);
       IPosition stride(4, 1);
       IPosition trc(blc+image->shape()-stride);
-      griddedData(blc, trc) = image->getSlice(start, image->shape());
+      griddedData(blc, trc)=image->getSlice(start, image->shape());
       
       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
       arrayLattice = new ArrayLattice<Complex>(griddedData);

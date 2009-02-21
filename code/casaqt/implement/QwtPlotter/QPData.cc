@@ -30,8 +30,6 @@
 
 namespace casa {
 
-// TODO PlotRasterDataImpl: possible indexing bug
-
 /////////////////////////////
 // QPPOINTDATA DEFINITIONS //
 /////////////////////////////

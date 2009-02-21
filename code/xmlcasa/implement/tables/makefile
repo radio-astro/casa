@@ -1,6 +1,6 @@
 # $Id$
 
-XLIBLIST:= CCMTOOLS PYTHON PGPLOT WCSLIB
+XLIBLIST:= CCMTOOLS CFITSIO PYTHON PGPLOT WCSLIB
 
 # Use the generic AIPS++ application makefile.
 #---------------------------------------------

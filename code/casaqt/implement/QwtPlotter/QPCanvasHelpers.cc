@@ -365,6 +365,20 @@ bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
 
 void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
+    // If drawing is held, just draw pixmap caches.
+    if(m_drawingHeld) {
+        if(!m_main.isNull())  painter->drawPixmap(rect.x(), rect.y(), m_main);
+        if(!m_layer.isNull()) painter->drawPixmap(0, 0, m_layer);
+        return;
+    }
+    
+    PlotOperationPtr op;
+    if(m_parent != NULL) op = m_parent->operationDraw();
+    if(!op.null()) {
+        op->reset();
+        op->setInProgress(true);
+    }
+    
     PlotLoggerPtr log;
     if(m_parent != NULL)
         log = m_parent->loggerForMeasurement(PlotLogger::DRAW_TOTAL);
@@ -372,6 +386,10 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     
     // First draw normally...
     if(m_drawMain) {
+        if(!op.null()) {
+            op->setCurrentStatus("Drawing main layer.");
+        }
+        
         QwtPlot::drawItems(painter, rect, maps, pf);
         QPixmap& pm = const_cast<QPixmap&>(m_main);
         const QPixmap* cache = canvas()->paintCache();
@@ -380,10 +398,20 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
             pm = QPixmap(rect.width(), rect.height());
             pm.fill(Qt::transparent);
         }
-    } else painter->drawPixmap(rect.x(), rect.y(), m_main);
+        
+        if(!op.null() && m_drawLayer) {
+            op->setCurrentProgress(50);
+        }
+        
+    } else if(!m_main.isNull())
+        painter->drawPixmap(rect.x(), rect.y(), m_main);
     
     // Then draw layered items as needed.
     if(m_drawLayer) {
+        if(!op.null()) {
+            op->setCurrentStatus("Drawing annotation layer.");
+        }
+        
         QPixmap& pm = const_cast<QPixmap&>(m_layer);
         pm = QPixmap(rect.width(), rect.height());
         pm.fill(Qt::transparent);
@@ -408,8 +436,15 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         }
     }
     
-    painter->drawPixmap(0, 0, m_layer);// I don't know why this must be offset?
+    if(!m_layer.isNull()) // I don't know why this must be offset?
+        painter->drawPixmap(0, 0, m_layer);
+    
     if(!log.null()) log->releaseMeasurement();
+    
+    if(!op.null()) {
+        op->setCurrentProgress(100);
+        op->setIsFinished(true);
+    }
 }
 
 void QPLayeredCanvas::attachLayeredItem(QwtPlotItem* item) {
@@ -433,6 +468,19 @@ void QPLayeredCanvas::setDrawLayers(bool main, bool layer) {
     m_drawLayer = layer;
 }
 
+bool QPLayeredCanvas::drawingIsHeld() const { return m_drawingHeld; }
+
+void QPLayeredCanvas::holdDrawing() {
+    setAutoReplot(false);
+    m_drawingHeld = true;
+}
+
+void QPLayeredCanvas::releaseDrawing() {
+    setAutoReplot(true);
+    m_drawingHeld = false;
+    replot();
+}
+
 void QPLayeredCanvas::replot(bool drawMain, bool drawLayer) {
     setDrawLayers(drawMain, drawLayer);
     replot();
@@ -447,6 +495,7 @@ void QPLayeredCanvas::installLegendFilter(QFrame* legendFrame) {
 
 void QPLayeredCanvas::initialize() {
     m_drawMain = m_drawLayer = true;
+    m_drawingHeld = false;
     m_legendFrame = NULL;
     
     QwtPlotCanvas* c = canvas();

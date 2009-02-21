@@ -131,6 +131,7 @@ void RFASelector::addString( String &str,const String &s1,const char *sep )
 // -----------------------------------------------------------------------
 Bool RFASelector::parseMinMax( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 )
 {
+    
   vmin = -C::flt_max; vmax=C::flt_max;
 // Option 1: fields named min/max exist... so use them
   Bool named = False;
@@ -142,6 +143,9 @@ Bool RFASelector::parseMinMax( Float &vmin,Float &vmax,const RecordInterface &sp
     return True;
 // Else look at first available field, if a 2-element array, assume
 // [min,max] has been specified
+  if (spec.nfields() < f0) {
+      return False;
+  }
   if( spec.shape(f0).nelements()==1 && spec.shape(f0)(0) == 2 )
   {
     Vector<Double> mm = spec.toArrayDouble(f0);
@@ -157,6 +161,11 @@ Bool RFASelector::parseMinMax( Float &vmin,Float &vmax,const RecordInterface &sp
   else
     vmax = spec.asFloat(f0);
   return True;
+}
+
+Bool RFASelector::fortestingonly_parseMinMax( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 )
+{
+    return parseMinMax( vmin, vmax, spec, f0 );
 }
 
 
@@ -183,6 +192,7 @@ void RFASelector::addClipInfo( const Vector<String> &expr,Float vmin,Float vmax,
 {
 // create mapper and clipinfo block
   RFDataMapper *mapper = new RFDataMapper(expr,sel_column);
+
   ClipInfo clipinfo = { mapper,vmin,vmax,clip,0.0 };
 // if dealing with cyclic values, normalize min/max accordingly
   Double cycle = mapper->getValueCycle();  // e.g. 360 for angles
@@ -213,12 +223,18 @@ void RFASelector::addClipInfo( const Vector<String> &expr,Float vmin,Float vmax,
 // -----------------------------------------------------------------------
 void RFASelector::parseClipField( const RecordInterface &spec,Bool clip )
 {
+    //cerr << "spec: " << spec << endl;
+    //cerr << "clip: " << clip << endl;
+    //cerr << "spec.name(0): " << spec.name(0) << endl;
+    //cerr << "RF_EXPR: " << RF_EXPR << endl;
+
   try {
 // Syntax one - we have a record of {expr,min,max} or {expr,[min,max]}
 // or {expr,max}
     if( spec.name(0) == RF_EXPR )
     {
       Vector<String> expr = spec.asArrayString(0);
+
       Float vmin,vmax;
       if( !parseMinMax(vmin,vmax,spec,1) )
         throw(AipsError(""));
@@ -264,8 +280,15 @@ void RFASelector::parseClipField( const RecordInterface &spec,Bool clip )
     }
   }
   catch( AipsError x ) {
-    os<<"Illegal \""<<(clip?RF_CLIP:RF_FLAGRANGE)<<"\" record\n"<<LogIO::EXCEPTION;
+      os<<"Illegal \""<<(clip?RF_CLIP:RF_FLAGRANGE) <<
+	  "\" record: " << x.what() << "\n" <<
+	  LogIO::EXCEPTION;
   }
+}
+
+void RFASelector::fortestingonly_parseClipField( const RecordInterface &spec,Bool clip )
+{
+    parseClipField(spec, clip);
 }
 
 void RFASelector::addClipInfoDesc ( const Block<ClipInfo> &clip )
@@ -661,9 +684,13 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
   }
   else
     quack_si = 0;
+
 // flag a specific range or clip outside of range?
-  if( isValidRecord(parm,RF_CLIP) )
+
+  if( isValidRecord(parm,RF_CLIP) ) {
     parseClipField(parm.asRecord(RF_CLIP),True);
+  }
+
   if( isValidRecord(parm,RF_FLAGRANGE) )
     parseClipField(parm.asRecord(RF_FLAGRANGE),False);
   // add to description strings, if something was parsed

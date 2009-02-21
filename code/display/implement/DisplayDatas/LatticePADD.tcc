@@ -315,10 +315,12 @@ const Bool LatticePADisplayData<T>::maskValue(const IPosition &pos) {
 // Query the units of the lattice values
 template <class T>
 const Unit LatticePADisplayData<T>::dataUnit() {
-  if (!itsMaskedLatticePtr) {
-    throw(AipsError("LatticePADisplayData<T>::dataUnit - "
-		    "no lattice is available"));
-  }
+  if (!itsMaskedLatticePtr) return Unit("");
+    //    throw(AipsError("LatticePADisplayData<T>::dataUnit - "
+    //	(dumb)	    "no lattice is available"));
+
+  if(itsDataUnit==Unit("_")) return Unit("");
+
   return itsDataUnit;
 }
 

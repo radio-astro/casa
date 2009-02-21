@@ -1330,7 +1330,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const std::string& location, const double padding, const bool usemodelcol, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const std::string& location, const double padding, const std::string& freqinterp, const bool usemodelcol, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
 {
 
    Bool rstat(False);
@@ -1345,7 +1345,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
 					String(cfcachedirname), Float(pastep), 
-					Float(pblimit));
+					Float(pblimit), String(freqinterp));
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

@@ -381,9 +381,31 @@ public:
     // Overrides QwtSymbol::clone().
     QwtSymbol* clone() const;
     
+    
+    // QPSymbol Methods //
+    
+    // Provides access to the underlying QPen and QBrush in a safe way,
+    // since QPainter::drawPoint works differently than the other draw
+    // methods.  WARNING: the pixel pen is NOT updated if you call
+    // QwtSymbol::setPen() AFTER a QPSymbol::setSymbol() or a
+    // QPSymbol::setLine() or a QPSymbol::setAreaFill().
+    // <group>
+    const QPen& drawPen() const;
+    const QBrush& drawBrush() const;
+    // </group>
+    
 private:
     Symbol m_style; // Style
     QChar m_char;   // Character
+    
+    QPen m_pixelPen;     // Pen used to draw pixels.
+    QBrush m_pixelBrush; // Brush used to draw pixels (empty).
+    
+    // Points to either QwtSymbol::pen() or the pixel pen.
+    const QPen* m_drawPen;
+    
+    // Points to either QwtSymbol::brush() or the pixel brush.
+    const QBrush* m_drawBrush;
 };
 
 

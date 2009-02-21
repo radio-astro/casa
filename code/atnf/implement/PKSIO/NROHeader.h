@@ -40,30 +40,62 @@
 using namespace std ;
 
 // <summary>
-// Base class specific for NRO data header.
+// <linkto class=NROHeader>NROHeader</linkto> is a base class 
+// for an observation data header of NRO 45m and ASTE raw data. 
 // </summary>
 
+// <use visibility=global>
+
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> 
+// </prerequisite>
+//
+// <etymology>
+// NRO and ASTE raw data format consists of two major components; data 
+// header and scan record. <linkto class=NROHeader>NROHeader</linkto> is 
+// a representation of the data header.
+// </etymology>
+//
+// <synopsis>
+// <linkto class=NROHeader>NROHeader</linkto> is a representation of 
+// the data header that is a meta-data describing observation settings 
+// and conditions during the observing session.
+// </synopsis>
+//
+// <example>
 // 
-// NROHeader
+// </example>
 //
-// Base class for NRO data header.
+// <motivation>
+// <linkto class=NROHeader>NROHeader</linkto> are defined to read 
+// meta-data described in the data header. Although basic data structure 
+// is same for NRO 45m and ASTE, there are slight difference in the 
+// data size. Thus <linkto class=NROHeader>NROHeader</linkto> is 
+// needed as a base class for the data header.
+// </motivation>
 //
+// <to do asof="">
+//   <li>
+// </to do>  
 class NROHeader 
 {
  public:
-  // constructor 
+  // Constructor 
   NROHeader() ;
 
-  // destructor 
+  // Destructor 
   virtual ~NROHeader() ;
 
-  // data initialization
+  // Data initialization
   virtual void initialize() ;
 
-  // finalization
+  // Finalization
   virtual void finalize() ;
 
-  // fill header from file
+  // Fill data header from file
   virtual int fill( FILE *fp, bool sameEndian ) = 0 ;
   virtual int fill( string name ) = 0 ;
 
@@ -147,101 +179,268 @@ class NROHeader
   vector< vector<double> > getCWCAL() { return CWCAL ; } ;
   char *getCDMY1() { return CDMY1 ; } ;
   vector<double> getDSBFC() { return DSBFC ;} ;
- 
   int getDataSize() { return datasize_ ; } ;
 
-  // endian conversion
+ protected:
+  // Endian conversion for int variable
   void convertEndian( int &value ) ;
+
+  // Endian convertion for float variable
   void convertEndian( float &value ) ;
+
+  // Endian conversion for double variable
   void convertEndian( double &value ) ;
 
-  // read data
+  // Read char data
   int readChar( char *v, FILE *f, int size ) ;
+
+  // Read int data
   int readInt( int &v, FILE *f, bool b ) ;
+
+  // Read float data
   int readFloat( float &v, FILE *f, bool b ) ;
+
+  // Read double data
   int readDouble( double &v, FILE *f, bool b ) ;
 
- protected:
-  char *LOFIL ;     // type of file record
-  char *VER ;       // version 
-  char *GROUP ;     // group name
-  char *PROJ ;      // project name
-  char *SCHED ;     // name of observation instruction file
-  char *OBSVR ;     // name of observer
-  char *LOSTM ;     // observation start time (YYYYMMDDHHMMSS)
-  char *LOETM ;     // observation end time (YYYYMMDDHHMMSS)
-  int ARYNM ;       // number of arrays (beams)
-  int NSCAN ;       // number of scans
-  char *TITLE ;     // title of observation
-  char *OBJ ;       // name of object 
-  char *EPOCH ;     // equinox B1950 or J2000
-  double RA0 ;      // right ascension [rad]
-  double DEC0 ;     // celestial declination [rad]
-  double GLNG0 ;    // Galactic longitude [rad]
-  double GLAT0 ;    // Galactic latitude [rad]
-  int NCALB ;       // calibration interval
-  int SCNCD ;       // scan coordinate  0: RADEC  1: LB  2: AZEL
-  char *SCMOD ;     // scan sequence pattern
-  double URVEL ;    // user-defined recessional velocity
-  char *VREF ;      // reference frame for recessional velocity  LSR/HEL/GAL
-  char *VDEF ;      // definition of recessional velocity  RAD/OPT
-  char *SWMOD ;     // switching mode  POS/BEAM/FREQ
-  double FRQSW ;    // switching frequency [Hz]
-  double DBEAM ;    // off-beam angle of beam switching [rad]
-  double MLTOF ;    // initial inclination angle of multi-beam array 
-  double CMTQ ;     // comet: perihelion distance
-  double CMTE ;     // comet: eccentricity
-  double CMTSOM ;   // comet: argument of perihelion
-  double CMTNODE ;  // comet: longitude of the ascending node 
-  double CMTI ;     // comet: orbital inclination angle
-  char *CMTTM ;     // comet: time of the perihelion passage
-  double SBDX ;     // correction for position of subreflector DX [mm] 
-  double SBDY ;     // correction for position of subreflector DY [mm] 
-  double SBDZ1 ;    // correction for position of subreflector DZ1 [mm] 
-  double SBDZ2 ;    // correction for position of subreflector DZ2 [mm] 
-  double DAZP ;     // correction for pointing on azimuth [rad]
-  double DELP ;     // correction for pointing on elevation [rad]
-  int CHBIND ;      // channel bind 
-  int NUMCH ;       // number of channel after channel bind
-  int CHMIN ;       // channel range (minimum)
-  int CHMAX ;       // channel range (maximum)
-  double ALCTM ;    // ALC time constant
-  double IPTIM ;    // interval to get data from spectrometer
-  double PA ;       // position angle of the map
-  int SCNLEN ;      // length of scan record
-  int SBIND ;       // space bind
-  int IBIT ;        // quantization bit number (fixed to 12)
-  char *SITE ;      // site (antenna) name  45m/ASTE
-  vector<char *> RX ;        // type of detector frontend 
-  vector<double> HPBW ;    // HPBW [rad]
-  vector<double> EFFA ;    // aperture efficiencies 
-  vector<double> EFFB ;    // beam efficiencies 
-  vector<double> EFFL ;    // antenna efficiencies 
-  vector<double> EFSS ;    // FSS efficiencies 
-  vector<double> GAIN ;    // antenna gain 
-  vector<char *> HORN ;      // type of polarization at feed horn  R/L/H/V
-  vector<char *> POLTP ;     // type of polarization  CIRC/LINR
-  vector<double> POLDR ;   // rotation direction of circular polarization
-  vector<double> POLAN ;   // angle of linear polarization
-  vector<double> DFRQ ;    // frequency of frequcency switching [Hz]
-  vector<char *> SIDBD ;     // type of sideband  LSB/USB/DSB
-  vector<int> REFN ;       // identifier of reference synthesizer
-  vector<int> IPINT ;      // temperature of calibrator
-  vector<int> MULTN ;      // channel id of the multi-beam detector
-  vector<double> MLTSCF ;  // scaling factor of the multi-beam detector
-  vector<char *> LAGWIND ;   // type of LAG window  NONE/HANN/HAMM/BLCK
-  vector<double> BEBW ;    // bandwidth at backend
-  vector<double> BERES ;   // spectral resolution at backend
-  vector<double> CHWID ;   // channel width at backend
-  vector<int> ARRY ;       // array usage  1: used  0: not used
-  vector<int> NFCAL ;      // freq. cal.: number of measurement (max 10)
-  vector<double> F0CAL ;   // freq. cal.: central frequency [Hz]
-  vector< vector<double> > FQCAL ;   // freq. cal.: measured central freq. [Hz]
-  vector< vector<double> > CHCAL ;   // freq. cal.: measured channel number
-  vector< vector<double> > CWCAL ;   // freq. cal.: measured channel width
-  char *CDMY1 ;     // dummy
-  vector<double> DSBFC ;   // DSB scaling factor
+  // Type of file record
+  char *LOFIL ;
 
+  // Version 
+  char *VER ;
+
+  // Group name
+  char *GROUP ;
+
+  // Project name
+  char *PROJ ;
+
+  // Name of observation scheduling file
+  char *SCHED ;
+
+  // Name of observer
+  char *OBSVR ;
+
+  // Observation start time with format of "YYYYMMDDHHMMSS" (UTC)
+  char *LOSTM ;
+
+  // observation end time with format of "YYYYMMDDHHMMSS" (UTC)
+  char *LOETM ;
+
+  // Number of arrays (beams and IFs)
+  int ARYNM ;
+
+  // Number of scans
+  int NSCAN ;
+
+  // Title of observation
+  char *TITLE ;
+
+  // Name of target object 
+  char *OBJ ;
+
+  // Equinox (B1950 or J2000)
+  char *EPOCH ;
+
+  // Right ascension [rad]
+  double RA0 ;
+
+  // Declination [rad]
+  double DEC0 ;
+
+  // Galactic longitude [rad]
+  double GLNG0 ;
+
+  // Galactic latitude [rad]
+  double GLAT0 ;
+
+  // Calibration interval
+  int NCALB ;
+
+  // Scan coordinate  (0: RADEC  1: LB  2: AZEL)
+  int SCNCD ;
+
+  // Scan sequence pattern
+  char *SCMOD ;
+
+  // User-defined recessional velocity [m/s]
+  double URVEL ;
+
+  // Reference frame for recessional velocity  (LSR or HEL or GAL)
+  char *VREF ;
+
+  // Definition of recessional velocity  (RAD or OPT)
+  char *VDEF ;
+
+  // Switching mode  (POS or BEAM or FREQ)
+  char *SWMOD ;
+
+  // Switching frequency [Hz]
+  double FRQSW ;
+
+  // Off-beam angle of beam switching [rad]
+  double DBEAM ;
+
+  // Initial inclination angle of multi-beam array 
+  double MLTOF ;
+
+  // Comet: Perihelion distance
+  double CMTQ ;
+
+  // Comet: Eccentricity
+  double CMTE ;
+
+  // Comet: Argument of perihelion
+  double CMTSOM ;
+
+  // Comet: Longitude of the ascending node 
+  double CMTNODE ;
+
+  // Comet: Orbital inclination angle
+  double CMTI ;
+
+  // Comet: Time of the perihelion passage
+  char *CMTTM ;
+
+  // Correction for position of subreflector DX [mm] 
+  double SBDX ;
+
+  // Correction for position of subreflector DY [mm] 
+  double SBDY ;
+
+  // Correction for position of subreflector DZ1 [mm] 
+  double SBDZ1 ;
+
+  // Correction for position of subreflector DZ2 [mm] 
+  double SBDZ2 ;
+
+  // Correction for pointing on azimuth [rad]
+  double DAZP ;
+
+  // Correction for pointing on elevation [rad]
+  double DELP ;
+
+  // Number of channel binding  
+  int CHBIND ;
+
+  // Number of channel after binding
+  int NUMCH ;
+
+  // Channel range (minimum)
+  int CHMIN ;
+
+  // Channel range (maximum)
+  int CHMAX ;
+
+  // ALC time constant
+  double ALCTM ;
+
+  // Interval to get data from spectrometer
+  double IPTIM ;
+
+  // Position angle of the map
+  double PA ;
+
+  // Length of scan record [bytes]
+  int SCNLEN ;
+
+  // Range of space binding
+  int SBIND ;
+
+  // Quantization bit number (fixed to 12)
+  int IBIT ;
+
+  // Site (antenna) name  (45m or ASTE)
+  char *SITE ;
+
+  // Dummy data
+  char *CDMY1 ;
+
+  // Type of detector frontend 
+  vector<char *> RX ;
+
+  // HPBW [rad]
+  vector<double> HPBW ;
+
+  // Aperture efficiencies 
+  vector<double> EFFA ;
+
+  // Beam efficiencies 
+  vector<double> EFFB ;
+
+  // Antenna efficiencies 
+  vector<double> EFFL ;
+
+  // FSS efficiencies 
+  vector<double> EFSS ;
+
+  // Antenna gain 
+  vector<double> GAIN ;
+
+  // Type of polarization at feed horn  (R or L or H or V)
+  vector<char *> HORN ;
+
+  // Type of polarization  (CIRC or LINR)
+  vector<char *> POLTP ;
+
+  // Rotation direction of circular polarization
+  vector<double> POLDR ;
+
+  // Polarization angle of linear polarization
+  vector<double> POLAN ;
+
+  // Switching frequency of frequcency switching [Hz]
+  vector<double> DFRQ ;
+
+  // Type of sideband  (LSB or USB or DSB)
+  vector<char *> SIDBD ;
+
+  // Identifier of reference synthesizer
+  vector<int> REFN ;
+
+  // Temperature of calibrator
+  vector<int> IPINT ;
+
+  // Beam id of the multi-beam detector
+  vector<int> MULTN ;
+
+  // Scaling factor of the multi-beam detector
+  vector<double> MLTSCF ;
+
+  // Type of LAG window  (NONE or HANN or HAMM or BLCK)
+  vector<char *> LAGWIND ;
+
+  // Bandwidth at backend
+  vector<double> BEBW ;
+
+  // Spectral resolution at backend
+  vector<double> BERES ;
+
+  // Channel width at backend
+  vector<double> CHWID ;
+
+  // Array usage  (1: used  0: not used)
+  vector<int> ARRY ;
+
+  // Frequency calibration: Number of measurement (max 10)
+  vector<int> NFCAL ;
+
+  // Frequency calibration: Central frequency [Hz]
+  vector<double> F0CAL ;
+
+  // Frequency calibration: Measured central frequency [Hz]
+  vector< vector<double> > FQCAL ;
+
+  // Frequency calibration: Measured channel number
+  vector< vector<double> > CHCAL ;
+
+  // Frequency calibration: Measured channel width [Hz]
+  vector< vector<double> > CWCAL ;
+
+  // DSB scaling factor
+  vector<double> DSBFC ;
+
+  // Data size of the header [bytes]
   int datasize_ ;
 } ;
 

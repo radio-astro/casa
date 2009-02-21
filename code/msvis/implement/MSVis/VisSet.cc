@@ -385,6 +385,30 @@ void VisSet::selectChannel(Int nGroup,Int start, Int width, Int increment,
 
 }
 
+void VisSet::selectChannel(const Matrix<Int>& chansel) {
+
+  // This doesn't handle multiple selections per spw!
+
+  LogSink logSink;
+  LogMessage message(LogOrigin("VisSet","selectChannel"));
+
+  for (uInt ispw=0;ispw<chansel.nrow();++ispw) {
+    const Int& spw=chansel(ispw,0);
+    const Int& start=chansel(ispw,1);
+    const Int& end=chansel(ispw,2);
+    Int nchan=end-start+1;
+    const Int& step=chansel(ispw,3);
+
+    ostringstream os;
+    os << ".  Spw " << spw << ":" << start << "~" << end 
+       << " (" << nchan << " channels, step by " << step << ")";
+    message.message(os);
+    logSink.post(message);
+
+    this->selectChannel(1,start,nchan,step,spw,False);
+  }
+}
+
 Int VisSet::numberAnt()  
 {  
   if(iter_p->newMS()){

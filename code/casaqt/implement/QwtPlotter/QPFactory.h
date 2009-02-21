@@ -72,81 +72,88 @@ public:
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(const String& windowTitle = "Qwt Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS) const;
+            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
             const String& windowTitle = "Qwt Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS) const;
+            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::canvas().
-    PlotCanvasPtr canvas() const;
+    PlotCanvasPtr canvas(bool smartDelete = true) const;
     
     // Implements PlotFactory::panel().
-    PlotPanelPtr panel() const;
+    PlotPanelPtr panel(bool smartDelete = true) const;
     
     // Implements PlotFactory::button().
     PlotButtonPtr button(const String& str, bool isText = true,
-                         bool toggleable = false) const;
+            bool toggleable = false, bool smartDelete = true) const;
     
     // Implements PlotFactory::checkbox().
-    PlotCheckboxPtr checkbox(const String& str) const;
+    PlotCheckboxPtr checkbox(const String& str, bool smartDelete = true) const;
 
 
     // Implements PlotFactory::scatterPlot().
     ScatterPlotPtr scatterPlot(PlotPointDataPtr data,
-                               const String& title = "Scatter Plot") const;
+            const String& title= "Scatter Plot", bool smartDelete= true) const;
     
     // Implements PlotFactory::barPlot().
-    BarPlotPtr barPlot(PlotPointDataPtr data,
-            const String& title = "Bar Plot") const;
+    BarPlotPtr barPlot(PlotPointDataPtr data, const String& title = "Bar Plot",
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::rasterPlot().
     RasterPlotPtr rasterPlot(PlotRasterDataPtr data,
             const String& title = "Raster Plot",
-            PlotRasterData::Format format = PlotRasterData::RGB32) const;
+            PlotRasterData::Format format = PlotRasterData::RGB32,
+            bool smartDelete = true) const;
 
     
     // Implements PlotFactory::annotation().
     PlotAnnotationPtr annotation(const String& text,
-            const PlotCoordinate& coord) const;
+            const PlotCoordinate& coord, bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeRectangle().
     PlotShapeRectanglePtr shapeRectangle(const PlotCoordinate& upperLeft,
-            const PlotCoordinate& lowerRight) const;
+            const PlotCoordinate& lowerRight, bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeEllipse().
     PlotShapeEllipsePtr shapeEllipse(const PlotCoordinate& center,
-            const PlotCoordinate& radii) const;
+            const PlotCoordinate& radii, bool smartDelete = true) const;
     
     // Implements PlotFactory::shapePolygon().
-    PlotShapePolygonPtr shapePolygon(const vector<PlotCoordinate>& c) const;
+    PlotShapePolygonPtr shapePolygon(const vector<PlotCoordinate>& c,
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeLine().
-    PlotShapeLinePtr shapeLine(double location, PlotAxis axis) const;
+    PlotShapeLinePtr shapeLine(double location, PlotAxis axis,
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeArrow().
     PlotShapeArrowPtr shapeArrow(const PlotCoordinate& from,
             const PlotCoordinate& to, PlotShapeArrow::Style fromStyle =
             PlotShapeArrow::NOARROW, PlotShapeArrow::Style toStyle =
-            PlotShapeArrow::V_ARROW) const;
+            PlotShapeArrow::V_ARROW, bool smartDelete = true) const;
     
     // Implements PlotFactory::shapePath().
-    PlotShapePathPtr shapePath(const vector<PlotCoordinate>& coords) const;
+    PlotShapePathPtr shapePath(const vector<PlotCoordinate>& coords,
+            bool smartDelete = true) const;
     
     // Implements PlotFactory::shapeArc().
     PlotShapeArcPtr shapeArc(const PlotCoordinate& start,
             const PlotCoordinate& widthHeight, int startAngle,
-            int spanAngle) const;
+            int spanAngle, bool smartDelete = true) const;
     
     // Implements PlotFactory::point().
-    PlotPointPtr point(const PlotCoordinate& coord) const;
+    PlotPointPtr point(const PlotCoordinate& coord,
+            bool smartDelete = true) const;
 
     
     // Implements PlotFactory::color().
     // <group>
-    PlotColorPtr color(const String& color) const;
-    PlotColorPtr color(const PlotColor& copy) const;
+    PlotColorPtr color(const String& color, bool smartDelete = true) const;
+    PlotColorPtr color(const PlotColor& copy, bool smartDelete = true) const;
     // </group>
     
     // Implements PlotFactory::allNamedColors().
@@ -155,79 +162,86 @@ public:
     // Implements PlotFactory::font().
     // <group>
     PlotFontPtr font(const String& family = "Arial", double pointSize = 12.0,
-                     const String& color = "000000", bool bold = false,
-                     bool italics = false, bool underline = false) const;
-    PlotFontPtr font(const PlotFont& copy) const;
+            const String& color = "000000", bool bold = false,
+            bool italics = false, bool underline = false,
+            bool smartDelete = true) const;
+    PlotFontPtr font(const PlotFont& copy, bool smartDelete = true) const;
     // </group>
     
     // Implements PlotFactory::areaFill().
     // <group>
     PlotAreaFillPtr areaFill(const String& color,
-            PlotAreaFill::Pattern pattern = PlotAreaFill::NOFILL) const;    
-    PlotAreaFillPtr areaFill(const PlotAreaFill& copy) const;
+            PlotAreaFill::Pattern pattern = PlotAreaFill::NOFILL,
+            bool smartDelete = true) const;    
+    PlotAreaFillPtr areaFill(const PlotAreaFill& copy,
+            bool smartDelete = true) const;
     // </group>
     
     // Implements PlotFactory::line().
     // <group>
     PlotLinePtr line(const String& color,
-            PlotLine::Style style = PlotLine::SOLID, double width = 1.0) const;
-    PlotLinePtr line(const PlotLine& copy) const;
+            PlotLine::Style style = PlotLine::SOLID, double width = 1.0,
+            bool smartDelete = true) const;
+    PlotLinePtr line(const PlotLine& copy, bool smartDelete = true) const;
     // </group>
     
     // Implements PlotFactory::symbol().
     // <group>
-    PlotSymbolPtr symbol(PlotSymbol::Symbol style) const;
-    PlotSymbolPtr symbol(char symbol) const;
-    PlotSymbolPtr uSymbol(unsigned short unicode) const;
-    PlotSymbolPtr symbol(const PlotSymbol& copy) const;
+    PlotSymbolPtr symbol(PlotSymbol::Symbol style,
+            bool smartDelete = true) const;
+    PlotSymbolPtr symbol(const PlotSymbol& copy, bool smartDelete= true) const;
     // </group>
 
 
     // Overrides PlotFactory tool methods.
     // <group>
-    PlotSelectToolPtr selectTool();
-    PlotZoomToolPtr zoomTool();
-    PlotPanToolPtr panTool();
-    PlotTrackerToolPtr trackerTool();
+    PlotSelectToolPtr selectTool(bool smartDelete = true) const;
+    PlotZoomToolPtr zoomTool(bool smartDelete = true) const;
+    PlotPanToolPtr panTool(bool smartDelete = true) const;
+    PlotTrackerToolPtr trackerTool(bool smartDelete = true) const;
     
     PlotSelectToolPtr selectTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system);
+            PlotCoordinate::System system, bool smartDelete = true) const;
     PlotZoomToolPtr zoomTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system);
+            PlotCoordinate::System system, bool smartDelete = true) const;
     PlotPanToolPtr panTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system);
+            PlotCoordinate::System system, bool smartDelete = true) const;
     PlotTrackerToolPtr trackerTool(PlotAxis xAxis, PlotAxis yAxis,
-            PlotCoordinate::System system);
+            PlotCoordinate::System system, bool smartDelete = true) const;
     // </group>
+    
+    
+    // Implements PlotFactory::mutex().
+    PlotMutexPtr mutex(bool smartDelete = true) const;
     
     
     // Defaults //
     
     // Returns a default font for annotations.  Currently: 14-point black
     // Arial.
-    static PlotFontPtr defaultAnnotationFont();
+    static PlotFontPtr defaultAnnotationFont(bool smartDelete = true);
     
     // Returns a default area fill for bar plots.  Currently: blue filled.
-    static PlotAreaFillPtr defaultBarPlotAreaFill();
+    static PlotAreaFillPtr defaultBarPlotAreaFill(bool smartDelete = true);
     
     // Returns a default line for legends.  Currently: 1px black solid.
-    static PlotLinePtr defaultLegendLine();
+    static PlotLinePtr defaultLegendLine(bool smartDelete = true);
     
     // Returns a default area fill for legends.  Currently: white filled.
-    static PlotAreaFillPtr defaultLegendAreaFill();
+    static PlotAreaFillPtr defaultLegendAreaFill(bool smartDelete = true);
     
     // Returns a default line for shapes.  Currently: 1px black solid.
-    static PlotLinePtr defaultShapeLine();
+    static PlotLinePtr defaultShapeLine(bool smartDelete = true);
     
     // Returns a default area fill for shapes.  Currently: no fill.
-    static PlotAreaFillPtr defaultShapeAreaFill();
+    static PlotAreaFillPtr defaultShapeAreaFill(bool smartDelete = true);
     
     // Returns a default line for scatter plots.  Currently: no line.
-    static PlotLinePtr defaultPlotLine();
+    static PlotLinePtr defaultPlotLine(bool smartDelete = true);
 
     // Returns a default symbol for scatter plots.  Currently: 8x8 blue
     // circle with no outline.
-    static PlotSymbolPtr defaultPlotSymbol();
+    static PlotSymbolPtr defaultPlotSymbol(bool smartDelete = true);
     
     // The default error bar cap, currently 10.
     static const unsigned int DEFAULT_ERROR_CAP;

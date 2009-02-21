@@ -3642,7 +3642,16 @@ especially in wide-field cleaning.
      <description>Padding factor in image plane (&gt;=1.0)</description>
      <value>1.0</value>
      </param>
-
+     <param type="string" name="freqinterp">
+       <description>interpolation mode in frequency;options:- nearest, linear, cubic, spline </description>
+       <value>nearest</value>
+       <allowed kind="enum">
+	 <value>nearest</value>
+	 <value>linear</value>
+	 <value>cubic</value>
+	 <value>spline</value>
+       </allowed>
+     </param>
      <param type="bool" name="usemodelcol">
      <description>use MODEL\_DATA column or not</description>
      <value>true</value>

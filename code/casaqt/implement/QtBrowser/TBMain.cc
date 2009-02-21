@@ -157,7 +157,7 @@ void TBMain::setup() {
     connect(actionExportVOTable, SIGNAL(triggered()),
             this, SLOT(exportVOTable()));
     connect(actionPlot2D, SIGNAL(triggered()), this, SLOT(plot2D()));
-    connect(actionEditTable, SIGNAL(triggered()), this, SLOT(editTable()));
+    connect(actionEditTable, SIGNAL(toggled(bool)), SLOT(editCurrentTable()));
     connect(actionCheckValidity, SIGNAL(triggered()),
             this, SLOT(checkValidity()));
     connect(actionFilter, SIGNAL(triggered()), this, SLOT(filterOnFields()));
@@ -186,6 +186,8 @@ void TBMain::setup() {
     connect(columnsMenu, SIGNAL(triggered(QAction*)),
             this, SLOT(viewColumn(QAction*)));
     editTablesMenu = new QMenu("Edit Table...");
+    connect(editTablesMenu, SIGNAL(triggered(QAction*)),
+            SLOT(editTable(QAction*)));
     separator = menuEdit->insertSeparator(actionOptions);
 
     formatMenu = new QMenu("Format Display...");
@@ -270,6 +272,57 @@ void TBMain::enableMenus(bool en) {
     }
 }
 
+void TBMain::editTable(TBTableTabs* ttabs, bool edit) {
+    if(waiting || ttabs == NULL) return;
+    
+    TBTable* table = ttabs->getTable();
+    bool editToggle = edit;
+    
+    if(edit && !table->canWrite()) {
+        // if editing is turned on, get write lock
+        bool tryAgain = true;
+        while(tryAgain && !table->tryWriteLock()) {
+            QMessageBox::StandardButton resp = QMessageBox::question(this,
+                    "Write Lock Unavailable", "The write lock for this "
+                    "table is current unavailable!  Would you like to try "
+                    "again?", QMessageBox::Retry | QMessageBox::Abort);
+            tryAgain = resp == QMessageBox::Retry;
+        }
+    }
+    
+    if(edit && !table->canWrite()) {
+        // write lock did not succeed
+        editToggle = false;
+    } else if(!edit) {
+        // we're not editing, so relinquish the write lock
+        table->releaseWriteLock();
+    }
+    
+    // toggle editing in table tabs
+    ttabs->setEditable(editToggle);
+    
+    // update edit action
+    String name = table->getName();
+    QAction* a;
+    for(int i = 0; i < editTablesMenu->actions().size(); i++) {
+        a = editTablesMenu->actions().at(i);
+        if(name == String(a->text().toStdString())) {
+            a->blockSignals(true);
+            a->setChecked(editToggle);
+            a->blockSignals(false);
+            break;
+        }
+    }
+    
+    // update the edit button if this is the current table tab
+    if(ttabs == browser.currentlySelectedTableTabs()) {
+        actionEditTable->blockSignals(true);
+        actionEditTable->setChecked(editToggle);
+        actionEditTable->blockSignals(false);
+    }
+}
+
+
 // Private Slots //
 
 void TBMain::openTable() {
@@ -316,11 +369,7 @@ void TBMain::tableOpened(String name) {
     
     QAction* a = editTablesMenu->addAction(name.c_str());
     a->setCheckable(true);
-    if(tt->getTable()->isAnyEditable())
-        connect(a, SIGNAL(toggled(bool)),
-            browser.table(name), SLOT(setEditable(bool)));
-    else
-        a->setEnabled(false);
+    a->setEnabled(tt->getTable()->isAnyEditable());
     if(editTablesMenu->actions().size() == 1)
         menuEdit->insertMenu(separator, editTablesMenu);
     
@@ -524,16 +573,18 @@ void TBMain::redoAction() {
     }
 }
 
-void TBMain::editTable() {
+void TBMain::editCurrentTable() {
     if(waiting) return;
 
-    String name = browser.currentlySelectedTableName();
-    for(int i = 0; i < editTablesMenu->actions().size(); i++) {
-        QAction* a = editTablesMenu->actions().at(i);
-        String n = qPrintable(a->text());
-        if(n == name)
-            a->trigger();
-    }
+    editTable(browser.currentlySelectedTableTabs(),
+              actionEditTable->isChecked());
+}
+
+void TBMain::editTable(QAction* action) {
+    if(waiting) return;
+    
+    editTable(browser.table(action->text().toStdString()),
+              action->isChecked());
 }
 
 void TBMain::exportVOTable() {
@@ -592,7 +643,7 @@ void TBMain::showAllColumns() {
     for(int i = 0; i < actions.size() - 2; i++) {
         QAction* a = actions.at(i);
         if(a->isCheckable() && !a->isChecked())
-            a->trigger();
+            a->toggle();
     }
 }
 
@@ -603,7 +654,7 @@ void TBMain::hideAllColumns() {
     for(int i = 0; i < actions.size() - 2; i++) {
         QAction* a = actions.at(i);
         if(a->isCheckable() && a->isChecked())
-            a->trigger();
+            a->toggle();
     }
 }
 

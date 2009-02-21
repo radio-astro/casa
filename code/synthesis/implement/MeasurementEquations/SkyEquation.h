@@ -239,9 +239,6 @@ public:
 
   virtual void fullGradientsChiSquared(Bool incremental=False);
 
-  virtual void fullGradientsChiSquared(Bool incremental, 
-				       Bool useCorrectedData);
-
   SkyEquation() {};
   
   // Check for validity
@@ -251,23 +248,16 @@ public:
   // <group>
   virtual void initializeGet(const VisBuffer& vb, Int row, Int model,
 			     Bool incremental);
-  virtual void initializeGet(const VisBuffer& vb, Int row, Int model, 
-			     Array<Complex>& griddedVis, 
-			     Vector<Double>& uvscale,
-			     UVWMachine* & uvwMachine,
-			     Bool incremental);
+  
 
   virtual VisBuffer& get(VisBuffer& vb, Int model, Bool incremental);
   virtual void finalizeGet();
   virtual void initializePut(const VisBuffer &vb, Int model);
-  virtual void initializePut(const VisBuffer &vb, Int model, 
-			     Vector<Double>& uvscale,
-			     UVWMachine* & uvwMachine);
+  
   virtual void put(const VisBuffer& vb, Int model, Bool dopsf=False, FTMachine::Type col=FTMachine::OBSERVED);
-  virtual void put(const VisBuffer& vb, Int model, Vector<Double>& scale, 
-		   UVWMachine *uvwMachine, Bool dopsf=False);
+  
   virtual void finalizePut(const VisBuffer& vb, Int Model);
-  virtual void finalizePut(const VisBuffer& vb, Int Model, Bool& isCopy);
+ 
   // This encapsulates all of the change logic we should have to deal
   // with (short of returning a range of rows that has the same
   // SkyJones).  First we look to see if the first row of the VB
@@ -326,10 +316,7 @@ public:
   virtual VisBuffer& get(VisBuffer& vb, const SkyComponent& component);
   virtual VisBuffer& get(VisBuffer& vb, const ComponentList& components);
   // Do the sum of the gets for all the models for this visbuffer
-  virtual Bool get(VisBuffer& vb, PtrBlock< Array<Complex> *>& griddedVis, 
-		   Cube<Complex>& modelVis, 
-		   Block< Vector<Double> >& uvscale,  
-		   PtrBlock<UVWMachine *>& uvwMachines, Bool& incremental);
+  
   SkyComponent& applySkyJones(SkyComponent& corruptedComponent,
 			      const VisBuffer& vb,
 			      Int row);

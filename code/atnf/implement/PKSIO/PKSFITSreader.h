@@ -103,7 +103,8 @@ class PKSFITSreader : public PKSreader
         const Vector<Int>  refChan,
         const Bool getSpectra = True,
         const Bool getXPol    = False,
-        const Bool getFeedPos = False);
+        const Bool getFeedPos = False,
+        const Bool getPointing = False);
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(

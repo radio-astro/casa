@@ -50,6 +50,8 @@ class utils
 
     bool verifyparam(const ::casac::record& param = ::casac::initialize_record(""));
 
+    ::casac::variant* expandparam(const std::string& name = "", const ::casac::variant& value = ::casac::initialize_variant(""));
+
     ::casac::record* torecord(const std::string& input);
 
     std::string toxml(const ::casac::record& input = ::casac::initialize_record(""), const bool asfile = false, const std::string& filename = "recordas.xml");

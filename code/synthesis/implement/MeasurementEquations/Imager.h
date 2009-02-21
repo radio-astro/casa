@@ -223,7 +223,8 @@ class Imager
 		  const Bool doPointingCorrection=True,
 		  const String& cfCacheDirName="", 
 		  const Float& pastep=5.0,
-		  const Float& pbLimit=5.0e-2);
+		  const Float& pbLimit=5.0e-2,
+		  const String& freqinterpmethod="linear");
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -575,6 +576,7 @@ protected:
   Bool  multiFields_p; 	      // multiple fields have been specified in setdata
 
   Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
+  String freqInterpMethod_p; //frequency interpolation mode
 
   // Set the defaults
   void defaults();

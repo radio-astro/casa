@@ -85,6 +85,8 @@ public:
     using PlotCanvas::setBackground;
     using PlotCanvas::setSelectLine;
     using PlotCanvas::setTitleFont;
+    using PlotCanvas::setAxisRange;
+    using PlotCanvas::setAxesRanges;
     using PlotCanvas::showCartesianAxis;
     using PlotCanvas::setAxisFont;
     using PlotCanvas::setGridMajorLine;
@@ -357,6 +359,10 @@ public:
     
     // Implements PlotCanvas::standardMouseTools().
     PlotStandardMouseToolGroupPtr standardMouseTools();
+    
+    
+    // Implements PlotCanvas::mutex().
+    PlotMutexPtr mutex() const;
     
     
     // Implements PlotCanvas handler methods.

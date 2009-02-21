@@ -81,6 +81,13 @@ PlotCanvas::LegendPosition PlotCanvas::legendPosition(String p, bool* ok) {
     return INT_URIGHT;
 }
 
+bool PlotCanvas::legendPositionIsInternal(LegendPosition p) {
+    return p == INT_URIGHT || p == INT_ULEFT || p == INT_LRIGHT ||
+           p == INT_LLEFT;
+}
+
+const String PlotCanvas::OPERATION_DRAW = "draw_items";
+
 
 // Non-Static //
 
@@ -101,16 +108,38 @@ void PlotCanvas::setBackground(const String& color,
     setBackground(*bg);
 }
 
+void PlotCanvas::showAxes(PlotAxis xAxis, PlotAxis yAxis, bool show) {
+    showAxis(xAxis, show);
+    showAxis(yAxis, show);
+}
+
+void PlotCanvas::showAxes(bool show) {
+    showAxis(X_BOTTOM, show);
+    showAxis(X_TOP, show);
+    showAxis(Y_LEFT, show);
+    showAxis(Y_RIGHT, show);
+}
+
 PlotRegion PlotCanvas::axesRanges(PlotAxis xAxis, PlotAxis yAxis) const {
     pair<double, double> x = axisRange(xAxis), y = axisRange(yAxis);
     return PlotRegion(PlotCoordinate(x.first, y.second),
                       PlotCoordinate(x.second, y.first));
 }
 
+void PlotCanvas::setAxisRange(PlotAxis axis, const pair<double,double>& range){
+    setAxisRange(axis, range.first, range.second); }
+
 void PlotCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
         PlotAxis yAxis, double yFrom, double yTo) {
     setAxisRange(xAxis, xFrom, xTo);
     setAxisRange(yAxis, yFrom, yTo);
+}
+
+void PlotCanvas::setAxesRanges(PlotAxis xAxis,
+        const pair<double, double>& xRange, PlotAxis yAxis,
+        const pair<double, double>& yRange) {
+    setAxesRanges(xAxis, xRange.first, xRange.second, yAxis, yRange.first,
+                  yRange.second);
 }
 
 void PlotCanvas::setAxesRegion(const PlotRegion& region, PlotAxis xAxis,
@@ -142,6 +171,21 @@ PlotAxesStack& PlotCanvas::canvasAxesStack() const {
     return stack;
 }
 
+bool PlotCanvas::canvasAxesStackMove(int delta) {
+    PlotAxesStack& stack = canvasAxesStack();
+    if(!stack.isValid()) return false;
+    
+    unsigned int index = stack.stackIndex(), size = stack.size();
+    
+    if(size == 1 || (delta <= 0 && index == 0) ||
+       (delta > 0 && index == size - 1)) return false;
+    
+    PlotRegion r = convertRegion(stack.moveAndReturn(delta),
+                                 PlotCoordinate::WORLD);
+    setAxesRegion(r, stack.currentXAxis(), stack.currentYAxis());    
+    return true;
+}
+
 void PlotCanvas::showCartesianAxis(PlotAxis mirrorAxis, bool show,
         bool hideNormalAxis) {
     switch(mirrorAxis) {
@@ -159,10 +203,17 @@ void PlotCanvas::showCartesianAxes(bool show, bool hideNormal) {
     showCartesianAxis(Y_LEFT, show, hideNormal);
 }
 
+void PlotCanvas::clearAxesLabels() {
+    setAxisLabel(X_BOTTOM, "");
+    setAxisLabel(X_TOP, "");
+    setAxisLabel(Y_LEFT, "");
+    setAxisLabel(Y_RIGHT, "");
+}
 
 void PlotCanvas::setAxisFont(PlotAxis axis, const PlotFontPtr font) {
     if(!font.null()) setAxisFont(axis, *font); }
     
+
 PlotRegion PlotCanvas::convertRegion(const PlotRegion& region,
         PlotCoordinate::System newSystem) const {
     PlotCoordinate upperLeft = convertCoordinate(region.upperLeft(),
@@ -427,6 +478,16 @@ void PlotCanvas::setLegendFill(const String& color,
 
 void PlotCanvas::setLegendFont(const PlotFontPtr font) {
     if(!font.null()) setLegendFont(*font); }
+
+PlotOperationPtr PlotCanvas::operationDraw() const {
+    return operationDraw(PlotMutexPtr());
+}
+
+PlotOperationPtr PlotCanvas::operationDraw(PlotMutexPtr m) const {
+    static PlotOperationPtr draw = new PlotOperation(OPERATION_DRAW, mutex());
+    if(!m.null()) draw->setMutex(m);
+    return draw;
+}
 
 
 // Protected Methods //

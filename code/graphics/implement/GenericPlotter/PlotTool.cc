@@ -341,21 +341,13 @@ void PlotZoomTool::handleMouseEvent(const PlotEvent& event) {
         
     // on wheel go through zoom stack 
     } else if((w = dynamic_cast<const PlotWheelEvent*>(&event)) != NULL) {
-        PlotRegion r = m_stack->moveAndReturn(w->delta());
-        if(m_coordSystem != PlotCoordinate::WORLD)
-            r = m_canvas->convertRegion(r, PlotCoordinate::WORLD);
-        m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                m_stack->currentYAxis());
+        m_canvas->canvasAxesStackMove(w->delta());
         m_lastEventHandled = true;
         
     // go to base on right click, zoom in 50% centered on double click
     } else if((c = dynamic_cast<const PlotClickEvent*>(&event)) != NULL) {
         if(c->button() == PlotClickEvent::CONTEXT) {
-            PlotRegion r = m_stack->moveAndReturn(0);
-            if(m_coordSystem != PlotCoordinate::WORLD)
-                r = m_canvas->convertRegion(r, PlotCoordinate::WORLD);
-            m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                    m_stack->currentYAxis());
+            m_canvas->canvasAxesStackMove(0);
             m_lastEventHandled = true;
             
         } else if(c->button() == PlotClickEvent::DOUBLE) {
@@ -502,16 +494,12 @@ void PlotPanTool::handleMouseEvent(const PlotEvent& event) {
     
     // stack navigation
     } else if((w = dynamic_cast<const PlotWheelEvent*>(&event)) != NULL) {
-        PlotRegion r = m_stack->moveAndReturn(w->delta());
-        m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                m_stack->currentYAxis());
+        m_canvas->canvasAxesStackMove(w->delta());
         m_lastEventHandled = true;
         
     } else if((c = dynamic_cast<const PlotClickEvent*>(&event)) != NULL) {
         if(c->button() == PlotClickEvent::CONTEXT) {
-            PlotRegion r = m_stack->moveAndReturn(0);
-            m_canvas->setAxesRegion(r, m_stack->currentXAxis(),
-                                    m_stack->currentYAxis());
+            m_canvas->canvasAxesStackMove(0);
             m_lastEventHandled = true;
         }
     }

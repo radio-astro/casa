@@ -5,7 +5,7 @@
 # Copyright (C) 2008, 2009
 # Associated Universities, Inc. Washington DC, USA.
 #
-# This library is free software; you can redistribute it and/or modify it
+# This script is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Library General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or (at your
 # option) any later version.
@@ -136,6 +136,7 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
 	retValue = ia.moments( moments=moments,axis=int(axis),mask=mask,region=reg,includepix=includepix,excludepix=excludepix,outfile=outfile,drop=False)
         
 	ia.close()
+        return retValue
     except Exception, instance:
 	print '*** Error ***',instance
 	raise Exception, instance

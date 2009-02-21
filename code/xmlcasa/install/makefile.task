@@ -258,6 +258,11 @@ $(AIPSARCH)/python/$(PYTHONVER)/%.py : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2pyim
 	cp $< $(AIPSROOT)/share/xml
 	chmod 664 $@
 
+$(AIPSROOT)/share/xml/%.xml : $(CODEDIR)/%.defxml
+	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
+	cp $< $(AIPSROOT)/share/xml/%.xml
+	chmod 664 $@
+
 $(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
 	-@ echo "	$*.xml"
 	 @ trap "$(RM) $(ARCHTMPD)/$*.xml" 1 2 3 15 ; \

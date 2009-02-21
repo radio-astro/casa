@@ -203,6 +203,9 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    msk=new_mask.get_mask()
 		    del new_mask
 		    msks=s.get_masklist(msk)
+		    if len(msks) < 1:
+			    print 'No channel is selected. Exit without calculation.'
+			    return
 		    lbl=s.get_unit()
                     print 'final mask list ('+lbl+') =',msks
 

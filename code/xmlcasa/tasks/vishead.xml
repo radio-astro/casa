@@ -10,22 +10,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="vishead">
 
-<shortdescription> List, Get, and Put data in a measurement set </shortdescription>
+<shortdescription> List, get, and put metadata in a measurement set </shortdescription>
 
 <description>
 
 This task allows the user to manipulate some common data items in a measurement
 set.  The action of the task is determined primarily by the 'mode' keyword.
-Currently, three possible values are allowed for mode:
+Currently, four possible values are allowed for mode:
 
-list --- list data in a MS
-get  --- get a specified datum from the MS
-put  --- put a specified value into the MS
+list    --- list metadata in an MS
+summary --- summary of MS contents
+get     --- get a specified datum from the MS
+put     --- put a specified value into the MS
 
 Keywords for get and put data:
-  'telescope'
+  'schedule'
   'observer'
-  (more to come...)
+  'project'
+  'release_date'
+  'schedule_type'
+  'telescope'
+  'field'
+  'freq_group_name'
+  'spw_name'
+
+
 
 Input Parameters:
 
@@ -33,10 +42,13 @@ vis  --- Name of input visibility file
          ex: vis='my.ms'
 
 mode --- Mode of operation for vishead
-         ex: mode=''->'summary'; mode='get'
+         ex: mode=''->'list'; mode='get'
 
-    hditem  --- keyword to get or put in the MS (used in get/put mode only)
-                ex: hditem='telescope'
+    hdkey   --- keyword to get or put in the MS (used in get/put mode only)
+                ex: hdkey='telescope'
+
+    hdindex --- index (counting from 0) if keyword is an array (used in get/put mode only)
+                ex: hdindex='2'; hdindex=''->put/get full array; 
 
     hdvalue --- value to be put in the MS (used in put mode only)
                 ex: hdvalue=array(['MyTelescope'])
@@ -51,41 +63,50 @@ mode --- Mode of operation for vishead
     </param>
 
     <param type="string" name="mode">
-        <description>options: summary, get, put </description>
+        <description>options: list, summary, get, put</description>
         <allowed kind="enum">
+            <value>list</value>
             <value>summary</value>
             <value>get</value>
             <value>put</value>
             <value></value> 
-        <!--<value>list</value>
-            <value>add</value>
+        <!--<value>add</value>
             <value>del</value>-->
         </allowed>
-        <value>summary</value>
-        <example>mode=''->'summary'; mode='get'</example>
+        <value>list</value>
+        <example>mode=''->'list'; mode='get'</example>
     </param>
 
-    <param type="string" name="hditem" subparam="true">
+    <param type="string" name="hdkey" subparam="true">
         <description>keyword to get/put</description>
         <value></value>
-        <example>hditem='telescope'; see help for list of keywords</example>
+        <example>hdkey='telescope'; see help for list of keywords</example>
+    </param>
+
+    <param type="string" name="hdindex" subparam="true">
+        <description>keyword index to get/put, counting from zero. ''==>all</description>
+        <value></value>
+        <example>hdindex='3'; see help for list of keywords</example>
     </param>
 
     <param type="any" name="hdvalue" subparam="true">
         <any type="variant"/>
-        <description>value of hditem</description>
+        <description>value of hdkey</description>
         <value type="string"></value>
         <example>hdvalue=['VLA','BIMA']</example>
     </param>
 
     <constraints>
           <when param="mode">
+             <equals type="string" value="list"/>
              <equals type="string" value="summary"/>
              <equals type="string" value="get">
-                   <default param="hditem"><value type="string"/></default>
+                   <default param="hdkey"><value type="string"/></default>
+                   <default param="hdindex"><value type="string"/></default>
              </equals>
              <equals type="string" value="put">
-                   <default param="hditem"><value type="string"/></default>
+                   <default param="hdkey"><value type="string"/></default>
+                   <default param="hdindex"><value type="string"/></default>
                    <default param="hdvalue"><value type="string"/></default>
              </equals>
           </when>
@@ -95,9 +116,13 @@ mode --- Mode of operation for vishead
 
 <example>
 
-hdvalue = vishead(vis='my.ms',mode='get',hditem='telescope')
-hdvalue[0] = ['MyTelescope']
-vishead(vis='my.ms',mode='put',hditem='telescope',hdvalue=hdvalue)
+vishead(vis = 'my.ms')
+hdvalue = vishead(vis='my.ms',mode='get',hdkey='telescope')
+hdvalue = 'MyTelescope'
+vishead(vis='my.ms',mode='put',hdkey='telescope',hdvalue=hdvalue)
+
+vishead(vis='my.ms',mode='put',hdkey='telescope',hdindex='',hdvalue=['X','Y','Z','W']
+vishead(vis='my.ms',mode='put',hdkey='telescope',hdindex='2',hdvalue='Z')
 
 </example>
 

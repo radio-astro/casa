@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <xmlcasa/record.h>
 #include <xmlcasa/utils/utils_cmpt.h>
 #include <xmlcasa/utils/stdBaseInterface.h>
 #include <xmlcasa/xerces/stdcasaXMLUtil.h>
@@ -94,8 +95,8 @@ utils::setconstraints(const ::casac::variant& xmldescriptor)
 	 rstat = false;
    }
    *itsLog << LogIO::NORMAL3 << "Constraints set." << LogIO::POST;
-	 // std::cerr << "constraints record: ";
-	 // dumpRecord(std::cerr, *myConstraints);
+	 //std::cerr << "constraints record: ";
+	 //dumpRecord(std::cerr, *myConstraints);
    return rstat;
 }
 
@@ -122,6 +123,26 @@ utils::verifyparam(const ::casac::record& param)
    return rstat;
 }
 
+::casac::variant*
+utils::expandparam(const std::string& name , const ::casac::variant& value )
+{
+   ::casac::variant *rstat(0);
+   rec_map::iterator iter = myConstraints->begin(); // We need the underlying record...
+   if(myConstraints){
+       //dumpRecord(std::cerr, (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord());
+       if((*iter).second.asRecord()["parameters"].asRecord().count(name) &&
+		       (*iter).second.asRecord()["parameters"].asRecord()[name].asRecord().count("allowed")){
+          rstat = stdBaseInterface::expandEnum((*iter).second.asRecord()["parameters"].asRecord()[name].asRecord()["allowed"], value, *itsLog);
+       }else{
+	  rstat = new variant(value);
+       }
+   } else {
+       rstat = new variant(casac::initialize_variant(""));;
+       *itsLog << LogOrigin("utils", "expandparam") << LogIO::WARN
+		 << "Contraints record not set, unable to expand parameter" << LogIO::POST;
+   }
+   return rstat;
+}
 
 ::casac::record*
 utils::torecord(const std::string& input)

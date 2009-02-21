@@ -116,8 +116,8 @@
         cat $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPCODE/VERSION | awk '{print $3}'`
-        cat $AIPCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSCODE/VERSION | awk '{print $3}'`
+        cat $AIPSCODE/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master:" `cat $AIPSCODE/VERSION`
@@ -132,8 +132,8 @@
         cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPARCH/VERSION | awk '{print $3}'`
-        cat $AIPARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSARCH/VERSION | awk '{print $3}'`
+        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master:" `cat $AIPSARCH/VERSION`
@@ -147,8 +147,8 @@
         cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
      elif [ "$MODE" = release_date ]
      then
-        rdate=`cat $AIPARCH/VERSION | awk '{print $3}'`
-        cat $AIPARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
+        rdate=`cat $AIPSARCH/VERSION | awk '{print $3}'`
+        cat $AIPSARCH/VERSION | awk -F. '{printf "CASA Version %.1f.%d Build %d\n", $1/10, $2, $3}'
         echo "Dated: $rdate"
      else
         echo "Master: ($AIPSARCH/VERSION not found)"

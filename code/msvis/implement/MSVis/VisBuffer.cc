@@ -110,6 +110,7 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       timeOK_p=other.timeOK_p;
       timeIntervalOK_p=other.timeIntervalOK_p;
       uvwOK_p=other.uvwOK_p;
+      uvwMatOK_p=other.uvwMatOK_p;
       visOK_p=other.visOK_p;
       modelVisOK_p=other.modelVisOK_p;
       correctedVisOK_p=other.correctedVisOK_p;
@@ -222,6 +223,10 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
 	uvw_p.resize(other.uvw_p.nelements()); 
 	uvw_p=other.uvw_p;
       }
+      if (uvwMatOK_p) {
+	uvwMat_p.resize(other.uvwMat_p.shape()); 
+	uvwMat_p=other.uvwMat_p;
+      }
       if (visOK_p) {
 	visibility_p.resize(other.visibility_p.shape());
 	visibility_p=other.visibility_p;
@@ -315,8 +320,8 @@ void VisBuffer::invalidate()
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
-    timeOK_p=timeIntervalOK_p=uvwOK_p=visOK_p=weightOK_p=weightMatOK_p=
-    weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    False;
+    timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
+    weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    False;
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=False;
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=False;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=False;
@@ -327,8 +332,8 @@ void VisBuffer::validate()
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
-    timeOK_p=timeIntervalOK_p=uvwOK_p=visOK_p=weightOK_p=weightMatOK_p=
-    weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    True;
+    timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
+    weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    True;
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=True;  
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=True;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=True;
@@ -1232,6 +1237,10 @@ Vector<Double>& VisBuffer::fillTimeInterval()
 
 Vector<RigidVector<Double,3> >& VisBuffer::filluvw()
 { uvwOK_p=True; return visIter_p->uvw(uvw_p);}
+
+Matrix<Double>& VisBuffer::filluvwMat()
+{ uvwMatOK_p=True; return visIter_p->uvwMat(uvwMat_p);}
+
 Matrix<CStokesVector>& 
 VisBuffer::fillVis(VisibilityIterator::DataColumn whichOne)
 {
@@ -1289,6 +1298,14 @@ const Vector<Float>& VisBuffer::feed_pa(Double time) const
 const Vector<MDirection>& VisBuffer::azel(Double time) const
 {return visIter_p->azel(time);}
 
+Matrix<Double>& VisBuffer::azelMat(Double time, Matrix<Double>& azelMat) const {
+  Vector<MDirection> azelMeas=This->azel(time);
+  azelMat.resize(2,azelMeas.nelements());
+  for (uInt iant=0;iant<azelMeas.nelements();++iant)
+    azelMat.column(iant) = (azelMeas(iant).getAngle("deg").getValue());
+  return azelMat;
+
+}
 
 Vector<Int> VisBuffer::unique(const Vector<Int>& indices) const
 {
@@ -1312,6 +1329,9 @@ Vector<Int> VisBuffer::unique(const Vector<Int>& indices) const
     uniqIndices.resize(nUniq, True);
   };
   return uniqIndices;
+
+
+
 };
 
 Bool VisBuffer::checkMSId() {

@@ -377,6 +377,45 @@ bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &c
 	return rstat;
 }
 
+variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, casa::LogIO &itsLog, bool silent){
+   variant *rstat(0);
+   bool ambiguous = false;
+   int count = 0;
+   if(allowed.type() == variant::STRINGVEC){
+      if(value.type() == variant::STRING && value.getString().length() > 0){
+         for(int i=0;i<allowed.asStringVec().size();i++){
+            // cerr << i << " " << allowed.asStringVec()[i] << endl;
+            if(!allowed.asStringVec()[i].compare(0, value.getString().length(), value.getString())){
+	       rstat = new variant(allowed.asStringVec()[i]);
+	       if(allowed.asStringVec()[i] == value.getString()){
+		       count = 0;
+		       break;
+	       }
+	       count++;
+	    }
+	 }
+      }else if(value.type() == variant::STRINGVEC){
+         rstat = new variant(value);
+      }
+      if(count > 1)ambiguous = true;
+   } else if(allowed.type() == variant::STRING){
+      if(value.type() == variant::STRING){
+	 if(!allowed.asString().compare(0, value.getString().length(), value.getString())){
+	    rstat = new variant(allowed.asString());
+         }
+      }
+   }
+   if(ambiguous && !silent){
+      rstat = new variant(value);
+      itsLog << casa::LogIO::NORMAL << value.getString() << " is ambiguous, please supply more characters!"
+				<< casa::LogIO::POST;
+      cerr << "******* " << value.getString() << " is ambiguous, please supply more characters! *******" << endl;
+   }
+   if(!rstat)
+      rstat = new variant(value);
+   return rstat;
+}
+
 bool stdBaseInterface::checkme(const string &param, variant &user, record &constraintsRec, casa::LogIO &itsLog, bool silent){
 	bool rstat(true);
 	//
@@ -553,7 +592,8 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      vector<string> &theEnums = dflt.asStringVec();
 		      while(i<theEnums.size()){
 			      // std::cerr << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
-			if(user.asString() == theEnums[i]){
+			if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
+			   user.asString() = theEnums[i];
 			   break;
 			}
 			 i++;
@@ -570,7 +610,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      while(j<userVals.size()){
 		         unsigned int i=0;
 		         while(i<theEnums.size()){
-			   if(userVals[j] == theEnums[i])
+			   if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
 			      break;
 			    i++;
 		          }

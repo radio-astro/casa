@@ -95,7 +95,8 @@ class FITSreader
         const int refChan[],
         const int getSpectra = 1,
         const int getXPol = 0,
-        const int getFeedPos = 0);
+        const int getFeedPos = 0,
+        const int getPointing = 0);
 
     // Find the range in time and position of the data selected.
     virtual int findRange(

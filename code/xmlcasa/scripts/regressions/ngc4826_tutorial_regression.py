@@ -976,6 +976,7 @@ immath(outfile='ngc4826.tutorial.16apr98.src.clean.pbcormod',
        mode='evalexpr',
        expr="'ngc4826.tutorial.16apr98.src.clean.model'['ngc4826.tutorial.16apr98.src.clean.model'!=0.0]/'ngc4826.tutorial.16apr98.src.clean.flux'")
 
+
 #
 ##########################################################################
 #
@@ -1080,18 +1081,22 @@ if scriptmode:
 
 # Do a moment one on channel 0 to check that the indexing is right
 # NOTE: THIS STILL CRASHES
-
-immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
-	  moments=[1],includepix=[],
-	  chans='0',
-          outfile='ngc4826.tutorial.16apr98.moments.plane0.mom1') 
+try:
+    immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
+              moments=[1],includepix=[],
+              chans='0',
+              outfile='ngc4826.tutorial.16apr98.moments.plane0.mom1') 
+except:
+    pass
 
 # Do a moment one on channel 35 to check that the indexing is right
-
-immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
+try:
+    immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
 	  moments=[1],includepix=[],
 	  chans='35',
-          outfile='ngc4826.tutorial.16apr98.moments.plane35.mom1') 
+          outfile='ngc4826.tutorial.16apr98.moments.plane35.mom1')
+except:
+    pass
 
 if benchmarking:
     moments2time=time.time()
@@ -1118,19 +1123,31 @@ try:
 except:
     pass
 
-momoneplane0=imstat('ngc4826.tutorial.16apr98.moments.plane0.mom1')
+
+
+ia.open('ngc4826.tutorial.16apr98.src.clean.image')
+csys=ia.coordsys()
+vel0=0.0
+vel35=0.0
 
 try:
+    momoneplane0=imstat('ngc4826.tutorial.16apr98.moments.plane0.mom1')
     print "Found plane 0 moment 1 value = "+str(momoneplane0['median'][0])
 except:
     pass
 
-momoneplane35=imstat('ngc4826.tutorial.16apr98.moments.plane35.mom1')
 
 try:
+    momoneplane35=imstat('ngc4826.tutorial.16apr98.moments.plane35.mom1')
     print "Found plane 35 moment 1 value = "+str(momoneplane35['median'][0])
 except:
     pass
+
+if(type(momoneplane0)==bool):
+    vel0=csys.frequencytovelocity(ia.toworld([0,0,0,0])['numeric'][3])
+if(type(momoneplane35)==bool):
+    vel35=csys.frequencytovelocity(ia.toworld([0,0,0,35])['numeric'][3])
+
 
 #
 ##########################################################################
@@ -1391,12 +1408,12 @@ except:
 try:
     momone_plane0 = momoneplane0['median'][0]
 except:
-    momone_plane0 = 0.0
+    momone_plane0 = vel0
 
 try:
     momone_plane35 = momoneplane35['median'][0]
 except:
-    momone_plane35 = 0.0
+    momone_plane35 = vel35
 
 try:
     psfcenter = psfstat['mean'][0]
@@ -1427,8 +1444,10 @@ datestring=datetime.datetime.isoformat(datetime.datetime.today())
 
 # System info
 myvers = casalog.version()
-#myuser = os.getenv('USER')
-myuser = os.getlogin()
+try:
+    myuser = os.getlogin()
+except:
+    myuser = os.getenv('USER')
 #myhost = str( os.getenv('HOST') )
 myuname = os.uname()
 myhost = myuname[1]

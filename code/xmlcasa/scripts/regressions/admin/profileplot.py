@@ -4,6 +4,7 @@ import pylab as pl
 import string
 import commands
 import sys
+import re
 import time
 import inspect
 from tw_utils import *
@@ -82,12 +83,14 @@ def handler(signum, frame):
     sys.exit()
     return
 def getmem(procName='') :
+    # First get memory info
+    
     cmd='top -n 1 -b -i | grep ' + procName
     #a=commands.getoutput(cmd)   #fixme: top command doesn't work on Mac
     (errorcode, a) = commands.getstatusoutput(cmd)   
     if(len(a)==0 or errorcode != 0) :
-        return -1.0,-1.0,-1.0
-    pid=string.split(a)[0]
+        return -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0
+    pid = string.split(a)[0]
     if os.path.isfile('/usr/sbin/lsof'):
         numoffile=string.atoi(commands.getoutput('/usr/sbin/lsof -p '+pid+' 2>/dev/null | wc -l'))
     else:
@@ -101,7 +104,27 @@ def getmem(procName='') :
          memstr1=string.atof(string.split(string.split(a)[5],'g')[0])*1024.0
     else:
         memstr1=string.atof(string.split(a)[5])
-    return memstr0, memstr1, numoffile
+
+
+    # Get CPU usage.
+    # top in batch mode doesn't give accurate numbers
+    # with just 1 iterations, so do 2 iterations with .5 sec
+    # delay
+    cmd='top -b d 0.5 -n2 | grep "^Cpu" | tail -1'
+    (errorcode, a) = commands.getstatusoutput(cmd)   
+
+    cpu_us = re.sub('.*[ :]', '', re.sub('%.*', '', a.split(',')[0]))
+    cpu_sy = re.sub('.*[ :]', '', re.sub('%.*', '', a.split(',')[1]))
+    cpu_id = re.sub('.*[ :]', '', re.sub('%.*', '', a.split(',')[3]))
+    cpu_wa = re.sub('.*[ :]', '', re.sub('%.*', '', a.split(',')[4]))
+
+    if len(a)==0 or errorcode != 0:
+        return -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0
+
+    return memstr0, memstr1, numoffile, \
+           cpu_us, cpu_sy, cpu_id, cpu_wa
+
+
 
 signal.signal(signal.SIGHUP, handler)
 signal.signal(signal.SIGTERM, handler)
@@ -116,25 +139,29 @@ y2=0.5
 # (doing so in the signal handler might be too late
 #  because the data will be read from publish_summary)
 fd = open(asciidata, "w")
-fd.write('#time(s) memory_virtual(bytes) memory_resident(bytes) no_filedesc\n')
+fd.write('#time(s) memory_virtual(Mbytes) memory_resident(Mbytes) no_filedesc CPU_user CPU_system CPU_idle CPU_wait\n')
 
 i=0
 
 while True:
-	y1,y2, nfile=getmem(procnam)
+	y1,y2,nfile, cpu_us, cpu_sy, cpu_id, cpu_wa = getmem(procnam)
     	if (y1 > 0.0):
         	time.sleep(2.0)
                 tt = time.time()-t1
 	        t.append(tt)
-        	if( y1 > 2.5e9): y1=2.5e9
-        	if(y2 > 2.5e9): y2=2.5e9
+        	if y1 > 2.5e9: y1=2.5e9
+        	if y2 > 2.5e9: y2=2.5e9
 		y11.append(y1)
 		y22.append(y2)
                 numfile.append(nfile)
-                fd.write(str(tt) + ' ' + \
-                         str(y1) + ' ' + \
-                         str(y2) + ' ' + \
-                         str(nfile) + '\n')
+                fd.write(str(int(round(tt, 0))) + ' ' + \
+                         str(int(round(y1/1000000, 0))) + ' ' + \
+                         str(int(round(y2/1000000, 0))) + ' ' + \
+                         str(nfile) + ' ' + \
+                         str(cpu_us) + ' ' + \
+                         str(cpu_sy) + ' ' + \
+                         str(cpu_id) + ' ' + \
+                         str(cpu_wa) + '\n')
                 fd.flush()
 	else:
 

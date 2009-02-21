@@ -248,6 +248,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    break
       myf=sys._getframe(stacklevel).f_globals
 
+      value = myf['cu'].expandparam(param, value)
+      myf[param] = value
       return myf['cu'].verifyparam({param:value})
 #
 #

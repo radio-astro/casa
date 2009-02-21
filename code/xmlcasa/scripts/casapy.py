@@ -9,6 +9,20 @@ except ImportError, e:
 import os
 import sys
 import matplotlib
+
+homedir = os.getenv('HOME')
+if homedir == None :
+   print "Environment variable HOME is not set, please set it"
+   exit(1)
+
+ipythonenv = homedir + '/.casa/ipython'
+ipythonpath = homedir + '/.casa/ipython/security'
+try :
+   os.makedirs(ipythonpath, 0755)
+except :
+   pass
+os.environ['IPYTHONDIR']=ipythonpath
+
 #import string
 
 #

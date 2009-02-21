@@ -30,6 +30,7 @@
 
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
+#include <casaqt/QwtPlotter/QPOperation.h>
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
@@ -40,13 +41,6 @@
 #include <qwt_text_label.h>
 
 namespace casa {
-
-// TODO QPCanvas not implemented/to be fixed:
-// * weird Qt thing for legend where setting the border using a stylesheet
-//   doesn't allow the background to be set using the palette
-// * test exporting
-// TODO General: check if trying to draw outside QRect is slower/faster than
-//               adding checks before painting
 
 //////////////////////////
 // QPCANVAS DEFINITIONS //
@@ -242,11 +236,15 @@ void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
         case NORMAL:
             m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
                                         new QwtLinearScaleEngine());
+            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
+                                      new QwtScaleDraw());
             break;
             
         case LOG10:
             m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
                                         new QwtLog10ScaleEngine());
+            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
+                                      new QwtScaleDraw());
             break;
             
         case DATE_MJ_DAY: case DATE_MJ_SEC:
@@ -662,16 +660,15 @@ vector<double> QPCanvas::textWidthHeightDescent(const String& text,
 PlotFactory* QPCanvas::implementationFactory() const { return new QPFactory();}
 
 
-void QPCanvas::holdDrawing() { m_canvas.setAutoReplot(false); }
+void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
 
 void QPCanvas::releaseDrawing() {
     PRE_REPLOT
-    m_canvas.replot();
+    m_canvas.releaseDrawing();
     POST_REPLOT
-    m_canvas.setAutoReplot(true);
 }
 
-bool QPCanvas::drawingIsHeld() const { return !m_canvas.autoReplot(); }
+bool QPCanvas::drawingIsHeld() const { return m_canvas.drawingIsHeld(); }
 
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     if(item.null() || !item->isValid()) return false;
@@ -973,8 +970,7 @@ void QPCanvas::showLegend(bool on, LegendPosition pos) {
         l->setPalette(pal);
         
         // for internal positioning        
-        if(pos == INT_URIGHT || pos == INT_LRIGHT || pos == INT_ULEFT ||
-           pos == INT_LLEFT) {
+        if(legendPositionIsInternal(pos)) {
             // clear out old spacing
             QGridLayout* gl = dynamic_cast<QGridLayout*>(
                               m_legendFrame.layout());
@@ -1026,7 +1022,10 @@ void QPCanvas::showLegend(bool on, LegendPosition pos) {
                         1, 2);
             
             ((QGridLayout*)m_legendFrame.layout())->addWidget(l, 1, 1);
+            m_canvas.setDrawLayers(false, false);
             m_legendFrame.show();
+            QCoreApplication::processEvents();
+            m_canvas.setDrawLayers(true, true);
         }
     } else {
         m_canvas.insertLegend(NULL);
@@ -1130,6 +1129,9 @@ PlotStandardMouseToolGroupPtr QPCanvas::standardMouseTools() {
     }
     return m_standardTools;
 }
+
+
+PlotMutexPtr QPCanvas::mutex() const { return new QPMutex(); }
 
 
 // Macro for the handlers because they got very repetitive.

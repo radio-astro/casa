@@ -41,6 +41,13 @@ using namespace std ;
 NRO45Reader::NRO45Reader( string name ) 
   : NROReader( name )
 {
+  // read Header
+  readHeader() ;
+  // allocate memory for spectral data
+  data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
+  // DEBUG
+  cout << "NRO45Reader::NRO45Reader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
+  //
 }
 
 // Destructor.
@@ -55,15 +62,6 @@ Int NRO45Reader::readHeader()
   //cout << "NRO45Reader::readHeader()" << endl ;
   //
   int status = 0 ;
-  // open file if not opened yet
-  if ( fp_ == NULL ) {
-    status = open() ;
-    if ( status == -1 ) {
-      cerr << "Error opening file " << filename_ << "." << endl ;
-      cerr << "Failed to read data header." << endl ;
-      return status ;
-    }
-  }
 
   // check endian
   fseek( fp_, 144, SEEK_SET ) ;
@@ -97,10 +95,11 @@ Int NRO45Reader::readHeader()
     scanNum_ = header_->getNSCAN() + 1 ; // includes ZERO scan
     scanLen_ = header_->getSCNLEN() ;
     rowNum_ = scanNum_ * header_->getARYNM() ;
-    //rowNum_ = scanNum_  ;
+    chmax_ = (int) ( scanLen_ - SCAN_HEADER_SIZE ) * 8 / header_->getIBIT() ;
     cout << "NRO45Reader::readHeader()  Number of scan        = " << scanNum_ << endl ;
     cout << "NRO45Reader::readHeader()  Number of data record = " << rowNum_ << endl ;
     cout << "NRO45Reader::readHeader()  Length of data record = " << scanLen_ << " byte" << endl ;
+    cout << "NRO45Reader::readHeader()  Max number of channel = " << chmax_ << endl ;
   }
 
   return status ;
@@ -110,10 +109,35 @@ vector<double> NRO45Reader::getAntennaPosition()
 {
   // NOBEYAMA in ITRF2005
   // Obtained from ITRF website http://itrf.ensg.ign.fr/
-  vector<double> pos( 3 ) ;
-  pos[0] = -3871169.229 ;
-  pos[1] = 3428274.975 ;
-  pos[2] = 3723698.519 ;
+  //vector<double> pos( 3 ) ;
+  //pos[0] = -3871169.229 ;
+  //pos[1] = 3428274.975 ;
+  //pos[2] = 3723698.519 ;
+
+  // NOBEYAMA in World Geodetic System
+  // 
+  // E138d28m21.2s N35d56m40.9s 1350m in old Japanese Geodetic System 
+  // (from http://www.nro.nao.ac.jp/Misc/hist_NRO.html)
+  // 
+  // E138d28m09.96444s N35d56m52.3314s 1350m in World Geodetic System
+  // (conversion is done by http://vldb.gsi.go.jp/sokuchi/tky2jgd/)
+  
+  double elon = 138. + 28. / 60. + 9.96444 / 3600. ;
+  double nlat = 35. + 56. / 60. + 52.3314 / 3600. ;
+  double alti = 1350. ;
+
+  MPosition p( MVPosition( Quantity( alti, "m" ),
+                           Quantity( elon, "deg" ),
+                           Quantity( nlat, "deg" ) ),
+               MPosition::Ref( MPosition::WGS84 ) ) ;
+  MeasFrame frame( p ) ;
+  MVPosition mvp ;
+  frame.getITRF( mvp ) ;
+  Vector<Double> pp = mvp.getValue() ;
+  vector<double> pos ;
+  pp.tovector( pos ) ;
+  //cout << "NRO45Reader::getAntennaPosition()  pp[0] = " << pp[0]
+  //     << " pp[1] = " << pp[1] << " pp[2] = " << pp[2] << endl ;
 
   return pos ;
 }

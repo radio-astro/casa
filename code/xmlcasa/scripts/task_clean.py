@@ -3,7 +3,7 @@ from taskinit import *
 from cleanhelper import *
 
 
-def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, scan, mode,niter,gain,threshold, psfmode, imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,interactive,mask, nchan,start,width,imsize,cell, phasecenter, restfreq, stokes,weighting,robust, uvtaper,outertaper,innertaper, modelimage,restoringbeam,pbcor, minpb,  noise, npixels, npercycle, cyclefactor, cyclespeedup):
+def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, scan, mode,interpolation,niter,gain,threshold, psfmode, imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,interactive,mask, nchan,start,width,imsize,cell, phasecenter, restfreq, stokes,weighting,robust, uvtaper,outertaper,innertaper, modelimage,restoringbeam,pbcor, minpb,  noise, npixels, npercycle, cyclefactor, cyclespeedup):
 
 	#Python script
 
@@ -59,8 +59,10 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		if(imagermode=='mosaic'):
 			if(alg.count('mf') <1):
 				alg='mf'+alg
-			imCln.setoptions(ftmachine=ftmachine, padding=1.0)
+			imCln.setoptions(ftmachine=ftmachine, padding=1.0, freqinterp=interpolation)
 			imCln.setvp(dovp=True)
+		else:
+			imCln.setoptions(freqinterp=interpolation)
 		###PBCOR or not
 		sclt='SAULT'
 		if((scaletype=='PBCOR') or (scaletype=='pbcor')):

@@ -208,7 +208,8 @@ uInt PKSFITSreader::select(
         const Vector<Int>  refChan,
         const Bool getSpectra,
         const Bool getXPol,
-        const Bool getFeedPos)
+        const Bool getFeedPos,
+        const Bool getPointing)
 {
   // Apply beam selection.
   uInt nBeamSel = beamSel.nelements();
@@ -276,9 +277,10 @@ uInt PKSFITSreader::select(
   cGetSpectra = getSpectra;
   cGetXPol    = getXPol;
   cGetFeedPos = getFeedPos;
+  cGetPointing = getPointing;
 
   uInt maxNChan = cReader->select(start, end, ref, cGetSpectra, cGetXPol,
-                                  cGetFeedPos);
+                                  cGetFeedPos, cGetPointing);
 
   delete [] end;
   delete [] ref;

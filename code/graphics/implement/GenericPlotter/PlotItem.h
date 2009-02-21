@@ -69,8 +69,7 @@ public:
     virtual PlotAxis xAxis() const = 0;
     virtual PlotAxis yAxis() const = 0;
     // </group>
-    
-protected:
+
     // Sets the item's axes.
     // <group>
     virtual void setXAxis(PlotAxis x) = 0;    

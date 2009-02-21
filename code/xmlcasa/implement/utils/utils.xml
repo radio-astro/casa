@@ -87,6 +87,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="bool"/>
 </method>
 
+<method type="function" name="expandparam">
+	<shortdescription>If a param is an enum it will minmatch the enum value and return the full value otherwise it just returns the value</shortdescription>
+	<input>
+    <param type="string" name="name">
+	    <description>Parameter name to expand</description>
+	    <value></value>
+    </param>
+    <param type="variant" name="value">
+	    <description>Value of the parameter</description>
+	    <value></value>
+    </param>
+	</input>
+  <returns type="variant"/>
+</method>
+
 <method type="function" name="torecord">
 
 	<shortdescription>Transforms an XML string into a record</shortdescription>

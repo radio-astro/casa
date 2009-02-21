@@ -37,8 +37,22 @@
 
 namespace casa {
 
-// TODO General: reduce number of draws in qwtplottertest
-// TODO General: log messages for function entering, object creation/deletion
+// TODO PlotCanvas: way of providing custom tick labels for axes, print to
+//      printer.
+// TODO PlotData: possible indexing bug in PlotRasterDataImpl
+// TODO PlotLogger: log messages for function entering, object
+//      creation/deletion.
+// TODO QPCanvas: grid in separate layer, weird Qt thing for legend where
+//      setting the border using a stylesheet doesn't allow the background to
+//      be set using the palette, pixmap cache for stack
+// TODO QPCurve: test which is faster: setting the pen multiple times and
+//      going through the data once, or setting the pen twice and going through
+//      the data twice.  also test which is faster: multiple for loops or
+//      single for loop with if statements.
+// TODO QPPlotter: find way of continuing pen style, reduce number of draws in
+//      qwtplottertest
+// TODO QPRasterPlot: different origins, fix contour line offset problem
+// TODO QPSymbol: character width
 
 ///////////////////////////
 // QPPLOTTER DEFINITIONS //
@@ -168,7 +182,8 @@ void QPPlotter::close() { QWidget::close(); }
 
 PlotCanvasLayoutPtr QPPlotter::canvasLayout() { return m_layout; }
 void QPPlotter::setCanvasLayout(PlotCanvasLayoutPtr layout) {
-    if(layout != m_layout) {        
+    if(layout != m_layout) {
+        m_canvasTools.clear();
         m_layout = layout;
         setupCanvasFrame();
         
@@ -205,6 +220,7 @@ void QPPlotter::canvasLayoutChanged(PlotCanvasLayout& layout) {
                 }
             }
         }
+        m_canvasTools.clear();
         setupCanvasFrame();
     }
 }
@@ -429,7 +445,6 @@ void QPPlotter::resizeEvent(QResizeEvent* event) {
 // Private Methods //
 
 void QPPlotter::setupCanvasFrame() {
-    m_canvasTools.clear();
     if(m_layout.null()) {
         if(canvasFrame->layout() != NULL) delete canvasFrame->layout();
         return;

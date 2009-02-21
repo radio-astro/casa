@@ -78,17 +78,28 @@ public:
     
     // canRead() must be implemented by any subclass.
     // Returns whether or not the underlying table can be read (i.e., the read
-    // lock is available).  Does not necessary guarantee that the next
-    // read operation will succeed, but a sufficiently close check before
-    // a read should suffice in most situations.
+    // lock is set).  Does not necessary guarantee that the next read operation
+    // will succeed, but a sufficiently close check before a read should
+    // suffice in most situations.
     virtual bool canRead() = 0;
     
     // canWrite() must be implemented by any subclass.
     // Returns whether or not the underlying table can be written (i.e., the
-    // write lock is available).  Does not necessary guarantee that the next
-    // write operation will succeed, but a sufficiently close check before
-    // a write should suffice in most situations.
+    // write lock is set).  Does not necessary guarantee that the next write
+    // operation will succeed, but a sufficiently close check before a write
+    // should suffice in most situations.
     virtual bool canWrite() = 0;
+    
+    // tryWriteLock() must be implemented by any subclass.
+    // Tries to reopen the table using a write lock, and returns whether the
+    // operation succeeded or not.  This MUST be done before any editing
+    // operations, and the lock should be released afterwards using
+    // releaseWriteLock().
+    virtual bool tryWriteLock() = 0;
+    
+    // releaseWriteLock() must be implemented by any subclass.
+    // Releases the write lock if needed.
+    virtual bool releaseWriteLock() = 0;
     
     // loadRows() must be implemented by any subclass.
     // Loads the given rows into the table.  See TBTable::loadRows();
@@ -200,6 +211,12 @@ public:
     
     // Implements TBTableDriver::canWrite().
     bool canWrite();
+    
+    // Implements TBTableDriver::tryWriteLock().
+    bool tryWriteLock();
+
+    // Implements TBTableDriver::releaseWriteLock().
+    bool releaseWriteLock();
     
     // Implements TBTableDriver::loadRows().
     Result loadRows(int start, int num, bool full, vector<String>* fields,

@@ -40,11 +40,19 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MCPosition.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MeasFrame.h>
 
 #include <casa/namespace.h>
 
 #include <atnf/PKSIO/NRODataset.h>
 #include <atnf/PKSIO/NROHeader.h>
+
+#define SCAN_HEADER_SIZE 424 
 
 using namespace std ;
 
@@ -95,7 +103,7 @@ class NROReader
 
   // Get scan data
   virtual NRODataset *getData() { return data_ ; } ;
-  virtual NRODataset *getData( int i ) ;
+  virtual int getData( int i ) ;
  
   // Get number of scan 
   Int getScanNum() { return scanNum_ ; } ;
@@ -105,6 +113,9 @@ class NROReader
 
   // Get number of data record
   Int getRowNum() { return rowNum_ ; } ;
+
+  // Get number of channel
+  Int getChannelMax() { return chmax_ ; } ;
  
   // Get spectrum
   vector< vector<double> > getSpectrum() ;
@@ -150,6 +161,9 @@ class NROReader
   void convertEndian( double &value ) ;
   void convertEndian( NRODataset *d ) ;
 
+  // memory management
+  void releaseData() ;
+
   // filename 
   string filename_ ;
 
@@ -179,6 +193,9 @@ class NROReader
 
   // check if endian of input file is same as that of system
   bool same_ ;
+
+  // channel number for spectral data
+  Int chmax_ ;
 };
 
 #endif /* NRO_READER_H */

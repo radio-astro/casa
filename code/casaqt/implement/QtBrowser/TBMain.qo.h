@@ -143,6 +143,9 @@ private:
 
     // Calls setEnabled() on all menus with the given parameter.
     void enableMenus(bool en);
+    
+    // Turns on/off editing, if write lock is available, on the given table.
+    void editTable(TBTableTabs* table, bool edit);
 
 private slots:
     // Opens a filechooser dialog to allow the user to open a table.
@@ -202,7 +205,11 @@ private slots:
     void redoAction();
 
     // Enters the currently selected table into editing mode.
-    void editTable();
+    void editCurrentTable();
+    
+    // Enters the table corresponding to the given edit action into editing
+    // mode.
+    void editTable(QAction* action);
 
     // Exports the current table to VOTable format.  See
     // TBBrowser::exportVOTable().

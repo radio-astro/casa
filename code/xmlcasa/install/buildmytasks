@@ -10,7 +10,9 @@ usage() {
 }
 
 iam=`basename $0`
+OUTPUTFILE="mytasks.py"
 WORKDIR=`pwd`
+INSTALLDIR=`pwd`
 xmlfiles=
 while [ "$#" -gt 0 ]
   do
@@ -42,12 +44,6 @@ while [ "$#" -gt 0 ]
 if [ -z $VERBOSE ]; then
   VERBOSE="off"
 fi
-if [ -z $INSTALLDIR ]; then
-  INSTALLDIR=`pwd`
-fi
-if [ -z $OUTPUTFILE ]; then
-  OUTPUTFILE="mytasks.py"
-fi
 if [ -z $xmlfiles ]; then
   xmlfiles=`ls *.xml`
 fi
@@ -76,8 +72,8 @@ do
   if [[ "$VERBOSE" == "on" ]]; then echo "Generating $xmlfile task ..."; fi
   xmlgenpy $xmlfile
   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
-  sed -e 's+pathname=.*$+pathname="file://${INSTALLDIR}/"+' ${xmlfile}.py > tmp${xmlfile}.py
-  mv tmp${xmlfile}.py ${xmlfile}.py
+  sed -i .bak -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py
+  rm *.bak
   if [[ "${INSTALLDIR}" != "${WORKDIR}" ]] ; then
      mv ${xmlfile}.py ${INSTALLDIR}
      mv ${xmlfile}_cli.py ${INSTALLDIR}

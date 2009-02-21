@@ -49,7 +49,6 @@
 
 using namespace std ;
 
-
 //
 // getNROReader 
 //
@@ -188,8 +187,13 @@ NROReader::NROReader( string name ) {
   scanNum_ = 0 ;
   rowNum_ = 0 ;
   scanLen_ = 0 ;
-  data_ = NULL ;
+  //data_ = NULL ;
+  data_ = new NRODataset() ;
   dataid_ = -1 ;
+
+  // open file
+  if ( open() != 0 ) 
+    cout << "NROReader::NROReader()  error while opening " << filename_ << endl ;
 
   // OS endian 
   int i = 1 ;
@@ -208,7 +212,7 @@ NROReader::NROReader( string name ) {
 NROReader::~NROReader()
 {
   delete header_ ;
-  delete data_ ;
+  releaseData() ;
 
   close() ;
 }
@@ -216,12 +220,14 @@ NROReader::~NROReader()
 // open
 Int NROReader::open() 
 {
-  int status ;
+  int status = 0 ;
 
-  if ( (fp_ = fopen( filename_.c_str(), "rb" )) == NULL ) 
-    status = -1 ;
-  else 
-    status = 0 ;
+  if ( fp_ == NULL ) {
+    if ( (fp_ = fopen( filename_.c_str(), "rb" )) == NULL ) 
+      status = -1 ;
+    else 
+      status = 0 ;
+  }
 
   return status ;
 }
@@ -254,31 +260,25 @@ vector<double> NROReader::getSpectrum( int i )
   // DEBUG
   //cout << "NROReader::getSpectrum() start process (" << i << ")" << endl ;
   //
-  // size of spectrum is not CHANNEL_MAX but header_->getNCH() after binding
+  // size of spectrum is not chmax_ but header_->getNCH() after binding
   int nchan = header_->getNUMCH() ;
-  vector<double> spec( CHANNEL_MAX, 0.0 ) ;  // spectrum "before" binding
-  //vector<double> spec( nchan, 0.0 ) ;  // spectrum "before" binding
-  vector<double> bspec( nchan, 0.0 ) ;       // spectrum "after" binding
+  vector<double> spec( chmax_, 0.0 ) ;  // spectrum "before" binding
+  vector<double> bspec( nchan, 0.0 ) ;  // spectrum "after" binding
   // DEBUG
-  //cout << "NROReader::getSpectrum()  nchan = " << nchan << " CHANNEL_MAX = " << CHANNEL_MAX << endl ;
+  //cout << "NROReader::getSpectrum()  nchan = " << nchan << " chmax_ = " << chmax_ << endl ;
   //
 
-  NROHeader *h ;
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
+  if ( getData( i ) != 0 ) {
+    cout << "NROReader::getSpectrum()  error" << endl ;
     return bspec ;
   }
-  NRODataset *d = getData( i ) ;
-  h = header_ ;
   
-  int bit = h->getIBIT() ;   // fixed to 12 bit
-  //double scale = d.SFCTR ;
-  double scale = d->SFCTR ;
+  int bit = header_->getIBIT() ;   // fixed to 12 bit
+  double scale = data_->SFCTR ;
   // DEBUG
   //cout << "NROReader::getSpectrum()  scale = " << scale << endl ;
   //
-  //double offset = d.ADOFF ;
-  double offset = d->ADOFF ;
+  double offset = data_->ADOFF ;
   // DEBUG
   //cout << "NROReader::getSpectrum()  offset = " << offset << endl ;
   //
@@ -286,15 +286,14 @@ vector<double> NROReader::getSpectrum( int i )
     //cerr << "NROReader::getSpectrum()  zero spectrum (" << i << ")" << endl ;
     return bspec ;
   }
-  //char *cdata = d.LDATA ;
-  char *cdata = d->LDATA ;
-  vector<double> mscale = h->getMLTSCF() ;
+  char *cdata = data_->LDATA ;
+  vector<double> mscale = header_->getMLTSCF() ;
   double dscale = mscale[getIndex( i )] ;
-  int cbind = h->getCHBIND() ;
-  int chmin = h->getCHMIN() ;
+  int cbind = header_->getCHBIND() ;
+  int chmin = header_->getCHMIN() ;
 
   // char -> int
-  vector<int> ispec( CHANNEL_MAX, 0 ) ;
+  vector<int> ispec( chmax_, 0 ) ;
   union SharedMemory {
     int ivalue ;
     unsigned char cbuf[4] ;
@@ -303,7 +302,7 @@ vector<double> NROReader::getSpectrum( int i )
   int j = 0 ;
   char ctmp = 0x00 ;
   int sw = 0 ;
-  for ( int i = 0 ; i < CHANNEL_MAX ; i++ ) {
+  for ( int i = 0 ; i < chmax_ ; i++ ) {
     if ( bit == 12 ) {  // 12 bit qunatization
       u.ivalue = 0 ;
 
@@ -356,7 +355,7 @@ vector<double> NROReader::getSpectrum( int i )
   }
 
   // int -> double 
-  for ( int i = 0 ; i < CHANNEL_MAX ; i++ ) {
+  for ( int i = 0 ; i < chmax_ ; i++ ) {
     spec[i] = (double)( ispec[i] * scale + offset ) * dscale ; 
     // DEBUG
     //cout << "NROReader::getSpectrum()  spec[" << i << "] = " << spec[i] << endl ;
@@ -399,21 +398,7 @@ Int NROReader::getPolarizationNum()
   //
   int npol = 0 ;
 
-  NROHeader *h ;
-  //NRODataset *d ;
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
-    return npol ;
-  }
-  //if ( data_.size() == 0 ) {
-  //cerr << "ERROR: data_ is empty." << endl ;
-  //return npol ;
-  //}
-  h = header_ ;
-
-  // DEBUG
-  //cout << "NROReader::getPolarizationNum()  get header" << endl ;
-  //
+  NROHeader *h = header_ ;
 
   vector<string> type( 2 ) ;
   type[0] = "CIRL" ;
@@ -423,9 +408,7 @@ Int NROReader::getPolarizationNum()
   vector<int> ntype( 2, 0 ) ;
 
   unsigned int imax = rowNum_ ;
-  //unsigned int imax = 10 ;  
   for ( unsigned int i = 0 ; i < imax ; i++ ) { 
-    //d = data_[i] ;
     int index = getIndex( i ) ;
     // DEBUG 
     //cout <<"NROReader::getPolarizationNum()  index = " << index << endl ;
@@ -479,12 +462,11 @@ vector<double> NROReader::getStartIntTime()
 
 double NROReader::getStartIntTime( int i ) 
 {
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
-    return 0.0 ;
+  if ( getData( i ) != 0 ) {
+    cout << "NROReader::getStartIntTime()  error" << endl ;
+    return -999999.0 ;
   }
-  NRODataset *d = getData( i ) ;
-  char *t = d->LAVST ;
+  char *t = data_->LAVST ;
   return getMJD( t ) ;
 }
 
@@ -515,12 +497,11 @@ Int NROReader::getIndex( int irow )
   // DEBUG 
   //cout << "NROReader::getIndex()  start" << endl ;
   //
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
-    return -1 ;
+  if ( getData( irow ) != 0 ) {
+    cout << "NROReader::getIndex()  error " << endl ;
+    return -1 ; 
   }
-  NRODataset *d = getData( irow ) ;
-  string str = d->ARRYT ;
+  string str = data_->ARRYT ;
   // DEBUG
   //cout << "NROReader::getIndex()  str = " << str << endl ;
   //
@@ -544,57 +525,86 @@ vector<double> NROReader::getFrequencies( int i )
   // v[2]  frequency increment
   vector<double> v( 3, 0.0 ) ;
 
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
+  if ( getData( i ) != 0 ) {
+    cout << "NROReader::getFrequendies()  error" << endl ;
     return v ;
   }
-  NRODataset *d = getData( i ) ;
-  string arryt = string( d->ARRYT ) ;
+  string arryt = string( data_->ARRYT ) ;
   string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
   uInt ib = atoi( sbeamno.c_str() ) - 1 ; 
 
 
-  v[0] = header_->getCHCAL()[ib][0] - 1 ;
+  v[0] = header_->getCHCAL()[ib][0] - 1 ; // 0-base
 
   int ia ;
-  if ( strncmp( d->ARRYT, "X", 1 ) == 0 )
+  if ( strncmp( data_->ARRYT, "X", 1 ) == 0 )
     ia = 1 ;  // FX
   else
     ia = 2 ;  
 
   int iu ;
-  if ( d->FQIF1 > 0 )
+  if ( data_->FQIF1 > 0 )
     iu = 1 ;  // USB
   else 
     iu = 2 ;  // LSB
 
-  v[1] = header_->getFQCAL()[ib][0] ;
-  v[1] -= header_->getF0CAL()[ib] ;
-  if ( ia == 1 ) {
-    if ( iu == 1 ) {
-      v[1] = d->FREQ0 + v[1] ;
+  int ivdef = -1 ;
+  if ( strncmp( header_->getVDEF(), "RAD", 3 ) == 0 )
+    ivdef = 0 ;
+  else if ( strncmp( header_->getVDEF(), "OPT", 3 ) == 0 )
+    ivdef = 1 ;
+  // DEBUG
+  //cout << "NROReader::getFrequencies() ivdef = " << ivdef << endl ;
+  //
+  double vel = header_->getURVEL() + data_->VRAD ;
+  double cvel = 2.99792458e8 ; // speed of light [m/s]
+
+  int ncal = header_->getNFCAL()[ib] ;
+  double freqs[ncal] ;
+
+  for ( int ii = 0 ; ii < ncal ; ii++ ) {
+    freqs[ii] = header_->getFQCAL()[ib][ii] ;
+    freqs[ii] -= header_->getF0CAL()[ib] ;
+    if ( ia == 1 ) {
+      if ( iu == 1 ) {
+        freqs[ii] = data_->FREQ0 + freqs[ii] ;
+      }
+      else if ( iu == 2 ) {
+        freqs[ii] = data_->FREQ0 - freqs[ii] ;
+      }
     }
-    else if ( iu == 2 ) {
-      v[1] = d->FREQ0 - v[1] ;
+    else if ( ia == 2 ) {
+      if ( iu == 1 ) {
+        freqs[ii] = data_->FREQ0 - freqs[ii] ;
+      }
+      else if ( iu == 2 ) {
+        freqs[ii] = data_->FREQ0 + freqs[ii] ;
+      }
     }
-  }
-  if ( ia == 2 ) {
-    if ( iu == 1 ) {
-      v[1] = d->FREQ0 - v[1] ;
+
+    if ( ivdef == 0 ) {
+      double factor = 1.0 / ( 1.0 - vel / cvel ) ;
+      freqs[ii] = freqs[ii] * factor - data_->FQTRK * ( factor - 1.0 ) ;
     }
-    else if ( iu == 2 ) {
-      v[1] = d->FREQ0 + v[1] ;
+    else if ( ivdef == 1 ) {
+      double factor = vel / cvel ;
+      freqs[ii] = freqs[ii] * ( 1.0 + factor ) - data_->FQTRK * factor ;
     }
   }
 
   double cw = header_->getCWCAL()[ib][0] ;
-  if ( cw == 0 ) {
-    cw = ( header_->getFQCAL()[ib][1] - header_->getFQCAL()[ib][0] ) 
+  // DEBUG
+  //if ( i == 25 ) {
+  //cout << "NROReader::getFrequencies() FQCAL[0] = " << header_->getFQCAL()[ib][0] << " FQCAL[1] = " << header_->getFQCAL()[ib][1] << endl ;
+  //cout << "NROReader::getFrequencies() freqs[0] = " << freqs[0] << " freqs[1] = " << freqs[1] << endl ;
+  //}
+  if ( cw == 0.0 ) {
+    cw = ( freqs[1] - freqs[0] ) 
       / ( header_->getCHCAL()[ib][1] - header_->getCHCAL()[ib][0] ) ;
-    // / ( header_->getCHCAL()[ib][1] - header_->getCHCAL()[ib][0] + 1 ) ;
     if ( cw < 0.0 ) 
       cw = abs( cw ) ;
   }
+  v[1] = freqs[0] ;
   v[2] = cw ;
 
   return v ;
@@ -604,12 +614,6 @@ vector<Bool> NROReader::getIFs()
 {
   vector<Bool> v ;
   vector< vector<double> > fref ;
-  //NRODataset d = NRODataset() ;
-  NRODataset *d ;
-  if ( header_ == NULL ) {
-    cerr << "ERROR: header_ is empty." << endl ;
-    return v ;
-  }
   vector< vector<double> > chcal = header_->getCHCAL() ;
   vector<double> f0cal = header_->getF0CAL() ;
   vector<double> beres = header_->getBERES() ;
@@ -622,8 +626,11 @@ vector<Bool> NROReader::getIFs()
     if ( f[0] != 0. ) {
       f[1] = f[1] - f[0] * f[2] ;
     }
-    d = getData( i ) ;
-    f[3] = d->FREQ0 ;
+    if ( getData( i ) != 0 ) {
+      cout << "NROReader::getIFs()  error at " << i << endl ;
+      return v ;
+    }
+    f[3] = data_->FREQ0 ;
     if ( v.size() == 0 ) {
       v.push_back( True ) ;
       fref.push_back( f ) ;
@@ -728,51 +735,32 @@ void NROReader::convertEndian( NRODataset *d )
   convertEndian( d->ADOFF ) ;
 }
 
-// Read the next data record.
-//Int NROReader::readData( NRODataset &d, int i ) 
+// Read specified data record.
 Int NROReader::readData( int i ) 
 {
   int status = 0 ;
-  // open file if not opened yet 
-  if ( fp_ == NULL ) {
-    status = open() ;
-    if ( status == -1 ) {
-      cerr << "Error opening file " << filename_ << "." << endl ;
-      cerr << "Failed to read data header." << endl ;
-      return status ;
-    }
-  }
-
-  // read data header if not read yet
-  if ( scanNum_ == 0 ) { 
-    status = readHeader() ;
-    //status = -1 ;
-    if ( status == -1 ) 
-      return status ;
-  }
 
   // fill NRODataset
   int offset = header_->getDataSize() + scanLen_ * i ;
   // DEBUG
   //cout << "NROReader::readData()  offset (header) = " << offset << endl ;
-  //cout << "NROReader::readData()  offset (scan)   = " << sizeof( NRODataset ) << endl ;
-  //cout << "NROReader::readData()  scan length     = " << scanLen_ << endl ; 
-  //
-  // for NEW Dataset
+  //cout << "NROReader::readData()  sizeof(NRODataset) = " << sizeof( NRODataset ) << " byte" << endl ;
   fseek( fp_, offset, SEEK_SET ) ;
-  //if ( (int)fread( &d, 1, scanLen_, fp_ ) != scanLen_ ) {
-  if ( (int)fread( data_, 1, scanLen_, fp_ ) != scanLen_ ) {
-    cerr << "Failed to read data record: " << i << endl ;
+  int rsize = SCAN_HEADER_SIZE ;
+  if ( (int)fread( data_, 1, rsize, fp_ ) != rsize ) {
+    cerr << "Failed to read scan header: " << i << endl ;
     return -1 ;
   }
-  // DEBUG
-  //cout << "NROReader::readData()  finished to read data" << endl ;
-  //
+  //offset += SCAN_HEADER_SIZE ;
+  //fseek( fp_, offset, SEEK_SET ) ;
+  rsize = scanLen_ - SCAN_HEADER_SIZE ;
+  //data_->LDATA = new char[rsize] ;
+  if ( (int)fread( data_->LDATA, 1, rsize, fp_ ) != rsize ) {
+    cerr << "Failed to read spectral data: " << i << endl ;
+    return -1 ;
+  }
+
   if ( !same_ ) {
-    // DEBUG
-    //cout << "NROReader::readData()  need to convert endian" << endl ;
-    //
-    //convertEndian( d ) ;
     convertEndian( data_ ) ;
   } 
 
@@ -780,43 +768,43 @@ Int NROReader::readData( int i )
 }
 
 // Get specified scan
-NRODataset *NROReader::getData( int i )
+int NROReader::getData( int i )
 {
+  // DEBUG
+  //cout << "NROReader::getData()  Start " << endl ;
+  //
   if ( i < 0 || i >= rowNum_ ) {
     cerr << "NROReader::getData()  data index out of range." << endl ;
-    return NULL ;
+    return -1 ;
   }
 
   if ( i == dataid_ ) {
-    return data_ ;
+    return 0 ;
   }
 
+  // DEBUG
+  //cout << "NROReader::getData()  Get new dataset" << endl ;
+  //
   // read data 
-  delete data_ ;
-  data_ = new NRODataset() ;
+  //releaseData() ;
+  //data_ = new NRODataset() ;
   int status = readData( i ) ;
-
   if ( status == 0 ) {
     dataid_ = i ;
-    return data_ ;
   }
   else {
     cerr << "NROReader::getData()  error while reading data " << i << endl ;
     dataid_ = -1 ;
-    return NULL ;
+    //releaseData() ;
   }
+
+  return status ;
 }
 
 // Get SRCDIRECTION in RADEC(J2000)
 Vector<Double> NROReader::getSourceDirection()
 {
   Vector<Double> v ;
-  if ( header_ == NULL ) {
-    Int status = readHeader() ;
-    if ( status == -1 ) {
-      return v ;
-    }
-  }
   Double srcra = Double( header_->getRA0() ) ;
   Double srcdec = Double( header_->getDEC0() ) ;
   char *epoch = header_->getEPOCH() ;
@@ -848,17 +836,14 @@ Vector<Double> NROReader::getSourceDirection()
 Vector<Double> NROReader::getDirection( int i )
 {
   Vector<Double> v ;
-  if ( header_ == NULL ) {
-    Int status = readHeader() ;
-    if ( status == -1 ) {
-      return v ;
-    }
+  if ( getData( i ) != 0 ) {
+    cout << "NROReader::getDirection()  error " << endl ;
+    return v ;
   }
-  NRODataset *d = getData( i ) ;
   char *epoch = header_->getEPOCH() ;
   int icoord = header_->getSCNCD() ;
-  Double dirx = Double( d->SCX ) ;
-  Double diry = Double( d->SCY ) ;
+  Double dirx = Double( data_->SCX ) ;
+  Double diry = Double( data_->SCY ) ;
   if ( icoord == 1 ) {
     // convert from LB to RADEC
     MDirection result = 
@@ -910,4 +895,16 @@ Vector<Double> NROReader::getDirection( int i )
   }
 
   return v ;
+}
+
+void NROReader::releaseData()
+{
+  if ( data_ != NULL ) {
+    if ( data_->LDATA != NULL ) {
+      delete data_->LDATA ;
+      data_->LDATA = NULL ;
+    }
+    delete data_ ;
+    data_ = NULL ;
+  }
 }

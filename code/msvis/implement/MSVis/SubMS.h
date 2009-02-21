@@ -27,9 +27,12 @@
 //#
 //# $Id$
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
-
+#include <map>
+#include <vector>
+//#include <ms/MeasurementSets/MSColumns.h>
 
 #ifndef MSVIS_SUBMS_H
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -59,8 +62,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // </synopsis>
 
+// These forward declarations are so the corresponding .h files don't have to
+// be included in this .h file, but it's only worth it if a lot of other files
+// include this file.
 class MSColumns;
 class ROMSColumns;
+
+  // These typedefs are necessary because a<b::c> doesn't work.
+  typedef std::vector<uInt> uivector;
+  struct uIntCmp 
+  {
+    bool operator()(const uInt i1, const uInt i2) const 
+    {
+      return i1 < i2;
+    }
+  };
+  typedef std::map<const uInt, uivector, uIntCmp> ui2vmap;
+
+template<class T> class ROArrayColumn;
 
 class SubMS
 {
@@ -129,14 +148,30 @@ class SubMS
 				   Bool forceInMemory=False);
 
   // This setup a default new ms
-  // Can be called directly as its not dependent on any private variable
-  static MeasurementSet* setupMS(String msname, Int nchan, Int npol, String telescop, Int obstype=0);
+  // Declared static as it can be (and is) called directly outside of SubMS.
+  // Therefore it is not dependent on any member variable.
+  static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
+				 String telescop, String colName="DATA", Int obstype=0);
   
+  void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
   
   
 
  private:
-  //method that returns the selected ms
+  // *** Private member functions ***
+
+  // Declared static because it's used in setupMS().  Therefore it can't use
+  // any member variables.
+  static const Vector<String>& parseColumnNames(const String colNameList);
+
+  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
+		     const String& colName, const Bool writeToDataCol=False);
+  Bool putDataColumn(MSColumns& msc, Cube<Complex>& data, 
+		     const String& colName, const Bool writeToDataCol=False);
+  Bool getDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
+		     const String& colName);
+
+  //method that returns the selected ms (?! - but it's Boolean - RR)
   Bool makeSelection();
   Bool fillAllTables(const String& colname);
   Bool fillDDTables();
@@ -148,45 +183,78 @@ class SubMS
   Bool copySource();
   Bool copyObservation();
   Bool copyPointing();
-  Bool writeDiffSpwShape(String& columnName);
-  Bool writeSimilarSpwShape(String& columnName);
+  Bool writeDiffSpwShape(const String& columnName);
+  Bool writeSimilarSpwShape(const String& columnName);
   // return the number of unique antennas selected
-  Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, 
-		    Bool includeAutoCorr=False);
+  //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, Bool includeAutoCorr=False);
   // Number of time bins to average into from selected data
-  Int numOfTimeBins(const Double& timeBin);
-  Bool fillAverAntTime(Vector<Int>& ant1, Vector<Int>& ant2, 
-		       const Double& timeBin, 
-		       const Int& numOfTimeBins);
-  Bool fillTimeAverData(Vector<Int>& ant1, Vector<Int>& ant2, 
-			const Double& timeBin, const Int& numbas, 
-			const String& ColumnName);
-  void checkSpwShape();
+  Int numOfTimeBins(const Double timeBin);
 
+  // Used in a couple of places to estimate how much memory to grab.
+  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * npol_p[0] *
+                           sizeof(Complex);}
+
+  // Picks a reference to DATA, MODEL_DATA, or CORRECTED_DATA out of ms_p.
+  const ROArrayColumn<Complex>& right_column(const MSColumns *ms_p, const String& colName);
+
+  // Figures out the number, maximum, and index of the selected antennas.
+  uInt fillAntIndexer(const MSColumns *msc, Vector<Int>& antIndexer);
+
+  //Bool fillAverAntTime();
+  Bool fillTimeAverData(const String& ColumnName);
+
+  // Returns whether or not all the elements of inNumChan_p are the
+  // same, AND whether all the elements of nchan_p are the same.
+  Bool checkSpwShape();
+
+  void relabelIDs();
+  void remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol);
+  void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+  uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
+
+  // A "Slot" is a subBin, i.e. rows within the same time bin that have
+  // different Data Descriptors, Field_IDs, Array_IDs, or States should not be
+  // averaged together.  This function returns the Slot number corresponding to
+  // the Data Descriptor (dd), Field_ID, Array_ID, and State, all of which have
+  // *remapped* values.
+  uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
+			const Int field, const Int scan, const Int state);
+
+  // *** Member variables ***
+
+  // Initialized* by ctors.  (Maintain order both here and in ctors.)
+  //  * not necessarily to anything useful.
+  MeasurementSet ms_p, mssel_p;
   MSColumns * msc_p;
   MSColumns * mscIn_p;
+  Bool doChanAver_p, antennaSel_p, sameShape_p;
+  Double timeBin_p;
+  uInt numOutRows_p;
+  String scanString_p, uvrangeString_p, taqlString_p;
+  uInt nant_p;
 
-  MeasurementSet ms_p, mssel_p, msOut_p;
+  // Uninitialized by ctors.
+  MeasurementSet msOut_p;
   Vector<Int> spw_p, nchan_p, chanStart_p, chanStep_p, npol_p, inNumChan_p;
   Vector<Int> fieldid_p;
   Bool averageChannel_p;
   Vector<Int> spwRelabel_p, fieldRelabel_p;
   Vector<Int> oldDDSpwMatch_p;
-  Bool doChanAver_p;
-  Bool antennaSel_p;
   Vector<String> antennaSelStr_p;
   Vector<Int> antennaId_p;
-  Double timeBin_p;
-  Bool sameShape_p;
+  Vector<Int> antIndexer_p;
   String timeRange_p;
   Vector<Double> newTimeVal_p;
-  Vector<Int> timeBinIndex_p;
   Vector<Int> antNewIndex_p;
   Vector<Int> feedNewIndex_p;
-  String scanString_p;
-  String uvrangeString_p;
-  String taqlString_p;
-  
+  Vector<uInt> tOI_p; //timeOrderIndex
+
+  Vector<Int> scanRemapper_p, stateRemapper_p; 
+
+  // Each bin gets a map which maps its set of slot keys from
+  // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
+  // the slot.
+  Vector<ui2vmap> bin_slots_p;
 };
 
 

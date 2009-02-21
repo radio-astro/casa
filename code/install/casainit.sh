@@ -268,6 +268,7 @@
                    awk '{ print $1 }' | \
                    awk -F/ '{ print $(NF-1) }'`
            a_ext=`/bin/echo $a_temp | sed -e 's/.*_//'`
+           [ "$a_ext" == "64b" -a "`uname -p`" != "x86_64" ] && a_ext='*'
            [ "$a_ext" != "*" ] && a_arch=${a_arch}_$a_ext
         fi
      fi

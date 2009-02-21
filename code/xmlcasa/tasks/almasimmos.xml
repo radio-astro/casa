@@ -7,9 +7,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
 <task type="function" name="almasimmos">
 
-  <shortdescription>ALMA mosaic simulation task (v20090106):</shortdescription>
+  <shortdescription>mosaic simulation task:</shortdescription>
   <description>
-    This is a prototype task which will simulate ALMA data.  
+    This is a prototype task which will simulate data.  
     Please contact CASA helpdesk with questions.
   </description>
   
@@ -19,33 +19,62 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="modelimage">
       <description>input image name</description>
-      <value>pollux.im</value>
+      <value></value>
     </param>
 
+    <param type="bool" name="modifymodel">
+      <description>modify model WCS or flux scale</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="refdirection" subparam='true'>
+       <description>reference direction (CRVAL): "J2000 19h00m00 -40d00m00" or "direction" or "header"</description>
+       <value>direction</value>
+    </param>
+
+    <param type="string" name="refpixel" subparam='true'>
+       <description>reference pixel (CRPIX): "[100,100]" or "center" or "header"</description>
+       <value>header</value>
+    </param>
+
+    <param type="string" name="incell" subparam='true'>
+       <description>pixel size: "0.1arcsec" or "header"</description>
+       <value>header</value>
+    </param>
+
+    <param type="string" name="inbright" subparam='true'>
+       <description>peak surface brightness in Jy/sq arcsec or "default"</description>
+       <value>default</value>
+    </param>
+
+<!-- 
     <param type="string" name="incell">
       <description>input image pixel size</description>
-<!-- add "header" here to use the existing WCS -->
       <value>0.1arcsec</value>
     </param>
 
     <param type="double" name="inbright">
       <description>input image pk surface brightness (Jy/sq arcsec)</description>
-<!-- add "header" here to use the existing WCS-->
       <value>0.1</value>
     </param>
+-->
 
     <param type="string" name="complist">
       <description>componentlist table to observe</description>
       <value></value>
     </param>
 
-<!--  ARRAY  -->
 
-<!-- add telescopename=ALMA,EVLA -->
+<!--  ARRAY  -->
 
     <param type="string" name="antennalist" mustexist="true">
       <description>antenna position file</description>
-      <value>configs/almaconfig.out10</value>
+      <value>alma.out10.cfg</value>
+    </param>
+
+    <param type="string" name="checkinputs">
+      <description>verify input parameters (graphic output)</description>
+      <value>yes</value>
     </param>
             
 
@@ -254,7 +283,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!--   DISPLAY    -->    
     
-    
     <param type="bool" name="fidelity">
       <description>Calculate fidelity images</description>
       <value>True</value>
@@ -264,11 +292,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Plot simulation result images,figures</description>
       <value>True</value>
     </param>
+        
     
-    
-    
+<!--  CONSTRAINTS  -->    
     
     <constraints>
+      <when param="modifymodel">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+	  <default param="refdirection"><value>"direction"</value></default>
+	  <default param="refpixel"><value>"center"</value></default>
+	  <default param="incell"><value>"header"</value></default>
+	  <default param="inbright"><value>"default"</value></default>
+	</equals>
+      </when>
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
@@ -318,7 +355,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
   
 <example>
-ALMA mosaic simulation task (prototype):	
+mosaic simulation task (prototype):	
 
     This task simulates interfermetric observations (currently 
     only ALMA can be done easily).  New functionality is actively 
@@ -333,14 +370,30 @@ ALMA mosaic simulation task (prototype):
     modelimage -- name of an image to simulate
         *experimental* input images with more than 2 dimensions 
         have not been tested for all possible permutations.
-    incell -- pixel size of input image (overrides any value in 
-        the image header)
-        *experimental* can be set to "header" to use the image header
-    inbright -- peak surface brightness to scale input image
+    changeimage -- if you want to modify the input image either 
+        its pointing direction or cell size, or its brightness, 
+        overriding the input image header
+    refdirection -- direction of input image (i.e. CRVAL); 
+        can be set to "direction" to use the same as the 
+        desired simulation direction specified below
+    refpixel -- pixel at which refdirection is specified (i.e. CRPIX); 
+        can be set to "center" to use the central pixel of the image
+    incell -- pixel size of input image 
+    inbright -- peak surface brightness to scale input image 
+        (default to use image values - note that we don't try to 
+        be fancy and scale the image if you change the pixel size 
+        and the image units are in Jy/pixel, we'll just keep the 
+        same numerical values)
     complist -- componentlist table to use to simulate the data.
         May be used with or without modelimage
     antennalist -- ascii file containing antenna positions.
-        each row has geocentric x y z coordinates, antenna diam 
+        each row has x y z coordinates and antenna diameter; 
+        header lines are required to specify the observatory name
+        and coordinate system e.g. 
+        # observatory=ALMA
+        # coordsys=UTM
+        # datum=WGS84
+        # zone=19
     -------------------------------
     -- Output Control:
     project -- Name of project simulated; created ms and images will
@@ -353,7 +406,7 @@ ALMA mosaic simulation task (prototype):
     nchan -- number of channels (cab be 1 for a continuum simulation)
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
         Can optionally be a list of pointings, which will override
-    	pointingspacing.  Otherwise almasimmos will hexagonally
+    	pointingspacing.  Otherwise simmos will hexagonally
     	pack the input image with pointings.  When direction is a
     	list, the centroid of direction will be used as the center.
     pointingspacing-- spacing in between beams e.g '1arcsec'        

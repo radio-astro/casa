@@ -1,5 +1,6 @@
 import os
 import shutil
+import stat
 from taskinit import *
 
 def concat(vislist,concatvis,freqtol,dirtol):
@@ -42,7 +43,15 @@ def concat(vislist,concatvis,freqtol,dirtol):
 		else:
 			if(len(vis) >1):
 				casalog.post('copying '+vis[0]+' to '+concatvis , 'INFO')
-				shutil.copytree(vis[0],concatvis)	
+				shutil.copytree(vis[0],concatvis)
+				# set the mode of the entire target MS to rwxr-x-r-x (recursive chmod does not exist in Python)
+				os.chmod(concatvis, stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+				for root, dirs, files in os.walk(concatvis):
+					for name in files:
+						os.chmod(os.path.join(root, name), stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+					for name in dirs:
+						os.chmod(os.path.join(root, name), stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+
 				vis.remove(vis[0])
 
                 if ((type(concatvis)==str) & (os.path.exists(concatvis))):

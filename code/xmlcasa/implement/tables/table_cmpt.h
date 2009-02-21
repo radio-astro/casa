@@ -42,13 +42,12 @@ class table
     table();
     virtual ~table();
 
+    ::casac::table * fromfits(const std::string& tablename, const std::string& fitsfile, const int whichhdu = 1, const std::string& storage = "standard", const std::string& convention = "none", const bool nomodify = true, const bool ack = true);
+
     bool fromascii(const std::string& tablename, const std::string& asciifile, const std::string& headerfile = "", const bool autoheader = false, const std::vector<int>& autoshape = std::vector<int> (1, -1), const std::string& sep = " ", const std::string& commentmarker = "", const int firstline = 0, const int lastline = -1, const bool nomodify = true, const std::vector<std::string>& columnnames = std::vector<std::string> (1, ""), const std::vector<std::string>& datatypes = std::vector<std::string> (1, ""));
 
-//begin modification
-//july 2 2007
-//    bool fromASDM(const std::string& tablename, const std::string& xmlfile, const std::string& headerfile = "", const bool autoheader = false, const std::vector<int>& autoshape = std::vector<int> (1, -1), const std::string& sep = " ", const std::string& commentmarker = "", const int firstline = 0, const int lastline = -1, const bool nomodify = true, const std::vector<std::string>& columnnames = std::vector<std::string> (1, ""), const std::vector<std::string>& datatypes = std::vector<std::string> (1, ""));
     bool fromASDM(const std::string& tablename, const std::string& xmlfile);
-//end modification
+
     bool open(const std::string& tablename = "", const ::casac::record& lockoptions = ::casac::initialize_record("default"), const bool nomodify = true);
 
     bool flush();

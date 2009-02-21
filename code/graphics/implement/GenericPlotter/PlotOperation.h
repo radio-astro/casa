@@ -1,0 +1,113 @@
+//# PlotOperation.h: Classes for managing large, threaded plot operations.
+//# Copyright (C) 2009
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: $
+#ifndef PLOTOPERATION_H_
+#define PLOTOPERATION_H_
+
+#include <casa/BasicSL/String.h>
+#include <casa/Utilities/CountedPtr.h>
+
+#include <casa/namespace.h>
+
+namespace casa {
+
+// Abstract class, for a synchronization mutex specific to the threading
+// library used by the plotting implementations.
+class PlotMutex {
+public:
+    // Constructor.
+    PlotMutex() { }
+    
+    // Destructor.
+    virtual ~PlotMutex() { }
+    
+    
+    // ABSTRACT METHODS //
+    
+    // Locks the mutex.
+    virtual void lock() = 0;
+    
+    // Unlocks the mutex.
+    virtual void unlock() = 0;
+};
+typedef CountedPtr<PlotMutex> PlotMutexPtr;
+
+
+// Simple object to synchronize operation progress information across threads.
+class PlotOperation {    
+public:
+    // Constructor which takes the operation name and a synchronization mutex.
+    PlotOperation(const String& name, PlotMutexPtr mutex);
+    
+    // Destructor.
+    ~PlotOperation();
+    
+    
+    // Accessors (synchronized).
+    // <group>
+    String name() const;    
+    bool inProgress() const;    
+    bool isFinished() const;    
+    unsigned int currentProgress() const;    
+    String currentStatus() const;
+    // </group>
+    
+    // Mutators (synchronized).
+    // <group>
+    void setInProgress(bool inProgress);
+    void setIsFinished(bool isFinished);
+    void setCurrentProgress(unsigned int currentProgress);
+    void setCurrentStatus(const String& currentStatus);
+    // </group>
+    
+    // Sets the operation's mutex to the given.
+    void setMutex(PlotMutexPtr mutex);
+    
+    // Resets the in progress, is finished, current progress, and current
+    // status members.
+    void reset();
+    
+private:    
+    // Name.
+    String m_name;
+    
+    // Flags.
+    bool m_inProgress, m_isFinished;
+    
+    // Current progress (0 - 100)%.
+    unsigned int m_currentProgress;
+    
+    // Current status message.
+    String m_currentStatus;
+    
+    // Synchronization mutex.
+    PlotMutexPtr m_mutex;
+};
+typedef CountedPtr<PlotOperation> PlotOperationPtr;
+
+}
+
+#endif /* PLOTOPERATION_H_ */

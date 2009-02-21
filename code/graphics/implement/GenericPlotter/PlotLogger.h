@@ -63,8 +63,8 @@ public:
     // LogIO::origin().
     virtual const String& origin2() const = 0;
     
-    // Returns the actual message.  See LogIO::operator<<().
-    virtual const String& message() const = 0;
+    // Reports the message to the given output stream.
+    virtual void message(ostream& outstream) const = 0;
     
     // Returns the message's priority.  See LogIO::priority().
     virtual LogMessage::Priority priority() const = 0;
@@ -91,7 +91,7 @@ public:
     virtual const String& origin2() const;
     
     // Implements PlotLogMessage::message().
-    virtual const String& message() const;
+    virtual void message(ostream& outstream) const;
     
     // Implements PlotLogMessage::priority().
     virtual LogMessage::Priority priority() const;
@@ -149,7 +149,7 @@ public:
     // Implements PlotLogMessage::message().  Message is:
     // END.\tTime: [time] [timeUnits].  Memory: [memory] [memoryUnits].
     // If the measurement has not been ended, calls stopMeasurement() first.
-    const String& message() const;
+    void message(ostream& outstream) const;
     
     // Implements PlotLogMessage::priority().
     LogMessage::Priority priority() const;
@@ -191,7 +191,6 @@ private:
     double m_time, m_memory;         // Time and memory
     TimeUnit m_timeUnit;             // Time unit
     MemoryUnit m_memoryUnit;         // Memory unit
-    String m_message;                // Message
     LogMessage::Priority m_priority; // Message priority
 };
 
@@ -238,7 +237,7 @@ public:
     const String& origin2() const;
     
     // Implements PlotLogMessage::message().
-    const String& message() const;
+    void message(ostream& outstream) const;
     
     // Implements PlotLogMessage::priority().
     LogMessage::Priority priority() const;
@@ -267,7 +266,6 @@ public:
     
 private:
     String m_origin1, m_origin2;     // Origins
-    String m_message;                // Message
     LogMessage::Priority m_priority; // Priority
     PlotRegion m_region;             // Region
     vector<vector<pair<unsigned int, unsigned int> > >* m_indices; // Indices

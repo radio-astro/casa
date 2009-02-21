@@ -171,3 +171,5 @@ from task_makemask import makemask
 from task_smoothcal import smoothcal
 from task_imval import imval
 from task_sdcal import sdcal
+from task_vishead import vishead
+

@@ -150,6 +150,7 @@ Int PKSMS2reader::open(
 
   cBeamNoCol.reference(msCols.feed1());
   cPointingCol.reference(pointingCols.direction());
+  cPointingTimeCol.reference(pointingCols.time());
   cSigmaCol.reference(msCols.sigma());
   cNumReceptorCol.reference(feedCols.numReceptors());
 
@@ -353,6 +354,10 @@ Int PKSMS2reader::getHeader(
   ROMSPointingColumns pointingCols(cPKSMS.pointing());
   String dirref = pointingCols.direction().keywordSet().asRecord("MEASINFO").
                     asString("Ref");
+  cDirRef = dirref;
+  if (dirref =="AZELGEO" || dirref == "AZEL") {
+     dirref = "J2000";
+  }
   sscanf(dirref.chars()+1, "%f", &equinox);
 
   // Frequency/velocity reference frame.
@@ -421,7 +426,8 @@ uInt PKSMS2reader::select(
         const Vector<Int>  refChan,
         const Bool getSpectra,
         const Bool getXPol,
-        const Bool getFeedPos)
+        const Bool getFeedPos,
+        const Bool getPointing)
 {
   if (!cMSopen) {
     return 1;
@@ -502,6 +508,9 @@ uInt PKSMS2reader::select(
 
   // Get feed positions?  (Not available.)
   cGetFeedPos = False;
+
+  // Get Pointing data (for MS)
+  cGetPointing = getPointing;
 
   return maxNChan;
 }
@@ -803,39 +812,74 @@ Int PKSMS2reader::read(
   refBeam = 0;
   beamNo  = ibeam + 1;
 
-  //Matrix<Double> pointingDir = cPointingCol(fieldId);
-  //pointingDir = cPointingCol(fieldId);
-  //direction = pointingDir.column(0);
-  //uInt ncols = pointingDir.ncolumn();
-  //if (ncols == 1) {
-  //  scanRate = 0.0f;
-  //} else {
-  //  scanRate  = pointingDir.column(1);
-  //}
-
-  // Get direction from FIELD table 
-  // here, assume direction to be the field direction not pointing
-  Matrix<Double> delayDir = cFieldDelayDirCol(fieldId);
-  direction = delayDir.column(0);
-  uInt ncols = delayDir.ncolumn();
-  if (ncols == 1) {
-    scanRate = 0.0f;
-  } else {
-    scanRate  = delayDir.column(1);
-  }
-
-  // caluculate azimuth and elevation
-  // first, get the reference frame 
+  //pointing/azel
   MVPosition mvpos(antennaCols.position()(0));
   MPosition mp(mvpos); 
   Quantum<Double> qt(time,"s");
   MVEpoch mvt(qt);
   MEpoch me(mvt);
   MeasFrame frame(mp, me);
+  MDirection md;
+  if (cGetPointing) {
+    //cerr << "get pointing data ...." << endl;
+    Vector<Double> pTimes = cPointingTimeCol.getColumn();
+    Int PtIdx=-1;
+    for (PtIdx = pTimes.nelements()-1; PtIdx >= 0; PtIdx--) {
+      if (cPointingTimeCol(PtIdx) <= time) {
+        break;
+      }
+    }
+    //cerr << "got index=" << PtIdx << endl;
+    Matrix<Double> pointingDir = cPointingCol(PtIdx);
+
+    ROMSPointingColumns PtCols(cPKSMS.pointing());
+    Vector<MDirection> vmd(1);
+    PtCols.directionMeasCol().get(PtIdx,vmd);
+    md = vmd[0];
+    // put J2000 coordinates in "direction" 
+    if (cDirRef =="J2000") {
+      direction = pointingDir.column(0);
+    }
+    else {
+      direction =
+        MDirection::Convert(md, MDirection::Ref(MDirection::J2000,
+                                                frame)
+                            )().getAngle("rad").getValue();
+      
+    }
+    uInt ncols = pointingDir.ncolumn();
+    if (ncols == 1) {
+      scanRate = 0.0f;
+    } else {
+      scanRate  = pointingDir.column(1);
+    }
+  }
+  else {
+  // Get direction from FIELD table 
+  // here, assume direction to be the field direction not pointing
+    Matrix<Double> delayDir = cFieldDelayDirCol(fieldId);
+    direction = delayDir.column(0);
+    uInt ncols = delayDir.ncolumn();
+    if (ncols == 1) {
+      scanRate = 0.0f;
+    } else {
+      scanRate  = delayDir.column(1);
+    }
+  }
+  // caluculate azimuth and elevation
+  // first, get the reference frame 
+ /**
+  MVPosition mvpos(antennaCols.position()(0));
+  MPosition mp(mvpos); 
+  Quantum<Double> qt(time,"s");
+  MVEpoch mvt(qt);
+  MEpoch me(mvt);
+  MeasFrame frame(mp, me);
+  **/
   //
   ROMSFieldColumns fldCols(cPKSMS.field());
   Vector<MDirection> vmd(1);
-  MDirection md;
+  //MDirection md;
   fldCols.delayDirMeasCol().get(fieldId,vmd);
   md = vmd[0];
   //Vector<Double> dircheck = md.getAngle("rad").getValue();

@@ -133,13 +133,16 @@ image::~image()
       delete itsImage;
       itsImage = 0;
     }
-
     delete itsLog;
     itsLog=0;
   } catch (AipsError x) {
+    if(itsLog){
     *itsLog << LogOrigin("image", "~image");
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
+    } else {
+	    cerr << "Exception Reported: " << x.getMesg() << endl;
+    }
+    // RETHROW(x);
   }
 }
 

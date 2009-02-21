@@ -294,24 +294,24 @@ else:
     load_jupiter6cm(prefix,msname) # Build data from scratch
 
 default(listvis)
-vis                 = msname            #  Name of input visibility file
-options             =       'ap'        #  List options: ap only
-datacolumn          =     'data'        #  Column to list: data, corrected, model, residual
-field               =       '12'        #  Field names or index to be listed: ''==>all
-spw                 =        '0'        #  Spectral window:channels: '\*'==>all, spw='1:5~57'
-selectdata          =       True        #  Other data selection parameters
-antenna             =    '16&22'        #  Antenna/baselines: ''==>all, antenna = '3'
-timerange           = '<18:31:36.6'     #  Time range: ''==>all
-correlation         = 'LL LR RR'        #  Correlations: ''==>all, correlation = 'RR RL'
-scan                =       '76'        #  Scan numbers
-feed                =         ''        #  Multi-feed numbers (Not yet implemented)
-array               =         ''        #  Array numbers (Not yet implemented)
-uvrange             =         ''        #  uv range: ''==>all; not yet implemented
-average             =         ''        #  Averaging mode: ==>none (Not yet implemented)
-showflags           =      False        #  Show flagged data (Not yet implemented)
-pagerows            =          5        #  Rows per page
-listfile            = outputFilename    #  Output file
-async               =      False        #  If true the taskname must be started using listvis(...)
+vis                 = msname                   #  Name of input visibility file
+options             =       'ap'               #  List options: ap only
+datacolumn          =     'data'               #  Column to list: data, corrected, model, residual
+field               =       '12'               #  Field names or index to be listed: ''==>all
+spw                 =        '0'               #  Spectral window:channels: '\*'==>all, spw='1:5~57'
+selectdata          =       True               #  Other data selection parameters
+antenna             =    '16&22'               #  Antenna/baselines: ''==>all, antenna = '3'
+timerange           = '<1999/04/16/18:31:36.6' #  Time range: ''==>all
+correlation         = 'LL LR RR'               #  Correlations: ''==>all, correlation = 'RR RL'
+scan                =       '76'               #  Scan numbers
+feed                =         ''               #  Multi-feed numbers (Not yet implemented)
+array               =         ''               #  Array numbers (Not yet implemented)
+uvrange             =         ''               #  uv range: ''==>all; not yet implemented
+average             =         ''               #  Averaging mode: ==>none (Not yet implemented)
+showflags           =      False               #  Show flagged data (Not yet implemented)
+pagerows            =          5               #  Rows per page
+listfile            = outputFilename           #  Output file
+async               =      False               #  If true the taskname must be started using listvis(...)
 go(listvis)
 
 comparefilename = prefix + 'compare_' + str(testNum)

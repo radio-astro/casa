@@ -25,20 +25,21 @@ not yet possible to both time average and frequency average a data set.
 		<value></value>
 	</param>
 
-	<param type="string" name="outputvis">
+	<param type="string" name="outputvis" mustexist="false">
 		<description>Name of output visibility file</description>
 		<value></value>
 	</param>
+
 	<param type="string" name="datacolumn">
-		<description>Whic data column to split out</description>
+		<description>Which data column to split out</description>
 		<value>corrected</value>
 		<allowed kind="enum">
 			<value>data</value>
 			<value>corrected</value>
 			<value>model</value>
+                        <value>all</value>
 		</allowed>
 	</param>
-
 
         <param type="any" name="field">
                 <description>Select field using field id(s) or field name(s)</description>
@@ -46,26 +47,26 @@ not yet possible to both time average and frequency average a data set.
                 <value type="string"></value>
         </param>
 
-
-	<param type="string" name="spw">
+	<param type="any" name="spw">
 		<description>Select spectral window/channels</description>
-		<value></value>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+		<value type="string"></value>
 	</param>
 
 	<param type="any" name="width">
-		<description>Defines the number of channel to average to form  one output channel</description>
+	  <description>Number of channels to average to form one output channel</description>
          <any type="variant" limittypes="string stringArray int intArray"/>
-	 <value type="string">1</value>
+	 <value type="int">1</value>
 	</param>
 
-	<param type="string" name="antenna" >
+	<param type="any" name="antenna">
 		<description>Select data based on antenna/baseline</description>
-		<value></value>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+		<value type="string"></value>
 	</param>
 
-	<param type="any" name="timebin">
-		<description>Value for timeaveraging</description>
-		
+	<param type="string" name="timebin">
+		<description>Value for timeaveraging</description>		
 		<value type="string">0s</value>
 	</param>
 

@@ -117,6 +117,16 @@ public:
     // Gets the minimum and maximum values.  Returns false for error.
     virtual bool minsMaxes(double& xMin, double& xMax, double& yMin,
                            double& yMax) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
+    // Gets the x and y values at the given index.  Default implementation
+    // just calls xAt and yAt, but in subclasses where performance could be
+    // gained, this method should be overridden.  Implementations for plots
+    // that use PlotPointData should use this method by default in case there
+    // are performance gains.
+    virtual void xAndYAt(unsigned int index, double& x, double& y) const;
 };
 INHERITANCE_POINTER2(PlotPointData, PlotPointDataPtr, PlotData, PlotDataPtr)
 
@@ -147,6 +157,14 @@ public:
     // Gets the mins/maxes for just the unmasked points.
     virtual bool unmaskedMinsMaxes(double& xMin, double& xMax, double& yMin,
                                    double& yMax) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
+    // Gets the x and y values and the mask at the given index.  See
+    // PlotPointData::xAndYAt().
+    virtual void xyAndMaskAt(unsigned int index, double& x, double& y,
+                             bool& mask) const;
 };
 INHERITANCE_POINTER(PlotMaskedPointData, PlotMaskedPointDataPtr, PlotPointData,
                     PlotPointDataPtr, PlotData, PlotDataPtr)
@@ -177,6 +195,15 @@ public:
     // Gets the maximum errors for the four sides.
     virtual bool errorMaxes(double& xLeft, double& xRight, double& yBottom,
                             double& yTop) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
+    // Gets the x and y values and error data at the given index.  See
+    // PlotPointData::xAndYAt().
+    virtual void xyAndErrorsAt(unsigned int index, double& x, double& y,
+            double& xLeftError, double& xRightError, double& yBottomError,
+            double& yTopError) const;
 };
 INHERITANCE_POINTER(PlotErrorData, PlotErrorDataPtr, PlotPointData,
                     PlotDataPtr, PlotData, PlotDataPtr)

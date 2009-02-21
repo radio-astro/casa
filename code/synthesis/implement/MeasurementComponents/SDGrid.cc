@@ -152,6 +152,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     movingDir_p=other.movingDir_p;
     fixMovingSource_p=other.fixMovingSource_p;
     firstMovingDir_p=other.firstMovingDir_p;
+    freqInterpMethod_p=other.freqInterpMethod_p;
 
   };
   return *this;
@@ -637,42 +638,6 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   gridOk(convSupport);
 
 
-  const Matrix<Float> *imagingweight;
-  if(imwght.nelements()>0)
-    imagingweight=&imwght;
-  else
-    imagingweight=&(vb.imagingWeight());
-  Bool iswgtCopy;
-  const Float *wgtStorage;
-  wgtStorage=imagingweight->getStorage(iswgtCopy);
- 
-  const Cube<Complex> *data;
-  if(type==FTMachine::MODEL){
-    data=&(vb.modelVisCube());
-  }
-  else if(type==FTMachine::CORRECTED){
-    data=&(vb.correctedVisCube());
-  }
-  else{
-    data=&(vb.visCube());
-  }
-
-  Bool isCopy;
-  const Complex *datStorage=data->getStorage(isCopy);
-
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if (row==-1) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-  }
-
-
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS()){
     matchAllSpwChans(vb);
@@ -688,9 +653,48 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap.resize();
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
-  flags.resize(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
+
+  const Matrix<Float> *imagingweight;
+  if(imwght.nelements()>0)
+    imagingweight=&imwght;
+  else
+    imagingweight=&(vb.imagingWeight());
+
+
+  if(dopsf) type=FTMachine::PSF;
+
+  Cube<Complex> data;
+  //Fortran gridder need the flag as ints 
+  Cube<Int> flags;
+  Matrix<Float> elWeight;
+  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+
+
+  Bool iswgtCopy;
+  const Float *wgtStorage;
+  wgtStorage=elWeight.getStorage(iswgtCopy);
+
+  Bool isCopy;
+  const Complex *datStorage=0;
+  if(!dopsf)
+    datStorage=data.getStorage(isCopy);
+
+  // If row is -1 then we pass through all rows
+  Int startRow, endRow, nRow;
+  if (row==-1) {
+    nRow=vb.nRow();
+    startRow=0;
+    endRow=nRow-1;
+  } else {
+    nRow=1;
+    startRow=row;
+    endRow=row;
+  }
+
+
   Vector<Int> rowFlags(vb.flagRow().nelements());
   rowFlags=0;
   for (Int rownr=startRow; rownr<=endRow; rownr++) {
@@ -720,7 +724,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	// accounted for.
 	{
 	  Bool del;
-	  IPosition s(data->shape());
+	  IPosition s(data.shape());
 	  ggridsd(actualPos.getStorage(del),
 		  datStorage,
 		  &s(0),
@@ -758,7 +762,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     }
     {
       Bool del;
-      IPosition s(data->shape());
+      IPosition s(data.shape());
       ggridsd(xyPositions.getStorage(del),
 	      datStorage,
 	      &s(0),
@@ -783,8 +787,9 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      sumWeight.getStorage(del));
     }
   }
-  data->freeStorage(datStorage, isCopy);
-  imagingweight->freeStorage(wgtStorage,iswgtCopy);
+  if(!dopsf)
+    data.freeStorage(datStorage, isCopy);
+  elWeight.freeStorage(wgtStorage,iswgtCopy);
 
 }
 
@@ -825,12 +830,18 @@ void SDGrid::get(VisBuffer& vb, Int row)
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //No point in reading data if its not matching in frequency
+  if(max(chanMap)==-1)
+    return;
+  Cube<Complex> data;
+  Cube<Int> flags;
+  getInterpolateArrays(vb, data, flags);
 
+  Complex *datStorage;
+  Bool isCopy;
+  datStorage=data.getStorage(isCopy);
   // NOTE: with MS V2.0 the pointing could change per antenna and timeslot
   //
-  flags.resize(vb.flagCube().shape());
-  flags=0;
-  flags(vb.flagCube())=True;
   Vector<Int> rowFlags(vb.flagRow().nelements());
   rowFlags=0;
   for (Int rownr=startRow; rownr<=endRow; rownr++) {
@@ -857,9 +868,9 @@ void SDGrid::get(VisBuffer& vb, Int row)
 	for (Int i=0;i<2;i++) {
 	  actualPos(i)=xyPos(i)-Double(offsetLoc(i));
 	}
-	IPosition s(vb.modelVisCube().shape());
+	IPosition s(data.shape());
 	dgridsd(actualPos.getStorage(del),
-		vb.modelVisCube().getStorage(del),
+		datStorage,
 		&s(0),
 		&s(1),
 		flags.getStorage(del),
@@ -890,9 +901,9 @@ void SDGrid::get(VisBuffer& vb, Int row)
     }
 
     Bool del;
-    IPosition s(vb.modelVisCube().shape());
+    IPosition s(data.shape());
     dgridsd(xyPositions.getStorage(del),
-	    vb.modelVisCube().getStorage(del),
+	    datStorage,
 	    &s(0),
 	    &s(1),
 	    flags.getStorage(del),
@@ -909,7 +920,10 @@ void SDGrid::get(VisBuffer& vb, Int row)
 	    convFunc.getStorage(del),
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del));
+
+    data.putStorage(datStorage, isCopy);
   }
+  interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 
 // Finalize : optionally normalize by weight image

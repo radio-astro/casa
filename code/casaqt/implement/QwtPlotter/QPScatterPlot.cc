@@ -68,8 +68,7 @@ PlotPointDataPtr QPCurve::pointData() const { return m_data; }
 PlotMaskedPointDataPtr QPCurve::maskedData() const { return m_maskedData; }
 PlotErrorDataPtr QPCurve::errorData() const { return m_errorData; }
 
-bool QPCurve::isValid() const {
-    return !m_data.null() && m_data->size() > 0; }
+bool QPCurve::isValid() const { return !m_data.null() && m_data->isValid(); }
 
 
 void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
@@ -86,13 +85,15 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
     emit const_cast<QPCurve*>(this)->drawStarted();
     p->save();
     
+    QRect brect(0, 0, p->device()->width(), p->device()->height());
+    
     // Draw error lines if needed.
     bool drawErrorLine = !m_errorData.null() &&
                          m_errorLine.style() != PlotLine::NOLINE;
     if(drawErrorLine) {
         p->setPen(m_errorLine.asQPen());
         unsigned int cap = m_errorCap / 2;
-        double tempx, tempy;
+        double tempx, tempy, txleft, txright, tybottom, tytop;
         int temp, min, max;
         
         bool drawNormally = m_maskedData.null();
@@ -106,27 +107,31 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
                 // only draw unmasked error lines
                 for(unsigned int i = s; i < n; i++) {
                     if(!m_maskedData->maskedAt(i)) {
-                        tempx = m_errorData->xAt(i);
-                        tempy = m_errorData->yAt(i);
+                        m_errorData->xyAndErrorsAt(i, tempx, tempy, txleft,
+                                txright, tybottom, tytop);
                         
-                        min=xMap.transform(tempx-m_errorData->xLeftErrorAt(i));
-                       max=xMap.transform(tempx+m_errorData->xRightErrorAt(i));
+                        min = xMap.transform(tempx - txleft);
+                        max = xMap.transform(tempx + txright);
                         temp = yMap.transform(tempy);
-                        p->drawLine(min, temp, max, temp);
                         
-                        if(cap > 0) {
-                            p->drawLine(min, temp - cap, min, temp + cap);
-                            p->drawLine(max, temp - cap, max, temp + cap);
+                        if(brect.contains(min,temp)||brect.contains(max,temp)){
+                            p->drawLine(min, temp, max, temp);                        
+                            if(cap > 0) {
+                                p->drawLine(min, temp - cap, min, temp + cap);
+                                p->drawLine(max, temp - cap, max, temp + cap);
+                            }
                         }
                         
-                      min=yMap.transform(tempy-m_errorData->yBottomErrorAt(i));
-                        max=yMap.transform(tempy+m_errorData->yTopErrorAt(i));
+                        min = yMap.transform(tempy - tybottom);
+                        max = yMap.transform(tempy + tytop);
                         temp = xMap.transform(tempx);
-                        p->drawLine(temp, min, temp, max);
                         
-                        if(cap > 0) {
-                            p->drawLine(temp - cap, min, temp + cap, min);
-                            p->drawLine(temp - cap, max, temp + cap, max);
+                        if(brect.contains(temp,min)||brect.contains(temp,max)){
+                            p->drawLine(temp, min, temp, max);                        
+                            if(cap > 0) {
+                                p->drawLine(temp - cap, min, temp + cap, min);
+                                p->drawLine(temp - cap, max, temp + cap, max);
+                            }
                         }
                     }
                 }
@@ -136,69 +141,82 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
         // draw all error lines
         if(drawNormally) {
             for(unsigned int i = s; i < n; i++) {
-                tempx = m_errorData->xAt(i);
-                tempy = m_errorData->yAt(i);
+                m_errorData->xyAndErrorsAt(i, tempx, tempy, txleft,
+                        txright, tybottom, tytop);
                 
-                min = xMap.transform(tempx - m_errorData->xLeftErrorAt(i));
-                max = xMap.transform(tempx + m_errorData->xRightErrorAt(i));
+                min = xMap.transform(tempx - txleft);
+                max = xMap.transform(tempx + txright);
                 temp = yMap.transform(tempy);
-                p->drawLine(min, temp, max, temp);
                 
-                if(cap > 0) {
-                    p->drawLine(min, temp - cap, min, temp + cap);
-                    p->drawLine(max, temp - cap, max, temp + cap);
+                if(brect.contains(min, temp) || brect.contains(max, temp)) {
+                    p->drawLine(min, temp, max, temp);                
+                    if(cap > 0) {
+                        p->drawLine(min, temp - cap, min, temp + cap);
+                        p->drawLine(max, temp - cap, max, temp + cap);
+                    }
                 }
                 
-                min = yMap.transform(tempy - m_errorData->yBottomErrorAt(i));
-                max = yMap.transform(tempy + m_errorData->yTopErrorAt(i));
+                min = yMap.transform(tempy - tybottom);
+                max = yMap.transform(tempy + tytop);
                 temp = xMap.transform(tempx);
-                p->drawLine(temp, min, temp, max);
                 
-                if(cap > 0) {
-                    p->drawLine(temp - cap, min, temp + cap, min);
-                    p->drawLine(temp - cap, max, temp + cap, max);
+                if(brect.contains(temp, min) || brect.contains(temp, max)) {
+                    p->drawLine(temp, min, temp, max);                
+                    if(cap > 0) {
+                        p->drawLine(temp - cap, min, temp + cap, min);
+                        p->drawLine(temp - cap, max, temp + cap, max);
+                    }
                 }
             }
         }
     }
-    
-    // TODO QPCurve: test which is faster: setting the pen multiple times and
-    // going through the data once, or setting the pen twice and going through
-    // the data twice.
     
     // Draw normal/masked lines
     bool drawLine = m_line.style() != PlotLine::NOLINE,
          drawMaskedLine = !m_maskedData.null() &&
                           m_maskedLine.style() != PlotLine::NOLINE;
     if(drawLine || drawMaskedLine) {
+        double tempx, tempy, tempx2, tempy2;
+        int ix, iy, ix2, iy2;
         if(!m_maskedData.null()) {
+            bool mask;
+            
             // set the painter's pen only once if possible
             bool samePen = m_line.asQPen() == m_maskedLine.asQPen();
             if(!drawMaskedLine || samePen) p->setPen(m_line.asQPen());
             
-            for(unsigned int i = s; i < n - 1; i++) {
-                if(!m_maskedData->maskedAt(i)) {
+            m_maskedData->xyAndMaskAt(s, tempx, tempy, mask);
+            ix = xMap.transform(tempx); iy = yMap.transform(tempy);
+            
+            for(unsigned int i = s + 1; i < n; i++) {
+                m_maskedData->xAndYAt(i, tempx2, tempy2);
+                ix2 = xMap.transform(tempx2); iy2 = yMap.transform(tempy2);
+                if(drawLine && !mask) {
                     if(drawMaskedLine && !samePen) p->setPen(m_line.asQPen());
-                    p->drawLine(xMap.transform(m_data->xAt(i)),
-                                yMap.transform(m_data->yAt(i)),
-                                xMap.transform(m_data->xAt(i + 1)),
-                                yMap.transform(m_data->yAt(i + 1)));
-                } else if(drawMaskedLine) {
-                    if(!samePen) p->setPen(m_maskedLine.asQPen());
-                    p->drawLine(xMap.transform(m_data->xAt(i)),
-                                yMap.transform(m_data->yAt(i)),
-                                xMap.transform(m_data->xAt(i + 1)),
-                                yMap.transform(m_data->yAt(i + 1)));
+                    if(brect.contains(ix, iy) || brect.contains(ix2, iy2))
+                        p->drawLine(ix, iy, ix2, iy2);
+                } else if(drawMaskedLine && mask) {
+                    if(drawLine && !samePen) p->setPen(m_maskedLine.asQPen());
+                    ix2 = xMap.transform(tempx2); iy2 = yMap.transform(tempy2);
+                    if(brect.contains(ix, iy) || brect.contains(ix2, iy2))
+                        p->drawLine(ix, iy, ix2, iy2);
                 }
+                tempx = tempx2; tempy = tempy2;
+                ix = ix2; iy = iy2;
             }
             
         } else {
             p->setPen(m_line.asQPen());
-            for(unsigned int i = s; i < n - 1; i++)
-                p->drawLine(xMap.transform(m_data->xAt(i)),
-                            yMap.transform(m_data->yAt(i)),
-                            xMap.transform(m_data->xAt(i + 1)),
-                            yMap.transform(m_data->yAt(i + 1)));
+            m_data->xAndYAt(s, tempx, tempy);
+            ix = xMap.transform(tempx); iy = yMap.transform(tempy);
+            for(unsigned int i = s + 1; i < n; i++) {
+                m_data->xAndYAt(i, tempx2, tempy2);
+                ix2 = xMap.transform(tempx2); iy2 = yMap.transform(tempy2);
+                if(brect.contains(ix, iy) || brect.contains(ix2, iy2))
+                    p->drawLine(ix, iy, ix2, iy2);
+                tempx = tempx2; tempy = tempy2;
+                ix = ix2; iy = iy2;
+            }
         }
     }
     
@@ -207,45 +225,64 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
          drawMaskedSymbol = !m_maskedData.null() &&
                             m_maskedSymbol.symbol() != PlotSymbol::NOSYMBOL;
     if(drawSymbol || drawMaskedSymbol) {
+        double tempx, tempy;
+        
         if(!m_maskedData.null()) {
+            bool mask;
+            
+            const QPen& pen = m_symbol.drawPen(),
+                      & mpen = m_maskedSymbol.drawPen();
+            const QBrush& brush = m_symbol.drawBrush(),
+                        & mbrush = m_maskedSymbol.drawBrush();
+            
             // set the painter's pen/brush only once if possible
-            bool samePen = m_symbol.pen() == m_maskedSymbol.pen(),
-                 sameBrush = m_symbol.brush() == m_maskedSymbol.brush();
-            if(!drawMaskedSymbol || samePen) p->setPen(m_symbol.pen());
-            if(!drawMaskedSymbol || sameBrush) p->setBrush(m_symbol.brush());
+            bool samePen = pen == mpen, sameBrush = brush == mbrush;
+            if(!drawMaskedSymbol || samePen) p->setPen(pen);
+            else if(!drawSymbol) p->setPen(mpen);
+            if(!drawMaskedSymbol || sameBrush) p->setBrush(brush);
+            else if(!drawSymbol) p->setBrush(mbrush);
             
             QSize size = ((QwtSymbol&)m_symbol).size();
             QRect rect(0, 0, size.width(), size.height());
             size = ((QwtSymbol&)m_maskedSymbol).size();
             QRect mRect(0, 0, size.width(), size.height());
+            
             for(unsigned int i = s; i < n; i++) {
-                if(!m_maskedData->maskedAt(i)) {
-                    rect.moveCenter(QPoint(xMap.transform(m_data->xAt(i)),
-                                           yMap.transform(m_data->yAt(i))));
+                m_maskedData->xyAndMaskAt(i, tempx, tempy, mask);
+                if(drawSymbol && !mask) {
+                    rect.moveCenter(QPoint(xMap.transform(tempx),
+                                           yMap.transform(tempy)));
+                    if(!brect.intersects(rect)) continue;
                     if(drawMaskedSymbol) {
-                        if(!samePen) p->setPen(m_symbol.pen());
-                        if(!sameBrush) p->setBrush(m_symbol.brush());
+                        if(!samePen) p->setPen(pen);
+                        if(!sameBrush) p->setBrush(brush);
                     }
                     m_symbol.draw(p, rect);
-                } else if(drawMaskedSymbol) {
-                    mRect.moveCenter(QPoint(xMap.transform(m_data->xAt(i)),
-                                            yMap.transform(m_data->yAt(i))));
-                    if(!samePen) p->setPen(m_maskedSymbol.pen());
-                    if(!sameBrush) p->setBrush(m_maskedSymbol.brush());
+                } else if(drawMaskedSymbol && mask) {
+                    mRect.moveCenter(QPoint(xMap.transform(tempx),
+                                            yMap.transform(tempy)));
+                    if(!brect.intersects(rect)) continue;
+                    if(drawSymbol) {
+                        if(!samePen) p->setPen(mpen);
+                        if(!sameBrush) p->setBrush(mbrush);
+                    }
                     m_symbol.draw(p, mRect);
                 }
             }
             
         } else {
             // draw all symbols normally
-            p->setPen(m_symbol.pen());
-            p->setBrush(m_symbol.brush());
+            p->setPen(m_symbol.drawPen());
+            p->setBrush(m_symbol.drawBrush());
             
             QSize size = ((QwtSymbol&)m_symbol).size();
             QRect rect(0, 0, size.width(), size.height());
+            
             for(unsigned int i = s; i < n; i++) {
-                rect.moveCenter(QPoint(xMap.transform(m_data->xAt(i)),
-                                       yMap.transform(m_data->yAt(i))));
+                m_data->xAndYAt(i, tempx, tempy);
+                rect.moveCenter(QPoint(xMap.transform(tempx),
+                                       yMap.transform(tempy)));
+                if(!brect.intersects(rect)) continue;
                 m_symbol.draw(p, rect);
             }
         }

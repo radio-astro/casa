@@ -32,9 +32,6 @@
 
 namespace casa {
 
-// TODO QPSymbol: character width
-// TODO General: find way of continuing pen style
-
 
 /////////////////////////
 // QPCOLOR DEFINITIONS //
@@ -253,60 +250,81 @@ void QPAreaFill::setAsQBrush(const QBrush& b) {
 // QPSYMBOL DEFINITIONS //
 //////////////////////////
 
-QPSymbol::QPSymbol() : m_char('o') {
-    m_style = QPOptions::symbol(QwtSymbol::style());
-}
+QPSymbol::QPSymbol() : m_style(QPOptions::symbol(style())), m_char('o'),
+        m_drawPen(&pen()), m_drawBrush(&brush()) { }
 
 QPSymbol::QPSymbol(const QwtSymbol& s): QwtSymbol(s),
-        m_style(QPOptions::symbol(s.style())), m_char('o') { }
+        m_style(QPOptions::symbol(s.style())), m_char('o'), m_drawPen(&pen()),
+        m_drawBrush(&brush()) { }
 
-QPSymbol::QPSymbol(const PlotSymbol& copy) {
-    operator=(copy);
-}
+QPSymbol::QPSymbol(const PlotSymbol& copy) : m_drawPen(&pen()),
+        m_drawBrush(&brush()) {
+    operator=(copy); }
 
-QPSymbol::QPSymbol(const PlotSymbolPtr copy) : m_style(CIRCLE), m_char('o') {
-    if(!copy.null()) operator=(*copy);
-}
+QPSymbol::QPSymbol(const PlotSymbolPtr copy) : m_style(CIRCLE), m_char('o'),
+        m_drawPen(&pen()), m_drawBrush(&brush()) {
+    if(!copy.null()) operator=(*copy); }
 
 QPSymbol::~QPSymbol() { }
 
 
 pair<double, double> QPSymbol::size() const {
-    QSize s = QwtSymbol::size();
+    if(m_style == PIXEL) return pair<double, double>(1, 1);
+    const QSize& s = QwtSymbol::size();
     return pair<double, double>(s.width(), s.height());
 }
 
 void QPSymbol::setSize(double width, double height) {
-    QwtSymbol::setSize((int)(width + 0.5), (int)(height + 0.5));
+    const QSize& s = QwtSymbol::size();
+    if(s.width() != width || s.height() != height)
+        QwtSymbol::setSize((int)(width + 0.5), (int)(height + 0.5));
 }
 
 PlotSymbol::Symbol QPSymbol::symbol() const { return m_style; }
 void QPSymbol::setSymbol(Symbol symbol) {
-    m_style = symbol;
-    setStyle(QPOptions::symbol(m_style));
+    if(symbol != m_style) {
+        m_style = symbol;
+        setStyle(QPOptions::symbol(m_style));
+        
+        if(symbol == PIXEL) {
+            m_pixelPen.setColor(pen().color());
+            m_drawPen = &m_pixelPen;
+            m_drawBrush = &m_pixelBrush;
+        } else {
+            m_drawPen = &pen();
+            m_drawBrush = &brush();
+        }
+    }
 }
 
 void QPSymbol::setSymbol(char c) {
-    m_char = c;
-    m_style = CHARACTER;
-    setStyle(QPOptions::symbol(m_style));
+    if(m_style != CHARACTER || m_char != c) {
+        m_char = c;
+        setSymbol(CHARACTER);
+    }
 }
 
 void QPSymbol::setUSymbol(unsigned short unicode) {
-    m_char = QChar(unicode);
-    m_style = CHARACTER;
-    setStyle(QPOptions::symbol(m_style));
+    if(m_style != CHARACTER || m_char != QChar(unicode)) {
+        m_char = QChar(unicode);
+        setSymbol(CHARACTER);
+    }
 }
 
 char QPSymbol::symbolChar() const { return m_char.unicode(); }
 unsigned short QPSymbol::symbolUChar() const { return m_char.unicode(); }
 
 PlotLinePtr QPSymbol::line() const { return new QPLine(pen()); }
-void QPSymbol::setLine(const PlotLine& line) { setPen(QPLine(line).asQPen()); }
+void QPSymbol::setLine(const PlotLine& line) {
+    setPen(QPLine(line).asQPen());
+    m_pixelPen.setColor(pen().color());
+}
 
 PlotAreaFillPtr QPSymbol::areaFill() const { return new QPAreaFill(brush()); }
 void QPSymbol::setAreaFill(const PlotAreaFill& fill) {
-    setBrush(QPAreaFill(fill).asQBrush()); }
+    setBrush(QPAreaFill(fill).asQBrush());
+    m_pixelPen.setColor(brush().color());
+}
 
 
 void QPSymbol::draw(QPainter* p, const QRect& r) const {
@@ -324,6 +342,10 @@ void QPSymbol::draw(QPainter* p, const QRect& r) const {
 }
 
 QwtSymbol* QPSymbol::clone() const { return new QPSymbol(*this); }
+
+
+const QPen& QPSymbol::drawPen() const { return *m_drawPen; }
+const QBrush& QPSymbol::drawBrush() const { return *m_drawBrush; }
 
 
 ///////////////////////////

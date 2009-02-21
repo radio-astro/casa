@@ -44,6 +44,8 @@
 //
 //  helper function to create ~/.casa/ipython/security
 //
+/*
+ * Not needed as it's done in the python driver script
 static int make_it_a_dir( const char *path ) {
     struct stat buf;
     if ( stat( path, &buf ) == 0 ) {
@@ -71,6 +73,7 @@ static int make_it_a_dir( const char *path ) {
     }
     return 0;
 }
+*/
 
 int main( int argc, char **argv ) {
 
@@ -254,6 +257,8 @@ int main( int argc, char **argv ) {
     } else {
 	path= strdup("");
     }
+    /*
+     * Now done in the casapy.py script
 
     //
     //  setup ~/.casa/ state directory...
@@ -308,6 +313,7 @@ int main( int argc, char **argv ) {
     free(ipythonpath);
     //  ----------------------------------------------------------------------
     //
+    */
 
     std::cout << "CASA Version ";
     casa::VersionInfo::report(std::cout);

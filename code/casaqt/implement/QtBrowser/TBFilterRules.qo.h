@@ -189,6 +189,13 @@ public:
     TBFilterRules(TBTable* table, QWidget* parent = NULL);
 
     ~TBFilterRules();
+    
+    // Renames the window title and run button text to distinguish between
+    // a search and a filter.  If isSearch is true, the title is set to "Search
+    // Rules" and the run button text is set to "Search"; otherwise the title
+    // is set to "Filter Rules" and the run button text is set to "Run Filter."
+    // The default behavior is for filter, not search.
+    void renameForSearch(bool isSearch);
 
 signals:
     // This signal is emitted when the user has entered a TBFilterRuleSequence

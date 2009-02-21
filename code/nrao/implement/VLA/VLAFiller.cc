@@ -1997,8 +1997,8 @@ uInt VLAFiller::addDoppler( const VLAEnum::CDA cda ) {
   MSSourceColumns& srcc = source();
   const uInt source_id = srcc.nrow() - 1;
   dopc.sourceId().put(newRow, source_id );
-  // transition column in SOURCE subtable is not filled. So here we fill TRANSITION_ID with -1.
-  dopc.transitionId().put(newRow, -1);
+  // transition column in SOURCE subtable is not filled. So here we fill TRANSITION_ID with 0.
+  dopc.transitionId().put(newRow, 0);
   if (sda.dopplerTracking( cda )) {
 	  const MDoppler dop(Quantity(1.0*sda.radialVelocity( cda ), "m/s"), sda.dopplerDefn( cda ));
 	  dopc.velDefMeas().put(newRow, dop );
@@ -2190,8 +2190,12 @@ uInt VLAFiller::addSource(const MDirection& dir ){
       }
     }
   }
+  Vector<Double> sysvel(restFreq.size(), 0.0);
+  Vector<String> transition(restFreq.size(), "Unknown");
   src.numLines().put(newRow, validRest);
   src.restFrequencyMeas().put(newRow, restFreq);
+  src.sysvel().put(newRow, sysvel);
+  src.transition().put(newRow, transition);
   return newRow;
 
 }

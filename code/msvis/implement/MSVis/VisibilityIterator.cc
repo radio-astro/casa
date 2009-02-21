@@ -881,6 +881,12 @@ ROVisibilityIterator::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
     return uvwvec;
 }
 
+Matrix<Double>& ROVisibilityIterator::uvwMat(Matrix<Double>& uvwmat) const
+{
+    colUVW.getColumn(uvwmat,True);
+    return uvwmat;
+}
+
 // Fill in parallactic angle.
 const Vector<Float>& ROVisibilityIterator::feed_pa(Double time) const
 {

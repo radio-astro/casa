@@ -172,6 +172,8 @@ public:
   // call to VisIter origin optional:
   void selectChannel(Int nGroup,Int start, Int width, Int increment, 
 		     Int spectralWindow, Bool callOrigin);
+  // Collective selection via MSSelection channel selection Matrix
+  void selectChannel(const Matrix<Int>& chansel);
 
   // number of antennas
   Int numberAnt();

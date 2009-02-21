@@ -41,6 +41,13 @@ using namespace std ;
 ASTEFXReader::ASTEFXReader( string name ) 
   : NROReader( name )
 {
+  // read Header
+  readHeader() ;
+  // allocate memory for spectral data
+  data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
+  // DEBUG
+  cout << "ASTEFXReader::ASTEFXReader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
+  //
 }
 
 // Destructor.
@@ -52,15 +59,6 @@ ASTEFXReader::~ASTEFXReader()
 Int ASTEFXReader::readHeader() 
 {
   int status = 0 ;
-  // open file if not opened yet
-  if ( fp_ == NULL ) {
-    status = open() ;
-    if ( status == -1 ) {
-      cerr << "Error opening file " << filename_ << "." << endl ;
-      cerr << "Failed to read data header." << endl ;
-      return status ;
-    }
-  }
 
   // check endian
   fseek( fp_, 144, SEEK_SET ) ;
@@ -92,10 +90,11 @@ Int ASTEFXReader::readHeader()
     scanNum_ = header_->getNSCAN() + 1 ;   // includes ZERO scan
     scanLen_ = header_->getSCNLEN() ;
     rowNum_ = scanNum_ * header_->getARYNM() ;
-    //rowNum_ = 100 ;
+    chmax_ = (int) ( scanLen_ - SCAN_HEADER_SIZE ) * 8 / header_->getIBIT() ;
     cout << "ASTEFXReader::readHeader()  Number of scan        = " << scanNum_ << endl ;
     cout << "ASTEFXReader::readHeader()  Number of data record = " << rowNum_ << endl ;
     cout << "ASTEFXReader::readHeader()  Length of data record = " << scanLen_ << " byte" << endl ;
+    cout << "ASTEFXReader::readHeader()  Max number of channel = " << chmax_ << endl ;
   }
 
   return status ;
@@ -104,11 +103,33 @@ Int ASTEFXReader::readHeader()
 vector<double> ASTEFXReader::getAntennaPosition() 
 {
   // ASTE in ITRF2005
-  // no information 
-  vector<double> pos( 3 ) ;
-  pos[0] = 0.0 ;
-  pos[1] = 0.0 ;
-  pos[2] = 0.0 ;
+  // tentative 
+  //vector<double> pos( 3 ) ;
+  //pos[0] = 2412830.391  ;
+  //pos[1] = -5271936.712 ;
+  //pos[2] = -2652209.088 ;
+
+  // ASTE in World Geodetic System
+  // 
+  // W67d42m11s S22d58m18s 2400m 
+  // Ref.: Ezawa, H. et al. 2004, Proc. SPIE, 5489, 763
+  //
+  double elon = -67. - 42. / 60. - 11. / 3600. ;
+  double nlat = -22. - 58. / 60. - 18. / 3600. ;
+  double alti = 4800. ;
+
+  MPosition p( MVPosition( Quantity( alti, "m" ),
+                           Quantity( elon, "deg" ),
+                           Quantity( nlat, "deg" ) ),
+               MPosition::Ref( MPosition::WGS84 ) ) ;
+  MeasFrame frame( p ) ;
+  MVPosition mvp ;
+  frame.getITRF( mvp ) ;
+  Vector<Double> pp = mvp.getValue() ;
+  vector<double> pos ;
+  pp.tovector( pos ) ;
+  //cout << "ASTEFXReader::getAntennaPosition()  pp[0] = " << pp[0]
+  //     << " pp[1] = " << pp[1] << " pp[2] = " << pp[2] << endl ;
 
   return pos ;
 }

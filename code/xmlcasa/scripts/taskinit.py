@@ -56,6 +56,11 @@ casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
 
+defaultsdir = {}
+defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
+defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/evladefaults.xml'
+
+
 def selectfield(vis,minstring):
         """Derive the fieldid from  minimum matched string(s): """
 

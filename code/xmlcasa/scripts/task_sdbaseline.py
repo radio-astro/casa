@@ -313,6 +313,9 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
 		    msk=new_mask.get_mask()
 		    del new_mask
 		    msks=s.get_masklist(msk)
+		    if len(msks) < 1:
+			    print 'No channel is selected. Exit without baselining.'
+			    return
 		    print 'final mask list ('+s._getabcissalabel()+') =',msks
 		    header += "   Fit Range: "+str(msks)+"\n"
 		    # Calculate base-line RMS

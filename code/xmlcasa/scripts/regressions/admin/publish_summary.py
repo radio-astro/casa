@@ -30,18 +30,22 @@ quantity=casac.Quantity
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 
-SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
+#SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
+SCRIPT_REPOS=[AIPS_DIR+'/code/xmlcasa/scripts/regressions/',AIPS_DIR+'/code/xmlcasa/tasks/tests/']
 UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
-if not os.access(SCRIPT_REPOS, os.F_OK):
+#for i in range( len( SCRIPT_REPOS ) ):
+#SCRIPT_REPOS_DIR = SCRIPT_REPOS[i]
+SCRIPT_REPOS_DIR = SCRIPT_REPOS[0]
+if os.access(SCRIPT_REPOS_DIR, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/regressions/'
+        SCRIPT_REPOS_DIR = AIPS_DIR+'/lib64/python2.5/regressions/'
         UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/regressions/'
+        SCRIPT_REPOS_DIR = AIPS_DIR+'/lib/python2.5/regressions/'
         UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
-    else:            #Mac release
-        SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
-        UTILS_DIR = AIPS_DIR+'/MacOS/'        
+else:            #Mac release
+    SCRIPT_REPOS_DIR = AIPS_DIR+'/Resources/python/regressions/'
+    UTILS_DIR = AIPS_DIR+'/MacOS/'
 # because casapy releases have a different directory structure
 
 
@@ -57,9 +61,12 @@ class runTest:
                  retemplate=False,
                  cleanup=True):
         casalog.showconsole(onconsole=True)
-        
+
         TEMPLATE_RESULT_DIR=AIPS_DIR+'/data/regression/'
-        tests = [test]
+        if ( isinstance( test, str ) ):
+            tests = [test]
+        else:
+            tests=test
         if type(tests) != type([]):
             raise TypeError
         self.resultdir=RESULT_DIR
@@ -69,6 +76,7 @@ class runTest:
         self.resultRow=[]
         self.result=[]
         self.numTests=0
+
         ####Get the directories right
         self.tester.setDataBaseDir(DATA_REPOS)
         self.tester.setScriptsDir(SCRIPT_REPOS)
@@ -76,8 +84,6 @@ class runTest:
         self.tester.setWorkingDir(WORKING_DIR)
         self.resultsubdir = ''
 
-        print SCRIPT_REPOS
-        
         if((len(tests)==1) and (tests[0]=='all')):
             self.numTests=self.tester.locateTests()
         else:
@@ -128,11 +134,10 @@ class runTest:
 
                 profilepage = RESULT_DIR+'/'+time.strftime('%Y_%m_%d/')+testName+'_profile.html'
                 process_data = "%s/profile.txt"  % self.tester.workingDirectory
-
                 os.system("echo -n > " + process_data)
-                pp = SCRIPT_REPOS + '/profileplot.py'  # for release
+                pp = SCRIPT_REPOS_DIR + '/profileplot.py'  # for release
                 if not os.path.isfile(pp):
-                    pp = SCRIPT_REPOS + '/admin/profileplot.py' # for devel
+                    pp = SCRIPT_REPOS_DIR + '/admin/profileplot.py' # for devel
                 pyt = UTILS_DIR + '/python'  # for release
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib64/casapy/bin/python'    # for devel
@@ -165,7 +170,7 @@ class runTest:
                     print >> sys.stderr, "%s failed, dumping traceback:" % testName
                     traceback.print_exc() # print and swallow exception
                     self.resultRow.append([self.tester.testname(k), 'Failed with exception', 0, '', ''])
-
+                    
                 time2=time.time()
                 time2=(time2-time1)/60.0
                 
@@ -227,13 +232,13 @@ class runTest:
                 self.result_common['testid'] = testName, "test name"
                 if short_description != None:
                     self.result_common['description'] = "'" + short_description + "'", "test short description"
-
+                    
                 (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svn info | grep -E "^Revision"')
                 if errorcode != 0:
                     datasvnr = "Unknown version"
                 else:
                     # Test if some subdirectories in repository are have different revision no
-                    cmd = 'find '+DATA_REPOS[0]+'/ -type d 2>/dev/null | grep -v "\.svn" 2>/dev/null | xargs -n 1 svn info 2>/dev/null' + \
+                    cmd = 'find '+DATA_REPOS[0]+'/ -follow -type d 2>/dev/null | grep -v "\.svn" 2>/dev/null | xargs -n 1 svn info 2>/dev/null' + \
                     ' | grep Revision 2>/dev/null | sort -u 2>/dev/null'
                     (errorcode, allrevision) = commands.getstatusoutput(cmd)
                     allrevision = allrevision.replace("\n", "; ")
@@ -245,7 +250,7 @@ class runTest:
 
                 # execution test
                 exec_result = self.result_common.copy()
-                exec_result['version'] = 1, "version of this file"
+                exec_result['version'] = 3, "version of this file"
                 exec_result['type'] = "exec", "test type"
                 exec_result['time'] = time2*60, "execution time in seconds"
                 exec_result['disk'] = space_used, "disk space (KB) in use after test"
@@ -265,17 +270,22 @@ class runTest:
                         lineno += 1
                         if len(line) > 0 and line[0] != '#':
                             try:
-                                (t, m_virtual, m_resident, nfiledesc) = line.split()
+                                (t, m_virtual, m_resident, nfiledesc,
+                                 cpu_us, cpu_sy, cpu_id, cpu_wa) = line.split()
                                 mem = mem + \
                                       str(t)          + ',' + \
                                       str(m_virtual)  + ',' + \
                                       str(m_resident) + ',' + \
-                                      str(nfiledesc)  + ';'
+                                      str(nfiledesc)  + ',' + \
+                                      str(cpu_us)     + ',' + \
+                                      str(cpu_sy)     + ',' + \
+                                      str(cpu_id)     + ',' + \
+                                      str(cpu_wa)     + ';'
                             except:
                                 print >> sys.stderr, "Error parsing %s:%d: '%s'" % \
                                       (process_data, lineno, line)
                     process_file.close()
-                exec_result['resource'] = mem, "time(s),virtual(bytes),resident(bytes),nfiledesc"
+                exec_result['resource'] = mem, "time(s),virtual(Mbytes),resident(Mbytes),nfiledesc,cpu_us,cpu_sy,cpu_id,cpu_wa"
 
                 whatToTest=self.tester.whatQualityTest()
                 keys=[]

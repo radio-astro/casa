@@ -167,11 +167,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
-    // This version returns the gridded vis...should be used in conjunction 
-    // with the version of 'get' that needs the gridded visdata 
-    virtual void initializeToVis(ImageInterface<Complex>& image,
-			 const VisBuffer& vb, Array<Complex>& griddedVis,
-			 Vector<Double>& uvscale);
     
     // Finalize transform to Visibility plane: flushes the image
     // cache and shows statistics if it is being used.
@@ -191,13 +186,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get actual coherence from grid by degridding
     void get(VisBuffer& vb, Int row=-1);
-    
-    // Get the coherence from grid return it in the degrid 
-    // is used especially when scratch columns are not 
-    // present in ms.
-    void get(VisBuffer& vb, Cube<Complex>& degrid, 
-	     Array<Complex>& griddedVis, Vector<Double>& scale, 
-	     Int row=-1);
     
     void get(VisBuffer& vb, Cube<Float>& pointingOffsets, Int row=-1,
 	     Type whichVBColumn=FTMachine::MODEL,Int Conj=0)

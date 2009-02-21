@@ -45,13 +45,15 @@ PlotLogGeneric::~PlotLogGeneric() { }
 
 const String& PlotLogGeneric::origin1() const { return m_origin1; }
 const String& PlotLogGeneric::origin2() const { return m_origin2; }
-const String& PlotLogGeneric::message() const { return m_message; }
+void PlotLogGeneric::message(ostream& os) const { os << m_message; }
 LogMessage::Priority PlotLogGeneric::priority() const { return m_priority; }
 
 
 ////////////////////////////////////
 // PLOTLOGMEASUREMENT DEFINITIONS //
 ////////////////////////////////////
+
+// Static //
 
 String PlotLogMeasurement::timeUnits(TimeUnit t) {
     switch(t) {
@@ -72,10 +74,12 @@ String PlotLogMeasurement::memoryUnits(MemoryUnit m) {
 }
 
 
+// Non-Static //
+
 PlotLogMeasurement::PlotLogMeasurement(const String& origin1,
         const String& origin2, TimeUnit timeUnit, MemoryUnit memoryUnit,
         LogMessage::Priority priority): m_origin1(origin1), m_origin2(origin2),
-        m_time(0), m_memory(0), m_timeUnit(timeUnit), m_memoryUnit(memoryUnit),
+        m_time(-1), m_memory(0), m_timeUnit(timeUnit), m_memoryUnit(memoryUnit),
         m_priority(priority) {
     startMeasurement();
 }
@@ -85,10 +89,17 @@ PlotLogMeasurement::~PlotLogMeasurement() { }
 const String& PlotLogMeasurement::origin1() const { return m_origin1; }
 const String& PlotLogMeasurement::origin2() const { return m_origin2; }
 
-const String& PlotLogMeasurement::message() const {
-    if(m_message.empty())
-        const_cast<PlotLogMeasurement*>(this)->stopMeasurement();
-    return m_message;
+void PlotLogMeasurement::message(ostream& outstream) const {
+    if(m_time < 0) const_cast<PlotLogMeasurement*>(this)->stopMeasurement();
+    
+    outstream << "END\tTime: ";
+    if(m_time >= 0)
+        outstream << "+" << m_time << " " << timeUnits(m_timeUnit);
+    else outstream << "unreported";
+    outstream << ".  Memory: ";
+    if(m_memory >= 0) outstream << "+";
+    outstream << m_memory << " " << memoryUnits(m_memoryUnit);
+    outstream << '.';
 }
 
 LogMessage::Priority PlotLogMeasurement::priority() const { return m_priority;}
@@ -114,17 +125,7 @@ void PlotLogMeasurement::stopMeasurement() {
     m_memory = Memory::allocatedMemoryInBytes() - m_startMemory;
     if(m_memoryUnit == KILOBYTE)      m_memory /= 1024;
     else if(m_memoryUnit == MEGABYTE) m_memory /= 1024 * 1024;
-    
-    stringstream ss;
-    ss << "END.\tTime: ";
-    if(m_time >= 0) {
-        ss << "+" << m_time << " " << timeUnits(m_timeUnit);
-    } else ss << "unreported";
-    ss << ".  Memory: ";
-    if(m_memory >= 0) ss << "+";
-    ss << m_memory << " " << memoryUnits(m_memoryUnit);
-    ss << '.';
-    m_message = ss.str();
+
     startMeasurement();
 }
 
@@ -165,38 +166,34 @@ PlotLogLocate::~PlotLogLocate() {
 const String& PlotLogLocate::origin1() const { return m_origin1; }
 const String& PlotLogLocate::origin2() const { return m_origin2; }
 
-const String& PlotLogLocate::message() const {
-    stringstream ss;
+void PlotLogLocate::message(ostream& os) const {
     unsigned int np = numSearchedPlots(), ni = numLocatedIndices();
-    ss << "Locating indices with x in [" << m_region.left() << ", "
+    os << "Locating indices with x in [" << m_region.left() << ", "
        << m_region.right() << "] and y in [" << m_region.bottom() << ", "
        << m_region.top() << ".  Searched " << np << " plots and found " << ni
        << " indices.";
-    if(np > 0 && ni > 0) ss << '\n';
+    if(np > 0 && ni > 0) os << '\n';
     
     bool first = true;
     unsigned int n, from, to;
     for(unsigned int i = 0; i < np; i++) {
         n = m_indices->at(i).size();
         if(n > 0) {
-            if(!first) ss << '\n';
+            if(!first) os << '\n';
             first = false;
         }
-        if(np > 0 && n > 0) ss << "Plot " << i << ": ";
-        if(n > 0) ss << "[";
+        if(np > 0 && n > 0) os << "Plot " << i << ": ";
+        if(n > 0) os << "[";
         
         for(unsigned int j = 0; j < n; i++) {
             from = (*m_indices)[i][j].first;
             to = (*m_indices)[i][j].second;
-            ss << from;
-            if(to != from) ss << "-" << to;
-            if(j < n - 1) ss << ", ";
+            os << from;
+            if(to != from) os << "-" << to;
+            if(j < n - 1) os << ", ";
         }
-        if(n > 0) ss << "]";
+        if(n > 0) os << "]";
     }
-    
-    const_cast<String&>(m_message) = ss.str();
-    return m_message;
 }
 
 LogMessage::Priority PlotLogLocate::priority() const { return m_priority; }
@@ -242,7 +239,8 @@ void PlotLogger::setMeasurementEvents(int flags) {
 void PlotLogger::postMessage(const PlotLogMessage& message) {
     m_logger.origin(LogOrigin(message.origin1(), message.origin2()));
     m_logger.priority(message.priority());
-    m_logger << message.message() << LogIO::POST;
+    message.message(m_logger.output());
+    m_logger << LogIO::POST;
 }
 
 void PlotLogger::postMessage(const String& origin1, const String& origin2,

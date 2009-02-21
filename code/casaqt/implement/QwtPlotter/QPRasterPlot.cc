@@ -34,10 +34,6 @@
 
 namespace casa {
 
-// TODO QPRasterPlot: not implemented/fix:
-// * different origins
-// * fix contour line offset problem
-
 //////////////////////////////
 // QPRASTERPLOT DEFINITIONS //
 //////////////////////////////

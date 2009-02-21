@@ -1,0 +1,89 @@
+1 - 
+1 -  AtmTypeTest: Test for type tropical:
+1 -  AtmTypeTest: 0 hx: 9.225 px: 319 tx: 242.1
+1 -  AtmTypeTest: 1 hx: 10.225 px: 276.8 tx: 235.4
+1 -  AtmTypeTest: 2 hx: 11.225 px: 239.1 tx: 228.6
+1 -  AtmTypeTest: 3 hx: 12.85 px: 186.4 tx: 218
+1 -  AtmTypeTest: 4 hx: 14.85 px: 135.4 tx: 204.6
+1 -  AtmTypeTest: 5 hx: 16.85 px: 96.13 tx: 195.1
+1 -  AtmTypeTest: 6 hx: 18.85 px: 68.33 tx: 202.1
+1 -  AtmTypeTest: 7 hx: 22.6 px: 37.26 tx: 216
+1 -  AtmTypeTest: 8 hx: 26.6 px: 20.23 tx: 225
+1 -  AtmTypeTest: 9 hx: 30.6 px: 11.21 tx: 233.6
+1 -  AtmTypeTest: 10 hx: 34.85 px: 6.142 tx: 242.8
+1 -  AtmTypeTest: 11 hx: 40.85 px: 2.732 tx: 255.8
+1 -  AtmTypeTest: 12 hx: 46.85 px: 1.26 tx: 268.6
+1 -  AtmTypeTest: 13 hx: 52.85 px: 0.6042 tx: 266.7
+1 -  AtmTypeTest: 14 hx: 58.85 px: 0.2798 tx: 256
+1 -  AtmTypeTest: 15 hx: 65.1 px: 0.1202 tx: 235.7
+1 -  AtmTypeTest: 16 hx: 73.1 px: 0.036 tx: 208.3
+1 -  AtmTypeTest: 17 hx: 81.1 px: 0.009162 tx: 182.6
+1 -  AtmTypeTest: 18 hx: 89.1 px: 0.002076 tx: 176.7
+1 -  AtmTypeTest: 19 hx: 95.6 px: 0.0006374 tx: 184.1
+1 - 
+1 -  AtmTypeTest: Test for type TROPICAL:
+1 -  AtmTypeTest: 0 hx: 9.225 px: 319 tx: 242.1
+1 -  AtmTypeTest: 1 hx: 10.225 px: 276.8 tx: 235.4
+1 -  AtmTypeTest: 2 hx: 11.225 px: 239.1 tx: 228.6
+1 -  AtmTypeTest: 3 hx: 12.85 px: 186.4 tx: 218
+1 -  AtmTypeTest: 4 hx: 14.85 px: 135.4 tx: 204.6
+1 -  AtmTypeTest: 5 hx: 16.85 px: 96.13 tx: 195.1
+1 -  AtmTypeTest: 6 hx: 18.85 px: 68.33 tx: 202.1
+1 -  AtmTypeTest: 7 hx: 22.6 px: 37.26 tx: 216
+1 -  AtmTypeTest: 8 hx: 26.6 px: 20.23 tx: 225
+1 -  AtmTypeTest: 9 hx: 30.6 px: 11.21 tx: 233.6
+1 -  AtmTypeTest: 10 hx: 34.85 px: 6.142 tx: 242.8
+1 -  AtmTypeTest: 11 hx: 40.85 px: 2.732 tx: 255.8
+1 -  AtmTypeTest: 12 hx: 46.85 px: 1.26 tx: 268.6
+1 -  AtmTypeTest: 13 hx: 52.85 px: 0.6042 tx: 266.7
+1 -  AtmTypeTest: 14 hx: 58.85 px: 0.2798 tx: 256
+1 -  AtmTypeTest: 15 hx: 65.1 px: 0.1202 tx: 235.7
+1 -  AtmTypeTest: 16 hx: 73.1 px: 0.036 tx: 208.3
+1 -  AtmTypeTest: 17 hx: 81.1 px: 0.009162 tx: 182.6
+1 -  AtmTypeTest: 18 hx: 89.1 px: 0.002076 tx: 176.7
+1 -  AtmTypeTest: 19 hx: 95.6 px: 0.0006374 tx: 184.1
+1 - 
+1 -  AtmTypeTest: Test for type midlatWinter
+1 -  AtmTypeTest: 0 hx: 9.225 px: 289.2 tx: 223.9
+1 -  AtmTypeTest: 1 hx: 10.225 px: 248 tx: 219.6
+1 -  AtmTypeTest: 2 hx: 11.225 px: 212.4 tx: 219.1
+1 -  AtmTypeTest: 3 hx: 12.85 px: 164.9 tx: 218.3
+1 -  AtmTypeTest: 4 hx: 14.85 px: 120.6 tx: 217.3
+1 -  AtmTypeTest: 5 hx: 16.85 px: 88.16 tx: 216.3
+1 -  AtmTypeTest: 6 hx: 18.85 px: 64.33 tx: 215.3
+1 -  AtmTypeTest: 7 hx: 22.6 px: 35.58 tx: 215.2
+1 -  AtmTypeTest: 8 hx: 26.6 px: 19.01 tx: 215.2
+1 -  AtmTypeTest: 9 hx: 30.6 px: 10.14 tx: 217.8
+1 -  AtmTypeTest: 10 hx: 34.85 px: 5.316 tx: 227.5
+1 -  AtmTypeTest: 11 hx: 40.85 px: 2.255 tx: 245.8
+1 -  AtmTypeTest: 12 hx: 46.85 px: 1.022 tx: 263.7
+1 -  AtmTypeTest: 13 hx: 52.85 px: 0.4814 tx: 263.3
+1 -  AtmTypeTest: 14 hx: 58.85 px: 0.2206 tx: 253.1
+1 -  AtmTypeTest: 15 hx: 65.1 px: 0.09455 tx: 240.7
+1 -  AtmTypeTest: 16 hx: 73.1 px: 0.03 tx: 224.3
+1 -  AtmTypeTest: 17 hx: 81.1 px: 0.008729 tx: 207.2
+1 -  AtmTypeTest: 18 hx: 89.1 px: 0.002332 tx: 199.1
+1 -  AtmTypeTest: 19 hx: 95.6 px: 0.0008164 tx: 209.1
+1 - 
+1 -  AtmTypeTest: Test for type subarcticWinter
+1 -  AtmTypeTest: 0 hx: 9.225 px: 273.1 tx: 217.2
+1 -  AtmTypeTest: 1 hx: 10.225 px: 233.5 tx: 217.2
+1 -  AtmTypeTest: 2 hx: 11.225 px: 199.5 tx: 217.2
+1 -  AtmTypeTest: 3 hx: 12.85 px: 154.6 tx: 217.2
+1 -  AtmTypeTest: 4 hx: 14.85 px: 113 tx: 217.2
+1 -  AtmTypeTest: 5 hx: 16.85 px: 82.52 tx: 216.1
+1 -  AtmTypeTest: 6 hx: 18.85 px: 60.17 tx: 214.9
+1 -  AtmTypeTest: 7 hx: 22.6 px: 33.14 tx: 212.6
+1 -  AtmTypeTest: 8 hx: 26.6 px: 17.51 tx: 212.7
+1 -  AtmTypeTest: 9 hx: 30.6 px: 9.306 tx: 216.5
+1 -  AtmTypeTest: 10 hx: 34.85 px: 4.826 tx: 222.2
+1 -  AtmTypeTest: 11 hx: 40.85 px: 1.988 tx: 236.8
+1 -  AtmTypeTest: 12 hx: 46.85 px: 0.8645 tx: 251.6
+1 -  AtmTypeTest: 13 hx: 52.85 px: 0.4 tx: 260.1
+1 -  AtmTypeTest: 14 hx: 58.85 px: 0.1819 tx: 252.3
+1 -  AtmTypeTest: 15 hx: 65.1 px: 0.07866 tx: 248.6
+1 -  AtmTypeTest: 16 hx: 73.1 px: 0.02639 tx: 238.8
+1 -  AtmTypeTest: 17 hx: 81.1 px: 0.008264 tx: 221.5
+1 -  AtmTypeTest: 18 hx: 89.1 px: 0.002364 tx: 203.3
+1 -  AtmTypeTest: 19 hx: 95.6 px: 0.0008439 tx: 211.3
+1 -  AtmTypeTest: TESTBED done 

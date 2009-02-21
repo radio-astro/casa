@@ -247,12 +247,14 @@ antenna specification can itself be a list of antennas, the expression
 allows a rich selection syntax which is simple for simple selections.
 
 ANT in the description below is a comma-separated list of antenna
-specifications.  A baseline specification is an single ANT, 
-ANT followed by ampersand or a pair of ANT separated by ampersand.  
-A baseline expression is single baseline specification or a semi-colon 
+specifications.  A baseline specification is an single ANT, ANT
+followed by an operator or a pair of ANT separated by an operator.  A
+baseline expression is single baseline specification or a semi-colon
 separated list of baseline specifications.
 
 \subsection{Syntax}
+
+\subsubsection{Antenna specification}
 
 An ANT can be given as a single string
 (literal/pattern/regular expression), single integer ID, a range of
@@ -273,16 +275,55 @@ no match is found, the given specification is matched against the
 station name (the {\tt STATION} column of the {\tt ANTENNA} sub-table
 of the MS).
 
-A baseline specification consists of an ANT, an
-ANT followed by an ampersand or a pair of antenna
-specifications separated by ampersand.  Formally, baseline
-specification is of the form ANT[\&ANT] (where the part
-in square brackets is optional).
+\subsubsection{Baseline specification}
 
-An atomic ANT selects all baselines containing all the antennas in ANT.  
-ANT\& selects only baselines between the list of antennas in the antenna 
-specification.  ANT1\&ANT2 selects baselines between antennas in ANT1 
-and ANT2 only.  E.g.
+A baseline specification consists of an ANT, an ANT followed by an
+operator or a pair of antenna specifications separated by an operator.
+Operator can be one, two or three ampersands ({\tt '\&'}) -- {\tt
+'\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
+selection cross- {\it and} auto-correlation baselines and {\tt
+'\&\&\&'} selection {\it only} auto-correlation baselines.  Formally,
+baseline specification is of the form {\tt ANT[$<$OP$>$][ANT]} (where
+the parts in square brackets are optional and {\tt $<$OP$>$} can be {\tt
+'\&', '\&\&'} or {\tt '\&\&\&'}).
+
+Possible forms of baseline specifications are tabulated in
+Table~\ref{BASELINE:TAB}.
+
+\begin{table}[h!]
+\caption{Baseline specification syntax}
+\label{BASELINE:TAB}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+{\bf Specification} & {\bf Meaning}\\
+\hline
+ANT    & Select only cross-correlation baselines between all the \\
+       & antennas in ANT and {\it all} other available antennas \\
+\hline
+ANT\&  & Select only cross-correlation baselines between antennas \\
+       & in ANT only\\
+\hline
+ANT1\&ANT2 & Select only cross-correlation baselines between \\
+       & antennas in ANT1 and ANT2\\
+\hline
+ANT\&\& & Select cross- {\it and} auto-correlation baselines \\
+       &between all the antennas in ANT only\\
+\hline
+ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines \\
+       & between antennas in ANT1 and ANT2\\
+\hline
+ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
+       &antennas in ANT\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+In the most comman usage, an atomic ANT selects all baselines
+containing all the antennas in ANT.  ANT\& selects only baselines
+between the list of antennas in the antenna specification.  ANT1\&ANT2
+selects baselines between antennas in ANT1 and ANT2 only.  E.g.
 
 \begin{itemize}
 \item baseline={\tt 1,2,3}  selects baseline between antennas 1, 2 and 3
@@ -981,7 +1022,7 @@ token '-' (near char. 12 in string "25/22:40:0 - 26/03:30:0")
 
 \subsection{Formal Grammar Specifications}
 
-{\tt TEN} in the following referrs to the TableExprNode object of the
+{\tt TEN} in the following refers to the TableExprNode object of the
 {\tt Tables} module of CASA.
 
 \subsubsection{Baseline Selection Expression}

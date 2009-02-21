@@ -130,7 +130,7 @@ class cleanhelper:
         if((self.nimages==1) and (type(names)==str)):
             names=[names]
         if((len(phasecenters)) != (len(imsizes))):
-            raise TypeError, 'Number of phasecenters not equal to images'
+            raise TypeError, 'Number of phasecenters or image sizes  not equal to images'
         lerange=range(self.nimages)
         lerange.reverse()
         for n in lerange:
@@ -409,7 +409,6 @@ class cleanhelper:
             modelimages=[modelimages]
         k=0
         for modim in modelimages:
-            
             ia.open(modim)
             modelos.append('modelos_'+str(k))
             if( (ia.brightnessunit().count('/beam')) > 0):
@@ -422,7 +421,7 @@ class cleanhelper:
                 newcsys=ia.coordsys()
                 newshape=ia.shape()
                 ia.open(modim)
-                ib=ia.regrid(outfile=modelos[k], shape=newshape, axes=[0,1], csys=newcsys.torecord(), overwrite=True)
+                ib=ia.regrid(outfile=modelos[k], shape=newshape, axes=[0,1,3], csys=newcsys.torecord(), overwrite=True)
                 ib.done()
                 
             k=k+1
@@ -458,7 +457,8 @@ class cleanhelper:
             else:
                 self.makemaskimage(outputmask=outputmask, maskobject=maskelos)
         for ima in maskelos:
-            ia.removefile(ima)
+            if(os.path.exists(ima)):
+                ia.removefile(ima)
         if(not (os.path.exists(outputmodel))):
             self.im.make(outputmodel)
         for k in range(len(modelos)):

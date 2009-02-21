@@ -2,6 +2,8 @@
 
 usage: python report.py testresult_dir report_dir revision generate_plot
 
+testresult_dir: database top directory
+report_dir: output directory
 revision: 'latest' for latest trunk only, or 'all'
 generate_plot: boolean, generates png plots iff true
 
@@ -29,9 +31,12 @@ colormania = False   # more or less colors in the generated HTML
 colormania = True    #
 
 SOURCE_DIR = os.environ["CASAPATH"].split()[0]
+known_releases = ["CASA Version 2.3.0 (build #6654)",
+                  "CASA Version 2.3.1 (build #6826)"]
 
-exclude_host = ['pc011896.hq.eso.org']
+#exclude_host = ['pc011896.hq.eso.org']
 #exclude_test = ['fits-import-export']
+exclude_host = []
 exclude_test = []
 same_version_per_host = False  # if False the latest run for each test is reported
 
@@ -89,6 +94,60 @@ def distribution(s):
     else:
         return "???", "???", "???", "???"
 
+
+def selected_revisions(data):
+    
+    all = sets.Set()
+    for log in data:
+        all.add(log['CASA'])
+
+    all_list = []
+    for c in all:
+        all_list.append(c)
+    all_list.sort(reverse=True)
+
+    # The following block selects which versions to use,
+    # with lower density as we go back in time.
+    # For example with b(base) = 5 and d(density) = 4
+    # the following versions selected
+    #
+    # 0,1,2,3,4,       (density=1    in range < 5)
+    # 8,12,16,20,24,   (density=1/4  in range < 25)
+    # 32,48,64,80,96   (density=1/16 in range < 125)
+    # etc.
+    b = 5
+    d = 4
+    selected = sets.Set()
+    for c in range(len(all_list)):
+        interval = b
+        density = 1
+        use_it = False
+        for j in range(20):
+            # loops until b^20 (i.e. long enough)
+            if c < interval and (c % density) == 0:
+                use_it = True
+                break
+            interval *= b;
+            density  *= d;
+
+        # Use also
+        #   - the oldest log of all times
+        #   - the 2.3.0 release
+        if all_list[c] == "CASA Version 2.0 Rev 5654" or \
+           all_list[c] in known_releases:
+            use_it = True
+
+        if use_it:
+            selected.add(all_list[c])
+            print "Use ", all_list[c]
+        else:
+            print "Drop", all_list[c]
+
+    # 'selected' now contains the revisions to be
+    # used (still sorted).
+    return selected
+    
+
 class report:
     def __init__(self, reg_dir, report_dir, \
                  revision, \
@@ -106,21 +165,43 @@ class report:
         if len(data) == 0:
             raise Exception, "No test log files found in %s, cannot determine CASA version" % result_dir
 
+        if revision == 'all':
+            # Select only some revisions (in order to reduce length of historical report)
+            casas_set = selected_revisions(data)
+
+            # Filter log files
+            filtered_data = []
+            for log in data:
+                if log['CASA'] in casas_set:
+                    filtered_data.append(log)
+            data = filtered_data
+
         #
         # collect some general data
         #
-        hosts_set = sets.Set()
-        tests_set = sets.Set()
-        casas_set = sets.Set()
-        
+        hosts_set    = sets.Set()
+        tests_set    = sets.Set()
+        self.subtests = {}
+        casas_set    = sets.Set()
         for log in data:
             # Use only the hostname as key
             # (the 'platform' string format might change
             #  with time)
             # hosts.add((log['host'], log['platform']))
-            tests_set.add(log['testid'])
-            hosts_set.add(log['host'])
-            casas_set.add(log['CASA'])
+
+            tests_set.add   (log['testid'])
+            hosts_set.add   (log['host'])
+            casas_set.add   (log['CASA'])
+
+            test = log['testid']
+            if not self.subtests.has_key(test):
+                self.subtests[test] = sets.Set()
+                
+            if log['type'] == 'exec':
+                self.subtests[test].add(('', log['type']))
+            else:
+                self.subtests[test].add((log['image'],log['type']))
+            
         #
         # Identify also hosts from entries in ./Log but no ./Result logfile exist
         if False:
@@ -184,7 +265,8 @@ class report:
                    v > self.casa_revision[host]:
                 self.casa_revision[host] = v
 
-        latest_on_stable = self.casa_revision['fc8tst64b']
+        #latest_on_stable = self.casa_revision['fc8tst64b']
+        latest_on_stable = self.casas[0] # global latest
 
         if True:
             # this part is now obsolete but not harmful...
@@ -242,8 +324,9 @@ class report:
         if not os.path.isdir(report_dir):
             os.mkdir(report_dir)
         
-        shutil.copyfile(html_header, pagename)
-        fd = open(pagename, "a")
+        #shutil.copyfile(html_header, pagename)
+        fd = open(pagename, "w")
+        fd.write('<html></head>')
 
         print "Get archive size..."
         archive_size = commands.getoutput("du -hs " + result_dir + " | awk '{print $1}'")
@@ -257,9 +340,11 @@ class report:
         fd.write('<dd><a href="#test_platform">Test vs. platform</a> (short)')
         fd.write('<dd><a href="#revision_platform_full">Revision vs. platform</a> (full)')
         fd.write('<dd><a href="#test_platform_full">Test vs. platform</a> (full)')
-        if revision == 'all':
-            fd.write('<dd><a href="../CASA_latest/test-report.html">Latest test release</a>')
         fd.write('</dl>')
+        if revision == 'all':
+            fd.write('<a href="../CASA_latest/test-report.html">--> Latest test release</a><br>')
+        else:
+            fd.write('<a href="../CASA/test-report.html">--> All revisions</a><br>')
         fd.write('<center>')
 
         if revision != 'all':
@@ -272,8 +357,19 @@ class report:
                 raise Exception, "Could not parse revision number '%s'" \
                       % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+', trunk only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, trunk only</h2>')
             fd.write('<hr>')
+
+            # Filter out all other versions
+
+            self.casas = [latest_on_stable]
+            
+            data2 = []
+            for d in data:
+                if d['CASA'] == latest_on_stable:
+                    data2.append(d)
+            data = data2
+                
 
         # Simple tables
         fd.write('<br><a name="revision_platform"></a>')
@@ -309,7 +405,7 @@ class report:
         fd.write('</center></body>\n')
         fd.write('</html>\n')
         fd.close()
-        os.system('cat ' + html_footer + ' >> '+pagename)
+        #os.system('cat ' + html_footer + ' >> '+pagename)
         print "Wrote", pagename
         
         os.system('touch '+report_dir+'/success')
@@ -339,39 +435,55 @@ class report:
                 summary[host][casa]['pass'] = 0
                 summary[host][casa]['fail'] = 0
                 summary[host][casa]['undetermined'] = 0
+                for test in tests:
+                    status  [host][casa][test] = {}
+                    run_date[host][casa][test] = {}
+                    l       [host][casa][test] = {}
 
         for log in data:
-            if log['testid'] in tests and log['type'] == 'exec':  # ignore subtests
+            if log['testid'] in tests:
                 host = log['host']
                 casa = log['CASA']
                 test = log['testid']
+                if log['type'] == 'exec':
+                    subtest = ('', log['type'])
+                else:
+                    subtest = ((log['image'],log['type']))
 
 
-                # if we have a 2nd entry for this (host,casa,test)
-                # then one of them is obsolete
-                if run_date[host][casa].has_key(test):
-                    if run_date[host][casa][test] < log['date']:
+                # If we have a 2nd entry for this (host,casa,test)
+                # then one of them is obsolete, warn about that.
+                if run_date[host][casa][test].has_key(subtest):
+                    if run_date[host][casa][test][subtest] < log['date']:
                         print "%s deprecated by %s" %\
-                              (l[host][casa][test], log['logfile'])
+                              (l[host][casa][test][subtest], log['logfile'])
                     else:
                         print "%s deprecated by %s" %\
-                              (log['logfile'], l[host][casa][test])
-                                   
-                if not run_date[host][casa].has_key(test) or \
-                       run_date[host][casa][test] < log['date']:
-                    run_date[host][casa][test] = log['date']
-                    status  [host][casa][test] = log['status']
-                    l       [host][casa][test] = log['logfile']
+                              (log['logfile'], l[host][casa][test][subtest])
+
+                if not run_date[host][casa][test].has_key(subtest) or \
+                       run_date[host][casa][test][subtest] < log['date']:
+
+                    run_date[host][casa][test][subtest] = log['date']
+                    l[host][casa][test][subtest] = log['logfile']
+
+                    status[host][casa][test][subtest] = log['status']
 
         for host in self.hosts:
             for casa in self.casas:
+                # Count number of pass/fail/undet.
                 for test in tests:
-                    if status[host][casa].has_key(test):
-                        s = status[host][casa][test]
-                        summary[host][casa][s] += 1
-                        #print host, casa, test, s
-                    else:
-                        summary[host][casa]['undetermined'] += 1
+                    for subtest in self.subtests[test]:
+                        if status[host][casa][test].has_key(subtest):
+                            s = status[host][casa][test][subtest]
+                            
+                            summary[host][casa][s] += 1 # increments number
+                                                        # of s=pass/fail/undet. by 1
+                            
+                            #print host, casa, test, subtest
+                        else:
+                            summary[host][casa]['undetermined'] += 1
+
 
         fd.write('<h2><I><a name="rev_plat_det">'+heading+'</a></I></h2><br>')
         if extended:
@@ -405,7 +517,10 @@ class report:
         for casa in self.casas:
             print "Generate summary for", casa
             fd.write('<TR>')
-            fd.write('<TD><nobr>' + casa + '</nobr></TD>')
+            if casa in known_releases:
+                fd.write('<TD><nobr><b>' + casa + '</b></nobr></TD>')
+            else:
+                fd.write('<TD><nobr>' + casa + '</nobr></TD>')
             tot_pass = 0
             tot_fail = 0
             tot_unde = 0
@@ -506,26 +621,32 @@ class report:
         fd.write('<TD><b>Trunk summary</b></TD>')
         fd.write('</TR>\n')    
 
+        # identify subtests for each test
+        subtests = {}
         for test in self.tests:
-            # identify subtests for this test
-            subtests = sets.Set()
-            for log in data:
-                if log['testid'] == test:
-                    if log['type'] == 'exec':
-                        subtests.add(('', log['type']))
-                    else:
-                        subtests.add((log['image'],log['type']))
+            subtests[test] = sets.Set()
+        subtests_list = {}
+            
+        for log in data:
+            test = log['testid']
+
+            if log['type'] == 'exec':
+                subtests[test].add(('', log['type']))
+            else:
+                subtests[test].add((log['image'],log['type']))
+
+        for test in self.tests:
 
             # loop through the subtests so that the 'exec' subtest
             # is always processed first
-            subtests_list = [s for s in subtests]
-            subtests_list.sort(cmp=cmp_exec)
+            subtests_list[test] = [s for s in subtests[test]]
+            subtests_list[test].sort(cmp=cmp_exec)
             
-            print "Subtests for", test, "=", subtests_list
+            print "Subtests for", test, "=", subtests_list[test]
 
             summary_filename = report_dir+"/summary_"+test+".html"
             fd.write('<TR>')
-            fd.write('<TD rowspan='+str(1+len(subtests))+' align=center><big><b>')
+            fd.write('<TD rowspan='+str(1+len(subtests[test]))+' align=center><big><b>')
             if extended:
                 fd.write('<a href="summary_'+test+'.html">'+shorten(test)+'</a>')
 
@@ -552,13 +673,13 @@ class report:
             fd.write('</TD>')
             fd.write('</TR>\n')
 
-           
-            for subtest in subtests_list:
+            for subtest in subtests_list[test]:
                 summary_subtest['pass'] = 0
                 summary_subtest['fail'] = 0
                 summary_subtest['undet'] = 0
                 fd.write('<TR>')
                 fd.write('<td align=left>')
+
                 if extended:
                     fd.write('<dl><dt>')
                 if subtest[1] == 'exec':
@@ -596,7 +717,6 @@ class report:
                             else:
                                 basename = ('history-'+test+'-'+subtest[0]+'-'+subtest[1]).replace('/', '-').replace('--', '-')
                                 fd.write('<a href="'+basename+'.html">History</a>')
-
 
                             twin_plots = open(report_dir+'/'+basename+'.html', 'w')
                             twin_plots.write('<html><head><title>'+basename+'</title></head><body>')
@@ -747,8 +867,16 @@ class report:
                 if log.has_key('reason'):
                     fd.write(': '+log['reason'])
                 if log.has_key('runlog'):
-                    shutil.copyfile(from_dir+'/'+log['runlog'],
-                                    to_dir+'/'+log['runlog'])
+                    if os.path.isfile(from_dir+'/'+log['runlog']):
+                        shutil.copyfile(from_dir+'/'+log['runlog'],
+                                        to_dir+'/'+log['runlog'])
+                    else:
+                        print >> sys.stderr, \
+                              "Error: %s: Missing file: %s" % \
+                              (log['logfile'], log['runlog'])
+                        commands.getstatusoutput('touch '+ to_dir+'/'+log['runlog'])
+                        #fixme!!! touch
+
                     fd.write('<br>')
                     fd.write('<a href='+os.path.dirname(log['logfile'])+'/'+log['runlog']+'>log ')
                     fd.write('(')
@@ -768,32 +896,56 @@ class report:
 
                             profile_html = 'profile-'+test+'-'+host+'.html'
                             profile_png  = 'profile-'+test+'-'+host+'.png'
+                            profile_cpu_png  = 'profile_cpu-'+test+'-'+host+'.png'
 
-                            t, mvirtual, mresident, nfiledesc = \
+                            t, mvirtual, mresident, nfiledesc, \
+                               cpu_us, cpu_sy, cpu_id, cpu_wa = \
                                self.parse_resources(log)
 
                             if (len(mvirtual) > 0):
-                                max_virtual  = "%.0f MB" % (max(mvirtual)/1024.0/1024)
-                                max_resident = "%.0f MB" % (max(mresident)/1024.0/1024)
-                                max_filedesc = "%d" % max(nfiledesc)
+                                if log['version'] == '1':
+                                    max_virtual  = "%.0f MB" % (max(mvirtual)/1024.0/1024)
+                                    max_resident = "%.0f MB" % (max(mresident)/1024.0/1024)
+                                    max_filedesc = "%d" % max(nfiledesc)
+                                else:
+                                    max_virtual  = "%.0f MB" % (max(mvirtual))
+                                    max_resident = "%.0f MB" % (max(mresident))
+                                    max_filedesc = "%d" % max(nfiledesc)
                             else:
                                 max_virtual  = "N/A"
                                 max_resident = "N/A"
                                 max_filedesc = "N/A"
+                                
+                                                                
                             fd.write('<br><a href='+profile_html+'>')
-                            fd.write('Virt. memory: ' + max_virtual)
+                            fd.write('Memory(max): ' + max_virtual + ' virt. / ' + max_resident + ' res.')
                             fd.write('</a>')
 
                             fd.write('<br><a href='+profile_html+'>')
-                            fd.write('Res. memory: ' + max_resident)
+                            fd.write('File desc.(max): ' + max_filedesc)
                             fd.write('</a>')
 
                             fd.write('<br><a href='+profile_html+'>')
-                            fd.write('File desc.: ' + max_filedesc)
+                            
+                            if (len(cpu_us) > 0):
+                                avg_cpu_us = "%.0f" % (sum(cpu_us)*1.0/len(cpu_us))
+                                avg_cpu_sy = "%.0f" % (sum(cpu_sy)*1.0/len(cpu_us))
+                                avg_cpu_id = "%.0f" % (sum(cpu_id)*1.0/len(cpu_us))
+                                avg_cpu_wa = "%.0f" % (sum(cpu_wa)*1.0/len(cpu_us))
+                                fd.write("CPU(avg): %s%%us %s%%sy %s%%wa %s%%id" % \
+                                         (avg_cpu_us, \
+                                          avg_cpu_sy, \
+                                          avg_cpu_wa, \
+                                          avg_cpu_id))
+                            else:
+                                fd.write('CPU(avg): N/A')
                             fd.write('</a>')
 
                             self.create_profile_html(t, mvirtual, mresident, nfiledesc, \
-                                                     report_dir, profile_png, profile_html, \
+                                                     cpu_us, cpu_sy, cpu_id, cpu_wa, \
+                                                     report_dir,
+                                                     profile_png, profile_html, \
+                                                     profile_cpu_png, \
                                                      test, host)
                     elif log['status'] == 'fail':
                         # filter depends on error message format
@@ -914,9 +1066,10 @@ class report:
         i = 1
         while log.has_key('imagefile_'+str(i)):
             fn = log['imagefile_'+str(i)]
-            print "Image:", fn
-            shutil.copyfile(from_dir+'/'+fn,
-                            to_dir  +'/'+fn)
+            print "Copy image:", fn
+            if os.path.isfile(from_dir+'/'+fn):
+                shutil.copyfile(from_dir+'/'+fn,
+                                to_dir  +'/'+fn)
             fd.write('<br>Image: '+fn+'<img src="'+os.path.dirname(log['logfile'])+'/'+fn+'">')
             i = i + 1
 
@@ -949,12 +1102,19 @@ class report:
             fd.write('</font></TD>')
 
     def parse_resources(self, log):
-        # expected format: t0,mv0,mr0,nf0;t1,mv1,mr1,nf1;...
+        # expected format:
+        # version 1: t0,mv0,mr0,nf0;t1,mv1,mr1,nf1;...
+        # version 2: t0,mv0,mr0,nf0,cpuus0,cpusy0,cpuid0,cpuwa0;...
         samples = log['resource'].split(';')
         t = []
         mvirtual = []
         mresident = []
         nfiledesc = []
+        cpu_us = []
+        cpu_sy = []
+        cpu_id = []
+        cpu_wa = []
+        
         for s in samples:
             if (s != ''):
                 ss = s.split(',')
@@ -962,8 +1122,14 @@ class report:
                 mvirtual.append(float(ss[1]))
                 mresident.append(float(ss[2]))
                 nfiledesc.append(int(ss[3]))
-
-        return t, mvirtual, mresident, nfiledesc
+                if log['version'] != '1':
+                    cpu_us.append(float(ss[4]))
+                    cpu_sy.append(float(ss[5]))
+                    cpu_id.append(float(ss[6]))
+                    cpu_wa.append(float(ss[7]))
+                    
+        return t, mvirtual, mresident, nfiledesc, \
+               cpu_us, cpu_sy, cpu_id, cpu_wa
 
     def read_log(self, result_dir, revision):
         #
@@ -972,9 +1138,8 @@ class report:
         #alllogs=os.listdir(result_dir)
 
         find_cmd = 'find '+result_dir+' -name result\*.txt'
-        print find_cmd
-        findout=commands.getoutput(find_cmd)
-        alllogs=['']
+        findout = commands.getoutput(find_cmd)
+        alllogs = ['']
         if(findout != ''):
             alllogs=findout.split('\n')
 
@@ -995,7 +1160,7 @@ class report:
             data_file = {}
             lineno = 0
             line = fd.readline().rstrip() ; lineno += 1
-            data_file['logfile'] = logfile.split(result_dir)[1]
+            data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
             while line:
                 #print line
                 try:
@@ -1072,8 +1237,9 @@ class report:
                        data_file['host'].find('ma014655') >= 0:
 
                     data.append(data_file)
-
-        # endif for each logfile
+                    
+        # end for each logfile
+        
         return data
 
     def dump_host(self, fd, host, extended):
@@ -1140,7 +1306,7 @@ class report:
                 #print t
 
                 # read the number after 'build #'
-                # or after 'Rev '  (older versions)
+                # or after 'Rev ' (older versions)
                 a = log['CASA'].find('build #')
                 if a >=0:
                     a += len('build #')
@@ -1167,8 +1333,10 @@ class report:
                         (log['date'],revision, log['time']) )
 
                     if log.has_key('resource'):
-                        t, mvirtual, mresident, nfiledesc = \
+                        t, mvirtual, mresident, nfiledesc, \
+                           dummy, dummy, dummy, dummy = \
                            self.parse_resources(log)
+                        # discards CPU usage
                         if (len(mresident) > 0):
                             plotdata['mresident'][log['host']].append(
                                 (log['date'],revision, max(mresident)) )
@@ -1274,8 +1442,35 @@ class report:
                 sys.stdout.flush()
 
     def create_profile_html(self, t, y11, y22, numfile, \
-                            report_dir, png_filename, html_filename, \
+                            cpu_us, cpu_sy, cpu_id, cpu_wa, \
+                            report_dir, \
+                            png_filename, html_filename, \
+                            png_cpu_filename, \
                             testname, host):
+        # CPU profile plot
+        pl.clf()
+        pl.plot(t,cpu_us,lw=2)
+        pl.plot(t,cpu_id,lw=2)
+        pl.plot(t,cpu_wa,lw=2)
+        pl.plot(t,cpu_sy,lw=2)
+
+        if len(t) > 0:
+            pl.axis([0.9*min(t),1.1*max(t), -10, 100])
+        else:
+            pl.axis([0, 1, -10, 100])
+            
+        pl.xlabel('time (sec)')
+        pl.ylabel('CPU usage (percent)')
+        font=FontProperties(size='small')
+        pl.legend(('user', 'idle', 'wait', 'system'),
+                  loc=[0.7,0.85], prop=font)
+
+        pl.title('Machine CPU usage for '+testname+' on '+host)
+        pl.savefig(report_dir + '/' + png_cpu_filename);
+
+
+
+        # Memory profile plot
         pl.clf()
         pl.plot(t,y11,lw=2)
         pl.plot(t,y22,lw=2)
@@ -1300,8 +1495,17 @@ class report:
         pl.title('memory usage of casapy for '+testname+' on '+host)
 
         pl.savefig(report_dir + '/' + png_filename);
-        ht=htmlPub(report_dir + '/' + html_filename, 'Memory profile of '+testname)
-        body1=['<pre>Memory profile of run of test %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
+
+
+        # Generate HTML
+        ht=htmlPub(report_dir + '/' + html_filename, 'Profile of '+testname)
+
+        body1=['<pre>CPU profile of run of %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
         body2=['']
-        ht.doBlk(body1, body2, png_filename, 'Profile')
+        ht.doBlk(body1, body2, png_cpu_filename, 'CPU profile')
+
+        body1=['<pre>Memory profile of run of %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
+        body2=['']
+        ht.doBlk(body1, body2, png_filename, 'Memory profile')
+        
         ht.doFooter()

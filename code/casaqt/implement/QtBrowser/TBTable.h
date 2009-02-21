@@ -254,6 +254,12 @@ public:
     // See TBTableDriver::canWrite().
     bool canWrite();
     
+    // See TBTableDriver::tryWriteLock().
+    bool tryWriteLock();
+
+    // See TBTableDriver::releaseWriteLock().
+    bool releaseWriteLock();
+    
     
     // Loads the given rows into the table and returns a Result indicating the
     // success of the loading.  The rows loaded will be from start to start +

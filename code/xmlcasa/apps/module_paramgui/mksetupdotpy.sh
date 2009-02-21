@@ -55,15 +55,15 @@ done
 echo "               ]," >> $SETUPDOTPY
 if [ "$SETUPLIBS" != "" ]; then
    if [ "$QT4LIBD" != "" ]; then
-      echo "               library_dirs=['$ARCHLIB', $SETUPLIBS, '$PYTHONLIBD' $CFITSIO_LIBPATH, '$QT4LIBD']," >> $SETUPDOTPY
+      echo "               library_dirs=['$ARCHLIB', $SETUPLIBS, '$PYTHONLIBD' $CFITSIO_LIBPATH, '$CORELIBD', '$QT4LIBD']," >> $SETUPDOTPY
    else
-      echo "               library_dirs=['$ARCHLIB', $SETUPLIBS, '$PYTHONLIBD' $CFITSIO_LIBPATH]," >> $SETUPDOTPY
+      echo "               library_dirs=['$ARCHLIB', $SETUPLIBS, '$PYTHONLIBD' $CFITSIO_LIBPATH, '$CORELIBD']," >> $SETUPDOTPY
    fi
 else
    if [ "$QT4LIBD" != "" ]; then
-      echo "               library_dirs=['$ARCHLIB', '$PYTHONLIBD' $CFITSIO_LIBPATH, '$QT4LIBD']," >> $SETUPDOTPY
+      echo "               library_dirs=['$ARCHLIB', '$PYTHONLIBD' $CFITSIO_LIBPATH, '$QT4LIBD', '$CORELIBD']," >> $SETUPDOTPY
    else
-      echo "               library_dirs=['$ARCHLIB', '$PYTHONLIBD' $CFITSIO_LIBPATH]," >> $SETUPDOTPY
+      echo "               library_dirs=['$ARCHLIB', '$PYTHONLIBD' $CFITSIO_LIBPATH, '$CORELIBD']," >> $SETUPDOTPY
    fi
 fi
 

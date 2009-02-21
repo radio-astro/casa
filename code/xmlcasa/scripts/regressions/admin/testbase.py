@@ -60,8 +60,10 @@ class testbase :
             # Also, searching in .../tests/<name>/regression.py is
             # obsolete
             raise Exception, "Unsupported!"
-        
-            theFiles=os.listdir(self.scriptRepository)
+
+            theFile=[]
+            for i in range( len(self.scriptRepository) ):
+                theFiles=theFiles+os.listdir(self.scriptRepository)
             tempy=[]
             ###locate only the *.py files
             for leF in theFiles:
@@ -84,11 +86,15 @@ class testbase :
 
     def getTest(self, testnamek, testName):
         #Copy the script to the working dir
-        if testnamek[0:6] == 'tests/':
-            shutil.copy(self.scriptRepository+'/'+testnamek,
-                        self.workingDirectory+'/'+testName+'.py')
-        shutil.copy(self.scriptRepository+'/'+testnamek, \
-                    self.workingDirectory+'/')
+        for i in range( len( self.scriptRepository ) ):
+            dir=self.scriptRepository[i]
+            if testnamek[0:6] == 'tests/':
+                if os.path.isdir(self.scriptRepository[i]+'/'+testnamek):
+                    shutil.copy(self.scriptRepository[i]+'/'+testnamek,
+                                self.workingDirectory+'/'+testName+'.py')
+            if os.path.isfile(self.scriptRepository[i]+'/'+testnamek):
+                shutil.copy(self.scriptRepository[i]+'/'+testnamek, \
+                            self.workingDirectory+'/')
     
     def testname(self, ind=0):
         if(len(self.testsToRun)==0):
@@ -112,13 +118,36 @@ class testbase :
         return desc
                
     def runtests(self, testName, testId=0, dry=False):
-        try:
+        # Find out if there is a "run" method defined int
+        # the file or not.  If there is then we assume that
+        # all we need to do is call it to do the test.  Those
+        # with a run method will also need the data moved
+        # (or not moved) as specified by the data() and doCopy()
+        # methods.
+        #
+        # If there is no run method we assume that this is a
+        # stand-alone script that can be excuted by itself.
+        hasRun = False
+        try:        
             leFile=self.testsToRun[testId]
+            if leFile.startswith( 'tests/' ):
+                leFile=leFile[6:]
+            cmd = 'grep def '+leFile+' | grep run\('
+            results = commands.getoutput( cmd )
+            #print "RESULTS OF GREP FOR RUN: ", results
+            if ( len( results ) > 0 ):
+                hasRun = True
+        except:
+            self.notest=True
+            #print >> sys.stderr, "Error running test:", sys.exc_info()[0]
+            raise
 
-            if leFile[0:6] == 'tests/':
+        try:
+            if ( hasRun ):
                 print "Import", leFile
-                leTest=__import__(testName)
+                leTest=__import__(testName, locals=locals(), globals=globals() )
                 #print "  imported"
+
                 allData=leTest.data()
                 # check if there is a doCopy function and use it if possible
                 try:
@@ -147,6 +176,7 @@ class testbase :
                                 shutil.copy(theData, self.workingDirectory+'/'+leData)
                             else:
                                 os.system('ln -sf '+theData+' '+self.workingDirectory+'/'+leData)
+                theImages=[]
                 if not dry:
                     theImages=leTest.run()
                 else:
@@ -156,13 +186,18 @@ class testbase :
                     # h121
                     theImages =  ['nrao150.3mm.image', 'h121.co10.image',  '0224b.3mm.image', 'h121b.co10.image', 'h121all.3mm.image', 'h121c.co10.image' ]
 
+                del leTest
+
+                if type(theImages) == None:
+                    raise Exception, "Illegal return value from run()"                   
+                    
                 leResult=[]
                 for leImage in theImages :
                     leResult.append(self.workingDirectory+'/'+leImage)
                 self.defineQualityTestList(leResult)
                 return leResult, theImages
             else:
-                print "execfile", leFile
+                print "Executing ", leFile
                 if dry:
                     return [], []
                 a=inspect.stack()
@@ -184,7 +219,7 @@ class testbase :
                 # do not propagate to here if the regression
                 # script is run directly with execfile() from
                 # here. But an exeption propagates
-                
+
                 fd=open('exec-'+leFile, 'w')
                 print >> fd, "regstate=True"   # used in regression scripts to signal error
                 print >> fd, "execfile('"+leFile+"')"
@@ -196,7 +231,7 @@ class testbase :
                 # What we really want, but regstate doesn't propagate:
                 # execfile(leFile, gl)
                 execfile('./exec-'+leFile, gl)
-                
+                _file=str('./exec-')+str(leFile)
                 return [], []   # no product images known
         except:
             self.notest=True
@@ -249,10 +284,14 @@ class testbase :
         testName=string.lower(testname)
 
         # search for DIR/tests/<name>.py
-        if os.path.isdir(scriptdir+'/tests/'):
-            allScripts=os.listdir(scriptdir+'/tests/')
-        else:
-            allScripts=[]
+        allScripts=[]
+        for i in range( len( scriptdir ) ):
+            dir = scriptdir[i]
+            if os.path.isdir(dir+'/tests/'):
+                allScripts=allScripts+os.listdir(dir+'/tests/')
+            else:
+                allScripts=allScripts+os.listdir(dir)
+
         print "allScripts = ", allScripts
         theScript=''
         numOfScript=0
@@ -265,11 +304,18 @@ class testbase :
                 numOfScript +=1
 
         # search for DIR/<name>.py
-        if os.path.isdir(scriptdir):
-            allScripts=os.listdir(scriptdir)
-        else:
-            allScripts=[]
-        print "allScripts = ", allScripts
+        for i in range( len( scriptdir ) ):
+            dir = scriptdir[i]
+            print "LOOKING FOR SCRIPTS IN : ", dir
+            if os.path.isdir(dir):
+                allScripts=allScripts+os.listdir(dir)
+            #else:
+                #allScripts=[]
+                #allScripts=allScripts
+            if os.path.exists( dir+'tests' ):
+                for file_name in os.listdir(dir+'tests'):
+                    allScripts=allScripts+['tests/'+file_name]
+
         for scr in allScripts:
             #print scriptdir, scr, testname
             if (scr == testname + '.py'):
@@ -280,7 +326,6 @@ class testbase :
         if( numOfScript > 1) :
             print 'More than 1 scripts found for name '+testname
             print 'Using the following one '+ theScript
-        print "Found", theScript
         return theScript
 
     def ispythonscript(self, thescript):
@@ -291,9 +336,15 @@ class testbase :
 
     def locatedata(self, datafile):
         for repository in self.dataBaseDirectory :
-            findstr='find '+repository+'/ -name '+datafile+' -print 2>/dev/null'
+            # See if find understands -L or -follow (depends on find version)
+            (err, a) = commands.getstatusoutput('find -L ' + repository+'/ 1>/dev/null 2>&1')
+            if not err:
+                findstr='find -L '+repository+'/ -name '+datafile+' -print 2>/dev/null'
+            else:
+                findstr='find '+repository+'/ -follow -name '+datafile+' -print 2>/dev/null'
             # A '/' is appended to the directory name; otherwise sometimes find doesn't find
-            # Ignore error messages like missing directory permissions
+            # Also, ignore error messages such as missing directory permissions
+            
             (find_errorcode, a)=commands.getstatusoutput(findstr)   # stdout and stderr
             #if find_errorcode != 0:
             #    print >> sys.stderr, "%s failed: %s" % (findstr, a)

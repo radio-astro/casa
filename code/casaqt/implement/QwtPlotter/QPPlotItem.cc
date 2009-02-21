@@ -140,11 +140,11 @@ PlotAxis QPPlotItem::xAxis() const {
 PlotAxis QPPlotItem::yAxis() const {
     return QPOptions::axis(QwtPlot::Axis(asQwtPlotItem().yAxis())); }
 
-
 void QPPlotItem::setXAxis(PlotAxis x) {
     asQwtPlotItem().setXAxis(QPOptions::axis(x)); }
 void QPPlotItem::setYAxis(PlotAxis y) {
     asQwtPlotItem().setYAxis(QPOptions::axis(y)); }
+
 
 void QPPlotItem::attach(QPCanvas* canvas, PlotCanvasLayer layer) {
     if(canvas != NULL) {

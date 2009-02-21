@@ -195,11 +195,10 @@ that very often can be quite expensive.
 </comments>
 </method>
 -->
-<!--
+
  
-   <method type="constructor" name="fromfits">
-   <shortdescription>Create a \casa\ table from a
-binary FITS file</shortdescription>
+   <method type="function" name="fromfits">
+   <shortdescription>Create a \casa\ table from a binary FITS file</shortdescription>
    
 <description>
 Create a table from binary FITS format. This generates a CASA table
@@ -209,6 +208,7 @@ Image FITS and UVFITS) are read by other means.
 \\It is possible to specify the storage manager to use for the table:
 \\\texttt{standard} is the default storage manager.
 \\\texttt{incremental} is efficient for slowly varying data.
+\\\texttt{memort} is for in memory use for e.g to grab given columns via getcol.
 </description>
 
 <input>
@@ -227,13 +227,19 @@ Image FITS and UVFITS) are read by other means.
      </param>
 
      <param type="string"  name="storage">
-     <description>Storage manager to use (standard or incremental)</description>
+     <description>Storage manager to use (standard or incremental or memory)</description>
      <value>standard</value>
+     <allowed kind="enum">
+	    <value>standard</value>
+	    <value>incremental</value>
+	    <value>memory</value>
+     </allowed>
+
      </param>
 
      <param type="string"  name="convention">
-     <description>Convention to use (SDFITS or none)</description>
-     <value>sdfits</value>
+     <description>Convention to use (sdfits or none)</description>
+     <value>none</value>
      </param>
 
      <param type="bool"  name="nomodify">
@@ -241,27 +247,23 @@ Image FITS and UVFITS) are read by other means.
      <value>true</value>
      </param>
 
+<!--
      <param type="any"  name="lockoptions">
      <description>locking to be used</description>
      <any type="string record"/>
      <value>default</value>
      </param>
-
+-->
      <param type="bool"  name="ack">
      <description>Acknowledge creations, etc</description>
      <value>true</value>
      </param>
 
-     <param type="any"  name="tableserver">
-     <description>Table server to be used</description>
-     <any type="record"/>
-     <value>defaulttableserver</value>
-     </param>
 </input>
 <returns type="casatable"/>
 </method>
 
--->
+
  
    <method type="function" name="fromascii">
    <shortdescription>Create a \casa\ table from a file containing data in ASCII format</shortdescription>
@@ -1042,20 +1044,13 @@ table tool has open.
 </example>
 </method>
 
- 
    <method type="function" name="toasciifmt">
-   <shortdescription>!!!NOT IMPLEMENTED!!! Write \casa\ table into an ASCII format</shortdescription>
+   <shortdescription>Write \casa\ table into an ASCII format </shortdescription>
    
 <description>
-!!!NOT IMPLEMENTED!!!
-
-Write a table into an ASCII format. Both columnar data (scalar) and
-table keywords may be written. The separator between values can be
-specified and defaults to a blank. Note that columns containing
-arrays will be ignored (after showing a warning).
-
-The output format is that read by
-<link anchor="table:table.fromascii">fromascii</link>.
+Write a table into an ASCII format approximately compatible with <link anchor="table:table.fromascii">fromascii</link> except that in order to permit variable shaped arrays (as they often occur in MSs), array values are output enclosed in square brackets. 
+The separator between values can be specified and defaults to a blank. Note that columns containing
+invalid data or record type data are ignored and a warning is issued.
 
 If the argument headerfile is set then the header information is
 written to that file instead of the first two lines of the data file.
@@ -1077,12 +1072,29 @@ written to that file instead of the first two lines of the data file.
      </param>
 
      <param type="string" name="sep">
-     <description>Value separator</description>
+     <description>Value separator, default is one blank</description>
      <value></value>
      </param>
 </input>
 <returns type="bool"/>
+<example>
+\begin{verbatim}
+tb.toasciifmt(asciifile='myfile3.dat', headerfile='myfile3.head', columns=['SOURCE_ID', 'NAME', 'PROPER_MOTION'], sep=', ')
+\end{verbatim}
+
+will produce a comma separated ASCII output of the three columns 'SOURCE_ID', 'NAME', and 'PROPER_MOTION' in file 'myfile3.dat'
+and a format description in 'myfile3.head'. 
+
+\begin{verbatim}
+tb.toasciifmt(asciifile='myfile.dat')
+\end{verbatim}
+
+will produce a space separated ASCII output of all table columns into file 'myfile.dat'
+with the first two lines containing a format description. 
+</example>
 </method>
+
+ 
 
  
    <method type="function" name="query">

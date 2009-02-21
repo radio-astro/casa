@@ -41,6 +41,7 @@ class stdBaseInterface {
 	static bool verifyOne(record &theRec, record &theContraints, casa::LogIO &itsLog, bool silent=true);
 	static bool checkme(const string &name, variant &user, record &constraint, casa::LogIO &itsLog, bool silent=false);
 	static bool checkQuanta(const string &name, variant &user, record &constraint, casa::LogIO &itsLog, bool silent=false);
+	static variant *expandEnum(variant &allowed, const variant &value, casa::LogIO &itsLog, bool silent=false);
    private :
 	void init();
 	void parse_it(record &params, const char *line);

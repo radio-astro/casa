@@ -171,6 +171,7 @@ public:
 
   // Note that azel is a function instead of a cached value
   const Vector<MDirection>& azel(Double time) const; 
+  Matrix<Double>& azelMat(Double time,Matrix<Double>& azelMat) const; 
 
   Int fieldId() const {return fieldIdOK_p ? fieldId_p : This->fillFieldId();}
 
@@ -237,6 +238,9 @@ public:
 
   Vector<RigidVector<Double,3> >& uvw() {return uvwOK_p ? uvw_p : filluvw();}
   const Vector<RigidVector<Double,3> >& uvw() const {return This->uvw();}
+
+  Matrix<Double>& uvwMat() {return uvwMatOK_p ? uvwMat_p : filluvwMat();}
+  const Matrix<Double>& uvwMat() const {return This->uvwMat();}
 
   Matrix<CStokesVector>& visibility() 
   { return visOK_p ? visibility_p : fillVis(VisibilityIterator::Observed);}
@@ -436,6 +440,7 @@ private:
   Vector<Double>& fillTime();
   Vector<Double>& fillTimeInterval();
   Vector<RigidVector<Double,3> >& filluvw();
+  Matrix<Double>& filluvwMat();
   Matrix<CStokesVector>& fillVis(VisibilityIterator::DataColumn whichOne);
   Cube<Complex>& fillVisCube(VisibilityIterator::DataColumn whichOne);
   Vector<Float>& fillWeight();
@@ -462,8 +467,8 @@ private:
     feed1OK_p, feed2OK_p, cjonesOK_p,
     fieldIdOK_p, arrayIdOK_p, flagOK_p, flagRowOK_p, scanOK_p, freqOK_p,
     lsrFreqOK_p, phaseCenterOK_p, polFrameOK_p, sigmaOK_p, sigmaMatOK_p,spwOK_p,
-    timeOK_p, timeIntervalOK_p, uvwOK_p, visOK_p, weightOK_p, weightMatOK_p,
-    weightSpectrumOK_p;
+    timeOK_p, timeIntervalOK_p, uvwOK_p, uvwMatOK_p,visOK_p, weightOK_p, 
+    weightMatOK_p, weightSpectrumOK_p;
   Bool corrTypeOK_p, flagCubeOK_p, visCubeOK_p, imagingWeightOK_p,
     modelVisOK_p, correctedVisOK_p, modelVisCubeOK_p, correctedVisCubeOK_p;
   Bool msOK_p, newMS_p;
@@ -492,6 +497,7 @@ private:
   Vector<Double> time_p;
   Vector<Double> timeInterval_p;
   Vector<RigidVector<Double,3> > uvw_p;
+  Matrix<Double> uvwMat_p;
   Matrix<CStokesVector> visibility_p, modelVisibility_p, correctedVisibility_p;
   Vector<Float> weight_p;
   Matrix<Float> weightMat_p;

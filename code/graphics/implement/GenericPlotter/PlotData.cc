@@ -28,6 +28,42 @@
 
 namespace casa {
 
+///////////////////////////////
+// PLOTPOINTDATA DEFINITIONS //
+///////////////////////////////
+
+void PlotPointData::xAndYAt(unsigned int index, double& x, double& y) const {
+    x = xAt(index);
+    y = yAt(index);
+}
+
+
+////////////////////////////////////
+// PLOTMASKEDPOINTDATADEFINITIONS //
+////////////////////////////////////
+
+void PlotMaskedPointData::xyAndMaskAt(unsigned int index, double& x, double& y,
+        bool& mask) const {
+    xAndYAt(index, x, y);
+    mask = maskedAt(index);
+}
+
+
+///////////////////////////////
+// PLOTERRORDATA DEFINITIONS //
+///////////////////////////////
+
+void PlotErrorData::xyAndErrorsAt(unsigned int index, double& x, double& y,
+        double& xLeftError, double& xRightError, double& yBottomError,
+        double& yTopError) const {
+    xAndYAt(index, x, y);
+    xLeftError = xLeftErrorAt(index);
+    xRightError = xRightErrorAt(index);
+    yBottomError = yBottomErrorAt(index);
+    yTopError = yTopErrorAt(index);
+}
+
+
 ///////////////////////////////////////
 // PLOTHISTOGRAMDATAIMPL DEFINITIONS //
 ///////////////////////////////////////

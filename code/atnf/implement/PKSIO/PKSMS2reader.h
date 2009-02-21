@@ -100,7 +100,8 @@ class PKSMS2reader : public PKSreader
         const Vector<Int>  refChan,
         const Bool getSpectra = True,
         const Bool getXPol    = False,
-        const Bool getFeedPos = False);
+        const Bool getFeedPos = False,
+        const Bool getPointing = False);
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -174,6 +175,7 @@ class PKSMS2reader : public PKSreader
     Vector<Int>    cEndChan, cRefChan, cStartChan;
     Vector<Bool>   cBeams, cIFs;
     Vector<Slicer> cDataSel;
+    String         cDirRef;
     MeasurementSet cPKSMS;
     Table          cSysCalTab, tmptab, tmptab2;
 
@@ -203,6 +205,7 @@ class PKSMS2reader : public PKSreader
     ROArrayColumn<Float>    cTcalCol;
     ROScalarColumn<Int>     cBeamNoCol;
     ROArrayColumn<Double>   cPointingCol;
+    ROScalarColumn<Double>  cPointingTimeCol;
     ROArrayColumn<Float>    cTsysCol;
     ROArrayColumn<Float>    cSigmaCol;
     ROArrayColumn<Float>    cCalFctrCol;

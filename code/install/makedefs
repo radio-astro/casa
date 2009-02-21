@@ -425,6 +425,7 @@ XLIBLIST_shared_flagging    := CORE LAPACK F77
 XLIBLIST_shared_dish        := CORE WCSLIB LAPACK F77 CFITSIO
 XLIBLIST_shared_simulators  := CORE LAPACK F77
 XLIBLIST_shared_synthesis   := CORE LAPACK F77 PGPLOT X11 CFITSIO
+XLIBLIST_shared_plotms      := CORE QT4 XERCES LAPACK F77 PGPLOT X11 CFITSIO
 XLIBLIST_shared_casaqt      := CORE QT4 XERCES
 XLIBLIST_shared_display := QT4 CORE CFITSIO X11 MIRLIB WCSLIB LAPACK F77
 XLIBLIST_shared_alma  := $(XLIBLIST_shared_display)
@@ -588,6 +589,7 @@ LIBflagging    := defeat shatic defeat defeat defeat defeat
 LIBdish        := defeat shatic defeat defeat defeat defeat
 LIBsimulators  := defeat shatic defeat defeat defeat defeat
 LIBsynthesis   := defeat shatic defeat defeat defeat defeat
+LIBplotms       := defeat shatic defeat defeat defeat defeat
 LIBcasaqt    := defeat shatic defeat defeat defeat defeat
 LIBatmosphere   := defeat defeat defeat defeat defeat defeat
 #                                                          Demo programs
@@ -616,13 +618,14 @@ LIBxmlcasa     := defeat shatic defeat defeat defeat defeat
 # packages and should not need to be redefined in the site makedefs.
 LINKtableplot      := graphics 
 LINKcasaqt      := casaqt graphics 
-LINKmsvis       := msvis tableplot graphics 
+LINKmsvis       := msvis tableplot casaqt graphics 
 LINKcalibration := calibration msvis tableplot graphics 
 LINKionosphere  := ionosphere tableplot graphics 
 LINKflagging    := flagging msvis tableplot graphics 
 LINKdish        := dish tableplot graphics 
 LINKsimulators  := simulators tableplot graphics 
 LINKsynthesis   := synthesis calibration graphics casaqt msvis tableplot flagging
+LINKplotms      :=  plotms casaqt synthesis calibration graphics msvis tableplot flagging 
 LINKxmlcasa     := xmlcasa nrao display casaqt synthesis calibration graphics msvis tableplot flagging 
 LINKgraphics    := graphics 
 LINKatmosphere  := atmosphere 
@@ -655,8 +658,8 @@ PERL5    :=
 RM       := rm -f
 
 # Absolute pathnames of doxygen and dot executables (if available).
-DOXYGEN  :=
-DOXYDOT  :=
+DOXYGEN  =
+DOXYDOT  =
 DOXYGENCFG = $(shell if [ -f $(AIPSSITE)/doxygen.cfg ]; then echo "$(AIPSSITE)/doxygen.cfg"; else echo "$(CODEINSD)/docutils/doxygen.cfg"; fi )
 
 
@@ -721,12 +724,12 @@ DOCEXTR   := docdoxy
 DOCDOXY   := docdoxy
 
 # What standard packages to build (default is all including demo).
-PACKAGES  := graphics tableplot msvis calibration ionosphere flagging dish simulators casaqt synthesis demo
+PACKAGES  := graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis plotms demo
 
 
-SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis graphics xmlcasa
+SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa
 
-CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis
+CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis plotms
 
 # What auxiliary packages to build
 AUXILIARY := casaqt display 
@@ -1169,6 +1172,7 @@ export LIBflagging    := $(LIBflagging)
 export LIBdish        := $(LIBdish)
 export LIBsimulators  := $(LIBsimulators)
 export LIBsynthesis   := $(LIBsynthesis)
+export LIBplotms      := $(LIBplotms)
 export LIBdisplay   := $(LIBdisplay)
 export LIBvlbi      := $(LIBvlbi)
 export LIBcontrib   := $(LIBcontrib)

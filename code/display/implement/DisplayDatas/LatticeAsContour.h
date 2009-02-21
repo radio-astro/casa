@@ -236,7 +236,9 @@ template <class T> class LatticeAsContour : public LatticePADisplayData<T> {
   virtual String showPosition(const Vector<Double> &wld, const Bool &abs,
                               const Bool &dsp);
   
- 
+  using LatticePADisplayData<T>::dataUnit;
+  
+  
  protected:
   
   // Construct user option DisplayParameters (for min/max contour.)
@@ -256,8 +258,8 @@ template <class T> class LatticeAsContour : public LatticePADisplayData<T> {
   
   // Min and Max actual contours. linearly scaled from itsLevels to fit these.
   // <group>
-  DParameterRange<Float> *itsMinContour;
-  DParameterRange<Float> *itsMaxContour;
+  DParameterRange<Float> *itsBaseContour;
+  DParameterRange<Float> *itsUnitContour;
   // </group>
   
   Float itsLine;

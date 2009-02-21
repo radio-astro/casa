@@ -17,8 +17,8 @@
 #include <xmlcasa/casac.h>
 #include <xmlcasa/Quantity.h>
 #include <xmlcasa/conversions.h>
-#include <xmlcasa/variant.h>
 #include <xmlcasa/record.h>
+#include <xmlcasa/variant.h>
 #include <xmlcasa/synthesis/imager_forward.h>
 
 // put includes here
@@ -126,11 +126,11 @@ class imager
 
     bool setmfcontrol(const double cyclefactor = 1.5, const double cyclespeedup = -1, const int stoplargenegatives = 2, const int stoppointmode = -1, const double minpb = 0.1, const std::string& scaletype = "NONE", const double constpb = 0.4, const std::vector<std::string>& fluxscale = std::vector<std::string> (1, ""));
 
-    bool setoptions(const std::string& ftmachine = "ft", const int cache = -1, const int tile = 16, const std::string& gridfunction = "SF", const std::string& location = "", const double padding = 1.0, const bool usemodelcol = true, const int wprojplanes = 1, const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbgriddingcorrections = true, const std::string& cfcachedirname = "", const double pastep = 1.0, const double pblimit = 0.05);
+    bool setoptions(const std::string& ftmachine = "ft", const int cache = -1, const int tile = 16, const std::string& gridfunction = "SF", const std::string& location = "", const double padding = 1.0, const std::string& freqinterp = "nearest", const bool usemodelcol = true, const int wprojplanes = 1, const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbgriddingcorrections = true, const std::string& cfcachedirname = "", const double pastep = 1.0, const double pblimit = 0.05);
 
     bool setscales(const std::string& scalemethod = "nscales", const int nscales = 5, const std::vector<double>& uservector = ::casac::initialize_vector( 3, (double) 0.0, (double) 3.0, (double) 10.0 ));
 
-    bool settaylorterms(const int ntaylorterms = 2, const double reffreq = 0.0);
+    bool settaylorterms(const int ntaylorterms = 2, const double reffreq = 1.4e+09);
 
     bool setsdoptions(const double scale = 1.0, const double weight = 1.0, const int convsupport = -1);
 

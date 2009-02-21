@@ -81,7 +81,7 @@ bool PlotFont::operator==(const PlotFont& rh) const {
     return pointSize() == rh.pointSize() &&
            pixelSize() == rh.pixelSize() &&
            fontFamily() == rh.fontFamily() &&
-           color() == rh.color() && italics() == rh.italics() &&
+           *color() == *rh.color() && italics() == rh.italics() &&
            bold() == rh.bold() && underline() == rh.underline();
 }
 bool PlotFont::operator!=(const PlotFont& rh) const { return !(*this == rh); }
@@ -109,7 +109,8 @@ PlotAreaFill& PlotAreaFill::operator=(const PlotAreaFill& rh) {
 }
 
 bool PlotAreaFill::operator==(const PlotAreaFill& rh) const {
-    return color() == rh.color() && pattern() == rh.pattern(); }
+    if(pattern() == rh.pattern() && pattern() == NOFILL) return true;
+    return *color() == *rh.color() && pattern() == rh.pattern(); }
 bool PlotAreaFill::operator!=(const PlotAreaFill& rh) const {
     return !(*this == rh); }
 
@@ -137,8 +138,10 @@ PlotLine& PlotLine::operator=(const PlotLine& rh) {
 }
 
 bool PlotLine::operator==(const PlotLine& rh) const {
+    if(style() == rh.style() == style() == NOLINE) return true;
+    if(width() == rh.width() && width() == 0) return true;
     return width() == rh.width() && style() == rh.style() &&
-           color() == rh.color();
+           *color() == *rh.color();
 }
 
 bool PlotLine::operator!=(const PlotLine& rh) const { return !(*this == rh); }
@@ -216,11 +219,11 @@ PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
 }
 
 bool PlotSymbol::operator==(const PlotSymbol& rh) const {
+    if(symbol() == rh.symbol() && symbol() == NOSYMBOL) return true;
+    if(size()== rh.size() && size()== pair<double, double>(0, 0)) return true;
     return size() == rh.size() && symbol() == rh.symbol() &&
-           isCharacter() == rh.isCharacter() &&
-           (isCharacter() && rh.isCharacter() ? symbolChar() ==
-               rh.symbolChar() : true) && line() == rh.line() &&
-           areaFill() == rh.areaFill();
+           (isCharacter() ? symbolChar() == rh.symbolChar() : true) &&
+           *line() == *rh.line() && *areaFill() == *rh.areaFill();
 }
 
 bool PlotSymbol::operator!=(const PlotSymbol& rh) const {

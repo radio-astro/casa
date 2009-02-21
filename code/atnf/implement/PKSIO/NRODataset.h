@@ -39,8 +39,6 @@
 
 using namespace std ;
 
-#define CHANNEL_MAX 2048
-
 // <summary>
 // <linkto class=NRODataset>NRODataset</linkto> is a class 
 // that represents a single scan record 
@@ -58,7 +56,8 @@ using namespace std ;
 //
 // <etymology>
 // NRO and ASTE raw data format consists of two major components; data 
-// header and scan record. NROData is a representation of the scan record 
+// header and scan record. <linkto class=NROData>NROData</linkto> is a 
+// representation of the scan record 
 // that contains a scan header and a spectral data.
 // </etymology>
 //
@@ -90,7 +89,7 @@ struct NRODataset
   // Scan number
   int ISCAN ;
 
-  // Integration start time with format of "YYYYMMDDHHMMSS.sss"
+  // Integration start time with format of "YYYYMMDDHHMMSS.sss" (UTC)
   char LAVST[24] ;
 
   // Scan type (ON or ZERO)
@@ -195,11 +194,12 @@ struct NRODataset
   // Offset for array data
   double ADOFF ;
 
-  // Spectral data: Originally, the data are double array. 
+  // Spectral data: 
+  // Originally the data are double array. 
   // But they are quantized and converted to the int array with 
   // a scalling factor and an offset value. Additionally, 
   // this int array is stored into the char array.
-  char LDATA[CHANNEL_MAX*12/8] ; 
+  char *LDATA ;
 } ;
 
 #endif /* NRO_DATASET_H */

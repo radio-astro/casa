@@ -9,18 +9,21 @@
 
 namespace casa {
 
-PlotFactoryPtr plotterImplementation(Plotter::Implementation which) {
+PlotFactoryPtr plotterImplementation(Plotter::Implementation which,
+        bool smartDelete) {
     switch(which) {
 #ifdef AIPS_HAS_QWT
-    case Plotter::QWT: return PlotFactoryPtr(new QPFactory());
+    case Plotter::QWT: return PlotFactoryPtr(new QPFactory(), smartDelete);
 #endif
 
     default: return PlotFactoryPtr();
     }
 }
 
-SimplePlotterPtr simplePlotter(Plotter::Implementation which) {
-    return SimplePlotterPtr(new SimplePlotter(plotterImplementation(which)));
+SimplePlotterPtr simplePlotter(Plotter::Implementation which,
+        bool smartDelete) {
+    return SimplePlotterPtr(new SimplePlotter(plotterImplementation(which)),
+            smartDelete);
 }
 
 

@@ -85,10 +85,8 @@ void PSkyEquation::predict(Bool incremental) {
   PredictAlgorithm  predictVis;
   String errorString; 
   Bool allDone, assigned; 
-  Int rank ;
+  Int rank;
   
-  Bool initialized=False; 
-
   for (Int model=0;model<sm_->numberOfModels();model++) {     
       if(incremental){
         StokesImageUtil::From(sm_->cImage(model), sm_->deltaImage(model));
@@ -167,7 +165,7 @@ void PSkyEquation::gradientsChiSquared(Bool incremental) {
   // Initialize the gradients
   sm_->initializeGradients();
 
-  ROVisIter& vi(vs_->iter());
+  //ROVisIter& vi(vs_->iter());
   unlock();
 
   for (Int model=0;model<sm_->numberOfModels();model++) {   

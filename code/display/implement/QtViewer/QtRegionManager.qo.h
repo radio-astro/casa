@@ -31,6 +31,7 @@
 #define QTREGIONMANAGER_H
 
 #include <casa/aips.h>
+#include <casa/Containers/List.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
 #include <graphics/X11/X_enter.h>
@@ -46,6 +47,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class QtViewer;
+class ImageRegion;
+class Record;
+template <class T> class PtrBlock;
 
 
 class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
@@ -75,19 +79,36 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
  
  
  protected slots:
-  
+
+  //update the regionames in the menu
+  void updateNames();
+  //remove region from image
+  void removeRegion();
   // React to new region creation in display panel.
   void newRegion_(String imgFilename);
   
   // Save last-created region (reacts to Save button).
   void saveRegion_();
-  
+  void saveRegionInImage();
   // Reacts to extent button selection -- sets extent state in display panel.
   void setExtent_();
 
   // Reacts to change in pathname (just to re-enable Save button).
   void pathnameChg_();
 
+  // Cleanup on destruction
+  void cleanup();
+  // Set up stuff to extend or not plane along channels and pol
+  void singlePlane();
+  void planeExtension();
+  // Load region from ds9 or aipsbox or rgn file
+  void loadRegionsFromFile();
+  //draw region on viewer
+  void drawRegion(Record mousereg, WorldCanvasHolder *wch);
+
+ private:
+  PtrBlock<const ImageRegion * >  unionRegions_p;
+  List<RegionShape*> regShapes_p;
   
 };
 

@@ -243,7 +243,7 @@ void WFSkyEquation::multiPredict(Bool incremental) {
   //   AlwaysAssert(ok(),AipsError);
   // Initialize 
   VisIter& vi=vs_->iter();
-  Int numberOfRows= vs_->numberCoh();
+  //Int numberOfRows= vs_->numberCoh();
   //  vi.setRowBlocking(numberOfRows);
 
   VisBuffer vb(vi);
@@ -350,8 +350,6 @@ void WFSkyEquation::multiPredict(Bool incremental) {
 VisBuffer& WFSkyEquation::multiGet(VisBuffer& result,  Int nmodels,
 				   Bool incremental) {
   //  AlwaysAssert(ok(),AipsError);
-  Int nRow=result.nRow();
-
   result.modelVisCube(); // get the visibility so vb will have it
 
   //  Cube<Complex> data(result.modelVisCube());
