@@ -1001,15 +1001,15 @@ CoordinateSystem ImageFITSConverter::getCoordinateSystem (Int& stokesFITSValue,
         os << LogIO::WARN <<
           "Cannot create the coordinate system from FITS keywords.\n"
           "I will use a dummy linear coordinate along each axis instead.\n"
-          "If you your FITS file actually does contain a coordinate system\n"
+          "If your FITS file actually does contain a coordinate system\n"
           "please submit a bug report."  << LogIO::POST;
 //
         CoordinateSystem cSys2;
         Vector<String> names(shape.nelements());
         for (uInt i=0; i<names.nelements(); i++) {
-           ostringstream oss;
-           oss << i;
-           names(i) = String("linear") + String(oss);
+	    ostringstream oss;
+	    oss << i;
+	    names(i) = String("linear") + String(oss);
         }   
         CoordinateUtil::addLinearAxes(cSys2, names, shape);
         cSys = cSys2;

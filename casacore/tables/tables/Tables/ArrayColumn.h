@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumn.h 20481 2009-01-08 07:40:44Z gervandiepen $
+//# $Id: ArrayColumn.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef TABLES_ARRAYCOLUMN_H
 #define TABLES_ARRAYCOLUMN_H
@@ -322,7 +322,7 @@ public:
 			     const Slicer& arraySection) const;
     // </group>
 
-    // The get() function like above which does not check shapes, etc..
+    // The get() function like above which does not check shapes, etc.
     // It is faster and can be used for performance reasons if one
     // knows for sure that the arguments are correct.
     // E.g. it is used internally in virtual column engines.
@@ -590,7 +590,7 @@ public:
     // In fact, this function is an assignment operator with copy semantics.
     void putColumn (const ROArrayColumn<T>& that);
 
-    // The put() function like above which does not check shapes, etc..
+    // The put() function like above which does not check shapes, etc.
     // It is faster and can be used for performance reasons if one
     // knows for sure that the arguments are correct.
     // E.g. it is used internally in virtual column engines.

@@ -24,13 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITSConverter.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ImageFITSConverter.h 20495 2009-01-19 00:50:41Z Malte.Marquarding $
 
 
 #ifndef IMAGES_IMAGEFITSCONVERTER_H
 #define IMAGES_IMAGEFITSCONVERTER_H
 
 #include <casa/aips.h>
+
+#ifndef WCSLIB_GETWCSTAB
+ #define WCSLIB_GETWCSTAB
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

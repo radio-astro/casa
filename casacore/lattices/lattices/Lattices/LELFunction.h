@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELFunction.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LELFunction.h 20508 2009-01-20 11:09:47Z gervandiepen $
 
 #ifndef LATTICES_LELFUNCTION_H
 #define LATTICES_LELFUNCTION_H
@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -175,7 +175,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -278,7 +278,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -383,7 +383,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -496,7 +496,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -605,7 +605,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -703,7 +703,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>
@@ -797,7 +797,7 @@ private:
 //
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 //
 // <example>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 20338 2008-06-19 05:58:02Z gervandiepen $
+//# $Id: IPosition.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -169,13 +169,13 @@ public:
     // wants to remove trailing axes.
     // <br>
     // The functions with argument <src>ignoreAxes</src> do
-    // not consider the axes given in that argument..
+    // not consider the axes given in that argument.
     // <group>
     IPosition nonDegenerate(uInt startingAxis=0) const;
     IPosition nonDegenerate(const IPosition& ignoreAxes) const;
     // </group>
 
-    // Old values are copied on resize if copy==True..
+    // Old values are copied on resize if copy==True.
     // If the size increases, values beyond the former size are undefined.
     void resize(uInt newSize, Bool copy=True);
 

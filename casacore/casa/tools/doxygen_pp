@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-#  $Id: doxygen_pp 20364 2008-06-30 06:10:38Z gervandiepen $
+#  $Id: doxygen_pp 20508 2009-01-20 11:09:47Z gervandiepen $
 
 
 #  Convert multiple C++ "slash-slash" style comment lines
@@ -615,8 +615,8 @@ sub change_comment_style
 	    $code = 1;
 	  }
 	}
-	# Doxygen treats .. as end of list. So escape second one.
-	$comment =~ s|\.\.|.\\.|g;
+	# Doxygen treats a trailing .. as end of list. So escape second one.
+	$comment =~ s|\.\.\s*$|.\\.|g;
 	# Skip an empty line if needed.
 	if ($nadded > 0) {
 	  if ($comment =~ /^\s*$/) {

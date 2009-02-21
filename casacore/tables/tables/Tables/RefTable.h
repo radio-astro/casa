@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.h 19726 2006-11-07 01:30:08Z gvandiep $
+//# $Id: RefTable.h 20519 2009-02-05 13:39:01Z gervandiepen $
 
 #ifndef TABLES_REFTABLE_H
 #define TABLES_REFTABLE_H
@@ -339,6 +339,9 @@ private:
 
     // Write a reference table.
     void writeRefTable (Bool fsync);
+
+    // Copy a RefTable that is not persistent. It requires some special logic.
+    void copyRefTable (const String& newName, int tableOption);
 };
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExtendImage.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: ExtendImage.h 20505 2009-01-19 14:37:24Z gervandiepen $
 
 #ifndef IMAGES_EXTENDIMAGE_H
 #define IMAGES_EXTENDIMAGE_H
@@ -167,7 +167,7 @@ public:
   // Get the best cursor shape.
   virtual IPosition doNiceCursorShape (uInt maxPixels) const;
 
-  // Handle the (un)locking and syncing, etc..
+  // Handle the (un)locking and syncing, etc.
   // <group>
   virtual Bool lock (FileLocker::LockType, uInt nattempts);
   virtual void unlock();

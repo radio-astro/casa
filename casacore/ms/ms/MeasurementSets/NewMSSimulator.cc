@@ -949,7 +949,7 @@ void NewMSSimulator::observe(const String& sourceName,
   timeRange(0)=Tstart;
   timeRange(1)=Tend;
   obsc.timeRange().put(nobsrow,timeRange);
-  obsc.observer().put(nobsrow,"AIPS++ simulator");
+  obsc.observer().put(nobsrow,"CASA simulator");
   
   Int row=ms_p->nrow()-1;
   Int maxObsId=-1;
@@ -1267,7 +1267,7 @@ void NewMSSimulator::observe(const String& sourceName,
       pointingc.time().put(m,Time);
       pointingc.timeOrigin().put(m,Tstart);
       pointingc.interval().put(m,Tint);
-      pointingc.antennaId().put(m, m);
+      pointingc.antennaId().put(m, m-numPointing);
       pointingc.directionMeasCol().put(m,direction);
       pointingc.targetMeasCol().put(m,direction);             
     }

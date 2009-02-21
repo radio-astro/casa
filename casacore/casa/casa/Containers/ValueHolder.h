@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolder.h 20450 2008-11-28 12:52:51Z gervandiepen $
+//# $Id$
 
 
 #ifndef CASA_VALUEHOLDER_H
@@ -165,6 +165,7 @@ public:
   void getValue (Double& value) const          { value = asDouble(); }
   void getValue (Complex& value) const         { value = asComplex(); }
   void getValue (DComplex& value) const        { value = asDComplex(); }
+  void getValue (String& value) const          { value = asString(); }
   void getValue (Array<Bool>& value) const
     { value.reference(asArrayBool()); }
   void getValue (Array<uChar>& value) const
@@ -185,6 +186,8 @@ public:
     { value.reference(asArrayComplex()); }
   void getValue (Array<DComplex>& value) const
     { value.reference(asArrayDComplex()); }
+  void getValue (Array<String>& value) const
+    { value.reference(asArrayString()); }
   // </group>
 
   // Put the value as a field in a record.
@@ -193,11 +196,10 @@ public:
   // Construct the object from the value in a record.
   static ValueHolder fromRecord (const Record&, const RecordFieldId&);
 
-  //# Write the ValueHolder to an output stream.
-  //# friend AipsIO& operator<< (AipsIO& os, const ValueHolder& vh);
-
-  //# Read the ValueHolder from an input stream.
-  //# friend AipsIO& operator>> (AipsIO& os, ValueHolder& vh);
+  // Write the ValueHolder to an output stream.
+  // Arrays are written as normal arrays using ArrayIO.h. 
+  friend std::ostream& operator<< (std::ostream& os, const ValueHolder& vh)
+    { return vh.itsRep->write (os); }
 
 private:
   ValueHolderRep* itsRep;

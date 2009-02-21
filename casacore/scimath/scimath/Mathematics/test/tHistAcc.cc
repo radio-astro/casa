@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHistAcc.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tHistAcc.cc 20497 2009-01-19 02:30:07Z Malte.Marquarding $
 
 #include <casa/iostream.h>
 #include <casa/Arrays.h>
@@ -65,8 +65,8 @@ int main()
       for (i=0; i<nv; i++) {
 	  vvi(i) = i;                     // temporary
 	  vvf(i) = rnd();                 // Array values
-	  vvi(i) = vvf(i);                // round to Int
-	  vvf(i) = vvi(i);                // whole numbers Float
+	  vvi(i) = Int(vvf(i));                // round to Int
+	  vvf(i) = Float(vvi(i));                // whole numbers Float
 	  bvf[i] = vvi(i);                 // Block too
       }
 

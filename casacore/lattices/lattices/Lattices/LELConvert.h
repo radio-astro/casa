@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELConvert.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LELConvert.h 20508 2009-01-20 11:09:47Z gervandiepen $
 
 #ifndef LATTICES_LELCONVERT_H
 #define LATTICES_LELCONVERT_H
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <p>
 // A description of the implementation details of the LEL classes can
 // be found in
-// <a href="http://www.astron.nl/aips++/docs/notes/216">Note 216</a>
+// <a href="../notes/216.html">Note 216</a>
 // </synopsis> 
 
 // <example>

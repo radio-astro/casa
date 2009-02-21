@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: images.dox 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: images.dox 20505 2009-01-19 14:37:24Z gervandiepen $
 
 namespace casa {
 
@@ -38,8 +38,9 @@ namespace casa {
 //  <li> slices of images
 //  <li> regions in images
 //  <li> expressions of images
-//   (using <a href="http://www.astron.nl/aips++/docs/notes/223">LEL</a>)
+//   (using <a href="../notes/223.html">LEL</a>)
 //  <li> concatenation of images
+//  <li> stretching an image cube along a curved line
 // </ul>
 //
 // It is built on top of the
