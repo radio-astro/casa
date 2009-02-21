@@ -118,7 +118,8 @@ resize(const IPosition & fftSize,
 	    delete[] itsWorkOut;
 	}
 
-	itsWorkOut = new S[((itsSize(0)/2+1) * itsSize.product())/itsSize(0)];
+	itsWorkOut = new S[(itsSize(0)/2+1) * (itsSize.product()/itsSize(0))];
+	// The division is performed *before* the multiplication here, in order to avoid overflowing an Int!
 
 	if (itsWorkC2C) {
 	    delete[] itsWorkC2C;
@@ -274,7 +275,7 @@ fft0(Array<S> & cResult, Array<T> & rData, const Bool constInput) {
   S *cPtr = cResult.getStorage(resultIsAcopy);
 
   objcopy(cPtr, itsWorkOut, 
-	  ((itsSize(0)/2+1) * itsSize.product())/itsSize(0));
+	  (itsSize(0)/2+1) * (itsSize.product()/itsSize(0)));
   cResult.putStorage(cPtr, resultIsAcopy);
 
   return;
@@ -314,7 +315,7 @@ fft0(Array<T> & rResult, Array<S> & cData, const Bool constInput)
   const S * complexPtr = cData.getStorage(dataIsAcopy);
 
   objcopy(itsWorkOut, complexPtr, 
-	  ((itsSize(0)/2+1) * itsSize.product())/itsSize(0));
+	  (itsSize(0)/2+1) * (itsSize.product()/itsSize(0)));
   
   itsFFTW.c2r(itsSize, itsWorkOut, itsWorkIn);
 
