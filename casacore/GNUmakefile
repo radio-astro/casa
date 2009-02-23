@@ -31,9 +31,14 @@ FFLAGS := -O2
 DESTDIR := 
 ARCH := 
 
-VERSION:=$(shell head -1 VERSION | perl -pe "s|^(\S+).*|\$$1|" | tee /tmp/foo )
+DEP := 1
+
+VERSION:=$(shell head -1 VERSION | perl -pe "s|^(\S+).*|\$$1|")
 
 OS := $(shell uname | tr 'A-Z' 'a-z')
+arch := $(shell uname -p)
+fastdep := $(shell which fastdep 2> /dev/null)
+
 ifeq "$(OS)" "darwin"
 SO := $(VERSION).dylib
 #INC :=
@@ -41,8 +46,6 @@ endif
 ifeq "$(OS)" "linux"
 SO := so.$(VERSION)
 INC += -I/usr/include/cfitsio
-
-arch := $(shell uname -p)
 ifeq "$(arch)" "x86_64"
 FFLAGS += -m64
 CFLAGS += -m64
@@ -65,10 +68,6 @@ INC += -I$(CASAARCH)/include
 endif
 endif
 
-INSTALLDIR := $(DESTDIR)
-
-LIBDIR := $(INSTALLDIR)/lib
-
 ##
 ## setup fortran compiler
 ##
@@ -84,20 +83,22 @@ FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 
 ifeq "$(FC)" ""
-all: 
+allsys: 
 	@echo "error could not find fortran compiler; please set the 'FC', GNUmakefile variable"
 else
-all: images msfits
+allsys: images msfits
 endif
 
 CASACC := $(shell find casa -type f -name '*.cc' | egrep -v '/test/|/apps/')
 CASAOBJ := $(CASACC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 CASALIB := $(shell echo $(CASAOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+CASADEP := $(shell echo $(CASAOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 CASALIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_casa.$(SO)
 CORELIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasacore.$(SO)
 else
 CASALIB := $(CASAOBJ)
+CASADEP := $(shell echo $(CASAOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 CASALIB_PATH := $(DESTDIR)/lib/libcasa_casa.$(SO)
 CORELIB_PATH := $(DESTDIR)/lib/libcasacore.$(SO)
 endif
@@ -111,9 +112,11 @@ COMPONENTSCC := $(shell find components -type f -name '*.cc' | egrep -v '/test/|
 COMPONENTSOBJ := $(COMPONENTSCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 COMPONENTSLIB := $(shell echo $(COMPONENTSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+COMPONENTSDEP := $(shell echo $(COMPONENTSOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 COMPONENTSLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_components.$(SO)
 else
 COMPONENTSLIB := $(COMPONENTSOBJ)
+COMPONENTSDEP := $(shell echo $(COMPONENTSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 COMPONENTSLIB_PATH := $(DESTDIR)/lib/libcasa_components.$(SO)
 endif
 ###  coordinates -> measures  -> scimath -> casa
@@ -126,9 +129,11 @@ COORDINATESCC := $(shell find coordinates -type f -name '*.cc' | egrep -v '/test
 COORDINATESOBJ := $(COORDINATESCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 COORDINATESLIB := $(shell echo $(COORDINATESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+COORDINATESDEP := $(shell echo $(COORDINATESOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 COORDINATESLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_coordinates.$(SO)
 else
 COORDINATESLIB := $(COORDINATESOBJ)
+COORDINATESDEP := $(shell echo $(COORDINATESOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 COORDINATESLIB_PATH := $(DESTDIR)/lib/libcasa_coordinates.$(SO)
 endif
 ###  lattices -> tables  -> casa
@@ -139,9 +144,11 @@ LATTICESCC := $(shell find lattices -type f -name '*.cc' | egrep -v '/test/|/app
 LATTICESOBJ := $(LATTICESCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 LATTICESLIB := $(shell echo $(LATTICESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+LATTICESDEP := $(shell echo $(LATTICESOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 LATTICESLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_lattices.$(SO)
 else
 LATTICESLIB := $(LATTICESOBJ)
+LATTICESDEP := $(shell echo $(LATTICESOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 LATTICESLIB_PATH := $(DESTDIR)/lib/libcasa_lattices.$(SO)
 endif
 ###  images      -> mirlib
@@ -164,10 +171,12 @@ IMAGESOBJ := $(IMAGESCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 IMAGESLIB := images/images/Images/ImageExprGram.lcc images/images/Images/ImageExprGram.ycc \
 		$(shell echo $(IMAGESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+IMAGESDEP :=    $(shell echo $(IMAGESOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 IMAGESLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_images.$(SO)
 else
 IMAGESLIB := images/images/Images/ImageExprGram.lcc images/images/Images/ImageExprGram.ycc \
 		$(IMAGESOBJ)
+IMAGESDEP :=    $(shell echo $(IMAGESOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 IMAGESLIB_PATH := $(DESTDIR)/lib/libcasa_images.$(SO)
 endif
 ###  tables -> casa
@@ -177,11 +186,13 @@ ifneq "$(ARCH)" ""
 TABLESLIB := tables/tables/Tables/RecordGram.lcc tables/tables/Tables/RecordGram.ycc \
 		tables/tables/Tables/TableGram.lcc tables/tables/Tables/TableGram.ycc \
 		$(shell echo $(TABLESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+TABLESDEP :=    $(shell echo $(TABLESOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 TABLESLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_tables.$(SO)
 else
 TABLESLIB := tables/tables/Tables/RecordGram.lcc tables/tables/Tables/RecordGram.ycc \
 		tables/tables/Tables/TableGram.lcc tables/tables/Tables/TableGram.ycc \
 		$(TABLESOBJ)
+TABLESDEP :=    $(shell echo $(TABLESOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 TABLESLIB_PATH := $(DESTDIR)/lib/libcasa_tables.$(SO)
 endif
 ###  scimath -> casa
@@ -193,11 +204,13 @@ SCIMATHOBJ := $(SCIMATHCC:%.cc=%.o)
 SCIMATHFOBJ := $(SCIMATHF:%.f=%.o)
 ifneq "$(ARCH)" ""
 SCIMATHLIB := $(shell echo $(SCIMATHOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+SCIMATHDEP := $(shell echo $(SCIMATHOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 SCIMATHLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_scimath.$(SO)
 SCIMATHFLIB := $(shell echo $(SCIMATHFOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
 SCIMATHFLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_scimath_f.$(SO)
 else
 SCIMATHLIB := $(SCIMATHOBJ)
+SCIMATHDEP := $(shell echo $(SCIMATHOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 SCIMATHLIB_PATH := $(DESTDIR)/lib/libcasa_scimath.$(SO)
 SCIMATHFLIB := $(SCIMATHFOBJ)
 SCIMATHFLIB_PATH := $(DESTDIR)/lib/libcasa_scimath_f.$(SO)
@@ -210,11 +223,13 @@ MEASURESOBJ := $(MEASURESCC:%.cc=%.o)
 MEASURESFOBJ := $(MEASURESF:%.f=%.o)
 ifneq "$(ARCH)" ""
 MEASURESLIB := $(shell echo $(MEASURESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+MEASURESDEP := $(shell echo $(MEASURESOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 MEASURESLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_measures.$(SO)
 MEASURESFLIB := $(shell echo $(MEASURESFOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
 MEASURESFLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_measures_f.$(SO)
 else
 MEASURESLIB := $(MEASURESOBJ)
+MEASURESDEP := $(shell echo $(MEASURESOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 MEASURESLIB_PATH := $(DESTDIR)/lib/libcasa_measures.$(SO)
 MEASURESFLIB := $(MEASURESFOBJ)
 MEASURESFLIB_PATH := $(DESTDIR)/lib/libcasa_measures_f.$(SO)
@@ -226,9 +241,11 @@ FITSCC := $(shell find fits -type f -name '*.cc' | egrep -v '/test/|/apps/')
 FITSOBJ := $(FITSCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 FITSLIB := $(shell echo $(FITSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+FITSDEP := $(shell echo $(FITSOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 FITSLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_fits.$(SO)
 else
 FITSLIB := $(FITSOBJ)
+FITSDEP := $(shell echo $(FITSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 FITSLIB_PATH := $(DESTDIR)/lib/libcasa_fits.$(SO)
 endif
 ###  ms -> measures  -> scimath -> casa
@@ -246,6 +263,7 @@ MSLIB := ms/ms/MeasurementSets/MSAntennaGram.lcc ms/ms/MeasurementSets/MSAntenna
 	       ms/ms/MeasurementSets/MSTimeGram.lcc ms/ms/MeasurementSets/MSTimeGram.ycc \
 	       ms/ms/MeasurementSets/MSUvDistGram.lcc ms/ms/MeasurementSets/MSUvDistGram.ycc \
 		$(shell echo $(MSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+MSDEP :=	$(shell echo $(MSOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 MSLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_ms.$(SO)
 else
 MSLIB := ms/ms/MeasurementSets/MSAntennaGram.lcc ms/ms/MeasurementSets/MSAntennaGram.ycc \
@@ -257,6 +275,7 @@ MSLIB := ms/ms/MeasurementSets/MSAntennaGram.lcc ms/ms/MeasurementSets/MSAntenna
 	       ms/ms/MeasurementSets/MSTimeGram.lcc ms/ms/MeasurementSets/MSTimeGram.ycc \
 	       ms/ms/MeasurementSets/MSUvDistGram.lcc ms/ms/MeasurementSets/MSUvDistGram.ycc \
 		$(MSOBJ)
+MSDEP :=	$(shell echo $(MSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 MSLIB_PATH := $(DESTDIR)/lib/libcasa_ms.$(SO)
 endif
 ###  msfits -> fits -> (cfitsio)
@@ -269,9 +288,11 @@ MSFITSCC := $(shell find msfits -type f -name '*.cc' | egrep -v '/test/|/apps/')
 MSFITSOBJ := $(MSFITSCC:%.cc=%.o)
 ifneq "$(ARCH)" ""
 MSFITSLIB := $(shell echo $(MSFITSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+MSFITSDEP := $(shell echo $(MSFITSOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 MSFITSLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_msfits.$(SO)
 else
 MSFITSLIB := $(MSFITSOBJ)
+MSFITSDEP := $(shell echo $(MSFITSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 MSFITSLIB_PATH := $(DESTDIR)/lib/libcasa_msfits.$(SO)
 endif
 ###
@@ -279,20 +300,56 @@ MIRCC := $(shell find mirlib -type f -name '*.c' | egrep -v '/test/|/apps/')
 MIROBJ := $(MIRCC:%.c=%.o)
 ifneq "$(ARCH)" ""
 MIRLIB := $(shell echo $(MIROBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+MIRDEP := $(shell echo $(MIROBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 MIRLIB_PATH := $(DESTDIR)/$(ARCH)/lib/libcasa_mirlib.$(SO)
 else
 MIRLIB := $(MIROBJ)
+MIRDEP := $(shell echo $(MIROBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 MIRLIB_PATH := $(DESTDIR)/lib/libcasa_mirlib.$(SO)
 endif
 
+COREINC := -Iimages -Icasa -Ifits -Icomponents -Icoordinates -Ilattices \
+		-Imeasures -I. -Ims -Imsfits -Iscimath -Itables
+
+ifneq "$(fastdep)" ""
+ifneq "$(ARCH)" ""
+define make-depend
+  $(fastdep) $(COREINC) +O $(ARCH) $1 > $2
+endef
+else
+define make-depend
+  $(fastdep) $(COREINC) $1 > $2
+endef
+endif
+else
+define make-depend
+endef
+endif
+
+INCDIR := $(DESTDIR)/include
+MODULES := casa components coordinates fits images lattices \
+		measures mirlib ms msfits scimath tables
+MODULESRE := $(shell echo $(MODULES) | perl -pe '$$_=join("|",split())')
+VPATH := . $(MODULES)
+
+$(INCDIR)/casacore/%.h: %.h
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	cp $< $@
+
+$(INCDIR)/casacore/%.tcc: %.tcc
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	cp $< $@
+
 %.o : %.cc
-	$(C++) $(CXXFLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	@$(call make-depend,$<,$(subst .o,.dep,$@))
+	$(C++) $(CXXFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
 %.o : %.c
-	$(CC) $(CLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	@$(call make-depend,$<,$(subst .o,.dep,$@))
+	$(CC) $(CLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
 %.o : %.f
-	$(FC) $(FFLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	$(FC) $(FFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
 %.lcc : %.ll
 	flex -P$(basename $(notdir $<)) -t $< > $@
@@ -301,23 +358,25 @@ endif
 	bison -p $(basename $(notdir $<)) -o $@ $<
 
 t% : t%.cc
-	$(C++) -I$(DESTDIR)/include/casacore $(INC) -o $@ $< -L$(DESTDIR)/lib -lcasa_casa
+	$(C++) $(COREINC) $(INC) -o $@ $< -L$(DESTDIR)/lib -lcasa_casa
 
 .SECONDEXPANSION:
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.cc|")
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
-	$(C++) $(CXXFLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	@$(call make-depend,$<,$(subst .o,.dep,$@))
+	$(C++) $(CXXFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.c|")
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
-	$(CC) $(CLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	@$(call make-depend,$<,$(subst .o,.dep,$@))
+	$(CC) $(CLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.f|")
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
-	$(FC) $(FFLAGS) -fPIC -I$(DESTDIR)/include/casacore $(INC) -c $< -o $@
+	$(FC) $(FFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
-###
+##
 ###  libcasacore
 ###
 libcasacore: $(CORELIB_PATH)
@@ -326,6 +385,7 @@ $(CORELIB_PATH): $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) \
 					$(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) $(SCIMATHFLIB) \
 					$(MEASURESLIB) $(MEASURESFLIB) $(FITSLIB) $(MSLIB) \
 					$(MSFITSLIB) $(MIRLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -337,9 +397,10 @@ endif
 ###
 ###  casa
 ###
-casa: $(CASALIB_PATH)
+casa: $(CASALIB_PATH) $(shell find casa -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^casa/@$(INCDIR)/casacore/@g")
 
 $(CASALIB_PATH): $(CASALIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^)
 endif
@@ -351,9 +412,10 @@ endif
 ###
 ###  components
 ###
-components: coordinates tables $(COMPONENTSLIB_PATH)
+components: coordinates tables $(COMPONENTSLIB_PATH) $(shell find components -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^components/@$(INCDIR)/casacore/@g")
 
 $(COMPONENTSLIB_PATH): $(COMPONENTSLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -365,9 +427,10 @@ endif
 ###
 ###  coordinates
 ###
-coordinates: measures fits $(COORDINATESLIB_PATH)
+coordinates: measures fits $(COORDINATESLIB_PATH) $(shell find coordinates -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^coordinates/@$(INCDIR)/casacore/@g")
 
 $(COORDINATESLIB_PATH): $(COORDINATESLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -379,9 +442,10 @@ endif
 ###
 ###  lattices
 ###
-lattices: scimath $(LATTICESLIB_PATH)
+lattices: scimath $(LATTICESLIB_PATH) 
 
-$(LATTICESLIB_PATH): $(LATTICESLIB)
+$(LATTICESLIB_PATH): $(LATTICESLIB) $(shell find lattices -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^lattices/@$(INCDIR)/casacore/@g")
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -393,9 +457,10 @@ endif
 ###
 ###  images
 ###
-images: components lattices fits mirlib $(IMAGESLIB_PATH)
+images: components lattices fits mirlib $(IMAGESLIB_PATH) $(shell find images -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^images/@$(INCDIR)/casacore/@g")
 
 $(IMAGESLIB_PATH): $(IMAGESLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
 endif
@@ -407,9 +472,10 @@ endif
 ###
 ###  tables
 ###
-tables: casa $(TABLESLIB_PATH)
+tables: casa $(TABLESLIB_PATH) $(shell find tables -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^tables/@$(INCDIR)/casacore/@g")
 
 $(TABLESLIB_PATH): $(TABLESLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa
 endif
@@ -423,7 +489,8 @@ endif
 ###
 scimath: casa $(SCIMATHLIB_PATH)
 
-$(SCIMATHLIB_PATH): $(SCIMATHLIB) $(SCIMATHFLIB_PATH)
+$(SCIMATHLIB_PATH): $(SCIMATHLIB) $(SCIMATHFLIB_PATH) $(shell find scimath -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^scimath/@$(INCDIR)/casacore/@g")
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -433,6 +500,7 @@ endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(SCIMATHFLIB_PATH): $(SCIMATHFLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -445,9 +513,10 @@ endif
 ###
 ###  measures
 ###
-measures: scimath tables $(MEASURESLIB_PATH)
+measures: scimath tables $(MEASURESLIB_PATH) $(shell find measures -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^measures/@$(INCDIR)/casacore/@g")
 
 $(MEASURESLIB_PATH):  $(MEASURESLIB) $(MEASURESFLIB_PATH)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
@@ -457,6 +526,7 @@ endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(MEASURESFLIB_PATH):  $(MEASURESFLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
@@ -468,9 +538,10 @@ endif
 ###
 ###  ms
 ###
-ms: measures tables $(MSLIB_PATH)
+ms: measures tables $(MSLIB_PATH) $(shell find ms -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^ms/@$(INCDIR)/casacore/@g")
 
 $(MSLIB_PATH): $(MSLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -483,9 +554,10 @@ endif
 ###
 ###  fits
 ###
-fits: scimath tables $(FITSLIB_PATH)
+fits: scimath tables $(FITSLIB_PATH) $(shell find fits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^fits/@$(INCDIR)/casacore/@g")
 
 $(FITSLIB_PATH): $(FITSLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio $(FC_LIB)
 endif
@@ -497,9 +569,10 @@ endif
 ###
 ###  msfits
 ###
-msfits: ms fits $(MSFITSLIB_PATH)
+msfits: ms fits $(MSFITSLIB_PATH) $(shell find msfits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^msfits/@$(INCDIR)/casacore/@g")
 
 $(MSFITSLIB_PATH): $(MSFITSLIB)
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_fits -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
 endif
@@ -512,9 +585,10 @@ endif
 ###
 ###  mirlib
 ###
-mirlib: $(MIRLIB_PATH)
+mirlib: $(MIRLIB_PATH) 
 
-$(MIRLIB_PATH): $(MIRLIB)
+$(MIRLIB_PATH): $(MIRLIB) $(shell find msfits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^@$(INCDIR)/casacore/@g")
+	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^)
 endif
@@ -523,36 +597,7 @@ ifeq "$(OS)" "linux"
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
-setup:
-	mkdir -p $(DESTDIR)/include/casacore
-ifneq "$(ARCH)" ""
-	mkdir -p $(DESTDIR)/$(ARCH)/lib
-else
-	mkdir -p $(DESTDIR)/lib
-endif
-	(cd casa && tar -cf - $(shell find casa -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd casa && tar -cf - $(shell find casa -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd components && tar -cf - $(shell find components -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd components && tar -cf - $(shell find components -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd coordinates && tar -cf - $(shell find coordinates -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd coordinates && tar -cf - $(shell find coordinates -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd scimath && tar -cf - $(shell find scimath -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd scimath && tar -cf - $(shell find scimath -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd tables && tar -cf - $(shell find tables -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd tables && tar -cf - $(shell find tables -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd lattices && tar -cf - $(shell find lattices -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd lattices && tar -cf - $(shell find lattices -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd measures && tar -cf - $(shell find measures -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd measures && tar -cf - $(shell find measures -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd images && tar -cf - $(shell find images -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd images && tar -cf - $(shell find images -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd ms && tar -cf - $(shell find ms -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd ms && tar -cf - $(shell find ms -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd fits && tar -cf - $(shell find fits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd fits && tar -cf - $(shell find fits -type f -name '*.tcc' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	(cd msfits && tar -cf - $(shell find msfits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe 's|^[^/]+/||')) | tar -C $(DESTDIR)/include/casacore -xf -
-	tar -cf - $(shell find mirlib -type f -name '*.h' | egrep -v '/test/|/apps/') | tar -C $(DESTDIR)/include/casacore -xf -
-
+installinc: $(shell find . -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@\\./(?:$(MODULESRE))/@$(INCDIR)/casacore/@g")
 
 TCASACC := $(shell find casa -type f -name 't*.cc' | grep /test/)
 TCASA := $(basename $(TCASACC | perl -pe 's|^[^/]+/||'))
@@ -616,7 +661,7 @@ cleanmir:
 	@rm -f $(subst .$(VERSION),,$(MIRLIB_PATH))
 
 cleaninc:
-	rm -rf $(DESTDIR)/include/casacore
+	@rm -rf $(DESTDIR)/include/casacore
 
 ifneq "$(ARCH)" ""
 clean: cleanmir cleanmsfits cleanms cleanfits cleanmeasures \
@@ -631,7 +676,12 @@ clean: cleanmir cleanmsfits cleanms cleanfits cleanmeasures \
 	cleanscimath cleantables cleanimages cleanlattices \
 	cleancoordinates cleancomponents cleancore cleancasa \
 	cleaninc
-	@rm -f $(shell find . -type f -name '*.lcc') $(shell find . -type f -name '*.ycc')
+	@rm -f `find . -type f -name '*.lcc'` `find . -type f -name '*.ycc'`
 	@rm -rf $(shell find . -type f -name '*.o')
 	@echo finished cleaning up...
+endif
+
+ifeq "$(DEP)" "1"
+-include $(CASADEP) $(COMPONENTSDEP) $(COORDINATESDEP) $(LATTICESDEP) $(IMAGESDEP) \
+	$(SCIMATHDEP) $(MEASURESDEP) $(FITSDEP) $(MSDEP) $(MSFITSDEP) $(MIRDEP)
 endif
