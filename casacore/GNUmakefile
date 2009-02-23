@@ -64,7 +64,6 @@ else
 ifeq "$(ARCH)" ""
 ARCH := $(shell echo $$CASAPATH | perl -pe "s|\S+\s+(\S+).*|\$$1|")
 endif
-INC += -I$(CASAARCH)/include
 endif
 endif
 
@@ -326,6 +325,10 @@ define make-depend
 endef
 endif
 
+define orphan-objects
+  perl -e 'use File::Find; %source = ( ); sub find_source { if ( -f $$_ && m/\.(?:cc|c|f)$$/ ) { my $$file = $$_; s/\.(?:cc|c|f)$$//; $$source{$$_} = "$$File::Find::dir/$$file"; } } sub find_orphan { if ( -f $$_ && m/\.o$$/ ) { my $$file = $$_; s/\.o$$//; if ( ! defined $$source{$$_} ) { unlink($$file); } } } find( { wanted => \&find_source }, "$1" ); find( { wanted => \&find_orphan }, "$1" );'
+endef
+
 INCDIR := $(DESTDIR)/include
 MODULES := casa components coordinates fits images lattices \
 		measures mirlib ms msfits scimath tables
@@ -376,6 +379,7 @@ t% : t%.cc
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
 	$(FC) $(FFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
 
+
 ##
 ###  libcasacore
 ###
@@ -401,6 +405,7 @@ casa: $(CASALIB_PATH) $(shell find casa -type f -name '*.h' | egrep -v '/test/|/
 
 $(CASALIB_PATH): $(CASALIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,casa)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^)
 endif
@@ -416,6 +421,7 @@ components: coordinates tables $(COMPONENTSLIB_PATH) $(shell find components -ty
 
 $(COMPONENTSLIB_PATH): $(COMPONENTSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,components)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -431,6 +437,7 @@ coordinates: measures fits $(COORDINATESLIB_PATH) $(shell find coordinates -type
 
 $(COORDINATESLIB_PATH): $(COORDINATESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,coordinates)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
@@ -446,6 +453,7 @@ lattices: scimath $(LATTICESLIB_PATH)
 
 $(LATTICESLIB_PATH): $(LATTICESLIB) $(shell find lattices -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^lattices/@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,lattices)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -461,6 +469,7 @@ images: components lattices fits mirlib $(IMAGESLIB_PATH) $(shell find images -t
 
 $(IMAGESLIB_PATH): $(IMAGESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,images)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
 endif
@@ -476,6 +485,7 @@ tables: casa $(TABLESLIB_PATH) $(shell find tables -type f -name '*.h' | egrep -
 
 $(TABLESLIB_PATH): $(TABLESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,tables)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa
 endif
@@ -491,21 +501,23 @@ scimath: casa $(SCIMATHLIB_PATH)
 
 $(SCIMATHLIB_PATH): $(SCIMATHLIB) $(SCIMATHFLIB_PATH) $(shell find scimath -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^scimath/@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,scimath)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas -lfftw3 $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath_f -lcasa_casa -llapack -lblas -lfftw3 $(FC_LIB)
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
 $(SCIMATHFLIB_PATH): $(SCIMATHFLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,scimath)
 ifeq "$(OS)" "darwin"
-	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas -lfftw3 $(FC_LIB)
 endif
 ifeq "$(OS)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_casa -llapack -lblas -lfftw3 $(FC_LIB)
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
@@ -517,6 +529,7 @@ measures: scimath tables $(MEASURESLIB_PATH) $(shell find measures -type f -name
 
 $(MEASURESLIB_PATH):  $(MEASURESLIB) $(MEASURESFLIB_PATH)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,measures)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
@@ -527,6 +540,7 @@ endif
 
 $(MEASURESFLIB_PATH):  $(MEASURESFLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,measures)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_scimath -lcasa_scimath_f -lcasa_tables -lcasa_casa $(FC_LIB)
 endif
@@ -542,6 +556,7 @@ ms: measures tables $(MSLIB_PATH) $(shell find ms -type f -name '*.h' | egrep -v
 
 $(MSLIB_PATH): $(MSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,ms)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa -llapack -lblas $(FC_LIB)
 endif
@@ -558,6 +573,7 @@ fits: scimath tables $(FITSLIB_PATH) $(shell find fits -type f -name '*.h' | egr
 
 $(FITSLIB_PATH): $(FITSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,fits)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio $(FC_LIB)
 endif
@@ -573,6 +589,7 @@ msfits: ms fits $(MSFITSLIB_PATH) $(shell find msfits -type f -name '*.h' | egre
 
 $(MSFITSLIB_PATH): $(MSFITSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,msfits)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -L$(dir $@) -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_fits -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
 endif
@@ -589,6 +606,7 @@ mirlib: $(MIRLIB_PATH)
 
 $(MIRLIB_PATH): $(MIRLIB) $(shell find msfits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,mirlib)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^)
 endif
