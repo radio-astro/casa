@@ -31,7 +31,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/Convolver.h>
-#include <scimath/Mathematics/FFTPack.h>
+#include <scimath/Mathematics/FFTW.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/BasicMath/Math.h>
 #include <scimath/Mathematics/NumericTraits.h>
