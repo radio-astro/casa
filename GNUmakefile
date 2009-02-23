@@ -419,7 +419,7 @@ endif
 ###
 components: coordinates tables $(COMPONENTSLIB_PATH) $(shell find components -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^components/@$(INCDIR)/casacore/@g")
 
-$(COMPONENTSLIB_PATH): $(COMPONENTSLIB)
+$(COMPONENTSLIB_PATH): $(COORDINATESLIB_PATH) $(TABLESLIB_PATH) $(COMPONENTSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,components)
 ifeq "$(OS)" "darwin"
@@ -435,7 +435,7 @@ endif
 ###
 coordinates: measures fits $(COORDINATESLIB_PATH) $(shell find coordinates -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^coordinates/@$(INCDIR)/casacore/@g")
 
-$(COORDINATESLIB_PATH): $(COORDINATESLIB)
+$(COORDINATESLIB_PATH): $(MEASURESLIB_PATH) $(FITSLIB_PATH) $(COORDINATESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,coordinates)
 ifeq "$(OS)" "darwin"
@@ -451,7 +451,7 @@ endif
 ###
 lattices: scimath $(LATTICESLIB_PATH) 
 
-$(LATTICESLIB_PATH): $(LATTICESLIB) $(shell find lattices -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^lattices/@$(INCDIR)/casacore/@g")
+$(LATTICESLIB_PATH): $(SCIMATHFLIB_PATH) $(LATTICESLIB) $(shell find lattices -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^lattices/@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,lattices)
 ifeq "$(OS)" "darwin"
@@ -467,7 +467,7 @@ endif
 ###
 images: components lattices fits mirlib $(IMAGESLIB_PATH) $(shell find images -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^images/@$(INCDIR)/casacore/@g")
 
-$(IMAGESLIB_PATH): $(IMAGESLIB)
+$(IMAGESLIB_PATH): $(COMPONENTSLIB_PATH) $(LATTICESLIB_PATH) $(FITSLIB_PATH) $(MIRLIB_PATH) $(IMAGESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,images)
 ifeq "$(OS)" "darwin"
@@ -483,7 +483,7 @@ endif
 ###
 tables: casa $(TABLESLIB_PATH) $(shell find tables -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^tables/@$(INCDIR)/casacore/@g")
 
-$(TABLESLIB_PATH): $(TABLESLIB)
+$(TABLESLIB_PATH): $(CASALIB_PATH) $(TABLESLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,tables)
 ifeq "$(OS)" "darwin"
@@ -499,7 +499,7 @@ endif
 ###
 scimath: casa $(SCIMATHLIB_PATH)
 
-$(SCIMATHLIB_PATH): $(SCIMATHLIB) $(SCIMATHFLIB_PATH) $(shell find scimath -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^scimath/@$(INCDIR)/casacore/@g")
+$(SCIMATHLIB_PATH): $(CASALIB_PATH) $(SCIMATHLIB) $(SCIMATHFLIB_PATH) $(shell find scimath -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^scimath/@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,scimath)
 ifeq "$(OS)" "darwin"
@@ -527,7 +527,7 @@ endif
 ###
 measures: scimath tables $(MEASURESLIB_PATH) $(shell find measures -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^measures/@$(INCDIR)/casacore/@g")
 
-$(MEASURESLIB_PATH):  $(MEASURESLIB) $(MEASURESFLIB_PATH)
+$(MEASURESLIB_PATH):  $(SCIMATHFLIB_PATH) $(TABLESLIB_PATH) $(MEASURESLIB) $(MEASURESFLIB_PATH)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,measures)
 ifeq "$(OS)" "darwin"
@@ -554,7 +554,7 @@ endif
 ###
 ms: measures tables $(MSLIB_PATH) $(shell find ms -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^ms/@$(INCDIR)/casacore/@g")
 
-$(MSLIB_PATH): $(MSLIB)
+$(MSLIB_PATH): $(MEASURESLIB_PATH) $(TABLESLIB_PATH) $(MSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,ms)
 ifeq "$(OS)" "darwin"
@@ -571,7 +571,7 @@ endif
 ###
 fits: scimath tables $(FITSLIB_PATH) $(shell find fits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^fits/@$(INCDIR)/casacore/@g")
 
-$(FITSLIB_PATH): $(FITSLIB)
+$(FITSLIB_PATH): $(SCIMATHLIB_PATH) $(TABLESLIB_PATH) $(FITSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,fits)
 ifeq "$(OS)" "darwin"
@@ -587,7 +587,7 @@ endif
 ###
 msfits: ms fits $(MSFITSLIB_PATH) $(shell find msfits -type f -name '*.h' | egrep -v '/test/|/apps/' | perl -pe "s@^msfits/@$(INCDIR)/casacore/@g")
 
-$(MSFITSLIB_PATH): $(MSFITSLIB)
+$(MSFITSLIB_PATH): $(MSLIB_PATH) $(FITSLIB_PATH) $(MSFITSLIB)
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,msfits)
 ifeq "$(OS)" "darwin"
