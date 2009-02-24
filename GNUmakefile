@@ -322,6 +322,7 @@ endef
 endif
 else
 define make-depend
+  gcc -MM -MT $(subst .dep,.o,$2) $(COREINC) $1 > $2
 endef
 endif
 
