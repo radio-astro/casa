@@ -386,11 +386,11 @@ t% : t%.cc
 ###
 libcasacore: $(CORELIB_PATH)
 
-$(CORELIB_PATH): $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) \
-					$(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) $(SCIMATHFLIB) \
-					$(MEASURESLIB) $(MEASURESFLIB) $(FITSLIB) $(MSLIB) \
-					$(MSFITSLIB) $(MIRLIB)
+$(CORELIB_PATH): $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) $(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) \
+			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(FITSLIB) $(MSLIB) $(MSFITSLIB) $(MIRLIB) \
+			$(shell find . -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^\./\w+/@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
+	@$(call orphan-objects,.)
 ifeq "$(OS)" "darwin"
 	$(C++) -dynamiclib -install_name $(notdir $@) -o $@ $(filter %.o,$^) -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
 endif
