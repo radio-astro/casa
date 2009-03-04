@@ -331,7 +331,7 @@ define orphan-objects
 endef
 
 define orphan-deps
-  perl -e 'use File::Find; %headers = ( ); $$scrubre = ""; sub find_scrub { if ( -f $$_ && m/\.dep$$/ ) { my $$file = $$_; my @out = ( ); my $$dump = 0; open( DEP, "< $$file" ); while ( <DEP> ) { $$dump = 1 if s@(?:$$scrubre)@@g; push( @out, $$_ ); } close( DEP ); if ( $$dump ) { open( OUT, "> $$file" ); print OUT join("", @out); close( OUT ); } } } sub find_dep { if ( -f $$_ && m/\.dep$$/ ) { open( DEP, "< $$_ " ); while (<DEP>) { if ( m@(\S+\.h)@ ) { $$headers{$$1} = 1; } } close( DEP ); } } find( { wanted => \&find_dep }, "$1" ); @scrub = ( ); foreach ( keys %headers ) { if ( ! -f $$_ ) { push( @scrub, $$_ ); } } if ( scalar(@scrub) > 0 ) { $$scrubre = join("|",@scrub); find( { wanted => \&find_scrub }, "$1" ); }'
+  perl -e 'use File::Find; %headers = ( ); $$scrubre = ""; sub find_scrub { if ( -f $$_ && m/\.dep$$/ ) { my $$file = $$_; my @out = ( ); my $$dump = 0; open( DEP, "< $$file" ); while ( <DEP> ) { $$dump = 1 if s@(?:$$scrubre)@@g; push( @out, $$_ ); } close( DEP ); if ( $$dump ) { open( OUT, "> $$file" ); print OUT join("", @out); close( OUT ); } } } sub find_dep { if ( -f $$_ && m/\.dep$$/ ) { open( DEP, "< $$_ " ); while (<DEP>) { if ( m@(\S+\.h)@ ) { $$headers{$$1} = 1; } } close( DEP ); } } find( { wanted => \&find_dep }, "$1" ); @scrub = ( ); foreach ( keys %headers ) { if ( ! -f $$_ ) { push( @scrub, $$_ ); } } if ( scalar(@scrub) > 0 ) { print "removing:\t" . join("\n\t\t",@scrub) . "\n"; $$scrubre = join("|",@scrub); find( { wanted => \&find_scrub }, "$1" ); }'
 endef
 
 
