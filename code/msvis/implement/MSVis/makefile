@@ -1,4 +1,5 @@
 # $Id$
+XLIBLIST += WCSLIB
 
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------
