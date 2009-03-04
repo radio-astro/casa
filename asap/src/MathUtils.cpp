@@ -75,6 +75,24 @@ float mathutil::statistics(const String& which,
    return 0.0;
 }
 
+IPosition mathutil::minMaxPos(const String& which,
+                           const MaskedArray<Float>& data)
+{
+   Float minVal, maxVal;
+   IPosition minPos(data.ndim(), 0), maxPos(data.ndim(), 0); 
+   minMax(minVal, maxVal, minPos, maxPos, data);
+   String str(which);
+   str.upcase();
+   if (str.matches(String("MIN_ABC"))) {
+     return minPos;
+   } else if (str.matches(String("MAX_ABC"))) {
+     return maxPos;
+   } else {
+      String msg = str + " is not a valid type of statistics";
+      throw(AipsError(msg));
+   } 
+   //return 0.0;
+}
 
 void mathutil::replaceMaskByZero(Vector<Float>& data, const Vector<Bool>& mask)
 {

@@ -340,9 +340,12 @@ class scantable(Scantable):
         Determine the specified statistic of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
         channels should be excluded.
+        You can get min/max values with their
+        channels/frequencies/velocities by selecting stat='min_abc'
+        or 'max_abc'.
         Parameters:
-            stat:    'min', 'max', 'sumsq', 'sum', 'mean'
-                     'var', 'stddev', 'avdev', 'rms', 'median'
+            stat:    'min', 'max', 'min_abc', 'max_abc', 'sumsq', 'sum',
+                     'mean', 'var', 'stddev', 'avdev', 'rms', 'median'
             mask:    an optional mask specifying where the statistic
                      should be determined.
         Example:
@@ -358,7 +361,15 @@ class scantable(Scantable):
                              "number of channels. Please use setselection() "
                              "to select individual IFs")
 
-        statvals = self._math._stats(self, mask, stat)
+        if stat.lower().find('_abc') == -1:
+            statvals = self._math._stats(self, mask, stat)
+            getchan = False
+            sstat = str(stat)
+        else:
+            chan = self._math._minmaxchan(self, mask, stat)
+            getchan = True
+            statvals = []
+            sstat = stat.lower().strip('_abc')
         out = ''
         axes = []
         for i in range(self.nrow()):
@@ -371,17 +382,22 @@ class scantable(Scantable):
             axes.append(axis)
             tm = self._gettime(i)
             src = self._getsourcename(i)
+            xpos = ''
+            if getchan:
+                qx, qy = self.chan2data(rowno=i, chan=chan[i])
+                statvals.append(qy['value'])
+                xpos = '(x = %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
             out += 'Scan[%d] (%s) ' % (axis[0], src)
             out += 'Time[%s]:\n' % (tm)
             if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
             if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
             if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            out += '= %3.3f\n' % (statvals[i])
+            out += '= %3.3f   ' % (statvals[i]) +xpos+'\n' 
             out +=  "--------------------------------------------------\n"
 
         if rcParams['verbose']:
             print "--------------------------------------------------"
-            print " ", stat
+            print " ", sstat
             print "--------------------------------------------------"
             print out
         #else:
@@ -389,6 +405,23 @@ class scantable(Scantable):
             #           'axes' : axes,
             #           'data': statvals}
         return statvals
+
+    def chan2data(self, rowno=0, chan=0):
+        """
+        Returns channel/frequency/velocity and spectral value
+        at an arbitrary row and channel in the scantable.
+        Parameters:
+            rowno:   a row number in the scantable. Default is the
+                     first row, i.e. rowno=0
+            chan:    a channel in the scantable. Default is the first
+                     channel, i.e. pos=0
+        """
+        if isinstance(rowno, int) and isinstance(chan, int):
+            x, xlbl = self.get_abcissa(rowno)
+            qx = {'unit': xlbl, 'value': x[chan]}
+            qy = {'unit': self.get_fluxunit(),
+                  'value': self._getspectrum(rowno)[chan]}
+            return qx, qy
 
     def stddev(self, mask=None):
         """

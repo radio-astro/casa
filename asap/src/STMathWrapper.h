@@ -120,6 +120,11 @@ public:
                                const std::string& which)
   { return STMath::statistic(in.getCP(), mask, which); }
 
+  std::vector<int> minMaxChan(const ScantableWrapper& in,
+                               const std::vector<bool>& mask,
+                               const std::string& which)
+  { return STMath::minMaxChan(in.getCP(), mask, which); }
+
   ScantableWrapper bin( const ScantableWrapper& in, int width=5)
   { return ScantableWrapper(STMath::bin(in.getCP(), width)); }
 

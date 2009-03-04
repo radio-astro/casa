@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STMath.cpp 1446 2008-11-12 06:04:01Z TakTsutsumi $
+//# $Id: python_STMath.cpp 1516 2009-02-24 03:12:51Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <vector>
 #include <boost/python.hpp>
@@ -56,6 +56,7 @@ namespace asap {
         .def("_donod", &STMathWrapper::donod)
         .def("_dofs", &STMathWrapper::dofs)
         .def("_stats", &STMathWrapper::statistic)
+        .def("_minmaxchan", &STMathWrapper::minMaxChan)
         .def("_freqswitch", &STMathWrapper::freqSwitch)
         .def("_bin", &STMathWrapper::bin)
         .def("_resample", &STMathWrapper::resample)

@@ -206,6 +206,10 @@ public:
                                const std::vector<bool>& mask,
                                const std::string& which);
 
+  std::vector< int > minMaxChan(const casa::CountedPtr<Scantable>& in,
+                                const std::vector<bool>& mask,
+                                const std::string& which);
+
   casa::CountedPtr<Scantable> bin( const casa::CountedPtr<Scantable>& in,
                                    int width=5);
   casa::CountedPtr<Scantable>

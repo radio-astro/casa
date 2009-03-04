@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: MathUtils.h 1446 2008-11-12 06:04:01Z TakTsutsumi $
+//# $Id: MathUtils.h 1514 2009-02-23 09:55:35Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #ifndef MATHUTILS_H
 #define MATHUTILS_H
@@ -36,6 +36,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Arrays/IPosition.h>
 
 namespace mathutil {
 
@@ -74,6 +75,10 @@ void hanning(casa::Vector<casa::Float>& out,
 
 // Generate specified statistic
 float statistics(const casa::String& which,
+                 const casa::MaskedArray<casa::Float>& data);
+
+// Return a position of min or max value
+ casa::IPosition minMaxPos(const casa::String& which,
                  const casa::MaskedArray<casa::Float>& data);
 
 // Replace masked value by zero

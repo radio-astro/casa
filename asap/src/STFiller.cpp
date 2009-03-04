@@ -454,65 +454,37 @@ void STFiller::openNRO( int whichIF, int whichBeam )
        << " " 
        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
        << ")" << endl ;
-  //
-//   if ( nreader_->open() != 0 ) {
-//     throw( AipsError( "Error while opening file "+filename_ ) ) ;
-//   }
-
-  isNRO_ = true ;
-
-  // store data into  NROHeader and NRODataset
-  //if ( nreader_->readHeader() != 0 ) {
-  //throw( AipsError( "Error while reading file "+filename_ ) ) ;
-  //}
-
-  // get header data
-  NROHeader *nheader =  nreader_->getHeader() ;
 
   // fill STHeader
   header_ = new STHeader() ;
 
-  header_->nchan = nheader->getNUMCH() ; 
-  header_->npol = nreader_->getPolarizationNum() ;
-  header_->observer = nheader->getOBSVR() ;
-  header_->project = nheader->getPROJ() ;
-  header_->obstype = nheader->getSWMOD() ;
-  header_->antennaname = nheader->getSITE() ;
-  // TODO: should be investigated antenna position since there are 
-  //       no corresponding information in the header
-  // 2008/11/13 Takeshi Nakazato
-  // 
-  // INFO: tentative antenna posiiton is obtained for NRO 45m from ITRF website
-  // 2008/11/26 Takeshi Nakazato
-  vector<double> pos = nreader_->getAntennaPosition() ;
-  header_->antennaposition = pos ;
-  char *eq = nheader->getEPOCH() ;
-  if ( strncmp( eq, "B1950", 5 ) == 0 )
-    header_->equinox = 1950.0 ;
-  else if ( strncmp( eq, "J2000", 5 ) == 0 ) 
-    header_->equinox = 2000.0 ;
-//   char *vref = nheader->getVREF() ;
-//   if ( strncmp( vref, "LSR", 3 ) == 0 ) {
-//     strcat( vref, "K" ) ;
-//   }
-//   header_->freqref = vref ;
-  nreader_->getData( 0 ) ;
-  header_->reffreq = nreader_->getData()->FREQ0 ;
-  header_->bandwidth = nheader->getBEBW()[0] ;
-  header_->utc = nreader_->getStartTime() ;
-  header_->fluxunit = "K" ;
-  header_->epoch = "UTC" ;  
-  char *poltp = nheader->getPOLTP()[0] ;
-  if ( strcmp( poltp, "" ) == 0 ) 
-    poltp = "None" ;
-  header_->poltype = poltp ;
+  if ( nreader_->getHeaderInfo( header_->nchan,
+                                header_->npol,
+                                nIF_,
+                                nBeam_,
+                                header_->observer,
+                                header_->project,
+                                header_->obstype,
+                                header_->antennaname,
+                                header_->antennaposition,
+                                header_->equinox,
+                                header_->freqref,
+                                header_->reffreq,
+                                header_->bandwidth,
+                                header_->utc,
+                                header_->fluxunit,
+                                header_->epoch,
+                                header_->poltype ) ) {
+    cout << "STFiller::openNRO()  Failed to get header information." << endl ;
+    return ;
+  }
+
   // DEBUG
-  cout << "STFiller::openNRO()  poltype = " << header_->poltype << endl ;
+  //cout << "STFiller::openNRO()  getHeaderInfo " << endl ;
   //
 
-  vector<Bool> ifs = nreader_->getIFs() ;
   ifOffset_ = 0;
-  nIF_ = ifs.size() ;
+  vector<Bool> ifs = nreader_->getIFs() ;
   if ( whichIF >= 0 ) {
     if ( whichIF >= 0 && whichIF < nIF_ ) {
       for ( int i = 0 ; i < nIF_ ; i++ ) 
@@ -530,9 +502,12 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     }
   }
 
+  // DEBUG
+  //cout << "STFiller::openNRO()  nIF " << endl ;
+  //
+
   beamOffset_ = 0;
   vector<Bool> beams = nreader_->getBeams() ;
-  nBeam_ = beams.size() ;
   if (whichBeam>=0) {
     if (whichBeam>=0 && whichBeam<nBeam_) {
       for ( int i = 0 ; i < nBeam_ ; i++ ) 
@@ -549,6 +524,11 @@ void STFiller::openNRO( int whichIF, int whichBeam )
       throw(AipsError("Illegal Beam selection"));
     }
   }
+
+  // DEBUG
+  //cout << "STFiller::openNRO()  nBeam " << endl ;
+  //
+
   header_->nbeam = nBeam_ ;
   header_->nif = nIF_ ;
 
@@ -588,32 +568,59 @@ int STFiller::readNRO()
        << ")" << endl ;
   //
 
-  // get header
-  NROHeader *h = nreader_->getHeader() ;
-
   // fill row
   uInt id ;
   uInt imax = nreader_->getRowNum() ;
   vector< vector<double > > freqs ;
   uInt i = 0 ;
   int count = 0 ;
+  uInt scanno ;
+  uInt cycleno ;
+  uInt beamno ;
+  uInt polno ;
+  vector<double> fqs ;
+  Vector<Double> restfreq ;
+  uInt refbeamno ;
+  Double scantime ;
+  Double interval ;
+  String srcname ;
+  String fieldname ;
+  Array<Float> spectra ;
+  Array<uChar> flagtra ;
+  Array<Float> tsys ;
+  Array<Double> direction ;
+  Float azimuth ;
+  Float elevation ;
+  Float parangle ;
+  Float opacity ;
+  uInt tcalid ;
+  Int fitid ;
+  uInt focusid ;
+  Float temperature ;
+  Float pressure ;
+  Float humidity ;
+  Float windvel ;
+  Float winddir ;
+  Double srcvel ;
+  Array<Double> propermotion ;
+  Vector<Double> srcdir ;
+  Array<Double> scanrate ;
   for ( i = 0 ; i < imax ; i++ ) {
     if( nreader_->getData( i ) != 0 ) {
       cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
       return -1 ;
     }
-    NRODataset *d = nreader_->getData() ;
 
-    char *scanType = d->SCANTP ;
+    string scanType = nreader_->getScanType( i ) ;
     Int srcType = -1 ;
-    if ( strncmp( scanType, "ON", 2 ) == 0 ) {
+    if ( scanType.compare( 0, 2, "ON") == 0 ) {
       srcType = 0 ;
     }
-    else if ( strncmp( scanType, "OFF", 3 ) == 0 ) {
+    else if ( scanType.compare( 0, 3, "OFF" ) == 0 ) {
       //cout << "OFF srcType: " << i << endl ;
       srcType = 1 ;
     }
-    else if ( strncmp( scanType, "ZERO", 4 ) == 0 ) {
+    else if ( scanType.compare( 0, 4, "ZERO" ) == 0 ) {
       //cout << "ZERO srcType: " << i << endl ;
       srcType = 2 ;
     }
@@ -627,43 +634,52 @@ int STFiller::readNRO()
       TableRow row( table_->table() ) ;
       TableRecord& rec = row.record();
 
-      RecordFieldPtr<Int> srctCol(rec, "SRCTYPE") ;
-      *srctCol = srcType ;     
-      RecordFieldPtr<Array<Double> > srateCol(rec, "SCANRATE");
-      Array<Double> srcarr( IPosition( 1, 2 ) ) ;
-      srcarr = 0.0 ;
-      *srateCol = srcarr ;
-      RecordFieldPtr<Array<Double> > spmCol(rec, "SRCPROPERMOTION") ;
-      *spmCol = srcarr ;
-      RecordFieldPtr<Array<Double> > sdirCol(rec, "SRCDIRECTION") ;
-      *sdirCol = nreader_->getSourceDirection() ;
-      RecordFieldPtr<Double> svelCol(rec, "SRCVELOCITY") ;
-      *svelCol = h->getURVEL() ;   // [m/s]
-      RecordFieldPtr<Int> fitCol(rec, "FIT_ID") ;
-      *fitCol = -1 ;
+      if ( nreader_->getScanInfo( i,
+                                  scanno,
+                                  cycleno,
+                                  beamno,
+                                  polno,
+                                  fqs,
+                                  restfreq,
+                                  refbeamno,
+                                  scantime,
+                                  interval,
+                                  srcname,
+                                  fieldname,
+                                  spectra,
+                                  flagtra,
+                                  tsys,
+                                  direction,
+                                  azimuth,
+                                  elevation,
+                                  parangle,
+                                  opacity,
+                                  tcalid,
+                                  fitid,
+                                  focusid,
+                                  temperature,
+                                  pressure,
+                                  humidity,
+                                  windvel,
+                                  winddir,
+                                  srcvel,
+                                  propermotion,
+                                  srcdir,
+                                  scanrate ) ) {
+        cerr << "STFiller::readNRO()  Failed to get scan information." << endl ;
+        return 1 ;
+      }
+
       RecordFieldPtr<uInt> scannoCol( rec, "SCANNO" ) ;
-      //*scannoCol = (uInt)(d->getISCAN()) ;
-      *scannoCol = (uInt)(d->ISCAN) ;
-      RecordFieldPtr<uInt> cyclenoCol(rec, "CYCLENO");
-      RecordFieldPtr<Double> mjdCol( rec, "TIME" ) ;
-      *mjdCol = Double( nreader_->getStartIntTime( i ) ) ;
-      RecordFieldPtr<Double> intervalCol( rec, "INTERVAL" ) ;
-      *intervalCol = Double( h->getIPTIM() ) ;
-      RecordFieldPtr<String> srcnCol(rec, "SRCNAME") ;
-      *srcnCol = String( h->getOBJ() ) ;
-      RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME"); 
-      *fieldnCol = String( h->getOBJ() ) ;
-      // BEAMNO is 0-base
+      *scannoCol = scanno ;
+      RecordFieldPtr<uInt> cyclenoCol(rec, "CYCLENO") ;
+      *cyclenoCol = cycleno ;
       RecordFieldPtr<uInt> beamCol(rec, "BEAMNO") ;
-      string arryt = string( d->ARRYT ) ;
-      string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
-      uInt ibeamno = atoi( sbeamno.c_str() ) ; 
-      *beamCol = ibeamno - 1 ;
-      RecordFieldPtr<Int> rbCol(rec, "REFBEAMNO") ;
+      *beamCol = beamno ;
       RecordFieldPtr<uInt> ifCol(rec, "IFNO") ;
+      RecordFieldPtr< uInt > polnoCol(rec, "POLNO") ;
+      *polnoCol = polno ;
       RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID") ;
-      vector<double> fqs = nreader_->getFrequencies( i ) ;
-      //cout << "STFiller::readNRO()  fqs[1] = " << fqs[1] << endl ;
       if ( freqs.size() == 0 ) {
         id = table_->frequencies().addEntry( Double( fqs[0] ),
                                              Double( fqs[1] ),
@@ -697,51 +713,57 @@ int STFiller::readNRO()
         }
       }
       RecordFieldPtr<uInt> molidCol(rec, "MOLECULE_ID") ;
-      Vector<Double> restfreq( IPosition( 1, 1 ) ) ;
-      restfreq( 0 ) = d->FREQ0 ;
       id = table_->molecules().addEntry( restfreq ) ;
       *molidCol = id ;
-      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
-      //
-      // No Tcal information in the data
-      //
-      // 2008/11/20 Takeshi Nakazato
-      //
-      *mcalidCol = 0 ;
-      RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID") ;
-
-      id = table_->weather().addEntry( Float( d->TEMP ),
-                                       Float( d->PATM ),
-                                       Float( d->PH2O ),
-                                       Float( d->VWIND ),
-                                       Float( d->DWIND ) ) ;
-
-      *mweatheridCol = id ;          
-      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
-      RecordFieldPtr< Array<Double> > dirCol(rec, "DIRECTION") ;
-      *dirCol = nreader_->getDirection( i ) ;
-      RecordFieldPtr<Float> azCol(rec, "AZIMUTH") ;
-      *azCol = d->RAZ ;
-      RecordFieldPtr<Float> elCol(rec, "ELEVATION") ;
-      *elCol = d->REL ;
-      RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
+      RecordFieldPtr<Int> rbCol(rec, "REFBEAMNO") ;
+      *rbCol = refbeamno ;
+      RecordFieldPtr<Double> mjdCol( rec, "TIME" ) ;
+      *mjdCol = scantime ;
+      RecordFieldPtr<Double> intervalCol( rec, "INTERVAL" ) ;
+      *intervalCol = interval ;
+      RecordFieldPtr<String> srcnCol(rec, "SRCNAME") ;
+      *srcnCol = srcname ;
+      RecordFieldPtr<Int> srctCol(rec, "SRCTYPE") ;
+      *srctCol = srcType ;     
+      RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME"); 
+      *fieldnCol = fieldname ;
       RecordFieldPtr< Array<Float> > specCol(rec, "SPECTRA") ;
-      vector<double> spec = nreader_->getSpectrum( i ) ;
-      Array<Float> sp( IPosition( 1, spec.size() ) ) ;
-      int index = 0 ;
-      for ( Array<Float>::iterator itr = sp.begin() ; itr != sp.end() ; itr++ ) {
-        *itr = spec[index++] ;
-      }
-      *specCol = sp ;
+      *specCol = spectra ;
       RecordFieldPtr< Array<uChar> > flagCol(rec, "FLAGTRA") ;
-      Array<uChar> flag( sp.shape() ) ;
-      flag.set( 0 ) ;
-      *flagCol = flag ;
-      RecordFieldPtr< uInt > polnoCol(rec, "POLNO") ;
-      *polnoCol = 0 ;
+      *flagCol = flagtra ;
       RecordFieldPtr< Array<Float> > tsysCol(rec, "TSYS") ;
-      Array<Float> tsys( IPosition( 1, 1 ), d->TSYS ) ;
       *tsysCol = tsys ;
+      RecordFieldPtr< Array<Double> > dirCol(rec, "DIRECTION") ;
+      *dirCol = direction ;
+      RecordFieldPtr<Float> azCol(rec, "AZIMUTH") ;
+      *azCol = azimuth ;
+      RecordFieldPtr<Float> elCol(rec, "ELEVATION") ;
+      *elCol = elevation ;
+      RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
+      *parCol = parangle ;
+      RecordFieldPtr<Float> tauCol(rec, "OPACITY") ;
+      *tauCol = opacity ;
+      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
+      *mcalidCol = tcalid ;
+      RecordFieldPtr<Int> fitCol(rec, "FIT_ID") ;
+      *fitCol = fitid ;
+      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
+      *mfocusidCol = focusid ;
+      RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID") ;
+      id = table_->weather().addEntry( temperature,
+                                       pressure,
+                                       humidity,
+                                       windvel,
+                                       winddir ) ;
+      *mweatheridCol = id ;          
+      RecordFieldPtr<Double> svelCol(rec, "SRCVELOCITY") ;
+      *svelCol = srcvel ;
+      RecordFieldPtr<Array<Double> > spmCol(rec, "SRCPROPERMOTION") ;
+      *spmCol = propermotion ;
+      RecordFieldPtr<Array<Double> > sdirCol(rec, "SRCDIRECTION") ;
+      *sdirCol = srcdir ;
+      RecordFieldPtr<Array<Double> > srateCol(rec, "SCANRATE");
+      *srateCol = scanrate ;
 
       table_->table().addRow() ;
       row.put(table_->table().nrow()-1, rec) ;
