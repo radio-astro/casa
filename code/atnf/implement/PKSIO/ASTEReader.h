@@ -61,12 +61,9 @@ class ASTEReader : public NROReader
   ~ASTEReader() ;
 
   // Read data header
-  int readHeader() ;
+  virtual int readHeader() ;
 
-  // Read the next data record.
-  //int readData( NRODataset &d, int i ) ;
-
- private:
+ protected:
   // Get Antenna Position in ITRF coordinate
   vector<double> getAntennaPosition() ;
 

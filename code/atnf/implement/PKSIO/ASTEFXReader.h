@@ -47,11 +47,11 @@ using namespace std ;
 // </summary>
 
 #include <casa/namespace.h>
-#include <atnf/PKSIO/NROReader.h>
+#include <atnf/PKSIO/ASTEReader.h>
 #include <atnf/PKSIO/ASTEFXHeader.h>
 #include <atnf/PKSIO/NRODataset.h>
 
-class ASTEFXReader : public NROReader
+class ASTEFXReader : public ASTEReader
 {
   public:
   // Constructor 
@@ -62,13 +62,6 @@ class ASTEFXReader : public NROReader
 
   // Read data header
   int readHeader() ;
-
-  // Read the next data record.
-  //int readData( NRODataset &d, int i ) ;
-
- private:
-  // Get Antenna Position in ITRF coordinate
-  vector<double> getAntennaPosition() ;
 };
 
 #endif /* ASTE_FX_READER_H */

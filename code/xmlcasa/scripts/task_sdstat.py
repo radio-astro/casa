@@ -217,8 +217,10 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    sd.rcParams['verbose']=True
 
                     # Get statistic values
-                    maxl=s.stats('max',msk)
-                    minl=s.stats('min',msk)
+                    #maxl=s.stats('max',msk)
+                    #minl=s.stats('min',msk)
+                    maxl=s.stats('max_abc',msk)
+                    minl=s.stats('min_abc',msk)
                     suml=s.stats('sum',msk)
                     meanl=s.stats('mean',msk)
                     medianl=s.stats('median',msk)
@@ -237,8 +239,10 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    verbsave=sd.rcParams['verbose']
 			    sd.rcParams['verbose']=True
 
-                    maxl=s.stats('max',msk)
-                    minl=s.stats('min',msk)
+                    #maxl=s.stats('max',msk)
+                    #minl=s.stats('min',msk)
+                    maxl=s.stats('max_abc',msk)
+                    minl=s.stats('min_abc',msk)
                     suml=s.stats('sum',msk)
                     meanl=s.stats('mean',msk)
                     medianl=s.stats('median',msk)
@@ -256,8 +260,10 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    verbsave=sd.rcParams['verbose']
 			    sd.rcParams['verbose']=True
 
-                    maxl=s.stats('max')
-                    minl=s.stats('min')
+                    #maxl=s.stats('max')
+                    #minl=s.stats('min')
+                    maxl=s.stats('max_abc')
+                    minl=s.stats('min_abc')
                     suml=s.stats('sum')
                     meanl=s.stats('mean')
                     medianl=s.stats('median')

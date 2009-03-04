@@ -41,12 +41,8 @@ using namespace std ;
 ASTEReader::ASTEReader( string name ) 
   : NROReader( name )
 {
-  // read Header
-  readHeader() ;
-  // allocate memory for spectral data
-  data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
   // DEBUG
-  cout << "ASTEReader::ASTEReader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
+  cout << "ASTEReader::ASTEReader()" << endl ;
   //
 }
 
@@ -91,10 +87,12 @@ Int ASTEReader::readHeader()
     scanLen_ = header_->getSCNLEN() ;
     rowNum_ = scanNum_ * header_->getARYNM() ;
     chmax_ = (int) ( scanLen_ - SCAN_HEADER_SIZE ) * 8 / header_->getIBIT() ;
+    data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
     cout << "ASTEReader::readHeader()  Number of scan        = " << scanNum_ << endl ;
     cout << "ASTEReader::readHeader()  Number of data record = " << rowNum_ << endl ;
     cout << "ASTEReader::readHeader()  Length of data record = " << scanLen_ << " byte" << endl ;
     cout << "ASTEReader::readHeader()  Max number of channel = " << chmax_ << endl ;
+    cout << "ASTEReader::readHeader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
   }
 
   return status ;
@@ -112,12 +110,17 @@ vector<double> ASTEReader::getAntennaPosition()
 
   // ASTE in World Geodetic System
   // 
-  // W67d42m11s S22d58m18s 2400m 
+  // W67d42m11s S22d58m18s 4800m 
   // Ref.: Ezawa, H. et al. 2004, Proc. SPIE, 5489, 763
   //
   double elon = -67. - 42. / 60. - 11. / 3600. ;
   double nlat = -22. - 58. / 60. - 18. / 3600. ;
   double alti = 2400. ;
+
+  // APEX value
+  //double elon = -67.7592 ;
+  //double nlat = -23.0057 ;
+  //double alti = 5105. ;
 
   MPosition p( MVPosition( Quantity( alti, "m" ),
                            Quantity( elon, "deg" ),

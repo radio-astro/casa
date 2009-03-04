@@ -4,12 +4,12 @@
 
 #include <casa/aips.h>
 #include <casa/namespace.h>
-
+#include <cassert>
 
 int main (int,char *)
 {
     /*
-      First work a bit to an RFASelector object,
+      First work a bit to get an RFASelector object,
       so that we can test its methods
      */
     Float vmin, vmax;

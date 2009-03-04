@@ -1,7 +1,5 @@
-//#---------------------------------------------------------------------------
-//# NRO45Reader.h: Class to read NRO 45m OTF data.
-//#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# RFASelector.h: this defines RFASelector
+//# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -26,48 +24,60 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-//#---------------------------------------------------------------------------
-//# Original: 2008/10/30, Takeshi Nakazato, NAOJ
-//#---------------------------------------------------------------------------
+#ifndef FLAGGING_FLAGINDEX_H
+#define FLAGGING_FLAGINDEX_H
 
-#ifndef NRO45_READER_H
-#define NRO45_READER_H
-
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/String.h>
+#include <casa/Utilities/Regex.h>
+#include <casa/OS/HostInfo.h>
+#include <casa/System/PGPlotter.h>
+#include <casa/System/ProgressMeter.h>
+#include <casa/stdio.h>
+#include <casa/math.h>
+#include <stdarg.h>
 
-#include <casa/namespace.h>
-#include <atnf/PKSIO/NROReader.h>
-#include <atnf/PKSIO/NRO45Header.h>
-#include <atnf/PKSIO/NRODataset.h>
+#include <casa/Quanta/UnitMap.h>
+#include <casa/Quanta/UnitVal.h>
+#include <casa/Quanta/MVAngle.h>
+#include <casa/Quanta/MVEpoch.h>
 
-#include <string>
+namespace casa { //# NAMESPACE CASA - BEGIN
 
-using namespace std ;
+  class FlagIndex {
 
-// <summary>
-// Class to read NRO 45m data.
-// </summary>
+  public:
+    FlagIndex();
+    FlagIndex(const String &time,
+	      uInt ant1,
+	      uInt ant2,
+	      uInt spw,
+	      const String &chan,
+	      const String &corr);
 
-class NRO45Reader : public NROReader
-{
- public:
-  // Constructor 
-  NRO45Reader( string name ) ;
+    FlagIndex &operator=(const FlagIndex & other);
+    
+  private:  
+    String time;
+    uInt ant1;
+    uInt ant2;
+    
+    uInt spw;
+    String chan;
+    
+    String corr;
+    
+    //uInt field;
+    //uInt scan;
+    //time_interval
+    
+    //uInt polid;
 
-  // Destructor.
-  ~NRO45Reader() ;
+    friend ostream &operator<<(ostream &os, const FlagIndex &fi);
+  };
 
-  // Read data header
-  virtual int readHeader() ;
+} //# NAMESPACE CASA - END
 
- protected:
-  // Get Antenna Position in ITRF coordinate
-  vector<double> getAntennaPosition() ;
-
-};
-
-#endif /* NRO45_READER_H */
+#endif

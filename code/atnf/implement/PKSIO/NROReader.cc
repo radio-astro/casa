@@ -139,6 +139,7 @@ NROReader *getNROReader( const String filename,
       // DEBUG
       //cout << "getNROReader:: " << filename << ": " << datatype << endl ;
       //
+      reader->readHeader() ;
       return reader ;
     }
   }
@@ -907,4 +908,236 @@ void NROReader::releaseData()
     delete data_ ;
     data_ = NULL ;
   }
+  dataid_ = -1 ;
 }
+
+int NROReader::getHeaderInfo( Int &nchan,
+                              Int &npol,
+                              Int &nif,
+                              Int &nbeam,
+                              String &observer,
+                              String &project,
+                              String &obstype,
+                              String &antname,
+                              Vector<Double> &antpos,
+                              Float &equinox,
+                              String &freqref,
+                              Double &reffreq,
+                              Double &bw,
+                              Double &utc,
+                              String &fluxunit,
+                              String &epoch,
+                              String &poltype )
+{
+  
+  nchan = header_->getNUMCH() ; 
+  npol = getPolarizationNum() ;
+  observer = header_->getOBSVR() ;
+  project = header_->getPROJ() ;
+  obstype = header_->getSWMOD() ;
+  antname = header_->getSITE() ;
+  // TODO: should be investigated antenna position since there are 
+  //       no corresponding information in the header
+  // 2008/11/13 Takeshi Nakazato
+  // 
+  // INFO: tentative antenna posiiton is obtained for NRO 45m from ITRF website
+  // 2008/11/26 Takeshi Nakazato
+  vector<double> pos = getAntennaPosition() ;
+  antpos = pos ;
+  char *eq = header_->getEPOCH() ;
+  if ( strncmp( eq, "B1950", 5 ) == 0 )
+    equinox = 1950.0 ;
+  else if ( strncmp( eq, "J2000", 5 ) == 0 ) 
+    equinox = 2000.0 ;
+//   char *vref = header_->getVREF() ;
+//   if ( strncmp( vref, "LSR", 3 ) == 0 ) {
+//     strcat( vref, "K" ) ;
+//   }
+//   header_->freqref = vref ;
+  getData( 0 ) ;
+  reffreq = data_->FREQ0 ;
+  bw = header_->getBEBW()[0] ;
+  utc = getStartTime() ;
+  fluxunit = "K" ;
+  epoch = "UTC" ;  
+  char *poltp = header_->getPOLTP()[0] ;
+  if ( strcmp( poltp, "" ) == 0 ) 
+    poltp = "None" ;
+  poltype = poltp ;
+  // DEBUG
+  cout << "NROReader::getHeaderInfo()  poltype = " << poltype << endl ;
+  //
+
+  vector<Bool> ifs = getIFs() ;
+  nif = ifs.size() ;
+
+  vector<Bool> beams = getBeams() ;
+  nbeam = beams.size() ;
+
+  return 0 ;
+}
+
+string NROReader::getScanType( int i )
+{
+  if ( getData( i ) != 0 ) {
+    cerr << "NROReader::getScanType()  error " << endl ;
+    return NULL ;
+  }
+  string s = data_->SCANTP ;
+
+  return s ;
+}
+
+int NROReader::getScanInfo( int irow,
+                            uInt &scanno,
+                            uInt &cycleno,
+                            uInt &beamno,
+                            uInt &polno,
+                            vector<double> &freqs,   
+                            Vector<Double> &restfreq,
+                            uInt &refbeamno,
+                            Double &scantime,
+                            Double &interval,
+                            String &srcname,
+                            String &fieldname,
+                            Array<Float> &spectra,
+                            Array<uChar> &flagtra,
+                            Array<Float> &tsys,
+                            Array<Double> &direction,
+                            Float &azimuth,
+                            Float &elevation,
+                            Float &parangle,
+                            Float &opacity,
+                            uInt &tcalid,
+                            Int &fitid,
+                            uInt &focusid,
+                            Float &temperature,  
+                            Float &pressure,     
+                            Float &humidity,     
+                            Float &windvel,      
+                            Float &winddir,      
+                            Double &srcvel,
+                            Array<Double> &propermotion,
+                            Vector<Double> &srcdir,
+                            Array<Double> &scanrate )
+{
+  // get data record
+  if ( getData( irow ) != 0 ) {
+    cerr << "NROReader::getScanInfo() failed to get scan information." << endl ;
+    return 1 ;
+  }
+
+  // scanno
+  scanno = (uInt)(data_->ISCAN) ;
+
+  // cycleno
+  cycleno = 0 ;
+
+  // beamno
+  string arryt = string( data_->ARRYT ) ;
+  string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
+  uInt ibeamno = atoi( sbeamno.c_str() ) ; 
+  beamno = ibeamno - 1 ;
+
+  // polno
+  polno = 0 ;
+
+  // freqs (for IFNO and FREQ_ID)
+  freqs = getFrequencies( irow ) ;
+
+  // restfreq (for MOLECULE_ID)
+  Vector<Double> rf( IPosition( 1, 1 ) ) ;
+  rf( 0 ) = data_->FREQ0 ;
+  restfreq = rf ;
+
+  // refbeamno
+  refbeamno = 0 ;
+
+  // scantime
+  scantime = Double( getStartIntTime( irow ) ) ;
+
+  // interval
+  interval = Double( header_->getIPTIM() ) ;
+
+  // srcname
+  srcname = String( header_->getOBJ() ) ;
+
+  // fieldname
+  fieldname = String( header_->getOBJ() ) ;
+
+  // spectra
+  vector<double> spec = getSpectrum( irow ) ;
+  Array<Float> sp( IPosition( 1, spec.size() ) ) ;
+  int index = 0 ;
+  for ( Array<Float>::iterator itr = sp.begin() ; itr != sp.end() ; itr++ ) {
+    *itr = spec[index++] ;
+  }
+  spectra = sp ;
+
+  // flagtra
+  Array<uChar> flag( spectra.shape() ) ;
+  flag.set( 0 ) ;
+  flagtra = flag ;
+
+  // tsys
+  Array<Float> tmp( IPosition( 1, 1 ), data_->TSYS ) ;
+  tsys = tmp ;
+
+  // direction
+  direction = getDirection( irow ) ;
+
+  // azimuth
+  azimuth = data_->RAZ ;
+
+  // elevation
+  elevation = data_->REL ;
+
+  // parangle
+  parangle = 0.0 ;
+
+  // opacity
+  opacity = 0.0 ;
+
+  // tcalid 
+  tcalid = 0 ;
+
+  // fitid
+  fitid = -1 ;
+
+  // focusid 
+  focusid = 0 ;
+
+  // temperature (for WEATHER_ID)
+  temperature = Float( data_->TEMP ) ;
+
+  // pressure (for WEATHER_ID)
+  pressure = Float( data_->PATM ) ;
+
+  // humidity (for WEATHER_ID) 
+  humidity = Float( data_->PH2O ) ;
+
+  // windvel (for WEATHER_ID)
+  windvel = Float( data_->VWIND ) ;
+
+  // winddir (for WEATHER_ID)
+  winddir = Float( data_->DWIND ) ;
+
+  // srcvel 
+  srcvel = header_->getURVEL() ;
+
+  // propermotion
+  Array<Double> srcarr( IPosition( 1, 2 ) ) ;
+  srcarr = 0.0 ;
+  propermotion = srcarr ;
+
+  // srcdir
+  srcdir = getSourceDirection() ;
+
+  // scanrate
+  Array<Double> sr( IPosition( 1, 1 ) ) ;
+  sr = 0.0 ;
+  scanrate = sr ;
+
+  return 0 ;
+}
+

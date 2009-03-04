@@ -175,7 +175,7 @@ class PKSMS2reader : public PKSreader
     Vector<Int>    cEndChan, cRefChan, cStartChan;
     Vector<Bool>   cBeams, cIFs;
     Vector<Slicer> cDataSel;
-    String         cDirRef;
+    String         cDirRef, cTelName;
     MeasurementSet cPKSMS;
     Table          cSysCalTab, tmptab, tmptab2;
 

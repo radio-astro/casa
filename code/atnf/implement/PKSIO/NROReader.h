@@ -90,79 +90,131 @@ class NROReader
   virtual Int readHeader() = 0 ;
 
   // Read the next data record.
-  Int readData( int i ) ;
+  virtual Int readData( int i ) ;
 
   // Open the dataset.
-  int open() ;
+  virtual int open() ;
 
   // Close the input file.
-  void close() ;
+  virtual void close() ;
 
-  // Get data header
-  virtual NROHeader *getHeader() { return header_ ; } ;
+  // Get header information
+  virtual int getHeaderInfo( Int &nchan,
+                             Int &npol,
+                             Int &nif,
+                             Int &nbeam,
+                             String &observer,
+                             String &project,
+                             String &obstype,
+                             String &antname,
+                             Vector<Double> &antpos,
+                             Float &equinox,
+                             String &freqref,
+                             Double &reffreq,
+                             Double &bw,
+                             Double &utc,
+                             String &fluxunit,
+                             String &epoch,
+                             String &poltype ) ;
+                         
+  // Get scan information
+  virtual int getScanInfo( int irow,
+                           uInt &scanno,
+                           uInt &cycleno,
+                           uInt &beamno,
+                           uInt &polno,
+                           vector<double> &freqs,   
+                           Vector<Double> &restfreq,  
+                           uInt &refbeamno,
+                           Double &scantime,
+                           Double &interval,
+                           String &srcname,
+                           String &fieldname,
+                           Array<Float> &spectra,
+                           Array<uChar> &flagtra,
+                           Array<Float> &tsys,
+                           Array<Double> &direction,
+                           Float &azimuth,
+                           Float &elevation,
+                           Float &parangle,
+                           Float &opacity,
+                           uInt &tcalid,
+                           Int &fitid,
+                           uInt &focusid,
+                           Float &temperature,  
+                           Float &pressure,     
+                           Float &humidity,     
+                           Float &windvel,      
+                           Float &winddir,      
+                           Double &srcvel,
+                           Array<Double> &propermotion,
+                           Vector<Double> &srcdir,
+                           Array<Double> &scanrate ) ;
+
+  // Get scan type
+  virtual string getScanType( int i ) ;
 
   // Get scan data
-  virtual NRODataset *getData() { return data_ ; } ;
   virtual int getData( int i ) ;
  
   // Get number of scan 
-  Int getScanNum() { return scanNum_ ; } ;
+  virtual Int getScanNum() { return scanNum_ ; } ;
 
   // Get length of scan
-  Int getScanLen() { return scanLen_ ; } ;
+  virtual Int getScanLen() { return scanLen_ ; } ;
 
   // Get number of data record
-  Int getRowNum() { return rowNum_ ; } ;
+  virtual Int getRowNum() { return rowNum_ ; } ;
 
   // Get number of channel
-  Int getChannelMax() { return chmax_ ; } ;
+  virtual Int getChannelMax() { return chmax_ ; } ;
  
+  // Get IF settings
+  virtual vector<Bool> getIFs() ;
+
+  // Get Beam settings
+  virtual vector<Bool> getBeams() ;
+
+ protected:
+  // convert time in character representation to MJD representation
+  virtual double getMJD( char *time ) ;
+
   // Get spectrum
-  vector< vector<double> > getSpectrum() ;
-  vector<double> getSpectrum( int i ) ;
+  virtual vector< vector<double> > getSpectrum() ;
+  virtual vector<double> getSpectrum( int i ) ;
 
   // Get number of polarization
-  Int getPolarizationNum() ;
+  virtual Int getPolarizationNum() ;
 
   // Get MJD time
-  double getStartTime() ;
-  double getEndTime() ;
-  vector<double> getStartIntTime() ;
-  double getStartIntTime( int i ) ;
+  virtual double getStartTime() ;
+  virtual double getEndTime() ;
+  virtual vector<double> getStartIntTime() ;
+  virtual double getStartIntTime( int i ) ;
 
   // Get Antenna Position in ITRF coordinate
   virtual vector<double> getAntennaPosition() = 0 ;
 
   // Get Frequency Settings
-  vector<double> getFrequencies( int i ) ;
-
-  // Get IF settings
-  vector<Bool> getIFs() ;
-
-  // Get Beam settings
-  vector<Bool> getBeams() ;
+  virtual vector<double> getFrequencies( int i ) ;
 
   // Get SRCDIRECTION in RADEC(J2000)
-  Vector<Double> getSourceDirection() ;
+  virtual Vector<Double> getSourceDirection() ;
 
   // Get DIRECTION in RADEC(J2000)
-  Vector<Double> getDirection( int i ) ;
-
- protected:
-  // convert time in character representation to MJD representation
-  double getMJD( char *time ) ;
+  virtual Vector<Double> getDirection( int i ) ;
 
   // Get integer representation of ARRYT
-  Int getIndex( int irow ) ;
+  virtual Int getIndex( int irow ) ;
 
   // convert Endian
-  void convertEndian( int &value ) ;
-  void convertEndian( float &value ) ;
-  void convertEndian( double &value ) ;
-  void convertEndian( NRODataset *d ) ;
+  virtual void convertEndian( int &value ) ;
+  virtual void convertEndian( float &value ) ;
+  virtual void convertEndian( double &value ) ;
+  virtual void convertEndian( NRODataset *d ) ;
 
   // memory management
-  void releaseData() ;
+  virtual void releaseData() ;
 
   // filename 
   string filename_ ;

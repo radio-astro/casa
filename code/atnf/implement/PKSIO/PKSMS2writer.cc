@@ -92,8 +92,9 @@ Int PKSMS2writer::create(
   cHaveXPol.assign(haveXPol);
 
   Int maxNPol = max(cNPol);
-  cGBT = cAPEX = cSMT = cALMA = False;
+  cGBT = cAPEX = cSMT = cALMA = cATF = False;
 
+  String telName = antName;
   // check if it is GBT data
   if (antName.contains("GBT")) {
     cGBT = True;
@@ -107,14 +108,11 @@ Int PKSMS2writer::create(
   else if (antName.contains("ALMA")) {
     cALMA = True;
   }
+  else if (antName.contains("ATF")) {
+    cATF = True;
+    telName="ATF";
+  }
  
-
-   
-  //cGBT = antName.contains("GBT");
-  //cAPEX = antName.contains("APEX");
-  //cSMT = antName.contains("HHT");
-  //cALMA = antName.contains("ALMA");
-
   // Add the non-standard CALFCTR column.
   pksDesc.addColumn(ArrayColumnDesc<Float>("CALFCTR", "Calibration factors",
               IPosition(1,maxNPol), ColumnDesc::Direct));
@@ -386,7 +384,7 @@ Int PKSMS2writer::create(
   addDopplerEntry();
   addFeedEntry();
   //addObservationEntry(observer, project);
-  addObservationEntry(observer, project, antName);
+  addObservationEntry(observer, project, telName);
   addProcessorEntry();
 
   return 0;
@@ -648,7 +646,20 @@ Int PKSMS2writer::addAntennaEntry(
     cAntennaCols->dishDiameter().put(n, 12.0);
   }
   else if (cALMA) {
+    // this needs to be changed in future...
     cAntennaCols->station().put(n, "CHAJNANTOR");
+    cAntennaCols->dishDiameter().put(n, 12.0);
+  }
+  else if (cATF) {
+    //pad name for the antenna is static...
+    String stname="unknown";
+    if (antName.contains("DV")) {
+       stname="PAD001";
+    }
+    if (antName.contains("DA")) {
+       stname="PAD002";
+    }
+    cAntennaCols->station().put(n, stname);
     cAntennaCols->dishDiameter().put(n, 12.0);
   }
   else if (cSMT) {

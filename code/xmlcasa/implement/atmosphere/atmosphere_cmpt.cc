@@ -75,7 +75,9 @@ atmosphere::listAtmosphereTypes()
     int i = 0;
     while (AtmosphereType::name(i) != "") {
       ostringstream oss;
-      oss << i+1 << " - " << AtmosphereType::name(i++);
+      //oss << i+1 << " - " << AtmosphereType::name(i++);
+      oss << i+1 << " - " << AtmosphereType::name(i);
+      i++;
       rtn.push_back(oss.str());
     }
   } catch (AipsError x) {

@@ -182,11 +182,10 @@ Int PKSMS2reader::open(
   haveSpectra = True;
   cHaveDataCol = False;
   cHaveCorrectedDataCol = False;
-  //String telName = antennaCols.name()(0);
   ROMSObservationColumns observationCols(cPKSMS.observation());
-  String telName = observationCols.telescopeName()(0);
-  //cATF = (telName.contains("DA41") || telName.contains("DV01"));
-  cATF = telName.contains("ATF");
+  //String telName = observationCols.telescopeName()(0);
+  cTelName = observationCols.telescopeName()(0);
+  cATF = cTelName.contains("ATF");
 
   if (cHaveDataCol = cPKSMS.isColumn(MSMainEnums::DATA)) { 
     if (cATF) {
@@ -318,6 +317,9 @@ Int PKSMS2reader::getHeader(
   // Antenna name and ITRF coordinates.
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
   antName = antennaCols.name()(0);
+  if (cATF) {
+     antName = cTelName + "-" + antName;
+  }
   antPosition = antennaCols.position()(0);
 
   // Observation type.

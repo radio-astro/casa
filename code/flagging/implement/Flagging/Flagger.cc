@@ -40,6 +40,7 @@
 #include <flagging/Flagging/RFASelector.h>
 #include <flagging/Flagging/RFAUVBinner.h>
 #include <flagging/Flagging/RFATimeFreqCrop.h>
+#include <flagging/Flagging/RFAApplyFlags.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/System/PGPlotter.h>
@@ -969,6 +970,19 @@ namespace casa {
     return True;
   }
   
+  Bool Flagger::applyFlags(const std::vector<FlagIndex> &fi) {
+  
+    Record agent(defaultAgents().asRecord("applyflags") );
+    
+    //cerr << __FILE__ << __LINE__ << "the hello agent = " << hello << endl;
+    
+    RFAApplyFlags::setIndices(&fi); // static memory
+
+    agent.define("id", String("applyflags"));
+    addAgent(agent);
+
+    return True;
+  }
   
   
   Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
@@ -1306,6 +1320,7 @@ namespace casa {
     agent_defaults.defineRecord("flagexaminer",RFAFlagExaminer::getDefaults());
     agent_defaults.defineRecord("uvbin",RFAUVBinner::getDefaults());
     agent_defaults.defineRecord("tfcrop",RFATimeFreqCrop::getDefaults());
+    agent_defaults.defineRecord("applyflags",RFAApplyFlags::getDefaults());
     return agent_defaults;
   }
   
@@ -1313,7 +1328,9 @@ namespace casa {
   // Flagger::createAgent
   // Creates flagging agent based on name
   // -----------------------------------------------------------------------
-  RFABase * Flagger::createAgent ( const String &id,RFChunkStats &chunk,const RecordInterface &parms )
+  RFABase * Flagger::createAgent (const String &id,
+				  RFChunkStats &chunk,
+				  const RecordInterface &parms )
   {
     // cerr << "Agent id: " << id << endl;
     if( id == "timemed" )
@@ -1332,6 +1349,8 @@ namespace casa {
       return new RFAUVBinner(chunk,parms);
     else if( id == "tfcrop" )
       return new RFATimeFreqCrop(chunk,parms);
+    else if( id == "applyflags" )
+      return new RFAApplyFlags(chunk,parms);
     else
       return NULL;
   }
@@ -1523,16 +1542,21 @@ namespace casa {
       Record agcounts; // record of agent instance counts
       acc.resize(agents.nfields());
       
+      //cerr << __FILE__ << " " << __LINE__ << agents << endl;
+
       acc.set(NULL);
       uInt nacc = 0;
       for( uInt i=0; i<agents.nfields(); i++ ) 
 	{
 	  if(  agents.dataType(i) != TpRecord )
-	    os<<"Unrecognized field '"<<agents.name(i)<<"' in agents\n"<<LogIO::EXCEPTION;
+	    os << "Unrecognized field '" << agents.name(i) << "' in agents\n" << LogIO::EXCEPTION;
+
 	  const RecordInterface & agent_rec( agents.asRecord(i) );
+
 	  // normally, the field name itself is the agent ID
+
 	  String agent_id( downcase(agents.name(i)) );
-	  
+	  	  
 	  // but if an id field is set in the sub-record, use that instead
 	  if( agent_rec.isDefined("id") && agent_rec.dataType("id") == TpString )
 	    {
@@ -1541,6 +1565,7 @@ namespace casa {
 	  // check that this is agent really exists
 	  if( !agent_defaults.isDefined(agent_id) )
 	    {
+	      //cerr << agent_defaults;
 	      os<<"Unknown flagging method '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	    }
 	  // create parameter record by taking agent defaults, and merging in global

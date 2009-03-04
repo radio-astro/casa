@@ -167,10 +167,7 @@ class PKSMS2writer : public PKSwriter
     ScalarColumn<Complex> *cXCalFctrCol;
 
     // for handling parameters specific to GBT and other telescopes
-    Bool cGBT;
-    Bool cSMT;
-    Bool cAPEX;
-    Bool cALMA;
+    Bool cGBT, cSMT, cAPEX, cALMA, cATF;
 
     // Add an entry to the ANTENNA subtable.
     Int addAntennaEntry(

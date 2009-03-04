@@ -30,6 +30,7 @@ import string
 import time
 import inspect
 import gc
+import numpy
 from odict import odict
 from taskmanager import tm
 from </xsl:text><xsl:value-of select="$taskname"/> import <xsl:value-of select="$taskname"/>_imp
@@ -249,7 +250,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
       myf=sys._getframe(stacklevel).f_globals
 
       value = myf['cu'].expandparam(param, value)
-      myf[param] = value
+      if(type(value) == numpy.ndarray) :
+         myf[param] = value.tolist()
+      else :
+         myf[param] = value
       return myf['cu'].verifyparam({param:value})
 #
 #

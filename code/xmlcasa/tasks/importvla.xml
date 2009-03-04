@@ -24,7 +24,7 @@ importvla(archivefiles=None,vis=None,
       the weights.
    </description>
    <input>
-	   <param type="stringArray" name="archivefiles" mustexist="True">
+	   <param type="stringArray" name="archivefiles" mustexist="true">
 		   <description>Name of input VLA archive file(s)</description>
 		   <value></value>
 	   </param>

@@ -28,6 +28,9 @@
 #define FLAGGING_FLAGGER_H
 
 #include <flagging/Flagging/RFCommon.h>
+
+#include <flagging/Flagging/FlagIndex.h>
+
 #include <casa/System/PGPlotter.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
@@ -181,6 +184,8 @@ public:
   // Make a selection for manual flagging
   Bool setmanualflags(Bool autocorr, Bool rowflag, Bool unflag, String clipexpr, Vector<Double> cliprange, String clipcolumn, Bool outside, Double quackinterval=0.0, String opmode=String("flag"));
 
+  Bool applyFlags(const std::vector<FlagIndex> &fi);
+
   // Clean up all agents of type "select".
   //Bool clearflagselections(Vector<Int> &recordlist,Vector<String> &agentlist);
   Bool clearflagselections(Int recordindex);
@@ -204,6 +209,7 @@ public:
 // record of additional options.
 // Set indexing_base to 1 if agent options use 1-based indexing.  usually,
 // this is only necessary if options are being passed from Glish.
+
   //void run ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
   //void summary ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
   bool run (Bool trial, Bool reset);    
@@ -245,9 +251,11 @@ public:
   Vector<Int> ifrNumbers ( Vector<Int> ant1,Vector<Int> ant2 ) const;
 // derives antenna indices from a flat IFR index
   void ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr ) const;
+
 // returns a record with all available agents and their default options
   const RecordInterface & defaultAgents () const 
       { return agent_defaults; }
+
 // returns a record of available options
   static const RecordInterface & defaultOptions ();
 // returns the log sink 
