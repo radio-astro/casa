@@ -31,7 +31,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/Convolver.h>
-#include <scimath/Mathematics/FFTPack.h>
+#include <scimath/Mathematics/FFTW.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/BasicMath/Math.h>
 #include <scimath/Mathematics/NumericTraits.h>
@@ -82,11 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> <linkto file=NumericTraits.h>Relationships</linkto>
 //      between different numerical data types.
 // <li> Multi-dimensional Fourier transforms are done in the 
-//      <linkto class="FFTServer">FFTServer</linkto> class.  This decomposes
-//      the transforms into a one-dimensional transforms which are done using
-//      the functions in the <linkto class="FFTPack">FFTPack</linkto>
-//      class. The FFTPack class also contains functions for doing
-//      one-dimensional sine, cosine, and real-symmetric transforms.
+//      <linkto class="FFTServer">FFTServer</linkto> class, which uses
+//      <linkto class="FFTW">FFTW</linkto> to do multi-dimensional transforms.
 // <li> Numerical <linkto class="Convolver">Convolution</linkto> 
 //      (both linear and circular) of multi-dimensional Arrays.
 // <li> <linkto file="Random.h">Random</linkto> numbers in a wide 

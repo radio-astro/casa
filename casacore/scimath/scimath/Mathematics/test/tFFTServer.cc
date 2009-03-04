@@ -54,7 +54,7 @@ do {                          \
 } while (0)
 
 unsigned tests_done = 0;
-const Bool debug = False;
+const Bool debug = False;//True;
 
 
 template <class T>
@@ -918,13 +918,22 @@ template <class S, class T>
 class C2R4Doddoddoddeven1 {
   public:
     static Array<S> input() {
-        Array<S> input(IPosition(4,2,5,7,2), Complex(0, 0));
-        input(IPosition(4,0)) = Complex(3*5*7*2,0);
-        return input;
+#if PERFORMANCE_TEST
+      // Useful to test how the use of threads effects CPU usage
+      Array<S> input(IPosition(4,20,500,70,20), Complex(0, 0));
+#else
+      Array<S> input(IPosition(4,2,5,7,2), Complex(0, 0));
+#endif
+      input(IPosition(4,0)) = Complex(3*5*7*2,0);
+      return input;
     }
     
     static Array<T> expectedResult() {
-        Array<T> expectedResult(IPosition(4,3,5,7,2), 1.0f);
+#if PERFORMANCE_TEST
+      Array<T> expectedResult(IPosition(4, 38, 500, 70, 20));
+#else
+      Array<T> expectedResult(IPosition(4,3,5,7,2), 1.0f);
+#endif
         expectedResult = 1.0f;
         return expectedResult;
     }
@@ -1291,10 +1300,18 @@ public:
         {
       Array<S> result(expectedResult.shape());
       
-      if (shifted_mode)
+      int iterations = 1;
+#if PERFORMANCE_TEST
+      iterations = 10;
+#endif
+      for (int i = 0; i < iterations; i++) {
+	if (shifted_mode) {
           server.fft(result, input);
-      else
+	}
+	else {
           server.fft0(result, input);
+	}
+      }
       
       if (debug) {
           cout << "Input:" << endl;
@@ -1427,13 +1444,25 @@ class TestC2C
 			   AipsError);
 
 		// ... and inverse in-place
+
+		if (debug) {
+		    cout << "Input:" << endl;
+		    dump(copy);
+		}
 		if (shifted) {
 		    server.fft(copy, False);
 		}
 		else {
 		    server.fft0(copy, False);
 		}
-	    
+
+		if (debug) {
+		    cout << "Result:" << endl;
+		    dump(copy);
+		    cout << "Expected:" << endl;
+		    dump(input);
+		}
+			    
 		AlwaysTrue(copy.shape().isEqual(input.shape()),
 			   AipsError);
 		AlwaysTrue(allNearAbs(copy, input, epsilon1),
@@ -1479,16 +1508,22 @@ class TestC2C
 template <class T, class S>
 void run_tests()
 {
+    FFTServer<T, S> server0(IPosition(1,8));
+    TestR2C<T, S, R2C1Deven1, T, S> t1(server0);
+    TestR2C<T, S, R2C1Deven2, T, S> t2(server0);
+    TestR2C<T, S, R2C1Deven3, T, S> t3(server0);
+    TestR2C<T, S, R2C1Deven4, T, S> t4(server0);
+    TestR2C<T, S, R2C1Dodd1, T, S> t5(server0);
+    TestR2C<T, S, R2C1Dodd2, T, S> t6(server0);
+    TestR2C<T, S, R2C1Dodd3, T, S> t7(server0);
+    TestR2C<T, S, R2C2Deveneven1, T, S> t8(server0);
+    TestR2C<T, S, R2C2Deveneven2, T, S> t9(server0);
+#if USE_FFTW
     FFTServer<T, S> server(IPosition(1,8));
-    TestR2C<T, S, R2C1Deven1, T, S> t1(server);
-    TestR2C<T, S, R2C1Deven2, T, S> t2(server);
-    TestR2C<T, S, R2C1Deven3, T, S> t3(server);
-    TestR2C<T, S, R2C1Deven4, T, S> t4(server);
-    TestR2C<T, S, R2C1Dodd1, T, S> t5(server);
-    TestR2C<T, S, R2C1Dodd2, T, S> t6(server);
-    TestR2C<T, S, R2C1Dodd3, T, S> t7(server);
-    TestR2C<T, S, R2C2Deveneven1, T, S> t8(server);
-    TestR2C<T, S, R2C2Deveneven2, T, S> t9(server);
+    server = server0;              // test assignment
+#else
+    FFTServer<T, S> server(server0);
+#endif
     TestR2C<T, S, R2C2Deveneven3, T, S> t10(server);
     TestR2C<T, S, R2C2Devenodd1, T, S> t11(server);
     TestR2C<T, S, R2C2Devenodd2, T, S> t12(server);
@@ -1550,7 +1585,6 @@ void run_tests()
     return;
 }
 
-
 int main()
 {
   tests_done = 0;
@@ -1567,6 +1601,7 @@ int main()
 
       run_tests<Float, Complex>();
       run_tests<Double, DComplex>();
+
   }
   catch (AipsError x) {
     cerr << x.getMesg() << endl;

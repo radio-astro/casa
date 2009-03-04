@@ -29,6 +29,7 @@
 #define SCIMATH_FFTSERVER_H
 
 //# Includes
+#include <scimath/Mathematics/FFTW.h>
 #include <casa/aips.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Block.h>
@@ -46,11 +47,15 @@ template <class S> class Matrix;
 class FFTEnums {
 public:
   enum TransformType {
-    // Complex to Complex transforms.
+    // Forward Complex to Complex transforms.
     COMPLEX,
+    // Inverse Complex to Complex transforms.
+    INVCOMPLEX,
     // Real to Complex or Complex to Real transforms.
     REALTOCOMPLEX,
-    // Real to Real transforms with symmetric Arrays.
+    // Real to Complex or Complex to Real transforms.
+    COMPLEXTOREAL,
+    // Real to Real transforms with symmetric Arrays (not used)
     REALSYMMETRIC
   };
 };
@@ -94,7 +99,9 @@ public:
 // twiddle factors used during the transform. The initialised transform shape
 // is always compared with the shape of the supplied arguments when a transform
 // is done and the FFTServer class will automatically resize itself if
-// necessary. So the default constructor is perfectly safe to use.
+// necessary. So the default constructor is perfectly safe to use. After this
+// implementation was changed from using FFTPack to FFTW, nothing is gained by
+// using the non-default constructor; it exists only for historical reasons.
 
 // With any transform the output Array must either be the correct shape for the
 // desired output or zero length (ie not contain any elements). If it is zero
@@ -130,12 +137,8 @@ public:
 // first axis.
 // </ul>
 
-// This class does transforms using the widely used FORTRAN fftpack
-// package.<br>
-// <em> P.N. Swarztrauber, Vectorizing the FFTs, in Parallel Computations
-// (G. Rodrigue, ed.), Academic Press, 1982, pp. 51--83. </em><br>
-// This package only does one dimensional transforms and this class decomposes
-// multi-dimensional transforms into a series of 1-dimensional ones.
+// This class does transforms using the highly optimized FFTW package and will
+// use as many threads as there are CPU cores.
 
 // In this class a forward transform is defined as one that goes from the real
 // to the complex (or the time to frequency) domain. In a forward transform the
@@ -151,8 +154,8 @@ public:
 // <src>[nx/2,ny/2,...]</src> were the indexing begins at zero. Because the
 // fftpack software assumes the origin of the transform is at the first element
 // ie.,<src>[0,0,...]</src> this class flips the data in the Array around to
-// compensate. This flipping currently takes about one 20% of the total
-// transform time and can be avoided by using the <src>fft0</src> member
+// compensate. This flipping does not use threads and may take much longer than
+// the FFT itself. It can be avoided by using the <src>fft0</src> member
 // functions which do not flip the data.
 
 // Some of the member functions in this class scramble the input Array,
@@ -229,7 +232,8 @@ public:
   // Initialise the server to do transforms on Arrays of the specified
   // shape. The server will, however, resize to do transforms of other lengths
   // if necessary. See the resize function for a description of the
-  // TransformType enumerator.
+  // TransformType enumerator. This constructor is deprecated; just use the
+  // default one.
   FFTServer(const IPosition & fftSize, 
 	    const FFTEnums::TransformType transformType 
 	    = FFTEnums::REALTOCOMPLEX);
@@ -250,10 +254,10 @@ public:
   // Modify the FFTServer object to do transforms of the supplied shape. The
   // amount of internal storage, and the initialisation, depends on the type of
   // transform that will be done. Th etransform type is specified with the
-  // TransformTypes enumerator. Currently there is no difference in
+  // TransformTypes enumerator. There is no difference in
   // initialisation for the COMPLEXTOREAL and REALTOCOMPLEX transforms. The
   // shape argument is the shape of the real array (or complex one if complex
-  // to complex transforms are being done). In general it is not necessary to
+  // to complex transforms are being done). It is not necessary to
   // use this function as all the fft & fft0 functions will automatically
   // resize the server, if necessary, to match their input arguments.
   void resize(const IPosition & fftSize,
@@ -306,7 +310,7 @@ public:
   // The <src>fft0</src> functions are equivalent to the <src>fft</src>
   // functions described above except that the origin of the transform is the
   // first element of the Array, ie. [0,0,0...], rather than the centre
-  // element, ie [nx/2, ny/2, nz/2, ...]. As the underlying FORTRAN functions
+  // element, ie [nx/2, ny/2, nz/2, ...]. As the underlying FFTW functions
   // assume that the origin of the transform is the first element these
   // routines are in general faster than the equivalent ones with the origin
   // at the centre of the Array.
@@ -338,22 +342,30 @@ public:
   void flip(Array<S> & cData, const Bool toZero, const Bool isHermitian);
   // </group>
 private:
-  // function instead of flip for complex data only
-  Int phaseRotate(Matrix<S> & cData, Bool toZero);
+    //# finds the shape of the output array when doing complex->real transforms
+    IPosition determineShape(const IPosition & rShape, const Array<S> & cData);
 
-  //# finds the shape of the output array when doing complex->real transforms
-  IPosition determineShape(const IPosition & rShape, const Array<S> & cData);
-  //# The size of the last FFT done by this object
-  IPosition itsSize;
-  //# Whether the last FFT was complex<->complex or not
-  FFTEnums::TransformType itsTransformType;
-  //# twiddle factors and factorisations used by fftpack
-  PtrBlock<Block<T> *> itsWork;
-  //# buffer for copying non-contigious arrays to contigious ones. This is done
-  //# so that the FFT's have a better chance of fitting into cache and hence
-  //# going faster. 
-  //# This buffer is also used as temporary storage when flipping the data.
-  Block<S> itsBuffer;
+    //# The size of the last FFT done by this object
+    IPosition itsSize;
+
+    //# Whether the last FFT was complex<->complex or not
+    FFTEnums::TransformType itsTransformType;
+
+    //# buffer for copying non-contigious arrays to contigious ones. This is done
+    //# so that the FFT's have a better chance of fitting into cache and hence
+    //# going faster. 
+    //# This buffer is also used as temporary storage when flipping the data.
+    Block<S> itsBuffer;
+
+
+    FFTW itsFFTW;
+
+    T * itsWorkIn;
+    S * itsWorkOut;
+    
+    S * itsWorkC2C;
+    
+    Bool debug;
 };
 
 } //# NAMESPACE CASA - END
