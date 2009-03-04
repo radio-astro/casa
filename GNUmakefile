@@ -330,6 +330,11 @@ define orphan-objects
   perl -e 'use File::Find; %source = ( ); sub find_source { if ( -f $$_ && m/\.(?:cc|c|f)$$/ ) { my $$file = $$_; s/\.(?:cc|c|f)$$//; $$source{$$_} = "$$File::Find::dir/$$file"; } } sub find_orphan { if ( -f $$_ && m/\.o$$/ ) { my $$file = $$_; s/\.o$$//; if ( ! defined $$source{$$_} ) { unlink($$file); } } } find( { wanted => \&find_source }, "$1" ); find( { wanted => \&find_orphan }, "$1" );'
 endef
 
+define orphan-deps
+  perl -e 'use File::Find; %headers = ( ); $$scrubre = ""; sub find_scrub { if ( -f $$_ && m/\.dep$$/ ) { my $$file = $$_; my @out = ( ); my $$dump = 0; open( DEP, "< $$file" ); while ( <DEP> ) { $$dump = 1 if s@(?:$$scrubre)@@g; push( @out, $$_ ); } close( DEP ); if ( $$dump ) { open( OUT, "> $$file" ); print OUT join("", @out); close( OUT ); } } } sub find_dep { if ( -f $$_ && m/\.dep$$/ ) { open( DEP, "< $$_ " ); while (<DEP>) { if ( m@(\S+\.h)@ ) { $$headers{$$1} = 1; } } close( DEP ); } } find( { wanted => \&find_dep }, "$1" ); @scrub = ( ); foreach ( keys %headers ) { if ( ! -f $$_ ) { push( @scrub, $$_ ); } } if ( scalar(@scrub) > 0 ) { $$scrubre = join("|",@scrub); find( { wanted => \&find_scrub }, "$1" ); }'
+endef
+
+
 INCDIR := $(DESTDIR)/include
 MODULES := casa components coordinates fits images lattices \
 		measures mirlib ms msfits scimath tables
@@ -379,7 +384,6 @@ t% : t%.cc
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.f|")
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
 	$(FC) $(FFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
-
 
 ##
 ###  libcasacore
@@ -616,12 +620,15 @@ ifeq "$(OS)" "linux"
 endif
 	cd $(dir $@) && ln -fs $(notdir $@) $(subst .$(VERSION),,$(notdir $@))
 
-installinc: $(shell find . -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@\\./(?:$(MODULESRE))/@$(INCDIR)/casacore/@g")
+#installinc: $(shell find . -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@\\./(?:$(MODULESRE))/@$(INCDIR)/casacore/@g")
 
-TCASACC := $(shell find casa -type f -name 't*.cc' | grep /test/)
-TCASA := $(basename $(TCASACC | perl -pe 's|^[^/]+/||'))
+#TCASACC := $(shell find casa -type f -name 't*.cc' | grep /test/)
+#TCASA := $(basename $(TCASACC | perl -pe 's|^[^/]+/||'))
 
-casatest: $(TCASA)
+#casatest: $(TCASA)
+
+cleandeps:
+	@$(call orphan-deps,.)
 
 cleancasa:
 	@rm -f $(CASALIB_PATH)
