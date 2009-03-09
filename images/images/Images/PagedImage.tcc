@@ -26,8 +26,8 @@
 //# $Id: PagedImage.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
 
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageRegion.h>
-#include <images/Images/RegionHandlerTable.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionHandlerTable.h>
 #include <images/Images/ImageInfo.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeNavigator.h>
