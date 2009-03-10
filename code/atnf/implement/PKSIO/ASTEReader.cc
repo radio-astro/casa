@@ -31,6 +31,7 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/ASTEReader.h>
+#include <atnf/PKSIO/ASTEDataset.h>
 
 #include <string>
 #include <stdio.h>
@@ -52,47 +53,18 @@ ASTEReader::~ASTEReader()
 }
   
 // Read data header
-Int ASTEReader::readHeader() 
+Int ASTEReader::read() 
 {
   int status = 0 ;
 
-  // check endian
-  fseek( fp_, 144, SEEK_SET ) ;
-  int tmp ;
-  if( fread( &tmp, 1, sizeof(int), fp_ ) != sizeof(int) ) {
-    cerr << "Error while checking endian of the file. " << endl ;
-    return -1 ;
-  }
-  if ( ( 0 < tmp ) && ( tmp <= ASTE_ARYMAX ) ) {
-    same_ = true ;
-  }
-  else {
-    same_ = false ;
-  }
-  fseek( fp_, 0, SEEK_SET ) ;
+  // create ASTEDataset
+  dataset_ = new ASTEDataset( filename_ ) ;
 
-  // create ASTEHeader
-  header_ = new ASTEHeader() ;
+  // fill ASTEDataset
+  status = dataset_->fillHeader() ;
 
-  // fill ASTEHeader
-  status = header_->fill( fp_, same_ ) ;
-
-  if ( status == -1 ) {
+  if ( status != 0 ) {
     cerr << "Failed to fill data header." << endl ;
-    scanNum_ = 0 ;
-    scanLen_ = 0 ;
-  }
-  else {
-    scanNum_ = header_->getNSCAN() + 1 ;   // includes ZERO scan
-    scanLen_ = header_->getSCNLEN() ;
-    rowNum_ = scanNum_ * header_->getARYNM() ;
-    chmax_ = (int) ( scanLen_ - SCAN_HEADER_SIZE ) * 8 / header_->getIBIT() ;
-    data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
-    cout << "ASTEReader::readHeader()  Number of scan        = " << scanNum_ << endl ;
-    cout << "ASTEReader::readHeader()  Number of data record = " << rowNum_ << endl ;
-    cout << "ASTEReader::readHeader()  Length of data record = " << scanLen_ << " byte" << endl ;
-    cout << "ASTEReader::readHeader()  Max number of channel = " << chmax_ << endl ;
-    cout << "ASTEReader::readHeader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
   }
 
   return status ;

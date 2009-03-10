@@ -17,7 +17,7 @@
 using namespace std;
 
 #ifdef AIPS_USEATM
-#include <atmosphere/ATM/ATMSkyStatus.h>
+#include <ATM/ATMSkyStatus.h>
 using namespace atm;
 #endif
 
@@ -326,35 +326,6 @@ atmosphere::getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx)
 	  << LogIO::POST;
 #endif
   return rtn;
-}
-
-Quantity
-atmosphere::getStartupWaterContent()
-{
-  ::casac::Quantity q;
-#ifdef AIPS_USEATM
-  try {
-    if (pAtmProfile) {
-      atm::Length gw = pAtmProfile->getGroundWH2O();
-      std::vector<double> qvalue(1);
-      qvalue[0] = gw.get("mm");
-      q.value = qvalue;
-      q.units = "mm";
-    } else {
-      *itsLog << LogIO::WARN
-	      << "Please initialize atmospheric profile with initAtmProfile."
-	      << LogIO::POST;
-    }
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    RETHROW(x);
-  }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
-  return q;
 }
 
 Quantity
@@ -892,7 +863,7 @@ atmosphere::getDryOpacity(const int nc, const int spwId)
 }
 
 double
-atmosphere::getDryContOpacity(const int nc)
+atmosphere::getDryContOpacity(const int nc, const int spwId)
 {
   double dryContOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -903,7 +874,7 @@ atmosphere::getDryContOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      dryContOpacity = pRefractiveIndexProfile->getDryContOpacity(chan).get("neper");
+      dryContOpacity = pRefractiveIndexProfile->getDryContOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -923,7 +894,7 @@ atmosphere::getDryContOpacity(const int nc)
 
 
 double
-atmosphere::getO2LinesOpacity(const int nc)
+atmosphere::getO2LinesOpacity(const int nc, const int spwId)
 {
   double o2LinesOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -934,7 +905,7 @@ atmosphere::getO2LinesOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      o2LinesOpacity = pRefractiveIndexProfile->getO2LinesOpacity(chan).get("neper");
+      o2LinesOpacity = pRefractiveIndexProfile->getO2LinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -954,7 +925,7 @@ atmosphere::getO2LinesOpacity(const int nc)
 
 
 double
-atmosphere::getO3LinesOpacity(const int nc)
+atmosphere::getO3LinesOpacity(const int nc, const int spwId)
 {
   double o3LinesOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -965,7 +936,7 @@ atmosphere::getO3LinesOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      o3LinesOpacity = pRefractiveIndexProfile->getO3LinesOpacity(chan).get("neper");
+      o3LinesOpacity = pRefractiveIndexProfile->getO3LinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -985,7 +956,7 @@ atmosphere::getO3LinesOpacity(const int nc)
 
 
 double
-atmosphere::getCOLinesOpacity(const int nc)
+atmosphere::getCOLinesOpacity(const int nc, const int spwId)
 {
   double coLinesOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -996,7 +967,7 @@ atmosphere::getCOLinesOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      coLinesOpacity = pRefractiveIndexProfile->getCOLinesOpacity(chan).get("neper");
+      coLinesOpacity = pRefractiveIndexProfile->getCOLinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1016,7 +987,7 @@ atmosphere::getCOLinesOpacity(const int nc)
 
 
 double
-atmosphere::getN2OLinesOpacity(const int nc)
+atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
 {
   double n2oLinesOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -1027,7 +998,7 @@ atmosphere::getN2OLinesOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      n2oLinesOpacity = pRefractiveIndexProfile->getN2OLinesOpacity(chan).get("neper");
+      n2oLinesOpacity = pRefractiveIndexProfile->getN2OLinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1080,7 +1051,7 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 
 
 double
-atmosphere::getH2OLinesOpacity(const int nc)
+atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 {
   double h2oLinesOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -1091,7 +1062,7 @@ atmosphere::getH2OLinesOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(chan).get("neper");
+      h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1111,7 +1082,7 @@ atmosphere::getH2OLinesOpacity(const int nc)
 
 
 double
-atmosphere::getH2OContOpacity(const int nc)
+atmosphere::getH2OContOpacity(const int nc, const int spwId)
 {
   double h2oContOpacity(-1.0);
 #ifdef AIPS_USEATM
@@ -1122,7 +1093,7 @@ atmosphere::getH2OContOpacity(const int nc)
 	chan = pSpectralGrid->getRefChan();
       else
 	chan = nc;
-      h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(chan).get("neper");
+      h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."

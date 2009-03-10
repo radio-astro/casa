@@ -53,7 +53,8 @@ bool PlotMSPlotParameters::equals(const PlotMSWatchedParameters& other,
     
     if(updateFlags & MS) {
         if(itsMSFilename_ != o->itsMSFilename_ ||
-           (!itsMSFilename_.empty() && itsMSSelection_ != o->itsMSSelection_))
+           (!itsMSFilename_.empty() && itsMSSelection_ != o->itsMSSelection_)||
+           (!itsMSFilename_.empty() && itsMSAveraging_ != o->itsMSAveraging_))
             return false;
     }
     
@@ -79,6 +80,15 @@ void PlotMSPlotParameters::setSelection(const PlotMSSelection& sel) {
     }
 }
 
+const PlotMSAveraging& PlotMSPlotParameters::averaging() const {
+    return itsMSAveraging_; }
+void PlotMSPlotParameters::setAveraging(const PlotMSAveraging& avg) {
+    if(avg != itsMSAveraging_) {
+        itsMSAveraging_ = avg;
+        if(updateFlag_) updateFlag(MS);
+    }
+}
+
 PlotMSPlotParameters&
 PlotMSPlotParameters::operator=(const PlotMSPlotParameters& copy) {
     PlotMSWatchedParameters::operator=(copy);
@@ -89,6 +99,7 @@ PlotMSPlotParameters::operator=(const PlotMSPlotParameters& copy) {
                 
         setFilename(copy.filename());
         setSelection(copy.selection());
+        setAveraging(copy.averaging());
         if(oldupdate) updateFlag(MS);
         
         updateFlag_ = oldupdate;

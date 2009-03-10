@@ -62,6 +62,10 @@ SimplePlotter::~SimplePlotter() { }
 
 int SimplePlotter::execLoop() { return m_factory->execLoop(); }
 
+void SimplePlotter::holdDrawing() { m_canvas->holdDrawing(); }
+
+void SimplePlotter::releaseDrawing() { m_canvas->releaseDrawing(); }
+
 
 // Plotter Customization Methods //
 

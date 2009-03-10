@@ -26,7 +26,7 @@
 //# $Id: $
 #ifdef AIPS_HAS_QWT
 
-#include <casaqt/QwtPlotter/QPScatterPlot.qo.h>
+#include <casaqt/QwtPlotter/QPScatterPlot.h>
 
 #include <casaqt/QwtPlotter/QPFactory.h>
 
@@ -34,17 +34,26 @@
 
 namespace casa {
 
-/////////////////////////
-// QPCURVE DEFINITIONS //
-/////////////////////////
+///////////////////////////////
+// QPSCATTERPLOT DEFINITIONS //
+///////////////////////////////
 
-QPCurve::QPCurve(PlotPointDataPtr data) : m_data(data),
-        m_symbol(QPFactory::defaultPlotSymbol()),
+// Static //
+
+const String QPScatterPlot::CLASS_NAME = "QPScatterPlot";
+
+
+// Constructors/Destructors //
+
+QPScatterPlot::QPScatterPlot(PlotPointDataPtr data, const String& title):
+        m_data(data), m_symbol(QPFactory::defaultPlotSymbol()),
         m_line(QPFactory::defaultPlotLine()),
-        m_maskedSymbol(QPFactory::defaultPlotSymbol()),
+        m_maskedSymbol(QPFactory::defaultPlotMaskedSymbol()),
         m_maskedLine(QPFactory::defaultPlotLine()),
         m_errorLine(QPFactory::defaultPlotLine()),
         m_errorCap(QPFactory::DEFAULT_ERROR_CAP) {
+    QPPlotItem::setTitle(title);
+    
     if(!data.null()) {
         PlotMaskedPointData* p = dynamic_cast<PlotMaskedPointData*>(&*data);
         if(p != NULL) m_maskedData = PlotMaskedPointDataPtr(p, false);
@@ -53,39 +62,199 @@ QPCurve::QPCurve(PlotPointDataPtr data) : m_data(data),
     }
     
     setItemAttribute(QwtPlotItem::AutoScale);
-    
-    // Hide masked stuff and make red.
-    m_maskedSymbol.setSymbol(PlotSymbol::NOSYMBOL);
-    m_maskedSymbol.setColor("FF0000");    
-    m_maskedLine.setStyle(PlotLine::NOLINE);
-    m_maskedLine.setColor("FF0000");
 }
 
-QPCurve::~QPCurve() { }
-
-
-PlotPointDataPtr QPCurve::pointData() const { return m_data; }
-PlotMaskedPointDataPtr QPCurve::maskedData() const { return m_maskedData; }
-PlotErrorDataPtr QPCurve::errorData() const { return m_errorData; }
-
-bool QPCurve::isValid() const { return !m_data.null() && m_data->isValid(); }
-
-
-void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, int from, int to) const {
-    if(!isValid()) return;
+QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
+        m_data(copy.pointData()), m_symbol(QPFactory::defaultPlotSymbol()),
+        m_line(QPFactory::defaultPlotLine()),
+        m_maskedSymbol(QPFactory::defaultPlotMaskedSymbol()),
+        m_maskedLine(QPFactory::defaultPlotLine()),
+        m_errorLine(QPFactory::defaultPlotLine()),
+        m_errorCap(QPFactory::DEFAULT_ERROR_CAP) {
+    QPPlotItem::setTitle(copy.title());
     
+    if(!m_data.null()) {
+        PlotMaskedPointData* p = dynamic_cast<PlotMaskedPointData*>(&*m_data);
+        if(p != NULL) m_maskedData = PlotMaskedPointDataPtr(p, false);
+        PlotErrorData* e = dynamic_cast<PlotErrorData*>(&*m_data);
+        if(e != NULL) m_errorData = PlotErrorDataPtr(e, false);
+    }
+    
+    setLine(copy.line());
+    setSymbol(copy.symbol());
+    
+    // check for masked plot
+    const MaskedScatterPlot* m = dynamic_cast<const MaskedScatterPlot*>(&copy);
+    if(m != NULL) {
+        setMaskedLine(m->maskedLine());
+        setMaskedSymbol(m->maskedSymbol());
+    }
+    
+    // check for error plot
+    const ErrorPlot* e = dynamic_cast<const ErrorPlot*>(&copy);
+    if(e != NULL) {
+        setErrorLine(e->errorLine());
+        setErrorCapSize(e->errorCapSize());
+    }
+    
+    setItemAttribute(QwtPlotItem::AutoScale);
+}
+
+QPScatterPlot::~QPScatterPlot() { }
+
+
+// Public Methods //
+
+bool QPScatterPlot::isValid() const {
+    return !m_data.null() && m_data->isValid(); }
+
+
+QwtDoubleRect QPScatterPlot::boundingRect() const {
+    double xMin, xMax, yMin, yMax;
+    if(!const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(xMin,xMax,yMin,yMax))
+        return QwtDoubleRect();
+    
+    // have to switch y min and max for some reason..
+    return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
+}
+
+QWidget* QPScatterPlot::legendItem() const {
+    QwtLegendItem* i= new QwtLegendItem(m_symbol, m_line.asQPen(), qwtTitle());
+    i->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowSymbol |
+                         QwtLegendItem::ShowText);
+    return i;
+}
+
+
+bool QPScatterPlot::linesShown() const {
+    return m_line.style() != PlotLine::NOLINE; }
+void QPScatterPlot::setLinesShown(bool l) {
+    if(l != linesShown()) {
+        m_line.setStyle(l ? PlotLine::SOLID : PlotLine::NOLINE);
+        itemChanged();
+    }
+}
+
+PlotLinePtr QPScatterPlot::line() const { return new QPLine(m_line); }
+void QPScatterPlot::setLine(const PlotLine& line) {
+    if(m_line != line) {
+        m_line = line;
+        itemChanged();
+    }
+}
+
+
+PlotPointDataPtr QPScatterPlot::pointData() const { return m_data; }
+
+bool QPScatterPlot::symbolsShown() const {
+    return m_symbol.symbol() != PlotSymbol::NOSYMBOL; }
+void QPScatterPlot::setSymbolsShown(bool show) {
+    if(show != symbolsShown()) {
+        m_symbol.setSymbol(show ? PlotSymbol::CIRCLE : PlotSymbol::NOSYMBOL);
+        itemChanged();
+    }
+}
+
+PlotSymbolPtr QPScatterPlot::symbol() const {
+    return new QPSymbol(m_symbol); }
+void QPScatterPlot::setSymbol(const PlotSymbol& sym) {
+    if(sym != m_symbol) {
+        m_symbol = sym;
+        itemChanged();
+    }
+}
+
+
+PlotMaskedPointDataPtr QPScatterPlot::maskedData() const{ return m_maskedData;}
+
+bool QPScatterPlot::maskedLinesShown() const {
+    return m_maskedLine.style() != PlotLine::NOLINE; }
+void QPScatterPlot::setMaskedLinesShown(bool s) {
+    if(s != maskedLinesShown()) {
+        m_maskedLine.setStyle(s ? PlotLine::SOLID : PlotLine::NOLINE);
+        itemChanged();
+    }
+}
+
+PlotLinePtr QPScatterPlot::maskedLine() const {
+    return new QPLine(m_maskedLine); }
+void QPScatterPlot::setMaskedLine(const PlotLine& line) {
+    if(m_maskedLine != line) {
+        m_maskedLine = line;
+        itemChanged();
+    }
+}
+
+bool QPScatterPlot::maskedSymbolsShown() const {
+    return m_maskedSymbol.symbol() != PlotSymbol::NOSYMBOL; }
+void QPScatterPlot::setMaskedSymbolsShown(bool s) {
+    if(s != maskedSymbolsShown()) {
+        m_maskedSymbol.setSymbol(s ? PlotSymbol::CIRCLE :
+                                     PlotSymbol::NOSYMBOL);
+        itemChanged();
+    }
+}
+
+PlotSymbolPtr QPScatterPlot::maskedSymbol() const {
+    return new QPSymbol(m_maskedSymbol); }
+void QPScatterPlot::setMaskedSymbol(const PlotSymbol& symbol) {
+    if(symbol != m_maskedSymbol) {
+        m_maskedSymbol = symbol;
+        itemChanged();
+    }
+}
+
+
+PlotErrorDataPtr QPScatterPlot::errorData() const { return m_errorData; }
+
+bool QPScatterPlot::errorLineShown() const {
+    return m_errorLine.style() != PlotLine::NOLINE; }
+void QPScatterPlot::setErrorLineShown(bool s) {
+    if(s != errorLineShown()) {
+        m_errorLine.setStyle(s ? PlotLine::SOLID : PlotLine::NOLINE);
+        itemChanged();
+    }
+}
+
+PlotLinePtr QPScatterPlot::errorLine() const{ return new QPLine(m_errorLine); }
+void QPScatterPlot::setErrorLine(const PlotLine& line) {
+    if(m_errorLine != line) {
+        m_errorLine = line;
+        itemChanged();
+    }
+}
+
+unsigned int QPScatterPlot::errorCapSize() const { return m_errorCap; }
+
+void QPScatterPlot::setErrorCapSize(unsigned int capSize) {
+    if(m_errorCap != capSize) {
+        m_errorCap = capSize;
+        itemChanged();
+    }
+}
+
+
+// Protected Methods //
+
+void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& brect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    unsigned int n = m_data->size();
+    if(!isValid() || n == 0 || drawIndex >= n) return;
+        
+    if(drawIndex + drawCount > n) drawCount = n - drawIndex;
+    n = drawIndex + drawCount;
+    
+    /*
     if(from < 0) from = 0;
     unsigned int n = m_data->size();
     if(to <= from) to = (int)n;
     n = min(n, (unsigned int)to);
     unsigned int s = (unsigned int)from;
     if(s == n) return;
+    */
 
-    emit const_cast<QPCurve*>(this)->drawStarted();
     p->save();
-    
-    QRect brect(0, 0, p->device()->width(), p->device()->height());
     
     // Draw error lines if needed.
     bool drawErrorLine = !m_errorData.null() &&
@@ -105,7 +274,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
                 
             } else {
                 // only draw unmasked error lines
-                for(unsigned int i = s; i < n; i++) {
+                for(unsigned int i = drawIndex; i < n; i++) {
                     if(!m_maskedData->maskedAt(i)) {
                         m_errorData->xyAndErrorsAt(i, tempx, tempy, txleft,
                                 txright, tybottom, tytop);
@@ -140,7 +309,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             
         // draw all error lines
         if(drawNormally) {
-            for(unsigned int i = s; i < n; i++) {
+            for(unsigned int i = drawIndex; i < n; i++) {
                 m_errorData->xyAndErrorsAt(i, tempx, tempy, txleft,
                         txright, tybottom, tytop);
                 
@@ -185,10 +354,10 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             bool samePen = m_line.asQPen() == m_maskedLine.asQPen();
             if(!drawMaskedLine || samePen) p->setPen(m_line.asQPen());
             
-            m_maskedData->xyAndMaskAt(s, tempx, tempy, mask);
+            m_maskedData->xyAndMaskAt(drawIndex, tempx, tempy, mask);
             ix = xMap.transform(tempx); iy = yMap.transform(tempy);
             
-            for(unsigned int i = s + 1; i < n; i++) {
+            for(unsigned int i = drawIndex + 1; i < n; i++) {
                 m_maskedData->xAndYAt(i, tempx2, tempy2);
                 ix2 = xMap.transform(tempx2); iy2 = yMap.transform(tempy2);
                 if(drawLine && !mask) {
@@ -207,9 +376,9 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             
         } else {
             p->setPen(m_line.asQPen());
-            m_data->xAndYAt(s, tempx, tempy);
+            m_data->xAndYAt(drawIndex, tempx, tempy);
             ix = xMap.transform(tempx); iy = yMap.transform(tempy);
-            for(unsigned int i = s + 1; i < n; i++) {
+            for(unsigned int i = drawIndex + 1; i < n; i++) {
                 m_data->xAndYAt(i, tempx2, tempy2);
                 ix2 = xMap.transform(tempx2); iy2 = yMap.transform(tempy2);
                 if(brect.contains(ix, iy) || brect.contains(ix2, iy2))
@@ -219,7 +388,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             }
         }
     }
-    
+        
     // Draw normal/masked symbols
     bool drawSymbol = m_symbol.symbol() != PlotSymbol::NOSYMBOL,
          drawMaskedSymbol = !m_maskedData.null() &&
@@ -246,8 +415,8 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             QRect rect(0, 0, size.width(), size.height());
             size = ((QwtSymbol&)m_maskedSymbol).size();
             QRect mRect(0, 0, size.width(), size.height());
-            
-            for(unsigned int i = s; i < n; i++) {
+                        
+            for(unsigned int i = drawIndex; i < n; i++) {
                 m_maskedData->xyAndMaskAt(i, tempx, tempy, mask);
                 if(drawSymbol && !mask) {
                     rect.moveCenter(QPoint(xMap.transform(tempx),
@@ -269,7 +438,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
                     m_symbol.draw(p, mRect);
                 }
             }
-            
+                        
         } else {
             // draw all symbols normally
             p->setPen(m_symbol.drawPen());
@@ -278,7 +447,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
             QSize size = ((QwtSymbol&)m_symbol).size();
             QRect rect(0, 0, size.width(), size.height());
             
-            for(unsigned int i = s; i < n; i++) {
+            for(unsigned int i = drawIndex; i < n; i++) {
                 m_data->xAndYAt(i, tempx, tempy);
                 rect.moveCenter(QPoint(xMap.transform(tempx),
                                        yMap.transform(tempy)));
@@ -288,205 +457,7 @@ void QPCurve::draw(QPainter* p, const QwtScaleMap& xMap,
         }
     }
 
-    p->restore();
-    emit const_cast<QPCurve*>(this)->drawEnded();
-}
-
-QwtDoubleRect QPCurve::boundingRect() const {
-    double xMin, xMax, yMin, yMax;
-    if(!const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(xMin,xMax,yMin,yMax))
-        return QwtDoubleRect();
-    
-    // have to switch y min and max for some reason..
-    return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
-}
-
-QWidget* QPCurve::legendItem() const {
-    QwtLegendItem* i = new QwtLegendItem(m_symbol, m_line.asQPen(), title());
-    i->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowSymbol |
-                         QwtLegendItem::ShowText);
-    return i;
-}
-
-
-///////////////////////////////
-// QPSCATTERPLOT DEFINITIONS //
-///////////////////////////////
-
-// Static //
-
-const String QPScatterPlot::CLASS_NAME = "QPScatterPlot";
-
-const unsigned int QPScatterPlot::DEFAULT_ERROR_CAP = 10;
-
-
-// Constructors/Destructors //
-
-QPScatterPlot::QPScatterPlot(PlotPointDataPtr data, const String& title):
-        m_curve(data) {
-    QPPlotItem::setTitle(title);
-    
-    connect(&m_curve, SIGNAL(drawStarted()), SLOT(curveDrawingStarted()));
-    connect(&m_curve, SIGNAL(drawEnded()), SLOT(curveDrawingEnded()));
-}
-
-QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
-        m_curve(copy.pointData()) {
-    QPPlotItem::setTitle(copy.title());
-    
-    setLine(copy.line());
-    setSymbol(copy.symbol());
-    
-    // check for masked plot
-    const MaskedScatterPlot* m = dynamic_cast<const MaskedScatterPlot*>(&copy);
-    if(m != NULL) {
-        setMaskedLine(m->maskedLine());
-        setMaskedSymbol(m->maskedSymbol());
-    }
-    
-    // check for error plot
-    const ErrorPlot* e = dynamic_cast<const ErrorPlot*>(&copy);
-    if(e != NULL) {
-        setErrorLine(e->errorLine());
-        setErrorCapSize(e->errorCapSize());
-    }
-}
-
-QPScatterPlot::~QPScatterPlot() { }
-
-
-// Public Methods //
-
-bool QPScatterPlot::isValid() const { return m_curve.isValid(); }
-
-
-QwtPlotItem& QPScatterPlot::asQwtPlotItem() { return m_curve; }
-const QwtPlotItem& QPScatterPlot::asQwtPlotItem() const { return m_curve; }
-
-
-bool QPScatterPlot::linesShown() const {
-    return m_curve.line_().style() != PlotLine::NOLINE; }
-void QPScatterPlot::setLinesShown(bool l) {
-    if(l != linesShown()) {
-        m_curve.line_().setStyle(l ? PlotLine::SOLID : PlotLine::NOLINE);
-        m_curve.itemChanged();
-    }
-}
-
-PlotLinePtr QPScatterPlot::line() const { return new QPLine(m_curve.line_()); }
-void QPScatterPlot::setLine(const PlotLine& line) {
-    if(m_curve.line_() != line) {
-        m_curve.line_() = line;
-        m_curve.itemChanged();
-    }
-}
-
-
-PlotPointDataPtr QPScatterPlot::pointData() const {
-    return m_curve.pointData(); }
-
-bool QPScatterPlot::symbolsShown() const {
-    return m_curve.symbol_().symbol() != PlotSymbol::NOSYMBOL; }
-
-void QPScatterPlot::setSymbolsShown(bool show) {
-    if(show != symbolsShown()) {
-        m_curve.symbol_().setSymbol(show ? PlotSymbol::CIRCLE :
-                                           PlotSymbol::NOSYMBOL);
-        m_curve.itemChanged();
-    }
-}
-
-PlotSymbolPtr QPScatterPlot::symbol() const {
-    return new QPSymbol(m_curve.symbol_()); }
-
-void QPScatterPlot::setSymbol(const PlotSymbol& sym) {
-    if(sym != m_curve.symbol_()) {
-        m_curve.symbol_() = sym;
-        m_curve.itemChanged();
-    }
-}
-
-
-PlotMaskedPointDataPtr QPScatterPlot::maskedData() const {
-    return m_curve.maskedData(); }
-
-bool QPScatterPlot::maskedLinesShown() const {
-    return m_curve.maskedLine_().style() != PlotLine::NOLINE; }
-void QPScatterPlot::setMaskedLinesShown(bool s) {
-    if(s != maskedLinesShown()) {
-        m_curve.maskedLine_().setStyle(s ? PlotLine::SOLID : PlotLine::NOLINE);
-        m_curve.itemChanged();
-    }
-}
-
-PlotLinePtr QPScatterPlot::maskedLine() const {
-    return new QPLine(m_curve.maskedLine_()); }
-void QPScatterPlot::setMaskedLine(const PlotLine& line) {
-    if(m_curve.maskedLine_() != line) {
-        m_curve.maskedLine_() = line;
-        m_curve.itemChanged();
-    }
-}
-
-bool QPScatterPlot::maskedSymbolsShown() const {
-    return m_curve.maskedSymbol_().symbol() != PlotSymbol::NOSYMBOL; }
-void QPScatterPlot::setMaskedSymbolsShown(bool s) {
-    if(s != maskedSymbolsShown()) {
-        m_curve.maskedSymbol_().setSymbol(s ? PlotSymbol::CIRCLE :
-                                              PlotSymbol::NOSYMBOL);
-        m_curve.itemChanged();
-    }
-}
-
-PlotSymbolPtr QPScatterPlot::maskedSymbol() const {
-    return new QPSymbol(m_curve.maskedSymbol_()); }
-void QPScatterPlot::setMaskedSymbol(const PlotSymbol& symbol) {
-    if(symbol != m_curve.maskedSymbol_()) {
-        m_curve.maskedSymbol_() = symbol;
-        m_curve.itemChanged();
-    }
-}
-
-
-PlotErrorDataPtr QPScatterPlot::errorData() const {
-    return m_curve.errorData(); }
-
-bool QPScatterPlot::errorLineShown() const {
-    return m_curve.errorLine_().style() != PlotLine::NOLINE; }
-void QPScatterPlot::setErrorLineShown(bool s) {
-    if(s != errorLineShown()) {
-        m_curve.errorLine_().setStyle(s ? PlotLine::SOLID : PlotLine::NOLINE);
-        m_curve.itemChanged();
-    }
-}
-
-PlotLinePtr QPScatterPlot::errorLine() const {
-    return new QPLine(m_curve.errorLine_()); }
-void QPScatterPlot::setErrorLine(const PlotLine& line) {
-    if(m_curve.errorLine_() != line) {
-        m_curve.errorLine_() = line;
-        m_curve.itemChanged();
-    }
-}
-
-unsigned int QPScatterPlot::errorCapSize() const { return m_curve.errorCap_();}
-
-void QPScatterPlot::setErrorCapSize(unsigned int capSize) {
-    if(capSize != errorCapSize()) {
-        m_curve.errorCap_() = capSize;
-        m_curve.itemChanged();
-    }
-}
-
-
-// Private Slots //
-
-void QPScatterPlot::curveDrawingStarted() {
-    QPI_DRAWLOG1_(m_logger)
-}
-
-void QPScatterPlot::curveDrawingEnded() {
-    QPI_DRAWLOG2_(m_logger)
+    p->restore();    
 }
 
 }

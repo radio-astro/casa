@@ -34,171 +34,268 @@ namespace casa {
 // PLOTMSTHREAD DEFINITIONS //
 //////////////////////////////
 
-// Static //
-
-PlotMSOperationThread* PlotMSThread::threadForRedrawingPlotter(PlotterPtr p) {
-    vector<PlotCanvasPtr> canvases;
-    if(!p.null()) canvases = p->canvasLayout()->allCanvases();
-    return new PlotMSDrawThread(canvases);
-}
-
-PlotMSOperationThread* PlotMSThread::threadForRedrawingPlot(PlotMSPlot* plot) {
-    vector<PlotCanvasPtr> canvases;
-    if(plot != NULL) canvases = plot->canvases();
-    return new PlotMSDrawThread(canvases);
-}
-
-const unsigned int PlotMSThread::DEFAULT_CHECK_TIME_MSEC = 250;
-
-
-// Non-Static //
-
-PlotMSThread::PlotMSThread(PlotMSOperationThread* thread,
-        PlotMSProgress* progress, unsigned int checkTime) :
-        itsThread_(thread), itsProgress_(progress), itsCheckTime_(checkTime) {
-    if(itsProgress_ != NULL)
-        connect(this,
-                SIGNAL(progressAndStatusChanged(unsigned int, const String&)),
-                itsProgress_, SLOT(setProgress(unsigned int, const String&)));
+PlotMSThread::PlotMSThread(PlotProgressWidget* progress,
+        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
+        itsProgressWidget_(progress), itsPostThreadMethod_(postThreadMethod),
+        itsPostThreadObject_(postThreadObject) {
+    connect(progress, SIGNAL(backgroundRequested()), SLOT(background()));
+    connect(progress, SIGNAL(pauseRequested()), SLOT(pause()));
+    connect(progress, SIGNAL(resumeRequested()), SLOT(resume()));
+    connect(progress, SIGNAL(cancelRequested()), SLOT(cancel()));
     
-    if(itsCheckTime_ == 0) itsCheckTime_ = DEFAULT_CHECK_TIME_MSEC;
+    connect(this, SIGNAL(initializeProgress(const String&)),
+            progress, SLOT(initialize(const String&)));
+    connect(this, SIGNAL(updateProgress(unsigned int, const String&)),
+            progress, SLOT(setProgress(unsigned int, const String&)));
+    connect(this, SIGNAL(finalizeProgress()), progress, SLOT(finalize()));
 }
 
 PlotMSThread::~PlotMSThread() {
-    if(itsThread_ != NULL) delete itsThread_;
+    /*if(itsDeletePostThreadMethod_) delete itsPostThreadMethod_;*/ }
+
+/*
+PlotMSPostThreadMethod PlotMSThread::getPostThreadMethod() {
+    return itsPostThreadMethod_; }
+PlotMSPostThreadMethodObject PlotMSThread::getPostThreadMethodObject() {
+    return itsPostThreadMethodObject_; }
+*/
+
+void PlotMSThread::postThreadMethod() {
+    if(itsPostThreadMethod_ != NULL && itsPostThreadObject_ != NULL)
+        (*itsPostThreadMethod_)(itsPostThreadObject_);
 }
 
+void PlotMSThread::initializeProgressWidget(const String& operationName) {
+    emit initializeProgress(operationName); }
 
-void PlotMSThread::run() {
-    if(itsThread_ == NULL) return;
-    
-    if(itsProgress_ != NULL)
-        itsProgress_->initialize(itsThread_->operationName());
-    
-    itsThread_->start();
-    while(itsThread_->isRunning() && !itsThread_->isFinished()) {
-        usleep(itsCheckTime_ * 1000);
-        emit progressAndStatusChanged(itsThread_->currentProgress(),
-                                      itsThread_->currentStatus());
-    }
-    
-    itsProgress_->finalize();
-}
+void PlotMSThread::updateProgressWidget(unsigned int progress,
+        const String& status) { emit updateProgress(progress, status); }
+
+void PlotMSThread::finalizeProgressWidget() { emit finalizeProgress(); }
 
 
 //////////////////////////////////
 // PLOTMSDRAWTHREAD DEFINITIONS //
 //////////////////////////////////
 
-PlotMSDrawThread::PlotMSDrawThread(const vector<PlotCanvasPtr>& canvases) :
-        itsCanvases_(canvases), itsMutex_(new PlotMSMutex()), itsIndex_(0) {
-    // get rid of null canvases
-    for(int i = 0; (unsigned int)i < itsCanvases_.size(); i++) {
-        if(itsCanvases_[i].null()) {
-            itsCanvases_.erase(itsCanvases_.begin() + i);
-            i--;
-        }
-    }
+PlotMSDrawThread::PlotMSDrawThread(PlotMSPlotter* plotter,
+        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
+        PlotMSThread(plotter->getProgressWidget(), postThreadMethod,
+        postThreadObject) {
+    initialize(plotter->getPlotter()->canvasLayout()->allCanvases());
+    connect(this, SIGNAL(updateOperations()), SLOT(operationsUpdated()));
+}
+
+PlotMSDrawThread::PlotMSDrawThread(PlotMSPlot* plot) :
+        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget()) {
+    initialize(plot->canvases());
+    connect(this, SIGNAL(updateOperations()), SLOT(operationsUpdated()));
 }
 
 PlotMSDrawThread::~PlotMSDrawThread() { }
 
-unsigned int PlotMSDrawThread::currentProgress() const {
-    unsigned int progress = 0;
-    itsMutex_->lock();
-    if(!itsOperation_.null()) {
-        // Progress is a function of the current canvas progress and the total
-        // number of canvases.
-        double n = 100.0 * itsCanvases_.size();
-        double perc = itsOperation_->currentProgress() / n;
-        perc += itsIndex_ * 100;
-        progress = (unsigned int)(perc / n);
+
+void PlotMSDrawThread::startOperation() {
+    if(itsCanvases_.size() == 0) {
+        emit finishedOperation(this);
+        return;
     }
-    itsMutex_->unlock();
-    return progress;
-}
-
-String PlotMSDrawThread::currentStatus() const {
-    if(!itsOperation_.null()) return itsOperation_->currentStatus();
-    else                      return "";
-}
-
-
-void PlotMSDrawThread::run() {
-    PlotCanvasPtr canvas;
+    
+    initializeProgressWidget(itsOperations_[0]->name());
+    
+    for(unsigned int i = 0; i < itsOperations_.size(); i++)
+        itsOperations_[i]->setIsFinished(false);
+    
     for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
-        canvas = itsCanvases_[i];
-        itsOperation_ = canvas->operationDraw(itsMutex_);
-        itsIndex_ = i;
-        
-        if(canvas->drawingIsHeld()) canvas->releaseDrawing();
-        else                        canvas->refresh();
+        if(itsCanvases_[i]->drawingIsHeld()) itsCanvases_[i]->releaseDrawing();
+        else                                 itsCanvases_[i]->refresh();
+    }
+}
+
+void PlotMSDrawThread::operationChanged(const PlotOperation& operation) {
+    itsOpMutex_->lock();
+    
+    itsLastStatus_ = operation.currentStatus();
+    for(unsigned int i = 0; i < itsOperations_.size(); i++)
+        if(&*itsOperations_[i] == &operation)
+            itsLastProgresses_[i] = operation.currentProgress();
+    
+    itsOpMutex_->unlock();
+    
+    if(itsUpdateMutex_->tryLock()) {
+        itsUpdateMutex_->unlock();
+        emit updateOperations();
+    } else {
+        itsOpMutex_->lock();
+        itsLastUpdateWaiting_ = true;
+        itsOpMutex_->unlock();
     }
 }
 
 
-////////////////////////////////
-// PLOTMSPROGRESS DEFINITIONS //
-////////////////////////////////
-
-PlotMSProgress::PlotMSProgress(PlotMS* plotms, QWidget* parent) :
-        QWidget(parent), itsParent_(plotms) {
-    setupUi(this);
-    connect(backgroundButton, SIGNAL(clicked()), SLOT(background()));
-    connect(pauseButton, SIGNAL(clicked()), SLOT(pauseResume()));
-    connect(cancelButton, SIGNAL(clicked()), SLOT(cancel()));
+void PlotMSDrawThread::background() {
+    cout << "PlotMSDrawThread::background() not yet implemented." << endl;
 }
 
-PlotMSProgress::~PlotMSProgress() { }
-
-
-void PlotMSProgress::initialize(const String& operationName) {
-    operationLabel->setText(operationName.c_str());
-    progressBar->setValue(0);
-    statusLabel->setText("Starting " + QString(operationName.c_str()) + ".");
+void PlotMSDrawThread::pause() {
+    cout << "PlotMSDrawThread::pause() not yet implemented." << endl;
 }
 
-void PlotMSProgress::finalize() {
-    progressBar->setValue(100);
-    statusLabel->setText("Finished " + operationLabel->text() + ".");
+void PlotMSDrawThread::resume() {
+    cout << "PlotMSDrawThread::resume() not yet implemented." << endl;
+}
+
+void PlotMSDrawThread::cancel() {
+    cout << "PlotMSDrawThread::cancel() not yet implemented." << endl;
 }
 
 
-void PlotMSProgress::setStatus(const String& status) {
-    statusLabel->setText(status.c_str());
+void PlotMSDrawThread::initialize(const vector<PlotCanvasPtr>& canvases) {
+    itsCanvases_.clear();
+    itsOperations_.clear();
+    
+    itsLastProgresses_.clear();
+    itsLastStatus_ = "";
+    itsLastUpdateWaiting_ = false;
+    
+    itsOpMutex_ = new PlotMSMutex();
+    itsUpdateMutex_ = new PlotMSMutex();
+    
+    // Remove nulls and duplicates (shouldn't be necessary).
+    PlotCanvasPtr canvas;
+    bool found;
+    for(unsigned int i = 0; i < canvases.size(); i++) {
+        if(canvases[i].null()) continue;
+        canvas = canvases[i];
+        found = false;
+        for(unsigned int j = 0; !found && j < itsCanvases_.size(); j++)
+            if(itsCanvases_[j] == canvas) found = true;
+        if(!found) itsCanvases_.push_back(canvas);
+    }
+    
+    // Get draw operations.
+    itsOperations_.resize(itsCanvases_.size());
+    for(unsigned int i = 0; i < itsOperations_.size(); i++) {
+        itsOperations_[i] = itsCanvases_[i]->operationDraw();
+        itsOperations_[i]->addWatcher(this);
+    }
+    
+    // Initialize last progresses.
+    itsLastProgresses_.resize(itsCanvases_.size(), 0);
 }
 
-void PlotMSProgress::setProgress(unsigned int progress) {
-    if(progress > 100) progress = 100;
-    progressBar->setValue(progress);
+
+void PlotMSDrawThread::operationsUpdated() {
+    itsUpdateMutex_->lock();
+    
+    itsOpMutex_->lock();
+    
+    unsigned int n = itsLastProgresses_.size();
+    double progress = 0;
+    bool done = true;
+    
+    for(unsigned int i = 0; i < itsLastProgresses_.size(); i++) {
+        progress += itsLastProgresses_[i];
+        done &= itsOperations_[i]->isFinished();
+    }
+    String status = itsLastStatus_;
+    
+    itsOpMutex_->unlock();
+    
+    updateProgressWidget((unsigned int)(progress / n), status);
+    
+    itsOpMutex_->lock();
+    if(done) {
+        itsLastUpdateWaiting_ = false;
+        for(unsigned int i = 0; i < itsOperations_.size(); i++)
+            itsOperations_[i]->removeWatcher(this);
+        finalizeProgressWidget();
+        itsCanvases_.clear();
+        itsOperations_.clear();
+        itsOpMutex_->unlock();        
+        itsUpdateMutex_->unlock();
+        emit finishedOperation(this);
+        return;
+    }
+    itsOpMutex_->unlock();
+    
+    itsUpdateMutex_->unlock();
+    
+    itsOpMutex_->lock();
+    bool b = itsLastUpdateWaiting_;
+    itsOpMutex_->unlock();
+    
+    if(b) {
+        itsOpMutex_->lock();
+        itsLastUpdateWaiting_ = false;
+        itsOpMutex_->unlock();
+        emit updateOperations();
+    }
 }
 
 
-void PlotMSProgress::background() {
-    itsParent_->getLogger().postMessage("PlotMSThread", "background",
-            "Method not yet implemented!");
+///////////////////////////////////
+// PLOTMSCACHETHREAD DEFINITIONS //
+///////////////////////////////////
+
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
+        const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& data,
+        bool loadAxes) :
+        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget()),
+        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsAxes_(axes),
+        itsAxesData_(data), itsLoadAxes_(loadAxes),
+        itsAveraging_(plot->parameters().averaging()) {
+    // Make sure axes data vector is same length as axes vector.
+    if(itsAxesData_.size() != itsAxes_.size())
+        itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
+    
+    // Connect QThread signals.
+    QThread::connect((QThread*)this, SIGNAL(finished()),
+                     SLOT(threadFinished()));
+    QThread::connect((QThread*)this, SIGNAL(terminated()),
+                     SLOT(threadFinished()));
 }
 
-void PlotMSProgress::pauseResume() {
-    pauseButton->setText(pauseButton->isChecked() ? "Resume" : "Pause");
-    itsParent_->getLogger().postMessage("PlotMSThread", "pause/resume",
-            "Method not yet implemented!");
+PlotMSCacheThread::~PlotMSCacheThread() { }
+
+
+void PlotMSCacheThread::run() {
+    if(itsVisSet_ == NULL) return;
+
+    if(itsLoadAxes_) {
+        itsData_->loadCache(*itsVisSet_, itsAxes_, itsAxesData_, itsAveraging_,
+                            this);
+    } else {
+        cout << "PlotMSCacheThread::release_axes not yet implemented." << endl;
+    }
 }
 
-void PlotMSProgress::cancel() {
-    itsParent_->getLogger().postMessage("PlotMSThread", "cancel",
-            "Method not yet implemented!");
+void PlotMSCacheThread::setProgressAndStatus(unsigned int progress,
+        const String& status) {
+    if(progress != itsLastProgress_ || status != itsLastStatus_) {
+        itsLastProgress_ = progress;
+        itsLastStatus_ = status;
+        updateProgressWidget(itsLastProgress_, itsLastStatus_);
+    }
 }
 
 
-/////////////////////////////
-// PLOTMSMUTEX DEFINITIONS //
-/////////////////////////////
+void PlotMSCacheThread::background() {
+    cout << "PlotMSCacheThread::background() not yet implemented." << endl; }
 
-PlotMSMutex::PlotMSMutex() { }
-PlotMSMutex::~PlotMSMutex() { }
+void PlotMSCacheThread::pause() {
+    cout << "PlotMSCacheThread::pause() not yet implemented." << endl; }
 
-void PlotMSMutex::lock() { itsMutex_.lock(); }
-void PlotMSMutex::unlock() { itsMutex_.unlock(); }
+void PlotMSCacheThread::resume() {
+    cout << "PlotMSCacheThread::resume() not yet implemented." << endl; }
+
+void PlotMSCacheThread::cancel() {
+    cout << "PlotMSCacheThread::cancel() not yet implemented." << endl; }
+
+
+void PlotMSCacheThread::threadFinished() {
+    finalizeProgressWidget();
+    emit finishedOperation(this);
+}
 
 }

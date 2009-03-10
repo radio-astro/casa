@@ -40,7 +40,7 @@
 namespace casa {
 
 // Implementation of QPButton for Qwt plotter, using a QPushButton.
-class QPButton : public QObject, public virtual PlotButton {
+class QPButton : public QObject, public PlotButton {
     Q_OBJECT
     
 public:
@@ -143,7 +143,7 @@ private slots:
 
 
 // Implementation of PlotCheckbox for Qwt plotter, using a QCheckBox.
-class QPCheckbox : public QObject, public virtual PlotCheckbox {
+class QPCheckbox : public QObject, public PlotCheckbox {
     Q_OBJECT
     
 public:
@@ -221,7 +221,7 @@ private slots:
 
 
 // Implementation of PlotPanel for Qwt plotter, using a QFrame.
-class QPPanel : public QObject, public virtual PlotPanel {
+class QPPanel : public QObject, public PlotPanel {
     Q_OBJECT
     
 public:

@@ -81,6 +81,54 @@ QPAnnotation::~QPAnnotation() { }
 
 // Public Methods //
 
+QwtDoubleRect QPAnnotation::boundingRect() const {
+    if(m_canvas != NULL) {        
+        QwtScaleMap xMap = m_canvas->asQwtPlot().canvasMap(QwtPlot::xBottom);
+        QwtScaleMap yMap = m_canvas->asQwtPlot().canvasMap(QwtPlot::yLeft);
+        
+        int x, y;
+        if(m_coord.system() == PlotCoordinate::PIXEL) {
+            x = (int)(m_coord.x() + 0.5);
+            y = (int)(m_coord.y() + 0.5);
+        } else {
+            PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
+                                            PlotCoordinate::WORLD);
+            x = xMap.transform(c.x());
+            y = yMap.transform(c.y());
+        }
+        
+        QSize s = m_label.textSize(m_label.font());
+        x += s.width();
+        y += s.height();
+        
+        double dx, dy;
+        if(m_coord.system() == PlotCoordinate::PIXEL) {
+            dx = xMap.invTransform(x) - xMap.invTransform(m_coord.x());
+            dy = yMap.invTransform(y) - yMap.invTransform(m_coord.y());
+        } else {
+            PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
+                                            PlotCoordinate::WORLD);
+            dx = xMap.invTransform(x) - c.x();
+            dy = yMap.invTransform(y) - c.y();
+        }
+        
+        if(dx < 0) dx = -dx;
+        if(dy < 0) dy = -dy;
+        
+        PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
+                                                       PlotCoordinate::WORLD);
+        return QRectF(c.x(), c.y(), dx, dy);
+    } else return QRectF();
+}
+
+QWidget* QPAnnotation::legendItem() const {
+    QwtText text = QwtPlotItem::title();
+    text.setBackgroundPen(m_label.backgroundPen());
+    text.setBackgroundBrush(m_label.backgroundBrush());
+    return new QwtTextLabel(text);
+}
+
+
 String QPAnnotation::text() const { return m_label.text().toStdString(); }
 
 void QPAnnotation::setText(const String& newText) {
@@ -156,49 +204,16 @@ void QPAnnotation::setBackground(const PlotAreaFill& area) {
     }
 }
 
-QwtDoubleRect QPAnnotation::boundingRect() const {
-    if(m_canvas != NULL) {        
-        QwtScaleMap xMap = m_canvas->asQwtPlot().canvasMap(QwtPlot::xBottom);
-        QwtScaleMap yMap = m_canvas->asQwtPlot().canvasMap(QwtPlot::yLeft);
-        
-        int x, y;
-        if(m_coord.system() == PlotCoordinate::PIXEL) {
-            x = (int)(m_coord.x() + 0.5);
-            y = (int)(m_coord.y() + 0.5);
-        } else {
-            PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
-                                            PlotCoordinate::WORLD);
-            x = xMap.transform(c.x());
-            y = yMap.transform(c.y());
-        }
-        
-        QSize s = m_label.textSize(m_label.font());
-        x += s.width();
-        y += s.height();
-        
-        double dx, dy;
-        if(m_coord.system() == PlotCoordinate::PIXEL) {
-            dx = xMap.invTransform(x) - xMap.invTransform(m_coord.x());
-            dy = yMap.invTransform(y) - yMap.invTransform(m_coord.y());
-        } else {
-            PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
-                                            PlotCoordinate::WORLD);
-            dx = xMap.invTransform(x) - c.x();
-            dy = yMap.invTransform(y) - c.y();
-        }
-        
-        if(dx < 0) dx = -dx;
-        if(dy < 0) dy = -dy;
-        
-        PlotCoordinate c = m_canvas->convertCoordinate(m_coord,
-                                                       PlotCoordinate::WORLD);
-        return QRectF(c.x(), c.y(), dx, dy);
-    } else return QRectF();
-}
 
-void QPAnnotation::draw(QPainter* painter, const QwtScaleMap& xMap,
-                        const QwtScaleMap& yMap, const QRect& rect) const {    
-    QPI_DRAWLOG1    
+QwtText& QPAnnotation::asQwtText() { return m_label; }
+const QwtText& QPAnnotation::asQwtText() const { return m_label; }
+
+
+// Protected Methods //
+
+void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     if(!m_label.isEmpty() && m_canvas != NULL) {
         painter->save();
 
@@ -240,18 +255,7 @@ void QPAnnotation::draw(QPainter* painter, const QwtScaleMap& xMap,
 
         painter->restore();
     }
-    QPI_DRAWLOG2
 }
-
-QWidget* QPAnnotation::legendItem() const {
-    QwtText text = QwtPlotItem::title();
-    text.setBackgroundPen(m_label.backgroundPen());
-    text.setBackgroundBrush(m_label.backgroundBrush());
-    return new QwtTextLabel(text);
-}
-
-QwtText& QPAnnotation::asQwtText() { return m_label; }
-const QwtText& QPAnnotation::asQwtText() const { return m_label; }
 
 }
 

@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <sys/wait.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <xmlcasa/ms/ms_cmpt.h>
 #include <msfits/MSFits/MSFitsInput.h>
@@ -42,9 +43,9 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/MSFixVis.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/OS/DOos.h>
 #include <tables/Tables/Table.h>
@@ -52,7 +53,6 @@
 #include <tables/Tables/TableParse.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 
@@ -98,6 +98,23 @@ ms::~ms()
    }
 }
 
+/////// Internal helper functions ///////
+
+// Takes a variant a returns a casa String, converting -1 to "" along the way.
+inline static String m1toBlankCStr_(const ::casac::variant& v) 
+{
+  String cs(toCasaString(v));
+  return cs == String("-1") ? "" : cs;
+}
+
+// Returns whether or not the MS pointed to by itsMS can be written to,
+// avoiding a weird exception from itsMS->isWritable() if no ms is attached.
+inline bool ms::ready2write_()
+{
+  return (!detached() && itsMS->isWritable());
+}
+////// End of helper functions //////
+
 int
 ms::nrow(const bool selected)
 {
@@ -123,10 +140,9 @@ ms::iswritable()
 {
   Bool rstat(False);
   try {
-     if(!detached()){
-       rstat = itsMS->isWritable();
-     }
-  } catch (AipsError x) {
+    rstat = ready2write_();
+  }
+  catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
@@ -211,6 +227,7 @@ try {
   Table::relinquishAutoLocks();
   return True;
 }
+
 bool
 ms::close()
 {
@@ -279,12 +296,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column, const ::casac
 
          MeasurementSet *mssel= new MeasurementSet();
          Bool subselect=False;
-	 String fieldS=toCasaString(field);
-	 if(fieldS==String("-1"))
-	   fieldS="";
-	 String spwS=toCasaString(spw);
-	 if(spwS==String("-1"))
-	   spwS="";
+	 String fieldS(m1toBlankCStr_(field));
+	 String spwS(m1toBlankCStr_(spw));
 	 String baselineS=toCasaString(baseline);
 	 String timeS=toCasaString(time);
 	 String scanS=toCasaString(scan);
@@ -723,12 +736,12 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
        mscat.concatenate(appendedMS);
     }
      {
-       String message = "Appended data from file " + String(msfile);
+       String message = String(msfile) + " appended to " + itsMS->tableName();
        ostringstream param;
        param << "msfile= " << msfile
              << " freqTol='" << casaQuantity(freqtol) << "' dirTol='" << casaQuantity(dirtol) << "'";
        String paramstr=param.str();
-       writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), ms::name(), "ms");
+       writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), msfile, "ms");
      }
      rstat = True;
    } catch (AipsError x) {
@@ -749,14 +762,10 @@ ms::split(const std::string& outputms, const ::casac::variant& field,
 	  const ::casac::variant& uvrange, const std::string& taql, 
 	  const std::string& whichcol)
 {
-
-
-
   Bool rstat(False);
   try {
      *itsLog << LogOrigin("ms", "split");
-     if(!(itsMS->isWritable())){
-
+     if(!ready2write_()){
        *itsLog << LogIO::SEVERE
             << "Please open ms with parameter nomodify=false. Write access to ms is needed by split to store some temporary selection information. "
             << LogIO::POST;
@@ -766,12 +775,8 @@ ms::split(const std::string& outputms, const ::casac::variant& field,
 
      SubMS *splitter = new SubMS(*itsMS);
      *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
-     String t_field=toCasaString(field);
-     if(t_field==String("-1"))
-       t_field="";
-     String t_spw=toCasaString(spw);
-     if(t_spw==String("-1"))
-       t_spw="";
+     String t_field(m1toBlankCStr_(field));
+     String t_spw(m1toBlankCStr_(spw));
      String t_antenna=toCasaString(antenna);
      String t_scan=toCasaString(scan);
      String t_uvrange=toCasaString(uvrange);
@@ -1076,7 +1081,7 @@ bool ms::continuumsub(const ::casac::variant& field,
   Bool rstat(False);
   try {
     *itsLog << LogOrigin("ms", "continuumsub");
-    *itsLog << LogIO::NORMAL2 << "continuumsub starting"<<LogIO::POST;
+    *itsLog << LogIO::NORMAL2 << "continuumsub starting" << LogIO::POST;
       
     MSContinuumSubtractor sub(*itsMS);
     sub.setField(toCasaString(field));
@@ -1086,7 +1091,7 @@ bool ms::continuumsub(const ::casac::variant& field,
     sub.setOrder(fitorder);
     sub.setMode(mode);
     sub.subtract();
-    *itsLog << LogIO::NORMAL2 << "continuumsub finished"<<LogIO::POST;  
+    *itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;  
     rstat = True;
  } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1095,6 +1100,64 @@ bool ms::continuumsub(const ::casac::variant& field,
  }
  Table::relinquishAutoLocks();
  return rstat;
+}
+
+bool ms::calcuvw(const ::casac::variant& field)
+{
+  Bool rstat(false);
+  try {
+    *itsLog << LogOrigin("ms", "calcuvw");
+    if(!ready2write_()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open ms with parameter nomodify=false so the UVW column can be changed."
+	      << LogIO::POST;
+      return false;
+    }
+
+    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
+      
+    MSFixVis visfixer(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
+    visfixer.setField(m1toBlankCStr_(field));
+    rstat = visfixer.calc_uvw();
+    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
+
+bool ms::fixvis(const ::casac::variant& field)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("ms", "fixvis");
+    if(!ready2write_()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open ms with parameter nomodify=false."
+	      << LogIO::POST;
+      return false;
+    }
+    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
+      
+    MSFixVis visfixer(*itsMS);
+    visfixer.setField(toCasaString(field));
+    //rstat = visfixer.fixvis();
+    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
 }
 
 /*
@@ -1112,7 +1175,6 @@ ms::ptsrc(const std::vector<int>& fldid, const std::vector<int>& spwid)
 bool
 ms::done()
 {
-
   *itsLog << LogOrigin("ms", "done");
   Table::relinquishAutoLocks();
   return close();
@@ -1175,11 +1237,10 @@ ms::hanningsmooth()
   Bool rstat(False);
   try {
      *itsLog << LogOrigin("ms", "hanningsmooth");
-     if(!(itsMS->isWritable())){
+     if(!ready2write_()){
        *itsLog << LogIO::SEVERE
-	       << "Please open ms with parameter nomodify=false. "
-	       << "Write access to ms is needed by hanningsmooth to "
-	       << "store smoothed channel data into CORRECTED_DATA column."
+	       << "Please open ms with parameter nomodify=false so "
+	       << "smoothed channel data can be stored (in the CORRECTED_DATA column)."
 	       << LogIO::POST;
        return rstat;
      }
@@ -1207,7 +1268,7 @@ ms::uvsub(Bool reverse)
   Bool rstat(False);
   try {
      *itsLog << LogOrigin("ms", "uvsub");
-     if(!(itsMS->isWritable())){
+     if(!ready2write_()){
        *itsLog << LogIO::SEVERE
 	       << "Please open ms with parameter nomodify=false. "
 	       << "Write access to ms is needed by uvsub."

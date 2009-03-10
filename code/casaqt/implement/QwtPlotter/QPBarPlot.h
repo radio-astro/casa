@@ -30,19 +30,17 @@
 #ifdef AIPS_HAS_QWT
 
 #include <graphics/GenericPlotter/Plot.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
+
 #include <casaqt/QwtPlotter/QPData.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
-
-#include <qwt_plot_item.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
 // Implementation of BarPlot for Qwt plotter.
-class QPBarPlot : public QPPlotItem, public virtual BarPlot,
-                  public QwtPlotItem {
+class QPBarPlot : public QPPlotItem, public BarPlot {
 public:
     // Static //
     
@@ -75,11 +73,11 @@ public:
     
     // QPPlotItem Methods //
     
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem() { return *this; }
-    const QwtPlotItem& asQwtPlotItem() const { return *this; }
-    // </group>
+    // Overrides QwtPlotItem::boundingRect();
+    QwtDoubleRect boundingRect() const;
+    
+    // Overrides QwtPlotItem::legendItem().
+    QWidget* legendItem() const;
     
     
     // Plot Methods //
@@ -114,23 +112,14 @@ public:
     // Implements BarPlot::setAreaFill().
     void setAreaFill(const PlotAreaFill& areaFill);
     
+protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
     
-    // QwtPlotItem Methods //
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              const QRect&) const {
-        draw(p, xMap, yMap, 0, m_data.size() - 1); }
-    
-    // Additional drawing method similar to QwtPlotCurve::draw().
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              int from, int to) const;
-    
-    // Overrides QwtPlotItem::boundingRect();
-    QwtDoubleRect boundingRect() const;
-    
-    // Overrides QwtPlotCurve::legendItem().
-    QWidget* legendItem() const;
+    // Implements QPPlotItem::draw_().
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
     
 private:
     QPPointData m_data;    // Data

@@ -30,9 +30,16 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
 
+#include <vector>
+
 #include <casa/namespace.h>
+using namespace std;
 
 namespace casa {
+
+//# Forward Declarations
+class PlotOperationWatcher;
+
 
 // Abstract class, for a synchronization mutex specific to the threading
 // library used by the plotting implementations.
@@ -52,6 +59,10 @@ public:
     
     // Unlocks the mutex.
     virtual void unlock() = 0;
+    
+    // Tries to lock the mutex, and returns immediately with either true for
+    // success (mutex is now locked), or false (mutex is unavailable).
+    virtual bool tryLock() = 0;
 };
 typedef CountedPtr<PlotMutex> PlotMutexPtr;
 
@@ -75,7 +86,8 @@ public:
     String currentStatus() const;
     // </group>
     
-    // Mutators (synchronized).
+    // Mutators (synchronized).  Any mutator will notify registered watchers of
+    // a change.
     // <group>
     void setInProgress(bool inProgress);
     void setIsFinished(bool isFinished);
@@ -86,9 +98,20 @@ public:
     // Sets the operation's mutex to the given.
     void setMutex(PlotMutexPtr mutex);
     
+    // Adds the given watcher for this object.
+    void addWatcher(PlotOperationWatcher* watcher);
+    
+    // Removes the given watcher for this object.
+    void removeWatcher(PlotOperationWatcher* watcher);
+    
     // Resets the in progress, is finished, current progress, and current
-    // status members.
+    // status members.  Will notify registered watchers of a change.
     void reset();
+    
+    // Updates in progress, is finished, current progress, and current status
+    // members to reflect a "finished" state.  Will notify registered watchers
+    // of a change.
+    void finish();
     
 private:    
     // Name.
@@ -105,8 +128,32 @@ private:
     
     // Synchronization mutex.
     PlotMutexPtr m_mutex;
+    
+    // Watchers.
+    vector<PlotOperationWatcher*> m_watchers;
+    
+    
+    // Notifies any registered watchers that the operation has changed.
+    void notifyWatchers() const;
 };
 typedef CountedPtr<PlotOperation> PlotOperationPtr;
+
+
+// Abstract interface for any object that wants to watch a PlotOperation object
+// for changes.
+class PlotOperationWatcher {
+public:
+    // Constructor.
+    PlotOperationWatcher() { }
+    
+    // Destructor.
+    virtual ~PlotOperationWatcher() { }
+    
+    
+    // This method is called to notify the watcher that the given PlotOperation
+    // object has changed.
+    virtual void operationChanged(const PlotOperation& operation) = 0;
+};
 
 }
 

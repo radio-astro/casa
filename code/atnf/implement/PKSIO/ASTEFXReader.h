@@ -48,8 +48,6 @@ using namespace std ;
 
 #include <casa/namespace.h>
 #include <atnf/PKSIO/ASTEReader.h>
-#include <atnf/PKSIO/ASTEFXHeader.h>
-#include <atnf/PKSIO/NRODataset.h>
 
 class ASTEFXReader : public ASTEReader
 {
@@ -61,7 +59,7 @@ class ASTEFXReader : public ASTEReader
   ~ASTEFXReader() ;
 
   // Read data header
-  int readHeader() ;
+  virtual int read() ;
 };
 
 #endif /* ASTE_FX_READER_H */

@@ -122,7 +122,7 @@ public:
     
     // Returns this object's PlotMSLogger if logging for the given event is
     // turned on, NULL otherwise.
-    PlotMSLogger* loggerFor(PlotMSLogger::MeasurementEvent event);
+    PlotMSLogger* loggerFor(PlotMSLogger::Event event);
     
     
     // Plot Management Methods //
@@ -153,7 +153,7 @@ private:
     
     // Log states.
     // <group>
-    int itsLogMeasurementFlag_;
+    int itsLogEventFlag_;
     // </group>
     
     // Plot manager.

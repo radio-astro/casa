@@ -57,7 +57,6 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
@@ -70,8 +69,9 @@
 #include <images/Images/SepImageConvolver.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-#include <images/Images/WCLELMask.h>
 #include <images/Images/ImageAnalysis.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/Lattices/LatticeAddNoise.h>

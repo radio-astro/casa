@@ -31,6 +31,7 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/NRO45Reader.h>
+#include <atnf/PKSIO/NROOTFDataset.h>
 
 #include <string>
 #include <stdio.h>
@@ -52,52 +53,21 @@ NRO45Reader::~NRO45Reader()
 }
   
 // Read data header
-Int NRO45Reader::readHeader() 
+Int NRO45Reader::read() 
 {
   // DEBUG
-  //cout << "NRO45Reader::readHeader()" << endl ;
+  //cout << "NRO45Reader::read()" << endl ;
   //
   int status = 0 ;
 
-  // check endian
-  fseek( fp_, 144, SEEK_SET ) ;
-  int tmp ;
-  if( fread( &tmp, 1, sizeof(int), fp_ ) != sizeof(int) ) {
-    cerr << "Error while checking endian of the file. " << endl ;
-    return -1 ;
-  }
-  if ( ( 0 < tmp ) && ( tmp <= NRO_ARYMAX ) ) {
-    same_ = true ;
-    cout << "NRO45Reader::read()  same endian " << endl ;
-  }
-  else {
-    same_ = false ;
-    cout << "NRO45Reader::read()  different endian " << endl ;
-  }
-  fseek( fp_, 0, SEEK_SET ) ;
+  // create NROOTFDataset
+  dataset_ = new NROOTFDataset( filename_ ) ;
 
-  // create NRO45Header
-  header_ = new NRO45Header() ;
+  // fill NROOTFDataset
+  status = dataset_->fillHeader() ;
 
-  // fill NRO45Header
-  status = header_->fill( fp_, same_ ) ;
-
-  if ( status == -1 ) {
+  if ( status != 0 ) {
     cerr << "Failed to fill data header." << endl ;
-    scanNum_ = 0 ;
-    scanLen_ = 0 ;
-  }
-  else {
-    scanNum_ = header_->getNSCAN() + 1 ; // includes ZERO scan
-    scanLen_ = header_->getSCNLEN() ;
-    rowNum_ = scanNum_ * header_->getARYNM() ;
-    chmax_ = (int) ( scanLen_ - SCAN_HEADER_SIZE ) * 8 / header_->getIBIT() ;
-    data_->LDATA = new char[scanLen_-SCAN_HEADER_SIZE] ;
-    cout << "NRO45Reader::readHeader()  Number of scan        = " << scanNum_ << endl ;
-    cout << "NRO45Reader::readHeader()  Number of data record = " << rowNum_ << endl ;
-    cout << "NRO45Reader::readHeader()  Length of data record = " << scanLen_ << " byte" << endl ;
-    cout << "NRO45Reader::readHeader()  Max number of channel = " << chmax_ << endl ;
-    cout << "NRO45Reader::readHeader()  allocated memory for spectral data: " << scanLen_-SCAN_HEADER_SIZE << " bytes" << endl ;
   }
 
   return status ;

@@ -48,8 +48,6 @@ using namespace std ;
 
 #include <casa/namespace.h>
 #include <atnf/PKSIO/NROReader.h>
-#include <atnf/PKSIO/ASTEHeader.h>
-#include <atnf/PKSIO/NRODataset.h>
 
 class ASTEReader : public NROReader
 {
@@ -61,11 +59,11 @@ class ASTEReader : public NROReader
   ~ASTEReader() ;
 
   // Read data header
-  virtual int readHeader() ;
+  virtual int read() ;
 
  protected:
   // Get Antenna Position in ITRF coordinate
-  vector<double> getAntennaPosition() ;
+  virtual vector<double> getAntennaPosition() ;
 
 };
 

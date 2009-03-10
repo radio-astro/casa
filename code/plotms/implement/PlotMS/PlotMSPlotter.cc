@@ -77,30 +77,35 @@ int PlotMSPlotter::execLoop() {
 
 void PlotMSPlotter::doThreadedRedraw(PlotMSPlot* plot) {
     if(plot != NULL)
-        doThreadedOperation(PlotMSThread::threadForRedrawingPlot(plot));
+        doThreadedOperation(new PlotMSDrawThread(plot));
     else
-        doThreadedOperation(PlotMSThread::threadForRedrawingPlotter(
-                            itsPlotter_));
+        doThreadedOperation(new PlotMSDrawThread(this));
 }
 
-void PlotMSPlotter::doThreadedOperation(PlotMSOperationThread* thread) {
-    if(thread == NULL) return;
-    
-    PlotMSThread* t = new PlotMSThread(thread, itsThreadProgress_);
+void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
+    if(t == NULL) return;
     
     if(itsCurrentThread_ == NULL) {
         // no currently running thread, so start this one
         itsCurrentThread_ = t;
-        connect(itsCurrentThread_, SIGNAL(finished()),
-                SLOT(currentThreadFinished()));
-        connect(itsCurrentThread_, SIGNAL(terminated()),
+        connect(itsCurrentThread_, SIGNAL(finishedOperation(PlotMSThread*)),
                 SLOT(currentThreadFinished()));
         
-        // disable self and show progress GUI
+        // disable widgets and resizing
         setEnabled(false);
-        itsThreadProgress_->setVisible(true);
+        itsMinSize_ = minimumSize();
+        itsMaxSize_ = maximumSize();
+        setMinimumSize(size());
+        setMaximumSize(size());
         
-        itsCurrentThread_->start();
+        // show progress GUI
+        QRect rect = itsThreadProgress_->geometry();
+        rect.moveCenter(geometry().center());
+        itsThreadProgress_->move(rect.topLeft());
+        itsThreadProgress_->setVisible(true);
+        itsThreadProgress_->setEnabled(true);
+        
+        itsCurrentThread_->startOperation();
         
     } else {
         // there is a currently running thread, so add to waiting list
@@ -129,9 +134,7 @@ void PlotMSPlotter::holdDrawing() {
 }
 
 void PlotMSPlotter::releaseDrawing() {
-    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++)
-        canvases[i]->releaseDrawing();
+    doThreadedRedraw();
 }
 
 
@@ -216,8 +219,28 @@ void PlotMSPlotter::showAbout() {
 // Protected Methods //
 
 void PlotMSPlotter::closeEvent(QCloseEvent* event) {
+    if(itsCurrentThread_ != NULL) {
+        if(!showQuestion("One or more threaded operations are not yet "
+                "complete!  Do you still want to quit?", "PlotMS Quit")) {
+            event->ignore();
+            return;
+        }
+        
+        for(unsigned int i = 0; i < itsWaitingThreads_.size(); i++)
+            delete itsWaitingThreads_[i];
+        itsWaitingThreads_.clear();
+        itsCurrentThread_->terminateOperation();
+    }
+    
     // Close plotter separately if not Qt-based.
     if(!isQt_) itsPlotter_->close();
+}
+
+void PlotMSPlotter::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    //cout << "PlotMSPlotter::resizeEvent() " << isVisible() << endl;
+    //if(isVisible()) doThreadedRedraw();
+    // TODO
 }
 
 
@@ -287,8 +310,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     // Set up threads //    
     itsCurrentThread_ = NULL;
-    itsThreadProgress_ = new PlotMSProgress(itsParent_);
+    itsThreadProgress_ = new PlotProgressWidget(false, false, false, this);
     itsThreadProgress_->setVisible(false);
+    itsThreadProgress_->setWindowIcon(windowIcon());
     
     // Connect actions //
     connect(actionFlag, SIGNAL(triggered()), SLOT(actionFlag_()));
@@ -328,7 +352,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     // Set up plotter
     itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
-            PlotMSLogger::levelToMeasurementFlag(
+            PlotMSLogger::levelToEventFlag(
             itsParent_->getParameters().logLevel()), false);
     
     // If Qt, put in window.  Otherwise, just hope that it does something
@@ -376,7 +400,10 @@ void PlotMSPlotter::action(QAction* act) {
 
 // Private Slots //
 
-void PlotMSPlotter::currentThreadFinished() {    
+void PlotMSPlotter::currentThreadFinished() {
+    // Run post-thread method as needed.
+    itsCurrentThread_->postThreadMethod();
+    
     // Clean up current thread.
     delete itsCurrentThread_;
     itsCurrentThread_ = NULL;
@@ -385,12 +412,18 @@ void PlotMSPlotter::currentThreadFinished() {
     if(itsWaitingThreads_.size() > 0) {
         itsCurrentThread_ = itsWaitingThreads_[0];
         itsWaitingThreads_.erase(itsWaitingThreads_.begin());
-        connect(itsCurrentThread_, SIGNAL(finished()),
+        connect(itsCurrentThread_, SIGNAL(finishedOperation()),
                 SLOT(currentThreadFinished()));
-        connect(itsCurrentThread_, SIGNAL(terminated()),
-                SLOT(currentThreadFinished()));
-        itsCurrentThread_->start();
-    } else itsThreadProgress_->setVisible(false);
+        itsCurrentThread_->startOperation();
+    } else {
+        // re-enable and allow resizing
+        setMinimumSize(itsMinSize_);
+        setMaximumSize(itsMaxSize_);
+        setEnabled(true);
+        
+        // hide progress GUI
+        itsThreadProgress_->setVisible(false);
+    }
 }
 
 

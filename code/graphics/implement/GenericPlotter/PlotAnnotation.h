@@ -39,10 +39,16 @@ namespace casa {
 // annotation has text, font, orientation, outline, and background properties.
 class PlotAnnotation : public virtual PlotItem {
 public:
+    // Constructor.
     PlotAnnotation() { }
     
+    // Destructor.
     virtual ~PlotAnnotation() { }
     
+    
+    // Implements PlotItem::indexedDrawCount().  Provides default
+    // implementation that returns 1.
+    virtual unsigned int indexedDrawCount() const { return 1; }
     
     // ABSTRACT METHODS //
     
@@ -57,17 +63,6 @@ public:
     
     // Sets the annotation font to the given.
     virtual void setFont(const PlotFont& font) = 0;
-    
-    // Convenience methods for setting font.
-    // <group>
-    virtual void setFont(const PlotFontPtr font) {
-        if(!font.null()) setFont(*font); }
-    virtual void setFontColor(const String& color) {
-        PlotFontPtr f = font();
-        f->setColor(color);
-        setFont(*f);
-    }
-    // </group>
     
     // Returns orientation in counterclockwise degrees (between 0 and 360).
     virtual int orientation() const = 0;
@@ -95,6 +90,26 @@ public:
     // Sets the outline to the given line.
     virtual void setOutline(const PlotLine& line) = 0;
     
+    // Returns a copy of the area fill used for the annotation's background.
+    virtual PlotAreaFillPtr background() const = 0;
+    
+    // Sets the annotation's background to the given.
+    virtual void setBackground(const PlotAreaFill& area) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
+    // Convenience methods for setting font.
+    // <group>
+    virtual void setFont(const PlotFontPtr font) {
+        if(!font.null()) setFont(*font); }
+    virtual void setFontColor(const String& color) {
+        PlotFontPtr f = font();
+        f->setColor(color);
+        setFont(*f);
+    }
+    // </group>
+    
     // Convenience methods for setting the outline.
     // <group>
     virtual void setOutline(const PlotLinePtr line) {
@@ -110,12 +125,6 @@ public:
         setOutline(*line);
     }
     // </group>
-    
-    // Returns a copy of the area fill used for the annotation's background.
-    virtual PlotAreaFillPtr background() const = 0;
-    
-    // Sets the annotation's background to the given.
-    virtual void setBackground(const PlotAreaFill& area) = 0;
     
     // Convenience methods for setting the background.
     // <group>

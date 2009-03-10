@@ -20,11 +20,8 @@ MSUVWGenerator::MSUVWGenerator(MS &ms_ref) :
   antPositions_p(antColumns_p.positionMeas()),
   antOffset_p(antColumns_p.offsetMeas()),
   refpos_p(antPositions_p(0)),  // We use the first antenna for the reference
-  //feedColumns_(new const ROMSFeedColumns(ms_ref.feed())),
   feedOffset_p(msc_p.feed().positionMeas())
 {
-  //delete feedColumns_;           // It's done its work.
-  
   fill_bl_an(bl_an_p, ms_ref);		
 }
 

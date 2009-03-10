@@ -20,7 +20,7 @@
 #include <xmlcasa/record.h>
 #include <xmlcasa/variant.h>
 #include <xmlcasa/images/regionmanager_forward.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 
 namespace casac {
 

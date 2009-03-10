@@ -77,6 +77,7 @@ public:
     // <group>
     PlotFactoryPtr getFactory() { return itsFactory_; }
     PlotterPtr getPlotter() { return itsPlotter_; }
+    PlotProgressWidget* getProgressWidget() { return itsThreadProgress_; }
     PlotMSPlotTab* getPlotTab() { return itsPlotTab_; }
     PlotMSToolsTab* getToolsTab() { return itsToolsTab_; }
     PlotMSOptionsTab* getOptionsTab() { return itsOptionsTab_; }
@@ -109,7 +110,7 @@ public:
     // Runs the given operation thread, keeping GUI and progress information
     // synchronized as necessary.  The given thread will be deleted upon
     // completion.
-    void doThreadedOperation(PlotMSOperationThread* thread);
+    void doThreadedOperation(PlotMSThread* thread);
     
     
     // GUI Methods //
@@ -189,10 +190,13 @@ public slots:
     void showAbout();
     
 protected:
-    // Overrides the close event in case we're dealing with a plotter that
-    // isn't Qt and thus is in its own window (and possibly its own execution
-    // loop).
+    // Overrides QWidget::closeEvent(), in case we're dealing with a plotter
+    // that isn't Qt and thus is in its own window (and possibly its own
+    // execution loop).
     void closeEvent(QCloseEvent* event);
+    
+    // Overrides QWidget::resizeEvent(), to have threaded drawing.
+    void resizeEvent(QResizeEvent* event);
     
 private:
     // PlotMS parent.
@@ -220,13 +224,16 @@ private:
     QList<QToolButton*> itsToolButtons_;
     
     // Widget for displaying thread progress.
-    PlotMSProgress* itsThreadProgress_;
+    PlotProgressWidget* itsThreadProgress_;
     
     // Current thread (or NULL for none).
     PlotMSThread* itsCurrentThread_;
     
     // Waiting threads.
     vector<PlotMSThread*> itsWaitingThreads_;
+    
+    // Used to disallow resizing during a threaded operation.
+    QSize itsMinSize_, itsMaxSize_;
     
     // Flag for whether triggered QActions should trigger the associated PlotMS
     // action or not.  Should be false when the QAction's checked state is

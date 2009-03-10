@@ -6,7 +6,7 @@
 #include <casa/namespace.h>
 #include <cassert>
 
-const String MSFILE = "/diska/home/jmlarsen/ALMA/casa/data/protopipe/imager/cal.3mmcont.ggtau.ms";
+const String MSFILE = "/diska/jmlarsen/gnuactive/data/protopipe/imager/cal.3mmcont.ggtau.ms";
 const String MSFILE2 = "cal.3mmcont.ggtau.ms";
 int main (int,char *)
 {
@@ -20,18 +20,37 @@ int main (int,char *)
 
   flagger.setdata("", "", "", "", "", "", "", "", "");
 
-  String time("now");
-  uInt ant1(5);
-  uInt ant2(1);
-  String corr("LL");
-  uInt spw(3);
-  String chan("62");
-  FlagIndex fi(time, ant1, ant2, spw, chan, corr);
+  Double time(50487.6);
+  Double exposure(30);
+  uInt ant1(4);
+  uInt ant2(3);
+  uInt spw(0);
+  uInt chan(61);
+  String corr("XX");
+  FlagIndex fi(time, exposure,
+	       ant1, ant2, 
+	       spw, chan, corr);
 
   std::vector<FlagIndex> flagIndices;
   flagIndices.push_back(fi);
 
-  flagger.applyFlags(flagIndices);
+
+  chan=62;
+
+  flagIndices.push_back(FlagIndex(time, exposure,
+				  ant1, ant2,
+				  spw, chan, corr));
+
+  if (1) {
+      flagger.applyFlags(flagIndices);
+  }
+  else {
+      flagger.setmanualflags(False, False,
+			     False, "",
+			     Vector<Double>(2,0.0),
+			     "DATA",
+			     False);
+  }
 
   //cerr << __FILE__ << __LINE__ << "defaultAgents = " << flagger.defaultAgents() << endl;
   //Record agents(Record::Variable); 

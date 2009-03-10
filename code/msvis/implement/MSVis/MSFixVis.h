@@ -113,17 +113,20 @@ public:
   void setFields(const Vector<Int>& fieldIds);
 
 // Calculate the (u, v, w)s and store them in ms_p.
-  Bool fixuvw();
+  Bool calc_uvw();
+
+  //Bool fixvis();  // For things like rotation, differential aberration
+  //correction, etc., when there already is a UVW column, using FTMachine.
 
 private:
 // Pointer to MS
    MeasurementSet* ms_p;
 // DataDescription Ids to process
-   Vector<Int> itsDDIds;
+   Vector<Int> DDIds_p;
 // Field Ids to process
-   Vector<Int> itsFieldIds;
+   Vector<Int> FieldIds_p;
 // Number of spws
-   Int nSpw_;
+   Int nSpw_p;
 };
   
 } //# NAMESPACE CASA - END

@@ -71,6 +71,9 @@ public:
     // unless the given line's style is set to NOLINE.
     virtual void setLine(const PlotLine& line) = 0;
     
+    
+    // IMPLEMENTED METHODS //
+    
     // Convenience methods for setting line.
     // <group>
     virtual void setLine(const PlotLinePtr line) {
@@ -126,6 +129,10 @@ public:
         else             return pair<double,double>(0, 0);
     }
     
+    // Implements PlotItem::indexedDrawCount().  Provides default
+    // implementation that returns the number of plotted points.
+    virtual unsigned int indexedDrawCount() const{ return pointData()->size();}
+    
     
     // ABSTRACT METHODS //
     
@@ -148,6 +155,9 @@ public:
     // Sets the plot symbols to the given symbol. Implies setSymbolsShown(true)
     // unless the symbol's style is set to NOSYMBOL.
     virtual void setSymbol(const PlotSymbol& symbol) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
     
     // Convenience methods for setting symbol.
     // <group>
@@ -441,6 +451,10 @@ public:
         else             return pair<double,double>(0, 0);
     }
     
+    // Implements PlotItem::indexedDrawCount().  Provides default
+    // implementation that returns the number of plotted points.
+    virtual unsigned int indexedDrawCount() const{ return pointData()->size();}
+    
     
     // ABSTRACT METHODS //
     
@@ -460,6 +474,9 @@ public:
     
     // Sets the area fill used for the bars to the given.
     virtual void setAreaFill(const PlotAreaFill& areaFill) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
     
     // Convenience methods for setting area fill.
     // <group>

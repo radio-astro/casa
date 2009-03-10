@@ -29,8 +29,8 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <images/Images/ImageRegion.h>
-#include <images/Images/RegionManager.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionManager.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/namespace.h>
 using namespace std;

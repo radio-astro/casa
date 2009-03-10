@@ -30,7 +30,7 @@
 #ifdef AIPS_HAS_QWT
 
 #include <graphics/GenericPlotter/PlotAnnotation.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
 #include <qwt_text.h>
 
@@ -42,8 +42,7 @@ namespace casa {
 class QPCanvas;
 
 // Implementation of PlotAnnotation for Qwt plotter.
-class QPAnnotation : public QPPlotItem, public virtual PlotAnnotation,
-                     public QwtPlotItem {
+class QPAnnotation : public QPPlotItem, public PlotAnnotation {
 public:
     // Static //
     
@@ -82,11 +81,11 @@ public:
     
     // QPPlotItem Methods //
     
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem() { return *this; }
-    const QwtPlotItem& asQwtPlotItem() const { return *this; }
-    // </group>
+    // Overrides QwtPlotItem::boundingRect().
+    QwtDoubleRect boundingRect() const;
+    
+    // Overrides QwtPlotItem::legendItem().
+    QWidget* legendItem() const;
     
     
     // PlotAnnotation Methods //
@@ -134,19 +133,6 @@ public:
     void setBackground(const PlotAreaFill& area);
     
     
-    // QwtPlotItem Methods //
-    
-    // Overrides QwtPlotItem::boundingRect().
-    QwtDoubleRect boundingRect() const;
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect& canvasRect) const;
-    
-    // Overrides QwtPlotItem::legendItem().
-    QWidget* legendItem() const;
-    
-    
     // QPAnnotation Methods //
     
     // Provides access to the underlying QwtText object.
@@ -154,6 +140,15 @@ public:
     QwtText& asQwtText();
     const QwtText& asQwtText() const;
     // </group>
+    
+protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
     
 private:
     QwtText m_label;        // text, font, outline, and background

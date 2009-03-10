@@ -394,7 +394,8 @@ void PlotMSActionOnCacheAxes::doAction(PlotMS* plotms) {
     if(a.size() > 0) {
         if(itsType_ == CACHE_LOAD) {
             data.loadCache(*itsPlot_->visSet(), a, vector<PMS::DataColumn>(
-                           a.size(), PMS::DEFAULT_DATACOLUMN));
+                           a.size(), PMS::DEFAULT_DATACOLUMN),
+                           itsPlot_->parameters().averaging());
             
             // Notify watchers that cache has changed.  No redraw required.
             params.notifyWatchers(PlotMSWatchedParameters::CACHE, false);

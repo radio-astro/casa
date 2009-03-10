@@ -13,7 +13,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>ASAP SD task: do simple arithmatic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
 
   <description>ASAP SD task:
-        Do simple arithmatics (subtraction, addition, multiplication, and division) for spectra
+        Do simple arithmatic (subtraction, addition, multiplication, and division) for spectra
 
         Task Version 2009-02-04 TT
 </description>
@@ -209,28 +209,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         these file names should be put inside of sigle or double quotes.
 
         The fluxunit, specunit, and frame can be set, otherwise, the current
-        settings of the first spectral data in the expression are used.   
-        
-        ASAP recognizes the data of the "AT" telescopes, but currently
-        does not know about the GBT or any other telescope. This task
-        does know about GBT. Telescope name is obtained from the data.
-        If you wish to change the fluxunit (see below), by leaving
-        the sub-parameter telescopeparm unset (telescopeparm=''),
-        it will use internal telescope parameters for
-        flux conversion for the data from AT telescopes and it will use an
-        approximate aperture efficiency conversion for the GBT data.
-        If you give telescopeparm a list, then if the list has a single float it
-        is assumed to be the gain in Jy/K, if two or more elements they are assumed
-        to be telescope diameter (m) and aperture efficiency
-        respectively.
-
-        Note that sdaverage assumes that the fluxunit is set correctly in
-        the data already.  If not, then set telescopeparm='FIX' and it
-        will set the default units to fluxunit without conversion.
-        NOTE: If the data in sdfile is an ms from GBT and the default flux
-        unit is missing, this task automatically fixes the default fluxunit
-        to 'K' before the conversion.
-
+        settings of the first spectral data in the expression are used.  
+        Other selections (e.g. scan No, . IF, Pol) also apply to all 
+        the spectral data in the expression, so if any of the data does
+        not contains selection, the task will produce no output. 
         
         Example:
         # do on-off/off calculation

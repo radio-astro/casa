@@ -47,11 +47,11 @@ class PlotMSLogger {
 public:
     // Static //
     
-    // Enum meant to add values to PlotLogger::MeasurementEvent for
-    // PlotMS-specific events.  The idea is to bitwise-or these values with
-    // PlotLogger::MeasurementEvents and let the PlotLogger deal with the flags
-    // it knows about and PlotMSLogger to deal with the flags it added.
-    enum MeasurementEvent {
+    // Enum meant to add values to PlotLogger::Event for PlotMS-specific
+    // events.  The idea is to bitwise-or these values with PlotLogger::Event
+    // values and let the PlotLogger deal with the flags it knows about and
+    // PlotMSLogger to deal with the flags it added.
+    enum Event {
         INITIALIZE_GUI = 128,
         LOAD_CACHE     = 256
     };
@@ -59,19 +59,21 @@ public:
     // Enum for the log level, which controls the number and type of log
     // messages that PlotMS produces.  The levels correspond to the different
     // PlotLogger event flags as follows:
-    // * MeasurementEvent: OFF = NOMEASUREMENTS,
-    //                     LOW = DRAW_TOTAL,
-    //                     MED = DRAW_TOTAL | LOAD_CACHE,
-    //                     HIGH = DRAW_TOTAL | DRAW_INDIVIDUAL | LOAD_CACHE |
-    //                            INITIALIZE_GUI
+    // * OFF = NO_MEASUREMENTS,
+    // * LOW = DRAW_TOTAL | LOAD_CACHE,
+    // * MED = DRAW_TOTAL | METHODS_MAJOR | LOAD_CACHE,
+    // * HIGH = DRAW_TOTAL | DRAW_INDIVIDUAL | METHODS_MAJOR | OBJECTS_MAJOR |
+    //          INITIALIZE_GUI | LOAD_CACHE
     // <group>
-    PMS_ENUM1(Level, levels, levelStrings, level, OFF, LOW, MED, HIGH)
-    PMS_ENUM2(Level, levels, levelStrings, level, "off", "low", "medium", "high")
+    PMS_ENUM1(Level, levels, levelStrings, level,
+              OFF, LOW, MED, HIGH)
+    PMS_ENUM2(Level, levels, levelStrings, level,
+              "off", "low", "medium", "high")
     // </group>
     
     // Converts the given level to a log measurement event flag (see
     // documentation for Level enum).
-    static int levelToMeasurementFlag(Level level);
+    static int levelToEventFlag(Level level);
     
     
     // Non-Static //
@@ -110,7 +112,7 @@ public:
 protected:
     // Method to allow PlotMS to set the measurement event flags on the hidden
     // PlotLogger.
-    void setMeasurementEvents_(int flags);
+    void setEventFlags_(int flags);
     
 private:
     // PlotMS parent.

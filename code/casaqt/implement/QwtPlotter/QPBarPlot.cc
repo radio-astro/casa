@@ -76,6 +76,20 @@ QPBarPlot::~QPBarPlot() { }
 
 bool QPBarPlot::isValid() const { return m_data.size() > 0; }
 
+
+QwtDoubleRect QPBarPlot::boundingRect() const { return m_data.boundingRect(); }
+
+QWidget* QPBarPlot::legendItem() const {
+    QwtSymbol s(QwtSymbol::Rect, m_areaFill.asQBrush(), m_line.asQPen(),
+                QSize(10, 10));
+    QwtLegendItem* item = new QwtLegendItem(s, m_line.asQPen(),
+                                            QwtPlotItem::title());
+    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
+                            QwtLegendItem::ShowText);
+    return item;
+}
+
+
 bool QPBarPlot::linesShown() const {
     return m_line.style() != PlotLine::NOLINE; }
 
@@ -94,6 +108,7 @@ void QPBarPlot::setLine(const PlotLine& line) {
         itemChanged();
     }
 }
+
 
 PlotPointDataPtr QPBarPlot::pointData() const { return m_data.data(); }
 
@@ -117,15 +132,23 @@ void QPBarPlot::setAreaFill(const PlotAreaFill& areaFill) {
     }
 }
 
-void QPBarPlot::draw(QPainter* p, const QwtScaleMap& xMap,
-                     const QwtScaleMap& yMap, int from, int to) const {
-    QPI_DRAWLOG1
-    
+
+// Protected Methods //
+
+void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    /*
     if(to < 0) to = m_data.size() - 1;
     if(to < from) qSwap(to, from);
     
     if(to < 0)                     to = 0;
     if(from >= (int)m_data.size()) from = m_data.size() - 1;
+    */
+    unsigned int n = m_data.size();
+    if(drawIndex >= n) return;
+    if(drawIndex + drawCount > n) drawCount = n - drawIndex;
+    n = drawIndex + drawCount;
     
     p->save();
     p->setPen(m_line.asQPen());
@@ -133,7 +156,7 @@ void QPBarPlot::draw(QPainter* p, const QwtScaleMap& xMap,
     
     double x, y, width = m_barWidth / 2;
     int x1, x2, y1, y2;
-    for(int i = from; i <= to; i++) {
+    for(unsigned int i = drawIndex; i < n; i++) {
         x = m_data.x(i); y = m_data.y(i);
         if(m_barWidth <= 0) {
             x1 = xMap.transform(x), y1 = yMap.transform(y);
@@ -150,19 +173,6 @@ void QPBarPlot::draw(QPainter* p, const QwtScaleMap& xMap,
     }
     
     p->restore();
-    QPI_DRAWLOG2
-}
-
-QwtDoubleRect QPBarPlot::boundingRect() const { return m_data.boundingRect(); }
-
-QWidget* QPBarPlot::legendItem() const {
-    QwtSymbol s(QwtSymbol::Rect, m_areaFill.asQBrush(), m_line.asQPen(),
-                QSize(10, 10));
-    QwtLegendItem* item = new QwtLegendItem(s, m_line.asQPen(),
-                                            QwtPlotItem::title());
-    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
-                            QwtLegendItem::ShowText);
-    return item;
 }
 
 

@@ -159,7 +159,8 @@ void PlotMSCache::clear() {
 }
 
 void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
-        const vector<PMS::DataColumn>& data) {
+        const vector<PMS::DataColumn>& data, const PlotMSAveraging& averaging,
+        PlotMSCacheThread* thread) {
     // TBD: 
     // o Should we have ONE PtrBlock to a list of Records, each of which
     //    we fill with desired data/info, rather than private data for
@@ -179,7 +180,10 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
   Timer loadtimer;
 
   loadtimer.mark();
-    
+  
+  //cout << "Channel averaging is " << (averaging.channel() ? "on" : "off")
+  //     << ", with a value of " << averaging.channelValue() << "." endl;
+  
   // Calculate which axes need to be loaded; those that have already been
     // loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
     // done its job and cleared the cache if the underlying MS/selection has
@@ -245,17 +249,29 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
 
     chunk = 0;
     chshapes_.resize(4,nChunk_);
+    double progress;
     for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
         for(vi.origin(); vi.more(); vi++) {
+            // If a thread is given, update it.
+            if(thread != NULL)
+                thread->setStatus("Loading chunk " + String::toString(chunk) +
+                                  ".");
+            
             for(unsigned int i = 0; i < loadAxes.size(); i++) {
-	      //vb.freqAveCubes();
-	      chshapes_(0,chunk)=vb.nCorr();
-	      chshapes_(1,chunk)=vb.nChannel();
-	      chshapes_(2,chunk)=vb.nRow();
-	      chshapes_(3,chunk)=visSet.numberAnt();
-	      loadAxis(vb, chunk, loadAxes[i], loadData[i]);
+                //vb.freqAveCubes();
+                chshapes_(0,chunk)=vb.nCorr();
+                chshapes_(1,chunk)=vb.nChannel();
+                chshapes_(2,chunk)=vb.nRow();
+                chshapes_(3,chunk)=visSet.numberAnt();
+                loadAxis(vb, chunk, loadAxes[i], loadData[i]);
             }
             chunk++;
+            
+            // If a thread is given, update it.
+            if(thread != NULL) {
+                progress = ((double)chunk) / nChunk_;
+                thread->setProgress((unsigned int)((progress * 100) + 0.5));
+            }
         }
     }
         

@@ -1,4 +1,4 @@
-//# QPScatterPlot.qo.h: Qwt implementation of generic ScatterPlot class.
+//# QPScatterPlot.h: Qwt implementation of generic ScatterPlot class.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef QWTSCATTERPLOT_H_
-#define QWTSCATTERPLOT_H_
+#ifndef QPSCATTERPLOT_H_
+#define QPSCATTERPLOT_H_
 
 #ifdef AIPS_HAS_QWT
 
 #include <graphics/GenericPlotter/Plot.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
 #include <qwt_plot_item.h>
 #include <qwt_legend_item.h>
@@ -42,111 +42,14 @@
 
 namespace casa {
 
-//# Forward Declarations
-class QPCanvas;
-
-// Curve that can draw scatter plot data and/or masked data and/or error data.
-class QPCurve : public QObject, public QwtPlotItem {
-    Q_OBJECT
-    
-    friend class QPScatterPlot;
-    
-public:
-    // Constructor that takes the point data, and determines which type(s) it
-    // is.
-    QPCurve(PlotPointDataPtr data);
-    
-    // Destructor.
-    ~QPCurve();
-    
-    
-    // Returns the data.
-    // <group>
-    PlotPointDataPtr pointData() const;
-    PlotMaskedPointDataPtr maskedData() const;
-    PlotErrorDataPtr errorData() const;
-    // </group>
-    
-    // Returns true if the curve is valid, false otherwise.
-    bool isValid() const;
-    
-    
-    // QwtPlotItem Methods //
-    
-    // Implements QwtPlotItem::draw().
-    // <group>
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              const QRect& r) const {
-        draw(p, xMap, yMap, 0, -1); }    
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              int from, int to) const;
-    // </group>
-    
-    // Overrides QwtPlotItem::boundingRect().
-    QwtDoubleRect boundingRect() const;
-    
-    // Overrides QwtPlotItem::legendItem().
-    QWidget* legendItem() const;
-    
-signals:
-    // These signals are emitted when at the beginning and end of the draw
-    // method, respectively.  Used for logging.
-    // <group>
-    void drawStarted();    
-    void drawEnded();
-    // </group>
-    
-private:
-    // Data pointers.
-    // <group>
-    PlotPointDataPtr m_data;
-    PlotMaskedPointDataPtr m_maskedData;
-    PlotErrorDataPtr m_errorData;
-    // </group>
-    
-    // Customization objects.
-    // <group>
-    QPSymbol m_symbol;
-    QPLine m_line;
-    QPSymbol m_maskedSymbol;
-    QPLine m_maskedLine;
-    QPLine m_errorLine;
-    unsigned int m_errorCap;
-    // </group>
-    
-    // Provides access to objects for QPScatterPlot.
-    // <group>
-    QPSymbol& symbol_() { return m_symbol; }
-    QPLine& line_() { return m_line; }
-    QPSymbol& maskedSymbol_() { return m_maskedSymbol; }
-    QPLine& maskedLine_() { return m_maskedLine; }
-    QPLine& errorLine_() { return m_errorLine; }
-    unsigned int& errorCap_() { return m_errorCap; }
-    
-    const QPSymbol& symbol_() const { return m_symbol; }
-    const QPLine& line_() const { return m_line; }
-    const QPSymbol& maskedSymbol_() const { return m_maskedSymbol; }
-    const QPLine& maskedLine_() const { return m_maskedLine; }
-    const QPLine& errorLine_() const { return m_errorLine; }
-    const unsigned int& errorCap_() const { return m_errorCap; }
-    // </group>
-};
-
-
 // Implementation of ScatterPlot, MaskedPlot, and ErrorPlot for Qwt plotter.
-class QPScatterPlot : public QObject, public QPPlotItem,
-                      public virtual MaskedScatterPlot,
-                      public virtual ErrorPlot {
-    Q_OBJECT
-    
+class QPScatterPlot : public QPPlotItem, public MaskedScatterPlot,
+                      public ErrorPlot {
 public:
     // Static //
     
     // Convenient access to class name (QPScatterPlot).
     const static String CLASS_NAME;
-    
-    // Default cap for error lines (currently 10).
-    const static unsigned int DEFAULT_ERROR_CAP;
     
     
     // Non-Static //
@@ -178,11 +81,11 @@ public:
     
     // QPPlotItem Methods //
     
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem();
-    const QwtPlotItem& asQwtPlotItem() const;
-    // </group>
+    // Overrides QwtPlotItem::boundingRect();
+    QwtDoubleRect boundingRect() const;
+    
+    // Overrides QwtPlotItem::legendItem().
+    QWidget* legendItem() const;
     
     
     // Plot Methods //
@@ -271,16 +174,31 @@ public:
     // Implements ErrorPlot::setErrorCapSize().
     void setErrorCapSize(unsigned int capSize);
     
-private:
-    QPCurve m_curve;        // Curve.
-    PlotLoggerPtr m_logger; // For logging curve drawing.
+protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
     
-private slots:
-    // Catches the curve's drawStarted() and drawEnded() signals, respectively.
-    // Used for logging.
+    // Implements QPPlotItem::draw_().
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
+private:
+    // Data pointers.
     // <group>
-    void curveDrawingStarted();
-    void curveDrawingEnded();
+    PlotPointDataPtr m_data;
+    PlotMaskedPointDataPtr m_maskedData;
+    PlotErrorDataPtr m_errorData;
+    // </group>
+    
+    // Customization objects.
+    // <group>
+    QPSymbol m_symbol;
+    QPLine m_line;
+    QPSymbol m_maskedSymbol;
+    QPLine m_maskedLine;
+    QPLine m_errorLine;
+    unsigned int m_errorCap;
     // </group>
 };
 
@@ -288,4 +206,4 @@ private slots:
 
 #endif
 
-#endif /*QWTSCATTERPLOT_H_*/
+#endif /*QPSCATTERPLOT_H_*/

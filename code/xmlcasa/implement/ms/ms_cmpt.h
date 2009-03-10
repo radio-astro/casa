@@ -1,4 +1,3 @@
-
 /***
  * Framework independent header file for ms...
  *
@@ -35,9 +34,8 @@ namespace casac {
 class ms
 {
   private:
-
-	
-
+  bool ready2write_();
+  
   public:
 
     ms();
@@ -110,6 +108,10 @@ class ms
     bool continuumsub(const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& fitspw = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& solint = ::casac::initialize_variant("int"), const int fitorder = 0, const std::string& mode = "subtract");
 
     bool done();
+
+    bool calcuvw(const ::casac::variant& field = ::casac::initialize_variant(""));
+
+    bool fixvis(const ::casac::variant& field = ::casac::initialize_variant(""));
 
     ::casac::record* msseltoindex(const std::string& vis = "", const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "");
 

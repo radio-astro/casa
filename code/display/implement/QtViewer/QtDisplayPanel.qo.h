@@ -34,7 +34,7 @@
 #include <display/QtViewer/QtPixelCanvas.qo.h>
 #include <display/QtViewer/QtMouseTools.qo.h>
 #include <display/Display/PanelDisplay.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <display/DisplayEvents/MWCRTZoomer.h>
 #include <display/DisplayEvents/PCPositionEH.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>

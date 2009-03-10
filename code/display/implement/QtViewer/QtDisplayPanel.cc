@@ -46,9 +46,9 @@
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <display/RegionShapes/RegionShape.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
-#include <images/Images/RegionManager.h>
+#include <images/Regions/RegionManager.h>
+#include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/RegionHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -55,8 +55,6 @@ class atmosphere
 
     int getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx);
 
-    Quantity getStartupWaterContent();
-
     Quantity getGroundWH2O();
 
     std::string getProfile(Quantity& thickness, Quantity& temperature, Quantity& watermassdensity, Quantity& water, Quantity& pressure, Quantity& O3, Quantity& CO, Quantity& N2O);
@@ -89,21 +87,21 @@ class atmosphere
 
     double getDryOpacity(const int nc = -1, const int spwid = 0);
 
-    double getDryContOpacity(const int nc = -1);
+    double getDryContOpacity(const int nc = -1, const int spwid = 0);
 
-    double getO2LinesOpacity(const int nc = -1);
+    double getO2LinesOpacity(const int nc = -1, const int spwid = 0);
 
-    double getO3LinesOpacity(const int nc = -1);
+    double getO3LinesOpacity(const int nc = -1, const int spwid = 0);
 
-    double getCOLinesOpacity(const int nc = -1);
+    double getCOLinesOpacity(const int nc = -1, const int spwid = 0);
 
-    double getN2OLinesOpacity(const int nc = -1);
+    double getN2OLinesOpacity(const int nc = -1, const int spwid = 0);
 
     Quantity getWetOpacity(const int nc = -1, const int spwid = 0);
 
-    double getH2OLinesOpacity(const int nc = -1);
+    double getH2OLinesOpacity(const int nc = -1, const int spwid = 0);
 
-    double getH2OContOpacity(const int nc = -1);
+    double getH2OContOpacity(const int nc = -1, const int spwid = 0);
 
     int getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwid = 0);
 

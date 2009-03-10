@@ -165,6 +165,39 @@ void PlotMSSelection::initDefaults() {
 }
 
 
+/////////////////////////////////
+// PLOTMSAVERAGING DEFINITIONS //
+/////////////////////////////////
+
+PlotMSAveraging::PlotMSAveraging() { setDefaults(); }
+PlotMSAveraging::~PlotMSAveraging() { }
+
+
+bool PlotMSAveraging::channel() const { return itsChannel_; }
+void PlotMSAveraging::setChannel(bool channel) { itsChannel_ = channel; }
+
+double PlotMSAveraging::channelValue() const { return itsChannelValue_; }
+void PlotMSAveraging::setChannelValue(double value) {
+    itsChannelValue_ = value;
+    if(itsChannelValue_ < 0) itsChannelValue_ = 0;
+    if(itsChannelValue_ > 1) itsChannelValue_ = 1;
+}
+
+
+bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
+    if(itsChannel_ != other.itsChannel_) return false;
+    if(itsChannel_ && itsChannelValue_ != other.itsChannelValue_) return false;
+    
+    return true;
+}
+
+
+void PlotMSAveraging::setDefaults() {
+    itsChannel_ = false;
+    itsChannelValue_ = 0;
+}
+
+
 ///////////////////////////////////
 // PLOTMSLABELFORMAT DEFINITIONS //
 ///////////////////////////////////

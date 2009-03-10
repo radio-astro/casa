@@ -29,10 +29,12 @@
 
 #ifdef AIPS_HAS_QWT
 
+#include <graphics/GenericPlotter/PlotOperation.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 
 #include <QColor>
 #include <QFont>
+#include <QMutex>
 
 #include <qwt_color_map.h>
 #include <qwt_plot.h>
@@ -43,7 +45,7 @@
 namespace casa {
 
 // Implementation of PlotColor for Qwt plotter, using QColor.
-class QPColor : public virtual PlotColor {
+class QPColor : public PlotColor {
 public:
     // Defaults to QColor::QColor().
     QPColor();
@@ -103,7 +105,7 @@ private:
 
 
 // Implementation of PlotFont for Qwt plotter, using QFont and QPColor.
-class QPFont : public virtual PlotFont {
+class QPFont : public PlotFont {
 public:
     // Defaults to QFont::QFont() and QPColor::QPColor().
     QPFont();
@@ -195,7 +197,7 @@ private:
 
 
 // Implementation of PlotLine for Qwt plotter, using QPen.
-class QPLine : public virtual PlotLine {
+class QPLine : public PlotLine {
 public:
     // Defaults to QPen::QPen().
     QPLine();
@@ -254,7 +256,7 @@ private:
 
 
 // Implementation of PlotAreaFill for Qwt plotter, using QBrush.
-class QPAreaFill : public virtual PlotAreaFill {
+class QPAreaFill : public PlotAreaFill {
 public:
     // Defaults to QBrush::QBrush().
     QPAreaFill();
@@ -307,7 +309,7 @@ private:
 
 
 // Implementation of QPSymbol for Qwt plotter, using QwtSymbol.
-class QPSymbol : public virtual PlotSymbol, public QwtSymbol {
+class QPSymbol : public PlotSymbol, public QwtSymbol {
 public:
     // Defaults to QwtSymbol::QwtSymbol().
     QPSymbol();
@@ -406,6 +408,32 @@ private:
     
     // Points to either QwtSymbol::brush() or the pixel brush.
     const QBrush* m_drawBrush;
+};
+
+
+// Implementation of PlotMutex for the qwt plotter.  Very thin layer on top of
+// QMutex.
+class QPMutex : public PlotMutex {
+public:
+    // Constructor.
+    QPMutex();
+    
+    // Destructor.
+    ~QPMutex();
+    
+    
+    // Implements PlotMutex::lock().
+    void lock();
+    
+    // Implements PlotMutex::unlock().
+    void unlock();
+    
+    // Implements PlotMutex::tryLock().
+    bool tryLock();
+    
+private:
+    // Mutex.
+    QMutex m_mutex;
 };
 
 

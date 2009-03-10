@@ -44,7 +44,7 @@ class PlotFactory;
 
 // Implementation of Plotter for Qwt plotter.  A QWidget that can be used as a
 // main window.
-class QPPlotter : public QWidget, Ui::PlotterUI, public virtual Plotter {
+class QPPlotter : public QWidget, Ui::PlotterUI, public Plotter {
     Q_OBJECT
     
 public:
@@ -60,17 +60,17 @@ public:
     // Non-Static //
     
     // Constructor that creates a plotter with a single canvas (or none for
-    // NULL).  Uses the given log measurement flags (see
-    // PlotLogger::MeasurementEvent) if given, and the parent QWidget if given.
+    // NULL).  Uses the given log event flags (see PlotLogger::Event) if given,
+    // and the parent QWidget if given.
     QPPlotter(QPCanvas* canvas = NULL,
-              int logMeasureFlags = PlotLogger::NOMEASUREMENTS,
+              int logEventFlags = PlotLogger::NO_EVENTS,
               QWidget* parent = NULL);
     
     // Constructor that creates a plotter with the given layout (or none for
-    // null).  Uses the given log measurement flags (see
-    // PlotLogger::MeasurementEvent) if given, and the parent QWidget if given.
+    // null).  Uses the given log event flags (see PlotLogger::Event) if given,
+    // and the parent QWidget if given.
     QPPlotter(PlotCanvasLayoutPtr layout,
-              int logMeasureFlags = PlotLogger::NOMEASUREMENTS,
+              int logEventFlags = PlotLogger::NO_EVENTS,
               QWidget* parent = NULL);
     
     // Destructor.
@@ -177,11 +177,11 @@ public:
                              const String& directory = "");
     
     
-    // Implements Plotter::logMeasurementEvents().
-    int logMeasurementEvents() const;
+    // Implements Plotter::logEventFlags().
+    int logEventFlags() const;
     
-    // Implements Plotter::setLogMeasurementEvents().
-    void setLogMeasurementEvents(int flags);
+    // Implements Plotter::setLogEventFlags().
+    void setLogEventFlags(int flags);
 
     
     // Implements Plotter::registerResizeHandler().
@@ -192,7 +192,20 @@ public:
     
     // Implements Plotter::unregisterResizeHandlers().
     void unregisterResizeHandler(PlotResizeEventHandlerPtr handler);
-
+    
+    
+    // Returns the frame used to hold the canvases.
+    // <group>
+    const QWidget* canvasWidget() const;
+    QWidget* canvasWidget();
+    // </group>
+    
+    // Overrides QWidget::sizeHint() to return an invalid size.
+    QSize sizeHint() const;
+    
+    // Overrides QWidget::minimumSizeHint() to return an invalid size.
+    QSize minimumSizeHint() const;
+    
 protected:
     // For catching resize events.
     void resizeEvent(QResizeEvent* event);
@@ -216,8 +229,8 @@ private:
     // Logger.
     PlotLoggerPtr m_logger;
     
-    // Log measurement event flags.
-    int m_logMeasurements;
+    // Log event flags.
+    int m_logEvents;
     
     
     // Sets up the canvas QFrame for the current layout.

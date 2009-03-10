@@ -346,21 +346,6 @@ for i in range(n):
 </example>
    </method>
 
-   <method type="function" name="getStartupWaterContent">
-   <shortdescription>get the guessed startup water content</shortdescription>
-   
-<description>
-Get the guessed startup zenith column of precipitable water content in meters.
-</description>
-<returns type="Quantity"/>
-<example>
-\begin{verbatim}
-w = at.getStartupWaterContent()
-print "Guessed water content: ", w.value, w.units
-\end{verbatim}
-</example>
-</method>
-
  
    <method type="function" name="getGroundWH2O">
    <shortdescription>get the zenith column of water vapor</shortdescription>
@@ -876,7 +861,7 @@ print "Total Dry Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.get
 </method>
 
    <method type="function" name="getDryContOpacity">
-   <shortdescription>get the integrated Dry Continuum Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated Dry Continuum Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -888,6 +873,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The dryContOpacity of channel nc.</returns>
@@ -907,7 +896,7 @@ print "Total Dry Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getO2LinesOpacity">
-   <shortdescription>get the integrated O2 Lines Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated O2 Lines Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -919,6 +908,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The O2LinesOpacity of channel nc.</returns>
@@ -938,7 +931,7 @@ print "Total O2 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getO3LinesOpacity">
-   <shortdescription>get the integrated O2 Lines Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated O3 Lines Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -950,6 +943,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The O3LinesOpacity of channel nc.</returns>
@@ -969,7 +966,7 @@ print "Total O3 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getCOLinesOpacity">
-   <shortdescription>get the integrated O2 Lines Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated CO Lines Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -981,6 +978,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The COLinesOpacity of channel nc.</returns>
@@ -1000,7 +1001,7 @@ print "Total CO Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getN2OLinesOpacity">
-   <shortdescription>get the integrated O2 Lines Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated N2O Lines Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -1012,6 +1013,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The N2OLinesOpacity of channel nc.</returns>
@@ -1069,7 +1074,7 @@ for i in range(at.getNumSpectralWindows()):
 
  
    <method type="function" name="getH2OLinesOpacity">
-   <shortdescription>get the integrated H2O Lines Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated H2O Lines Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -1081,6 +1086,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The H2OLinesOpacity of channel nc.</returns>
@@ -1100,7 +1109,7 @@ print "Total H2O Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", 
 </method>
 
    <method type="function" name="getH2OContOpacity">
-   <shortdescription>get the integrated H2O Cont Opacity along the atmospheric path for channel nc</shortdescription>
+   <shortdescription>get the integrated H2O Cont Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
@@ -1112,6 +1121,10 @@ Get the integrated Dry Opacity for one channel in a band.
       <param type="int" direction="in" name="nc">
       <description>Channel number (0-based; defaults to reference channel)</description>
       <value>-1</value>
+     </param>
+      <param type="int" direction="in" name="spwid">
+      <description>Int standing for spectral window id (0-based)</description>
+      <value>0</value>
      </param>
 </input>
 <returns type="double">The H2OContOpacity of channel nc.</returns>

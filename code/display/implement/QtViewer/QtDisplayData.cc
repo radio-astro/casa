@@ -51,12 +51,12 @@
 #include <casa/iomanip.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
-#include <images/Images/WCBox.h>
-#include <images/Images/WCPolygon.h>
-#include <images/Images/WCIntersection.h>
-#include <images/Images/ImageRegion.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageStatistics.h>
+#include <images/Regions/WCBox.h>
+#include <images/Regions/WCPolygon.h>
+#include <images/Regions/WCIntersection.h>
+#include <images/Regions/ImageRegion.h>
 #include <casa/OS/File.h>
 #include <display/Display/Colormap.h>
 #include <display/Display/ColormapDefinition.h>

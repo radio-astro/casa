@@ -61,9 +61,7 @@ public:
 
 // Subclass of PlotZoomTool specific to Qwt plotter.  Currently isn't
 // specialized.
-class QPZoomTool : public QObject, public PlotZoomTool {
-    Q_OBJECT
-    
+class QPZoomTool : public PlotZoomTool {
 public:
     // Constructor which takes the tool's coordinate system.
     QPZoomTool(PlotCoordinate::System sys = PlotCoordinate::WORLD);

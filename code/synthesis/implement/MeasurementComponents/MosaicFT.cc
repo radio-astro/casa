@@ -47,9 +47,9 @@
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/WCBox.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/WCBox.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayLogical.h>

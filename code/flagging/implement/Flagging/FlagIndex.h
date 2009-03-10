@@ -50,22 +50,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   public:
     FlagIndex();
-    FlagIndex(const String &time,
+    FlagIndex(Double time,
+	      Double exposure,
 	      uInt ant1,
 	      uInt ant2,
 	      uInt spw,
-	      const String &chan,
+	      uInt chan,
 	      const String &corr);
 
     FlagIndex &operator=(const FlagIndex & other);
-    
-  private:  
-    String time;
+
+    bool operator==(const FlagIndex& other) const;
+    bool operator!=(const FlagIndex& other) const;
+
+  public:
+    Double time, exposure;
     uInt ant1;
     uInt ant2;
     
     uInt spw;
-    String chan;
+    uInt chan;
     
     String corr;
     

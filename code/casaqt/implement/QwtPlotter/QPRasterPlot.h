@@ -31,8 +31,9 @@
 
 #include <graphics/GenericPlotter/Plot.h>
 #include <casaqt/QwtPlotter/QPData.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
+#include <qwt_color_map.h>
 #include <qwt_plot_spectrogram.h>
 
 #include <casa/namespace.h>
@@ -40,8 +41,35 @@ using namespace std;
 
 namespace casa {
 
+// Implementation of QwtColorMap that just returns the value as a color.
+class QPRasterMap : public QwtColorMap {
+public:
+    // Constructor.
+    QPRasterMap(bool isARGB = false);
+    
+    // Destructor.
+    ~QPRasterMap();
+
+    // Implements QwtColorMap::copy().
+    QwtColorMap* copy() const;
+    
+    // Implements QwtColorMap::rgb().
+    QRgb rgb(const QwtDoubleInterval& interval, double value) const;
+    
+    // Implements QwtColorMap::colorIndex().
+    unsigned char colorIndex(const QwtDoubleInterval& intv, double val) const;
+    
+    // Sets whether the data format is argb or not.
+    void setIsARGB(bool argb);
+    
+private:
+    // Whether the value is an rgb or an argb.
+    bool m_isARGB;
+};
+
+
 // Implementation of RasterPlot for Qwt plotter.
-class QPRasterPlot : public QPPlotItem, public virtual RasterPlot,
+class QPRasterPlot : public QPPlotItem, public RasterPlot,
                      public QwtPlotSpectrogram {
 public:
     // Static //
@@ -72,15 +100,27 @@ public:
     
     // Implements PlotItem::isValid().
     bool isValid() const;
+    
+    // Implements PlotItem::indexedDrawCount().  This returns the number of
+    // points that are needed to fill in the raster plot in the current state
+    // of the canvas it is attached to.
+    unsigned int indexedDrawCount() const;
 
     
-    // QPPlotItem Methods //
+    // QwtPlotItem Methods //
     
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem() { return *this; }    
-    const QwtPlotItem& asQwtPlotItem() const { return *this; }
-    // </group>
+    // Overrides QwtPlotItem::itemChanged() to call QPPlotItem's definition
+    // rather than QwtPlotSpectrogram's.  (Multiple inheritance trickery.)
+    void itemChanged();
+    
+    
+    // QPPlotItem Methods //
+
+    // Overrides QwtPlotSpectrogram::boundingRect().
+    QwtDoubleRect boundingRect() const;
+    
+    // Overrides QwtPlotSpectrogram::legendItem().
+    QWidget* legendItem() const;
     
     
     // Plot Methods //
@@ -127,29 +167,27 @@ public:
     // Implements RasterPlot::setContourLines().
     void setContourLines(const vector<double>& lines);
     
-    
-    // QwtPlotItem Methods //
-    
-    // Overrides QwtPlotItem::boundingRect().
-    QwtDoubleRect boundingRect() const;
-    
-    // Overrides QwtPlotSpectrogram::draw().  Only adds logging.
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              const QRect &rect) const;
-    
-    // Overrides QwtPlotItem::legendItem().
-    QWidget* legendItem() const;
-    
 protected:
-    // QwtPlotRasterItem Methods //
+    // QPPlotItem Methods //
     
-    // Overrides QwtPlotSpectrogram::renderImage().
-    QImage renderImage(const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-                       const QwtDoubleRect& area) const;
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
     
 private:
-    QPRasterData m_data;             // Data
-    PlotRasterData::Format m_format; // Data format
+    QPRasterData m_data;                   // Data
+    PlotRasterData::Format m_format;       // Data format
+    QwtLinearColorMap m_spectMap;          // Spectrogram color map
+    QPRasterMap m_rasterMap;               // Raster color map
+    
+    
+    // Returns the rectangle in screen pixel coordinates that will contain the
+    // entire raster image.
+    QRect totalArea() const;
     
     // Converts between Qt's image format and CASA's.
     // <group>

@@ -147,19 +147,23 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
     vector<PlotMSSelection::Field> fields = PlotMSSelection::fields();
     QGridLayout* l = new QGridLayout(msSelectionFrame);
     l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(3);
+    l->setSpacing(3);    
     QLabel* label; QLineEdit* val;
     for(unsigned int i = 0; i < fields.size(); i++) {
         label = new QLabel(QString(PlotMSSelection::field(fields[i]).c_str()));
-        label->setAlignment(Qt::AlignRight);
+        label->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
         l->addWidget(label, i, 0);        
         val = new QLineEdit();       
         l->addWidget(val, i, 1);
         itsSelectionValues_.insert(fields[i], val);
     }
     
+    PlotMSWidget::putInScrollArea(msSelectionFrame);
+    //PlotMSWidget::putInScrollArea(msAveragingFrame);
+    
     itsLabelDefaults_.insert(msLocationLabel, msLocationLabel->text());
     itsLabelDefaults_.insert(msSelectionLabel, msSelectionLabel->text());
+    itsLabelDefaults_.insert(msAveragingLabel, msAveragingLabel->text());
     
     // Setup axes tab
     const vector<String>& axes = PMS::axesStrings();
@@ -279,6 +283,9 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
         selit.next();
         connect(selit.value(), SIGNAL(editingFinished()), SLOT(tabChanged()));
     }
+    connect(msAveragingChannel, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(msAveragingChannelValue, SIGNAL(valueChanged(int)),
+            SLOT(tabChanged()));
     
     connect(msClearButton, SIGNAL(clicked()), SLOT(msClear()));
     connect(msPlotButton, SIGNAL(clicked()), SLOT(plot()));
@@ -334,9 +341,7 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
 
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {
-    if(&p == itsCurrentParameters_) {
-        plotsChanged(itsPlotManager_);
-    }
+    if(&p == itsCurrentParameters_) plotsChanged(itsPlotManager_);
 }
 
 void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
@@ -367,7 +372,7 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     // Set to current plot, or latest plot if no current plot, and set tab.
     if(setIndex >= 0 && setIndex < goChooser->count() - 2) {
         goChooser->setCurrentIndex(setIndex);
-        goButton->click();
+        goClicked();
     }
 }
 
@@ -383,6 +388,11 @@ PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
          sel.setValue(i.key(), i.value()->text().toStdString());
      }
     params.setSelection(sel);
+    PlotMSAveraging avg;
+    avg.setChannel(msAveragingChannel->isChecked());
+    if(avg.channel())
+        avg.setChannelValue(msAveragingChannelValue->value() / 100.0);
+    params.setAveraging(avg);
     
     // Axes tab
     params.setXAxis(PMS::axis(axesXChooser->currentText().toStdString()));
@@ -448,6 +458,9 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
          i.next();
          i.value()->setText(sel.getValue(i.key()).c_str());
     }
+    const PlotMSAveraging& avg = params.averaging();
+    msAveragingChannel->setChecked(avg.channel());
+    msAveragingChannelValue->setValue((int)(avg.channelValue() * 100));
     
     // Axes tab
     PMS::Axis xAxis = params.xAxis(), yAxis = params.yAxis();
@@ -609,7 +622,7 @@ void PlotMSPlotTab::goClicked() {
                 for(unsigned int i = 0; i < itsPlotManager_.numPlots(); i++) {
                     if(itsPlotManager_.plot(i) == plot) {
                         goChooser->setCurrentIndex(i);
-                        goButton->click();
+                        goClicked();
                         break;
                     }
                 }
@@ -639,6 +652,11 @@ void PlotMSPlotTab::tabChanged() {
                     newParams.filename() != params.filename());        
         changedText(msSelectionLabel,
                     newParams.selection() != params.selection());
+        changedText(msAveragingLabel,
+                    newParams.averaging() != params.averaging());
+        if(newParams.averaging().channel())
+            msAveragingChannelValue->setValue(100);
+        else msAveragingChannelValue->setValue(0);
         
         // Axes tab, widgets
         vector<pair<PMS::Axis,unsigned int> > laxes= plot->data().loadedAxes();

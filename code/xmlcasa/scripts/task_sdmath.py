@@ -81,6 +81,12 @@ def sdmath(expr, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, fi
                expr=regex.sub("scandic['%s']" % skey ,expr)
             expr="tmpout="+expr 
             exec(expr)
+            outform=outform.upper()
+            if (outform == 'MS'):
+               outform = 'MS2'
+            elif (outform==''):
+               outform = 'ASAP'
+
             tmpout.save(outfile, outform, overwrite) 
 
         except Exception, instance:

@@ -32,12 +32,10 @@
 #include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
-#include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
+#include <casaqt/QwtPlotter/QPLayeredCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
-#include <qwt_plot_canvas.h>
-#include <qwt_plot_grid.h>
 #include <qwt_plot_picker.h>
 
 #include <QtGui>
@@ -55,7 +53,7 @@ class QPPlotter;
 
 // Implementation of PlotCanvas for the Qwt plotter.  Mainly consists of
 // wrappers and containers around a QwtPlot object.
-class QPCanvas : public QFrame, public virtual PlotCanvas {
+class QPCanvas : public QFrame, public PlotCanvas {
     Q_OBJECT
     
     friend class QPLayeredCanvas;
@@ -70,6 +68,17 @@ public:
     
     // Convenient access to class name (QPCanvas).
     static const String CLASS_NAME;
+    
+    // Convenient access to "origin" name for draw method for logging.
+    static const String DRAW_NAME;
+    
+    
+    // Exports the given plotter to the given format.
+    static bool exportPlotter(QPPlotter* plotter,
+            const PlotExportFormat& format);
+    
+    // Exports the given canvas to the given format.
+    static bool exportCanvas(QPCanvas* canvas, const PlotExportFormat& format);
     
     
     // Non-Static //
@@ -416,6 +425,12 @@ public:
     // the QwtPlotCanvas).
     void reinstallTrackerFilter();
     
+    // Overrides QWidget::sizeHint() to return an invalid size.
+    QSize sizeHint() const;
+    
+    // Overrides QWidget::minimumSizeHint() to return an invalid size.
+    QSize minimumSizeHint() const;
+    
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if
@@ -425,7 +440,7 @@ protected:
     // Returns a PlotLogger to be used for the given measurement event.  If the
     // return value is NULL, then the event should NOT be logged, otherwise it
     // should.  Should be used by QPPlotItems attached to the canvas.
-    PlotLoggerPtr loggerForMeasurement(PlotLogger::MeasurementEvent event);
+    PlotLoggerPtr loggerForEvent(PlotLogger::Event event);
     
     // For catching Qt press events.
     void mousePressEvent(QMouseEvent* event);
@@ -454,10 +469,9 @@ private:
 
     // Main-layer plot items.
     vector<pair<PlotItemPtr, QPPlotItem*> > m_plotItems;
-    vector<pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
     
-    // Cartesian axes (NULL if not shown).
-    vector<QPCartesianAxis*> m_cartAxes;
+    // Annotation-layer plot items.
+    vector<pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
     
     // Whether the axes ratio is locked or not.
     bool m_axesRatioLocked;
@@ -478,15 +492,9 @@ private:
     // to be first in the filter.
     QPMouseFilter m_mouseFilter;
     
-    // Used for displaying grid.
-    QwtPlotGrid m_grid;
-    
-    // Legend properties.
+    // Legend, and properties.
     // <group>
-    QFrame m_legendFrame;
-    QPLine m_legendLine;
-    QPAreaFill m_legendFill;
-    LegendPosition m_legendPosition;
+    QPLegendHolder* m_legend;
     QPFont m_legendFont;
     bool m_legendFontSet;
     // </group>
@@ -531,6 +539,11 @@ private:
     
     
     // Static //
+    
+    // Helper method for static exportPlotter() and exportCanvas() methods.
+    static bool exportHelper(QWidget* grabWidget,
+            vector<PlotCanvasPtr>& canvases,
+            const PlotExportFormat& format);
     
     // Converts between axes and vector indices.
     // <group>

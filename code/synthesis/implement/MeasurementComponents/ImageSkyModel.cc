@@ -32,7 +32,7 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>

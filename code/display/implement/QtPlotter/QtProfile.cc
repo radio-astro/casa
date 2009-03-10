@@ -28,7 +28,7 @@
 #include <measures/Measures.h>
 #include <coordinates/Coordinates.h>
 #include <casa/Exceptions/Error.h>
-#include <images/Images/WCBox.h>
+#include <images/Regions/WCBox.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LCRegion.h>

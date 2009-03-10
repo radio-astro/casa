@@ -557,7 +557,7 @@ public:
     // Returns a single PlotAxesStack associated with this canvas.  Note that
     // the canvas itself doesn't modify/use this stack AT ALL; it is expressly
     // for outside tools/classes/etc to have a single stack per canvas.
-    virtual PlotAxesStack& canvasAxesStack() const;
+    virtual PlotAxesStack& canvasAxesStack();
     
     // Convenience method to move along the PlotAxesStack associated with this
     // canvas (see canvasAxesStack()).  Calls the stack's moveAndReturn method,
@@ -745,8 +745,8 @@ public:
     // Returns a PlotOperation object that can be used to track drawing
     // progress across threads.
     // <group>
-    virtual PlotOperationPtr operationDraw() const;
-    virtual PlotOperationPtr operationDraw(PlotMutexPtr mutex) const;
+    virtual PlotOperationPtr operationDraw();
+    virtual PlotOperationPtr operationDraw(PlotMutexPtr mutex);
     // </group>
     
 protected:
@@ -754,6 +754,12 @@ protected:
     // <group>
     void attachTool(PlotToolPtr tool);
     void detachTool(PlotToolPtr tool);
+    // </group>
+    
+    // One-per-canvas members.
+    // <group>
+    PlotAxesStack m_stack;
+    PlotOperationPtr m_drawOperation;
     // </group>
 };
 typedef CountedPtr<PlotCanvas> PlotCanvasPtr;

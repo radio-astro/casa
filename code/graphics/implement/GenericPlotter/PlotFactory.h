@@ -67,34 +67,32 @@ public:
     // given parameters.  The plotter's window title is set to the given.  If
     // showSingleCanvas is true, then the plotter is created with a single
     // canvas; otherwise it has no canvases.  If showGUI is true then the
-    // plotter GUI will be shown after creation.  If log measurement flags are
-    // given (bitwise or of PlotLogger::MeasurementEvent) they are passed to
-    // the plotter.
+    // plotter GUI will be shown after creation.  If log event flags are given
+    // (bitwise or of PlotLogger::Event) they are passed to the plotter.
     virtual PlotterPtr plotter(const String& windowTitle = "Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const = 0;
     
     // Return a new instance of a Plotter for this implementation, with the
     // given rows and columns of canvases and parameters.  The plotter's window
     // title is set to the given.  If showGUI is true then the plotter GUI will
-    // be shown after creation.  If log measurement flags are given (bitwise or
-    // of PlotLogger::MeasurementEvent) they are passed to the plotter.
+    // be shown after creation.  If log event flags are given (bitwise or of
+    // PlotLogger::Event) they are passed to the plotter.
     virtual PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
             const String& windowTitle = "Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const = 0;
     
     // Convenience method for creating a plotter with a single, given canvas.
     // The plotter's window title is set to the given.  If showGUI is true then
-    // the plotter GUI will be shown after creation.  If log measurement flags
-    // are given (bitwise or of PlotLogger::MeasurementEvent) they are passed
-    // to the plotter.
+    // the plotter GUI will be shown after creation.  If log event flags are
+    // given (bitwise or of PlotLogger::Event) they are passed to the plotter.
     virtual PlotterPtr plotter(PlotCanvasPtr canvas,
             const String& windowTitle = "Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) {
-        PlotterPtr p = plotter(windowTitle, false, showGUI,logMeasurementFlags,
+        PlotterPtr p = plotter(windowTitle, false, showGUI, logEventFlags,
                                smartDelete);
         if(!canvas.null()) p->setCanvasLayout(new PlotLayoutSingle(canvas));
         return p;
@@ -102,6 +100,9 @@ public:
     
     // Return a new instance of a PlotCanvas for this implementation.
     virtual PlotCanvasPtr canvas(bool smartDelete = true) const = 0;
+    
+    // Returns true if this implementation has threaded drawing or not.
+    virtual bool canvasHasThreadedDrawing() const = 0;
     
     // Return a new instance of a PlotPanel for this implementation.
     virtual PlotPanelPtr panel(bool smartDelete = true) const = 0;

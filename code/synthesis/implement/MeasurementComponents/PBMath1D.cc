@@ -32,7 +32,7 @@
 #include <casa/Arrays/Vector.h>
 #include <synthesis/MeasurementComponents/PBMath1D.h>
 
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
 
 #include <components/ComponentModels/SkyComponent.h>

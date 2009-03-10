@@ -38,7 +38,6 @@
 
 namespace casa {
 
-
 // Connects PlotPointData and QwtData.
 class QPPointData : public QwtData {
 public:

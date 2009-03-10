@@ -47,22 +47,18 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
 
+//#include <fitsio.h>
+
 #include <casa/namespace.h>
 
 #include <atnf/PKSIO/NRODataset.h>
-#include <atnf/PKSIO/NROHeader.h>
-
-#define SCAN_HEADER_SIZE 424 
+#include <atnf/PKSIO/NRODataRecord.h>
 
 using namespace std ;
 
 // <summary>
 // Base class to read NRO 45m and ASTE data.
 // </summary>
-
-enum ENDIAN { BIG,
-              LITTLE,
-              UNKNOWN } ;
 
 // Open an appropriate NROreader for a NRO 45m and ASTE dataset.
 class NROReader *getNROReader( const String filename,
@@ -87,16 +83,7 @@ class NROReader
   virtual ~NROReader() ;
 
   // Read data header
-  virtual Int readHeader() = 0 ;
-
-  // Read the next data record.
-  virtual Int readData( int i ) ;
-
-  // Open the dataset.
-  virtual int open() ;
-
-  // Close the input file.
-  virtual void close() ;
+  virtual Int read() = 0 ;
 
   // Get header information
   virtual int getHeaderInfo( Int &nchan,
@@ -154,21 +141,12 @@ class NROReader
   // Get scan type
   virtual string getScanType( int i ) ;
 
-  // Get scan data
-  virtual int getData( int i ) ;
- 
-  // Get number of scan 
-  virtual Int getScanNum() { return scanNum_ ; } ;
+  // Get dataset
+  virtual NRODataset *getDataset() { return dataset_ ; } ;
 
-  // Get length of scan
-  virtual Int getScanLen() { return scanLen_ ; } ;
+  // Get number of rows
+  virtual Int getRowNum() ;
 
-  // Get number of data record
-  virtual Int getRowNum() { return rowNum_ ; } ;
-
-  // Get number of channel
-  virtual Int getChannelMax() { return chmax_ ; } ;
- 
   // Get IF settings
   virtual vector<Bool> getIFs() ;
 
@@ -181,7 +159,6 @@ class NROReader
 
   // Get spectrum
   virtual vector< vector<double> > getSpectrum() ;
-  virtual vector<double> getSpectrum( int i ) ;
 
   // Get number of polarization
   virtual Int getPolarizationNum() ;
@@ -190,7 +167,7 @@ class NROReader
   virtual double getStartTime() ;
   virtual double getEndTime() ;
   virtual vector<double> getStartIntTime() ;
-  virtual double getStartIntTime( int i ) ;
+  //virtual double getStartIntTime( int i ) ;
 
   // Get Antenna Position in ITRF coordinate
   virtual vector<double> getAntennaPosition() = 0 ;
@@ -207,47 +184,11 @@ class NROReader
   // Get integer representation of ARRYT
   virtual Int getIndex( int irow ) ;
 
-  // convert Endian
-  virtual void convertEndian( int &value ) ;
-  virtual void convertEndian( float &value ) ;
-  virtual void convertEndian( double &value ) ;
-  virtual void convertEndian( NRODataset *d ) ;
-
-  // memory management
-  virtual void releaseData() ;
-
   // filename 
   string filename_ ;
 
-  // file pointer 
-  FILE *fp_ ;
-
-  // header
-  NROHeader *header_ ;
-
-  // data
-  NRODataset *data_ ;
-
-  // data index
-  Int dataid_ ;
-
-  // number of scan
-  Int scanNum_ ;
-
-  // length of data record (byte)
-  Int scanLen_ ;
-
-  // number of data record
-  Int rowNum_ ;
-
-  // endian of the system
-  ENDIAN endian_ ;
-
-  // check if endian of input file is same as that of system
-  bool same_ ;
-
-  // channel number for spectral data
-  Int chmax_ ;
+  // dataset
+  NRODataset *dataset_ ;
 };
 
 #endif /* NRO_READER_H */

@@ -43,10 +43,14 @@
 
 #include <iomanip>
 
+#if 0
 #define LOC \
   do { \
     cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << endl; \
   } while (0)
+#else
+#define LOC
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -67,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // create record description on first entry
     if( !rec.nfields() )
       {
-	//rec = RFAFlagCubeBase::getDefaults();
+	rec = RFAFlagCubeBase::getDefaults();
 	rec.define(RF_NAME,"applyflags");
 	rec.define(RF_COLUMN,"DATA");
 	rec.define(RF_EXPR,"+ ABSolutely!");
@@ -100,6 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This method is called after constructing the agent.
   void RFAApplyFlags::init ()
   {
+      RFAFlagCubeBase::init();
     LOC;
   }
 
@@ -127,8 +132,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   { 
     LOC; 
 
-
-
     //    cerr << chunk.visIter() << endl;
     //    cerr << chunk.visBuf() << endl;
     
@@ -144,9 +147,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cerr << "startMJD = " << chunk.startMJD () << endl;
     cerr << "endMJD = " << chunk.endMJD () << endl;
 
-    //chunk.printStats();
+    chunk.printStats();
 
-    cerr << (*flagIndex)[0] << endl;
+    //cerr << (*flagIndex)[0] << endl;
 
 #if 0
     // check correlations and figure out the active correlations mask
@@ -281,25 +284,85 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// check correlations and figure out the active correlations mask
+  Vector<Int> corrtype;
+  chunk.visIter().corrType(corrtype);
+  corrmask = 0;
+
+
+
+// no correlations specified so flag everything
+  corrmask = chunk.fullCorrMask();
+  
+
+
+
+
+
+
+
+
+
+
+  
+    // init flagging cube and off we go...
+  LOC;
+  RFAFlagCubeBase::newChunk(maxmem);
+
+
     active = True;
     return active;
   };
 // Called once finished with a chunk
-  void RFAApplyFlags::endChunk () { LOC; }
+  void RFAApplyFlags::endChunk () { 
+      RFAFlagCubeBase::endChunk();
+
+      LOC; 
+  }
   
 // Called before starting a data pass on a chunk. 
-  void RFAApplyFlags::startData () { LOC; }
+  void RFAApplyFlags::startData () {
+      LOC; 
+      RFAFlagCubeBase::startData();
+  }
 
 // Called before starting a dry pass on a chunk. 
-  void RFAApplyFlags::startDry  () { LOC; }
+  void RFAApplyFlags::startDry  () { 
+      LOC; 
+      RFAFlagCubeBase::startDry();
+  }
 
 // Called before starting the fetch-flags pass.
-  void RFAApplyFlags::startFlag () { LOC; }
+  void RFAApplyFlags::startFlag () 
+  {
+      RFAFlagCubeBase::startFlag();
+      LOC; 
+  }
 
 // Iteration method for a flag pass. Called once per each VisBuffer.
   void RFAApplyFlags::iterFlag( uInt itime ) 
   { 
-    LOC; 
+      RFAFlagCubeBase::iterFlag(itime);
+      //LOC; 
     return;
   }
 
@@ -309,6 +372,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to cancel the data pass and request a dry pass.
   RFABase::IterMode RFAApplyFlags::iterTime ( uInt itime ) 
   { 
+      RFAFlagCubeBase::iterTime(itime);
+
     LOC; 
     return RFABase::CONT;
   }
@@ -321,11 +386,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LOC;
 
     uInt ifr = chunk.ifrNum(irow);   // baseline for this row
-    cerr << "ifr = " << ifr << endl;
-    cerr << "num(CHAN) = " << num(CHAN) << endl;
+
+    Bool debug = false;
 
     // apply data flags
-    for( uInt ich=0; ich<num(CHAN); ich++ )
+    for( uInt ich=0; ich<num(CHAN); ich++ ) {
       //      if( !flagchan.nelements() || flagchan(ich) ) {
 
       //for( uInt j=0; j<sel_clip.nelements(); j++ )  {
@@ -337,11 +402,85 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
       //unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
       //}
+	if (debug) {
+	    cerr << endl;
+	    cerr << "channel = " << ich << endl;
+	    cerr << "startMJD = " << chunk.startMJD() << endl;
+	    cerr << "currentMJD = " << chunk.currentMJD() << endl;
+	    cerr << "endMJD = " << chunk.endMJD() << endl;
+	    cerr << "ifrNum = " << chunk.ifrNum(irow) << " " << chunk.ifrString(chunk.ifrNum(irow)) << endl;
+	    unsigned a1, a2;
+	    chunk.ifrToAnt(a1, a2, chunk.ifrNum(irow));
+	    cerr << "ant = " << a1 << ", " << a2 << endl;
+	    cerr << "(feedNum) = " << chunk.feedNum(irow) << endl;
+	    //chunk.printStats(); slow
+	    cerr << "spectralWindow = " << chunk.visBuf().spectralWindow() << endl;
+	    cerr << "times = " << chunk.visBuf().time() << endl;
+	    Vector<Int> corrtype;
+	    chunk.visIter().corrType(corrtype);
+	    cerr << "corrType = " << corrtype << endl;
+	    
+	    cerr << "fieldID = " << chunk.visIter().fieldId() << endl;
 
-      //      flag.clearFlag(ich, ifr);
+	    //flag.clearFlag(ich, ifr);
+	}
+	unsigned a1, a2;
+	chunk.ifrToAnt(a1, a2, chunk.ifrNum(irow));
+	
+	Vector<Int> corrtype;
+	chunk.visIter().corrType(corrtype);
+	
+	FlagIndex msrow(chunk.currentMJD(),
+			chunk.visBuf().timeInterval()[0],
+			a1, a2,
+			chunk.visBuf().spectralWindow(),
+			ich,
+			Stokes::name(Stokes::type(corrtype(0)))
+	    );
 
-    //}
-      ;
+	for (vector<FlagIndex>::const_iterator fi = (*flagIndex).begin(); fi < (*flagIndex).end(); fi ++) {
+	    
+	    if (debug) {
+		cerr << "time = " << msrow.time << " (" <<
+		    (*fi).time << ")";
+		if (fabs((*fi).time - msrow.time) < 60) cerr << " *";
+		cerr << endl;
+		
+		cerr << "exposure = " << msrow.exposure << " (" <<
+		    (*fi).exposure << ")";
+		cerr << endl;
+		
+		cerr << "ant1 = " << msrow.ant1 << " (" <<
+		    (*fi).ant1 << ")";
+		if ((*fi).ant1 == msrow.ant1)	cerr << " *";
+		cerr << endl;
+		
+		cerr << "ant2 = " << msrow.ant2 << " (" <<
+		    (*fi).ant2 << ")";
+		if ((*fi).ant2 == msrow.ant2)	cerr << " *";
+		cerr << endl;
+	    
+		cerr << "spw  = " << msrow.spw << " (" <<
+		    (*fi).spw << ")";
+		if ((*fi).spw == msrow.spw)	cerr << " *";
+		cerr << endl;
+	    
+		cerr << "chan = " << msrow.chan << " (" <<
+		    (*fi).chan << ")";
+		if ((*fi).chan == msrow.chan)	cerr << " *";
+		cerr << endl;
+	    
+		cerr << "corr = " << msrow.corr << " (" <<
+		    (*fi).corr << ")";
+		if ((*fi).corr == msrow.corr)	cerr << " *";
+		cerr << endl;
+	    }    
+	    if (msrow == (*fi)) {
+		if (debug) cerr << "Flag it!" << endl;
+		flag.setFlag(ich, ifr);
+	    }
+	}
+    }
 
     return RFABase::CONT;
   }
@@ -350,13 +489,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Called after a pass is completed successfully (i.e., not stopped
 // by start or iter methods). Return value: STOP to stop, DATA for 
 // another data pass, DRY for another dry pass.
-  RFABase::IterMode RFAApplyFlags::endData   () { LOC; return RFABase::STOP; };
+  RFABase::IterMode RFAApplyFlags::endData()
+  {
+      RFAFlagCubeBase::endData();
+      LOC; return RFABase::STOP;
+  };
 
 // Called after a dry pass is complete
-  RFABase::IterMode RFAApplyFlags::endDry    () { LOC; return RFABase::STOP; };
+  RFABase::IterMode RFAApplyFlags::endDry() 
+  {
+      RFAFlagCubeBase::endDry();      
+      LOC; return RFABase::STOP; 
+  };
 
 // Called after a flag pass is complete
-  void RFAApplyFlags::endFlag        () {LOC; }
+  void RFAApplyFlags::endFlag() 
+  {
+      LOC; 
+  }
 
 
 } //# NAMESPACE CASA - END

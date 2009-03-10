@@ -31,11 +31,10 @@
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPBarPlot.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
-#include <casaqt/QwtPlotter/QPOperation.h>
 #include <casaqt/QwtPlotter/QPPanel.qo.h>
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
-#include <casaqt/QwtPlotter/QPScatterPlot.qo.h>
+#include <casaqt/QwtPlotter/QPScatterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 #include <casaqt/QwtPlotter/QPTool.qo.h>
 
@@ -63,19 +62,19 @@ int QPFactory::execLoop() {
 }
 
 PlotterPtr QPFactory::plotter(const String& windowTitle, bool showSingleCanvas,
-        bool showGUI, int logMeasurementFlags, bool smartDelete) const {
+        bool showGUI, int logEventFlags, bool smartDelete) const {
     QPCanvas* canvas = showSingleCanvas ? new QPCanvas() : NULL;
-    PlotterPtr plotter(new QPPlotter(canvas, logMeasurementFlags),smartDelete);
+    PlotterPtr plotter(new QPPlotter(canvas, logEventFlags),smartDelete);
     plotter->setWindowTitle(windowTitle);
     plotter->showGUI(showGUI);
     return plotter;
 }
 
 PlotterPtr QPFactory::plotter(unsigned int nrows, unsigned int ncols,
-        const String& windowTitle, bool showGUI,int logMeasurementFlags,
+        const String& windowTitle, bool showGUI, int logEventFlags,
         bool smartDelete) const{
     if(nrows == 0 || ncols == 0)
-        return plotter(windowTitle, false, showGUI, logMeasurementFlags,
+        return plotter(windowTitle, false, showGUI, logEventFlags,
                 smartDelete);
     
     PlotLayoutGrid* g = new PlotLayoutGrid(nrows, ncols);
@@ -83,7 +82,7 @@ PlotterPtr QPFactory::plotter(unsigned int nrows, unsigned int ncols,
         for(unsigned int j = 0; j < ncols; j++)
             g->setCanvasAt(PlotGridCoordinate(i, j), new QPCanvas());
     
-    PlotterPtr plotter(new QPPlotter(g, logMeasurementFlags), smartDelete);
+    PlotterPtr plotter(new QPPlotter(g, logEventFlags), smartDelete);
     plotter->setWindowTitle(windowTitle);
     plotter->showGUI(showGUI);
     return plotter;
@@ -91,6 +90,8 @@ PlotterPtr QPFactory::plotter(unsigned int nrows, unsigned int ncols,
 
 PlotCanvasPtr QPFactory::canvas(bool smartDelete) const {
     return PlotCanvasPtr(new QPCanvas(), smartDelete); }
+
+bool QPFactory::canvasHasThreadedDrawing() const { return true; }
 
 PlotPanelPtr QPFactory::panel(bool smartDelete) const {
     return PlotPanelPtr(new QPPanel(), smartDelete); }
@@ -290,10 +291,7 @@ PlotLinePtr QPFactory::defaultLegendLine(bool smartDelete) {
 }
 
 PlotAreaFillPtr QPFactory::defaultLegendAreaFill(bool smartDelete) {
-    QPAreaFill* a = new QPAreaFill();
-    a->setColor("FFFFFF");
-    a->setPattern(PlotAreaFill::FILL);
-    return PlotAreaFillPtr(a, smartDelete);
+    return new QPAreaFill(QApplication::palette().brush(QPalette::Window));
 }
 
 PlotLinePtr QPFactory::defaultShapeLine(bool smartDelete) {
@@ -325,6 +323,15 @@ PlotSymbolPtr QPFactory::defaultPlotSymbol(bool smartDelete) {
     s->setSize(8, 8);
     s->setLine("000000", PlotLine::NOLINE, 1.0);
     s->setAreaFill("0000FF");
+    return PlotSymbolPtr(s, smartDelete);
+}
+
+PlotSymbolPtr QPFactory::defaultPlotMaskedSymbol(bool smartDelete) {
+    QPSymbol* s = new QPSymbol();
+    s->setSymbol(PlotSymbol::NOSYMBOL);
+    s->setSize(8, 8);
+    s->setLine("000000", PlotLine::NOLINE, 1.0);
+    s->setAreaFill("FF0000");
     return PlotSymbolPtr(s, smartDelete);
 }
 

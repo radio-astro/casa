@@ -170,8 +170,12 @@ void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
     // Set plotter with new layout.
     itsPlotter_->setCanvasLayout(newGrid);
     
+    itsParent_->getPlotter()->holdDrawing();
+    
     // Initialize plot.
     plot->initializePlot(canvases);
+    
+    itsParent_->getPlotter()->releaseDrawing();
     
     // Notify watchers.
     notifyWatchers();

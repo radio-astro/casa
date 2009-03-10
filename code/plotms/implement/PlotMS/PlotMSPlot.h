@@ -113,6 +113,9 @@ public:
     virtual const VisSet* visSet() const;
     // </group>
     
+    // Gets the plot's parent.
+    virtual PlotMS* parent();
+    
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Calls the
     // protected updated methods as needed.
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
@@ -286,6 +289,10 @@ private:
     PlotMSSinglePlot(const PlotMSSinglePlot& copy);
     PlotMSSinglePlot& operator=(const PlotMSSinglePlot& copy);
     // </group>
+    
+    
+    // Use macro for define post-thread methods for loading the cache.
+    PMS_POST_THREAD_METHOD(PlotMSSinglePlot, cacheLoaded)
 };
 
 }

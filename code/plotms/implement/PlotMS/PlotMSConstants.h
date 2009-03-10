@@ -317,6 +317,52 @@ private:
 };
 
 
+
+// Specifies averaging parameters for an MS.
+class PlotMSAveraging {
+public:
+    // Constructor, which uses default values.
+    PlotMSAveraging();
+    
+    // Destructor.
+    ~PlotMSAveraging();
+    
+    
+    // Gets/Sets whether channel averaging is turned on or not.
+    // <group>
+    bool channel() const;
+    void setChannel(bool channel);
+    // </group>
+    
+    // Gets/Sets the channel averaging value, which will be a value between
+    // 0 and 1, inclusive.  This value indicates the "level" of averaging
+    // desired: 0 means no averaging, and 1 means full averaging.
+    // <group>
+    double channelValue() const;
+    void setChannelValue(double value);
+    // </group>
+    
+    
+    // Equality operators.
+    // <group>
+    bool operator==(const PlotMSAveraging& other) const;
+    bool operator!=(const PlotMSAveraging& other) const {
+        return !(operator==(other)); }
+    // </group>
+    
+private:
+    // Channel averaging flag and value, respectively.
+    // <group>
+    bool itsChannel_;
+    double itsChannelValue_;
+    // </group>
+    
+    
+    // Sets the default values.
+    void setDefaults();
+};
+
+
 // Class for generating labels based upon axes, units, etc.  A format is a
 // String that consists of tags and non-tags.  Tags are special substrings
 // differentiated by being surrounded by a separator; tags are replaced with

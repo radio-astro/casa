@@ -41,8 +41,6 @@
 
 #include <casa/namespace.h>
 #include <atnf/PKSIO/NROReader.h>
-#include <atnf/PKSIO/NRO45Header.h>
-#include <atnf/PKSIO/NRODataset.h>
 
 #include <string>
 
@@ -62,11 +60,11 @@ class NRO45Reader : public NROReader
   ~NRO45Reader() ;
 
   // Read data header
-  virtual int readHeader() ;
+  virtual int read() ;
 
  protected:
   // Get Antenna Position in ITRF coordinate
-  vector<double> getAntennaPosition() ;
+  virtual vector<double> getAntennaPosition() ;
 
 };
 

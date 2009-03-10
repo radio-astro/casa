@@ -79,6 +79,16 @@ public:
         setYAxis(y);
     }
     // </group>
+    
+    // Returns the "draw count" for this item, which subjectively means how
+    // many indexed draw operations this item needs to make.  This is used to
+    // make comparative judgments about how long each item will take to draw,
+    // and to possibly divide up the work for larger items.  For example, a
+    // plot with 1000 data points might return 1000, while a square might
+    // return 1 for each drawn line.  Whatever number is returned, the item
+    // should expect to be able to draw given two indexes; for example, a plot
+    // should be able to draw from index 0 to index 100.
+    virtual unsigned int indexedDrawCount() const = 0;
 };
 typedef CountedPtr<PlotItem> PlotItemPtr;
 

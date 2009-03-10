@@ -28,9 +28,8 @@
 
 namespace casa {
 
-// TODO casaplotms: add ms selection to command-line parameters
 // TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots.
+//                    for new plots
 // TODO PlotMSCache: multi-region locate
 // TODO PlotMSData: have stack list of caches so that common MS/Selections can
 //                  be shared across different plots
@@ -38,14 +37,15 @@ namespace casa {
 //                    locate message, log message for parameters updated, log
 //                    message for # of plotted points
 // TODO PlotMSParameters: canvas background, fonts, grids, spacing
-// TODO PlotMSPlot: different colors within one plot, use threading
+// TODO PlotMSPlot: different colors within one plot, different types
 // TODO PlotMSPlotManager: unused canvases
 // TODO PlotMSPlotter: range padding, customize toolbars, override close event
-//                     to call PlotMS::close() in case there's cleanup
-// TODO PlotMSThread: background, pause/resume, cancel; export thread
-// TODO PlotMSWidgets: disable size for pixel, label creator
+//                     to call PlotMS::close() in case there's cleanup needed
+// TODO PlotMSThread: background, pause/resume, cancel; export thread; draw
+//                    thread for non-threaded draws
+// TODO PlotMSWidgets: label creator
 // TODO PlotTool: make scrolling on standard tool group still do stack movement
-//                even when none tool is selected, display tracker value as
+//                even when "none" tool is selected, display tracker value as
 //                time when needed, set tracker font
 
 ////////////////////////
@@ -73,7 +73,7 @@ PlotMS::PlotMS(const PlotMSParameters& params) : itsParameters_(params) {
     // initialization, since PlotMSLogger is waiting for the PlotMSPlotter to
     // be built first to get a pointer to its logger!
     PlotLogger* tempLogger = NULL;
-    if(itsLogMeasurementFlag_ & PlotMSLogger::INITIALIZE_GUI)
+    if(itsLogEventFlag_ & PlotMSLogger::INITIALIZE_GUI)
         tempLogger = new PlotLogger(NULL); // should be okay to pass NULL for a
                                            // Plotter since we're just
                                            // generating event messsages..
@@ -103,14 +103,14 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag, bool redrawRequired) {
     if(&params == &itsParameters_) {
         // We only care about PlotMS's parameters.
-        itsLogMeasurementFlag_ = PlotMSLogger::levelToMeasurementFlag(
+        itsLogEventFlag_ = PlotMSLogger::levelToEventFlag(
                                  itsParameters_.logLevel());
-        itsLogger_.setMeasurementEvents_(itsLogMeasurementFlag_);
+        itsLogger_.setEventFlags_(itsLogEventFlag_);
     }
 }
 
-PlotMSLogger* PlotMS::loggerFor(PlotMSLogger::MeasurementEvent event) {
-    if(itsLogMeasurementFlag_ & event) return &itsLogger_;
+PlotMSLogger* PlotMS::loggerFor(PlotMSLogger::Event event) {
+    if(itsLogEventFlag_ & event) return &itsLogger_;
     else                               return NULL;
 }
 

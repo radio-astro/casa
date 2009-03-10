@@ -72,7 +72,7 @@ public:
 
 
 // A generic log message that could be anything.
-class PlotLogGeneric : public PlotLogMessage {
+class PlotLogGeneric : public virtual PlotLogMessage {
 public:    
     // Constructor which takes the origin(s), the message, and an optional
     // priority.
@@ -105,7 +105,7 @@ private:
 // Used to report time and memory measurements.  This functionality can be
 // accessed either directly with a PlotLogMeasurement object or indirectly
 // through the PlotLogger class.
-class PlotLogMeasurement : public PlotLogMessage {
+class PlotLogMeasurement : public virtual PlotLogMessage {
 public:
     // Static //
     
@@ -197,7 +197,7 @@ private:
 
 // Used to report located indices.  Basically just a container for the results
 // of a PlotCanvas::locate.
-class PlotLogLocate : public PlotLogMessage {
+class PlotLogLocate : public virtual PlotLogMessage {
 public:
     // Static //
     
@@ -273,6 +273,70 @@ private:
 };
 
 
+// Subclass of PlotLogMessage to unify messages for method entering/exiting.
+class PlotLogMethod : public virtual PlotLogMessage {
+public:
+    // Constructor which takes the class and method names, a flag for whether
+    // the method is entering or exiting, and an optional additional message
+    // and priority.
+    PlotLogMethod(const String& className, const String& methodName,
+            bool entering, const String& message = String(),
+            LogMessage::Priority priority = LogMessage::NORMAL);
+    
+    // Destructor.
+    ~PlotLogMethod();
+    
+    
+    // Implements PlotLogMessage::origin1().
+    const String& origin1() const;
+    
+    // Implements PlotLogMessage::origin2().
+    const String& origin2() const;
+    
+    // Implements PlotLogMessage::message().
+    void message(ostream& outstream) const;
+    
+    // Implements PlotLogMessage::priority().
+    LogMessage::Priority priority() const;
+    
+private:
+    String m_class, m_method, m_message; // Class, method, and message.
+    LogMessage::Priority m_priority;     // Priority.
+};
+
+
+// Subclass of PlotLogMessage to unify messages for object creation/deletion.
+class PlotLogObject : public virtual PlotLogMessage {
+public:
+    // Constructor which takes the class name and object address, a flag for
+    // whether the object is being created or destroyed, and an optional
+    // additional message and priority.
+    PlotLogObject(const String& className, void* address, bool creation,
+            const String& message = String(),
+            LogMessage::Priority priority = LogMessage::NORMAL);
+    
+    // Destructor.
+    ~PlotLogObject();
+    
+    
+    // Implements PlotLogMessage::origin1().
+    const String& origin1() const;
+    
+    // Implements PlotLogMessage::origin2().
+    const String& origin2() const;
+    
+    // Implements PlotLogMessage::message().
+    void message(ostream& outstream) const;
+    
+    // Implements PlotLogMessage::priority().
+    LogMessage::Priority priority() const;
+    
+private:
+    String m_class, m_method, m_message; // Class, method, and message.
+    LogMessage::Priority m_priority;     // Priority.
+};
+
+
 // A PlotLogger is used to log messages to an underlying CASA log object, as
 // well as provide access to different logging functionality like measurements.
 // PlotLogger is associated with a single Plotter object and should be used by
@@ -282,14 +346,15 @@ class PlotLogger {
 public:
     // Static //
     
-    // Measurement events that someone may want to log.  Specifying more than
-    // one event can be used by doing a bitwise or of one or more enum values
-    // into a flag.
-    enum MeasurementEvent {
+    // Events that someone may want to log.  Specifying more than one event can
+    // be used by doing a bitwise or of one or more enum values into a flag.
+    enum Event {
         DRAW_TOTAL         = 1, // Replotting/redrawing the whole GUI.
         DRAW_INDIVIDUAL    = 2, // Replotting/redrawing each plot item.
+        METHODS_MAJOR      = 4, // Entering/exiting major methods.
+        OBJECTS_MAJOR      = 8, // Creation/deletion of major objects.
         
-        NOMEASUREMENTS     = 0 // No measurement events.
+        NO_EVENTS          = 0 // No measurement events.
     };
     
     
@@ -304,8 +369,11 @@ public:
     
     // Event Methods //
     
-    // Calls Plotter::setLogMeasurementEvents().
-    void setMeasurementEvents(int flags);
+    // Calls Plotter::logEventFlags().
+    int eventFlags() const;
+    
+    // Calls Plotter::setLogEventFlags().
+    void setEventFlags(int flags);
     
     
     // Message Methods //

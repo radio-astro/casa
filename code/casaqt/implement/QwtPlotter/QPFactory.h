@@ -38,7 +38,7 @@
 namespace casa {
 
 // Implementation of PlotFactory for Qwt plotter.
-class QPFactory : public virtual PlotFactory {
+class QPFactory : public PlotFactory {
 public:
     // Constructor.
     QPFactory();
@@ -72,17 +72,20 @@ public:
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(const String& windowTitle = "Qwt Plotter",
             bool showSingleCanvas = true, bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const;
     
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(unsigned int nrows, unsigned int ncols,
             const String& windowTitle = "Qwt Plotter", bool showGUI = true,
-            int logMeasurementFlags = PlotLogger::NOMEASUREMENTS,
+            int logEventFlags = PlotLogger::NO_EVENTS,
             bool smartDelete = true) const;
     
     // Implements PlotFactory::canvas().
     PlotCanvasPtr canvas(bool smartDelete = true) const;
+    
+    // Implements PlotFactory::canvasHasThreadedDrawing().
+    bool canvasHasThreadedDrawing() const;
     
     // Implements PlotFactory::panel().
     PlotPanelPtr panel(bool smartDelete = true) const;
@@ -242,6 +245,10 @@ public:
     // Returns a default symbol for scatter plots.  Currently: 8x8 blue
     // circle with no outline.
     static PlotSymbolPtr defaultPlotSymbol(bool smartDelete = true);
+    
+    // Returns a default masked symbol for masked scatter plots.  Currently:
+    // 8x8 red no symbol with no outline.
+    static PlotSymbolPtr defaultPlotMaskedSymbol(bool smartDelete = true);
     
     // The default error bar cap, currently 10.
     static const unsigned int DEFAULT_ERROR_CAP;

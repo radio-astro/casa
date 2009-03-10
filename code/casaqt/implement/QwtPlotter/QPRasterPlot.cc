@@ -28,11 +28,33 @@
 
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 
+#include <casaqt/QwtPlotter/QPCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
 
 #include <qwt_legend_item.h>
 
 namespace casa {
+
+/////////////////////////////
+// QPRASTERMAP DEFINITIONS //
+/////////////////////////////
+
+QPRasterMap::QPRasterMap(bool isargb) : m_isARGB(isargb) { }
+QPRasterMap::~QPRasterMap() { }
+
+QwtColorMap* QPRasterMap::copy() const { return new QPRasterMap(); }
+
+QRgb QPRasterMap::rgb(const QwtDoubleInterval& interval, double value) const {
+    if(m_isARGB) return static_cast<QRgb>(value);
+    else         return 0xFF000000 | static_cast<QRgb>(value);
+}
+
+unsigned char QPRasterMap::colorIndex(const QwtDoubleInterval& interval,
+        double value) const {
+    return static_cast<unsigned char>(value); }
+
+void QPRasterMap::setIsARGB(bool argb) { m_isARGB = argb; }
+
 
 //////////////////////////////
 // QPRASTERPLOT DEFINITIONS //
@@ -46,28 +68,40 @@ const String QPRasterPlot::CLASS_NAME = "QPRasterPlot";
 // Constructors/Destructors //
 
 QPRasterPlot::QPRasterPlot(PlotRasterDataPtr data, PlotRasterData::Format form,
-        const String& title) : m_data(data), m_format(form) {
-    QPPlotItem::setTitle(title.c_str());
-    QwtPlotSpectrogram::setData(m_data);
+        const String& title) : m_data(data), m_format(form),
+        m_spectMap(QPOptions::standardSpectrogramMap()) {
+    QPPlotItem::setTitle(title);
+    setData(m_data);
     
-    setItemAttribute(QwtPlotItem::AutoScale);
+    QPPlotItem::setItemAttribute(QwtPlotItem::AutoScale);
 
-    setColorMap(QPOptions::standardSpectrogramMap());
+    if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
+    else {
+        m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+        setColorMap(m_rasterMap);
+    }
+    
     setDisplayMode(QwtPlotSpectrogram::ImageMode);
     setDisplayMode(QwtPlotSpectrogram::ContourMode);
 }
 
 QPRasterPlot::QPRasterPlot(const RasterPlot& copy) : m_data(copy.rasterData()),
-        m_format(copy.dataFormat()) {
-    QwtPlotSpectrogram::setTitle(copy.title().c_str());
-    QwtPlotSpectrogram::setData(m_data);
+        m_format(copy.dataFormat()),
+        m_spectMap(QPOptions::standardSpectrogramMap()) {
+    QPPlotItem::setTitle(copy.title());
+    setData(m_data);
     
     setContourLines(copy.contourLines());
     setLine(copy.line());
     
-    setItemAttribute(QwtPlotItem::AutoScale);
+    QPPlotItem::setItemAttribute(QwtPlotItem::AutoScale);
     
-    setColorMap(QPOptions::standardSpectrogramMap());
+    if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
+    else {
+        m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+        setColorMap(m_rasterMap);
+    }
+    
     setDisplayMode(QwtPlotSpectrogram::ImageMode);
     setDisplayMode(QwtPlotSpectrogram::ContourMode);
 }
@@ -78,6 +112,29 @@ QPRasterPlot::~QPRasterPlot() { }
 // Public Methods //
 
 bool QPRasterPlot::isValid() const { return m_data.isValid(); }
+
+unsigned int QPRasterPlot::indexedDrawCount() const {
+    if(m_canvas == NULL) return 0;
+
+    QRect prect = totalArea();
+    if(!prect.isValid()) return 0;
+    else return prect.width() * prect.height();
+}
+
+
+void QPRasterPlot::itemChanged() { QPPlotItem::itemChanged(); }
+
+
+QwtDoubleRect QPRasterPlot::boundingRect() const {
+    return m_data.boundingRect(); }
+
+QWidget* QPRasterPlot::legendItem() const {
+    QwtLegendItem* item = new QwtLegendItem();
+    item->setText(qwtTitle());
+    item->setCurvePen(defaultContourPen());
+    item->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowText);
+    return item;
+}
 
 
 bool QPRasterPlot::linesShown() const {
@@ -124,9 +181,14 @@ void QPRasterPlot::setYRange(double from, double to) {
 }
 
 PlotRasterData::Format QPRasterPlot::dataFormat() const { return m_format; }
-void QPRasterPlot::setDataFormat(PlotRasterData::Format f) {
+void QPRasterPlot::setDataFormat(PlotRasterData::Format f) {    
     if(f != m_format) {
         m_format = f;
+        if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
+        else {
+            m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+            setColorMap(m_rasterMap);
+        }
         itemChanged();
     }
 }
@@ -154,57 +216,63 @@ void QPRasterPlot::setContourLines(const vector<double>& lines) {
 }
 
 
-QwtDoubleRect QPRasterPlot::boundingRect() const {
-    return m_data.boundingRect(); }
-
-void QPRasterPlot::draw(QPainter* p, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect &rect) const {
-    QPI_DRAWLOG1    
-    QwtPlotSpectrogram::draw(p, xMap, yMap, rect);    
-    QPI_DRAWLOG2
-}
-
-QWidget* QPRasterPlot::legendItem() const {
-    QwtLegendItem* item = new QwtLegendItem();
-    item->setText(QwtPlotSpectrogram::title());
-    item->setCurvePen(defaultContourPen());
-    item->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowText);
-    return item;
-}
-
-
 // Protected Methods //
 
-QImage QPRasterPlot::renderImage(const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QwtDoubleRect& area) const {
-    if(m_format == PlotRasterData::SPECTROGRAM) {
-        return QwtPlotSpectrogram::renderImage(xMap, yMap, area);
-    } else {
-        // basically copied from code in QwtPlotSpectogram
-        if(area.isEmpty() || m_data.data().null()) return QImage();
+void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
+          const QwtScaleMap& yMap, const QRect& canvasRect,
+          unsigned int drawIndex, unsigned int drawCount) const {
+    if(!canvasRect.isValid()) return;
     
-        PlotRasterDataPtr d = m_data.data();
+    QRect adjArea = canvasRect;    
     
-        QRect rect = transform(xMap, yMap, area);
-        QImage image(rect.size(), format(m_format));
-    
-        double tx(0), ty(0);
-        PlotCoordinate c;
-        for(int y = rect.top(); y <= rect.bottom(); y++) {
-            ty = yMap.invTransform(y);
-            QRgb* line = (QRgb*)image.scanLine(y - rect.top());
+    // adjust for draw index and draw count if needed
+    if(drawIndex > 0 || drawCount < indexedDrawCount()) {
+        QRect prect = totalArea();
+        if(adjArea.isValid()) {
+            int height = adjArea.height(), left = adjArea.left(),
+                right = adjArea.right();
             
-            for(int x = rect.left(); x <= rect.right(); x++) {
-                tx = xMap.invTransform(x);
-
-                *line=static_cast<unsigned int>(m_data.data()->valueAt(tx,ty));
-                
-                line++;
+            unsigned int tmp = 0;
+            while(tmp < drawIndex) {
+                left++;
+                tmp += height;
             }
+            if(left > adjArea.left()) left--; // need to round down one
+            
+            int tmp2 = (int)drawCount;
+            while(right >= left && ((right - left + 1) * height) > tmp2)
+                right--;
+            if(right < adjArea.right()) right++; // need to round up one
+            
+            prect.setLeft(left);
+            prect.setRight(right);
+
+            if(prect.isValid()) adjArea &= prect;
         }
-    
-        return image;
     }
+    
+    QwtPlotSpectrogram::draw(painter, xMap, yMap, adjArea);
+}
+
+
+QRect QPRasterPlot::totalArea() const {
+    if(m_canvas == NULL) return QRect();
+    
+    PlotRegion ranges = m_canvas->axesRanges(QPPlotItem::xAxis(),
+                                             QPPlotItem::yAxis());
+    // have to switch the top and bottom for some stupid reason
+    QwtDoubleRect area(ranges.left(), ranges.bottom(),
+                       ranges.right() - ranges.left(),
+                       ranges.top() - ranges.bottom());
+    QwtDoubleRect brect = boundingRect();
+    
+    if(area == brect) return m_canvas->asQwtPlot().canvas()->contentsRect();
+    
+    if(brect.isValid()) area &= brect;
+    
+    return QPPlotItem::transform(
+            m_canvas->asQwtPlot().canvasMap(qwtXAxis()),
+            m_canvas->asQwtPlot().canvasMap(qwtYAxis()), area);
 }
 
 }

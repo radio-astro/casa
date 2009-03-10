@@ -94,9 +94,13 @@ public:
     // axes used for x and y values.  See PlotMSCache::load().
     // <group>
     void loadCache(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,
-            PMS::DataColumn xData, PMS::DataColumn yData);
+            PMS::DataColumn xData, PMS::DataColumn yData,
+            const PlotMSAveraging& averaging,
+            PlotMSCacheThread* thread = NULL);
     void loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data);
+            const vector<PMS::DataColumn>& data,
+            const PlotMSAveraging& averaging,
+            PlotMSCacheThread* thread = NULL);
     // </group>
     
     // See PlotMSCache::setUpPlot().

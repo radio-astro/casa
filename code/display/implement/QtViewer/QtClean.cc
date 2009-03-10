@@ -36,12 +36,12 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 #include <lattices/Lattices/LCBox.h>
-#include <images/Images/ImageRegion.h>
-#include <images/Images/RegionManager.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/WCBox.h>
-#include <images/Images/WCIntersection.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionManager.h>
+#include <images/Regions/WCBox.h>
+#include <images/Regions/WCIntersection.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayMath.h>

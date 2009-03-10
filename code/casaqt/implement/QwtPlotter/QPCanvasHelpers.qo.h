@@ -29,23 +29,28 @@
 
 #ifdef AIPS_HAS_QWT
 
-#include <graphics/GenericPlotter/PlotOptions.h>
+#include <casaqt/QwtPlotter/QPOptions.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
+#include <graphics/GenericPlotter/PlotCanvas.h>
 
-#include <casa/BasicSL/String.h>
-
-#include <qwt_scale_draw.h>
+#include <qwt_legend.h>
 #include <qwt_plot.h>
-#include <qwt_plot_canvas.h>
+#include <qwt_plot_grid.h>
+#include <qwt_scale_draw.h>
 
 #include <QObject>
 #include <QMouseEvent>
+#include <QSpacerItem>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-//# Forward declarations
+//# Forward Declarations
 class QPCanvas;
+
+
+// Miscellaneous Classes //
 
 // Filter to install on the QwtPlotCanvas to catch mouse move events (which
 // are otherwise stolen by other filters in QwtPicker classes).
@@ -75,50 +80,6 @@ protected:
 private:
     // Canvas.
     QwtPlotCanvas* m_canvas;
-};
-
-
-// Subclass of QwtScaleDraw to reimplement some drawing methods in order to fix
-// a weird bug when printing to PDF or PS.  This bug may be fixed when we
-// switch to qwt 5.1 rather than 5.0.2, in which case this class may be
-// removed.
-class QPCartesianScaleDraw : public QwtScaleDraw {
-public:
-    // Constructor.
-    QPCartesianScaleDraw();
-    
-    // Destructor.
-    ~QPCartesianScaleDraw();
-    
-    // Overrides QwtScaleDraw::drawBackbone().
-    void drawBackbone(QPainter* p) const;
-    
-    // Overrides QwtScaleDraw::drawTick().
-    void drawTick(QPainter* p, double value, int len) const;
-};
-
-
-// Plot item for drawing cartesian axes.  See
-// http://pyqwt.sourceforge.net/examples/CartesianDemo.py.html .
-class QPCartesianAxis : public QwtPlotItem {
-public:
-    // "Master" is the one being drawn; "slave" is the one that the master
-    // is attached to.
-    QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave);
-    
-    // Destructor.
-    ~QPCartesianAxis();
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
-private:
-    // Master axis.
-    QwtPlot::Axis m_axis;
-    
-    // Scale draw.
-    QPCartesianScaleDraw m_scaleDraw;
 };
 
 
@@ -166,89 +127,232 @@ private:
 };
 
 
-// Subclass of QwtPlot to have the main canvas layer (the QwtPlotCanvas), as
-// well as an additional layer on top via transparent pixmaps.
-class QPLayeredCanvas : public QwtPlot {
-    friend class QwtPlotItem;
-    friend class QPPlotItem;
-    friend class QPCanvas;
-    
+// Subclass of QwtLegend to handle outline and background, and be able to draw
+// itself using a QPainter.
+class QPLegend : public QwtLegend {
 public:
-    // Constructor which takes parent canvas (optional) parent widget.
-    QPLayeredCanvas(QPCanvas* parent, QWidget* parentWidget = NULL);
-    
-    // Constructor which takes the canvas title, the parent canvas, and an
-    // (optional) parent widget.
-    QPLayeredCanvas(const QwtText& title, QPCanvas* parent,
-                    QWidget* parentWidget = NULL);
+    // Constructor which takes optional parent widget.
+    QPLegend(QWidget* parent = NULL);
     
     // Destructor.
-    ~QPLayeredCanvas();
+    ~QPLegend();
     
     
-    // Include overloaded methods.
-    using QwtPlot::replot;
+    // Overrides QwtLegend::sizeHint() to take border into account.
+    QSize sizeHint() const;
     
-    
-    // Overrides QObject::eventFilter().  Used to pass events to the canvas
-    // when it is being covered by an interior legend.
-    bool eventFilter(QObject* watched, QEvent* event);
-    
-    
-protected:
-    // Overrides QwtPlot::drawItems().
-    void drawItems(QPainter* painter, const QRect& rect,
-                   const QwtScaleMap maps[axisCnt],
-                   const QwtPlotPrintFilter& filter) const;
-    
-    // Attaches the given item to the layer rather than the main canvas.
-    void attachLayeredItem(QwtPlotItem* item);
-    
-    // Detaches the given layered item.
-    void detachLayeredItem(QwtPlotItem* item);
-    
-    // Sets whether to redraw the layers on the next draw cycle (true), or to
-    // use the cached version (false).  Should be set immediately prior to a
-    // replot, and then immediately after with both set to true (for resizing,
-    // etc.).
-    void setDrawLayers(bool main, bool layer);
-    
-    // Hold/Release drawing.
+    // Gets/Sets the outline.
     // <group>
-    bool drawingIsHeld() const;
-    void holdDrawing();
-    void releaseDrawing();
+    const QPLine& line() const;
+    const QPen& pen() const;
+    void setLine(const PlotLine& line);
+    void setLine(const QPen& pen) { setLine(QPLine(pen)); }
     // </group>
     
-    // Compounds a call to setDrawLayers(drawMain, drawLayer), replot(), and
-    // setDrawLayers(true, true).  For common uses.
-    void replot(bool drawMain, bool drawLayer);
+    // Gets/Sets the background.
+    // <group>
+    const QPAreaFill& areaFill() const;
+    const QBrush& brush() const;
+    void setAreaFill(const PlotAreaFill& fill);
+    void setAreaFill(const QBrush& brush) { setAreaFill(QPAreaFill(brush)); }
+    // </group>
     
-    // Filters input events on the given frame to pass to the canvas.
-    void installLegendFilter(QFrame* legendFrame);
+    // Draws the legend's outline and bacgkround using the given painter on the
+    // given rect.  If useQwtPainter is true, QwtPainter is used (which
+    // preserves any set QwtMetricsMap).
+    void drawOutlineAndBackground(QPainter* painter, const QRect& rect,
+            bool useQwtPainter = false);
+    
+protected:
+    // Overrides QWidget::paintEvent() to draw outline and background if
+    // needed.
+    void paintEvent(QPaintEvent* event);
     
 private:
-    // Parent QPCanvas.
-    QPCanvas* m_parent;
+    // Outline.
+    QPLine m_line;
     
-    // Layered plot items.
-    vector<QwtPlotItem*> m_layeredItems;
+    // Background.
+    QPAreaFill m_areaFill;
+};
+
+
+// Holder for QPLegend that is responsible for its placement.
+class QPLegendHolder : public QWidget {
+    Q_OBJECT
     
-    // Layer draw flags.
-    bool m_drawMain;
-    bool m_drawLayer;
-    bool m_drawingHeld;
+public:
+    // Default padding for internal legends.
+    static const int DEFAULT_INTERNAL_PADDING;
     
-    // Layer pixmaps.
-    QPixmap m_main;
-    QPixmap m_layer;
-    
-    // Legend frame to watch for events.
-    QFrame* m_legendFrame;
+    // Converts from our legend position to Qwt's.
+    static QwtPlot::LegendPosition legendPosition(
+            PlotCanvas::LegendPosition pos);
     
     
-    // Initializes object (meant to be called from constructor).
-    void initialize();
+    // Constructor which takes the canvas and initial position.
+    QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition position,
+            int padding = DEFAULT_INTERNAL_PADDING);
+    
+    // Destructor.
+    ~QPLegendHolder();
+
+    
+    // Shows/hides the legend.
+    // <group>
+    bool legendShown() const;
+    void showLegend(bool show = true);
+    // </group>
+    
+    // Gets/Sets the legend position.
+    // <group>
+    bool isInternal() const;
+    PlotCanvas::LegendPosition position() const;
+    void setPosition(PlotCanvas::LegendPosition position);
+    // </group>
+    
+    // Gets/Sets the outline.
+    // <group>
+    const QPLine& line() const { return m_legend->line(); }
+    const QPen& pen() const { return m_legend->pen(); }
+    void setLine(const PlotLine& line) { m_legend->setLine(line); }
+    void setLine(const QPen& pen) { m_legend->setLine(pen); }
+    // </group>
+    
+    // Gets/Sets the background.
+    // <group>
+    const QPAreaFill& areaFill() const { return m_legend->areaFill(); }
+    const QBrush& brush() const { return m_legend->brush(); }
+    void setAreaFill(const PlotAreaFill& fill) { m_legend->setAreaFill(fill); }
+    void setAreaFill(const QBrush& brush) { m_legend->setAreaFill(brush); }
+    // </group>
+    
+    // Returns the rect for the internal legend, given a canvas rect.
+    QRect internalLegendRect(const QRect& canvasRect,
+            bool useQwtPainter = false) const;
+    
+    // See QPLegend::drawOutlineAndBackground.
+    void drawOutlineAndBackground(QPainter* painter, const QRect& rect,
+            bool useQwtPainter = false) {
+        m_legend->drawOutlineAndBackground(painter, rect, useQwtPainter); }
+    
+private:
+    // Canvas.
+    QPCanvas* m_canvas;
+    
+    // Actual legend.
+    QPLegend* m_legend;
+    
+    // Current position.
+    PlotCanvas::LegendPosition m_position;
+    
+    // Spacers for internal legends.
+    QSpacerItem* m_spaceTop, *m_spaceLeft, *m_spaceRight, *m_spaceBottom;
+    
+    // Padding for internal legends.
+    int m_padding;
+    
+    
+    // Update the spacers for the position, padding, and line width.
+    void updateSpacers();
+};
+
+
+// "Base" Item Classes //
+
+// Abstract superclass for all "base" item classes.  Base items are a special
+// type of plot item that are not PlotItems but *are* QwtPlotItems that go
+// below the normal items.
+class QPBaseItem : public QPLayerItem {
+    friend class QPLayeredCanvas;
+    
+public:
+    // Z indexes for known base items.
+    // <group>
+    static const double BASE_Z_CARTAXIS;
+    static const double BASE_Z_GRID;
+    // </group>    
+    
+    
+    // Constructor.
+    QPBaseItem();
+    
+    // Destructor.
+    virtual ~QPBaseItem();
+    
+    
+    // Implements QPLayerItem::itemChanged() to only redraw the base cache.
+    virtual void itemChanged();
+    
+protected:
+    // Attached canvas, or NULL for none.
+    QPCanvas* m_canvas;
+    
+    
+    // Attaches this item to the given canvas.
+    void qpAttach(QPCanvas* canvas);
+    
+    // Detaches this item from its canvas.
+    void qpDetach();
+};
+
+
+// Subclass of QPBaseItem for drawing grids.  Basically just a wrapper for
+// QwtPlotGrid.
+class QPGrid : public QPBaseItem, public QwtPlotGrid {
+public:
+    // Constructor.
+    QPGrid();
+    
+    // Destructor.
+    ~QPGrid();
+    
+    
+    // Implements QwtPlotItem::draw().
+    void draw(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& rect) const {
+        QwtPlotGrid::draw(painter, xMap, yMap, rect); }
+    
+    // Overrides QwtPlotItem::itemChanged() to use QPBaseItem's definition.
+    void itemChanged() { QPBaseItem::itemChanged(); }
+    
+    // Implements QPLayerItem::shouldDraw().
+    bool shouldDraw() const;
+    
+    // Overrides QwtPlotItem::boundingRect() to use QwtPlotGrid's definition.
+    QwtDoubleRect boundingRect() const { return QwtPlotGrid::boundingRect(); }
+    
+    // Overrides QwtPlotItem::updateScaleDiv() to use QwtPlotGrid's definition.
+    void updateScaleDiv(const QwtScaleDiv& xDiv, const QwtScaleDiv& yDiv) {
+        QwtPlotGrid::updateScaleDiv(xDiv, yDiv); }
+};
+
+
+// Subclass of QPBaseItem for drawing cartesian axes.  See
+// http://pyqwt.sourceforge.net/examples/CartesianDemo.py.html .
+class QPCartesianAxis : public QPBaseItem {
+public:
+    // "Master" is the one being drawn; "slave" is the one that the master
+    // is attached to.
+    QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave);
+    
+    // Destructor.
+    ~QPCartesianAxis();
+    
+    
+    // Implements QwtPlotItem::draw().
+    void draw(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& rect) const;
+    
+    // Implements QPLayerItem::shouldDraw().
+    bool shouldDraw() const { return true; }
+    
+private:
+    // Master axis.
+    QwtPlot::Axis m_axis;
+    
+    // Scale draw.
+    QwtScaleDraw m_scaleDraw;
 };
 
 }

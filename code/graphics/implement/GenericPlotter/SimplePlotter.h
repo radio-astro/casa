@@ -73,6 +73,12 @@ public:
     // Enters the execution loop and returns the result.
     int execLoop();
     
+    // Holds/Releases drawing on the canvas.  Is NOT recursive.
+    // <group>
+    void holdDrawing();
+    void releaseDrawing();
+    // </group>
+    
     
     // Plotter customization
     

@@ -348,6 +348,17 @@ const QPen& QPSymbol::drawPen() const { return *m_drawPen; }
 const QBrush& QPSymbol::drawBrush() const { return *m_drawBrush; }
 
 
+/////////////////////////
+// QPMUTEX DEFINITIONS //
+/////////////////////////
+
+QPMutex::QPMutex() { }
+QPMutex::~QPMutex() { }
+void QPMutex::lock() { m_mutex.lock(); }
+void QPMutex::unlock() { m_mutex.unlock(); }
+bool QPMutex::tryLock() { return m_mutex.tryLock(); }
+
+
 ///////////////////////////
 // QPOPTIONS DEFINITIONS //
 ///////////////////////////

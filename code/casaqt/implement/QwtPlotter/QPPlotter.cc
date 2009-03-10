@@ -38,20 +38,19 @@
 namespace casa {
 
 // TODO PlotCanvas: way of providing custom tick labels for axes, print to
-//      printer.
+//      printer, custom layer
 // TODO PlotData: possible indexing bug in PlotRasterDataImpl
 // TODO PlotLogger: log messages for function entering, object
-//      creation/deletion.
-// TODO QPCanvas: grid in separate layer, weird Qt thing for legend where
-//      setting the border using a stylesheet doesn't allow the background to
-//      be set using the palette, pixmap cache for stack
+//      creation/deletion
+// TODO QPCanvas: pixmap cache for stack
 // TODO QPCurve: test which is faster: setting the pen multiple times and
 //      going through the data once, or setting the pen twice and going through
 //      the data twice.  also test which is faster: multiple for loops or
-//      single for loop with if statements.
+//      single for loop with if statements
 // TODO QPPlotter: find way of continuing pen style, reduce number of draws in
 //      qwtplottertest
-// TODO QPRasterPlot: different origins, fix contour line offset problem
+// TODO QPRasterPlot: different origins, fix contour line offset problem,
+//      printing to PS
 // TODO QPSymbol: character width
 
 ///////////////////////////
@@ -85,9 +84,9 @@ bool QPPlotter::initColors() {
 
 // Constructors/Destructors //
 
-QPPlotter::QPPlotter(QPCanvas* canvas, int logMeasureFlags, QWidget* parent) :
+QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
         QWidget(parent), m_layout(NULL), m_emitResize(true),
-        m_logMeasurements(logMeasureFlags) {
+        m_logEvents(logEventFlags) {
     initialize();
     
     if(canvas != NULL) {    
@@ -96,9 +95,9 @@ QPPlotter::QPPlotter(QPCanvas* canvas, int logMeasureFlags, QWidget* parent) :
     }
 }
 
-QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logMeasureFlags,
-        QWidget* parent):QWidget(parent), m_layout(layout), m_emitResize(true),
-        m_logMeasurements(logMeasureFlags) {
+QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
+        QWidget* parent) : QWidget(parent), m_layout(layout),
+        m_emitResize(true), m_logEvents(logEventFlags) {
     initialize();
     
     if(!m_layout.null()) {
@@ -335,72 +334,7 @@ PlotFactory* QPPlotter::implementationFactory() const {
     return new QPFactory(); }
 
 bool QPPlotter::exportToFile(const PlotExportFormat& format) {
-    if(format.location.empty()) return false;
-
-    if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {
-        QImage image = QPixmap::grabWidget(canvasFrame).toImage();
-        
-        // width and height, if applicable
-        if(format.width > 0 && format.height > 0) {
-            // size is specified            
-            image = image.scaled(format.width, format.height,
-                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            
-        } else if(format.width > 0) {
-            // width is specified            
-            image = image.scaledToWidth(format.width,
-                                        Qt::SmoothTransformation);
-            
-        } else if(format.height > 0) {
-            //  height is specified            
-            image = image.scaledToHeight(format.height,
-                                         Qt::SmoothTransformation);
-        }
-        
-        if(format.dpi > 0) {
-            // convert dpi to dpm
-            int dpm = QPOptions::round(format.dpi / 2.54 * 100);
-            image.setDotsPerMeterX(dpm);
-            image.setDotsPerMeterY(dpm);
-        }
-        
-        int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
-
-        return !image.isNull() && image.save(format.location.c_str(),
-                PlotExportFormat::exportFormat(format.type).c_str(), f);
-        
-    } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {
-        QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
-        if(format.resolution == PlotExportFormat::HIGH)
-            mode = QPrinter::HighResolution;
-        
-        QPrinter printer(mode);
-        if(format.type == PlotExportFormat::PDF)
-            printer.setOutputFormat(QPrinter::PdfFormat);
-        else printer.setOutputFormat(QPrinter::PostScriptFormat);
-        
-        if(format.dpi > 0) printer.setResolution(format.dpi);
-        
-        printer.setColorMode(QPrinter::Color);
-        printer.setOutputFileName(format.location.c_str());
-        
-        vector<PlotCanvasPtr> canvases = m_layout->allCanvases();
-        QwtPlot* canv;
-        for(unsigned int i = 0; i < canvases.size(); i++) {
-            canv = &dynamic_cast<QPCanvas*>(&*canvases[i])->asQwtPlot();
-            printer.setOrientation(canv->width() >= canv->height() ?
-                                   QPrinter::Landscape : QPrinter::Portrait);
-            canv->print(printer);
-            if(i < canvases.size() - 1) printer.newPage();
-        }
-        
-        return true;
-    }
-
-    return false;
-}
+    return QPCanvas::exportPlotter(this, format); }
 
 String QPPlotter::fileChooserDialog(const String& title,
         const String& directory) {
@@ -409,9 +343,8 @@ String QPPlotter::fileChooserDialog(const String& title,
 }
 
 
-int QPPlotter:: logMeasurementEvents() const { return m_logMeasurements; }
-void QPPlotter::setLogMeasurementEvents(int flags) {
-    m_logMeasurements = flags; }
+int QPPlotter::logEventFlags() const { return m_logEvents; }
+void QPPlotter::setLogEventFlags(int flags) { m_logEvents = flags; }
 
 
 void QPPlotter::registerResizeHandler(PlotResizeEventHandlerPtr handler) {
@@ -427,6 +360,13 @@ void QPPlotter::unregisterResizeHandler(PlotResizeEventHandlerPtr handler) {
         }
     }
 }
+
+
+const QWidget* QPPlotter::canvasWidget() const { return canvasFrame; }
+QWidget* QPPlotter::canvasWidget() { return canvasFrame; }
+
+QSize QPPlotter::sizeHint() const { return QSize(); }
+QSize QPPlotter::minimumSizeHint() const { return QSize(); }
 
 
 // Protected Methods //

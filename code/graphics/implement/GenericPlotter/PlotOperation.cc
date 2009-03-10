@@ -55,28 +55,64 @@ String PlotOperation::currentStatus() const {
     PO_GETTER(String, m_currentStatus) }
 
 
-#define PO_SETTER(NAME, VAL)                                                  \
-    m_mutex->lock();                                                          \
-    NAME = VAL;                                                               \
-    m_mutex->unlock();
+#define PO_SETTER(NAME, TEMP, VAL)                                            \
+    if( TEMP != VAL ) {                                                       \
+        m_mutex->lock();                                                      \
+        NAME = VAL;                                                           \
+        m_mutex->unlock();                                                    \
+        notifyWatchers();                                                     \
+    }
 
-void PlotOperation::setInProgress(bool inProgress) {
-    PO_SETTER(m_inProgress, inProgress) }
-void PlotOperation::setIsFinished(bool isFinished) {
-    PO_SETTER(m_isFinished, isFinished) }
-void PlotOperation::setCurrentProgress(unsigned int currentProgress) {
-    PO_SETTER(m_currentProgress, currentProgress)
-    if(m_currentProgress > 100) m_currentProgress = 100;
+void PlotOperation::setInProgress(bool val) {
+    PO_SETTER(m_inProgress, inProgress(), val) }
+void PlotOperation::setIsFinished(bool val) {
+    PO_SETTER(m_isFinished, isFinished(), val) }
+void PlotOperation::setCurrentProgress(unsigned int val) {
+    if(val > 100) val = 100;
+    PO_SETTER(m_currentProgress, currentProgress(), val)
 }
-void PlotOperation::setCurrentStatus(const String& currentStatus) {
-    PO_SETTER(m_currentStatus, currentStatus) }
+void PlotOperation::setCurrentStatus(const String& val) {
+    PO_SETTER(m_currentStatus, currentStatus(), val) }
 
 void PlotOperation::setMutex(PlotMutexPtr mutex) { m_mutex = mutex; }
+
+void PlotOperation::addWatcher(PlotOperationWatcher* watcher) {
+    if(watcher == NULL) return;
+    for(unsigned int i = 0; i < m_watchers.size(); i++)
+        if(m_watchers[i] == watcher) return;
+    m_watchers.push_back(watcher);
+}
+
+void PlotOperation::removeWatcher(PlotOperationWatcher* watcher) {
+    if(watcher == NULL) return;
+    for(unsigned int i = 0; i < m_watchers.size(); i++) {
+        if(m_watchers[i] == watcher) {
+            m_watchers.erase(m_watchers.begin() + i);
+            return;
+        }
+    }
+}
 
 void PlotOperation::reset() {
     m_inProgress = false;
     m_isFinished = false;
     m_currentProgress = 0;
+    m_currentStatus = "";
+    notifyWatchers();
+}
+
+void PlotOperation::finish() {
+    m_inProgress = false;
+    m_isFinished = true;
+    m_currentProgress = 100;
+    m_currentStatus = "Finished.";
+    notifyWatchers();
+}
+
+
+void PlotOperation::notifyWatchers() const {
+    for(unsigned int i = 0; i < m_watchers.size(); i++)
+        m_watchers[i]->operationChanged(*this);
 }
 
 }

@@ -29,6 +29,7 @@
 
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
+#include <plotms/PlotMS/PlotMSThread.qo.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -68,18 +69,24 @@ public:
   // columns.  IMPORTANT: this method assumes that any currently loaded data is
   // valid for the given VisIter; i.e., if the meta-information or either of
   // the axes are already loaded, then they don't need to be reloaded.  If this
-  // is not the case, then clear() should be called BEFORE append().
+  // is not the case, then clear() should be called BEFORE append().  If a
+  // PlotMSCacheThreadHelper object is given, it will be used to report
+  // progress information.
   void load(VisSet& visSet, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data);
+            const vector<PMS::DataColumn>& data,
+            const PlotMSAveraging& averaging,
+            PlotMSCacheThread* thread = NULL);
 
   // Convenience method for loading x and y axes.
   void load(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,
-          PMS::DataColumn xData, PMS::DataColumn yData) {
+            PMS::DataColumn xData, PMS::DataColumn yData,
+            const PlotMSAveraging& averaging,
+            PlotMSCacheThread* thread = NULL) {
       vector<PMS::Axis> axes(2);
       axes[0] = xAxis; axes[1] = yAxis;
       vector<PMS::DataColumn> data(2);
       data[0] = xData; data[1] = yData;
-      load(visSet, axes, data);
+      load(visSet, axes, data, averaging, thread);
   }
   
   // Set up indexing for the plot (amp vs freq hardwired version)

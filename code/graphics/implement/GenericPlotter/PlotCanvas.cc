@@ -166,10 +166,7 @@ void PlotCanvas::moveAxesRanges(PlotAxis xAxis, double xDelta,
     setAxesRanges(xAxis, x.first, x.second, yAxis, y.first, y.second);
 }
 
-PlotAxesStack& PlotCanvas::canvasAxesStack() const {
-    static PlotAxesStack stack;
-    return stack;
-}
+PlotAxesStack& PlotCanvas::canvasAxesStack() { return m_stack; }
 
 bool PlotCanvas::canvasAxesStackMove(int delta) {
     PlotAxesStack& stack = canvasAxesStack();
@@ -479,14 +476,15 @@ void PlotCanvas::setLegendFill(const String& color,
 void PlotCanvas::setLegendFont(const PlotFontPtr font) {
     if(!font.null()) setLegendFont(*font); }
 
-PlotOperationPtr PlotCanvas::operationDraw() const {
+PlotOperationPtr PlotCanvas::operationDraw() {
     return operationDraw(PlotMutexPtr());
 }
 
-PlotOperationPtr PlotCanvas::operationDraw(PlotMutexPtr m) const {
-    static PlotOperationPtr draw = new PlotOperation(OPERATION_DRAW, mutex());
-    if(!m.null()) draw->setMutex(m);
-    return draw;
+PlotOperationPtr PlotCanvas::operationDraw(PlotMutexPtr m) {
+    if(m_drawOperation.null())
+        m_drawOperation = new PlotOperation(OPERATION_DRAW, mutex());
+    if(!m.null()) m_drawOperation->setMutex(m);
+    return m_drawOperation;
 }
 
 

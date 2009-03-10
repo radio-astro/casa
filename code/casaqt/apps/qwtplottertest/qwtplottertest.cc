@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <QtGui>
-
 #include <casa/namespace.h>
 
 namespace casa {
@@ -86,30 +84,47 @@ int main(int argc, char** argv) {
     String flag;
     if(argc > 1) {
         flag = String(argv[1]);
-        if(flag.size() >= 2) {
+        if(flag.size() >= 2 && flag[0] == '-' && flag [1] == '-')
             flag = flag.substr(2);
-        } else flag = String();
         flag.downcase();
     }
     
-    if(flag == "help") {
-        cout << "usage: " << argv[0] << " [flag]" << endl;
-        cout << "Available flags (no flag defaults to error):" << endl;
-        cout << "--simple     \tFor simple plotter." << endl;
-        cout << "--error      \tFor error bar plot." << endl;
-        cout << "--masked     \tFor masked scatter plot." << endl;
-        cout << "--bar        \tFor bar plot." << endl;
-        cout << "--histogram  \tFor histogram plot." << endl;
-        cout << "--raster     \tFor raster plot." << endl;
-        cout << "--spectrogram\tFor spectrogram plot." << endl;
-        cout << "--help       \tTo print this message and then exit." << endl;
+    const String FLAG_HELP = "help", FLAG_SIMPLE = "simple",
+          FLAG_ERROR = "error", FLAG_MASKED = "masked", FLAG_BAR = "bar",
+          FLAG_HISTOGRAM = "histogram", FLAG_RASTER = "raster",
+          FLAG_SPECTROGRAM = "spectrogram";
+    const String DEFAULT_FLAG = FLAG_ERROR;
+    
+    if(flag == FLAG_HELP) {
+        cout << "usage: " << argv[0] << " [flag]\n";
+        cout << "Available flags (no flag defaults to "<<DEFAULT_FLAG<<"):\n";
+        cout << "--" << FLAG_SIMPLE << "     \tFor simple plotter.\n";
+        cout << "--" << FLAG_ERROR << "      \tFor error bar plot.\n";
+        cout << "--" << FLAG_MASKED << "     \tFor masked scatter plot.\n";
+        cout << "--" << FLAG_BAR << "        \tFor bar plot.\n";
+        cout << "--" << FLAG_HISTOGRAM << "  \tFor histogram plot.\n";
+        cout << "--" << FLAG_RASTER << "     \tFor raster plot.\n";
+        cout << "--" << FLAG_SPECTROGRAM << "\tFor spectrogram plot.\n";
+        cout << "--" << FLAG_HELP << "       \tPrints this message and exits.";
+        cout << endl;
         return 0;
     }
     
+    if(!flag.empty() && flag != FLAG_SIMPLE && flag != FLAG_ERROR &&
+       flag != FLAG_MASKED && flag != FLAG_BAR && flag != FLAG_HISTOGRAM &&
+       flag != FLAG_RASTER && flag != FLAG_SPECTROGRAM) {
+        cout << "Unknown flag: \"" << flag << "\", using default ("
+             << DEFAULT_FLAG << ")." << endl;
+        flag = DEFAULT_FLAG;
+    } else if(flag.empty()) flag = DEFAULT_FLAG;
+    
     // FOR SIMPLE PLOTTER
-    if(flag == "simple") {
+    if(flag == FLAG_SIMPLE) {
         SimplePlotterPtr plotter = simplePlotter(Plotter::QWT);    
         plotter->setWindowTitle("Simple qwt plotter test");
+        
+        // Hold drawing until we've added everything.
+        plotter->holdDrawing();
     
         // Get some data
         int from = -25, to = 25;
@@ -143,6 +158,9 @@ int main(int argc, char** argv) {
         plotter->rectangle(5, -5000, 15, -10000);
         plotter->ellipse(-15, 10000, 5, 2500);
         plotter->arrow(0, 0, 5, 5000);
+        
+        // Release drawing.
+        plotter->releaseDrawing();
         
         // Export a screenshot
         plotter->exportPS(plotter->fileChooserDialog("Export to PS file"));
@@ -236,7 +254,7 @@ int main(int argc, char** argv) {
         plot->setSymbol(symbol);
         
         // Draw the plot as necessary.
-        if(flag.empty() || flag == "error") canvas->plotItem(plot);    
+        if(flag == FLAG_ERROR) canvas->plotItem(plot);    
         
     
         // Add a random mask.
@@ -249,7 +267,7 @@ int main(int argc, char** argv) {
         maskedPlot->setMaskedSymbol(PlotSymbol::SQUARE);
     
         // Draw the masked plot as necessary.
-        if(flag == "masked") canvas->plotItem(maskedPlot);
+        if(flag == FLAG_MASKED) canvas->plotItem(maskedPlot);
     
         
         // Set up rectangle from (5, 250) to (20, -200)
@@ -257,8 +275,7 @@ int main(int argc, char** argv) {
         PlotShapePtr rect = factory->shapeRectangle(c1, c2);
         rect->setLine("000000", PlotLine::DASHED, 2.0);// 2px black dashed line
         rect->setAreaFill("60A0C0", PlotAreaFill::MESH3); // meshed blue        
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(rect);      
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) canvas->plotItem(rect);      
         
         // Set up annotation with an outline and background
         c1 = PlotCoordinate(10, -200);
@@ -266,34 +283,29 @@ int main(int argc, char** argv) {
         annot->setOutline("black");
         annot->setBackground("339933", PlotAreaFill::MESH3);
         annot->setOrientation(30);
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(annot);
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) canvas->plotItem(annot);
         
         // Set up lines at x = 10 and y = 200
         PlotShapePtr pline = factory->shapeLine(200, Y_LEFT);
         pline->setLine("60A0C0", PlotLine::DOTTED, 2);
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(pline);
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) canvas->plotItem(pline);
         
         pline = factory->shapeLine(10, X_BOTTOM);
         pline->setLine("106080", PlotLine::DOTTED, 2);
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(pline);
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) canvas->plotItem(pline);
         
         // Set up arrow from (0, 0) to (-10, -600)
         c1 = PlotCoordinate(0, 0);
         c2 = PlotCoordinate(-10, -600);
         PlotShapePtr arrow = factory->shapeArrow(c1, c2);
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(arrow);
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) canvas->plotItem(arrow);
         
         // Set up ellipse centered on (-10, 400)
         c1 = PlotCoordinate(-10, 400);
         c2 = PlotCoordinate(10, 200);
         PlotShapeEllipsePtr ellipse = factory->shapeEllipse(c1, c2);
         ellipse->setAreaFill("669933", PlotAreaFill::MESH3);
-        if(flag.empty() || flag == "error" || flag == "masked")
-            canvas->plotItem(ellipse);
+        if(flag== FLAG_ERROR || flag== FLAG_MASKED) canvas->plotItem(ellipse);
         
         
         // Set up a histogram for some random data
@@ -309,7 +321,7 @@ int main(int argc, char** argv) {
     
         // Get histogram plot with ten bins
         BarPlotPtr hist = factory->histogramPlot(factory->singleData(v), 10);
-        if(flag == "histogram") canvas->plotItem(hist);
+        if(flag == FLAG_HISTOGRAM) canvas->plotItem(hist);
         
         
         // Set up a bar plot for some random data
@@ -318,7 +330,7 @@ int main(int argc, char** argv) {
         for(unsigned int i = 0; i < n; i++) by[i] = rand() % n;
         
         BarPlotPtr bar = factory->barPlot(factory->data(by));
-        if(flag == "bar") canvas->plotItem(bar);
+        if(flag == FLAG_BAR) canvas->plotItem(bar);
         
       
         // Set up a raster plot with contours
@@ -337,7 +349,7 @@ int main(int argc, char** argv) {
         raster->setContourLines(contours);
         raster->setLine("green", PlotLine::SOLID, 2.0);
         
-        if(flag == "raster") {
+        if(flag == FLAG_RASTER) {
             canvas->plotItem(raster);
             canvas->showColorBar();
         }
@@ -369,7 +381,7 @@ int main(int argc, char** argv) {
         spect->setContourLines(contours);
         spect->setLine("black", PlotLine::SOLID, 1.0);
         
-        if(flag == "spectrogram") {
+        if(flag == FLAG_SPECTROGRAM) {
             canvas->plotItem(spect);
             canvas->showColorBar();
         }
@@ -377,7 +389,7 @@ int main(int argc, char** argv) {
         
         // Customize canvas some more
         
-        if(flag.empty() || flag == "error" || flag == "masked") {
+        if(flag == FLAG_ERROR || flag == FLAG_MASKED) {
             // Set axes titles
             canvas->setAxisLabel(X_BOTTOM, "x");
             canvas->setAxisLabel(Y_LEFT, "x<sup>2</sup>");

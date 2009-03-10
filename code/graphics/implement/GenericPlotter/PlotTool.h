@@ -154,7 +154,7 @@ typedef CountedPtr<PlotTool> PlotToolPtr;
 // A PlotMouseTool is a specialization of PlotTool that handles all mouse
 // events.  It is abstract, and combines all mouse event handling methods into
 // one for convenience.
-class PlotMouseTool : public PlotTool,
+class PlotMouseTool : public virtual PlotTool,
                       public virtual PlotSelectEventHandler,
                       public virtual PlotClickEventHandler, 
                       public virtual PlotMousePressEventHandler,
@@ -220,7 +220,7 @@ INHERITANCE_POINTER2(PlotMouseTool, PlotMouseToolPtr, PlotTool, PlotToolPtr)
 // 2) keeping track of selected regions,
 // 3) showing/hiding the regions on the canvas, and
 // 4) notifying any interested classes whenever the selected regions changes.
-class PlotSelectTool : public PlotMouseTool {
+class PlotSelectTool : public virtual PlotMouseTool {
 public:
     // Constructor which takes the tool's coordinate system.
     PlotSelectTool(PlotCoordinate::System system = PlotCoordinate::WORLD);
@@ -310,7 +310,7 @@ INHERITANCE_POINTER(PlotSelectTool, PlotSelectToolPtr, PlotMouseTool,
 // 2) managing a zoom stack,
 // 3) managing the canvas's select line/cursor, and
 // 3) notifying interested objects when the zoom changes.
-class PlotZoomTool : public PlotMouseTool {
+class PlotZoomTool : public virtual PlotMouseTool {
 public:
     // Constructor which takes the tool's coordinate system.
     PlotZoomTool(PlotCoordinate::System sys = PlotCoordinate::WORLD);
@@ -382,7 +382,7 @@ INHERITANCE_POINTER(PlotZoomTool, PlotZoomToolPtr, PlotMouseTool,
 // 2) managing a pan stack,
 // 3) managing the canvas's cursor, and
 // 4) notifying interested objects when the pan changes.
-class PlotPanTool : public PlotMouseTool {
+class PlotPanTool : public virtual PlotMouseTool {
 public:
     // Constructor which takes the tool's coordinate system.
     PlotPanTool(PlotCoordinate::System sys = PlotCoordinate::WORLD);
@@ -448,7 +448,7 @@ INHERITANCE_POINTER(PlotPanTool, PlotPanToolPtr, PlotMouseTool,
 // 1) show a label with the current position hovering over the mouse,
 // 2) let an external class handle the tracking via notifications, or
 // 3) both.
-class PlotTrackerTool : public PlotMouseTool {
+class PlotTrackerTool : public virtual PlotMouseTool {
     friend class PlotStandardMouseToolGroup; // Why is this necessary to access
                                              // attach() and detach()? >:(
     
@@ -621,7 +621,7 @@ protected:
 
 // A PlotMouseToolGroup provides an interface for a group of PlotMouseTools
 // where only one (or none) is active at a time.
-class PlotMouseToolGroup : public PlotMouseTool {
+class PlotMouseToolGroup : public virtual PlotMouseTool {
 public:
     // Constructor for empty group.
     PlotMouseToolGroup();

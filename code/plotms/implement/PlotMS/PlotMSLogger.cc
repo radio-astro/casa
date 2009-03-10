@@ -36,14 +36,16 @@ namespace casa {
 
 // Static //
 
-int PlotMSLogger::levelToMeasurementFlag(Level level) {
+int PlotMSLogger::levelToEventFlag(Level level) {
     switch(level) {
-    case LOW: return PlotLogger::DRAW_TOTAL;
-    case MED: return PlotLogger::DRAW_TOTAL | LOAD_CACHE;
+    case LOW:  return PlotLogger::DRAW_TOTAL | LOAD_CACHE;
+    case MED:  return PlotLogger::DRAW_TOTAL | PlotLogger::METHODS_MAJOR |
+                      LOAD_CACHE;
     case HIGH: return PlotLogger::DRAW_TOTAL | PlotLogger::DRAW_INDIVIDUAL |
-                      LOAD_CACHE | INITIALIZE_GUI;
+                      PlotLogger::METHODS_MAJOR | PlotLogger::OBJECTS_MAJOR |
+                      INITIALIZE_GUI | LOAD_CACHE;
 
-    default: return PlotLogger::NOMEASUREMENTS;
+    default: return PlotLogger::NO_EVENTS;
     }
 }
 
@@ -86,9 +88,8 @@ PlotLogMeasurement PlotMSLogger::releaseMeasurement(bool post) {
 }
 
 
-void PlotMSLogger::setMeasurementEvents_(int flags) {
-    if(!itsLogger_.null())
-        itsLogger_->setMeasurementEvents(flags);
+void PlotMSLogger::setEventFlags_(int flags) {
+    if(!itsLogger_.null()) itsLogger_->setEventFlags(flags);
 }
 
 }

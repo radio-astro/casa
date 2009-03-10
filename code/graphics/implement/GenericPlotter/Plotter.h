@@ -191,13 +191,13 @@ public:
     
     // Logging methods //
     
-    // Gets/sets which measurement events, as a flag, this Plotter should log.
-    // The flag should be a bitwise-or of one or more values in
-    // PlotLogger::MeasurementEvent.  This call should trickle down to relevant
-    // objects associated with this plotter as necessary.
+    // Gets/sets which events, as a flag, this Plotter should log.  The flag
+    // should be a bitwise-or of one or more values in PlotLogger::Event.  This
+    // call should trickle down to relevant objects associated with this
+    // plotter as necessary.
     // <group>
-    virtual int logMeasurementEvents() const = 0;
-    virtual void setLogMeasurementEvents(int flags) = 0;
+    virtual int logEventFlags() const = 0;
+    virtual void setLogEventFlags(int flags) = 0;
     // </group>
     
     

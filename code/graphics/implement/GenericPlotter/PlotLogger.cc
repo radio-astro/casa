@@ -122,7 +122,7 @@ void PlotLogMeasurement::startMeasurement() {
 void PlotLogMeasurement::stopMeasurement() {
     time_t t = std::time(NULL);
     m_time = t - m_startTime;
-    m_memory = Memory::allocatedMemoryInBytes() - m_startMemory;
+    m_memory = ((double)Memory::allocatedMemoryInBytes()) - m_startMemory;
     if(m_memoryUnit == KILOBYTE)      m_memory /= 1024;
     else if(m_memoryUnit == MEGABYTE) m_memory /= 1024 * 1024;
 
@@ -225,6 +225,55 @@ PlotLogLocate::plotIndices(unsigned int index) const {
 bool PlotLogLocate::willDeleteIndices() const { return m_shouldDelete; }
 
 
+///////////////////////////////
+// PLOTLOGMETHOD DEFINITIONS //
+///////////////////////////////
+
+PlotLogMethod::PlotLogMethod(const String& className, const String& methodName,
+        bool entering, const String& message, LogMessage::Priority priority) :
+        m_class(className), m_method(methodName), m_priority(priority) {
+    stringstream ss;
+    if(entering) ss << "ENTERING.";
+    else         ss << "EXITING. ";
+    
+    if(!message.empty()) ss << "  " << message;
+    m_message = ss.str();
+}
+
+PlotLogMethod::~PlotLogMethod() { }
+
+const String& PlotLogMethod::origin1() const { return m_class; }
+const String& PlotLogMethod::origin2() const { return m_method; }
+void PlotLogMethod::message(ostream& outstream) const{ outstream << m_message;}
+LogMessage::Priority PlotLogMethod::priority() const { return m_priority; }
+
+
+///////////////////////////////
+// PLOTLOGOBJECT DEFINITIONS //
+///////////////////////////////
+
+PlotLogObject::PlotLogObject(const String& className, void* address,
+        bool creation, const String& message, LogMessage::Priority priority) :
+        m_class(className), m_method(creation ? "alloc" : "dealloc"),
+        m_priority(priority) {
+    stringstream ss;
+    if(creation) ss << "Creating";
+    else         ss << "Destroying";
+    ss << " object at " << address << ".";
+    
+    if(!message.empty()) ss << " " << message;
+    m_message = ss.str();
+}
+
+PlotLogObject::~PlotLogObject() { }
+
+
+const String& PlotLogObject::origin1() const { return m_class; }
+const String& PlotLogObject::origin2() const { return m_method; }
+void PlotLogObject::message(ostream& outstream) const{ outstream << m_message;}
+LogMessage::Priority PlotLogObject::priority() const { return m_priority; }
+
+
 ////////////////////////////
 // PLOTLOGGER DEFINITIONS //
 ////////////////////////////
@@ -233,8 +282,13 @@ PlotLogger::PlotLogger(Plotter* plotter) : m_plotter(plotter) { }
 
 PlotLogger::~PlotLogger() { }
 
-void PlotLogger::setMeasurementEvents(int flags) {
-    if(m_plotter != NULL) m_plotter->setLogMeasurementEvents(flags); }
+int PlotLogger::eventFlags() const {
+    if(m_plotter != NULL) return m_plotter->logEventFlags();
+    else                  return NO_EVENTS;
+}
+
+void PlotLogger::setEventFlags(int flags) {
+    if(m_plotter != NULL) m_plotter->setLogEventFlags(flags); }
 
 void PlotLogger::postMessage(const PlotLogMessage& message) {
     m_logger.origin(LogOrigin(message.origin1(), message.origin2()));

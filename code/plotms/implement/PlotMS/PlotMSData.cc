@@ -72,12 +72,14 @@ bool PlotMSData::minsMaxes(double& xMin, double& xMax, double& yMin,
 void PlotMSData::clearCache() { itsCache_->clear(); }
 
 void PlotMSData::loadCache(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,
-        PMS::DataColumn xData, PMS::DataColumn yData) {
-    itsCache_->load(visSet, xAxis, yAxis, xData, yData); }
+        PMS::DataColumn xData, PMS::DataColumn yData,
+        const PlotMSAveraging& averaging, PlotMSCacheThread* thread) {
+    itsCache_->load(visSet, xAxis, yAxis, xData, yData, averaging, thread); }
 
 void PlotMSData::loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
-        const vector<PMS::DataColumn>& data) {
-    itsCache_->load(visSet, axes, data); }
+        const vector<PMS::DataColumn>& data, const PlotMSAveraging& averaging,
+        PlotMSCacheThread* thread) {
+    itsCache_->load(visSet, axes, data, averaging, thread); }
 
 void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
     itsCache_->setUpPlot(xAxis, yAxis); }

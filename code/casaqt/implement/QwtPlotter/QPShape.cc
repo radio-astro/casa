@@ -194,6 +194,17 @@ QPShape::QPShape(const PlotShape& copy) {
 QPShape::~QPShape() { }
 
 
+QWidget* QPShape::legendItem() const {
+    QwtSymbol s(legendStyle(), m_area.asQBrush(), m_line.asQPen(),
+                QSize(10, 10));
+    QwtLegendItem* item = new QwtLegendItem(s, m_line.asQPen(),
+                                            QwtPlotItem::title());
+    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
+                            QwtLegendItem::ShowText);
+    return item;
+}
+
+
 bool QPShape::lineShown() const { return m_line.style() != PlotLine::NOLINE; }
 void QPShape::setLineShown(bool l) {
     if(l != lineShown()) {
@@ -225,16 +236,6 @@ void QPShape::setAreaFill(const PlotAreaFill& fill) {
         m_area = fill;
         itemChanged();
     }
-}
-
-QWidget* QPShape::legendItem() const {
-    QwtSymbol s(legendStyle(), m_area.asQBrush(), m_line.asQPen(),
-                QSize(10, 10));
-    QwtLegendItem* item = new QwtLegendItem(s, m_line.asQPen(),
-                                            QwtPlotItem::title());
-    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
-                            QwtLegendItem::ShowText);
-    return item;
 }
 
 
@@ -281,19 +282,6 @@ QwtDoubleRect QPRectangle::boundingRect() const {
     } else return QRectF();
 }
 
-void QPRectangle::draw(QPainter* painter, const QwtScaleMap& xMap,
-                            const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
-    QRectF rect = boundingRect();
-    if(rect.isValid()) {
-        const QRect r = transform(xMap, yMap, rect);
-        painter->setPen(m_line.asQPen());
-        painter->setBrush(m_area.asQBrush());        
-        painter->drawRect(r);
-    }
-    QPI_DRAWLOG2
-}
-
 
 vector<PlotCoordinate> QPRectangle::coordinates() const {
     vector<PlotCoordinate> v(2);
@@ -312,6 +300,19 @@ void QPRectangle::setRectCoordinates(const PlotCoordinate& ul,
         m_upperLeft = ul;
         m_lowerRight = lr;        
         itemChanged();
+    }
+}
+
+
+void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    QRectF rect = boundingRect();
+    if(rect.isValid()) {
+        const QRect r = transform(xMap, yMap, rect);
+        painter->setPen(m_line.asQPen());
+        painter->setBrush(m_area.asQBrush());        
+        painter->drawRect(r);
     }
 }
 
@@ -362,44 +363,6 @@ QwtDoubleRect QPEllipse::boundingRect() const {
     } else return QRectF();
 }
 
-void QPEllipse::draw(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
-    QRectF rect = boundingRect();
-    if(rect.isValid()) {
-        int x, y, width, height;
-        if(m_center.system() == PlotCoordinate::PIXEL) {
-            x = (int)(m_center.x() + 0.5);
-            y = (int)(m_center.y() + 0.5);
-        } else {
-            PlotCoordinate c = m_canvas->convertCoordinate(m_center,
-                                             PlotCoordinate::WORLD);
-            x = xMap.transform(c.x());
-            y = yMap.transform(c.y());
-        }
-        if(m_radii.system() == PlotCoordinate::PIXEL) {
-            width = (int)((2 * m_radii.x()) + 0.5);
-            height = (int)((2 * m_radii.y()) + 0.5);
-        } else {
-            PlotCoordinate c = m_canvas->convertCoordinate(m_center,
-                                             PlotCoordinate::WORLD);
-            PlotCoordinate r = m_canvas->convertCoordinate(m_radii,
-                                             PlotCoordinate::WORLD);
-            width = xMap.transform(c.x() + r.x()) -
-                    xMap.transform(c.x() - r.x());
-            height = yMap.transform(c.y() + r.y()) -
-                     yMap.transform(c.y() - r.y());
-        }
-        x = (int)(x - (width/2.0) + 0.5);
-        y = (int)(y - (height/2.0) + 0.5);
-        
-        QRect r(x, y, width, height);
-        painter->setPen(m_line.asQPen());
-        painter->setBrush(m_area.asQBrush());
-        painter->drawEllipse(r);
-    }
-    QPI_DRAWLOG2
-}
 
 vector<PlotCoordinate> QPEllipse::coordinates() const {
     vector<PlotCoordinate> v(2);
@@ -440,6 +403,45 @@ void QPEllipse::setCenter(const PlotCoordinate& center) {
     if(m_center != center) {
         m_center = center;
         itemChanged();
+    }
+}
+
+
+void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    QRectF rect = boundingRect();
+    if(rect.isValid()) {
+        int x, y, width, height;
+        if(m_center.system() == PlotCoordinate::PIXEL) {
+            x = (int)(m_center.x() + 0.5);
+            y = (int)(m_center.y() + 0.5);
+        } else {
+            PlotCoordinate c = m_canvas->convertCoordinate(m_center,
+                                             PlotCoordinate::WORLD);
+            x = xMap.transform(c.x());
+            y = yMap.transform(c.y());
+        }
+        if(m_radii.system() == PlotCoordinate::PIXEL) {
+            width = (int)((2 * m_radii.x()) + 0.5);
+            height = (int)((2 * m_radii.y()) + 0.5);
+        } else {
+            PlotCoordinate c = m_canvas->convertCoordinate(m_center,
+                                             PlotCoordinate::WORLD);
+            PlotCoordinate r = m_canvas->convertCoordinate(m_radii,
+                                             PlotCoordinate::WORLD);
+            width = xMap.transform(c.x() + r.x()) -
+                    xMap.transform(c.x() - r.x());
+            height = yMap.transform(c.y() + r.y()) -
+                     yMap.transform(c.y() - r.y());
+        }
+        x = (int)(x - (width/2.0) + 0.5);
+        y = (int)(y - (height/2.0) + 0.5);
+        
+        QRect r(x, y, width, height);
+        painter->setPen(m_line.asQPen());
+        painter->setBrush(m_area.asQBrush());
+        painter->drawEllipse(r);
     }
 }
 
@@ -491,12 +493,28 @@ QwtDoubleRect QPPolygon::boundingRect() const {
     } else return QRectF();
 }
 
-void QPPolygon::draw(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
+
+vector<PlotCoordinate> QPPolygon::coordinates() const { return m_coords; }
+
+void QPPolygon::setCoordinates(const vector<PlotCoordinate>& c) {
+    if(m_coords != c) {   
+        m_coords = c;
+        itemChanged();
+    }
+}
+
+
+void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     if(isValid() && m_canvas != NULL) {
-        QwtPolygon p(m_coords.size());
-        for(unsigned int i = 0; i < m_coords.size(); i++) {
+        unsigned int n = m_coords.size();
+        if(drawIndex >= n) return;
+        if(drawIndex + drawCount > n) drawCount = n - drawIndex;
+        n = drawIndex + drawCount;
+        
+        QwtPolygon p(n);
+        for(unsigned int i = drawIndex; i < n; i++) {
             PlotCoordinate c = m_coords[i];
             if(c.system() != PlotCoordinate::WORLD)
                 c = m_canvas->convertCoordinate(c, PlotCoordinate::WORLD);
@@ -508,16 +526,6 @@ void QPPolygon::draw(QPainter* painter, const QwtScaleMap& xMap,
         painter->setPen(m_line.asQPen());
         painter->setBrush(m_area.asQBrush());
         painter->drawPolygon(p);
-    }
-    QPI_DRAWLOG2
-}
-
-vector<PlotCoordinate> QPPolygon::coordinates() const { return m_coords; }
-
-void QPPolygon::setCoordinates(const vector<PlotCoordinate>& c) {
-    if(m_coords != c) {   
-        m_coords = c;
-        itemChanged();
     }
 }
 
@@ -553,13 +561,6 @@ bool QPLineShape::isValid() const { return true; }
 QwtDoubleRect QPLineShape::boundingRect() const {
     return m_marker.boundingRect(); }
 
-void QPLineShape::draw(QPainter* painter, const QwtScaleMap& xMap,
-                       const QwtScaleMap& yMap, const QRect& r) const {
-    QPI_DRAWLOG1
-    const_cast<QwtPlotMarker&>(m_marker).setLinePen(m_line.asQPen());
-    m_marker.draw(painter, xMap, yMap, r);
-    QPI_DRAWLOG2
-}
 
 vector<PlotCoordinate> QPLineShape::coordinates() const {
     vector<PlotCoordinate> v(1);
@@ -599,6 +600,14 @@ double QPLineShape::location() const {
 }
 
 PlotAxis QPLineShape::axis() const { return m_axis; }
+
+
+void QPLineShape::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    const_cast<QwtPlotMarker&>(m_marker).setLinePen(m_line.asQPen());
+    m_marker.draw(painter, xMap, yMap, canvasRect);
+}
 
 
 /////////////////////////
@@ -650,9 +659,55 @@ QwtDoubleRect QPArrow::boundingRect() const {
     } else return QRectF();
 }
 
-void QPArrow::draw(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
+
+vector<PlotCoordinate> QPArrow::coordinates() const {
+    vector<PlotCoordinate> v(2);
+    v[0] = m_from;
+    v[1] = m_to;
+    return v;
+}
+
+void QPArrow::setCoordinates(const vector<PlotCoordinate>& coords) {
+    if(coords.size() >= 2 && (m_from != coords[0] || m_to != coords[1])) {
+        m_from = coords[0];
+        m_to = coords[1];        
+        itemChanged();
+    }
+}
+
+void QPArrow::setArrowCoordinates(const PlotCoordinate& from,
+                                  const PlotCoordinate& to) {
+    if(from != m_from || to != m_to) {
+        m_from = from;
+        m_to = to;        
+        itemChanged();
+    }
+}
+
+PlotShapeArrow::Style QPArrow::arrowStyleFrom() const { return m_fromStyle; }
+PlotShapeArrow::Style QPArrow::arrowStyleTo() const { return m_toStyle; }
+
+void QPArrow::setArrowStyles(Style from, Style to) {
+    if(from != m_fromStyle || to != m_toStyle) {
+        m_fromStyle = from;
+        m_toStyle = to;
+        itemChanged();
+    }
+}
+
+double QPArrow::arrowSize() const { return m_size; }
+
+void QPArrow::setArrowSize(double size) {
+    if(size != m_size && size >= 1) {
+        m_size = size;
+        itemChanged();
+    }
+}
+
+
+void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     QRectF rect = boundingRect();
     if(rect.isValid() || m_from.x() == m_to.x() || m_from.y() == m_to.y()) {        
         painter->setPen(m_line.asQPen());
@@ -716,51 +771,6 @@ void QPArrow::draw(QPainter* painter, const QwtScaleMap& xMap,
             }
         }
     }
-    QPI_DRAWLOG2
-}
-
-vector<PlotCoordinate> QPArrow::coordinates() const {
-    vector<PlotCoordinate> v(2);
-    v[0] = m_from;
-    v[1] = m_to;
-    return v;
-}
-
-void QPArrow::setCoordinates(const vector<PlotCoordinate>& coords) {
-    if(coords.size() >= 2 && (m_from != coords[0] || m_to != coords[1])) {
-        m_from = coords[0];
-        m_to = coords[1];        
-        itemChanged();
-    }
-}
-
-void QPArrow::setArrowCoordinates(const PlotCoordinate& from,
-                                  const PlotCoordinate& to) {
-    if(from != m_from || to != m_to) {
-        m_from = from;
-        m_to = to;        
-        itemChanged();
-    }
-}
-
-PlotShapeArrow::Style QPArrow::arrowStyleFrom() const { return m_fromStyle; }
-PlotShapeArrow::Style QPArrow::arrowStyleTo() const { return m_toStyle; }
-
-void QPArrow::setArrowStyles(Style from, Style to) {
-    if(from != m_fromStyle || to != m_toStyle) {
-        m_fromStyle = from;
-        m_toStyle = to;
-        itemChanged();
-    }
-}
-
-double QPArrow::arrowSize() const { return m_size; }
-
-void QPArrow::setArrowSize(double size) {
-    if(size != m_size && size >= 1) {
-        m_size = size;
-        itemChanged();
-    }
 }
 
 
@@ -806,11 +816,25 @@ QwtDoubleRect QPPath::boundingRect() const {
     return QPolygonF(points).boundingRect();
 }
 
-void QPPath::draw(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect&) const {
-    if(m_coords.size() <= 1 || m_canvas == NULL) return;
+
+vector<PlotCoordinate> QPPath::coordinates() const { return m_coords; }
+
+void QPPath::setCoordinates(const vector<PlotCoordinate>& coords) {
+    if(coords != m_coords) {
+        m_coords = coords;
+        itemChanged();
+    }
+}
+
+
+void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    unsigned int n = m_coords.size();
+    if(n <= 1 || m_canvas == NULL || drawIndex >= n) return;
     
-    QPI_DRAWLOG1
+    if(drawIndex + drawCount > n) drawCount = n - drawIndex;
+    n = drawIndex + drawCount;
     
     /*
     QVector<QPoint> points;
@@ -834,7 +858,7 @@ void QPPath::draw(QPainter* painter, const QwtScaleMap& xMap,
     QVector<QPoint> v;
     PlotCoordinate c;
     int x, y;
-    for(unsigned int i = 0; i < m_coords.size(); i++) {
+    for(unsigned int i = drawIndex; i < n; i++) {
         if(m_coords[i].system() == PlotCoordinate::PIXEL) {
             /*
             if(i > 0) path.lineTo(m_coords[i].x(), m_coords[i].y());
@@ -859,16 +883,6 @@ void QPPath::draw(QPainter* painter, const QwtScaleMap& xMap,
     painter->drawPolyline(QPolygon(v));
     
     painter->restore();
-    QPI_DRAWLOG2
-}
-
-vector<PlotCoordinate> QPPath::coordinates() const { return m_coords; }
-
-void QPPath::setCoordinates(const vector<PlotCoordinate>& coords) {
-    if(coords != m_coords) {
-        m_coords = coords;
-        itemChanged();
-    }
 }
 
 
@@ -911,58 +925,6 @@ QwtDoubleRect QPArc::boundingRect() const {
     } else return QwtDoubleRect();
 }
 
-void QPArc::draw(QPainter* painter, const QwtScaleMap& xMap,
-                 const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
-    if(m_canvas != NULL) {
-        painter->save();
-        painter->setBrush(m_area.asQBrush());
-        
-        int x, y, width, height;
-        if(m_start.system() == PlotCoordinate::PIXEL) {
-            x = (int)(m_start.x() + 0.5);
-            y = (int)(m_start.y() + 0.5);
-            width = (int)(m_size.x() + 0.5);
-            height = (int)(m_size.y() + 0.5);
-        } else {
-            PlotCoordinate s = m_canvas->convertCoordinate(m_start,
-                                            PlotCoordinate::WORLD);
-            PlotCoordinate wh = m_canvas->convertCoordinate(m_size,
-                                            PlotCoordinate::WORLD);
-            x = xMap.transform(s.x());
-            y = yMap.transform(s.y());
-            width = xMap.transform(s.x() + wh.x()) - x;
-            height = yMap.transform(s.y() + wh.y()) - y;
-        }
-        
-        // ?
-        x = (int)(x - (width/2.0) + 0.5);
-        y = (int)(y - (height/2.0) + 0.5);
-        
-        if(m_orient != 0) {
-            painter->rotate(m_orient);
-#if QT_VERSION >= 0x040300
-            painter->worldTransform().inverted().map(x, y, &x, &y);
-#else
-            painter->worldMatrix().inverted().map(x, y, &x, &y);
-#endif
-        }
-        
-        // note: drawChord and drawArc are expecting 1/16ths of degrees
-        // first draw chord to get the background
-        painter->setPen(QPen(Qt::NoPen));
-        painter->drawChord(x, y, width, height,
-                           16 * m_startAngle, 16 * m_spanAngle);
-        
-        // then draw the arc with the line
-        painter->setPen(m_line.asQPen());
-        painter->drawArc(x, y, width, height,
-                         16 * m_startAngle, 16 * m_spanAngle);
-        
-        painter->restore();
-    }
-    QPI_DRAWLOG2
-}
 
 vector<PlotCoordinate> QPArc::coordinates() const {
     vector<PlotCoordinate> v(2);
@@ -1022,6 +984,59 @@ void QPArc::setOrientation(int o) {
 }
 
 
+void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+    if(m_canvas != NULL) {
+        painter->save();
+        painter->setBrush(m_area.asQBrush());
+        
+        int x, y, width, height;
+        if(m_start.system() == PlotCoordinate::PIXEL) {
+            x = (int)(m_start.x() + 0.5);
+            y = (int)(m_start.y() + 0.5);
+            width = (int)(m_size.x() + 0.5);
+            height = (int)(m_size.y() + 0.5);
+        } else {
+            PlotCoordinate s = m_canvas->convertCoordinate(m_start,
+                                            PlotCoordinate::WORLD);
+            PlotCoordinate wh = m_canvas->convertCoordinate(m_size,
+                                            PlotCoordinate::WORLD);
+            x = xMap.transform(s.x());
+            y = yMap.transform(s.y());
+            width = xMap.transform(s.x() + wh.x()) - x;
+            height = yMap.transform(s.y() + wh.y()) - y;
+        }
+        
+        // ?
+        x = (int)(x - (width/2.0) + 0.5);
+        y = (int)(y - (height/2.0) + 0.5);
+        
+        if(m_orient != 0) {
+            painter->rotate(m_orient);
+#if QT_VERSION >= 0x040300
+            painter->worldTransform().inverted().map(x, y, &x, &y);
+#else
+            painter->worldMatrix().inverted().map(x, y, &x, &y);
+#endif
+        }
+        
+        // note: drawChord and drawArc are expecting 1/16ths of degrees
+        // first draw chord to get the background
+        painter->setPen(QPen(Qt::NoPen));
+        painter->drawChord(x, y, width, height,
+                           16 * m_startAngle, 16 * m_spanAngle);
+        
+        // then draw the arc with the line
+        painter->setPen(m_line.asQPen());
+        painter->drawArc(x, y, width, height,
+                         16 * m_startAngle, 16 * m_spanAngle);
+        
+        painter->restore();
+    }
+}
+
+
 /////////////////////////
 // QPPOINT DEFINITIONS //
 /////////////////////////
@@ -1061,24 +1076,6 @@ QPPoint::QPPoint(const PlotPoint& copy) : m_symbol(copy.symbol()),
 QPPoint::~QPPoint() { }
 
 
-PlotCoordinate QPPoint::coordinate() const { return m_coord; }
-
-void QPPoint::setCoordinate(const PlotCoordinate& coordinate) {
-    if(m_coord != coordinate) {
-        m_coord = coordinate;
-        itemChanged();
-    }
-}
-
-PlotSymbolPtr QPPoint::symbol() const { return new QPSymbol(m_symbol); }
-
-void QPPoint::setSymbol(const PlotSymbol& s) {
-    if(s != *symbol()) {
-        m_symbol = s;        
-        itemChanged();
-    }
-}
-
 QwtDoubleRect QPPoint::boundingRect() const {
     if(m_canvas != NULL) {
         PlotCoordinate c = m_coord;
@@ -1105,9 +1102,36 @@ QwtDoubleRect QPPoint::boundingRect() const {
     } else return QwtDoubleRect();
 }
 
-void QPPoint::draw(QPainter* painter, const QwtScaleMap& xMap,
-                   const QwtScaleMap& yMap, const QRect&) const {
-    QPI_DRAWLOG1
+QWidget* QPPoint::legendItem() const {
+    QwtLegendItem* item = new QwtLegendItem(m_symbol, QPen(),
+                                            QwtPlotItem::title());
+    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
+                            QwtLegendItem::ShowText);
+    return item;
+}
+
+
+PlotCoordinate QPPoint::coordinate() const { return m_coord; }
+
+void QPPoint::setCoordinate(const PlotCoordinate& coordinate) {
+    if(m_coord != coordinate) {
+        m_coord = coordinate;
+        itemChanged();
+    }
+}
+
+PlotSymbolPtr QPPoint::symbol() const { return new QPSymbol(m_symbol); }
+
+void QPPoint::setSymbol(const PlotSymbol& s) {
+    if(s != *symbol()) {
+        m_symbol = s;        
+        itemChanged();
+    }
+}
+
+void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     painter->save();
     
     if(m_symbol.symbol() != PlotSymbol::PIXEL) {
@@ -1129,15 +1153,6 @@ void QPPoint::draw(QPainter* painter, const QwtScaleMap& xMap,
     m_symbol.draw(painter, rect);
     
     painter->restore();
-    QPI_DRAWLOG2
-}
-
-QWidget* QPPoint::legendItem() const {
-    QwtLegendItem* item = new QwtLegendItem(m_symbol, QPen(),
-                                            QwtPlotItem::title());
-    item->setIdentifierMode(QwtLegendItem::ShowSymbol |
-                            QwtLegendItem::ShowText);
-    return item;
 }
 
 #endif

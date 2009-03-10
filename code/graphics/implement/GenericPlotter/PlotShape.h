@@ -46,6 +46,11 @@ public:
     virtual ~PlotShape() { }
     
     
+    // Implements PlotItem::indexedDrawCount().  Provides default
+    // implementation that returns 1.
+    virtual unsigned int indexedDrawCount() const { return 1; }
+    
+    
     // ABSTRACT METHODS //
     
     // Returns the coordinates for this shape.  The number and order depends
@@ -69,6 +74,21 @@ public:
     // Sets this shape's line to the given.
     virtual void setLine(const PlotLine& line) = 0;
     
+    // Returns true if this shape has an area fill, false otherwise.
+    virtual bool areaFilled() const = 0;
+    
+    // Sets whether or not this shape has an area fill.
+    virtual void setAreaFilled(bool area = true) = 0;
+    
+    // Returns a copy of the area fill for this shape.
+    virtual PlotAreaFillPtr areaFill() const = 0;
+    
+    // Sets this shape's area fill to the given.
+    virtual void setAreaFill(const PlotAreaFill& fill) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
     // Convenience methods for setting the line for this shape.
     // <group>
     virtual void setLine(const PlotLinePtr l) {
@@ -84,18 +104,6 @@ public:
         setLine(*l);
     }
     // </group>
-    
-    // Returns true if this shape has an area fill, false otherwise.
-    virtual bool areaFilled() const = 0;
-    
-    // Sets whether or not this shape has an area fill.
-    virtual void setAreaFilled(bool area = true) = 0;
-    
-    // Returns a copy of the area fill for this shape.
-    virtual PlotAreaFillPtr areaFill() const = 0;
-    
-    // Sets this shape's area fill to the given.
-    virtual void setAreaFill(const PlotAreaFill& fill) = 0;
     
     // Convenience methods for setting the area fill.
     // <group>
@@ -167,6 +175,11 @@ public:
     
     // Destructor.
     virtual ~PlotShapePolygon() { }
+    
+    // Overrides PlotShape::indexedDrawCount().  Provides default
+    // implementation that returns the number of vertices.
+    virtual unsigned int indexedDrawCount() const {
+        return coordinates().size(); }
 };
 
 
@@ -253,6 +266,11 @@ public:
     
     // Destructor.
     virtual ~PlotShapePath() { }
+    
+    // Overrides PlotShape::indexedDrawCount().  Provides default
+    // implementation that returns the number of path points.
+    virtual unsigned int indexedDrawCount() const {
+        return coordinates().size(); }
 };
 
 
@@ -316,7 +334,12 @@ public:
     virtual ~PlotPoint() { }
     
     
-    // Abstract Methods //
+    // Implements PlotItem::indexedDrawCount().  Provides default
+    // implementation that returns 1.
+    virtual unsigned int indexedDrawCount() const { return 1; }
+    
+    
+    // ABSTRACT METHODS //
     
     // Returns the location of the point.
     virtual PlotCoordinate coordinate() const = 0;
@@ -329,6 +352,9 @@ public:
  
     // Sets the symbol used to draw the point.
     virtual void setSymbol(const PlotSymbol& symbol) = 0;
+    
+    
+    // IMPLEMENTED METHODS //
     
     // Convenience methods for setting the symbol.
     // </group>

@@ -1,4 +1,4 @@
-//# QPPlotItem.h: Superclass for all plot items in qwt plotter.
+//# QPPlotItem.cc: Superclass for all plot items in qwt plotter.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,13 +26,13 @@
 //# $Id: $
 #ifdef AIPS_HAS_QWT
 
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPBarPlot.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
-#include <casaqt/QwtPlotter/QPScatterPlot.qo.h>
+#include <casaqt/QwtPlotter/QPScatterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
 namespace casa {
@@ -117,60 +117,256 @@ bool QPPlotItem::isPlot(QPPlotItem* item) {
 }
 
 
-// Non-Static //
+// Constructors/Destructors //
 
 QPPlotItem::QPPlotItem() : m_canvas(NULL), m_layer(MAIN) { }
 
 QPPlotItem::~QPPlotItem() { }
 
 
+// Public Methods //
+
 PlotCanvas* QPPlotItem::canvas() const { return m_canvas; }
 
 String QPPlotItem::title() const {
-    return asQwtPlotItem().title().text().toStdString(); }
+    return QwtPlotItem::title().text().toStdString(); }
 
 void QPPlotItem::setTitle(const String& newTitle) {
-    QwtPlotItem& item = asQwtPlotItem();
-    item.setTitle(newTitle.c_str());
-    item.setItemAttribute(QwtPlotItem::Legend, !newTitle.empty());
+    QwtPlotItem::setTitle(newTitle.c_str());
+    setItemAttribute(QwtPlotItem::Legend, !newTitle.empty());
 }
 
 PlotAxis QPPlotItem::xAxis() const {
-    return QPOptions::axis(QwtPlot::Axis(asQwtPlotItem().xAxis())); }
+    return QPOptions::axis(QwtPlot::Axis(QwtPlotItem::xAxis())); }
 PlotAxis QPPlotItem::yAxis() const {
-    return QPOptions::axis(QwtPlot::Axis(asQwtPlotItem().yAxis())); }
+    return QPOptions::axis(QwtPlot::Axis(QwtPlotItem::yAxis())); }
 
 void QPPlotItem::setXAxis(PlotAxis x) {
-    asQwtPlotItem().setXAxis(QPOptions::axis(x)); }
+    QwtPlotItem::setXAxis(QPOptions::axis(x)); }
 void QPPlotItem::setYAxis(PlotAxis y) {
-    asQwtPlotItem().setYAxis(QPOptions::axis(y)); }
+    QwtPlotItem::setYAxis(QPOptions::axis(y)); }
 
+void QPPlotItem::itemChanged() {
+    if(m_canvas != NULL) {
+        QPLayeredCanvas& c = m_canvas->asQwtPlot();
+        bool oldMain = c.drawMain(), oldAnnotation = c.drawAnnotation();
+        c.setDrawLayers(m_layer == MAIN, m_layer == ANNOTATION);
+        QwtPlotItem::itemChanged();
+        c.setDrawLayers(oldMain, oldAnnotation);
+    }
+}
+
+
+// Protected Methods //
 
 void QPPlotItem::attach(QPCanvas* canvas, PlotCanvasLayer layer) {
     if(canvas != NULL) {
         detach();
         m_canvas = canvas;
         m_layer = layer;
-        if(layer == MAIN)
-            asQwtPlotItem().attach(&canvas->asQwtPlot());
-        else
-            canvas->asQwtPlot().attachLayeredItem(&asQwtPlotItem());
+        if(canvas != NULL) canvas->asQwtPlot().attachLayeredItem(this);
     }
 }
 
 void QPPlotItem::detach() {
     if(m_canvas != NULL) {
-        if(m_layer == MAIN) asQwtPlotItem().detach();
-        else m_canvas->asQwtPlot().detachLayeredItem(&asQwtPlotItem());
+        m_canvas->asQwtPlot().detachLayeredItem(this);
         m_canvas = NULL;
     }
 }
 
-PlotLoggerPtr
-QPPlotItem::loggerForMeasurement(PlotLogger::MeasurementEvent event) const {
+PlotLoggerPtr QPPlotItem::loggerForEvent(PlotLogger::Event event) const {
     if(m_canvas == NULL) return PlotLoggerPtr();
-    else return const_cast<QPCanvas*>(m_canvas)->loggerForMeasurement(event);
+    else return const_cast<QPCanvas*>(m_canvas)->loggerForEvent(event);
 }
+
+PlotOperationPtr QPPlotItem::drawOperation() const {
+    if(m_canvas == NULL) return PlotOperationPtr();
+    else return m_canvas->operationDraw();
+}
+
+
+//////////////////////////////
+// QPDRAWTHREAD DEFINITIONS //
+//////////////////////////////
+
+// Static //
+
+const unsigned int QPDrawThread::DEFAULT_SEGMENT_THRESHOLD = 50000;
+
+bool QPDrawThread::itemSortByZ(const QPLayerItem* item1,
+        const QPLayerItem* item2) { return item1->z() < item2->z(); }
+
+void QPDrawThread::drawItem(const QPLayerItem* item, QPainter* painter,
+            const QRect& rect, const QwtScaleMap maps[QwtPlot::axisCnt]) {
+    if(item == NULL || painter == NULL || !item->isVisible() ||
+       !item->shouldDraw()) return;
+    
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing,
+         item->testRenderHint(QwtPlotItem::RenderAntialiased));
+    item->draw(painter, maps[item->xAxis()], maps[item->yAxis()],
+               rect);
+    painter->restore();
+}
+
+void QPDrawThread::drawItem(const QPPlotItem* item, QPainter* painter,
+            const QRect& rect, const QwtScaleMap maps[QwtPlot::axisCnt],
+            unsigned int drawIndex, unsigned int drawCount) {
+    if(item == NULL || painter == NULL || drawCount == 0 ||
+       !item->isVisible() || !item->shouldDraw()) return;
+    
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing,
+         item->testRenderHint(QwtPlotItem::RenderAntialiased));
+    item->draw_(painter, maps[item->qwtXAxis()], maps[item->qwtYAxis()],
+                rect, drawIndex, drawCount);
+    painter->restore();
+}
+
+void QPDrawThread::drawItems(const QList<const QPLayerItem*>& items,
+        QPainter* painter, const QRect& rect,
+        const QwtScaleMap maps[QwtPlot::axisCnt]) {
+    if(items.size() == 0 || painter == NULL) return;
+    QList<const QPLayerItem*> copy(items);
+    qSort(copy.begin(), copy.end(), itemSortByZ);
+    for(int i = 0; i < copy.size(); i++)
+        drawItem(copy[i], painter, rect, maps);
+}
+
+void QPDrawThread::drawItems(const QList<const QPPlotItem*>& items,
+        QPainter* painter, const QRect& rect,
+        const QwtScaleMap maps[QwtPlot::axisCnt]) {
+    if(items.size() == 0 || painter == NULL) return;
+    QList<const QPPlotItem*> copy(items);
+    qSort(copy.begin(), copy.end(), itemSortByZ);
+    for(int i = 0; i < copy.size(); i++)
+        drawItem(copy[i], painter, rect, maps);
+}
+
+
+// Non-Static //
+
+QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
+        const QwtScaleMap maps[QwtPlot::axisCnt], const QRect& drawRect,
+        unsigned int segmentTreshold) : m_items(items), m_drawRect(drawRect),
+        m_segmentThreshold(segmentTreshold) {
+    qSort(m_items.begin(), m_items.end(), itemSortByZ);
+    if(m_segmentThreshold == 0) m_segmentThreshold = DEFAULT_SEGMENT_THRESHOLD;
+    
+    for(int i = 0; i < QwtPlot::axisCnt; i++) m_axesMaps[i] = maps[i];
+    
+    bool hasMain = false, hasAnnotation = false;
+    for(int i = 0; (!hasMain || !hasAnnotation) && i < m_items.size(); i++) {
+        if(m_items[i]->canvasLayer() == MAIN) hasMain = true;
+        else                                  hasAnnotation = true;
+    }
+    
+    if(hasMain) {
+        m_mainImage = QImage(drawRect.size(), QImage::Format_ARGB32);
+        m_mainImage.fill(Qt::transparent);
+    }
+    
+    if(hasAnnotation) {
+        m_annotationImage = QImage(drawRect.size(), QImage::Format_ARGB32);
+        m_annotationImage.fill(Qt::transparent);
+    }
+    
+    m_cancelFlag = false;
+}
+
+QPDrawThread::~QPDrawThread() { }
+
+unsigned int QPDrawThread::totalSegments() const {
+    unsigned int segments = 0;
+    
+    unsigned int t1, t2;
+    for(int i = 0; i < m_items.size(); i++) {
+        t2 = m_items[i]->indexedDrawCount();
+        t1 = t2 / m_segmentThreshold;
+        t2 = t2 % m_segmentThreshold;
+        segments += t1;
+        if(t2 > 0) segments++;
+    }
+    
+    return segments;
+}
+
+void QPDrawThread::run() {
+    if(m_items.size() == 0 || m_cancelFlag) return;
+    
+    // Set up painters.
+    QPainter mainPainter, annotationPainter;
+    if(!m_mainImage.isNull()) mainPainter.begin(&m_mainImage);
+    if(!m_annotationImage.isNull())annotationPainter.begin(&m_annotationImage);
+
+    // Set up log and operation.
+    PlotLoggerPtr log= m_items[0]->loggerForEvent(PlotLogger::DRAW_INDIVIDUAL);
+    PlotOperationPtr op = m_items[0]->drawOperation();
+    
+    // Temp variables.
+    const QPPlotItem* item;
+    QPainter* painter;
+    unsigned int drawCount;
+    String title;    
+    double segmentsTotal = totalSegments(), progress;
+    unsigned int segmentsDrawn = 0;
+    
+    // Item draw loop.
+    for(int i = 0; i < m_items.size(); i++) {
+        // Check if the draw's been canceled.
+        if(m_cancelFlag) break;
+        
+        // Update temp variables.
+        item = m_items[i];
+        painter= item->canvasLayer() == MAIN? &mainPainter: &annotationPainter;
+        drawCount = item->indexedDrawCount();
+        
+        // Update operation.
+        if(!op.null()) {
+            title = item->title();
+            if(title.empty()) title = item->className();
+            op->setCurrentStatus("Drawing item \"" + title + "\".");
+        }
+        
+        // Start logging.
+        if(!log.null())
+            log->markMeasurement(item->className(), QPPlotItem::DRAW_NAME);
+        
+        // Segment draw loop.
+        for(unsigned int j = 0; j < drawCount; j += m_segmentThreshold) {
+            // Check if the draw's been canceled.
+            if(m_cancelFlag) break;
+            
+            // Draw segment.
+            drawItem(item, painter, m_drawRect, m_axesMaps, j,
+                     m_segmentThreshold);
+            
+            // Update operation.
+            if(!op.null()) {
+                segmentsDrawn++;
+                progress = segmentsDrawn / segmentsTotal;
+                op->setCurrentProgress((unsigned int)(progress * 100));
+            }
+        }
+        
+        // Finish logging.
+        if(!log.null()) log->releaseMeasurement();
+    }
+}
+
+void QPDrawThread::drawIntoCaches(QPainter& mainCache,
+        QPainter& annotationCache) {
+    if(!m_mainImage.isNull()) mainCache.drawImage(m_drawRect, m_mainImage);
+    if(!m_annotationImage.isNull())
+        annotationCache.drawImage(m_drawRect, m_annotationImage);
+    
+    // Clear up memory.
+    m_mainImage = QImage();
+    m_annotationImage = QImage();
+}
+
+void QPDrawThread::cancel() { m_cancelFlag = true; }
 
 }
 

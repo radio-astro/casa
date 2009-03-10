@@ -112,15 +112,20 @@ class Flagger : public FlaggerEnums
 protected:
 // creates an agent by name
   RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms );
+
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();
+
 // sets up debug and report plotting objects
   void setupPlotters     ( const RecordInterface &opt );
+
 // detaches from all active plotters
   void cleanupPlotters   ();
+
 // plots flagging reports from individual agents
   void plotAgentReports  ( PGPlotterInterface &pgp);
   void printAgentReports  ( );
+
 // plots a flagging summary
   void plotSummaryReport ( PGPlotterInterface &pgp,RFChunkStats &chunk,const RecordInterface &opt );
   void printSummaryReport ( RFChunkStats &chunk,const RecordInterface &opt );
@@ -129,6 +134,7 @@ protected:
   MeasurementSet   ms;
   MeasurementSet   originalms;
   Block<RFABase*> acc;
+
   //new added
   MeasurementSet *mssel_p;
   VisSet *vs_p;
@@ -137,6 +143,7 @@ protected:
   Bool setdata_p;
   Bool selectdata_p;
   String dataMode_p;  
+
 //  Vector<Int> dataEnd_p;
 //  Vector<Int> dataStart_p, dataStep_p;
 //  Vector<Int> dataspectralwindowids_p;
@@ -146,6 +153,7 @@ protected:
   Vector<Int> datadescids_p;
   MRadialVelocity mDataStart_p;
   MRadialVelocity mDataStep_p;
+
   //
   uInt nant,nifr,ntime,nfeed,nfeedcorr;
   Vector<Int> ifr2ant1,ifr2ant2;
@@ -213,6 +221,7 @@ public:
   //void run ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
   //void summary ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
   bool run (Bool trial, Bool reset);    
+
   void summary ( const RecordInterface &agents,const RecordInterface &opt ); 
 
     // flag version support.
@@ -220,7 +229,6 @@ public:
   Bool  restoreFlagVersion(Vector<String> versionname, String merge);
   Bool  deleteFlagVersion(Vector<String> versionname);
   Bool  getFlagVersionList( Vector<String> &verlist);
-
  
   
   // returns current MS
@@ -229,26 +237,33 @@ public:
 // number of antennas in MS
   uInt numAnt    () const 
       { return nant; };
+
 // number of IFRs in MS
   uInt numIfr    () const 
       { return nifr; };
+
 // number of feeds in MS
   uInt numFeed    () const 
       { return nfeed; };
+
 // number of feed correlations in MS
   uInt numFeedCorr    () const 
       { return nfeedcorr; };
+
 // number of time slots in MS
   uInt numTime   () const 
       { return ntime; };
+
 // names of antennas
   const Vector<String> & antNames() const 
       { return antnames; };
   
 // derives a flat IFR index from two antenna indices
   uInt ifrNumber ( Int ant1,Int ant2 ) const;
+
 // vector version of above
   Vector<Int> ifrNumbers ( Vector<Int> ant1,Vector<Int> ant2 ) const;
+
 // derives antenna indices from a flat IFR index
   void ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr ) const;
 
@@ -258,15 +273,20 @@ public:
 
 // returns a record of available options
   static const RecordInterface & defaultOptions ();
+
 // returns the log sink 
   static LogIO & logSink ()       { return os; }
+
 // returns the flag report plotter
   PGPlotterInterface & pgprep ()   { return pgp_report; }
+
 // returns the screen ("debug") plotter
   PGPlotterInterface & pgpscr ()   { return pgp_screen; }
+
 // Uses SUBP to divide the flag report PGPlotter into subpanes.
 // Keeps track of the current setting, so no extra pagebreaks are produced
   void setReportPanels ( Int nx,Int ny );
+
 // Utility function to do channel selection
   /*
   Bool selectDataChannel(Vector<Int>& spwidnchans,
@@ -277,6 +297,7 @@ public:
   // Methods to write to the history table of Measurement Set.
   // Write an entry to the history table
   void writeHistory(LogIO& os);
+
   // write command line command
   void writeCommand(LogIO& os);
 

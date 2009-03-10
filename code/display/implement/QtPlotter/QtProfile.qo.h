@@ -39,7 +39,7 @@
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/Display/PanelDisplay.h>
 
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>

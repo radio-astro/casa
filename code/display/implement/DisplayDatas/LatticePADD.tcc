@@ -46,9 +46,9 @@
 #include <lattices/Lattices/LatticeLocker.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageRegion.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/WCLELMask.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/WCLELMask.h>
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>

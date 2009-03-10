@@ -30,15 +30,12 @@
 
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
-#include <casaqt/QwtPlotter/QPOperation.h>
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
-#include <qwt_legend.h>
 #include <qwt_scale_engine.h>
 #include <qwt_scale_widget.h>
-#include <qwt_text_label.h>
 
 namespace casa {
 
@@ -65,6 +62,152 @@ namespace casa {
 double QPCanvas::zOrder = 1;
 
 const String QPCanvas::CLASS_NAME = "QPCanvas";
+const String QPCanvas::DRAW_NAME = "drawItems";
+
+bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
+    vector<PlotCanvasPtr> canvases;
+    if(plotter != NULL && !plotter->canvasLayout().null())
+        canvases = plotter->canvasLayout()->allCanvases();
+    return exportHelper(plotter->canvasWidget(), canvases, fmt);
+}
+
+bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
+    vector<PlotCanvasPtr> canvases(1, PlotCanvasPtr(canvas, false));
+    return exportHelper(canvas, canvases, format);
+}
+
+
+bool QPCanvas::exportHelper(QWidget* grabWidget,
+        vector<PlotCanvasPtr>& canvases, const PlotExportFormat& format) {
+    if(format.location.empty()) return false;
+    
+    // Image
+    if(format.type == PlotExportFormat::JPG ||
+       format.type == PlotExportFormat::PNG) {
+        if(grabWidget == NULL) return false; // Check for null widget.
+        
+        QImage image;
+        
+        // Just grab the widget if: 1) screen resolution, or 2) high resolution
+        // but size is <= widget size or not set.        
+        if(format.resolution == PlotExportFormat::SCREEN ||
+           (format.width <= grabWidget->width() &&
+            format.height <= grabWidget->height())) {            
+            image = QPixmap::grabWidget(grabWidget).toImage();
+            
+            // Scale to set width and height, if applicable.
+            if(format.width > 0 && format.height > 0) {
+                // size is specified
+                image = image.scaled(format.width, format.height,
+                        Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            
+            } else if(format.width > 0) {
+                // width is specified            
+                image = image.scaledToWidth(format.width,
+                        Qt::SmoothTransformation);
+            
+            } else if(format.height > 0) {
+                //  height is specified            
+                image = image.scaledToHeight(format.height,
+                        Qt::SmoothTransformation);
+            }
+        } else {
+            // High resolution, or format size larger than widget.
+            
+            // make sure both width and height are set
+            int width = format.width, height = format.height;
+            if(width <= 0)  width  = grabWidget->width();
+            if(height <= 0) height = grabWidget->height();            
+            image = QImage(width, height, QImage::Format_ARGB32);
+            
+            // Fill with background color.
+            QPCanvas* canv;
+            for(unsigned int i = 0; i < canvases.size(); i++) {
+                if(canvases[i].null()) continue;
+                canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
+                if(canv == NULL) continue;
+                image.fill(canv->palette().color(
+                           canv->backgroundRole()).rgba());
+                break;
+            }
+            
+            // Print each canvas.
+            QPainter painter(&image);
+            double widthRatio  = ((double)width)  / grabWidget->width(),
+                   heightRatio = ((double)height) / grabWidget->height();
+            QRect geom, printGeom, imageRect(0, 0, width, height);
+            for(unsigned int i = 0; i < canvases.size(); i++) {
+                if(canvases[i].null()) continue;
+                canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
+                if(canv == NULL) continue;
+                
+                geom = canv->geometry();
+                printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
+                                  (int)((geom.y() * heightRatio) + 0.5),
+                                  (int)((geom.width() * widthRatio) + 0.5),
+                                  (int)((geom.height() * heightRatio) + 0.5));
+                printGeom &= imageRect;             
+                canv->asQwtPlot().print(&painter, printGeom);
+            }
+        }
+        
+        // Set DPI.
+        if(format.dpi > 0) {
+            // convert dpi to dpm
+            int dpm = QPOptions::round((format.dpi / 2.54) * 100);
+            image.setDotsPerMeterX(dpm);
+            image.setDotsPerMeterY(dpm);
+        }
+        
+        // Set output quality.
+        int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
+        
+        // Save to file.
+        return !image.isNull() && image.save(format.location.c_str(),
+                PlotExportFormat::exportFormat(format.type).c_str(), f);
+        
+    // PS/PDF
+    } else if(format.type == PlotExportFormat::PS ||
+              format.type == PlotExportFormat::PDF) {
+        // Set resolution.
+        QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
+        if(format.resolution == PlotExportFormat::HIGH)
+            mode = QPrinter::HighResolution;
+        
+        // Set file.
+        QPrinter printer(mode);
+        if(format.type == PlotExportFormat::PDF)
+            printer.setOutputFormat(QPrinter::PdfFormat);
+        else printer.setOutputFormat(QPrinter::PostScriptFormat);
+        printer.setOutputFileName(format.location.c_str());
+        
+        // Set output settings.
+        if(format.dpi > 0) printer.setResolution(format.dpi);
+        printer.setColorMode(QPrinter::Color);
+        
+        // Print each canvas.
+        QPCanvas* canv;
+        bool flag = false;
+        for(unsigned int i = 0; i < canvases.size(); i++) {
+            if(canvases[i].null()) continue;
+            canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
+            if(canv == NULL) continue;
+            
+            // don't do new page only for first non-null canvas
+            if(flag) printer.newPage();
+            flag = true;
+            
+            // Set orientation.
+            printer.setOrientation(canv->width() >= canv->height() ?
+                                   QPrinter::Landscape : QPrinter::Portrait);
+                  
+            canv->asQwtPlot().print(printer);
+        }
+        return true;
+    }
+    
+    return false;
+}
 
 unsigned int QPCanvas::axisIndex(PlotAxis a) {
     switch(a) {
@@ -90,12 +233,12 @@ PlotAxis QPCanvas::axisIndex(unsigned int i) {
 // Constructors/Destructors //
 
 QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
-        m_cartAxes(4), m_axesRatioLocked(false), m_axesRatios(4, 1),
-        m_autoIncColors(false), m_picker(m_canvas.canvas()),
-        m_mouseFilter(m_canvas.canvas()), m_grid(), m_legendFontSet(false),
-        m_inDraggingMode(false), m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL) {
+        m_axesRatioLocked(false), m_axesRatios(4, 1), m_autoIncColors(false),
+        m_picker(m_canvas.canvas()), m_mouseFilter(m_canvas.canvas()),
+        m_legendFontSet(false), m_inDraggingMode(false),
+        m_ignoreNextRelease(false), m_timer(this), m_clickEvent(NULL) {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     
     QGridLayout* gl = new QGridLayout(this);
     gl->addWidget(&m_canvas, 0, 0);
@@ -105,24 +248,10 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     gl->setMargin(0);
 #endif
     
-    QGridLayout* gl2 = new QGridLayout(&m_legendFrame);    
-    int l, t, r, b;
-    m_canvas.getContentsMargins(&l, &t, &r, &b);    
-#if QT_VERSION >= 0x040300
-    gl2->setContentsMargins(l, t, r, b);
-#else
-    int max = (l < t) ? l : t;
-    if(r > max) max = r;
-    if(b > max) max = b;
-    gl2->setMargin(max);
-#endif
-    
-    gl->addWidget(&m_legendFrame, 0, 0);
-    m_legendFrame.hide();
-    m_canvas.installLegendFilter(&m_legendFrame);
-    m_legendFrame.setMouseTracking(true);
-    
-    for(unsigned int i = 0; i < m_cartAxes.size(); i++) m_cartAxes[i] = NULL;
+    m_legend = new QPLegendHolder(this, PlotCanvas::INT_URIGHT);
+    setLegendLine(QPFactory::defaultLegendLine());
+    setLegendFill(QPFactory::defaultLegendAreaFill());
+    m_legend->showLegend(false);
     
     m_picker.setSelectionFlags(QwtPicker::RectSelection |
                                QwtPicker::DragSelection);
@@ -133,15 +262,6 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     m_mouseFilter.turnTracking(true);
     connect(&m_mouseFilter, SIGNAL(mouseMoveEvent(QMouseEvent*)),
             SLOT(trackerMouseEvent(QMouseEvent*)));
-    
-    m_grid.enableX(false);
-    m_grid.enableXMin(false);
-    m_grid.enableY(false);
-    m_grid.enableYMin(false);
-    m_grid.attach(&m_canvas);
-    
-    setLegendLine(QPFactory::defaultLegendLine());
-    setLegendFill(QPFactory::defaultLegendAreaFill());
     
     m_canvas.canvas()->setCursor(Qt::ArrowCursor);
     
@@ -204,9 +324,9 @@ void QPCanvas::setCursor(PlotCursor cursor) {
 
 void QPCanvas::refresh() {
     PRE_REPLOT
+    QCoreApplication::processEvents();
     m_canvas.replot();
     POST_REPLOT
-    update();
 }
 
 
@@ -411,26 +531,11 @@ void QPCanvas::setAxesRatioLocked(bool locked) {
 }
 
 bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
-    return m_cartAxes[axisIndex(axis)] != NULL; }
+    return m_canvas.cartesianAxisShown(axis); }
 
 void QPCanvas::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
                                  bool show, bool hideNormalAxis) {
-    int i = axisIndex(mirrorAxis);
-    QPCartesianAxis* a = m_cartAxes[i];
-    if(a != NULL) {
-        if(!show) {
-            a->detach();
-            delete a;
-            m_cartAxes[i] = NULL;
-        }
-    } else {
-        if(show) {
-            a = new QPCartesianAxis(QPOptions::axis(mirrorAxis),
-                                    QPOptions::axis(secondaryAxis));
-            a->attach(&m_canvas);
-            m_cartAxes[i] = a;
-        }
-    }
+    m_canvas.showCartesianAxis(mirrorAxis, secondaryAxis, show);
     showAxis(mirrorAxis, !hideNormalAxis);
 }
 
@@ -505,73 +610,7 @@ void QPCanvas::setAutoIncrementColors(bool autoInc) {
     m_autoIncColors = autoInc; }
 
 bool QPCanvas::exportToFile(const PlotExportFormat& format) {
-    if(format.location.empty()) return false;
-    
-    // Image
-    if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {
-        
-        QImage image = QPixmap::grabWidget(&m_canvas).toImage();
-        
-        // width and height, if applicable
-        if(format.width > 0 && format.height > 0) {
-            // size is specified
-            
-            image = image.scaled(format.width, format.height,
-                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            
-        } else if(format.width > 0) {
-            // width is specified
-            
-            image = image.scaledToWidth(format.width,
-                                        Qt::SmoothTransformation);
-            
-        } else if(format.height > 0) {
-            //  height is specified
-            
-            image = image.scaledToHeight(format.height,
-                                         Qt::SmoothTransformation);
-        }
-        
-        if(format.dpi > 0) {
-            // convert dpi to dpm
-            int dpm = QPOptions::round(format.dpi / 2.54 * 100);
-            image.setDotsPerMeterX(dpm);
-            image.setDotsPerMeterY(dpm);
-        }
-        
-        int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
-        
-        return !image.isNull() && image.save(format.location.c_str(),
-                PlotExportFormat::exportFormat(format.type).c_str(), f);
-        
-    // PS/PDF
-    } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {
-        QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
-        if(format.resolution == PlotExportFormat::HIGH)
-            mode = QPrinter::HighResolution;
-        
-        QPrinter printer(mode);
-        if(format.type == PlotExportFormat::PDF)
-            printer.setOutputFormat(QPrinter::PdfFormat);
-        else printer.setOutputFormat(QPrinter::PostScriptFormat);
-        
-        if(m_canvas.width() >= m_canvas.height())
-            printer.setOrientation(QPrinter::Landscape);
-        else printer.setOrientation(QPrinter::Portrait);
-        
-        if(format.dpi > 0)
-            printer.setResolution(format.dpi);
-        
-        printer.setColorMode(QPrinter::Color);
-        printer.setOutputFileName(format.location.c_str());
-        m_canvas.print(printer);
-        return true;
-    }
-    
-    return false;
-}
+    return exportCanvas(this, format); }
 
 String QPCanvas::fileChooserDialog(const String& title,
         const String& directory) {
@@ -664,6 +703,7 @@ void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
 
 void QPCanvas::releaseDrawing() {
     PRE_REPLOT
+    QCoreApplication::processEvents();
     m_canvas.releaseDrawing();
     POST_REPLOT
 }
@@ -727,11 +767,11 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     }
     
     // Update title font for legend.
-    QwtText t = qitem->asQwtPlotItem().title();
+    QwtText t = qitem->qwtTitle();
     if(m_legendFontSet) {
         t.setFont(m_legendFont.asQFont());
         t.setColor(m_legendFont.asQColor());
-        qitem->asQwtPlotItem().setTitle(t);
+        qitem->setQwtTitle(t);
     } else {
         m_legendFont.setAsQFont(t.font());
         m_legendFont.setAsQColor(t.color());
@@ -744,7 +784,7 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     if(!cartesianAxisShown(yAxis)) 
         m_canvas.enableAxis(QPOptions::axis(yAxis), true);
     
-    qitem->asQwtPlotItem().setZ(zOrder++);
+    qitem->setZ(zOrder++);
     qitem->attach(this, layer);
     
     if(layer == MAIN)
@@ -888,17 +928,17 @@ void QPCanvas::setSelectLine(const PlotLine& line) {
 }
 
 
-bool QPCanvas::gridXMajorShown() const { return m_grid.xEnabled(); }
-void QPCanvas::setGridXMajorShown(bool s) { m_grid.enableX(s); }
-bool QPCanvas::gridXMinorShown() const { return m_grid.xMinEnabled(); }   
-void QPCanvas::setGridXMinorShown(bool s) { m_grid.enableXMin(s); }
-bool QPCanvas::gridYMajorShown() const { return m_grid.yEnabled(); }    
-void QPCanvas::setGridYMajorShown(bool s) { m_grid.enableY(s); }
-bool QPCanvas::gridYMinorShown() const { return m_grid.yMinEnabled(); }
-void QPCanvas::setGridYMinorShown(bool s) { m_grid.enableYMin(s); }
+bool QPCanvas::gridXMajorShown() const { return m_canvas.grid().xEnabled(); }
+void QPCanvas::setGridXMajorShown(bool s) { m_canvas.grid().enableX(s); }
+bool QPCanvas::gridXMinorShown() const { return m_canvas.grid().xMinEnabled();}
+void QPCanvas::setGridXMinorShown(bool s) { m_canvas.grid().enableXMin(s); }
+bool QPCanvas::gridYMajorShown() const { return m_canvas.grid().yEnabled(); }    
+void QPCanvas::setGridYMajorShown(bool s) { m_canvas.grid().enableY(s); }
+bool QPCanvas::gridYMinorShown() const { return m_canvas.grid().yMinEnabled();}
+void QPCanvas::setGridYMinorShown(bool s) { m_canvas.grid().enableYMin(s); }
 
 PlotLinePtr QPCanvas::gridMajorLine() const {
-    return new QPLine(m_grid.majPen()); }
+    return new QPLine(m_canvas.grid().majPen()); }
 
 void QPCanvas::setGridMajorLine(const PlotLine& line) {
     if(line != *gridMajorLine()) {
@@ -906,16 +946,16 @@ void QPCanvas::setGridMajorLine(const PlotLine& line) {
         bool del = l == NULL;
         if(l == NULL) l = new QPLine(line);
         
-        m_grid.enableX(l->style() != PlotLine::NOLINE);
-        m_grid.enableY(l->style() != PlotLine::NOLINE);
-        m_grid.setMajPen(l->asQPen());
+        m_canvas.grid().enableX(l->style() != PlotLine::NOLINE);
+        m_canvas.grid().enableY(l->style() != PlotLine::NOLINE);
+        m_canvas.grid().setMajPen(l->asQPen());
         
         if(del) delete l;
     }
 }
 
 PlotLinePtr QPCanvas::gridMinorLine() const {
-    return new QPLine(m_grid.minPen()); }
+    return new QPLine(m_canvas.grid().minPen()); }
 
 void QPCanvas::setGridMinorLine(const PlotLine& line) {
     if(line != *gridMinorLine()) {
@@ -923,171 +963,49 @@ void QPCanvas::setGridMinorLine(const PlotLine& line) {
         bool del = l == NULL;
         if(l == NULL) l = new QPLine(line);
         
-        m_grid.enableXMin(l->style() != PlotLine::NOLINE);
-        m_grid.enableYMin(l->style() != PlotLine::NOLINE);
-        m_grid.setMinPen(l->asQPen());
+        m_canvas.grid().enableXMin(l->style() != PlotLine::NOLINE);
+        m_canvas.grid().enableYMin(l->style() != PlotLine::NOLINE);
+        m_canvas.grid().setMinPen(l->asQPen());
         
         if(del) delete l;
     }
 }
 
 
-bool QPCanvas::legendShown() const { return m_canvas.legend() != NULL; }
+bool QPCanvas::legendShown() const { return m_legend->legendShown(); }
 
 void QPCanvas::showLegend(bool on, LegendPosition pos) {
-    QwtLegend* l = m_canvas.legend();
-    if(l != NULL && m_legendFrame.isVisible()) {
-        m_legendFrame.layout()->removeWidget(l);
-        m_legendFrame.hide();
-        delete l;
-    }
-    
-    if(on) {        
-        l = new QwtLegend();
-        
-        QwtPlot::LegendPosition p;
-        switch(pos) {
-        case EXT_TOP: p = QwtPlot::TopLegend; break;
-        case EXT_RIGHT: p = QwtPlot::RightLegend; break;
-        case EXT_LEFT: p = QwtPlot::LeftLegend; break;
-        case EXT_BOTTOM: p = QwtPlot::BottomLegend; break;
-        default: p = QwtPlot::ExternalLegend;
-        }
-        
-        m_canvas.insertLegend(l, p);
-        m_legendPosition = pos;
-        
-        if(m_legendLine.style() != PlotLine::NOLINE) {
-            stringstream ss;
-            ss << "QwtLegend { border: " << m_legendLine.width() << "px ";
-            ss << QPOptions::cssLineStyle(m_legendLine.style()) << " ";
-            ss << '#' << m_legendLine.color()->asHexadecimal() << "; }";
-            l->setStyleSheet(ss.str().c_str());
-        }
-        
-        QPalette pal = l->palette();
-        pal.setBrush(QPalette::Window, m_legendFill.asQBrush());
-        l->setPalette(pal);
-        
-        // for internal positioning        
-        if(legendPositionIsInternal(pos)) {
-            // clear out old spacing
-            QGridLayout* gl = dynamic_cast<QGridLayout*>(
-                              m_legendFrame.layout());
-            QLayoutItem* i;
-            while((i = gl->takeAt(0)) != NULL) delete i;
-            
-            // adjust spacing to bypass axes
-            // top
-            int height = 10;
-            if(m_canvas.axisWidget(QwtPlot::xTop)->isVisible())
-                height += m_canvas.axisWidget(QwtPlot::xTop)->height();
-            if(!m_canvas.title().isEmpty())
-                height += m_canvas.titleLabel()->height();
-            
-            QSizePolicy::Policy p = QSizePolicy::Fixed;
-            if(pos == INT_LRIGHT || pos == INT_LLEFT)
-                p = QSizePolicy::MinimumExpanding;
-            gl->addItem(new QSpacerItem(0, height, QSizePolicy::Minimum, p),
-                        0, 0, 1, -1);
-            
-            // bottom
-            height = 10;
-            if(m_canvas.axisWidget(QwtPlot::xBottom)->isVisible())
-                height += m_canvas.axisWidget(QwtPlot::xBottom)->height();
-            p = QSizePolicy::Fixed;
-            if(pos == INT_URIGHT || pos == INT_ULEFT)
-                p = QSizePolicy::MinimumExpanding;            
-            gl->addItem(new QSpacerItem(0, height, QSizePolicy::Minimum, p),
-                        2, 0, 1, -1);
-            
-            // left
-            int width = 10;
-            if(m_canvas.axisWidget(QwtPlot::yLeft)->isVisible())
-                width += m_canvas.axisWidget(QwtPlot::yLeft)->width();
-            p = QSizePolicy::Fixed;
-            if(pos == INT_URIGHT || pos == INT_LRIGHT)
-                p = QSizePolicy::MinimumExpanding;            
-            gl->addItem(new QSpacerItem(width, 0, p, QSizePolicy::Minimum),
-                        1, 0);
-            
-            // right
-            width = 10;
-            if(m_canvas.axisWidget(QwtPlot::yRight)->isVisible())
-                width += m_canvas.axisWidget(QwtPlot::yRight)->width();
-            p = QSizePolicy::Fixed;
-            if(pos == INT_ULEFT || pos == INT_LLEFT)
-                p = QSizePolicy::MinimumExpanding;            
-            gl->addItem(new QSpacerItem(width, 0, p, QSizePolicy::Minimum),
-                        1, 2);
-            
-            ((QGridLayout*)m_legendFrame.layout())->addWidget(l, 1, 1);
-            m_canvas.setDrawLayers(false, false);
-            m_legendFrame.show();
-            QCoreApplication::processEvents();
-            m_canvas.setDrawLayers(true, true);
-        }
-    } else {
-        m_canvas.insertLegend(NULL);
-    }
+    m_legend->showLegend(on);
+    m_legend->setPosition(pos);
 }
 
 PlotCanvas::LegendPosition QPCanvas::legendPosition() const {
-    return m_legendPosition; }
+    return m_legend->position(); }
 
 void QPCanvas::setLegendPosition(LegendPosition pos) {   
-    showLegend(legendShown(), pos); }
+    m_legend->setPosition(pos); }
 
-PlotLinePtr QPCanvas::legendLine() const { return new QPLine(m_legendLine); }
-
-void QPCanvas::setLegendLine(const PlotLine& line) {
-    if(line != m_legendLine) {
-        m_legendLine = QPLine(line);
-        
-        if(m_canvas.legend() != NULL) {        
-            if(m_legendLine.style() != PlotLine::NOLINE) {
-                stringstream ss;
-                ss << "QwtLegend { border: " << m_legendLine.width() << "px ";
-                ss << QPOptions::cssLineStyle(m_legendLine.style()) << " ";
-                ss << '#' << m_legendLine.color()->asHexadecimal() << "; }";
-                m_canvas.legend()->setStyleSheet(ss.str().c_str());
-            } else {
-                m_canvas.legend()->setStyleSheet("");
-            }
-        }
-    }
-}
+PlotLinePtr QPCanvas::legendLine() const{ return new QPLine(m_legend->line());}
+void QPCanvas::setLegendLine(const PlotLine& line) { m_legend->setLine(line); }
 
 PlotAreaFillPtr QPCanvas::legendFill() const {
-    return new QPAreaFill(m_legendFill); }
-
+    return new QPAreaFill(m_legend->areaFill()); }
 void QPCanvas::setLegendFill(const PlotAreaFill& area) {
-    if(area != m_legendFill) {
-        m_legendFill = QPAreaFill(area);
-        
-        if(m_canvas.legend() != NULL) {
-            QPalette p = m_canvas.legend()->palette();
-            p.setBrush(QPalette::Window, m_legendFill.asQBrush());
-            m_canvas.legend()->setPalette(p);
-        }
-    }
-}
+    m_legend->setAreaFill(area); }
 
 PlotFontPtr QPCanvas::legendFont() const { return new QPFont(m_legendFont); }
     
 void QPCanvas::setLegendFont(const PlotFont& font) {
     if(font != m_legendFont) {
         m_legendFont = font;
-        m_legendFontSet = true;
-        if(m_canvas.legend() != NULL) {
-            for(unsigned int i = 0; i < m_plotItems.size(); i++) {
-                QwtText t = m_plotItems[i].second->asQwtPlotItem().title();
-                t.setFont(m_legendFont.asQFont());
-                t.setColor(m_legendFont.asQColor());
-                m_plotItems[i].second->asQwtPlotItem().setTitle(t);
-            }
+        for(unsigned int i = 0; i < m_plotItems.size(); i++) {
+            QwtText t = m_plotItems[i].second->qwtTitle();
+            t.setFont(m_legendFont.asQFont());
+            t.setColor(m_legendFont.asQColor());
+            m_plotItems[i].second->setQwtTitle(t);
         }
     }
+    m_legendFontSet = true;
 }
 
 
@@ -1201,16 +1119,19 @@ void QPCanvas::reinstallTrackerFilter() {
     m_canvas.canvas()->installEventFilter(&m_mouseFilter);
 }
 
+QSize QPCanvas::sizeHint() const { return QSize(); }
+QSize QPCanvas::minimumSizeHint() const { return QSize(); }
+
 
 // Protected Methods //
 
 void QPCanvas::setQPPlotter(QPPlotter* parent) { m_parent = parent; }
 
-PlotLoggerPtr QPCanvas::loggerForMeasurement(PlotLogger::MeasurementEvent e) {
-    if(e == PlotLogger::NOMEASUREMENTS || m_parent == NULL)
+PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) {
+    if(event == PlotLogger::NO_EVENTS || m_parent == NULL)
         return PlotLoggerPtr();
-    if(e & m_parent->logMeasurementEvents()) return m_parent->logger();
-    else                                     return PlotLoggerPtr();
+    if(event & m_parent->logEventFlags()) return m_parent->logger();
+    else                                  return PlotLoggerPtr();
 }
 
 void QPCanvas::mousePressEvent(QMouseEvent* event) {

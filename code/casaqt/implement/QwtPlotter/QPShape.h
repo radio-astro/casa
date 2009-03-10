@@ -31,7 +31,7 @@
 
 #include <graphics/GenericPlotter/PlotShape.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
-#include <casaqt/QwtPlotter/QPPlotItem.h>
+#include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
 #include <qwt_plot_item.h>
 #include <qwt_plot_marker.h>
@@ -42,8 +42,7 @@ namespace casa {
 
 // QPShape is the abstract superclass for any qwt-based shapes.  It handles the
 // common functionality like changing the QPen and QBrush.
-class QPShape : public QPPlotItem, public virtual PlotShape,
-                public QwtPlotItem {
+class QPShape : public QPPlotItem, public virtual PlotShape {
 public:
     // Static //
     
@@ -72,11 +71,8 @@ public:
     
     // QPPlotItem Methods //
     
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem() { return *this; }
-    const QwtPlotItem& asQwtPlotItem() const { return *this; }
-    // </group>
+    // Overrides QwtPlotItem::legendItem().
+    virtual QWidget* legendItem() const;
     
     
     // PlotShape Methods //
@@ -104,16 +100,7 @@ public:
     
     // Implements PlotShape::setAreaFill().
     void setAreaFill(const PlotAreaFill& fill);
-    
-    
-    // QwtPlotItem Methods //
-    
-    // Forces children to override QwtPlotItem::boundingRect().
-    virtual QwtDoubleRect boundingRect() const = 0;
-    
-    // Overrides QwtPlotItem::legendItem().
-    virtual QWidget* legendItem() const;
-    
+
 protected:
     QPLine m_line;     // Line
     QPAreaFill m_area; // Area fill
@@ -125,7 +112,7 @@ protected:
 
 
 // Implementation of PlotShapeRectangle for Qwt plotter.
-class QPRectangle : public virtual PlotShapeRectangle, public QPShape {
+class QPRectangle : public QPShape, public PlotShapeRectangle {
 public:
     // Static //
     
@@ -157,10 +144,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapeRectangle Methods //
     
@@ -175,6 +158,14 @@ public:
                             const PlotCoordinate& lowerRight);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Rect; }
     
@@ -185,7 +176,7 @@ private:
 
 
 // Implementation of PlotShapeEllipse for Qwt plotter.
-class QPEllipse : public QPShape, public virtual PlotShapeEllipse {
+class QPEllipse : public QPShape, public PlotShapeEllipse {
 public:
     // Static //
     
@@ -216,10 +207,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapeEllipse Methods //
     
@@ -246,6 +233,14 @@ public:
     void setCenter(const PlotCoordinate& center);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Ellipse; }
     
@@ -256,7 +251,7 @@ private:
 
 
 // Implementation of PlotShapePolygon for Qwt plotter.
-class QPPolygon : public QPShape, public virtual PlotShapePolygon {
+class QPPolygon : public QPShape, public PlotShapePolygon {
 public:
     // Static //
     
@@ -284,10 +279,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapePolygon Methods //
     
@@ -298,6 +289,14 @@ public:
     void setCoordinates(const vector<PlotCoordinate>& coords);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Hexagon; }
     
@@ -307,7 +306,7 @@ private:
 
 
 // Implementation of PlotShapeLine for Qwt plotter.
-class QPLineShape : public QPShape, public virtual PlotShapeLine {
+class QPLineShape : public QPShape, public PlotShapeLine {
 public:
     // Static //
     
@@ -335,10 +334,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapeLine Methods //
     
@@ -358,6 +353,14 @@ public:
     PlotAxis axis() const;
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
     
@@ -368,7 +371,7 @@ private:
 
 
 // Implementation of PlotShapeArrow for Qwt plotter.
-class QPArrow : public QPShape, public virtual PlotShapeArrow {
+class QPArrow : public QPShape, public PlotShapeArrow {
 public:
     // Static //
     
@@ -408,10 +411,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapeArrow Methods //
     
@@ -447,6 +446,14 @@ public:
     void setArrowSize(double size);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
     
@@ -468,7 +475,7 @@ private:
 
 
 // Implementation of PlotShapePath for Qwt plotter.
-class QPPath : public virtual PlotShapePath, public QPShape {
+class QPPath : public QPShape, public PlotShapePath {
 public:
     // Static //
     
@@ -496,10 +503,6 @@ public:
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
     
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
     
     // PlotShapePath Methods //
     
@@ -510,6 +513,14 @@ public:
     void setCoordinates(const vector<PlotCoordinate>& coords);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
     
@@ -519,7 +530,7 @@ private:
 
 
 // Implementation of PlotShapeArc for Qwt plotter.
-class QPArc : public virtual PlotShapeArc, public QPShape {
+class QPArc : public QPShape, public PlotShapeArc {
 public:
     // Static //
     
@@ -552,10 +563,6 @@ public:
     
     // Overrides QwtPlotItem::boundingRect().
     QwtDoubleRect boundingRect() const;
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
     
     
     // PlotShapeArc Methods //
@@ -597,6 +604,14 @@ public:
     void setOrientation(int o);
     
 protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
+    
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+    
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
     
@@ -610,8 +625,7 @@ private:
 
 
 // Implementation of PlotPoint for Qwt plotter.
-class QPPoint : public virtual PlotPoint, public QwtPlotItem,
-                public QPPlotItem {
+class QPPoint : public QPPlotItem, public PlotPoint {
 public:
     // Static //
     
@@ -645,11 +659,11 @@ public:
     // Implements PlotItem::isValid().
     bool isValid() const { return true; }
 
-    // Implements QPPlotItem::asQwtPlotItem().
-    // <group>
-    QwtPlotItem& asQwtPlotItem() { return *this; }
-    const QwtPlotItem& asQwtPlotItem() const { return *this; }
-    // </group>
+    // Overrides QwtPlotItem::boundingRect();
+    QwtDoubleRect boundingRect() const;
+    
+    // Overrides QwtPlotItem::legendItem().
+    QWidget* legendItem() const;
     
     
     // PlotPoint Methods //
@@ -666,18 +680,14 @@ public:
     // Implements PlotPoint::setSymbol().
     void setSymbol(const PlotSymbol& symbol);
     
+protected:
+    // Implements QPPlotItem::className().
+    const String& className() const { return CLASS_NAME; }
     
-    // QwtPlotItem Methods //
-    
-    // Overrides QwtPlotItem::boundingRect().
-    QwtDoubleRect boundingRect() const;
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect&) const;
-    
-    // Overrides QwtPlotItem::legendItem().
-    virtual QWidget* legendItem() const;
+    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRect& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
     
 private:
     QPSymbol m_symbol;      // symbol

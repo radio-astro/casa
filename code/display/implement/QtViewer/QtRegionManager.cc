@@ -31,9 +31,9 @@
 #include <display/RegionShapes/RegionShapes.h>
 #include <casa/Containers/Block.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <images/Images/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/WCUnion.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/WCUnion.h>
 
 #include <casa/Utilities/CountedPtr.h>
 

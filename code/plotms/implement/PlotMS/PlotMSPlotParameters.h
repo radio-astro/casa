@@ -78,6 +78,12 @@ public:
     virtual void setSelection(const PlotMSSelection& sel);
     // </group>
     
+    // Gets/Sets MS averaging.
+    // <group>
+    virtual const PlotMSAveraging& averaging() const;
+    virtual void setAveraging(const PlotMSAveraging& avg);
+    // </group>
+    
     // Copy operator.  See PlotMSWatchedParameters::operator=().
     virtual PlotMSPlotParameters& operator=(const PlotMSPlotParameters& copy);
     
@@ -87,6 +93,9 @@ protected:
     
     // MS selection.
     PlotMSSelection itsMSSelection_;
+    
+    // MS averaging.
+    PlotMSAveraging itsMSAveraging_;
     
     // Flag for avoiding multiple calls to PlotMSWatchedParameters::updateFlag.
     bool updateFlag_;

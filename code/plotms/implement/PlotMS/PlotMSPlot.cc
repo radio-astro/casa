@@ -97,6 +97,8 @@ const PlotMSData& PlotMSPlot::data() const { return itsData_; }
 VisSet* PlotMSPlot::visSet() { return itsVisSet_; }
 const VisSet* PlotMSPlot::visSet() const { return itsVisSet_; }
 
+PlotMS* PlotMSPlot::parent() { return itsParent_; }
+
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {   
     // Make sure it's this plot's parameters.
@@ -231,8 +233,7 @@ void PlotMSPlot::holdDrawing() {
 }
 
 void PlotMSPlot::releaseDrawing() {
-    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        itsCanvases_[i]->releaseDrawing();
+    itsParent_->getPlotter()->doThreadedRedraw(this);
 }
 
 void PlotMSPlot::startLogCache() {
@@ -310,7 +311,8 @@ bool PlotMSSinglePlot::updateCache() {
         if(itsParameters_.isSet() && itsVisSet_ != NULL) {
             PMS::Axis x = itsParameters_.xAxis(), y = itsParameters_.yAxis();
             itsData_.loadCache(*itsVisSet_, x, y, itsParameters_.xDataColumn(),
-                               itsParameters_.yDataColumn());
+                               itsParameters_.yDataColumn(),
+                               itsParameters_.averaging());
             itsData_.setupCache(x, y);
         }
         return true;
@@ -395,6 +397,11 @@ bool PlotMSSinglePlot::updatePlot() {
         itsParent_->showError("Could not update plot, for unknown reasons!");
         return false;
     }
+}
+
+void PlotMSSinglePlot::cacheLoaded_() {
+    // TODO
+    cout << "PlotMSSinglePlot::cacheLoaded_()" << endl;
 }
 
 }
