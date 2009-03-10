@@ -1,0 +1,20 @@
+AATM News
+=========
+
+Version 0.06
+------------
+
+New features:
+
+* Command line program "dispersive" which computes the dispersive
+  delay for a simple atmosphere illustrative of the AOS site
+
+* Command line program "absorption" similar to above but computing the
+  absorption
+
+
+Version 0.05
+------------
+
+This is the first public release version.
+
