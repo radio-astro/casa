@@ -29,6 +29,10 @@ class scantable(Scantable):
                          Over-rides the default selected by the reader
                          (input rpfits/sdfits/ms) or replaces the value
                          in existing scantables
+            getpt:       for MeasurementSet input data only:
+                         If True, all pointing data are filled.
+                         The deafult is False, which makes time to load
+                         the MS data faster in some cases. 
         """
         if average is None:
             average = rcParams['scantable.autoaverage']

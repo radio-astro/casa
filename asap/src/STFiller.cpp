@@ -479,10 +479,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     return ;
   }
 
-  // DEBUG
-  //cout << "STFiller::openNRO()  getHeaderInfo " << endl ;
-  //
-
   ifOffset_ = 0;
   vector<Bool> ifs = nreader_->getIFs() ;
   if ( whichIF >= 0 ) {
@@ -606,14 +602,15 @@ int STFiller::readNRO()
   Vector<Double> srcdir ;
   Array<Double> scanrate ;
   for ( i = 0 ; i < imax ; i++ ) {
-    if( nreader_->getData( i ) != 0 ) {
-      cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
-      return -1 ;
-    }
+//     if( nreader_->getDataset()->getRecord( i ) == NULL ) {
+//       cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
+//       return -1 ;
+//     }
 
     string scanType = nreader_->getScanType( i ) ;
     Int srcType = -1 ;
     if ( scanType.compare( 0, 2, "ON") == 0 ) {
+      // cout << "ON srcType: " << i << endl ;
       srcType = 0 ;
     }
     else if ( scanType.compare( 0, 3, "OFF" ) == 0 ) {
@@ -798,21 +795,27 @@ int STFiller::readNRO()
 
 Bool STFiller::fileCheck()
 {
+  bool bval = false ;
+
   // if filename_ is directory, return false
   File inFile( filename_ ) ;
   if ( inFile.isDirectory() )
-    return false ;
+    return bval ;
   
   // if beginning of header data is "RW", return true
   // otherwise, return false ; 
   FILE *fp = fopen( filename_.c_str(), "r" ) ;
   char buf[9] ;
+  char buf2[80] ;
   fread( buf, 4, 1, fp ) ;
   buf[4] = '\0' ;
-  if ( ( strncmp( buf, "RW", 2 ) == 0 ) )
-    return true ;
-
-  return false ;
+  fseek( fp, 640, SEEK_SET ) ;
+  fread( buf2, 80, 1, fp ) ;
+  if ( ( strncmp( buf, "RW", 2 ) == 0 ) || ( strstr( buf2, "NRO45M" ) != NULL ) ) {
+    bval = true ;
+  }
+  fclose( fp ) ;
+  return bval ;
 }
 
 }//namespace asap
