@@ -40,7 +40,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayDatas/LatticeAsVector.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <lattices/Lattices/MaskedLattice.h>
 
 #include <casa/Logging/LogIO.h>
