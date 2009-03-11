@@ -30,7 +30,7 @@
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/LCSlicer.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/SubImage.h>
 #include <lattices/Lattices/PagedArray.h>
 #include <casa/Arrays/Vector.h>

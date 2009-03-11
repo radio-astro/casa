@@ -33,7 +33,7 @@
 #include <casa/iostream.h>
 #include <casa/IO/AipsIO.h>
 #include <tables/Tables/TableRecord.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <casa/Inputs/Input.h>
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtViewerBase.qo.h>

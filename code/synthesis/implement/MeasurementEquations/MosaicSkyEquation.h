@@ -36,7 +36,7 @@
 #include <casa/Logging/LogSink.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
