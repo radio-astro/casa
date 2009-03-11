@@ -30,7 +30,7 @@
 #define SYNTHESIS_WFSKYEQUATION_H
 #include <synthesis/MeasurementComponents/WFGridFT.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

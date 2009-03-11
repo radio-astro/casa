@@ -78,7 +78,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageInfo.h>
 

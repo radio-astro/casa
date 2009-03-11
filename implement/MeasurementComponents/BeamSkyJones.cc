@@ -49,7 +49,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 
 #include <casa/Utilities/Assert.h>
 

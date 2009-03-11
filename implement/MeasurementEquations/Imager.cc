@@ -138,10 +138,10 @@
 #include <lattices/Lattices/LCExtension.h>
 
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageRegion.h>
-#include <images/Images/RegionManager.h>
-#include <images/Images/WCBox.h>
-#include <images/Images/WCUnion.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionManager.h>
+#include <images/Regions/WCBox.h>
+#include <images/Regions/WCUnion.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
