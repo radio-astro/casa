@@ -668,6 +668,9 @@ ifeq "$(OS)" "linux"
 endif
 
 
+cleandep:
+	@$(call orphan-deps,.)
+
 cleandeps:
 	@$(call orphan-deps,.)
 
