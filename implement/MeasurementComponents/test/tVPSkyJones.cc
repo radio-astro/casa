@@ -36,7 +36,7 @@
 #include <casa/Arrays/Vector.h>
 
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
