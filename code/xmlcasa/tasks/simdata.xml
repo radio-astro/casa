@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="almasimmos">
+<task type="function" name="simdata">
 
   <shortdescription>mosaic simulation task:</shortdescription>
   <description>
@@ -406,7 +406,7 @@ mosaic simulation task (prototype):
     nchan -- number of channels (cab be 1 for a continuum simulation)
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
         Can optionally be a list of pointings, which will override
-    	pointingspacing.  Otherwise simmos will hexagonally
+    	pointingspacing.  Otherwise simdata will hexagonally
     	pack the input image with pointings.  When direction is a
     	list, the centroid of direction will be used as the center.
     pointingspacing-- spacing in between beams e.g '1arcsec'        

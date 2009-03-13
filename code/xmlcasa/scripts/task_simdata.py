@@ -18,18 +18,13 @@ import pylab as pl
 import pdb
 
 
-def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=None, incell=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, async=None):
-
-    # should just change this to an input parameter verbose.  it sets util.verbose below
-    debug=True
+def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None, incell=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
 
 
 # helper function to plot an image (optionally), and calculate its statistics
-# we could move this to the utility object and have that object contain an incell, but
-# it probably doesn't matter much, since we may want to use this with some other
-# cell value
+# we could move this to the utility object
 
     def statim(image,plot=True,incell=None):
         ia.open(image)
@@ -67,7 +62,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
                 if type(incell)=='str':
                     incell=qa.quantity(incell)
                 pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
-            if debug: msg("pixel size= %s" % pixsize,origin="statim")
+            if verbose: msg("pixel size= %s" % pixsize,origin="statim")
             xextent=imsize[0]*abs(pixsize[0])*0.5
             xextent=[xextent,-xextent]
             yextent=imsize[1]*abs(pixsize[1])*0.5
@@ -98,23 +93,20 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
 
 
 
+    ############ main function ############################################
 
-    ############Begin of main function ############################################
 
-
-    casalog.origin('simmos')
-   
+    casalog.origin('simdata')
+    
+    util=simutil(direction)
+    if verbose: util.verbose=True
+    msg=util.msg
+    
     if((not os.path.exists(modelimage)) and (not os.path.exists(complist))):
         msg("ERROR -- No sky input found.  At least one of modelimage or complist must be set.",color="31")
         return
     
     try:
-        util=simutil(direction)
-        if debug: util.verbose=True
-        msg=util.msg
-        
-
-
         ##################################################################
         # set up pointings
         # uses imsize*cell, or could use insize*incell I suppose
@@ -134,7 +126,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             if incell=="header":
                 incell=cell
             # should we be using incell since there is not an image?
-            if debug: msg("creating an image from your clean components")
+            if verbose: msg("creating an image from your clean components")
             modelimage=project+'.model.im'
             ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
             cs=ia.coordsys()
@@ -183,7 +175,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             cell=incell
 
 
-        if debug: msg("imsize= %s" % imsize)
+        if verbose: msg("imsize= %s" % imsize)
 
 
 
@@ -243,6 +235,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
                 return
             else:
                 pl.figure(currfignum+1)
+                pl.clf()
 
 
 
@@ -295,7 +288,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
         if type(direction) == list:
             imcenter , discard = util.average_direction(direction)
             msg("Using phasecenter " + imcenter)
-            if debug:
+            if verbose:
                 print direction
                 for dir in direction:
                     msg("   "+dir)
@@ -330,7 +323,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             im.done()
 
             if refdirection!=None:
-                if debug: msg("setting model image direction to "+refdirection)
+                if verbose: msg("setting model image direction to "+refdirection)
                 if refdirection!="header":
                     ia.open(modelimage4d)
                     modelcs=ia.coordsys()
@@ -349,7 +342,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
                     modelcs.setreferencevalue(ref)
                     ia.setcoordsys(modelcs.torecord())
                     ia.done()
-                    if debug: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
+                    if verbose: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
 
 
             if refpixel!=None:
@@ -371,7 +364,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
                     spax=modelcs.findcoordinate("spectral")['pixel']
                     ref[spax]=0
                     ref[modelcs.findcoordinate("stokes")['pixel']]=0
-                    if debug: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
+                    if verbose: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
                     modelcs.setreferencepixel(ref)
                     ia.setcoordsys(modelcs.torecord())
                     ia.done()
@@ -459,7 +452,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             ##################################################################
             # do actual calculation of visibilities from the model image:
 
-            if debug: msg("predicting from "+modelimage4d)
+            if verbose: msg("predicting from "+modelimage4d)
             sm.predict(imagename=[modelimage4d], complist=complist)
             
         else:   # if we're doing only components
@@ -507,11 +500,11 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
 
             startfreq_ghz=qa.convertfreq(qa.quantity(startfreq),'GHz')
             eta_p = pl.exp(-(4.0*3.1415926535*epsilon*startfreq_ghz.get("value")/2.99792458e5)**2)
-            if debug: msg('ruze phase efficiency = ' + str(eta_p))
+            if verbose: msg('ruze phase efficiency = ' + str(eta_p))
 
             # antenna efficiency
             eta_a = eta_p*eta_s*eta_b*eta_t
-            if debug: msg('antenna efficiency = ' + str(eta_a))
+            if verbose: msg('antenna efficiency = ' + str(eta_a))
  
             # Ambient surface radiation temperature in K. 
             # FOR NOW, T_atm = T_ground = T_amb
@@ -535,14 +528,16 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             sm.setapply(type='TOPAC',opacity=tau0);  # arrange opac corruption
             # XXX VERIFY that this is just an attenuation!
+            # before 20090216 this did not set t_rx (defaults to 50)
+            # NewMSSimulator needs 2-temp formula not just t_atm
             sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                        antefficiency=eta_a,
-                        tau=tau0,tatmos=t_amb,tcmb=t_cmb,
+                        antefficiency=eta_a,trx=t_rx,
+                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
                         mode="calculate")
             sm.corrupt();
             sm.done();
 
-            if debug: msg("done corrupting with thermal noise")
+            if verbose: msg("done corrupting with thermal noise")
 
             
         # not yet implemented:
@@ -595,7 +590,11 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
                 outertaper=[]
                 innertaper=[]
 
-            if casalog.version().split()[2].split('.')[1] <= 3:
+            if verbose:
+                msg("clean inputs:")
+                msg("clean(vis="+msfile+",imagename="+image+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode="+psfmode+",imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell="+str(cell)+",phasecenter="+str(imcenter)+",restfreq='',stokes="+stokes+",weighting="+weighting+",robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+
+            if int(casalog.version().split()[2].split('.')[1]) <= 3:
                 # XXX 2.3.1 syntax:
                 clean(vis=msfile,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode="mosaic",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
                 # XXX 2.4.0 syntax:
@@ -637,7 +636,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             # modelflat should be the moment zero of that
             modelflat=project+"."+modelimage+".mom0" 
             if innchan>1:
-                if debug: msg("creating moment zero input image")
+                if verbose: msg("creating moment zero input image")
                 # actually run ia.moments
                 ia.open(modelimage4d)
                 ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
@@ -658,12 +657,12 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             # should we really be calling this mom0, if we use the mean, or mom-1?
             if nchan>1:
                 # image is either .clean or .dirty
-                if debug: msg("creating moment zero output image")
+                if verbose: msg("creating moment zero output image")
                 ia.open(image+".image")
                 ia.moments(moments=[-1],outfile=outflat,overwrite=True)
                 ia.done()
             else:
-                if debug: msg("flattening output image to "+outflat)
+                if verbose: msg("flattening output image to "+outflat)
                 # just remove degenerate axes from image
                 ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
                 # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
@@ -694,7 +693,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             del outflatcoordsys
             del imrr
 
-            if innchan==1 and not debug:
+            if innchan==1:
                 os.system("rm -rf "+modelflat)  # no need to keep this
 
 
@@ -713,7 +712,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
 
         if os.path.exists(modelimage) and (fidelity == True or display == True):
             # get beam from output clean image
-            if debug: msg("getting beam from "+image+".image")
+            if verbose: msg("getting beam from "+image+".image")
             ia.open(image+".image")
             beam=ia.restoringbeam()
             ia.done()
@@ -748,7 +747,7 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
             msg("fidelity image calculated")
 
             # clean up moment zero maps if we don't need them anymore
-            if nchan==1 and not debug:
+            if nchan==1:
                 os.system("rm -rf "+outflat) 
 
 
@@ -863,24 +862,24 @@ def almasimmos(modelimage=None, modifymodel=None, refdirection=None, refpixel=No
         
         # if not displaying still print stats:
         if psfmode != "none":
-            msg('Simulation rms: '+str(sim_rms),color="30")
-            msg('Simulation max: '+str(sim_max),color="30")
+            msg('Simulation rms: '+str(sim_rms))
+            msg('Simulation max: '+str(sim_max))
         
         if display == True or fidelity == True:
-            msg('Model rms: '+str(model_rms),color="30")
-            msg('Model max: '+str(model_max),color="30")
-            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),color="30")
-            
+            msg('Model rms: '+str(model_rms))
+            msg('Model max: '+str(model_max))
+            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']))
+
 
 
 
 
 
     except TypeError, e:
-        msg("task_simmos -- TypeError: %s" % e,color="red")
+        msg("task_simdata -- TypeError: %s" % e,color="red")
         return
     except ValueError, e:
-        print "task_simmos -- OptionError: ", e
+        print "task_simdata -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

@@ -112,21 +112,24 @@ public:
   void setField(const String& field);
   void setFields(const Vector<Int>& fieldIds);
 
+  // Specifies the new phase tracking centers for each selected field.
+  void setPhaseDirs(const Vector<MDirection>& phaseDirs);
+
 // Calculate the (u, v, w)s and store them in ms_p.
   Bool calc_uvw();
 
-  //Bool fixvis();  // For things like rotation, differential aberration
-  //correction, etc., when there already is a UVW column, using FTMachine.
+  // For things like rotation, differential aberration correction, etc., when
+  // there already is a UVW column, using FTMachine.
+  Bool fixvis();
 
 private:
-// Pointer to MS
-   MeasurementSet* ms_p;
-// DataDescription Ids to process
-   Vector<Int> DDIds_p;
-// Field Ids to process
-   Vector<Int> FieldIds_p;
-// Number of spws
-   Int nSpw_p;
+  Bool fields_are_OK();
+
+  MeasurementSet* ms_p;			// Pointer to MS
+  Vector<Int> DDIds_p;			// DataDescription Ids to process
+  Vector<Int> FieldIds_p;		// Field Ids to process
+  Vector<MDirection> phaseDirs_p;	// new phase centers for each selected field
+  Int nSpw_p;				// Number of spws
 };
   
 } //# NAMESPACE CASA - END

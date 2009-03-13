@@ -1,5 +1,5 @@
 # geodesy and pointing and other helper functions that are useful
-# to be available outside of the (alma)simmos task
+# to be available outside of the simdata task
 import casac
 import os
 import commands
@@ -11,9 +11,10 @@ qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = qatool.create()
 
 class simutil:
-    def __init__(self, direction="", verbose=False):
+    def __init__(self, direction="", totaltime=qa.quantity("0h"), verbose=False):
         self.direction=direction
         self.verbose=verbose
+        self.totaltime=totaltime
 
     def msg(self, s, origin=None, color=None):
         # ansi color codes:
@@ -32,7 +33,7 @@ class simutil:
             clr="\x1b["+color+"m"
         bw="\x1b[0m"
         if origin==None:
-            origin="simmos"
+            origin="simutil"
         print clr+"["+origin+"] "+bw+s
         casalog.post("")
         casalog.post(s)
@@ -146,7 +147,7 @@ class simutil:
             x = x['value']
             y = y['value']
             if epoch != epoch0:                     # Paranoia
-                print "[simmos] WARN: precession not handled by average_direction()"
+                print "[simutil] WARN: precession not handled by average_direction()"
             x = self.wrapang(x, avgx, 360.0)
             avgx += (x - avgx) / i
             avgy += (y - avgy) / i
@@ -218,7 +219,7 @@ class simutil:
         if direction==None: direction=self.direction
         if telescope==None: telescope=self.telescopename
         
-        # right now, simmos centers at the transit;  when that changes,
+        # right now, simdata centers at the transit;  when that changes,
         # or when that becomes optional, then that option needs to be
         # stored in the simutil object and used here, to either
         # center the plot at transit or not.
@@ -226,10 +227,10 @@ class simutil:
         # direction="J2000 18h00m00.03s -45d59m59.6s"
         # refdate="2012/06/21/03:25:00"
         
-        # XXX cludge because ACA isn't in the data repo yet
-        if telescope=="ACA":
-            telescope="ALMA"
-        # XXX
+#        # XXX cludge because ACA isn't in the data repo yet
+#        if telescope=="ACA":
+#            telescope="ALMA"
+#        # XXX
 
         ds=self.direction_splitter(direction)  # if list, returns average
         src=me.direction(ds[0],ds[1],ds[2])
@@ -284,7 +285,10 @@ class simutil:
         l=ax.get_yticklabels()
         pl.setp(l,fontsize="x-small")
         pl.ylim([0,90])
-        
+
+        if self.totaltime>0:
+            etimeh=qa.convert(self.totaltime,'h')['value']
+            pl.plot(pl.array([-0.5,0.5])*etimeh+(peak-starttime_float)*24,[80,80],'r')
 
 
 
@@ -396,17 +400,17 @@ class simutil:
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
-                    if params["observatory"]=="ACA":
-                        ## cludge because ACA isn't in the data repo yet
-                        obs=me.measure(me.observatory("ALMA"),'WGS84')
-                    else:
-                        obs=me.measure(me.observatory(params["observatory"]),'WGS84')
+#                    if params["observatory"]=="ACA":
+#                        ## cludge because ACA isn't in the data repo yet
+#                        obs=me.measure(me.observatory("ALMA"),'WGS84')
+#                    else:
+                    obs=me.measure(me.observatory(params["observatory"]),'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
                     obslon=qa.convert(obs['m0'],'deg')['value']
                     obsalt=qa.convert(obs['m2'],'m')['value']
                     if self.verbose:
-                        msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon))
-                        foo=self.getdatum(datum,verbose=True)
+                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon))
+                        #foo=self.getdatum(datum,verbose=True)
                     for i in range(len(inx)):
                         x,y,z = self.locxyz2itrf(inx[i],iny[i],inz[i]+obsalt,obslat,obslon)
                         stnx.append(x)
@@ -848,22 +852,22 @@ class simutil:
         ellipsoid, with z normal to the ellipsoid and y pointing north.
         """
         # from Rob Reid;  need to generalize to use any datum...
-        phi, lmbda = map(radians, (lat, longitude))
-        sphi = sin(phi)
+        phi, lmbda = map(pl.radians, (lat, longitude))
+        sphi = pl.sin(phi)
         a = 6378137.0      # WGS84 equatorial semimajor axis
         b = 6356752.3142   # WGS84 polar semimajor axis
-        ae = acos(b / a)
-        N = a / sqrt(1.0 - (sin(ae) * sphi)**2)
+        ae = pl.arccos(b / a)
+        N = a / pl.sqrt(1.0 - (pl.sin(ae) * sphi)**2)
     
         # Now you see the connection between the Old Ones and Antarctica...
-        Nploczcphimlocysphi = (N + locz) * cos(phi) - locy * sphi
+        Nploczcphimlocysphi = (N + locz) * pl.cos(phi) - locy * sphi
     
-        clmb = cos(lmbda)
-        slmb = sin(lmbda)
+        clmb = pl.cos(lmbda)
+        slmb = pl.sin(lmbda)
     
         x = Nploczcphimlocysphi * clmb - locx * slmb
         y = Nploczcphimlocysphi * slmb + locx * clmb
-        z = (N * (b / a)**2 + locz) * sphi + locy * cos(phi)
+        z = (N * (b / a)**2 + locz) * sphi + locy * pl.cos(phi)
     
         return x, y, z
 

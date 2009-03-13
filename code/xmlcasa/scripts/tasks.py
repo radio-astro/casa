@@ -6,7 +6,7 @@
 # all of the imaging tasks could be together.
 
 from accum import *
-from almasimmos import *
+from simdata import *
 from applycal import *
 from bandpass import *
 from blcal import *

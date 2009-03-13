@@ -30,7 +30,7 @@ def find(matchstring=None):
 		else:
 			filepath=pathname+'/'+arch+'/python/2.5/'
 
-		# taskfiles = ['accum.py','almasimmos.py','applycal.py','bandpass.py','blcal.py','browsetable.py','clean.py','clearcal.py','clearplot.py','clearstat.py','concat.py','deconvolve.py','exportfits.py','exportuvfits.py','feather.py','filecatalog.py','flagautocorr.py','flagdata.py','flagmanager.py','fluxscale.py','fringecal.py','ft.py','gaincal.py','imhead.py','immoments.py','importasdm.py','importfits.py','importuvfits.py','importvla.py','invert.py','listcal.py','listhistory.py','listobs.py','makemask.py','mosaic.py','plotants.py','plotcal.py','plotxy.py','regridimage.py','setjy.py','smoothcal.py','split.py','uvcontsub.py','uvmodelfit.py','viewer.py']
+		# taskfiles = ['accum.py','simdata.py','applycal.py','bandpass.py','blcal.py','browsetable.py','clean.py','clearcal.py','clearplot.py','clearstat.py','concat.py','deconvolve.py','exportfits.py','exportuvfits.py','feather.py','filecatalog.py','flagautocorr.py','flagdata.py','flagmanager.py','fluxscale.py','fringecal.py','ft.py','gaincal.py','imhead.py','immoments.py','importasdm.py','importfits.py','importuvfits.py','importvla.py','invert.py','listcal.py','listhistory.py','listobs.py','makemask.py','mosaic.py','plotants.py','plotcal.py','plotxy.py','regridimage.py','setjy.py','smoothcal.py','split.py','uvcontsub.py','uvmodelfit.py','viewer.py']
 
 		taskfiles = []
 		for key in tasksum.keys() :

@@ -366,7 +366,13 @@ def update_params(func, printtext=True):
             if(printtext):
                 if(hascheck):
                     noerror = obj.check_params(params[k],myf[params[k]])
-                if(myf[params[k]]==paramval):
+                # RI this doesn't work with numpy arrays anymore.  Noone seems
+                # interested, so I'll be the red hen and try to fix it.
+                myfparamsk=myf[params[k]]
+                if(type(myf[params[k]])==pl.ndarray):
+                    myfparamsk=myfparamsk.tolist()
+                #if(myf[params[k]]==paramval):
+                if(myfparamsk==paramval):
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]), 'ndpdef', 'black',noerror)
                 else:
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]), 'ndpnondef', 'black', noerror)

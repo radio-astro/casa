@@ -389,7 +389,7 @@ simulator::setfield(const std::string& sourcename, const ::casac::variant& sourc
       MDirection mdir;
       if (!casaMDirection(sourcedirection, mdir)){
 	*itsLog << LogIO::SEVERE 
-		<< "Could not convert source direction to a Direction Measures"
+		<< "Could not convert source direction to a Direction Measure."
 		<< LogIO::POST;
 	
       }

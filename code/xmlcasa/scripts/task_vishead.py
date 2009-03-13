@@ -15,108 +15,29 @@
 # however expert users can always use the table tool directly.
 
 from taskinit import *
-import os
+from vishead_util import *
 
-def getput_keyw(mode, vis, key, hdindex, hdvalue=''):
-    table = vis + '/' + key[0]
-
-    col = key[1]
-
-    tb.open(table, nomodify = (mode == 'get'))
-
-    if mode == 'get':
-        if hdindex == '':
-            # default: return full column
-            if(tb.isvarcol(col)):
-                value = tb.getvarcol(col)
-            else:
-                value = tb.getcol(col)
-        else:
-            i = int(hdindex)
-            # The following seems more efficient but complains
-            # that 'column XYZ is not an array column'
-            #   value = tb.getcolslice(col, startrow=i-1, nrow=1)
-            #
-            # So read the entire column instead
-
-            if i < 0:
-                # allowed by python, but...
-                raise Exception, "Illegal index " + str(i)
-            
-            value = tb.getcol(col)[i]  # throws exception if index too large
-            
-    elif mode == 'put':
-        if(tb.isvarcol(col)):
-            tb.close()
-            raise Exception, "vishead does not yet read/write variably sized columns"
-        else:
-            if hdindex == '':
-                # hdvalue expected to be an array
-                tb.putcol(col, hdvalue)   
-            else:
-                # Get full column, change one element,
-                # write it back. Not efficient but
-                # columns used by this task are short
-
-                i = int(hdindex)
-
-                c = list(tb.getcol(col))
-                # numpy arrays don't expand flexibly =>
-                # convert to python list
-                
-                c[i] = hdvalue
-                tb.putcol(col, c)
-                                
-        value = None
-    else:
-        tb.close()
-        raise Exception, "Assertion error"
-
-    #print "Will return", value
-
-    tb.close()    
-    return value
-
-
-def keyword_exists(vis, key):
-    table = vis + '/' + key[0]
-    col = key[1]
-
-    if not os.path.exists(table):
-        return False
-
-    try:
-        # Throws StandardError if subtable
-        # does not exist
-        tb.open(table)
-    except:
-        return False
-
-
-    return (col in tb.colnames())
-
-
-
-def vishead(vis, mode=None, hdkey=None, hdindex=None, hdvalue=None):
+def vishead(vis, mode=None, listitems=None, hdkey=None, hdindex=None, hdvalue=None):
     """Documentation goes here?"""
 
     casalog.origin('vishead')
-    casalog.post( "parameter vis:     " + str(vis), 'DEBUG1' )
-    casalog.post( "parameter mode:    " + str(mode), 'DEBUG1')
-    casalog.post( "parameter hdkey:   " + str(hdkey), 'DEBUG1')
-    casalog.post( "parameter hdindex: " + str(hdindex), 'DEBUG1')
-    casalog.post( "parameter hdvalue: " + str(hdvalue), 'DEBUG1')
+    casalog.post("parameter vis:       " + str(vis), 'DEBUG1' )
+    casalog.post("parameter mode:      " + str(mode), 'DEBUG1')
+    casalog.post("parameter listitems: " + str(listitems), 'DEBUG1')
+    casalog.post("parameter hdkey:     " + str(hdkey), 'DEBUG1')
+    casalog.post("parameter hdindex:   " + str(hdindex), 'DEBUG1')
+    casalog.post("parameter hdvalue:   " + str(hdvalue), 'DEBUG1')
 
     # Define vishead keywords
     keywords = {
         # Keywords from OBSERVATION TABLE
         # time_range
-        # log
-        'schedule'  :['OBSERVATION', 'SCHEDULE'], #array
+        'log':       ['OBSERVATION', 'LOG',      strip_r1], #OPT AoAoS
+        'schedule'  :['OBSERVATION', 'SCHEDULE', strip_r1], #array
         # flag_row
         'observer' :['OBSERVATION', 'OBSERVER'],  #array
         'project'  :['OBSERVATION', 'PROJECT'],   #array
-        'release_date'  :['OBSERVATION', 'RELEASE_DATE'], #array
+        'release_date'  :['OBSERVATION', 'RELEASE_DATE', secArray2localDate], #array
         'schedule_type'  :['OBSERVATION', 'SCHEDULE_TYPE'], #array
         'telescope':['OBSERVATION', 'TELESCOPE_NAME'],  #array
 
@@ -124,6 +45,8 @@ def vishead(vis, mode=None, hdkey=None, hdindex=None, hdvalue=None):
         # Keywords from FIELD TABLE
         'field'    :['FIELD', 'NAME'],   # also in pointing table(!)
                                         # so watch out when changing
+        'ptcs':     ['FIELD', 'PHASE_DIR', dict2direction_strs],   #OPT
+        'fld_code': ['FIELD', 'CODE'],        #OPT
 
         # Keywords from SPECTRAL_WINDOW TABLE
         #   not sure if all of these can freely edited by
@@ -143,10 +66,8 @@ def vishead(vis, mode=None, hdkey=None, hdindex=None, hdvalue=None):
         'spw_name' :['SPECTRAL_WINDOW', 'NAME'],
 
         # Keywords from SOURCE TABLE
-        # relevant?  'source_name' :['SOURCE', 'NAME']
-
-
-
+        'source_name' :['SOURCE', 'NAME'],  #OPT
+        'cal_grp':     ['SOURCE', 'CALIBRATION_GROUP']  #OPT
 
         #MS_VERSION (probably not)
     }
@@ -159,14 +80,25 @@ def vishead(vis, mode=None, hdkey=None, hdindex=None, hdvalue=None):
             #tb.summary()
 
             values = {}
-            for key in keywords.keys():
-                if keyword_exists(vis, keywords[key]):
-                    values[key] = getput_keyw('get', vis, keywords[key], '')
-                    casalog.post(key + ': ' + str(values[key]), 'INFO')
-                    casalog.post('    ' + str(keywords[key][0]) + \
-                                 ' -> ' + str(keywords[key][1]), 'DEBUG1')
+            if not listitems:
+                listitems = keywords.keys()
+                listitems.sort()
+            for key in listitems:
+                if keywords.has_key(key):
+                    kwtuple = keywords.get(key)
+                    if keyword_exists(vis, kwtuple):
+                        values[key] = getput_keyw('get', vis, kwtuple, '')
+                        if len(kwtuple) > 2:
+                            casalog.post(key + ': ' + str(kwtuple[2](values[key])),
+                                         'INFO')
+                        else:
+                            casalog.post(key + ': ' + str(values[key]), 'INFO')  
+                        casalog.post('    ' + str(kwtuple[0]) + \
+                                     ' -> ' + str(kwtuple[1]), 'DEBUG1')
+                    else:
+                        casalog.post(key + ': <undefined>', 'INFO')
                 else:
-                    casalog.post(key + ': <undefined>', 'INFO')
+                    casalog.post("Unrecognized item: " + key, 'WARN')
                     
             return values
 

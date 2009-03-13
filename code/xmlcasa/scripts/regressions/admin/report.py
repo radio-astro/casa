@@ -1449,15 +1449,16 @@ class report:
                             testname, host):
         # CPU profile plot
         pl.clf()
-        pl.plot(t,cpu_us,lw=2)
-        pl.plot(t,cpu_id,lw=2)
-        pl.plot(t,cpu_wa,lw=2)
-        pl.plot(t,cpu_sy,lw=2)
+        if len(t) == len(cpu_us):  # memory and/or CPU data may not be available
+            pl.plot(t,cpu_us,lw=1)
+            pl.plot(t,cpu_id,lw=1)
+            pl.plot(t,cpu_wa,lw=1)
+            pl.plot(t,cpu_sy,lw=1)
 
         if len(t) > 0:
-            pl.axis([0.9*min(t),1.1*max(t), -10, 100])
+            pl.axis([1.1*min(t)-0.1*max(t), 1.1*max(t)-0.1*min(t), -5, 105])
         else:
-            pl.axis([0, 1, -10, 100])
+            pl.axis([0, 1, -5, 105])
             
         pl.xlabel('time (sec)')
         pl.ylabel('CPU usage (percent)')
@@ -1476,10 +1477,8 @@ class report:
         pl.plot(t,y22,lw=2)
         if len(y11) > 0 and len(y22) > 0:
             if max(y11)>=max(y22):
-                #pl.axis([0.9*min(t),1.1*max(t),0.9*min(y11),1.1*max(y11)])
                 pl.axis([0.9*min(t),1.1*max(t),0,1.1*max(y11)])
             else:
-                #pl.axis([0.9*min(t),1.1*max(t),0.9*min(y22),1.1*max(y22)])
                 pl.axis([0.9*min(t),1.1*max(t),0,1.1*max(y22)])
         else:
             pl.axis([0, 1, 0, 1])
@@ -1502,10 +1501,10 @@ class report:
 
         body1=['<pre>CPU profile of run of %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
         body2=['']
-        ht.doBlk(body1, body2, png_cpu_filename, 'CPU profile')
+        ht.doBlk(body1, body2, png_cpu_filename, 'CPU/Memory profiles')
 
         body1=['<pre>Memory profile of run of %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
         body2=['']
-        ht.doBlk(body1, body2, png_filename, 'Memory profile')
+        ht.doBlk(body1, body2, png_filename, '')
         
         ht.doFooter()

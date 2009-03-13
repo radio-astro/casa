@@ -1,5 +1,6 @@
 // Based on code/alma/apps/UVWCoords
 
+#include <casa/Logging/LogIO.h>
 #include <msvis/MSVis/MSUVWGenerator.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
@@ -110,7 +111,7 @@ void MSUVWGenerator::uvw_bl(const uInt ant1, const uInt feed1,
   uvw = antUVW_p[ant2] - antUVW_p[ant1];
 }
 
-void MSUVWGenerator::make_uvws(const Vector<Int> flds,
+Bool MSUVWGenerator::make_uvws(const Vector<Int> flds,
 			       const Vector<MDirection>& phaseDirs)
 {
   ArrayColumn<Double>&      UVWcol   = msc_p.uvw();
@@ -144,16 +145,29 @@ void MSUVWGenerator::make_uvws(const Vector<Int> flds,
       oldFld  = fieldID(toir);
       uvw_an(oldTime, oldFld);
     }
+    
+    try{
+      if(flds[fieldID(toir)] > -1){
+	//      uvw_bl(ant1(toir), ant2(toir),
+	//     feed1(toir), feed2(toir), UVWcol(toir));
+	UVWcol.put(toir, antUVW_p[ant2(toir)] - antUVW_p[ant1(toir)]);
+      }
+    }
+    catch(AipsError x){
+      LogIO logSink;
       
-    if(flds[fieldID(toir)] > -1){
-      //      uvw_bl(ant1(toir), ant2(toir),
-      //     feed1(toir), feed2(toir), UVWcol(toir));
-      UVWcol.put(toir, antUVW_p[ant2(toir)] - antUVW_p[ant1(toir)]);
+      logSink << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+      throw(AipsError("Error in MSUVWGenerator::make_uvws."));
+      return false;
     }
   }
 
+  //TODO
   // Update the FIELD table with the new phase directions (and DELAY_DIR and
   // REFERENCE_DIR?).
+
+  return true;
 }
 
 // void MSUVWGenerator::get_ant_offsets(const MDirection& dir_with_a_frame)

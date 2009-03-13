@@ -5,7 +5,7 @@ ___________________________________________________________
 Available tasks:
 
    accum         exportfits      immoments       plotcal
-   almasimmos    exportuvfits    importasdm      plotxy
+   simdata       exportuvfits    importasdm      plotxy
    applycal      feather         importfits      (pointcal)
    bandpass      filecatalog     importuvfits    regridimage
    blcal         flagautocorr    importvla       restore

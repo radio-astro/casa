@@ -11,52 +11,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="vishead">
 
 <shortdescription> List, get, and put metadata in a measurement set </shortdescription>
-
-<description>
-
-This task allows the user to manipulate some common data items in a measurement
-set.  The action of the task is determined primarily by the 'mode' keyword.
-Currently, four possible values are allowed for mode:
-
-list    --- list metadata in an MS
-summary --- summary of MS contents
-get     --- get a specified datum from the MS
-put     --- put a specified value into the MS
-
-Keywords for get and put data:
-  'schedule'
-  'observer'
-  'project'
-  'release_date'
-  'schedule_type'
-  'telescope'
-  'field'
-  'freq_group_name'
-  'spw_name'
-
-
-
-Input Parameters:
-
-vis  --- Name of input visibility file
-         ex: vis='my.ms'
-
-mode --- Mode of operation for vishead
-         ex: mode=''->'list'; mode='get'
-
-    hdkey   --- keyword to get or put in the MS (used in get/put mode only)
-                ex: hdkey='telescope'
-
-    hdindex --- index (counting from 0) if keyword is an array (used in get/put mode only)
-                ex: hdindex='2'; hdindex=''->put/get full array; 
-
-    hdvalue --- value to be put in the MS (used in put mode only)
-                ex: hdvalue=array(['MyTelescope'])
-
-</description>
+<description>List, get, and put "header" information in a measurement set.</description>
 
 <input>
-    <param type="string" name="vis" mustexist="true">
+    <param type="string" name="vis" kind="ms" mustexist="true">
         <description>Name of input visibility file</description>
         <value></value>
         <example>vis='ngc5921.ms'</example>
@@ -75,6 +33,12 @@ mode --- Mode of operation for vishead
         </allowed>
         <value>list</value>
         <example>mode=''->'list'; mode='get'</example>
+    </param>
+
+    <param type="stringArray" name="listitems" subparam="true">
+      <description>items to list ([] for all)</description>
+      <value></value>
+      <example>listitems = ['field', 'ptcs']; see help for list of keywords</example>
     </param>
 
     <param type="string" name="hdkey" subparam="true">
@@ -98,7 +62,21 @@ mode --- Mode of operation for vishead
 
     <constraints>
           <when param="mode">
-             <equals type="string" value="list"/>
+             <equals type="string" value="list">
+	       <default param="listitems">
+		 <value type="stringArray">
+		   <value type="string">'telescope'</value>
+		   <value type="string">'observer'</value>
+		   <value type="string">'project'</value>
+		   <value type="string">'field'</value>
+		   <value type="string">'freq_group_name'</value>
+		   <value type="string">'spw_name'</value>
+		   <value type="string">'schedule'</value>
+		   <value type="string">'schedule_type'</value>
+		   <value type="string">'release_date'</value>
+		 </value>
+	       </default>
+	     </equals>
              <equals type="string" value="summary"/>
              <equals type="string" value="get">
                    <default param="hdkey"><value type="string"/></default>
@@ -114,7 +92,56 @@ mode --- Mode of operation for vishead
 
 </input>
 
+<!-- DIRTY HACK: <description> does not currently (2009-03-10) make it into help or ?,
+                 but <example> does. -->
+<!-- <description> -->
 <example>
+This task allows the user to manipulate some common data items in a measurement
+set.  The action of the task is determined primarily by the 'mode' keyword.
+Currently, four possible values are allowed for mode:
+
+list    --- list metadata in an MS
+summary --- summary of MS contents
+get     --- get a specified datum from the MS
+put     --- put a specified value into the MS
+
+Keywords for get and put data:
+  'log'
+  'schedule'
+  'observer'
+  'project'
+  'release_date'
+  'schedule_type'
+  'telescope'
+  'field'
+  'ptcs'                  (Phase tracking centers)
+  'fld_code'              (Field codes)
+  'freq_group_name'
+  'spw_name'
+  'source_name'
+  'cal_grp'               (Calibration groups)
+
+Input Parameters:
+
+vis  --- Name of input visibility file
+         ex: vis='my.ms'
+
+mode --- Mode of operation for vishead
+         ex: mode=''->'list'; mode='get'
+
+    hdkey   --- keyword to get or put in the MS (used in get/put mode only)
+                ex: hdkey='telescope'
+
+    hdindex --- index (counting from 0) if keyword is an array (used in get/put mode only)
+                ex: hdindex='2'; hdindex=''->put/get full array; 
+
+    hdvalue --- value to be put in the MS (used in put mode only)
+                ex: hdvalue=array(['MyTelescope'])
+
+<!-- </description> -->
+
+<!-- <example> -->
+Examples:
 
 vishead(vis = 'my.ms')
 hdvalue = vishead(vis='my.ms',mode='get',hdkey='telescope')

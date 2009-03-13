@@ -118,7 +118,7 @@ from task_imfit import imfit
 from task_invert import invert
 from task_sdlist import sdlist
 from task_deconvolve import deconvolve
-from task_almasimmos import almasimmos
+from task_simdata import simdata
 from task_importasdm import importasdm
 from task_uvmodelfit import uvmodelfit
 from task_polcal import polcal

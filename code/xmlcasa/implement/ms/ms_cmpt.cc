@@ -109,7 +109,7 @@ inline static String m1toBlankCStr_(const ::casac::variant& v)
 
 // Returns whether or not the MS pointed to by itsMS can be written to,
 // avoiding a weird exception from itsMS->isWritable() if no ms is attached.
-inline bool ms::ready2write_()
+inline Bool ms::ready2write_()
 {
   return (!detached() && itsMS->isWritable());
 }
@@ -1102,7 +1102,7 @@ bool ms::continuumsub(const ::casac::variant& field,
  return rstat;
 }
 
-bool ms::calcuvw(const ::casac::variant& field)
+bool ms::calcuvw(const ::casac::variant& fields)
 {
   Bool rstat(false);
   try {
@@ -1118,7 +1118,7 @@ bool ms::calcuvw(const ::casac::variant& field)
       
     MSFixVis visfixer(*itsMS);
     *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
-    visfixer.setField(m1toBlankCStr_(field));
+    visfixer.setField(m1toBlankCStr_(fields));
     rstat = visfixer.calc_uvw();
     *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
   }
@@ -1132,7 +1132,8 @@ bool ms::calcuvw(const ::casac::variant& field)
   return rstat;
 }
 
-bool ms::fixvis(const ::casac::variant& field)
+bool ms::fixvis(const std::vector<int>& fields,
+		const ::casac::variant& phaseDirs)
 {
   Bool rstat(False);
   try {
@@ -1146,7 +1147,7 @@ bool ms::fixvis(const ::casac::variant& field)
     *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
       
     MSFixVis visfixer(*itsMS);
-    visfixer.setField(toCasaString(field));
+    visfixer.setFields(Vector<Int>(fields));
     //rstat = visfixer.fixvis();
     *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
   }

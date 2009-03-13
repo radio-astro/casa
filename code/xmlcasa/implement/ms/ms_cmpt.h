@@ -34,7 +34,6 @@ namespace casac {
 class ms
 {
   private:
-  bool ready2write_();
   
   public:
 
@@ -109,11 +108,19 @@ class ms
 
     bool done();
 
-    bool calcuvw(const ::casac::variant& field = ::casac::initialize_variant(""));
+  bool calcuvw(const ::casac::variant& fields = ::casac::initialize_variant(""));
 
-    bool fixvis(const ::casac::variant& field = ::casac::initialize_variant(""));
+  bool fixvis(const std::vector<int>& fields = std::vector<int>(),
+	      const ::casac::variant& phaseDirs = ::casac::initialize_variant(""));
 
-    ::casac::record* msseltoindex(const std::string& vis = "", const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "");
+  ::casac::record* msseltoindex(const std::string& vis = "",
+				const ::casac::variant& spw = ::casac::initialize_variant(""),
+				const ::casac::variant& field = ::casac::initialize_variant(""),
+				const ::casac::variant& baseline = ::casac::initialize_variant(""),
+				const ::casac::variant& time = ::casac::initialize_variant(""),
+				const ::casac::variant& scan = ::casac::initialize_variant(""),
+				const ::casac::variant& uvrange = ::casac::initialize_variant(""),
+				const std::string& taql = "");
 
     bool hanningsmooth();
 

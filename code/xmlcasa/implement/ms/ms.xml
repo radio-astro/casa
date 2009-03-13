@@ -181,55 +181,56 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    others) to the current iteration.  At the end of the iteration,
    the original selection is restored.
 
-   You can iterate through a measurement set you have previously
-   selected using <link anchor="ms:ms.select.function">select</link>, but if you use
-   <link anchor="ms:ms.select.function">select</link> while iterating, you cannot get back
-   the unselected iteration (without reiterating through the table
-   until the current point).
+   You can iterate through a measurement set you have previously selected
+   using <link anchor="ms:ms.select.function">select</link>, but if you
+   use <link anchor="ms:ms.select.function">select</link> while iterating, you
+   cannot get back the unselected iteration (without reiterating through the
+   table until the current point).
 
-   The writehistory function allows messages to be appended to the
-   measurement set history table should you wish to do so.
-   The listhistory function lists your messages and those created
-   by autoflag, calibrater, imager and other tools.
+   The writehistory function allows messages to be appended to the measurement
+   set history table should you wish to do so.  The listhistory function lists
+   your messages and those created by autoflag, calibrater, imager and other
+   tools.
 
   \medskip\noindent\textbf{Conversions to \fits}
 
-    Just as the fromfits function will convert a \uvfits\  file to a
-    measurement set the tofits function will convert a measurement set
-    to a \uvfits\  file. Similarly a single dish measurement set ie., one
-    with a FLOAT_DATA column rather than a DATA column,
-    can be converted to a single dish \fits\ file using the tosdfits
-    function.
+    Just as the fromfits function will convert a \uvfits\ file to a measurement
+    set the tofits function will convert a measurement set to a \uvfits\
+    file. Similarly a single dish measurement set ie., one with a FLOAT_DATA
+    column rather than a DATA column, can be converted to a single dish \fits\
+    file using the tosdfits function.
 
-    You cannot read a \uvfits\  file into a measurement set and write it
+    You cannot read a \uvfits\ file into a measurement set and write it
     out as a single dish \fits\ file or vice-versa.
 
   \medskip\noindent\textbf{Concatenation}
 
     The concatenate function can be used to append the data from one
-    measurement set to the end of another. As all the data is copied
-    this function may take some time if the measurement set to be
-    copied is large. The measurement set needs to be opened for
-    writing for this to work.
+    measurement set to the end of another. As all the data is copied this
+    function may take some time if the measurement set to be copied is
+    large. The measurement set needs to be opened for writing for this to work.
 
   \medskip\noindent\textbf{Splitting}
-    The split function allow you to make a new ms from a subset of the 
-    actual ms
+    The split function allows you to make a new ms from a subset of the 
+    actual ms.
 		
 
   \medskip\noindent\textbf{Flagging data}
 
-    The flag and buffer functions all belong together.  The idea is to
-    fill a buffer of data (<link anchor="ms:ms.fillbuffer.function">fillbuffer</link>),
-    optionally retrieve it as a record
-    (<link anchor="ms:ms.getbuffer.function">getbuffer</link>) and display it in some data
-    display tool, do operations like differencing
+    The flag and buffer functions all belong together.  The idea is to fill a
+    buffer of data
+    (<link anchor="ms:ms.fillbuffer.function">fillbuffer</link>), optionally
+    retrieve it as a record
+    (<link anchor="ms:ms.getbuffer.function">getbuffer</link>) and display it
+    in some data display tool, do operations like differencing
     (<link anchor="ms:ms.diffbuffer.function">diffbuffer</link>), clipping
-    (<link anchor="ms:ms.clipbuffer.function">clipbuffer</link>) and manual edits of the
-    displayed data (<link anchor="ms:ms.setbufferflags.function">setbufferflags</link>),
-    and then write the flags back to the MS (<link anchor="ms:ms.writebufferflags.function">writebufferflags</link>), into the appropriate flag level, so you
-    can choose to apply or undo them.  The data is untouched by these
-    functions.
+    (<link anchor="ms:ms.clipbuffer.function">clipbuffer</link>) and manual
+    edits of the displayed data
+    (<link anchor="ms:ms.setbufferflags.function">setbufferflags</link>), and
+    then write the flags back to the MS
+    (<link anchor="ms:ms.writebufferflags.function">writebufferflags</link>),
+    into the appropriate flag level, so you can choose to apply or undo them.
+    The data is untouched by these functions.
 
 \def\bul{$+$}
 \def\all{$\ast$}
@@ -480,22 +481,19 @@ the ms definition itself. -->
   <returns type="bool"/>
 
   <description>
-    This function will convert a \uvfits\  file to a measurement set
-    table and then open the 
-    measurement set table. The newly created measurement set table
-    will continue to exist after the tool has been closed.
+    This function will convert a \uvfits\ file to a measurement set table and
+    then open the measurement set table. The newly created measurement set
+    table will continue to exist after the tool has been closed.
 
     Setting the lock argument to True will permanently lock the table
-    preventing other processes from writing to the measurement
-    set. Unless you expect this to happen, and want to prevent it, you
-    should leave the lock argument at the default value which implies
-    auto-locking.
+    preventing other processes from writing to the measurement set. Unless you
+    expect this to happen, and want to prevent it, you should leave the lock
+    argument at the default value which implies auto-locking.
 
 <!--
-    The host argument \tt{(currently ignored)} specifies which machine
-    the precompiled ms process should be started on. The default value
-    starts it on the same machine as the one that casapy is running
-    on.
+    The host argument \tt{(currently ignored)} specifies which machine the
+    precompiled ms process should be started on. The default value starts it on
+    the same machine as the one that casapy is running on.
 
     In order to run the ms tool on a remote machine you need to
     satisfy all the following conditions.
@@ -1605,11 +1603,15 @@ Date/Time:                         RR:                      RL:                 
      </param>
     
      <param type="int" direction="in" name="width">
-     <description>Number of input channels to average together, positive integer</description>
+     <description>
+       Number of input channels to average together, positive integer
+     </description>
      </param>
     
      <param type="int" direction="in" name="inc">
-     <description>Increment to next (group of) input channel(s), positive ineger</description>
+     <description>
+       Increment to next (group of) input channel(s), positive integer
+     </description>
      </param>
   </input>
   <returns type="bool"/>
@@ -2064,19 +2066,19 @@ for i in range(len(tcoord)):
     
      <param type="intArray" direction="in" name="nchan">
      <description>number of channels in output - 
-     Vector Int of length 1 or same length as spw</description>
+     Int vector of length 1 or same length as spw</description>
      <value>-1</value>
      </param>	
     
      <param type="intArray" direction="in" name="start">
      <description>Start channels in input data -
-     Vector Int of length 1 or same length as spw</description>
+     Int vector of length 1 or same length as spw</description>
      <value>0</value>
      </param>	
     
      <param type="intArray" direction="in" name="step">
      <description>number of input channels to average to make 1
-     output channel - Vector Int of length 1 or same as spw</description>
+     output channel - Int vector of length 1 or same as spw</description>
      <value>1</value>
      </param>
 
@@ -2672,76 +2674,66 @@ times this for channels and timeslots.
 </example>
 </method>
 
- 
    <method type="function" name="setbufferflags">
    <shortdescription>Set the flags in the buffer</shortdescription>
-   
-<input>
-
+   <input>
      <param type="any" name="flags">
-     <any type="record"/>
-     <description>record with flag and flag\_row</description>
+       <any type="record"/>
+       <description>record with flag and flag\_row</description>
      </param>
-</input>
-<returns type="bool"/>
-
-<description>
-Replace the flag and flag\_row fields in the internal
-buffer with those in the input record.
-The input record can e.g., be a modified version of the record
-returned by getbuffer(). The other fields in the record are ignored.
-</description>
-
-<example>
-\begin{verbatim}
-ms.open("3C273XC1.MS",False)
-ms.select({'antenna1':[3]})
-ms.fillbuffer("PHASE")
-rec=ms.getbuffer()
-rec['flag_row'][17]=True
-ms.setbufferflags(rec)
-\end{verbatim}
-
-<comments>
-We open the MS for reading, select a subset and
-read the data. We get the data into casapy, flag timeslot 17 and put
-the modified flags back into the buffer.
-</comments>
-</example>
-</method>
-
+   </input>
+   <returns type="bool"/>
+   <description>
+     Replace the flag and flag\_row fields in the internal
+     buffer with those in the input record.
+     The input record can be e.g., a modified version of the record
+     returned by getbuffer(). The other fields in the record are ignored.
+   </description>
+   <example>
+     \begin{verbatim}
+     ms.open("3C273XC1.MS",False)
+     ms.select({'antenna1':[3]})
+     ms.fillbuffer("PHASE")
+     rec=ms.getbuffer()
+     rec['flag_row'][17]=True
+     ms.setbufferflags(rec)
+     \end{verbatim}
+     <comments>
+       We open the MS for reading, select a subset and
+       read the data. We get the data into casapy, flag timeslot 17 and put
+       the modified flags back into the buffer.
+     </comments>
+   </example>
+   </method>
  
    <method type="function" name="writebufferflags">
-   <shortdescription>Write the flags in the internal buffer back to the table.</shortdescription>
-   
-<returns type="bool"/>
+     <shortdescription>Write the flags in the internal buffer back to the table.</shortdescription>
+     <returns type="bool"/>
+     <description>
+       Takes the flag and flag\_row field in the internal buffer and writes
+       them back to the FLAG and FLAG\_ROW column in the currently selected
+       table.
+     </description>
+     <example>
+       \begin{verbatim}
+       ms.open("3C273XC1.MS",False)
+       ms.select({'antenna1':[3]})
+       ms.fillbuffer("PHASE")
+       rec=ms.getbuffer()
+       rec['flag_row'][17]=True
+       ms.setbufferflags(rec)
+       ms.writebufferflags()
+       \end{verbatim}
 
-<description>
-Takes the flag and flag\_row field in the internal buffer and writes
-them back to the FLAG and FLAG\_ROW column in the currently selected
-table.
-</description>
-
-<example>
-\begin{verbatim}
-ms.open("3C273XC1.MS",False)
-ms.select({'antenna1':[3]})
-ms.fillbuffer("PHASE")
-rec=ms.getbuffer()
-rec['flag_row'][17]=True
-ms.setbufferflags(rec)
-ms.writebufferflags()
-\end{verbatim}
-
-<comments>
-We open the MS for reading, select a subset and
-read the data. We get the data into casapy, flag timeslot 17 and put
-the modified flags back into the buffer. We then write the buffer
-flags back to the table, causing the corresponding data to be
-marked flagged on subsequent access.
-</comments>
-</example>
-</method>
+       <comments>
+	 We open the MS for reading, select a subset and
+	 read the data. We get the data into casapy, flag timeslot 17 and put
+	 the modified flags back into the buffer. We then write the buffer
+	 flags back to the table, causing the corresponding data to be
+	 marked flagged on subsequent access.
+       </comments>
+     </example>
+   </method>
 
  
    <method type="function" name="clearbuffer">
@@ -2949,11 +2941,12 @@ in spectral window 1.
      and feed positions and offsets, the time, and the phase tracking center(s).
    </description>
    <input>
-     <param type="any" name="field">
+     <param type="any" direction="in" name="fields">
+       <description>
+	 Fields to operate on.  Blank = all.
+       </description>
        <any type="variant"/>
-       <description>Field Ids (0 relative) or Field names (msselection syntax and wilcards are used) to select</description>
-       <any type="variant"/>
-       <value></value>
+       <value>""</value>
      </param>
    </input>  
    <returns type="bool"/>
@@ -2972,8 +2965,7 @@ in spectral window 1.
    <keyword>fixvis</keyword>
    <description>
      This corrects visibilities, and/or their (u, v, w) positions, for various
-     effects that can be calculated without fitting a model (i.e. this is not
-     a calibrater).
+     effects that can be calculated without fitting a model to the data.
 
      The effects include:
      \begin{itemize}
@@ -2985,11 +2977,20 @@ in spectral window 1.
      \end{itemize}
    </description>
    <input>
-     <param type="any" name="field">
+     <param type="intArray" direction="in" name="fields">
+       <description>
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
+       </description>
+       <value>-1</value>
+     </param>	
+     <!-- <param type="any" direction="in" name="phasedirs"> -->
+     <!--  <any type="record"/>  -->
+     <param type="any" name="phasedirs">
        <any type="variant"/>
-       <description>Field Ids (0 relative) or Field names (msselection syntax and wilcards are used) to select</description>
-       <any type="variant"/>
-       <value></value>
+       <description>
+	 Phase tracking centers for each field in fields, in the same order.
+       </description>
+       <value>-1</value>
      </param>
    </input>  
    <returns type="bool"/>

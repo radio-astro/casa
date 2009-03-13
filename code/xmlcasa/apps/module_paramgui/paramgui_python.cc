@@ -156,9 +156,9 @@ static PyMethodDef ParamguiMethods[] = {
               "Run a parameter GUI for the given task using the given "
               "IPython shell.  The second argument is not necessary if "
               "the shell has already been set using setShell().\n"
-              "Examples: runTask('almasimmos') or runTask('almasimmos', "
-              "_ip) or runTask(taskName='almasimmos') or "
-              "runTask(taskName='almasimmos', ipShell=_ip).") },
+              "Examples: runTask('simdata') or runTask('simdata', "
+              "_ip) or runTask(taskName='simdata') or "
+              "runTask(taskName='simdata', ipShell=_ip).") },
   { "runAll", (PyCFunction)paramgui_runAll_, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("runAll([ipShell]) -> None\n"
               "Run a parameter GUI for all tasks using the given "

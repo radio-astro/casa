@@ -231,6 +231,11 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             # set the mask region
             elif ( len(masklist) > 0):
                     msk=s.create_mask(masklist,invert=invertmask)
+		    msks=s.get_masklist(msk)
+		    if len(msks) < 1:
+			    del msk, msks
+			    print 'Selected mask lists are out of range. Exit without calculation.'
+			    return
 
                     # Output line statistics to file
                     if ( len(statfile) > 0 ):
@@ -248,7 +253,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     medianl=s.stats('median',msk)
                     rmsl=s.stats('rms',msk)
                     stdvl=s.stats('stddev',msk)
-                    del msk             
+                    del msk, msks             
             else:
                     # Full region
                     print 'Using full region'

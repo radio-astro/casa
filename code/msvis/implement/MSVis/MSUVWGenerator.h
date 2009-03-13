@@ -124,7 +124,7 @@ public:
   //       		     UVWs of only 0, 2, and 4, phaseDirs will have 3
   //       		     entries and flds will be [0, -1, 1, -1, 2].  
   //       @param phaseDirs  Phase direction, assumed to be J2000 for now.
-  void make_uvws(const Vector<Int> flds, const Vector<MDirection>& phaseDir);
+  Bool make_uvws(const Vector<Int> flds, const Vector<MDirection>& phaseDir);
 private:
   // Sets up the antenna positions as baselines (bl_an_p), the number of
   // antennas (nant_p), and timeRes_p.
