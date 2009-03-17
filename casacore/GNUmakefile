@@ -20,13 +20,13 @@
 -include makedefs
 
 C++ := c++
-CXXFLAGS := -O2
+CXXFLAGS := -O2 -DCASA_USECASAPATH
 
 CC  := gcc
-CFLAGS := -O2
+CFLAGS := -O2 -DCASA_USECASAPATH
 
 FC  := 
-FFLAGS := -O2
+FFLAGS := -O2 -DCASA_USECASAPATH
 
 DESTDIR := 
 ARCH := 
@@ -466,7 +466,8 @@ libcasacore: $(CORELNK_PATH)
 
 $(CORELIB_PATH): $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) $(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) \
 			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(FITSLIB) $(MSLIB) $(MSFITSLIB) $(MIRLIB) \
-			$(shell find . -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^\./\w+/@$(INCDIR)/casacore/@g")
+			$(shell find . -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/mirlib/|/test/|/apps/' | perl -pe "s@^\./\w+/@$(INCDIR)/casacore/@g") \
+			$(shell find mirlib -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^@$(INCDIR)/casacore/@g")
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
 	@$(call orphan-objects,$(ARCH),.)
 	@$(call orphan-headers,$(INCDIR),.)
