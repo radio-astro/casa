@@ -402,15 +402,83 @@ define orphan-headers
   perl -e 'use File::Find; %headers = ( ); @removed = ( ); sub find_hdrs { if ( -f $$_ && ( m/\.h$$/ || m/\.tcc$$/ )) { $$headers{"$$File::Find::dir/$$_"} = 1; } } sub find_orphans { if ( -f $$_ && ( m/\.h$$/ || m/\.tcc$$/ )) { my $$file = "$$File::Find::dir/$$_"; my $$found = 0; $$file =~ s@^\./@@; foreach $$key (keys %headers) { if ( $$key =~ m|\Q$$file\E$$| ) { $$found = 1; last; } } unless ( $$found ) { push( @removed, "$$File::Find::dir/$$_"); unlink($$_); } } } find( { wanted => \&find_hdrs }, "$2" ); chdir("$1/casacore"); find( { wanted => \&find_orphans }, "$2" ); if ( scalar(@removed) > 0 ) { print "removed out-of-date, installed header files from $1:\n"; print "\t" . join("\n\t",@removed) . "\n"; }'
 endef
 
-INCDIR := $(DESTDIR)/include
-MODULES := casa components coordinates fits images lattices \
-		measures mirlib ms msfits scimath tables
-MODULESRE := $(shell echo $(MODULES) | perl -pe '$$_=join("|",split())')
-VPATH := . $(MODULES)
+define install-header
+	if test ! -d $(dir $2); then mkdir -p $(dir $2); fi
+	cp $1 $2
+endef
 
-$(INCDIR)/casacore/%.h: %.h
-	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
-	cp $< $@
+INCDIR := $(DESTDIR)/include
+
+#--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+$(INCDIR)/casacore/casa/%.h: casa/casa/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/components/%.h: components/components/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/coordinates/%.h: coordinates/coordinates/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/fits/%.h: fits/fits/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/images/%.h: images/images/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/lattices/%.h: lattices/lattices/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/measures/%.h: measures/measures/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/ms/%.h: ms/ms/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/msfits/%.h: msfits/msfits/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/scimath/%.h: scimath/scimath/%.h
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/tables/%.h: tables/tables/%.h
+	$(call install-header,$<,$@)
+#--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+$(INCDIR)/casacore/casa/%.tcc: casa/casa/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/components/%.tcc: components/components/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/coordinates/%.tcc: coordinates/coordinates/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/fits/%.tcc: fits/fits/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/images/%.tcc: images/images/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/lattices/%.tcc: lattices/lattices/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/measures/%.tcc: measures/measures/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/ms/%.tcc: ms/ms/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/msfits/%.tcc: msfits/msfits/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/scimath/%.tcc: scimath/scimath/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/tables/%.tcc: tables/tables/%.tcc
+	$(call install-header,$<,$@)
+#--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+$(INCDIR)/casacore/mirlib/%.h: mirlib/%.h
+	$(call install-header,$<,$@)
 
 $(INCDIR)/casacore/%.tcc: %.tcc
 	@if test ! -d $(dir $@); then mkdir -p $(dir $@); fi
