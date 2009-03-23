@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: DataManager.h 20539 2009-03-20 08:54:16Z gervandiepen $
 
 #ifndef TABLES_DATAMANAGER_H
 #define TABLES_DATAMANAGER_H
@@ -232,8 +232,18 @@ public:
     virtual String dataManagerType() const = 0;
 
     // Record a record containing data manager specifications.
-    // The default impementation returns an empty record.
+    // The default implementation returns an empty record.
     virtual Record dataManagerSpec() const;
+
+    // Get data manager properties that can be modified.
+    // It is a subset of the data manager specification.
+    // The default implementation returns an empty record.
+    virtual Record getProperties() const;
+
+    // Modify data manager properties given in record fields. Only the
+    // properties as returned by getProperties are used, others are ignored.
+    // The default implementation does nothing.
+    virtual void setProperties (const Record& spec);
 
     // Is the data manager a storage manager?
     // The default is yes.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseMappedArrayEngine.tcc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: BaseMappedArrayEngine.tcc 20537 2009-03-20 08:52:14Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/BaseMappedArrayEngine.h>
@@ -66,7 +66,9 @@ BaseMappedArrayEngine<VirtualType, StoredType>::BaseMappedArrayEngine
 template<class VirtualType, class StoredType>
 BaseMappedArrayEngine<VirtualType, StoredType>::BaseMappedArrayEngine
                    (const BaseMappedArrayEngine<VirtualType, StoredType>& that)
-: virtualName_p  (that.virtualName_p),
+: VirtualColumnEngine(),
+  VirtualArrayColumn<VirtualType>(),
+  virtualName_p  (that.virtualName_p),
   storedName_p   (that.storedName_p),
   isWritable_p   (that.isWritable_p),
   tempWritable_p (False),

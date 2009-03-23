@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 18675 2005-05-19 07:26:10Z gvandiep $
+//# $Id: DataManager.cc 20540 2009-03-20 08:58:07Z gervandiepen $
 
 
 //# Includes
@@ -41,6 +41,7 @@
 #include <tables/Tables/MappedArrayEngine.h>
 #include <tables/Tables/ForwardCol.h>
 #include <tables/Tables/VirtualTaQLColumn.h>
+///#include <tables/Tables/BitFlagsEngine.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
@@ -73,6 +74,12 @@ String DataManager::dataManagerName() const
 
 Record DataManager::dataManagerSpec() const
     { return Record(); }
+
+Record DataManager::getProperties() const
+    { return Record(); }
+
+void DataManager::setProperties (const Record&)
+    {}
 
 Bool DataManager::isStorageManager() const
     { return True; }
@@ -433,6 +440,9 @@ void DataManager::registerAllCtor ()
     MappedArrayEngine<Complex,DComplex>::registerClass();
     ForwardColumnEngine::registerClass();
     VirtualTaQLColumn::registerClass();
+    ///    BitFlagsEngine<uChar>::registerClass();
+    ///    BitFlagsEngine<Short>::registerClass();
+    ///    BitFlagsEngine<Int>::registerClass();
 }
 
 } //# NAMESPACE CASA - END
