@@ -479,6 +479,11 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     return ;
   }
 
+  // set frame keyword of FREQUENCIES table
+  if ( header_->freqref != "TOPO" ) {
+    table_->frequencies().setFrame( header_->freqref, false ) ;
+  }
+
   ifOffset_ = 0;
   vector<Bool> ifs = nreader_->getIFs() ;
   if ( whichIF >= 0 ) {

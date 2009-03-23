@@ -83,9 +83,9 @@ IPosition mathutil::minMaxPos(const String& which,
    minMax(minVal, maxVal, minPos, maxPos, data);
    String str(which);
    str.upcase();
-   if (str.matches(String("MIN_ABC"))) {
+   if (str.contains(String("MIN"))) {
      return minPos;
-   } else if (str.matches(String("MAX_ABC"))) {
+   } else if (str.contains(String("MAX"))) {
      return maxPos;
    } else {
       String msg = str + " is not a valid type of statistics";

@@ -344,9 +344,6 @@ class scantable(Scantable):
         Determine the specified statistic of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
         channels should be excluded.
-        You can get min/max values with their
-        channels/frequencies/velocities by selecting stat='min_abc'
-        or 'max_abc'.
         Parameters:
             stat:    'min', 'max', 'min_abc', 'max_abc', 'sumsq', 'sum',
                      'mean', 'var', 'stddev', 'avdev', 'rms', 'median'
@@ -364,16 +361,15 @@ class scantable(Scantable):
             raise ValueError("Cannot apply mask as the IFs have different "
                              "number of channels. Please use setselection() "
                              "to select individual IFs")
-
-        if stat.lower().find('_abc') == -1:
-            statvals = self._math._stats(self, mask, stat)
-            getchan = False
-            sstat = str(stat)
-        else:
+        rtnabc = False
+        if stat.lower().endswith('_abc'): rtnabc = True
+        getchan = False
+        if stat.lower().startswith('min') or stat.lower().startswith('max'): 
             chan = self._math._minmaxchan(self, mask, stat)
             getchan = True
             statvals = []
-            sstat = stat.lower().strip('_abc')
+        if not rtnabc: statvals = self._math._stats(self, mask, stat)
+
         out = ''
         axes = []
         for i in range(self.nrow()):
@@ -386,22 +382,28 @@ class scantable(Scantable):
             axes.append(axis)
             tm = self._gettime(i)
             src = self._getsourcename(i)
-            xpos = ''
+            refstr = ''
+            statunit= ''
             if getchan:
                 qx, qy = self.chan2data(rowno=i, chan=chan[i])
-                statvals.append(qy['value'])
-                xpos = '(x = %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                if rtnabc:
+                    statvals.append(qx['value'])
+                    refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
+                    statunit= '['+qx['unit']+']'
+                else:
+                    refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                    #statunit= ' ['+qy['unit']+']'
             out += 'Scan[%d] (%s) ' % (axis[0], src)
             out += 'Time[%s]:\n' % (tm)
             if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
             if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
             if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            out += '= %3.3f   ' % (statvals[i]) +xpos+'\n' 
+            out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
             out +=  "--------------------------------------------------\n"
 
         if rcParams['verbose']:
             print "--------------------------------------------------"
-            print " ", sstat
+            print " ", stat, statunit
             print "--------------------------------------------------"
             print out
         #else:
@@ -421,8 +423,8 @@ class scantable(Scantable):
                      channel, i.e. pos=0
         """
         if isinstance(rowno, int) and isinstance(chan, int):
-            x, xlbl = self.get_abcissa(rowno)
-            qx = {'unit': xlbl, 'value': x[chan]}
+            qx = {'unit': self.get_unit(),
+                  'value': self._getabcissa(rowno)[chan]}
             qy = {'unit': self.get_fluxunit(),
                   'value': self._getspectrum(rowno)[chan]}
             return qx, qy
