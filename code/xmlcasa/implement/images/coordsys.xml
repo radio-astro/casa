@@ -6,14 +6,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
  
-        <tool name="coordsys" module="images">
-<needs>measures</needs>
-        <shortdescription>Operations on CoordinateSystems</shortdescription>
+  <tool name="coordsys" module="images">
+    <needs>measures</needs>
+    <shortdescription>Operations on CoordinateSystems</shortdescription>
        
-
-include "coordsys.g"
-
-
+<!-- include "coordsys.g" -->
 
 <keyword>coordinates</keyword>
 <keyword>image</keyword>
@@ -3039,19 +3036,17 @@ will be linear in frequency.  This function allows you to replace the
 Spectral Coordinate by a finite table of values.  Coordinate
 conversions between pixel and world are then done by interpolation.
 
-You may specify either a vector of frequencies or velocities.
-If you specify frequencies, you can optionally specify a (new)
-reference code (see function <link anchor="images:coordsys.setreferencecode.function">setreferencecode</link>
-for more details) and rest frequency (else the existing ones 
-will be used).
+You may specify either a vector of frequencies or velocities.  If you specify
+frequencies, you can optionally specify a (new) reference code (see
+function <link anchor="images:coordsys.setreferencecode.function">setreferencecode</link>
+for more details) and rest frequency (else the existing ones will be used).
 
-If you specify velocities, you can optionally specify a (new)
-reference code and rest frequency (else the existing ones 
-will be used).  You must also give the doppler type 
-(see function <link anchor="images:image.summary.function">summary</link> for
-more details).   The velocities
-are then converted to frequency for creation of the Spectral Coordinate
-(which is fundamentally described by frequency).
+If you specify velocities, you can optionally specify a (new) reference code
+and rest frequency (else the existing ones will be used).  You must also give
+the doppler type (see
+function <link anchor="images:image.summary.function">summary</link> for more
+details).  The velocities are then converted to frequency for creation of the
+Spectral Coordinate (which is fundamentally described by frequency).
 
 You may specify the rest frequency as a Quantum or a double (native units
 of Spectral Coordinate used).
@@ -3060,8 +3055,6 @@ of Spectral Coordinate used).
 
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t setspectral Ex 1 \t----"
 csys = cs.newcoordsys(spectral=T);
 f1 = [1,1.01,1.03,1.4]
@@ -3077,8 +3070,6 @@ print 'f1 = ', f1
 #f1 =  [1, 1.01, 1.03, 1.3999999999999999]
 print 'f2 = ', f2
 #f2 =  [1.0, 1.01, 1.03, 1.3999999999999999]
-#
-"""
 \end{verbatim}
 We make a linear Spectral Coordinate.  Then overwrite it with
 a list of frequenices.  Convert those values to velocity,

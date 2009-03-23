@@ -165,7 +165,7 @@ def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uv
 			maskimage=imset.imagelist[0]+'.mask'
 	
 		if(not multifield):
-			imset.makemaskimage(outputmask=maskimage, imagename=maskimage,
+			imset.makemaskimage(outputmask=maskimage, imagename=imagename,
 						    maskobject=mask)
 			
 			

@@ -46,11 +46,7 @@ QVBoxLayout* RSUtils::vlayout(QWidget* parent) {
 }
 
 void RSUtils::setupLayout(QLayout* layout) {
-#if QT_VERSION >= 0x040300
     layout->setContentsMargins(0, 0, 0, 0);
-#else
-    layout->setMargin(0);
-#endif
     layout->setSpacing(3);
 }
 

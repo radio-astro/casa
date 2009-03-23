@@ -439,7 +439,6 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
 ### select the nearest spectrum in pick radius. 
 def _select_spectrum(event):
-	base=sd.plotter._plotter
         # Do not fire event when in zooming/panning mode
         mode = sd.plotter._plotter.figmgr.toolbar.mode
         if not mode =='':
@@ -475,18 +474,27 @@ def _select_spectrum(event):
 	if not pflag: return
 	# Pickable but too far from mouse position
 	elif pickline is None:
-		print 'No line selected.'
+		picked='No line selected.'
+		sd.plotter._plotter.figmgr.toolbar.set_message(picked)
 		return
         del pind, inds, xlin, ylin
+	# Spectra are Picked
+	theplot=sd.plotter._plotter
+	thetoolbar = theplot.figmgr.toolbar
+	thecanvas = theplot.figmgr.canvas
+	# Disconnect the default motion notify event
+	# Notice! the other buttons are also diabled!!!
+	thecanvas.mpl_disconnect(thetoolbar._idDrag)
         # Get picked spectrum
         xdata = pickline.get_xdata()
         ydata = pickline.get_ydata()
         titl=pickline.get_label()
         titp=event.inaxes.title.get_text()
         panel0=event.inaxes
-        print "Spectrum '"+titl+"' in panel '"+titp+"' is selected"
+	picked="Selected: '"+titl+"' in panel '"+titp+"'."
+	thetoolbar.set_message(picked)
 	# Generate a navigation window
-        naviwin=Navigationwindow(titp,titl)
+        #naviwin=Navigationwindow(titp,titl)
         #------------------------------------------------------#
         # Show spectrum data at mouse position
         def spec_data(event):
@@ -502,34 +510,36 @@ def _select_spectrum(event):
 				ipoint = i
 				break
 		# Output spectral value on the navigation window
-		posi='[ %s, %s ]\n       x = %.2f\n value = %.2f'\
-		      %(titp,titl,xdata[ipoint],ydata[ipoint])
-		naviwin.posi.set(posi)
+		posi='[ %s, %s ]:  x = %.2f   value = %.2f'\
+		      %(titl,titp,xdata[ipoint],ydata[ipoint])
+		#naviwin.posi.set(posi)
+		thetoolbar.set_message(posi)
         #------------------------------------------------------#
         # Disconnect from mouse events
         def discon(event):
-		naviwin.window.destroy()
-		base.canvas.mpl_disconnect(base.events['motion_notify'])
-		base.events['motion_notify']=None
-		base.canvas.mpl_disconnect(base.events['button_release'])
-		base.events['button_release']=None
+		#naviwin.window.destroy()
+		thecanvas.mpl_disconnect(theplot.events['motion_notify'])
+		theplot.events['motion_notify']=None
+		thetoolbar._idDrag=thecanvas.mpl_connect('motion_notify_event', thetoolbar.mouse_move)
+		thecanvas.mpl_disconnect(theplot.events['button_release'])
+		theplot.events['button_release']=None
 		return
         #------------------------------------------------------#
         # Show data value along with mouse movement
-        base.events['motion_notify']=base.canvas.mpl_connect('motion_notify_event',spec_data)
+        theplot.events['motion_notify']=thecanvas.mpl_connect('motion_notify_event',spec_data)
         # Finish events when mouse button is released
-        base.events['button_release']=base.canvas.mpl_connect('button_release_event',discon)
+        theplot.events['button_release']=thecanvas.mpl_connect('button_release_event',discon)
 
 ### Construct Navigation Window
-class Navigationwindow:
-        def __init__(self,titp,titl):
-		self.window=Tk.Tk()
-		self.window.title('Navigator')
-		self.frame=Tk.Frame(self.window)
-		self.frame.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
-		self.posi=Tk.StringVar(master=self.window)
-		initstr='Selected: [ %s, %s ]\nDrag mouse.'%(titp,titl)
-		self.posi.set(initstr)
-		self.label=Tk.Label(self.frame,textvariable=self.posi,justify=Tk.LEFT,height=3,width=20,padx=5,pady=5)
-		self.label.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
+#class Navigationwindow:
+#        def __init__(self,titp,titl):
+#		self.window=Tk.Tk()
+#		self.window.title('Navigator')
+#		self.frame=Tk.Frame(self.window)
+#		self.frame.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
+#		self.posi=Tk.StringVar(master=self.window)
+#		initstr='Selected: [ %s, %s ]\nDrag mouse.'%(titp,titl)
+#		self.posi.set(initstr)
+#		self.label=Tk.Label(self.frame,textvariable=self.posi,justify=Tk.LEFT,height=3,width=20,padx=5,pady=5)
+#		self.label.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
 

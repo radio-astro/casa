@@ -11,9 +11,20 @@ qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = qatool.create()
 
 class simutil:
-    def __init__(self, direction="", totaltime=qa.quantity("0h"), verbose=False):
+    #def __init__(self, direction="", totaltime=qa.quantity("0h"), verbose=False):
+    #    self.direction=direction
+    #    self.verbose=verbose
+    #    self.totaltime=totaltime
+
+    def __init__(self, direction="",
+                 startfreq=qa.quantity("245GHz"),
+                 bandwidth=qa.quantity("1GHz"),
+                 totaltime=qa.quantity("0h"),
+                 verbose=False):
         self.direction=direction
         self.verbose=verbose
+        self.startfreq=startfreq
+        self.bandwidth=bandwidth
         self.totaltime=totaltime
 
     def msg(self, s, origin=None, color=None):
@@ -200,6 +211,112 @@ class simutil:
         return ang
     
 
+
+    #==================================== tsys ==========================
+
+    def noisetemp(self, telescope=None, freq=None,
+                  diam=None, epsilon=None):
+        
+        if telescope==None: telescope=self.telescopename
+        telescope=str.upper(telescope)
+        
+        obs =['ALMA','ACA','EVLA','VLA']
+        d   =[ 12.   ,7.,   25.  , 25. ]
+        ds  =[ 0.75,  0.75, 0.364, 0.364] # what is subreflector size for ACA?!
+        eps =[ 25.,   25.,  300,   300 ]  # antenna surface accuracy
+        
+        cq  =[ 0.95, 0.95,  0.91,  0.79]  # correlator quantization eff
+        # VLA includes additional waveguide loss from correlator loss of 0.809
+        
+        if obs.count(telescope)>0:
+            iobs=obs.index(telescope)
+        else:
+            if self.verbose: self.msg("I don't know much about "+telescope+" so I'm going to use ALMA specs")
+            iobs=0 # ALMA is the default ;)
+            
+        if diam==None: diam=d[iobs]
+        diam_subreflector=ds[iobs]
+        if self.verbose: self.msg("subreflector diameter="+str(diam_subreflector))
+
+        # blockage efficiency.    
+        eta_b = 1.-(diam_subreflector/diam)**2
+
+        # spillover efficiency.    
+        eta_s = 0.96 # these are ALMA values
+        # taper efficiency.    
+        eta_t = 0.86 # these are ALMA values
+
+        # Ruze phase efficiency.    
+        if epsilon==None: epsilon = eps[iobs] # microns RMS
+        if freq==None:            
+            startfreq_ghz=qa.convert(qa.quantity(self.startfreq),'GHz')
+            bw_ghz=qa.convert(qa.quantity(self.bandwidth),'GHz')
+            freq_ghz=qa.add(startfreq_ghz,qa.mul(qa.quantity(0.5),bw_ghz))
+        else:            
+            freq_ghz=qa.convert(qa.quantity(freq),'GHz')
+        eta_p = pl.exp(-(4.0*3.1415926535*epsilon*freq_ghz.get("value")/2.99792458e5)**2)
+        if self.verbose: self.msg("ruze phase efficiency for surface accuracy of "+str(epsilon)+"um = " + str(eta_p))
+
+        # antenna efficiency
+        # eta_a = eta_p*eta_s*eta_b*eta_t
+
+        # correlator quantization efficiency.    
+        eta_q = cq[iobs]
+
+        # Receiver radiation temperature in K.         
+        if telescope=='ALMA' or telescope=='ACA':
+            # ALMA-40.00.00.00-001-A-SPE.pdf
+            f0=[ 35, 75,110,145,185,230,345,409,675,867]
+            t0=[ 17, 30, 37, 51, 65, 83,147,196,175,230]
+            flim=[31.3,950]
+        else:
+            if telescope=='EVLA':
+                # these are T_Rx/epsilon so may be incorrect
+                # http://www.vla.nrao.edu/astro/guides/vlas/current/node11.html
+                # http://www.vla.nrao.edu/astro/guides/evlareturn/stress_tests/L-Band/
+                f0=[0.33,1.47,4.89,8.44,22.5,33.5,43.3]
+                t0=[500, 70,  60,  55,  100, 130, 350]
+                flim=[0.305,50]
+            else:
+                if telescope=='VLA':
+                    # http://www.vla.nrao.edu/genpub/overview/
+                    # exclude P band for now
+                    # f0=[0.0735,0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
+                    # t0=[5000,  165,  56,  44,   34,  110, 110, 110]
+                    f0=[0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
+                    t0=[165,  56,  44,   34,  110, 110, 110]
+                    flim=[0.305,50]
+                else:
+                    self.msg("I don't know about the "+telescope+" receivers, using 200K",color="31")
+                    f0=[10,900]
+                    t0=[200,200]
+                    flim=[0,5000]
+
+
+        obsfreq=freq_ghz.get("value")
+        t_rx = pl.interp([obsfreq],f0,t0)[0]
+        if obsfreq>f0[-1] or obsfreq<f0[0]:
+            t_rx = pl.polyval(pl.polyfit(f0,t0,2),obsfreq)
+        # too jumpy
+        # sp=spline(f0,t0)
+        # t_rx = sp(obsfreq)[0]
+        
+        if obsfreq<flim[0]:
+            self.msg("observing freqency is lower than expected for "+telescope,color="31")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31")
+        if obsfreq>flim[1]:
+            self.msg("observing freqency is higher than expected for "+telescope,color="31")
+            self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31")
+
+        return (eta_p, eta_s, eta_b, eta_t, t_rx)
+    
+#        # NewMSSimulator needs 2-temp formula not just t_atm
+#        sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+#                    antefficiency=eta_a,trx=t_rx,
+#                    tau=tau0,tatmos=t_atm,tcmb=t_cmb,
+#                    mode="calculate")
+
+    
 
 
 
@@ -659,7 +776,7 @@ class simutil:
             self.msg("I can't figure out what ellipsoid %s is" % ellipsoid,color="31")
             return -1
         
-        if verbose:
+        if self.verbose:
             self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]))
         return datum[0],datum[1],datum[2],ellipsoids[ellipsoid][0],ellipsoids[ellipsoid][1]
     

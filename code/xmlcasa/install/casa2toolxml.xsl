@@ -74,7 +74,7 @@
 <xsl:text>
 </xsl:text>
 <xsl:element name="shortdescription">
-<xsl:value-of select="replace(.,'\\','')"/>`
+<xsl:value-of select="replace(.,'\\','')"/>
 </xsl:element>
 <xsl:text>
 </xsl:text>

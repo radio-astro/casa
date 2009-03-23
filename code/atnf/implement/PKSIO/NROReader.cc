@@ -300,6 +300,7 @@ vector<double> NROReader::getFrequencies( int i )
   //
   double vel = dataset_->getURVEL() + record->VRAD ;
   double cvel = 2.99792458e8 ; // speed of light [m/s]
+  double fq0 = record->FREQ0 ;
 
   int ncal = dataset_->getNFCAL()[ib] ;
   double freqs[ncal] ;
@@ -309,29 +310,29 @@ vector<double> NROReader::getFrequencies( int i )
     freqs[ii] -= dataset_->getF0CAL()[ib] ;
     if ( ia == 1 ) {
       if ( iu == 1 ) {
-        freqs[ii] = record->FREQ0 + freqs[ii] ;
+        freqs[ii] = fq0 + freqs[ii] ;
       }
       else if ( iu == 2 ) {
-        freqs[ii] = record->FREQ0 - freqs[ii] ;
+        freqs[ii] = fq0 - freqs[ii] ;
       }
     }
     else if ( ia == 2 ) {
       if ( iu == 1 ) {
-        freqs[ii] = record->FREQ0 - freqs[ii] ;
+        freqs[ii] = fq0 - freqs[ii] ;
       }
       else if ( iu == 2 ) {
-        freqs[ii] = record->FREQ0 + freqs[ii] ;
+        freqs[ii] = fq0 + freqs[ii] ;
       }
     }
 
-    if ( ivdef == 0 ) {
-      double factor = 1.0 / ( 1.0 - vel / cvel ) ;
-      freqs[ii] = freqs[ii] * factor - record->FQTRK * ( factor - 1.0 ) ;
-    }
-    else if ( ivdef == 1 ) {
-      double factor = vel / cvel ;
-      freqs[ii] = freqs[ii] * ( 1.0 + factor ) - record->FQTRK * factor ;
-    }
+//     if ( ivdef == 0 ) {
+//       double factor = 1.0 / ( 1.0 - vel / cvel ) ;
+//       freqs[ii] = freqs[ii] * factor - record->FQTRK * ( factor - 1.0 ) ;
+//     }
+//     else if ( ivdef == 1 ) {
+//       double factor = vel / cvel ;
+//       freqs[ii] = freqs[ii] * ( 1.0 + factor ) - record->FQTRK * factor ;
+//     }
   }
 
   double cw = dataset_->getCWCAL()[ib][0] ;
@@ -505,11 +506,11 @@ int NROReader::getHeaderInfo( Int &nchan,
     equinox = 1950.0 ;
   else if ( strncmp( eq, "J2000", 5 ) == 0 ) 
     equinox = 2000.0 ;
-//   char *vref = dataset_->getVREF() ;
-//   if ( strncmp( vref, "LSR", 3 ) == 0 ) {
-//     strcat( vref, "K" ) ;
-//   }
-//   dataset_->freqref = vref ;
+  char *vref = dataset_->getVREF() ;
+  if ( strncmp( vref, "LSR", 3 ) == 0 ) {
+    strcat( vref, "K" ) ;
+  }
+  freqref = vref ;
   NRODataRecord *record = dataset_->getRecord( 0 ) ;
   reffreq = record->FREQ0 ;
   bw = dataset_->getBEBW()[0] ;

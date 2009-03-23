@@ -87,13 +87,11 @@ class MSUVWGenerator
 {
 public:
   // Constructor 
-  //      @param ms_ptr Pointer to the MS.
-  //      @post Data reduction done for static information at the MS level:
-  //             - The positions for all the antennas in the Antenna table have
-  //               been determined by applying the chain of offsets from the
-  //               IERS station positions.
-  //             - All the (sub-)arrays present in the ConfigDescription table
-  //		   have been identified.
+  //      @param ms_ref Reference to the MS.
+  //      @post - The relative positions for all the antennas in the Antenna
+  //              table are in bl_an_p.
+  //            - timeRes_p has been conservatively calculated using rough
+  //              estimates of the maximum baseline length and field of view.
   MSUVWGenerator(MS& ms_ref);
 
   // Destructor
@@ -102,17 +100,11 @@ public:
   // Determine the uvw for a single phaseDir and timeCentroid, and pair of
   // feeds (which may be the same).
   //
-  //       @param phaseDir      Phase direction
-  //       @param timeCentroid  Time centroid (unit second), assumed to
-  //				be MJD TAI.
-  //	   @param ant1          Row number in the ANTENNA table of the 1st antenna.
-  //	   @param feed1         Row number in the FEED    table of the 1st feed.
-  //	   @param ant1          Row number in the ANTENNA table of the 2nd antenna.
-  //	   @param feed2         Row number in the FEED    table of the 2nd feed.
-  //       @param uvw           The returned UVW coordinates.
-  //	   @note ALMA (or ATF, anyway) MSes 
-  //       @warning
-  //       - This method will destroy the previous content of uvw.
+  //	   @param ant1   Row number in the ANTENNA table of the 1st antenna.
+  //	   @param feed1  Row number in the FEED    table of the 1st feed.
+  //	   @param ant1   Row number in the ANTENNA table of the 2nd antenna.
+  //	   @param feed2  Row number in the FEED    table of the 2nd feed.
+  //       @param uvw    The returned UVW coordinates.
   void uvw_bl(const uInt ant1, const uInt feed1, const uInt ant2, const uInt feed2,
 	      Array<Double>& uvw);
 
@@ -123,8 +115,7 @@ public:
   //       		     5 fields, and the user wants to (re)calculate the
   //       		     UVWs of only 0, 2, and 4, phaseDirs will have 3
   //       		     entries and flds will be [0, -1, 1, -1, 2].  
-  //       @param phaseDirs  Phase direction, assumed to be J2000 for now.
-  Bool make_uvws(const Vector<Int> flds, const Vector<MDirection>& phaseDir);
+  Bool make_uvws(const Vector<Int> flds);
 private:
   // Sets up the antenna positions as baselines (bl_an_p), the number of
   // antennas (nant_p), and timeRes_p.

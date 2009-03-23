@@ -32,21 +32,20 @@ def vishead(vis, mode=None, listitems=None, hdkey=None, hdindex=None, hdvalue=No
     keywords = {
         # Keywords from OBSERVATION TABLE
         # time_range
-        'log':       ['OBSERVATION', 'LOG',      strip_r1], #OPT AoAoS
-        'schedule'  :['OBSERVATION', 'SCHEDULE', strip_r1], #array
+        'log':       ['OBSERVATION', 'LOG',      digest], #OPT AoAoS
+        'schedule'  :['OBSERVATION', 'SCHEDULE', digest], #array
         # flag_row
-        'observer' :['OBSERVATION', 'OBSERVER'],  #array
-        'project'  :['OBSERVATION', 'PROJECT'],   #array
-        'release_date'  :['OBSERVATION', 'RELEASE_DATE', secArray2localDate], #array
-        'schedule_type'  :['OBSERVATION', 'SCHEDULE_TYPE'], #array
-        'telescope':['OBSERVATION', 'TELESCOPE_NAME'],  #array
+        'observer' :['OBSERVATION', 'OBSERVER', digest],  #array
+        'project'  :['OBSERVATION', 'PROJECT', digest],   #array
+        'release_date'  :['OBSERVATION', 'RELEASE_DATE', valref2localDate], #array
+        'schedule_type'  :['OBSERVATION', 'SCHEDULE_TYPE', digest], #array
+        'telescope':['OBSERVATION', 'TELESCOPE_NAME', digest],  #array
 
-        
         # Keywords from FIELD TABLE
-        'field'    :['FIELD', 'NAME'],   # also in pointing table(!)
-                                        # so watch out when changing
-        'ptcs':     ['FIELD', 'PHASE_DIR', dict2direction_strs],   #OPT
-        'fld_code': ['FIELD', 'CODE'],        #OPT
+        'field'    :['FIELD', 'NAME', digest],   # also in pointing table(!)
+                                                 # so watch out when changing
+        'ptcs':     ['FIELD', 'PHASE_DIR', valref2direction_strs],   #OPT
+        'fld_code': ['FIELD', 'CODE', digest],        #OPT
 
         # Keywords from SPECTRAL_WINDOW TABLE
         #   not sure if all of these can freely edited by
@@ -61,13 +60,13 @@ def vishead(vis, mode=None, listitems=None, hdkey=None, hdindex=None, hdvalue=No
 
         #per channel 'effective_bw' :['SPECTRAL_WINDOW', 'EFFECTIVE_BW'],
         #'resolution' :['SPECTRAL_WINDOW', 'RESOLUTION'],
-        'freq_group_name' :['SPECTRAL_WINDOW', 'FREQ_GROUP_NAME'],
+        'freq_group_name' :['SPECTRAL_WINDOW', 'FREQ_GROUP_NAME', digest],
         # don't allow change: 'total_bandwidth' :['SPECTRAL_WINDOW', 'TOTAL_BANDWIDTH'],        
-        'spw_name' :['SPECTRAL_WINDOW', 'NAME'],
+        'spw_name' :['SPECTRAL_WINDOW', 'NAME', digest],
 
         # Keywords from SOURCE TABLE
-        'source_name' :['SOURCE', 'NAME'],  #OPT
-        'cal_grp':     ['SOURCE', 'CALIBRATION_GROUP']  #OPT
+        'source_name' :['SOURCE', 'NAME', digest],  #OPT
+        'cal_grp':     ['SOURCE', 'CALIBRATION_GROUP', digest]  #OPT
 
         #MS_VERSION (probably not)
     }
@@ -87,14 +86,14 @@ def vishead(vis, mode=None, listitems=None, hdkey=None, hdindex=None, hdvalue=No
                 if keywords.has_key(key):
                     kwtuple = keywords.get(key)
                     if keyword_exists(vis, kwtuple):
+                        casalog.post('    ' + str(kwtuple[0]) + \
+                                     ' -> ' + str(kwtuple[1]), 'DEBUG1')
                         values[key] = getput_keyw('get', vis, kwtuple, '')
                         if len(kwtuple) > 2:
                             casalog.post(key + ': ' + str(kwtuple[2](values[key])),
                                          'INFO')
                         else:
                             casalog.post(key + ': ' + str(values[key]), 'INFO')  
-                        casalog.post('    ' + str(kwtuple[0]) + \
-                                     ' -> ' + str(kwtuple[1]), 'DEBUG1')
                     else:
                         casalog.post(key + ': <undefined>', 'INFO')
                 else:

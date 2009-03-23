@@ -59,9 +59,6 @@
 #                        listobs    ----> casapy.log                        #
 #                           |                                               #
 #                           v                                               #
-#                     flagautocorr  ----> n1333_1.ms                        #
-#                           |                                               #
-#                           v                                               #
 #                       flagdata    ----> n1333_1.ms                        #
 #                           |                                               #
 #                           v                                               #
@@ -87,9 +84,6 @@
 #                           |                                               #
 #                           v                                               #
 #                        listobs    ----> casapy.log                        #
-#                           |                                               #
-#                           v                                               #
-#                     flagautocorr  ----> n1333_2.ms                        #
 #                           |                                               #
 #                           v                                               #
 #                       flagdata    ----> n1333_2.ms                        #
@@ -252,14 +246,9 @@ if benchmarking:
 
 #
 #=====================================================================
+#  Flagging
 #
-# Get rid of the autocorrelations from the MS
-#
-print '--Flagautocorr--'
-
-# Don't default this one either, there is only one parameter (vis)
-
-flagautocorr()
+print '--Flagdata--'
 
 #
 # The following information on bad data comes from a test report
@@ -287,14 +276,46 @@ flagautocorr()
 # The uv weighting will properly downweight the poor data.
 #
 
+
+
+
+
+# Use flagdata() in vector mode => parameters must be vectors
+
+vis = msfile1
+mode = 'manualflag'
+
+field = ['']*5
+spw = ['']*5
+antenna = ['']*5
+clipexpr = ['ABS RR']*5
+clipminmax = [[0,0]]*5
+clipcolumn = ['DATA']*5
+clipoutside = [true]*5
+autocorr = [false]*5
+unflag = [false]*5
+correlation = ['']*5
+uvrange = ['']*5
+timerange = ['']*5
+scan = ['']*5
+feed = ['']*5
+array = ['']*5
+
+#
+##################################################
+#
+# Get rid of the autocorrelations from the MS
+#
+autocorr[0] = true
+
 #
 ##################################################
 #
 # Flag antenna with antennaid 8
 #
-default('flagdata')
-vis = msfile1
-flagdata(vis=msfile1,antenna='9', mode='manualflag')
+#flagdata(vis=msfile1,antenna='9', mode='manualflag')
+
+antenna[1] = '9'
 
 #
 #################################################
@@ -313,19 +334,33 @@ flagdata(vis=msfile1,antenna='9', mode='manualflag')
 ####################################################
 # Flag data (which is bad) in a time range
 #
-default('flagdata')
-flagdata(vis=msfile1,mode='manualflag',timerange='2003/05/02/21:40:58~2003/05/02/22:01:30')
+#flagdata(vis=msfile1,mode='manualflag',timerange='2003/05/02/21:40:58~2003/05/02/22:01:30')
+timerange[2]='2003/05/02/21:40:58~2003/05/02/22:01:30'
 
 #
 ###################################################
 # Flag all antenna 14, 15 data in the time ranges stated
 #
-default('flagdata')
-flagdata(vis=msfile1,mode='manualflag', antenna='14',
-         timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
+#flagdata(vis=msfile1,mode='manualflag', antenna='14',
+#         timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
+antenna[3] = '14'
+timerange[3] = '2003/05/02/18:50:50~2003/05/02/19:13:30'
 
-flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
-         timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
+
+#flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
+#         timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
+antenna[4] = '15'
+spw[4] = '0'
+timerange[4] ='2003/05/02/22:38:49~2003/05/02/22:39:11'
+
+
+#
+###################################################
+# Finally, apply all the flag specifications
+#
+
+flagdata()
+
 
 # Record flagging completion time
 if benchmarking:
@@ -515,17 +550,13 @@ listobs()
 if benchmarking:
     listtime2 = time.time()
 
-
 #
-#=====================================================================
+##################################################
 #
-# Get rid of the autocorrelations from the MS
+#  Flagging
 #
-print '--Flagautocorr--'
 
-# Don't default this one either, there is only one parameter (vis)
-
-flagautocorr()
+print '--Flagdata--'
 
 #
 # Bad data as identified in report by Debra Shepherd at
@@ -552,33 +583,76 @@ flagautocorr()
 #   final image RMS.
 #
 
+vis = msfile2
+mode = 'manualflag'
+
+field = ['']*5
+spw = ['']*5
+antenna = ['']*5
+clipexpr = ['ABS RR']*5
+clipminmax = [[0,0]]*5
+clipcolumn = ['DATA']*5
+clipoutside = [true]*5
+autocorr = [false]*5
+unflag = [false]*5
+correlation = ['']*5
+uvrange =['']*5
+timerange = ['']*5
+scan = ['']*5
+feed = ['']*5
+array = ['']*5
+
+#
+##################################################
+#
+# Get rid of the autocorrelations from the MS
+#
+autocorr[0] = true
+
 #
 # Flag all data from antennas 8,9,18
 #
 
-default('flagdata')
-flagdata(vis=msfile2,antenna='9,10,19', mode='manualflag')
+#default('flagdata')
+#flagdata(vis=msfile2,antenna='9,10,19', mode='manualflag')
+
+antenna[1] = '9,10,19'
 
 #
 # Flag antenna 14 for timerange.  ANTENNAID 14 is ANTENNANAME 15
 #
 
-default('flagdata')
-flagdata(vis=msfile2,mode='manualflag',
-	 antenna='15',
-	 timerange='2003/05/08/00:00:00~2003/05/08/20:00:00')
+#default('flagdata')
+#flagdata(vis=msfile2,mode='manualflag',
+#	 antenna='15',
+#	 timerange='2003/05/08/00:00:00~2003/05/08/20:00:00')
+
+antenna[2] = '15'
+timerange[2] = '2003/05/08/00:00:00~2003/05/08/20:00:00'
 
 #  antenna '22' has a bad scan 144
-flagdata(vis=msfile2,mode='manualflag',
-	 antenna='6,22',
-	 scan='144')
+#flagdata(vis=msfile2,mode='manualflag',
+#	 antenna='6,22',
+#	 scan='144')
+
+antenna[3] = '6,22'
+scan[3] = '144'
 
 #
 # Flag the last data channels
 #
 
-default('flagdata')
-flagdata(vis=msfile2, spw='*:59;60;61;62', mode='manualflag')
+#default('flagdata')
+#flagdata(vis=msfile2, spw='*:59;60;61;62', mode='manualflag')
+
+spw[4] = '*:59;60;61;62'
+
+#
+###################################################
+# Finally, apply all the flag specifications
+#
+
+flagdata()
 
 # Record flagging completion time
 if benchmarking:

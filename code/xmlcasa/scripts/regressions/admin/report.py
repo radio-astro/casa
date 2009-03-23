@@ -4,7 +4,7 @@ usage: python report.py testresult_dir report_dir revision generate_plot
 
 testresult_dir: database top directory
 report_dir: output directory
-revision: 'latest' for latest trunk only, or 'all'
+revision: 'latest' for latest stable only, or 'all'
 generate_plot: boolean, generates png plots iff true
 
 expected format of logfiles:
@@ -96,7 +96,7 @@ def distribution(s):
 
 
 def selected_revisions(data):
-    
+  
     all = sets.Set()
     for log in data:
         all.add(log['CASA'])
@@ -143,8 +143,21 @@ def selected_revisions(data):
         else:
             print "Drop", all_list[c]
 
-    # 'selected' now contains the revisions to be
-    # used (still sorted).
+    # And always use, too, the latest version on the stable branch
+    stable_versions = []
+    for log in data:
+        host = log['host']
+        if host.find('tst') >= 0 or \
+               host.find('ma014655') >= 0:
+            stable_versions.add(log['CASA'])
+
+    if len(stable_versions) > 0:
+        stable_versions.sort(reverse=True)
+        selected.add(stable_versions[0])
+        print "Use latest on stable: ", stable_versions[0]
+    else:
+        print "No tests on stable"
+
     return selected
     
 
@@ -265,7 +278,6 @@ class report:
                    v > self.casa_revision[host]:
                 self.casa_revision[host] = v
 
-        #latest_on_stable = self.casa_revision['fc8tst64b']
         latest_on_stable = self.casas[0] # global latest
 
         if True:
@@ -357,7 +369,7 @@ class report:
                 raise Exception, "Could not parse revision number '%s'" \
                       % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, trunk only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, stable only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -497,9 +509,9 @@ class report:
             
         fd.write('<TR><TD></TD>')
         if len(self.hosts_devel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>branches/active</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>trunk</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
         fd.write('</tr>')
         
         fd.write('<TR><TD></TD>')
@@ -585,9 +597,9 @@ class report:
         fd.write('<TR><TD colspan=2 rowspan=2></TD>')
 
         if len(self.hosts_devel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>branches/active</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_devel))+'>active</td>')
         if len(self.hosts_rel) > 0:
-            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>trunk</td>')
+            fd.write('<td align=center colspan='+str(len(self.hosts_rel))+'>stable</td>')
         fd.write('</tr>')
         
         for host in self.hosts:
@@ -618,7 +630,7 @@ class report:
 
             fd.write('</td>')
             
-        fd.write('<TD><b>Trunk summary</b></TD>')
+        fd.write('<TD><b>Stable summary</b></TD>')
         fd.write('</TR>\n')    
 
         # identify subtests for each test
@@ -787,7 +799,7 @@ class report:
         fd.write('</TABLE>\n')
 
     def dump_legend(self, fd):
-        fd.write('Legend: <table border="1" cellpadding=0 cellspacing=0><tr>')
+        fd.write('Legend: <br>Released versions in <b>bold</b> <table border="1" cellpadding=0 cellspacing=0><tr>')
         self.dump_td_start(fd, 1, 0, 0, " align=center")
         fd.write('All tests passed')
         self.dump_td_end(fd)
@@ -903,14 +915,9 @@ class report:
                                self.parse_resources(log)
 
                             if (len(mvirtual) > 0):
-                                if log['version'] == '1':
-                                    max_virtual  = "%.0f MB" % (max(mvirtual)/1024.0/1024)
-                                    max_resident = "%.0f MB" % (max(mresident)/1024.0/1024)
-                                    max_filedesc = "%d" % max(nfiledesc)
-                                else:
-                                    max_virtual  = "%.0f MB" % (max(mvirtual))
-                                    max_resident = "%.0f MB" % (max(mresident))
-                                    max_filedesc = "%d" % max(nfiledesc)
+                                max_virtual  = "%.0f MB" % (max(mvirtual))
+                                max_resident = "%.0f MB" % (max(mresident))
+                                max_filedesc = "%d" % max(nfiledesc)
                             else:
                                 max_virtual  = "N/A"
                                 max_resident = "N/A"
@@ -1119,10 +1126,13 @@ class report:
             if (s != ''):
                 ss = s.split(',')
                 t.append(float(ss[0]))
-                mvirtual.append(float(ss[1]))
-                mresident.append(float(ss[2]))
                 nfiledesc.append(int(ss[3]))
-                if log['version'] != '1':
+                if log['version'] == '1':
+                    mvirtual.append(float(ss[1])/1024.0/1024)
+                    mresident.append(float(ss[2])/1024.0/1024)
+                else:
+                    mvirtual.append(float(ss[1]))
+                    mresident.append(float(ss[2]))
                     cpu_us.append(float(ss[4]))
                     cpu_sy.append(float(ss[5]))
                     cpu_id.append(float(ss[6]))
@@ -1280,8 +1290,8 @@ class report:
 
         label={}
         label['time'] = 'Execution time (s)'
-        label['mresident'] = 'Peak resident memory (Bytes)'
-        label['mvirtual'] = 'Peak virtual memory (Bytes)'
+        label['mresident'] = 'Peak resident memory (MB)'
+        label['mvirtual'] = 'Peak virtual memory (MB)'
         label['filedesc'] = 'Max no. of open file descriptors'
 
         hosts = sets.Set()
@@ -1505,6 +1515,6 @@ class report:
 
         body1=['<pre>Memory profile of run of %s at %s </pre>'%(testname,time.strftime('%Y/%m/%d/%H:%M:%S'))]
         body2=['']
-        ht.doBlk(body1, body2, png_filename, '')
+        ht.doBlk(body1, body2, png_filename, ' ')
         
         ht.doFooter()

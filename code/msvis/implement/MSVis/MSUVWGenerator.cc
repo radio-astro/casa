@@ -91,7 +91,7 @@ void MSUVWGenerator::uvw_an(const Double timeCentroid, const Int fldID)
   Muvw::Convert uvwconv(uvwMeas, uvwref);
  
   for(uInt i = 0; i < nant_p; ++i){
-    // TODO: (Soon!) Antenna offsets are not handled yet.
+    //TODO: (Soon!) Antenna offsets are not handled yet.
     basMeas.set(bl_an_p[i], basref);
     MBaseline bas2000 = elconv(basMeas);
     MVuvw uvw2000(bas2000.getValue(), phasedir.getValue());
@@ -107,12 +107,11 @@ void MSUVWGenerator::uvw_bl(const uInt ant1, const uInt feed1,
 			    Array<Double>& uvw)
 {
   //uvw.resize(3);      // Probably redundant.  Does it significantly slow things down?
-  // TODO: Feed offsets are not handled yet.
+  //TODO: Feed offsets are not handled yet.
   uvw = antUVW_p[ant2] - antUVW_p[ant1];
 }
 
-Bool MSUVWGenerator::make_uvws(const Vector<Int> flds,
-			       const Vector<MDirection>& phaseDirs)
+Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
 {
   ArrayColumn<Double>&      UVWcol   = msc_p.uvw();
   const Vector<Double>&     timeCent = msc_p.timeCentroid().getColumn();
@@ -162,11 +161,6 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds,
       return false;
     }
   }
-
-  //TODO
-  // Update the FIELD table with the new phase directions (and DELAY_DIR and
-  // REFERENCE_DIR?).
-
   return true;
 }
 

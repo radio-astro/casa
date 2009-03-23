@@ -97,8 +97,10 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
     casalog.origin('simdata')
-    
-    util=simutil(direction)
+
+    bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
+    util=simutil(direction,startfreq=qa.quantity(startfreq),
+                 bandwidth=bandwidth)
     if verbose: util.verbose=True
     msg=util.msg
     
@@ -117,7 +119,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         fband  = 'band'+startfreq
 
         msfile=project+'.ms'
-        
+        casalog.origin('simdata')
 
         ##################################################################
         # if needed, make a model image from the input clean component list
@@ -234,8 +236,9 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             if checkinputs=="only":
                 return
             else:
-                pl.figure(currfignum+1)
-                pl.clf()
+                if display==True:
+                    pl.figure(currfignum+1)
+                    pl.clf()
 
 
 
@@ -245,14 +248,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # set up observatory, feeds, etc:
 
         sm.open(msfile)
-
-        # XXX cludge because ACA isn't in the data repo yet
-        if telescopename=="ACA":
-            posobs=me.observatory("ALMA")
-        else:
-            posobs=me.observatory(telescopename)
-        # XXX
-        
+        posobs=me.observatory(telescopename)
         diam=stnd;
         sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                  dishdiameter=diam.tolist(), 
@@ -479,46 +475,23 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 
             noise_any=True
 
-            # import numpy
-            # from math import exp
-
             noisymsfile = project + ".noisy.ms"
             msg('adding thermal noise to ' + noisymsfile)
 
-            diam=12.
-            # spillover efficiency.    
-            eta_s = 0.96 
-            # correlator quantization efficiency.    
-            eta_q = 0.95
-            # blockage efficiency.    
-            eta_b = 1.-(1./diam)**2
-            # taper efficiency.    
-            eta_t = 0.86
-
-            # Ruze phase efficiency.    
-            epsilon = 25.  # micron surface rms
-
-            startfreq_ghz=qa.convertfreq(qa.quantity(startfreq),'GHz')
-            eta_p = pl.exp(-(4.0*3.1415926535*epsilon*startfreq_ghz.get("value")/2.99792458e5)**2)
-            if verbose: msg('ruze phase efficiency = ' + str(eta_p))
+            (eta_p, eta_s, eta_b, eta_t, eta_q, t_rx) = util.noisetemp()
 
             # antenna efficiency
-            eta_a = eta_p*eta_s*eta_b*eta_t
+            eta_a = eta_p * eta_s * eta_b * eta_t
             if verbose: msg('antenna efficiency = ' + str(eta_a))
  
             # Ambient surface radiation temperature in K. 
-            # FOR NOW, T_atm = T_ground = T_amb
+            # FOR NOW, T_atm = T_ground = T_amb = parameter, also tau0=parameter
             t_ground = t_amb
             # Atmospheric radiation temperature in K. 
             t_atm = t_amb
 
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
-            # Receiver radiation temperature in K. 
-            # ALMA-40.00.00.00-001-A-SPE.pdf
-            freq0=[35,75,110,145,185,230,345,409,675,867]
-            trx0=[17,30,37,51,65,83,147,196,175,230]
-            t_rx = pl.interp([startfreq_ghz.get("value")],freq0,trx0)[0]
 
             os.system("cp -r "+msfile+" "+noisymsfile)
             # XXX check for and copy flagversions file as well
@@ -528,7 +501,6 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             sm.setapply(type='TOPAC',opacity=tau0);  # arrange opac corruption
             # XXX VERIFY that this is just an attenuation!
-            # before 20090216 this did not set t_rx (defaults to 50)
             # NewMSSimulator needs 2-temp formula not just t_atm
             sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
@@ -760,7 +732,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # display and statistics:
 
         # plot whichever image we have - preference is for noisy and cleaned
-        if display:
+        if display==True:
             pl.ion()
             pl.clf()
             if fidelity == True:
@@ -771,7 +743,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             sim_min,sim_max,sim_rms = statim(image+".image",plot=display)
 
         # plot model image if exists
-        if os.path.exists(modelimage):
+        if os.path.exists(modelimage) and display==True:
             if fidelity == True:
                 pl.subplot(231)
             else:
@@ -781,7 +753,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 model_min,model_max, model_rms = statim(modelregrid,plot=display)
                 xlim=max(pl.xlim())
                 ylim=max(pl.ylim())
-            if (display):
+            if display==True:
                 tt=pl.array(range(25))*pl.pi/12
                 pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
                 # XXX change this to use tb.open(ms/POINTINGS)/direction
@@ -794,12 +766,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
-                pl.subplot(233)
+                if display: pl.subplot(233)
                 statim(imgroot+".diff.im",plot=display)
-                pl.subplot(234)
+                if display: pl.subplot(234)
                 fidel_min, fidel_max, fidel_rms = statim(imgroot+".fidelity.im",plot=display)
 
-        if (display):
+        if display:
             tb.open(mstoimage)
             # XXX use rob's FFT of the PB instead
             rawdata=tb.getcol("UVW")

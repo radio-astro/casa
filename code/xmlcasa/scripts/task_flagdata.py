@@ -58,7 +58,7 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 
 	   Direct flagging of data will occur if
 	             autocorr = F; unflag = F; clipminmax = []
-		     
+       	     
 	   Other flagging options can be used with:
         autocorr -- Flag autocorrelations 
                 default: False
@@ -124,10 +124,82 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
                 
                 torun=True;
                 if( mode == 'manualflag' or mode == 'quack' ):
-                        fg.setdata();
                         # for a default of expr = 'ABS RR LL'
                         # need to call setmanualflags multiple times here.
-                        fg.setmanualflags(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation,autocorrelation=autocorr,unflag=unflag,clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval);
+			if type(autocorr) == list:
+				if mode == 'manualflag':
+					if type(unflag) != list or \
+					type(clipexpr) != list or \
+					type(clipminmax) != list or \
+					type(clipcolumn) != list or \
+					type(clipoutside) != list or \
+					type(antenna) != list or \
+					type(spw) != list or \
+					type(correlation) != list or \
+					type(field) != list or \
+					type(uvrange) != list or \
+					type(timerange) != list or \
+					type(scan) != list or \
+					type(feed) != list or \
+					type(array) != list:
+						raise Exception, 'Either none or all parameters must be arrays'
+				else:
+					if type(unflag) != list or \
+					type(autocorr) != list or \
+					type(quackinterval) != list or \
+					type(antenna) != list or \
+					type(spw) != list or \
+					type(correlation) != list or \
+					type(field) != list or \
+					type(uvrange) != list or \
+					type(timerange) != list or \
+					type(scan) != list or \
+					type(feed) != list or \
+					type(array) != list:
+						raise Exception, 'Either none or all parameters must be arrays'
+					
+				N = len(autocorr)
+
+				if mode == 'manualflag':
+					if len(unflag) != N or \
+					len(clipexpr) != N or \
+					len(clipminmax) != N or \
+					len(clipcolumn) != N or \
+					len(clipoutside) != N or \
+					len(antenna) != N or \
+					len(spw) != N or \
+					len(correlation) != N or \
+					len(field) != N or \
+					len(uvrange) != N or \
+					len(timerange) != N or \
+					len(scan) != N or \
+					len(feed) != N or \
+					len(array) != N:
+						raise Exception, 'Specified parameter arrays have different lengths'
+					fg.setdata();
+					for i in range(N):
+						fg.setmanualflags(field=field[i],spw=spw[i],array=array[i],feed=feed[i],scan=scan[i],baseline=antenna[i],uvrange=uvrange[i],time=timerange[i],correlation=correlation[i],autocorrelation=autocorr[i],unflag=unflag[i],clipexpr=clipexpr[i],cliprange=clipminmax[i],clipcolumn=clipcolumn[i],outside=clipoutside[i],quackinterval=quackinterval);
+				else:
+					if len(unflag) != N or \
+					len(autocorr) != N or \
+					len(quackinterval) != N or \
+					len(antenna) != N or \
+					len(spw) != N or \
+					len(correlation) != N or \
+					len(field) != N or \
+					len(uvrange) != N or \
+					len(timerange) != N or \
+					len(scan) != N or \
+					len(feed) != N or \
+					len(array) != N:
+						raise Exception, 'Specified parameter arrays have different lengths'
+					fg.setdata();
+					for i in range(N):
+						fg.setmanualflags(field=field[i],spw=spw[i],array=array[i],feed=feed[i],scan=scan[i],baseline=antenna[i],uvrange=uvrange[i],time=timerange[i],correlation=correlation[i],autocorrelation=autocorr[i],unflag=unflag[i],clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval[i]);
+						
+			else:
+				fg.setdata();
+				fg.setmanualflags(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation,autocorrelation=autocorr,unflag=unflag,clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval);
                         fg.setflagsummary();
                 if( mode == 'autoflag' ):
                         fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
@@ -153,8 +225,8 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 			torun = False;
                 if( torun == True ) :
                         fg.run();
-                        fg.done();
                 else :
+			fg.done();
                         return False;
 
         	#write history
@@ -187,3 +259,4 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 	
 	except Exception, instance:
 		print '*** Error ***',instance
+	fg.done()

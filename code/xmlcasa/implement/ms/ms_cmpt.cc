@@ -1102,7 +1102,7 @@ bool ms::continuumsub(const ::casac::variant& field,
  return rstat;
 }
 
-bool ms::calcuvw(const ::casac::variant& fields)
+bool ms::calcuvw(const std::vector<int>& fields)
 {
   Bool rstat(false);
   try {
@@ -1118,7 +1118,8 @@ bool ms::calcuvw(const ::casac::variant& fields)
       
     MSFixVis visfixer(*itsMS);
     *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
-    visfixer.setField(m1toBlankCStr_(fields));
+    //visfixer.setField(m1toBlankCStr_(fields));
+    visfixer.setFields(fields);
     rstat = visfixer.calc_uvw();
     *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
   }

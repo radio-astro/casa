@@ -24,28 +24,52 @@ clearcal('ggtau_07feb97.ms')
 copytime=time.time()
 
 print '--Flag data--'
-# flag three end channels for spectral window 2, fieldid=2
-#flagdata('ggtau_07feb97.ms',fieldid=[2],spwid=2,chans=[0,1,2,61,62,63])
-# flag PdBI central data channels (32,33) that suffer ringing due to Gibbs phenomenon
-default('flagdata')
-#flagdata(vis='ggtau_07feb97.ms',fieldid=[0,1,3],spwid=2,chans=[31,32])
-flagdata(vis='ggtau_07feb97.ms',field='0,1,3',spw='2:31~32')
-# flag channels 33,34 which are low for source 0415+379 (fieldid=0)
-default('flagdata')
-#flagdata(vis='ggtau_07feb97.ms',fieldid=[0],spwid=2,chans=[33,34])
-flagdata(vis='ggtau_07feb97.ms',field='0',spw='2:33~34')
-# flag channels 34-37 for CRL 618 (fieldid=3) and baseline 1-3,2-4
-default('flagdata')
-#flagdata(vis='ggtau_07feb97.ms',fieldid=[3],baseline=[0,2],chans=[34,37])
+
+# Setup four flagging specifications:
+#
+# 1.   Flag PdBI central data channels (32,33) that suffer ringing due to Gibbs phenomenon
+# 2.   Flag channels 33,34 which are low for source 0415+379 (fieldid=0)
+# 3-4. Flag channels 34-37 for CRL 618 (fieldid=3) and baseline 1-3,2-4
 ###  antenna names :   1  2  3  4  5
 ###  antenna ids   :   0  1  2  3  4
-flagdata(vis='ggtau_07feb97.ms',field='3',antenna='1&3',spw='2:34~37')
-default('flagdata')
-#flagdata(vis='ggtau_07feb97.ms',fieldid=[3],baseline=[1,3],chans=[34,37])
-flagdata(vis='ggtau_07feb97.ms',field='3',antenna='2&4',spw='2:34~37')
+
+# Flag spec. 1          2          3          4
+
+field   = ['0,1,3',   '0',       '3',       '3']
+spw     = ['2:31~32', '2:33~34', '2:34~37', '2:34~37']
+antenna = ['',        '',        '1&3',     '2&4']
+
+# Use flagdata() in vector mode => other parameters must be vectors too.
+vis='ggtau_07feb97.ms'
+mode='manualflag'
+clipexpr=['ABS RR']*4
+clipminmax=[[0,0]]*4
+clipcolumn=['DATA']*4
+clipoutside=[true]*4
+autocorr=[false]*4
+unflag=[false]*4
+correlation=['']*4
+uvrange=['']*4
+timerange=['']*4
+scan=['']*4
+feed=['']*4
+array=['']*4
+
+flagdata()
+
+# It is equivalent to call flagdata() four times but slower
+#flagdata(vis='ggtau_07feb97.ms',field='0,1,3',spw='2:31~32')
+#flagdata(vis='ggtau_07feb97.ms',field='0',spw='2:33~34')
+#flagdata(vis='ggtau_07feb97.ms',field='3',antenna='1&3',spw='2:34~37')
+#flagdata(vis='ggtau_07feb97.ms',field='3',antenna='2&4',spw='2:34~37')
+
+
+# flag three end channels for spectral window 2, fieldid=2
+#flagdata('ggtau_07feb97.ms',fieldid=[2],spwid=2,chans=[0,1,2,61,62,63])
+
 # flag channels 250-256 for spectral window 7
-#default('flagdata')
 #flagdata(vis='ggtau_07feb97.ms',spwid=[6])
+	
 flagtime=time.time()
 
 #

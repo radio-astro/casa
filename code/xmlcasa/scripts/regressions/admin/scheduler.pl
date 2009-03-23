@@ -25,6 +25,7 @@ $work    = "" if (0);   # non-default work dir
 $res_dir = "" if (0);   # non-default result dir
 $noloop  = "" if (0);   # Iterate through tests only once
 $noclean = "" if (0);   # Do not cleanup result dir
+$all     = "" if (0);   # Loop through all tests?
 
 $reg_dir  = $ARGV[0];
 $data_dir = $ARGV[1];
@@ -56,6 +57,8 @@ $file_tests = $reg_dir . "/tests_list.txt";
 (-e $file_tests) or $file_tests = $admin_dir . "/tests_list.txt";
 
 
+repeat:
+
 open FILE, "<$file_tests" or die $! . $file_tests;
 
 @tests=();
@@ -85,6 +88,7 @@ print gettime();
 printf "la %.2f ", $load_average_15;
 printf "lim %.2f\n", $la_limit;
 
+$reached_the_end = 0;
 $executeproc = `ps -Af | grep execute.py | wc -l`;
 if ($load_average_15 < $la_limit) {
     if ($executeproc >= 3) {
@@ -92,11 +96,17 @@ if ($load_average_15 < $la_limit) {
     }
     else {
         # increment next
-	(-e $file_next) or system("echo 0 > $file_next") == 0 or die $!;
-	open FILE, "<$file_next" or die $!;
-        $next = <FILE>;
+        (-e $file_next) or system("echo 0 0 > $file_next") == 0 or die $!;
+        open FILE, "<$file_next" or die $!;
+        ($next, $base) = split('\s', <FILE>);
         close FILE;
-        #chomp($next);
+        # the file is expected to contain either
+        #     <next>
+        # or
+        #     <next>  <base>
+        # where <next> is the number of the next test to be run,
+        # and <base> is an offset (defaulting to 0) to be added to <next>
+        if (! $base) { $base = 0; }
 	
 	if (! $noloop && $next > $#tests) {
 	    print STDERR gettime();
@@ -110,14 +120,16 @@ if ($load_average_15 < $la_limit) {
 	if ($next <= $#tests) {
  
 	    open FILE, ">$file_next" or die;
-	    if (! $noloop) {
-		print FILE (($next+1) % ($#tests+1)) . "\n";
-	    } else {
-		print FILE ($next+1) . "\n";
-	    }
-	    close FILE;
-	    
-	    $testname = $tests[$next];
+            if (! $noloop) {
+                print FILE (($next+1) % ($#tests+1)) . " " . $base . "\n";
+            } else {
+                print FILE ($next+1) . " " . $base . "\n";
+            }
+            close FILE;
+
+
+            $test_number = ($next + $base) % ($#tests+1);	    
+	    $testname = $tests[$test_number];
 	    $runcasa_log = "$workdir/Log/run-$testname-$hostname.log";
 	    
 	    system("/bin/rm -rf $workdir") == 0 or die $!;
@@ -132,7 +144,7 @@ if ($load_average_15 < $la_limit) {
 		"$admin_dir/process_manager.pl $timeout " .
 		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname";
 	    
-	    print gettime(), "Run test $next $testname: $cmd > $runcasa_log 2>&1\n";
+	    print gettime(), "Run test $test_number $testname: $cmd > $runcasa_log 2>&1\n";
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
 	    
 	    if (-d "$workdir/result") {
@@ -181,9 +193,18 @@ if ($load_average_15 < $la_limit) {
 		    print "Updated $res_dir/result-all.tgz\n";
 		}
 	    }
+
+	} # endif   next < $#tests
+	else {
+	    $reached_the_end = 1;
 	}
     }
 }
+if ($all and !$reached_the_end)
+{
+    goto repeat; 
+}
+
 
 sub gettime
 {

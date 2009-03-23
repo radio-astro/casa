@@ -1,4 +1,4 @@
-q########################################
+########################################
 # Regression Script for simdata of  #
 #        a protoplanetary disk         #
 
@@ -19,8 +19,8 @@ project="psim"
 modelimage="diskmodel.im"
 #complist=repodir+"star672GHz.cl"
 modifymodel=True
-checkinputs="yes"
-antennalist="alma.out20.cfg"
+checkinputs="no"
+antennalist=repodir+"alma.out20.cfg"
 direction="J2000 18h00m00.03s -45d59m59.6s"
 pointingspacing="0.5arcsec"
 refdate="2012/06/21/03:25:00"
@@ -40,6 +40,7 @@ weighting="briggs"
 robust=0.0
 #display=True
 display=False
+fidelity=False
 inp()
 go()
 
@@ -95,10 +96,11 @@ loghdr = """
 The disk input image is a simulation done by Wolf and D'Angelo, converted from
 900 GHz to 672 GHz
 
-A minimally bright star has been included as a clean component.
-
 ********** Regression *****************
 """
+
+#A minimally bright star has been included as a clean component.
+
 
 print >> logfile, loghdr
 

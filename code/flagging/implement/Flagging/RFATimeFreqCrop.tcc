@@ -814,7 +814,7 @@ void RFATimeFreqCrop :: endChunk ()
 
 RFATimeFreqCrop :: ~RFATimeFreqCrop () 
 {
-	cout << "destructor for RFATimeFreqCrop" << endl;
+    cout << "destructor for RFATimeFreqCrop" << endl;
 }
 
 
@@ -952,8 +952,10 @@ Float RFATimeFreqCrop :: UStd(Vector<Float> vect, Vector<Bool> flag, Float mean)
 /* Fit Piecewise polynomials to 'data' and get the 'fit' */
 void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 {
-  Int step=0,ind=0,deg=0,start=0;
-  Int left=0,right=0,le=0,ri=0;
+//    Int step=0,ind=0;
+    Int deg=0,start=0;
+  Int left=0,right=0;
+//  Int le=0,ri=0;
   Float sd,TOL=3;
   Vector<Float> tdata;
   Vector<Bool> tfband;

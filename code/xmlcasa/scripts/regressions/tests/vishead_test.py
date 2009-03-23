@@ -22,7 +22,7 @@ class tester:
     def start(self, msg):
         self.total += 1
         print
-        print stars + " Test " + msg + " start " + stars
+        print stars + " Test %s (" % self.total + msg + ") start " + stars
         self.current_test = msg
 
     def end(self, condition, error_msg):
@@ -64,51 +64,52 @@ def run():
 
     #os.system('pwd')
     #os.system('find ./pointingtest.ms -type f | xargs cksum | grep OBSERVATION | grep -v svn')
-
-    t.start("vishead( '" + input_file + "', 'list' )")
-    orig_hdr = vishead( input_file, 'list' )
+    
+    t.start("vishead( '" + input_file + "', 'list', [])")
+    orig_hdr = vishead(input_file, 'list', [])  # default listitems seems to work when
+                                                # run manually, but not from here.
     print "Original header ="
     print orig_hdr
-    t.end( type(orig_hdr) == \
-              type({'key1':'val1', 'key2':'val2'}), \
-              "... is a bad header")
-    
+    t.end(type(orig_hdr) == type({'key1':'val1', 'key2':'val2'})
+          and orig_hdr['source_name'][0][2] == 'NGC4826',
+          "... is a bad header")
+
     t.start("summary")
     vishead( input_file, 'summary' )
     t.end( True, "summary failed" )
 
     # Test the set/get value routines.  All of them
-    for keyword in ['schedule',
-                    'observer',
-                    'project',
-                    'release_date',
-                    'schedule_type',
-                    'telescope',
-                    'field',
-                    'freq_group_name',
-                    'spw_name']:
+    for keyword in orig_hdr:
+        print "List value of %s:" % (keyword), orig_hdr[keyword]
         
-        t.start("get " + keyword)
-        print "List value:     ", orig_hdr[keyword]
-        
-        val = vishead( input_file, 'get', keyword , '')
-        print "Read value:     ", val
-
-        # numpy array comparison returns a list of booleans
-        # therefore we have to manually traverse (sigh...) larger data
-        # structures containing numpy arrays, in order to check
-        # for equality
-        if type(orig_hdr[keyword]) is dict:
-            are_equal = (orig_hdr[keyword].keys() == val.keys())
-            for k in val.keys():
-                are_equal = (are_equal and is_true(orig_hdr[keyword][k] == val[k]))
-                if not is_true(orig_hdr[keyword][k] == val[k]):
-                    print orig_hdr[keyword][k] == val[k]
-        else:
-            are_equal = (val == orig_hdr[keyword])
-        t.end(are_equal, \
-              "Got "+str(val)+", expected "+str(orig_hdr[keyword]))
-
+        # Test getting.
+        valref = vishead(input_file, mode='get', hdkey=keyword, hdindex='')
+        print "Read value:     ", valref
+        #sys.stdout.flush()
+        for j in range(2):
+            t.start("get " + keyword + "[%d]" % j)
+            val = valref[j]
+            
+            # numpy array comparison returns a list of booleans
+            # therefore we have to manually traverse (sigh...) larger data
+            # structures containing numpy arrays, in order to check
+            # for equality
+            if type(orig_hdr[keyword][j]) is dict:
+                are_equal = (orig_hdr[keyword][j].keys() == val.keys())
+                for k in val.keys():
+                    are_equal = (are_equal and is_true(orig_hdr[keyword][j][k] == val[k]))
+                    if not is_true(orig_hdr[keyword][j][k] == val[k]):
+                        print orig_hdr[keyword][j][k] == val[k]
+            else:
+                are_equal = (val == orig_hdr[keyword][j])
+            if hasattr(are_equal, 'all'):
+                are_equal = are_equal.all()
+            t.end(are_equal, \
+                  "Got "+str(val)+", expected "+str(orig_hdr[keyword][j]))
+            
+        # Test putting.
+        # Put does not yet use the ref part of valref.
+        val = valref[0]
         if type(val) is dict:
             print str(keyword) + ' is probably a column ' + \
             'with variable length arrays, don\'t try to write that'
@@ -123,16 +124,16 @@ def run():
                 
             t.start("put/get " + keyword)
             print "New value:      ", myval
-            vishead( input_file, 'put', keyword, myval )
+            vishead(input_file, mode='put', hdkey=keyword, hdindex='', hdvalue=myval)
             
-            newval = vishead( input_file, 'get', keyword )
+            newval = vishead(input_file, mode='get', hdkey=keyword, hdindex='')[0]
             print "Read new value: ", newval
             
             t.end(newval == myval, "Got "+str(newval)+", expected "+str(myval))
         else:
             # read/write full column
-            all_values = vishead( input_file, 'get', keyword, '' )
-            vishead( input_file, 'put', keyword, '', all_values )
+            all_values = vishead(input_file, mode='get', hdkey=keyword)[0]
+            vishead(input_file, mode='put', hdkey=keyword, hdindex='', hdvalue=all_values)
             
             i = 0
             for e in val:
@@ -144,9 +145,10 @@ def run():
                 t.start("put/get " + keyword + '[' + str(i) + ']')
                 
                 print "New value:      ", myval
-                vishead( input_file, 'put', keyword, str(i), myval )
+                vishead(input_file, mode='put', hdkey=keyword, hdindex=str(i),
+                        hdvalue=myval)
                 
-                newval = vishead( input_file, 'get', keyword, str(i))
+                newval = vishead(input_file, mode='get', hdkey=keyword, hdindex=str(i))[0]
                 print "Read new value: ", newval
                 
                 t.end(newval == myval, "Got "+str(newval)+", expected "+str(myval))

@@ -318,7 +318,7 @@ namespace casa {
         << " uvrange=" << uvrange << " time=" << time
         << " correlation=" << correlation << endl;
 
-    LogIO os(LogOrigin("flag", "selectdata()", WHERE));
+    LogIO os(LogOrigin("Flagger", "selectdata()", WHERE));
     if (ms.isNull()) {
       os << LogIO::SEVERE << "NO MeasurementSet attached"
 	 << LogIO::POST;
@@ -403,7 +403,7 @@ namespace casa {
     /* Correlations */
     correlations_p.resize(0);
     string tcorr[50];
-    Char delim=',';
+    Regex delim("(,| )+");
     Int ncorr = split(correlation, tcorr, 50, delim);
     correlations_p.resize(ncorr);
     for(Int i=0;i<ncorr;i++) correlations_p[i] = upcase(String(tcorr[i]));
@@ -426,7 +426,7 @@ namespace casa {
 
     setdata_p = True;
     Bool rstat=True;
-    LogIO os(LogOrigin("flag", "setdata()", WHERE));
+    LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
     
     /* check the MS */
     if (ms.isNull()) {
@@ -558,7 +558,7 @@ namespace casa {
 				  Vector<Int>& dataStart, 
 				  Vector<Int>& dataEnd, Vector<Int>& dataStep)
   {
-    LogIO os(LogOrigin("Flag", "selectDataChannel()", WHERE));
+    LogIO os(LogOrigin("Flagger", "selectDataChannel()", WHERE));
     
     if (dataEnd.nelements() != spectralwindowids.nelements()){
       if(dataEnd.nelements()==1){
@@ -737,7 +737,7 @@ namespace casa {
              << " quackinterval=" << quackinterval << " opmode=" << opmode
              << endl;
 
-    LogIO os(LogOrigin("flag", "setmanualflags()", WHERE));
+    LogIO os(LogOrigin("Flagger", "setmanualflags()", WHERE));
     if (ms.isNull()) {
       os << LogIO::SEVERE << "NO MeasurementSet attached"
 	 << LogIO::POST;
@@ -987,7 +987,7 @@ namespace casa {
   
   Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
   {
-    LogIO os(LogOrigin("flag", "setautoflagparams()", WHERE));
+    LogIO os(LogOrigin("Flagger", "setautoflagparams()", WHERE));
     if (ms.isNull()) {
       os << LogIO::SEVERE << "NO MeasurementSet attached"
 	 << LogIO::POST;
@@ -1078,7 +1078,7 @@ namespace casa {
   
   Record Flagger::getautoflagparams(String algorithm)
   {
-    LogIO os(LogOrigin("flag", "getautoflagparams()", WHERE));
+    LogIO os(LogOrigin("Flagger", "getautoflagparams()", WHERE));
     
     // Use "RFATimeMedian::getDefaults()" !!!!!!!
     
@@ -1223,7 +1223,7 @@ namespace casa {
   //
   Bool Flagger::clearflagselections(Int recordindex)
   {
-    LogIO os(LogOrigin("flagger", "clearflagselections()", WHERE));
+    LogIO os(LogOrigin("Flagger", "clearflagselections()", WHERE));
     
     if( agents_p && agents_p->nfields() )
       {
@@ -1248,7 +1248,7 @@ namespace casa {
   
   Bool Flagger::printflagselections()
   {
-    LogIO os(LogOrigin("flagger", "printflagselections()", WHERE));
+    LogIO os(LogOrigin("Flagger", "printflagselections()", WHERE));
     if( agents_p )
       {
 	os << "Current list of agents : " << agents_p << LogIO::POST;
@@ -1854,7 +1854,7 @@ namespace casa {
 		{
 // 		  for( uInt i = 0; i<acc.nelements(); i++ ) 
 // 		    if (acc[i]) acc[i]->finalize();
-		  LogIO osss(LogOrigin("autoflag","run"),logSink_p);
+		  LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
       
 		  osss << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " 
 		       << chunk.visBuf().spectralWindow() 
@@ -1890,7 +1890,7 @@ namespace casa {
 	      {
 		//os << "Writing the following to MS HISTORY Table:" << LogIO::POST;
 		logSink_p.clearLocally();
-		LogIO oss(LogOrigin("autoflag", "run()"), logSink_p);
+		LogIO oss(LogOrigin("Flagger", "run()"), logSink_p);
 		os=oss;
 	      }
 	    }

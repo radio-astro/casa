@@ -108,10 +108,10 @@ class ms
 
     bool done();
 
-  bool calcuvw(const ::casac::variant& fields = ::casac::initialize_variant(""));
+  bool calcuvw(const std::vector<int>& fields=std::vector<int>());
 
-  bool fixvis(const std::vector<int>& fields = std::vector<int>(),
-	      const ::casac::variant& phaseDirs = ::casac::initialize_variant(""));
+  bool fixvis(const std::vector<int>& fields=std::vector<int>(),
+	      const ::casac::variant& phaseDirs=::casac::initialize_variant(""));
 
   ::casac::record* msseltoindex(const std::string& vis = "",
 				const ::casac::variant& spw = ::casac::initialize_variant(""),

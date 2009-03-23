@@ -108,9 +108,9 @@ public:
 // Destructor
   ~MSFixVis();
 
-// Set the required field Ids
-  void setField(const String& field);
-  void setFields(const Vector<Int>& fieldIds);
+// Set the required field Ids and return the # of selected fields.
+  Int setField(const String& field);
+  Int setFields(const Vector<Int>& fieldIds);
 
   // Specifies the new phase tracking centers for each selected field.
   void setPhaseDirs(const Vector<MDirection>& phaseDirs);
@@ -123,9 +123,19 @@ public:
   Bool fixvis();
 
 private:
-  Bool fields_are_OK();
+  // Interpret field indices (MSSelection)
+  Vector<Int> getFieldIdx(const String& fields);
+  
+  // Returns the number of selected fields, or -1 if a nonnegative entry in
+  // FieldIds_p does not match its spot.
+  Int check_fields();
+
+  // Log functions and variables
+  LogIO sink_p;
+  LogIO& logSink();
 
   MeasurementSet* ms_p;			// Pointer to MS
+  Int             nsel_p;		// Number of selected fields.
   Vector<Int> DDIds_p;			// DataDescription Ids to process
   Vector<Int> FieldIds_p;		// Field Ids to process
   Vector<MDirection> phaseDirs_p;	// new phase centers for each selected field

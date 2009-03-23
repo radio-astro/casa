@@ -26,10 +26,13 @@ if (! $result_dir) {
 if (! $data_dir) {
     $data_dir = "/casa/data/regression";
 }
+if (! $first_test) {
+    $first_test = 0;
+}
 $scheduler_state = "$result_dir/tests_next.txt";
 
 if (`uname` eq "Darwin\n") {
-    $release_dir = "http://svn.cv.nrao.edu/casa/osx_distro/";
+    $release_dir = "https://svn.cv.nrao.edu/casa/osx_distro/test/";
     $filename_regexp = "CASA-intel-[0-9]*\\.dmg"
 }
 elsif (`uname` eq "Linux\n") {
@@ -80,7 +83,7 @@ if ($release_dir =~ /^http/) {
     sys_exe("curl $release_dir/$latest_release > $prefix/$latest_release");
 }
 else {
-    sys_exe("cp $release_dir/$latest_release > $prefix/$latest_release");
+    sys_exe("cp $release_dir/$latest_release $prefix/$latest_release");
 }
 
 if (! -d $result_dir) {
@@ -102,7 +105,7 @@ if (!$safe){
     sys_exe("rm -rf $result_dir");
     mkdir($result_dir) or die;
 }
-sys_exe("echo 999999 > $scheduler_state");
+sys_exe("echo 999999 0 > $scheduler_state");
 
 print "Going to install $latest_release in $install_dir ...\n";
 
@@ -162,7 +165,7 @@ if (`uname` eq "Linux\n") {
     sys_exe("ln -s $data_dir /opt/casa/data");
 }
 
-sys_exe("echo 0 > $scheduler_state");
+sys_exe("echo 0 $first_test > $scheduler_state");
 
 # Finally, update this script and other files related to this testing infrastructure
 # with latest version from the release

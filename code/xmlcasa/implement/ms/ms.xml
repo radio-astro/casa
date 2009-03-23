@@ -2941,12 +2941,11 @@ in spectral window 1.
      and feed positions and offsets, the time, and the phase tracking center(s).
    </description>
    <input>
-     <param type="any" direction="in" name="fields">
+     <param type="intArray" direction="in" name="fields">
        <description>
-	 Fields to operate on.  Blank = all.
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
        </description>
-       <any type="variant"/>
-       <value>""</value>
+       <value>-1</value>
      </param>
    </input>  
    <returns type="bool"/>
@@ -2969,11 +2968,11 @@ in spectral window 1.
 
      The effects include:
      \begin{itemize}
-       \item Changing the phase tracking center(s),
-       \item Correcting for differential aberration,
-       \item Changing the equinox (i.e. B1950 to J2000 or 2006.78),
-       \item Changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-       \item Refocusing
+       \item changing the phase tracking center(s),
+       \item correcting for differential aberration,
+       \item changing the equinox (i.e. B1950 to J2000 or 2006.78),
+       \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
+       \item refocusing.
      \end{itemize}
    </description>
    <input>
