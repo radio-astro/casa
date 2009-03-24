@@ -47,6 +47,8 @@ public:
     static const unsigned int N_METADATA;
     
     static bool axisIsMetaData(PMS::Axis axis);
+    
+    static const unsigned int THREAD_SEGMENT;
 
   // Constructor
   PlotMSCache();
@@ -88,6 +90,9 @@ public:
       data[0] = xData; data[1] = yData;
       load(visSet, axes, data, averaging, thread);
   }
+  
+  // Releases the given axes from the cache.
+  void release(const vector<PMS::Axis>& axes);
   
   // Set up indexing for the plot (amp vs freq hardwired version)
   void setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis);

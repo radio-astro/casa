@@ -336,7 +336,7 @@ void PlotZoomTool::handleMouseEvent(const PlotEvent& event) {
         m_stack->addRegion(r, m_xAxis, m_yAxis);
         if(m_coordSystem != PlotCoordinate::WORLD)
             r = m_canvas->convertRegion(r, PlotCoordinate::WORLD);
-        m_canvas->setAxesRegion(r, m_xAxis, m_yAxis);
+        m_canvas->setAxesRegion(m_xAxis, m_yAxis, r);
         m_lastEventHandled = true;
         
     // on wheel go through zoom stack 
@@ -365,7 +365,7 @@ void PlotZoomTool::handleMouseEvent(const PlotEvent& event) {
                 m_stack->addRegion(m_canvas->convertRegion(r, m_coordSystem),
                                   m_xAxis, m_yAxis);
             else m_stack->addRegion(r, m_xAxis, m_yAxis);
-            m_canvas->setAxesRegion(r, m_xAxis, m_yAxis);
+            m_canvas->setAxesRegion(m_xAxis, m_yAxis, r);
             m_lastEventHandled = true;
         }
     }
@@ -618,6 +618,7 @@ void PlotTrackerTool::detach() {
     if(m_canvas != NULL && m_active) {
         PlotMouseMoveEventHandlerPtr h(this, false);
         m_canvas->unregisterMouseMoveHandler(h);
+        m_canvas->removePlotItem(m_annotation);
     }
     PlotMouseTool::detach();
     m_annotation = NULL;

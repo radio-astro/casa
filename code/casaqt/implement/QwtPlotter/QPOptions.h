@@ -341,7 +341,13 @@ public:
     
     // Implements PlotSymbol::setSize().  Note that the underlying QwtSymbol
     // only supports int sizes.
-    void setSize(double width, double height);
+    void setSize(double width, double height, bool heightIsPixel = true);
+    
+    // Implements PlotSymbol::heightIsPixel().
+    bool heightIsPixel() const;
+    
+    // Implements PlotSymbol::setHeightIsPixel().
+    void setHeightIsPixel(bool pixel = true);
     
     // Implements PlotSymbol::symbol().
     Symbol symbol() const;
@@ -399,6 +405,8 @@ public:
 private:
     Symbol m_style; // Style
     QChar m_char;   // Character
+    
+    bool m_heightIsPixel; // Flag for whether height is in pixels or points.
     
     QPen m_pixelPen;     // Pen used to draw pixels.
     QBrush m_pixelBrush; // Brush used to draw pixels (empty).

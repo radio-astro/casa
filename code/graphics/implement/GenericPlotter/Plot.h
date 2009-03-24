@@ -129,9 +129,9 @@ public:
         else             return pair<double,double>(0, 0);
     }
     
-    // Implements PlotItem::indexedDrawCount().  Provides default
-    // implementation that returns the number of plotted points.
-    virtual unsigned int indexedDrawCount() const{ return pointData()->size();}
+    // Implements PlotItem::drawCount().  Provides default implementation that
+    // returns the number of plotted points.
+    virtual unsigned int drawCount() const { return pointData()->size(); }
     
     
     // ABSTRACT METHODS //
@@ -451,9 +451,9 @@ public:
         else             return pair<double,double>(0, 0);
     }
     
-    // Implements PlotItem::indexedDrawCount().  Provides default
-    // implementation that returns the number of plotted points.
-    virtual unsigned int indexedDrawCount() const{ return pointData()->size();}
+    // Implements PlotItem::drawCount().  Provides default implementation that
+    // returns the number of plotted points.
+    virtual unsigned int drawCount() const { return pointData()->size(); }
     
     
     // ABSTRACT METHODS //

@@ -127,6 +127,8 @@ private:
 };
 
 
+// Legend Classes //
+
 // Subclass of QwtLegend to handle outline and background, and be able to draw
 // itself using a QPainter.
 class QPLegend : public QwtLegend {
@@ -284,6 +286,9 @@ public:
     // Implements QPLayerItem::itemChanged() to only redraw the base cache.
     virtual void itemChanged();
     
+    // Implements QPLayerItem::itemDrawCount().
+    virtual unsigned int itemDrawCount() const { return 1; }
+    
 protected:
     // Attached canvas, or NULL for none.
     QPCanvas* m_canvas;
@@ -307,17 +312,15 @@ public:
     // Destructor.
     ~QPGrid();
     
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect& rect) const {
-        QwtPlotGrid::draw(painter, xMap, yMap, rect); }
-    
+
     // Overrides QwtPlotItem::itemChanged() to use QPBaseItem's definition.
     void itemChanged() { QPBaseItem::itemChanged(); }
     
     // Implements QPLayerItem::shouldDraw().
     bool shouldDraw() const;
+    
+    // Implements QPLayerItem::itemTitle().
+    String itemTitle() const { return "grid"; }
     
     // Overrides QwtPlotItem::boundingRect() to use QwtPlotGrid's definition.
     QwtDoubleRect boundingRect() const { return QwtPlotGrid::boundingRect(); }
@@ -325,6 +328,13 @@ public:
     // Overrides QwtPlotItem::updateScaleDiv() to use QwtPlotGrid's definition.
     void updateScaleDiv(const QwtScaleDiv& xDiv, const QwtScaleDiv& yDiv) {
         QwtPlotGrid::updateScaleDiv(xDiv, yDiv); }
+    
+protected:
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* p, const QwtScaleMap& xMap,
+                const QwtScaleMap& yMap, const QRect& drawRect,
+                unsigned int drawIndex, unsigned int drawCount) const {
+        QwtPlotGrid::draw(p, xMap, yMap, drawRect); }
 };
 
 
@@ -338,14 +348,19 @@ public:
     
     // Destructor.
     ~QPCartesianAxis();
-    
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* painter, const QwtScaleMap& xMap,
-              const QwtScaleMap& yMap, const QRect& rect) const;
+
     
     // Implements QPLayerItem::shouldDraw().
     bool shouldDraw() const { return true; }
+    
+    // Implements QPLayerItem::itemTitle().
+    String itemTitle() const { return "cartesian axis"; }
+    
+protected:
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
+    void draw_(QPainter* p, const QwtScaleMap& xMap,
+                const QwtScaleMap& yMap, const QRect& drawRect,
+                unsigned int drawIndex, unsigned int drawCount) const;
     
 private:
     // Master axis.

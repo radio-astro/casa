@@ -432,7 +432,7 @@ XLIBLIST_shared_alma  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_atnf  := CORE RPFITS MIRLIB WCSLIB CFITSIO LAPACK F77
 XLIBLIST_shared_nfra  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_nrao  := $(XLIBLIST_shared_synthesis)
-XLIBLIST_shared_xmlcasa := CORE CFITSIO CCMTOOLS XERCES READLINE QT4
+XLIBLIST_shared_xmlcasa := CORE WCSLIB CFITSIO CCMTOOLS XERCES READLINE QT4
 
 # The shared library list may be defined in the including makefile either
 # before or after makedefs is included.
@@ -724,7 +724,7 @@ DOCEXTR   := docdoxy
 DOCDOXY   := docdoxy
 
 # What standard packages to build (default is all including demo).
-PACKAGES  := graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis plotms demo
+PACKAGES  := graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis demo
 
 
 SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa
@@ -732,7 +732,7 @@ SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms g
 CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis plotms
 
 # What auxiliary packages to build
-AUXILIARY := casaqt display 
+AUXILIARY := casaqt display plotms 
 
 # What consortium packages to build (atnf bima hia nfra nral nrao tifr).
 CONSORTIA := nrao atnf alma xmlcasa 

@@ -109,6 +109,10 @@ bool QPScatterPlot::isValid() const {
     return !m_data.null() && m_data->isValid(); }
 
 
+bool QPScatterPlot::shouldDraw() const {
+    return isValid() && m_data->size() > 0;
+}
+
 QwtDoubleRect QPScatterPlot::boundingRect() const {
     double xMin, xMax, yMin, yMax;
     if(!const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(xMin,xMax,yMin,yMax))

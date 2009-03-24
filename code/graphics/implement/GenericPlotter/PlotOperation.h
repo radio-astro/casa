@@ -84,6 +84,7 @@ public:
     bool isFinished() const;    
     unsigned int currentProgress() const;    
     String currentStatus() const;
+    bool cancelRequested() const;
     // </group>
     
     // Mutators (synchronized).  Any mutator will notify registered watchers of
@@ -93,6 +94,7 @@ public:
     void setIsFinished(bool isFinished);
     void setCurrentProgress(unsigned int currentProgress);
     void setCurrentStatus(const String& currentStatus);
+    void setCancelRequested(bool cancel);
     // </group>
     
     // Sets the operation's mutex to the given.
@@ -125,6 +127,9 @@ private:
     
     // Current status message.
     String m_currentStatus;
+    
+    // Cancel requested flag.
+    bool m_cancelRequested;
     
     // Synchronization mutex.
     PlotMutexPtr m_mutex;

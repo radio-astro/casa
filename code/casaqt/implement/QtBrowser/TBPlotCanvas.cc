@@ -115,7 +115,7 @@ void TBPlotCanvas::setYAxisTitle(String title) {
 }
 
 void TBPlotCanvas::setShownGrids(bool xMaj, bool xMin, bool yMaj, bool yMin) {
-    canvas->setGridShown(xMaj, xMin, yMaj, yMin);
+    canvas->showGrid(xMaj, xMin, yMaj, yMin);
 }
 
 void TBPlotCanvas::setXAxisDate(bool date, bool mjsec) {

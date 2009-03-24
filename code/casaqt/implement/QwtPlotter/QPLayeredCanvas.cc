@@ -42,12 +42,12 @@ QPLayer::QPLayer() { }
 QPLayer::~QPLayer() { }
 
 void QPLayer::clearImage() const {
-    const_cast<QPixmap&>(m_cachedImage) = QPixmap(); }
+    const_cast<QImage&>(m_cachedImage) = QImage(); }
 
 void QPLayer::initializeImage(const QSize& size,
         const QwtScaleMap maps[QwtPlot::axisCnt]) const {
-    const_cast<QPixmap&>(m_cachedImage) = QPixmap(size);
-    const_cast<QPixmap&>(m_cachedImage).fill(Qt::transparent);
+    const_cast<QImage&>(m_cachedImage) = QImage(size, QImage::Format_ARGB32);
+    const_cast<QImage&>(m_cachedImage).fill(Qt::transparent);
     
     for(int i = 0; i < QwtPlot::axisCnt; i++)
         const_cast<QwtScaleMap&>(m_cachedMaps[i]) = maps[i];
@@ -78,24 +78,48 @@ bool QPLayer::hasItemsToDraw() const {
     return false;
 }
 
+unsigned int QPLayer::itemDrawCount() const {
+    unsigned int n = 0;
+    QList<const QPLayerItem*> it = items();
+    for(int i = 0; i < it.size(); i++)
+        if(it[i] != NULL && it[i]->shouldDraw()) n += it[i]->itemDrawCount();
+    return n;
+}
+
+unsigned int QPLayer::itemDrawSegments(unsigned int threshold) const {
+    unsigned int n = 0;
+    QList<const QPLayerItem*> it = items();
+    for(int i = 0; i < it.size(); i++) {
+        if(it[i] != NULL && it[i]->shouldDraw())
+            n += it[i]->itemDrawSegments(threshold);
+    }
+    return n;
+}
+
 void QPLayer::drawItems(QPainter* painter, const QRect& canvasRect,
-        const QwtScaleMap maps[QwtPlot::axisCnt]) const {
-    QPDrawThread::drawItems(items(), painter, canvasRect, maps);
+        const QwtScaleMap maps[QwtPlot::axisCnt], PlotOperationPtr op,
+        unsigned int currentSegment, unsigned int totalSegments,
+        unsigned int segmentThreshold) const {
+    QPDrawThread::drawItems(items(), painter, canvasRect, maps, op,
+            currentSegment, totalSegments, segmentThreshold);
 }
 
 void QPLayer::cacheItems(const QRect& canvasRect,
-        const QwtScaleMap maps[QwtPlot::axisCnt]) const {
-    QPainter painter(&const_cast<QPixmap&>(m_cachedImage));
-    drawItems(&painter, canvasRect, maps);
+        const QwtScaleMap maps[QwtPlot::axisCnt], PlotOperationPtr op,
+        unsigned int currentSegment, unsigned int totalSegments,
+        unsigned int segmentThreshold) const {
+    QPainter painter(&const_cast<QImage&>(m_cachedImage));
+    drawItems(&painter, canvasRect, maps, op, currentSegment, totalSegments,
+            segmentThreshold);
 }
 
 void QPLayer::drawCache(QPainter* painter, const QRect& rect) const {
     if(!m_cachedImage.isNull())
-        painter->drawPixmap(rect.x(), rect.y(), m_cachedImage);
+        painter->drawImage(rect.x(), rect.y(), m_cachedImage);
 }
 
-QPixmap& QPLayer::cachedImage() { return m_cachedImage; }
-const QPixmap& QPLayer::cachedImage() const { return m_cachedImage; }
+QImage& QPLayer::cachedImage() { return m_cachedImage; }
+const QImage& QPLayer::cachedImage() const { return m_cachedImage; }
 
 
 ///////////////////////////////
@@ -190,9 +214,27 @@ QList<const QPPlotItem*> QPLayeredCanvas::allLayerItems(bool includeMain,
 
 void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
         const QwtPlotPrintFilter& filter) const {
+    if(painter == NULL) return;
+    
+    // Set up operation.
+    PlotOperationPtr op = m_parent->operationExport();
+    if(!op.null()) {
+        op->reset();
+        op->setInProgress(true);
+    }
+    
+    if(!m_printPainters.contains(painter))
+        const_cast<QList<QPainter*>&>(m_printPainters).append(painter);
     const_cast<bool&>(m_isPrinting) = true;
     QwtPlot::print(painter, rect, filter);
+    const_cast<QList<QPainter*>&>(m_printPainters).removeAll(painter);
     const_cast<bool&>(m_isPrinting) = false;
+    
+    // Finish operation and set status as saving to file.
+    if(!op.null()) {
+        op->finish();
+        op->setCurrentStatus("Saving to file (may take a while)...");
+    }
 }
 
 bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
@@ -219,7 +261,7 @@ bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
                                         we->modifiers(),
                                         we->orientation());
         }
-        
+
         // first try sending to picker
         if(!m_parent->getSelecter().eventFilter(c, sendEvent)) {
             // ..otherwise send to canvas
@@ -271,7 +313,7 @@ void QPLayeredCanvas::drawBaseItems() { replot(false, false); }
 
 void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
-    if(m_isPrinting) {
+    if(m_printPainters.contains(painter)) {
         printItems(painter, rect, maps, pf);
         return;
     }
@@ -286,7 +328,7 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
                         m_layerAnnotation.scaleMapsChanged(maps));
     
     // If drawing is held, just draw pixmap caches.
-    if(m_drawingHeld || (!drawMain && !drawAnnotation)) {
+    if(m_drawingHeld || m_isPrinting || (!drawMain && !drawAnnotation)) {
         paintCaches(painter, rect);
         return;
     }
@@ -299,12 +341,35 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         return;
     } else const_cast<bool&>(m_redrawWaiting) = false;
     
+    bool doMain = drawMain && m_layerMain.hasItemsToDraw(),
+         doAnnotation = drawAnnotation && m_layerAnnotation.hasItemsToDraw(),
+         doDraw = doMain || doAnnotation;
+    
     // Set up caches.
     if(drawMain)       m_layerMain.initializeImage(rect.size(), maps);
     if(drawAnnotation) m_layerAnnotation.initializeImage(rect.size(), maps);
+        
+    // Set up operation.
+    PlotOperationPtr op = m_parent->operationDraw();
+    if(!op.null()) op->reset();
     
-    bool doDraw = (drawMain && m_layerMain.hasItemsToDraw()) ||
-                  (drawAnnotation && m_layerAnnotation.hasItemsToDraw());
+    // Notify draw watchers as needed.
+    if(doDraw) {
+        int drawnLayersFlag = 0;
+        if(doMain) drawnLayersFlag |= MAIN;
+        if(doAnnotation) drawnLayersFlag |= ANNOTATION;
+        bool res = m_parent->notifyDrawWatchers(op, true, drawnLayersFlag);
+        
+        // The draw watchers told us not to continue, so assume they know what
+        // they're doing.
+        if(!res) {
+            paintCaches(painter, rect);
+            if(!op.null()) op->finish();
+            return;
+        }
+    }
+    
+    if(!op.null()) op->setInProgress(true);
     
     // Set up drawing thread.
     QPDrawThread* drawThread = NULL;
@@ -316,29 +381,16 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         const_cast<QPDrawThread*&>(m_drawThread) = drawThread;
     }
     
-    // Set up operation.
-    PlotOperationPtr op = m_parent->operationDraw();
-    if(!op.null()) {
-        op->reset();
-        op->setInProgress(true);
-    }
-    
     // Start logging.
     PlotLoggerPtr log;
     if(m_parent != NULL) log= m_parent->loggerForEvent(PlotLogger::DRAW_TOTAL);
-    if(!log.null())
+    if(!log.null() && doDraw)
         log->markMeasurement(QPCanvas::CLASS_NAME, QPCanvas::DRAW_NAME);
             
     // Start drawing thread if needed.
     if(doDraw)
         drawThread->start();
     else {
-        // Finish logging.
-        PlotLoggerPtr log;
-        if(m_parent != NULL)
-            log = m_parent->loggerForEvent(PlotLogger::DRAW_TOTAL);
-        if(!log.null()) log->releaseMeasurement();
-
         // Finish operation.
         PlotOperationPtr op;
         if(m_parent != NULL) op = m_parent->operationDraw();
@@ -351,13 +403,23 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
         const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {    
+    // Determine total draw segments.
+    PlotOperationPtr op = m_parent->operationExport();
+    unsigned int bseg = m_layerBase.itemDrawSegments(),
+                 mseg = m_layerMain.itemDrawSegments(),
+                 aseg = m_layerAnnotation.itemDrawSegments();
+    unsigned int nseg = bseg + mseg + aseg;
+    bool drawLegend = m_parent->m_legend->legendShown() &&
+                      m_parent->m_legend->isInternal();
+    if(drawLegend) nseg++;
+    
     // Draw layers.
-    m_layerBase.drawItems(painter, rect, maps);
-    m_layerMain.drawItems(painter, rect, maps);
-    m_layerAnnotation.drawItems(painter, rect, maps);
+    m_layerBase.drawItems(painter, rect, maps, op, 0, nseg);
+    m_layerMain.drawItems(painter, rect, maps, op, bseg, nseg);
+    m_layerAnnotation.drawItems(painter, rect, maps, op, bseg + mseg, nseg);
     
     // Draw internal legend if needed.
-    if(m_parent->m_legend->legendShown() && m_parent->m_legend->isInternal()) {
+    if(drawLegend) {
         // printLegend needs the metrics map set.
         QwtMetricsMap old = QwtPainter::metricsMap();
         QwtPainter::setMetricsMap(this, painter->device());
@@ -454,11 +516,11 @@ void QPLayeredCanvas::installLegendFilter(QWidget* legendFrame) {
 
 void QPLayeredCanvas::initialize() {
     m_drawMain = m_drawAnnotation = true;
-    m_isPrinting = false;
     m_drawingHeld = false;
     m_legendFrame = NULL;
     m_drawThread = NULL;
     m_redrawWaiting = false;
+    m_isPrinting = false;
     
     m_grid.enableX(false);
     m_grid.enableXMin(false);
@@ -474,8 +536,7 @@ void QPLayeredCanvas::initialize() {
     
     QwtPlotCanvas* c = canvas();
     c->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
-    c->setAttribute(Qt::WA_PaintOutsidePaintEvent, true);
-    //c->installEventFilter(this);    
+    c->setAttribute(Qt::WA_PaintOutsidePaintEvent, true); 
 }
 
 void QPLayeredCanvas::paintCaches(QPainter* painter, const QRect& rect) const {

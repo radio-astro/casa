@@ -45,6 +45,8 @@ bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
     return false;
 }
 
+const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
+
                                            
 PlotMSCache::PlotMSCache():
   nChunk_(0),
@@ -252,10 +254,16 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
     double progress;
     for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
         for(vi.origin(); vi.more(); vi++) {
+            // If a thread is given, check if the user canceled.
+            if(thread != NULL && thread->wasCanceled()) {
+                dataLoaded_ = false;
+                return;
+            }
+            
             // If a thread is given, update it.
-            if(thread != NULL)
+            if(thread != NULL && chunk % THREAD_SEGMENT == 0)
                 thread->setStatus("Loading chunk " + String::toString(chunk) +
-                                  ".");
+                                  " / " + String::toString(nChunk_) + ".");
             
             for(unsigned int i = 0; i < loadAxes.size(); i++) {
                 //vb.freqAveCubes();
@@ -268,7 +276,7 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
             chunk++;
             
             // If a thread is given, update it.
-            if(thread != NULL) {
+            if(thread != NULL && chunk % THREAD_SEGMENT == 0) {
                 progress = ((double)chunk) / nChunk_;
                 thread->setProgress((unsigned int)((progress * 100) + 0.5));
             }
@@ -286,6 +294,59 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
 
     cout << "PlotMSCache-ing time = " << loadtimer.all_usec()/1.0e6 << endl;
     
+}
+
+#define PMSC_DELETE(VAR)                                                      \
+    for(unsigned int i = 0; i < VAR.size(); i++)                              \
+        if(VAR[i]) delete VAR[i];                                             \
+    VAR.resize(0);
+
+void PlotMSCache::release(const vector<PMS::Axis>& axes) {
+    for(unsigned int i = 0; i < axes.size(); i++) {
+        switch(axes[i]) {
+        case PMS::SCAN: scan_.resize(0); break;
+        case PMS::FIELD: field_.resize(0); break;
+        case PMS::TIME: time_.resize(0); break;
+        case PMS::TIME_INTERVAL: timeIntr_.resize(0); break;
+        case PMS::SPW: spw_.resize(0); break;
+        
+        case PMS::CHANNEL: PMSC_DELETE(chan_) break;
+        case PMS::FREQUENCY: PMSC_DELETE(freq_) break;
+        case PMS::CORR: PMSC_DELETE(corr_) break;
+        case PMS::ANTENNA1: PMSC_DELETE(antenna1_) break;
+        case PMS::ANTENNA2: PMSC_DELETE(antenna2_) break;
+        case PMS::BASELINE: PMSC_DELETE(baseline_) break;
+        case PMS::UVDIST: PMSC_DELETE(uvdist_) break;
+        case PMS::UVDIST_L: PMSC_DELETE(uvdistL_) break;
+        case PMS::U: PMSC_DELETE(u_) break;
+        case PMS::V: PMSC_DELETE(v_) break;
+        case PMS::W: PMSC_DELETE(w_) break;
+        case PMS::AMP: PMSC_DELETE(amp_) break;
+        case PMS::PHASE: PMSC_DELETE(pha_) break;
+        case PMS::REAL: PMSC_DELETE(real_) break;
+        case PMS::IMAG: PMSC_DELETE(imag_) break;
+        case PMS::FLAG:
+            PMSC_DELETE(flag_)
+            PMSC_DELETE(flagrow_)
+            break;
+        case PMS::AZIMUTH: PMSC_DELETE(az_) break;
+        case PMS::ELEVATION: PMSC_DELETE(el_) break;
+        case PMS::PARANG: PMSC_DELETE(parang_) break;
+        case PMS::ROW: PMSC_DELETE(row_) break;
+        }
+        
+        loadedAxes_[axes[i]] = false;
+        
+        if(dataLoaded_ && axisIsMetaData(axes[i])) dataLoaded_ = false;
+        
+        if((dataLoaded_ || currentSet_) &&
+           (currentX_ == axes[i] || currentY_ == axes[i])) {
+            dataLoaded_ = false;
+            currentSet_ = false;
+        }
+    }
+    
+    if(!dataLoaded_ || !currentSet_) nChunk_ = 0;
 }
 
 bool PlotMSCache::readyForPlotting() const {
@@ -769,69 +830,8 @@ void PlotMSCache::setChunk(Int i) {
 }
 
 void PlotMSCache::deleteCache() {
-  
-  // Deflate simple arrays:
-  time_.resize(0);
-  timeIntr_.resize(0);
-  field_.resize(0);
-  spw_.resize(0);
-  scan_.resize(0);
-
-  // Delete PtrBlock contents
-  for (Int ic=0;ic<nChunk_;++ic) {
-    if (row_[ic])      delete row_[ic];
-    if (antenna1_[ic]) delete antenna1_[ic];
-    if (antenna2_[ic]) delete antenna2_[ic];
-    if (baseline_[ic]) delete baseline_[ic];
-    if (uvdist_[ic]) delete uvdist_[ic];
-    if (uvdistL_[ic]) delete uvdistL_[ic];
-    if (u_[ic]) delete u_[ic];
-    if (v_[ic]) delete v_[ic];
-    if (w_[ic]) delete w_[ic];
-    if (freq_[ic])     delete freq_[ic];
-    if (chan_[ic])     delete chan_[ic];
-    if (corr_[ic])     delete corr_[ic];
-    if (amp_[ic])      delete amp_[ic];
-    if (pha_[ic])      delete pha_[ic];
-    if (real_[ic])     delete real_[ic];
-    if (imag_[ic])     delete imag_[ic];
-    if (flag_[ic])     delete flag_[ic];
-    if (flagrow_[ic])  delete flagrow_[ic];
-    if (az_[ic])       delete az_[ic];
-    if (el_[ic])       delete el_[ic];
-    if (parang_[ic])   delete parang_[ic];
-  }
-  row_.resize(0);
-  antenna1_.resize(0);
-  antenna2_.resize(0);
-  baseline_.resize(0);
-  uvdist_.resize(0);
-  uvdistL_.resize(0);
-  u_.resize(0);
-  v_.resize(0);
-  w_.resize(0);
-  freq_.resize(0);
-  chan_.resize(0);
-  corr_.resize(0);
-  amp_.resize(0);
-  pha_.resize(0);
-  real_.resize(0);
-  imag_.resize(0);
-  flag_.resize(0);
-  flagrow_.resize(0);
-  az_.resize(0);
-  el_.resize(0);
-  parang_.resize(0);
-  
-  // Update number of chunks
-  nChunk_ = 0;
-  
-  // Update loaded axes.
-  const vector<PMS::Axis>& axes = PMS::axes();
-  for(unsigned int i = 0; i < axes.size(); i++)
-      loadedAxes_[axes[i]] = false;
-  
-  dataLoaded_ = currentSet_ = false;
+    // Release all axes.
+    release(PMS::axes());
 }
 
 void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,

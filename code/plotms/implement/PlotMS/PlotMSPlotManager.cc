@@ -164,6 +164,10 @@ void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
             tools = canvas->standardMouseTools();
             tools->trackerTool()->addNotifier(toolsTab);
             tools->selectTool()->setDrawRects(true);
+            
+            // add plotmsplotter as draw watcher
+            canvas->registerDrawWatcher(PlotDrawWatcherPtr(
+                    itsParent_->getPlotter(), false));
         }
     }
     

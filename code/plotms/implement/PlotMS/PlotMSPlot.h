@@ -141,6 +141,12 @@ protected:
     // false for failure.
     virtual bool assignCanvases() = 0;
     
+    // Returns true if the plot subclass has threaded caching, false otherwise.
+    // IMPORTANT: if a plot subclass has threaded caching, it MUST hook up the
+    // cacheLoaded method as a post-thread method, OR reimplement the
+    // parametersHaveChanged() method to handle it itself.
+    virtual bool hasThreadedCaching() const = 0;
+    
     // Helper method that updates the cache axes with the current parameters.
     // Should update the cache's loaded axes, and return true for success or
     // false for failure.
@@ -210,12 +216,18 @@ protected:
     // Mapping of which plot objects are on which canvas.
     map<MaskedScatterPlot*, PlotCanvasPtr> itsCanvasMap_;
     
+    // Flags for threaded cache loading.
+    bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_;
+    
 private:
     // Disable copy constructor and operator for now.
     // <group>
     PlotMSPlot(const PlotMSPlot& copy);
     PlotMSPlot& operator=(const PlotMSPlot& copy);
     // </group>
+    
+    // Use macro for define post-thread methods for loading the cache.
+    PMS_POST_THREAD_METHOD(PlotMSPlot, cacheLoaded)
 };
 
 
@@ -264,6 +276,9 @@ protected:
     // Implements PlotMSPlot::assignCanvases().
     bool assignCanvases();
     
+    // Implements PlotMSPlot::hasThreadedCaching().
+    bool hasThreadedCaching() const { return true; }
+    
     // Implements PlotMSPlot::updateCache().
     bool updateCache();
     
@@ -289,10 +304,6 @@ private:
     PlotMSSinglePlot(const PlotMSSinglePlot& copy);
     PlotMSSinglePlot& operator=(const PlotMSSinglePlot& copy);
     // </group>
-    
-    
-    // Use macro for define post-thread methods for loading the cache.
-    PMS_POST_THREAD_METHOD(PlotMSSinglePlot, cacheLoaded)
 };
 
 }

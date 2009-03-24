@@ -251,18 +251,18 @@ void QPAreaFill::setAsQBrush(const QBrush& b) {
 //////////////////////////
 
 QPSymbol::QPSymbol() : m_style(QPOptions::symbol(style())), m_char('o'),
-        m_drawPen(&pen()), m_drawBrush(&brush()) { }
+        m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) { }
 
 QPSymbol::QPSymbol(const QwtSymbol& s): QwtSymbol(s),
-        m_style(QPOptions::symbol(s.style())), m_char('o'), m_drawPen(&pen()),
-        m_drawBrush(&brush()) { }
+        m_style(QPOptions::symbol(s.style())), m_char('o'),
+        m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) { }
 
-QPSymbol::QPSymbol(const PlotSymbol& copy) : m_drawPen(&pen()),
-        m_drawBrush(&brush()) {
+QPSymbol::QPSymbol(const PlotSymbol& copy) : m_heightIsPixel(true),
+        m_drawPen(&pen()), m_drawBrush(&brush()) {
     operator=(copy); }
 
 QPSymbol::QPSymbol(const PlotSymbolPtr copy) : m_style(CIRCLE), m_char('o'),
-        m_drawPen(&pen()), m_drawBrush(&brush()) {
+        m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) {
     if(!copy.null()) operator=(*copy); }
 
 QPSymbol::~QPSymbol() { }
@@ -274,10 +274,22 @@ pair<double, double> QPSymbol::size() const {
     return pair<double, double>(s.width(), s.height());
 }
 
-void QPSymbol::setSize(double width, double height) {
+void QPSymbol::setSize(double width, double height, bool heightIsPixel) {
     const QSize& s = QwtSymbol::size();
-    if(s.width() != width || s.height() != height)
+    if(s.width() != width || s.height() != height || (isCharacter() &&
+       heightIsPixel != m_heightIsPixel)) {
+        m_heightIsPixel = heightIsPixel;
         QwtSymbol::setSize((int)(width + 0.5), (int)(height + 0.5));
+    } else m_heightIsPixel = heightIsPixel;
+}
+
+bool QPSymbol::heightIsPixel() const { return m_heightIsPixel; }
+
+void QPSymbol::setHeightIsPixel(bool pixel) {
+    if(isCharacter() && pixel != m_heightIsPixel) {
+        m_heightIsPixel = pixel;
+        QwtSymbol::setSize(QwtSymbol::size());
+    } else m_heightIsPixel = pixel;
 }
 
 PlotSymbol::Symbol QPSymbol::symbol() const { return m_style; }
@@ -330,7 +342,8 @@ void QPSymbol::setAreaFill(const PlotAreaFill& fill) {
 void QPSymbol::draw(QPainter* p, const QRect& r) const {
     if(m_style == CHARACTER) {
         QFont font = p->font();
-        font.setPixelSize(QwtSymbol::size().height());
+        if(m_heightIsPixel) font.setPixelSize(QwtSymbol::size().height());
+        else                font.setPointSize(QwtSymbol::size().height());
         p->setFont(font);
         p->drawText(r, Qt::AlignCenter | Qt::AlignVCenter, QString(m_char));
     } else if(m_style == PIXEL) {

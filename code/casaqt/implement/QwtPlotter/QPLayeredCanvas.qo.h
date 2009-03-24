@@ -73,23 +73,44 @@ public:
     // QPLayerItem::shouldDraw() returns true.
     virtual bool hasItemsToDraw() const;
     
+    // Returns the draw count for items on this layer (see
+    // QPLayerItem::drawCount()).
+    virtual unsigned int itemDrawCount() const;
+    
+    // Returns the number of draw segments for items on this layer, using the
+    // given segment threshold.
+    virtual unsigned int itemDrawSegments(unsigned int threshold =
+            QPDrawThread::DEFAULT_SEGMENT_THRESHOLD) const;
+    
     // Draws the attached items using the given painter, canvas rect, and scale
-    // maps.
+    // maps.  If PlotOperation parameters are given, they are updated as
+    // needed.
     virtual void drawItems(QPainter* painter, const QRect& canvasRect,
-            const QwtScaleMap maps[QwtPlot::axisCnt]) const;
+            const QwtScaleMap maps[QwtPlot::axisCnt],
+            PlotOperationPtr op = PlotOperationPtr(),
+            unsigned int currentSegment = 0,
+            unsigned int totalSegments = 0,
+            unsigned int segmentThreshold =
+                QPDrawThread::DEFAULT_SEGMENT_THRESHOLD) const;
     
     // Draws the attached layer items into the image cache, using the given
-    // canvas rect and scale maps.
+    // canvas rect and scale maps.  If PlotOperation parametesr are given, they
+    // are updated as needed.
     virtual void cacheItems(const QRect& canvasRect,
-            const QwtScaleMap maps[QwtPlot::axisCnt]) const;
+            const QwtScaleMap maps[QwtPlot::axisCnt],
+            PlotOperationPtr op = PlotOperationPtr(),
+            unsigned int currentSegment = 0,
+            unsigned int totalSegments = 0,
+            unsigned int segmentThreshold =
+                QPDrawThread::DEFAULT_SEGMENT_THRESHOLD) const;
     
     // Draws the cached image using the given painter and draw rect.
     virtual void drawCache(QPainter* painter, const QRect& rect) const;
     
     // Returns the cached image.
     // <group>
-    QPixmap& cachedImage();
-    const QPixmap& cachedImage() const;
+    QImage& cachedImage();
+    const QImage& cachedImage() const;
     // </group>
     
     
@@ -103,7 +124,7 @@ public:
     
 protected:
     // Cached image.
-    QPixmap m_cachedImage;
+    QImage m_cachedImage;
     
     // Cached image maps.
     QwtScaleMap m_cachedMaps[QwtPlot::axisCnt];
@@ -352,6 +373,9 @@ private:
     
     // Flag for whether we're printing rather than drawing onto a widget.
     bool m_isPrinting;
+    
+    // Printing painters, so we can call printItem insteads of drawItems.
+    QList<QPainter*> m_printPainters;
     
     // Current draw thread, or NULL for none.
     QPDrawThread* m_drawThread;

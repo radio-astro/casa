@@ -3,7 +3,7 @@ AIPSROOT := $(word 1, $(CASAPATH))
 AIPSARCH := $(AIPSROOT)/$(word 2, $(CASAPATH))
 include $(AIPSARCH)/makedefs
 
-LINKplotms += display casaqt flagging graphics
+LINKplotms += display
 SKIP_MAKEDEFS := YES
 BINEXECS := casaplotms
 

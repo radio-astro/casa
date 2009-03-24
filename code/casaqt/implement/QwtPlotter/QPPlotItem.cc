@@ -37,6 +37,26 @@
 
 namespace casa {
 
+/////////////////////////////
+// QPLAYERITEM DEFINITIONS //
+/////////////////////////////
+
+QPLayerItem::QPLayerItem() { }
+
+QPLayerItem::~QPLayerItem() { }
+
+void QPLayerItem::draw(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& canvasRect) const {
+    draw_(p, xMap, yMap, canvasRect, 0, itemDrawCount()); }
+
+unsigned int QPLayerItem::itemDrawSegments(unsigned int segThreshold) const {
+    if(!shouldDraw()) return 0;
+    unsigned int count = itemDrawCount();
+    unsigned int seg = count / segThreshold;
+    if(count % segThreshold > 0) seg++;
+    return seg;
+}
+
 ////////////////////////////
 // QPPLOTITEM DEFINITIONS //
 ////////////////////////////
@@ -210,38 +230,62 @@ void QPDrawThread::drawItem(const QPLayerItem* item, QPainter* painter,
     painter->restore();
 }
 
-void QPDrawThread::drawItem(const QPPlotItem* item, QPainter* painter,
+void QPDrawThread::drawItem(const QPLayerItem* item, QPainter* painter,
             const QRect& rect, const QwtScaleMap maps[QwtPlot::axisCnt],
             unsigned int drawIndex, unsigned int drawCount) {
-    if(item == NULL || painter == NULL || drawCount == 0 ||
-       !item->isVisible() || !item->shouldDraw()) return;
+    if(item == NULL || painter == NULL || !item->isVisible() ||
+       !item->shouldDraw()) return;
     
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing,
          item->testRenderHint(QwtPlotItem::RenderAntialiased));
-    item->draw_(painter, maps[item->qwtXAxis()], maps[item->qwtYAxis()],
-                rect, drawIndex, drawCount);
+    item->draw_(painter, maps[item->xAxis()], maps[item->yAxis()], rect,
+                drawIndex, drawCount);
     painter->restore();
 }
 
+// Convenience macro for defining both drawItems methods.
+#define QPT_DRAW(TYPE)                                                        \
+    if(items.size() == 0 || painter == NULL) return;                          \
+    QList<const TYPE *> copy(items);                                          \
+    qSort(copy.begin(), copy.end(), itemSortByZ);                             \
+                                                                              \
+    if(!op.null() && totalSegments > 0 && segmentThreshold > 0) {             \
+        unsigned int nseg;                                                    \
+        double progress = currentSegment;                                     \
+        for(int i = 0; i < copy.size(); i++) {                                \
+            if(op->cancelRequested()) break;                                  \
+            op->setCurrentStatus("Drawing item \"" + copy[i]->itemTitle() +   \
+                                 "\"");                                       \
+            nseg = copy[i]->itemDrawSegments(segmentThreshold);               \
+            for(unsigned int j = 0; j < nseg; j++) {                          \
+                if(op->cancelRequested()) break;                              \
+                drawItem(copy[i], painter, rect, maps, j * segmentThreshold,  \
+                         segmentThreshold);                                   \
+                progress++;                                                   \
+                op->setCurrentProgress((unsigned int)                         \
+                        (((progress / totalSegments) * 100) + 0.5));          \
+            }                                                                 \
+        }                                                                     \
+    } else {                                                                  \
+        for(int i = 0; i < copy.size(); i++)                                  \
+            drawItem(copy[i], painter, rect, maps);                           \
+    }
+
 void QPDrawThread::drawItems(const QList<const QPLayerItem*>& items,
         QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[QwtPlot::axisCnt]) {
-    if(items.size() == 0 || painter == NULL) return;
-    QList<const QPLayerItem*> copy(items);
-    qSort(copy.begin(), copy.end(), itemSortByZ);
-    for(int i = 0; i < copy.size(); i++)
-        drawItem(copy[i], painter, rect, maps);
+        const QwtScaleMap maps[QwtPlot::axisCnt], PlotOperationPtr op,
+        unsigned int currentSegment, unsigned int totalSegments,
+        unsigned int segmentThreshold) {
+    QPT_DRAW(QPLayerItem)
 }
 
 void QPDrawThread::drawItems(const QList<const QPPlotItem*>& items,
         QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[QwtPlot::axisCnt]) {
-    if(items.size() == 0 || painter == NULL) return;
-    QList<const QPPlotItem*> copy(items);
-    qSort(copy.begin(), copy.end(), itemSortByZ);
-    for(int i = 0; i < copy.size(); i++)
-        drawItem(copy[i], painter, rect, maps);
+        const QwtScaleMap maps[QwtPlot::axisCnt], PlotOperationPtr op,
+        unsigned int currentSegment, unsigned int totalSegments,
+        unsigned int segmentThreshold) {
+    QPT_DRAW(QPPlotItem)
 }
 
 
@@ -279,16 +323,8 @@ QPDrawThread::~QPDrawThread() { }
 
 unsigned int QPDrawThread::totalSegments() const {
     unsigned int segments = 0;
-    
-    unsigned int t1, t2;
-    for(int i = 0; i < m_items.size(); i++) {
-        t2 = m_items[i]->indexedDrawCount();
-        t1 = t2 / m_segmentThreshold;
-        t2 = t2 % m_segmentThreshold;
-        segments += t1;
-        if(t2 > 0) segments++;
-    }
-    
+    for(int i = 0; i < m_items.size(); i++)
+        segments += m_items[i]->drawSegments(m_segmentThreshold);    
     return segments;
 }
 
@@ -314,13 +350,16 @@ void QPDrawThread::run() {
     
     // Item draw loop.
     for(int i = 0; i < m_items.size(); i++) {
-        // Check if the draw's been canceled.
+        // Check the PlotOperation to see if cancel is requested.
+        if(!op.null() && op->cancelRequested()) cancel();
+        
+        // Cancel if needed.
         if(m_cancelFlag) break;
         
         // Update temp variables.
         item = m_items[i];
         painter= item->canvasLayer() == MAIN? &mainPainter: &annotationPainter;
-        drawCount = item->indexedDrawCount();
+        drawCount = item->drawCount();
         
         // Update operation.
         if(!op.null()) {
@@ -335,7 +374,10 @@ void QPDrawThread::run() {
         
         // Segment draw loop.
         for(unsigned int j = 0; j < drawCount; j += m_segmentThreshold) {
-            // Check if the draw's been canceled.
+            // Check the PlotOperation to see if cancel is requested.
+            if(!op.null() && op->cancelRequested()) cancel();
+            
+            // Cancel if needed.
             if(m_cancelFlag) break;
             
             // Draw segment.

@@ -66,7 +66,8 @@ QPPanTool::QPPanTool(PlotAxis xAxis, PlotAxis yAxis, PlotCoordinate::System sys)
         PlotPanTool(xAxis, yAxis, sys), m_panner(NULL) { }
 
 QPPanTool::~QPPanTool() {
-    if(m_panner != NULL) delete m_panner;
+    // don't need to delete since the QwtPlot canvas will do it
+    // if(m_panner != NULL) delete m_panner;
 }
 
 
@@ -96,10 +97,11 @@ void QPPanTool::handleMouseEvent(const PlotEvent& event) {
             c->button() == PlotClickEvent::CONTEXT) {
         m_canvas->canvasAxesStackMove(0);
         notifyWatchers();
-        
-        // cursor niceness
-    } else if((m = dynamic_cast<const PlotMouseEvent*>(&event)) != NULL &&
-              m->type() == PlotMouseEvent::PRESS)
+    } 
+    
+    // cursor niceness
+    if((m = dynamic_cast<const PlotMouseEvent*>(&event)) != NULL &&
+       m->type() == PlotMouseEvent::PRESS)
         m_canvas->setCursor(HAND_CLOSED);
     else if(m != NULL && m->type() == PlotMouseEvent::RELEASE)
         m_canvas->setCursor(HAND_OPEN);
@@ -128,6 +130,12 @@ void QPPanTool::attach(PlotCanvas* canvas) {
     }
 }
 
+void QPPanTool::detach() {
+    if(m_panner != NULL) delete m_panner;
+    m_panner = NULL;
+    PlotPanTool::detach();
+}
+
 
 // Private Slots //
 
@@ -152,7 +160,8 @@ QPTrackerTool::QPTrackerTool(PlotAxis xAxis, PlotAxis yAxis,
         m_tracker(NULL) { }
 
 QPTrackerTool::~QPTrackerTool() {
-    if(m_tracker != NULL) delete m_tracker;
+    // don't need to delete since the QwtPlot canvas will do it
+    // if(m_tracker != NULL) delete m_tracker;
 }
 
 

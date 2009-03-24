@@ -94,10 +94,12 @@ public:
     using PlotCanvas::setBackground;
     using PlotCanvas::setSelectLine;
     using PlotCanvas::setTitleFont;
-    using PlotCanvas::setAxisRange;
-    using PlotCanvas::setAxesRanges;
+    using PlotCanvas::showAxes;
     using PlotCanvas::showCartesianAxis;
     using PlotCanvas::setAxisFont;
+    using PlotCanvas::setAxisRange;
+    using PlotCanvas::setAxesRanges;
+    using PlotCanvas::showGrid;
     using PlotCanvas::setGridMajorLine;
     using PlotCanvas::setGridMinorLine;
     using PlotCanvas::setLegendLine;
@@ -109,13 +111,13 @@ public:
     
     // Implements PlotCanvas::size().
     pair<int, int> size() const;
-    
+
     // Implements PlotCanvas::title().
     String title() const;
-    
+
     // Implements PlotCanvas::setTitle().
     void setTitle(const String& title);
-
+    
     // Implements PlotCanvas::titleFont().
     PlotFontPtr titleFont() const;
     
@@ -127,67 +129,45 @@ public:
     
     // Implements PlotCanvas::setBackground().
     void setBackground(const PlotAreaFill& areaFill);
-    
+
     // Implements PlotCanvas::cursor().
     PlotCursor cursor() const;
     
     // Implements PlotCanvas::setCursor().
     void setCursor(PlotCursor cursor);
     
-    // Implements PlotCanvas::refresh().  Calls QwtPlot::replot()
+    // Implements PlotCanvas::refresh().
+    // <group>
     void refresh();
+    void refresh(int drawLayersFlag);
+    // </group>
     
     // Implements PlotCanvas::isQWidget().
     bool isQWidget() const { return true; }
+
     
-    
-    // Implements PlotCanvas::axisShown().
-    bool axisShown(PlotAxis axis) const;
-    
-    // Implements PlotCanvas::showAxis().
-    void showAxis(PlotAxis axis, bool show = true);
+    // Implements PlotCanvas::shownAxes().
+    int shownAxes() const;
+
+    // Implements PlotCanvas::showAxes().
+    void showAxes(int axesFlag);
     
     // Implements PlotCanvas::axisScale().
     PlotAxisScale axisScale(PlotAxis axis) const;
-    
+
     // Implements PlotCanvas::setAxisScale().
     void setAxisScale(PlotAxis axis, PlotAxisScale scale);
-    
-    // Implements PlotCanvas::axisRange().
-    pair<double, double> axisRange(PlotAxis axis) const;
-    
-    // Implements PlotCanvas::setAxisRange().
-    void setAxisRange(PlotAxis axis, double from, double to);
-    
-    // Overrides PlotCanvas::setAxesRanges().
-    void setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
-                       PlotAxis yAxis, double yFrom, double yTo);
 
-    // Implements PlotCanvas::axesAutoRescale().
-    bool axesAutoRescale() const;
-    
-    // Implements PlotCanvas::setAxesAutoRescale().
-    void setAxesAutoRescale(bool autoRescale = true);
-
-    // Implements PlotCanvas::rescaleAxes().
-    void rescaleAxes();
-    
-    // Implements PlotCanvas::axesRatioLocked().
-    bool axesRatioLocked() const;
-    
-    // Implements PlotCanvas::setAxesRatioLocked().
-    void setAxesRatioLocked(bool locked = true);
-    
     // Implements PlotCanvas::cartesianAxisShown().
     bool cartesianAxisShown(PlotAxis axis) const;
-    
+
     // Implements PlotCanvas::showCartesianAxis().
     void showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
-                           bool show = true, bool hideNormalAxis = true);
-
+            bool show = true, bool hideNormalAxis = true);
+    
     // Implements PlotCanvas::axisLabel().
     String axisLabel(PlotAxis axis) const;
-    
+
     // Implements PlotCanvas::setAxisLabel().
     void setAxisLabel(PlotAxis axis, const String& title);
 
@@ -196,7 +176,7 @@ public:
     
     // Implements PlotCanvas::setAxisFont().
     void setAxisFont(PlotAxis axis, const PlotFont& font);
-    
+
     // Implements PlotCanvas::colorBarShown().
     bool colorBarShown(PlotAxis axis = Y_RIGHT) const;
 
@@ -204,55 +184,44 @@ public:
     void showColorBar(bool show = true, PlotAxis axis = Y_RIGHT);
 
     
-    // Implements PlotCanvas::autoIncrementColors().
-    bool autoIncrementColors() const;
-    
-    // Implements PlotCanvas::setAutoIncrementColors().
-    void setAutoIncrementColors(bool autoInc = true);   
+    // Implements PlotCanvas::axisRange().
+    pair<double, double> axisRange(PlotAxis axis) const;
 
-    // Implements PlotCanvas::exportToFile().
-    bool exportToFile(const PlotExportFormat& format);
+    // Implements PlotCanvas::setAxisRange().
+    void setAxisRange(PlotAxis axis, double from, double to);
     
-    // Implements PlotCanvas::fileChooserDialog().
-    String fileChooserDialog(const String& title = "File Chooser",
-                             const String& directory = "");
+    // Overrides PlotCanvas::setAxesRanges().
+    void setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
+                       PlotAxis yAxis, double yFrom, double yTo);
     
-    // Implements PlotCanvas::convertCoordinate().
-    PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
-            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const;
+    // Implements PlotCanvas::axesAutoRescale().
+    bool axesAutoRescale() const;
+
+    // Implements PlotCanvas::setAxesAutoRescale().
+    void setAxesAutoRescale(bool autoRescale = true);
+
+    // Implements PlotCanvas::rescaleAxes().
+    void rescaleAxes();
+
+    // Implements PlotCanvas::axesRatioLocked().
+    bool axesRatioLocked() const;
     
-    // Implements PlotCanvas::textWidthHeightDescent().
-    vector<double> textWidthHeightDescent(const String& text,
-                                          PlotFontPtr font) const;
-    
-    // Implements PlotCanvas::implementation().
-    int implementation() const { return Plotter::QWT; }
-    
-    // Implements PlotCanvas::implementationFactory().
-    PlotFactory* implementationFactory() const;
-    
-    
-    // Implements PlotCanvas::holdDrawing().
-    void holdDrawing();
-    
-    // Implements PlotCanvas::releaseDrawing().
-    void releaseDrawing();
-    
-    // Implements PlotCanvas::drawingIsHeld().
-    bool drawingIsHeld() const;
-    
+    // Implements PlotCanvas::setAxesRatioLocked().
+    void setAxesRatioLocked(bool locked = true);
+
+
     // Implements PlotCanvas::plotItem().  If the given items is NOT an
     // instance of a QPPlotItem, a copy of the given items is made.  The
     // original item is NOT kept by the canvas, so any subsequent changes to
     // the original items will not be reflected on the canvas.
     bool plotItem(PlotItemPtr item, PlotCanvasLayer layer = MAIN);
-    
+
     // Implements PlotCanvas::allPlotItems().
     vector<PlotItemPtr> allPlotItems() const;
     
     // Implements PlotCanvas::layerPlotItems().
     vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const;
-    
+
     // Overrides PlotCanvas::numPlotItems().
     unsigned int numPlotItems() const;
 
@@ -261,7 +230,7 @@ public:
     
     // Implements PlotCanvas::removePlotItems().
     void removePlotItems(const vector<PlotItemPtr>& items);
-
+    
     // Overrides PlotCanvas::clearPlotItems().
     void clearPlotItems();
     
@@ -271,68 +240,58 @@ public:
     // Overrides PlotCanvas::clearLayer().
     void clearLayer(PlotCanvasLayer layer);
 
-       
-    // Implements PlotCanvas::selectLineShown().
-    bool selectLineShown() const;
+    
+    // Implements PlotCanvas::holdDrawing().
+    void holdDrawing();
+    
+    // Implements PlotCanvas::releaseDrawing().
+    void releaseDrawing();
+    
+    // Implements PlotCanvas::drawingIsHeld().
+    bool drawingIsHeld() const;
 
+        
     // Implements PlotCanvas::setSelectLineShown().
     void setSelectLineShown(bool shown = true);
-
+    
     // Implements PlotCanvas::selectLine().
     PlotLinePtr selectLine() const;
-
+    
     // Implements PlotCanvas::setSelectLine().
     void setSelectLine(const PlotLine& line);
-    
-    
-    // Implements PlotCanvas::gridXMajorShown().
-    bool gridXMajorShown() const;
-    
-    // Implements PlotCanvas::setGridXMajorShown().
-    void setGridXMajorShown(bool s = true);
-    
-    // Implements PlotCanvas::gridXMinorShown().
-    bool gridXMinorShown() const;
-       
-    // Implements PlotCanvas::setGridXMinorShown().
-    void setGridXMinorShown(bool s = true);
-    
-    // Implements PlotCanvas::gridYMajorShown().
-    bool gridYMajorShown() const;
-        
-    // Implements PlotCanvas::setGridYMajorShown().
-    void setGridYMajorShown(bool s = true);
 
-    // Implements PlotCanvas::gridYMinorShown().
-    bool gridYMinorShown() const;
-
-    // Implements PlotCanvas::setGridYMinorShown().
-    void setGridYMinorShown(bool s = true);
+    
+    // Implements PlotCanvas::gridShown().
+    bool gridShown(bool* xMajor = NULL, bool* xMinor = NULL,
+            bool* yMajor = NULL, bool* yMinor = NULL) const;
+    
+    // Implements PlotCanvas::showGrid().
+    void showGrid(bool xMajor, bool xMinor, bool yMajor,bool yMinor);
     
     // Implements PlotCanvas::gridMajorLine().
     PlotLinePtr gridMajorLine() const;
-    
+
     // Implements PlotCanvas::setGridMajorLine().
     void setGridMajorLine(const PlotLine& line);
-    
+
     // Implements PlotCanvas::gridMinorLine().
     PlotLinePtr gridMinorLine() const;
-    
+
     // Implements PlotCanvas::setGridMinorLine().
     void setGridMinorLine(const PlotLine& line);
-    
+
     
     // Implements PlotCanvas::legendShown().
     bool legendShown() const;
     
     // Implements PlotCanvas::showLegend().
-    void showLegend(bool on = true, LegendPosition pos = EXT_BOTTOM);
+    void showLegend(bool on = true, LegendPosition position = EXT_BOTTOM);
     
     // Implements PlotCanvas::legendPosition().
     LegendPosition legendPosition() const;
     
     // Implements PlotCanvas::setLegendPosition().
-    void setLegendPosition(LegendPosition pos);
+    void setLegendPosition(LegendPosition position);
     
     // Implements PlotCanvas::legendLine().
     PlotLinePtr legendLine() const;
@@ -348,69 +307,37 @@ public:
     
     // Implements PlotCanvas::legendFont().
     PlotFontPtr legendFont() const;
-        
+    
     // Implements PlotCanvas::setLegendFont().
     void setLegendFont(const PlotFont& font);
+
+
+    // Implements PlotCanvas::autoIncrementColors().
+    bool autoIncrementColors() const;
+
+    // Implements PlotCanvas::setAutoIncrementColors().
+    void setAutoIncrementColors(bool autoInc = true);
+
+    // Implements PlotCanvas::exportToFile().
+    bool exportToFile(const PlotExportFormat& format);
+
+    // Implements PlotCanvas::fileChooserDialog().
+    String fileChooserDialog(const String& title = "File Chooser",
+            const String& directory = "");
+
+    // Implements PlotCanvas::convertCoordinate().
+    PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
+           PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const;
+
+    // Implements PlotCanvas::textWidthHeightDescent().
+    vector<double> textWidthHeightDescent(const String& text,
+            PlotFontPtr font) const;
     
+    // Implements PlotCanvas::implementation().
+    int implementation() const { return Plotter::QWT; }
     
-    // Implements PlotCanvas::registerMouseTool().
-    void registerMouseTool(PlotMouseToolPtr tool, bool activate = true,
-                           bool blocking = false);
-    
-    // Implements PlotCanvas::allMouseTools().
-    vector<PlotMouseToolPtr> allMouseTools() const;
-    
-    // Implements PlotCanvas::activeMouseTools().
-    vector<PlotMouseToolPtr> activeMouseTools() const;
-    
-    // Implements PlotCanvas::unregisterMouseTool().
-    void unregisterMouseTool(PlotMouseToolPtr tool);
-    
-    // Implements PlotCanvas::standardMouseTools().
-    PlotStandardMouseToolGroupPtr standardMouseTools();
-    
-    
-    // Implements PlotCanvas::mutex().
-    PlotMutexPtr mutex() const;
-    
-    
-    // Implements PlotCanvas handler methods.
-    // <group>
-    void registerSelectHandler(PlotSelectEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotSelectEventHandlerPtr> allSelectHandlers() const;
-    void unregisterSelectHandler(PlotSelectEventHandlerPtr handler);
-    void registerClickHandler(PlotClickEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotClickEventHandlerPtr> allClickHandlers() const;
-    void unregisterClickHandler(PlotClickEventHandlerPtr handler);
-    void registerMousePressHandler(PlotMousePressEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotMousePressEventHandlerPtr> allMousePressHandlers() const;
-    void unregisterMousePressHandler(PlotMousePressEventHandlerPtr handler);
-    void registerMouseReleaseHandler(PlotMouseReleaseEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotMouseReleaseEventHandlerPtr> allMouseReleaseHandlers() const;
-    void unregisterMouseReleaseHandler(PlotMouseReleaseEventHandlerPtr handlr);
-    void registerMouseDragHandler(PlotMouseDragEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotMouseDragEventHandlerPtr> allMouseDragHandlers() const;
-    void unregisterMouseDragHandler(PlotMouseDragEventHandlerPtr handler);
-    void registerMouseMoveHandler(PlotMouseMoveEventHandlerPtr h,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotMouseMoveEventHandlerPtr> allMouseMoveHandlers() const;
-    void unregisterMouseMoveHandler(PlotMouseMoveEventHandlerPtr h);
-    void registerWheelHandler(PlotWheelEventHandlerPtr handler,
-            PlotCoordinate::System system = PlotCoordinate::WORLD);
-    vector<PlotWheelEventHandlerPtr> allWheelHandlers() const;
-    void unregisterWheelHandler(PlotWheelEventHandlerPtr handler);
-    void registerKeyHandler(PlotKeyEventHandlerPtr handler);
-    vector<PlotKeyEventHandlerPtr> allKeyHandlers() const;
-    void unregisterKeyHandler(PlotKeyEventHandlerPtr handler);
-    void registerResizeHandler(PlotResizeEventHandlerPtr handler);
-    vector<PlotResizeEventHandlerPtr> allResizeHandlers() const;
-    void unregisterResizeHandler(PlotResizeEventHandlerPtr handler);
-    // </group>
+    // Implements PlotCanvas::implementationFactory().
+    PlotFactory* implementationFactory() const;
     
 
     // QPCanvas Methods //
@@ -499,32 +426,8 @@ private:
     bool m_legendFontSet;
     // </group>
     
-    // Registered mouse tools.
-    vector<PlotMouseToolPtr> m_mouseTools;
-    
-    // Standard mouse tools (or NULL if none have been set yet).
-    PlotStandardMouseToolGroupPtr m_standardTools;
-    
-    // Handlers.
-    // <group>
-    vector<pair<PlotSelectEventHandlerPtr, PlotCoordinate::System> >
-        m_selectHandlers;
-    vector<pair<PlotClickEventHandlerPtr, PlotCoordinate::System> >
-        m_clickHandlers;
-    vector<pair<PlotMousePressEventHandlerPtr, PlotCoordinate::System> >
-        m_pressHandlers;
-    vector<pair<PlotMouseReleaseEventHandlerPtr, PlotCoordinate::System> >
-        m_releaseHandlers;
-    vector<pair<PlotMouseDragEventHandlerPtr, PlotCoordinate::System> >
-        m_dragHandlers;
-    vector<pair<PlotMouseMoveEventHandlerPtr, PlotCoordinate::System> >
-        m_moveHandlers;
-    vector<pair<PlotWheelEventHandlerPtr, PlotCoordinate::System> >
-        m_wheelHandlers;
-    vector<PlotKeyEventHandlerPtr> m_keyHandlers;
-    vector<PlotResizeEventHandlerPtr> m_resizeHandlers;
+    // Flag for whether we're in mouse dragging mode or not.
     bool m_inDraggingMode;
-    // </group>
     
     // For catching single vs. double clicks.
     // <group>
@@ -533,9 +436,15 @@ private:
     QMouseEvent* m_clickEvent;
     // </group>
     
-    
-    // Resets all mouse tools.
-    void resetStacks();
+       
+    // Converts the given Qt global position to a pixel PlotCoordinate.
+    // <group>
+    PlotCoordinate globalPosToPixelCoord(int x, int y);
+    PlotCoordinate globalPosToPixelCoord(QMouseEvent* event) {
+        return globalPosToPixelCoord(event->globalX(), event->globalY()); }
+    PlotCoordinate globalPosToPixelCoord(QWheelEvent* event) {
+        return globalPosToPixelCoord(event->globalX(), event->globalY()); }
+    // </group>
     
     
     // Static //

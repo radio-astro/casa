@@ -28,6 +28,7 @@
 
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
+#include <casaqt/QtUtilities/QtLayeredLayout.h>
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
@@ -55,7 +56,7 @@ namespace casa {
     postAxes[2] = axisRange(Y_LEFT); postAxes[3] = axisRange(Y_RIGHT);        \
     if(preAxes[0] != postAxes[0] || preAxes[1] != postAxes[1] ||              \
        preAxes[2] != postAxes[2] || preAxes[3] != postAxes[3])                \
-        resetStacks();
+        resetMouseTools();
 
 // Static //
 
@@ -80,6 +81,8 @@ bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
 bool QPCanvas::exportHelper(QWidget* grabWidget,
         vector<PlotCanvasPtr>& canvases, const PlotExportFormat& format) {
     if(format.location.empty()) return false;
+    
+    bool wasCanceled = false;
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
@@ -136,6 +139,8 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             double widthRatio  = ((double)width)  / grabWidget->width(),
                    heightRatio = ((double)height) / grabWidget->height();
             QRect geom, printGeom, imageRect(0, 0, width, height);
+            PlotFontPtr titleFont;
+            PlotOperationPtr op;
             for(unsigned int i = 0; i < canvases.size(); i++) {
                 if(canvases[i].null()) continue;
                 canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
@@ -146,13 +151,24 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
                                   (int)((geom.y() * heightRatio) + 0.5),
                                   (int)((geom.width() * widthRatio) + 0.5),
                                   (int)((geom.height() * heightRatio) + 0.5));
-                printGeom &= imageRect;             
+                printGeom &= imageRect;
+                titleFont = canv->titleFont();
+                
+                op = canv->operationExport();
+                if(!op.null()) wasCanceled |= op->cancelRequested();
+                if(wasCanceled) break;
                 canv->asQwtPlot().print(&painter, printGeom);
+                
+                // For bug where title color changes after a print.
+                if(!titleFont.null()) canv->setTitleFont(titleFont);
+                
+                if(!op.null()) wasCanceled |= op->cancelRequested();
+                if(wasCanceled) break;
             }
         }
         
         // Set DPI.
-        if(format.dpi > 0) {
+        if(!wasCanceled && format.dpi > 0) {
             // convert dpi to dpm
             int dpm = QPOptions::round((format.dpi / 2.54) * 100);
             image.setDotsPerMeterX(dpm);
@@ -163,8 +179,9 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
         
         // Save to file.
-        return !image.isNull() && image.save(format.location.c_str(),
-                PlotExportFormat::exportFormat(format.type).c_str(), f);
+        return !wasCanceled && !image.isNull() &&
+               image.save(format.location.c_str(),
+               PlotExportFormat::exportFormat(format.type).c_str(), f);
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
@@ -188,6 +205,8 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         // Print each canvas.
         QPCanvas* canv;
         bool flag = false;
+        PlotFontPtr titleFont;
+        PlotOperationPtr op;
         for(unsigned int i = 0; i < canvases.size(); i++) {
             if(canvases[i].null()) continue;
             canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
@@ -201,9 +220,19 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             printer.setOrientation(canv->width() >= canv->height() ?
                                    QPrinter::Landscape : QPrinter::Portrait);
                   
+            titleFont = canv->titleFont();
+            op = canv->operationExport();
+            if(!op.null()) wasCanceled |= op->cancelRequested();
+            if(wasCanceled) break;
             canv->asQwtPlot().print(printer);
+            
+            // For bug where title color changes after a print.
+            if(!titleFont.null()) canv->setTitleFont(titleFont);
+            
+            if(!op.null()) wasCanceled |= op->cancelRequested();
+            if(wasCanceled) break;
         }
-        return true;
+        return !wasCanceled;
     }
     
     return false;
@@ -239,19 +268,18 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_ignoreNextRelease(false), m_timer(this), m_clickEvent(NULL) {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setFocusPolicy(Qt::StrongFocus);
     
-    QGridLayout* gl = new QGridLayout(this);
-    gl->addWidget(&m_canvas, 0, 0);
-#if QT_VERSION >= 0x040300
-    gl->setContentsMargins(0, 0, 0, 0);
-#else
-    gl->setMargin(0);
-#endif
+    QtLayeredLayout* ll = new QtLayeredLayout(this);
+    ll->setContentsMargins(0, 0, 0, 0);
+    ll->addWidget(&m_canvas);
     
     m_legend = new QPLegendHolder(this, PlotCanvas::INT_URIGHT);
     setLegendLine(QPFactory::defaultLegendLine());
     setLegendFill(QPFactory::defaultLegendAreaFill());
     m_legend->showLegend(false);
+    
+    setCursor(NORMAL_CURSOR);
     
     m_picker.setSelectionFlags(QwtPicker::RectSelection |
                                QwtPicker::DragSelection);
@@ -263,8 +291,6 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     connect(&m_mouseFilter, SIGNAL(mouseMoveEvent(QMouseEvent*)),
             SLOT(trackerMouseEvent(QMouseEvent*)));
     
-    m_canvas.canvas()->setCursor(Qt::ArrowCursor);
-    
     m_canvas.enableAxis(QwtPlot::xBottom, false);
     m_canvas.enableAxis(QwtPlot::yLeft, false);
     m_canvas.setAutoReplot(true);
@@ -274,10 +300,7 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
 }
 
-QPCanvas::~QPCanvas() {
-    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
-        detachTool(m_mouseTools[i]);
-}
+QPCanvas::~QPCanvas() { }
 
 
 // Public Methods //
@@ -320,6 +343,7 @@ PlotCursor QPCanvas::cursor() const {
     return QPOptions::cursor(m_canvas.cursor().shape()); }
 
 void QPCanvas::setCursor(PlotCursor cursor) {
+    QWidget::setCursor(QPOptions::cursor(cursor));
     m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); }
 
 void QPCanvas::refresh() {
@@ -329,12 +353,34 @@ void QPCanvas::refresh() {
     POST_REPLOT
 }
 
+void QPCanvas::refresh(int drawLayersFlag) {
+    bool main= drawLayersFlag & MAIN, annotation= drawLayersFlag & ANNOTATION;
+    
+    if(main || annotation) {
+        PRE_REPLOT
+        QCoreApplication::processEvents();
+        m_canvas.replot(main, annotation);
+        POST_REPLOT
+    }
+}
 
-bool QPCanvas::axisShown(PlotAxis axis) const {
-    return m_canvas.axisEnabled(QPOptions::axis(axis)); }
 
-void QPCanvas::showAxis(PlotAxis axis, bool show) {
-    m_canvas.enableAxis(QPOptions::axis(axis), show); }
+int QPCanvas::shownAxes() const {
+    int axes = 0;
+    for(int i = 0; i < QwtPlot::axisCnt; i++) {
+        if(m_canvas.axisEnabled(i))
+            axes |= QPOptions::axis(QwtPlot::Axis(i));
+    }
+    return axes;
+}
+
+void QPCanvas::showAxes(int axesFlag) {
+    bool show;
+    for(int i = 0; i < QwtPlot::axisCnt; i++) {
+        show = axesFlag & QPOptions::axis(QwtPlot::Axis(i));
+        m_canvas.enableAxis(QwtPlot::Axis(i), show);
+    }
+}
 
 PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const {
     const QwtScaleEngine* e = m_canvas.axisScaleEngine(QPOptions::axis(axis));
@@ -380,6 +426,80 @@ void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
         if(m_canvas.autoReplot()) m_canvas.replot();
     }
 }
+
+bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
+    return m_canvas.cartesianAxisShown(axis); }
+
+void QPCanvas::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
+                                 bool show, bool hideNormalAxis) {
+    m_canvas.showCartesianAxis(mirrorAxis, secondaryAxis, show);
+    showAxis(mirrorAxis, !hideNormalAxis);
+}
+
+String QPCanvas::axisLabel(PlotAxis axis) const {
+    return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); }
+
+void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
+    m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
+    m_canvas.enableAxis(QPOptions::axis(axis));
+}
+
+PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
+    QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
+    return new QPFont(t.font(), t.color());
+}
+
+void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
+    if(font != *axisFont(axis)) {
+        QPFont f(font);    
+        QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
+        t.setFont(f.asQFont());
+        t.setColor(f.asQColor());
+        m_canvas.setAxisTitle(QPOptions::axis(axis), t);
+        if(!t.isEmpty()) m_canvas.enableAxis(QPOptions::axis(axis));
+    }
+}
+
+bool QPCanvas::colorBarShown(PlotAxis axis) const {
+    return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled(); }
+
+void QPCanvas::showColorBar(bool show, PlotAxis axis) {
+    QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
+    
+    if(!show) {
+        scale->setColorBarEnabled(false);
+        return;
+    }
+    
+    QPRasterPlot* r = NULL;
+    for(unsigned int i = 0; i < m_plotItems.size(); i++) {
+        r = dynamic_cast<QPRasterPlot*>(m_plotItems[i].second);
+        if(r != NULL) break;
+    }
+    
+    if(r == NULL) {
+        scale->setColorBarEnabled(false);
+        return;
+    }
+    
+    pair<double, double> v = r->rasterData()->valueRange();
+    scale->setColorBarEnabled(true);
+    
+    if(r->dataFormat() == PlotRasterData::SPECTROGRAM) {
+        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
+                           r->colorMap());
+    } else {
+        vector<double>* vals = r->rasterData()->colorBarValues();
+        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
+                           QPOptions::rasterMap(*vals));
+        delete vals;
+    }
+
+    m_canvas.enableAxis(QPOptions::axis(axis), true);
+    if(v.first != v.second) setAxisRange(axis, v.first, v.second);
+    else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
+}
+
 
 pair<double, double> QPCanvas::axisRange(PlotAxis axis) const {
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
@@ -530,185 +650,6 @@ void QPCanvas::setAxesRatioLocked(bool locked) {
     }
 }
 
-bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
-    return m_canvas.cartesianAxisShown(axis); }
-
-void QPCanvas::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
-                                 bool show, bool hideNormalAxis) {
-    m_canvas.showCartesianAxis(mirrorAxis, secondaryAxis, show);
-    showAxis(mirrorAxis, !hideNormalAxis);
-}
-
-String QPCanvas::axisLabel(PlotAxis axis) const {
-    return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); }
-
-void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
-    m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
-    m_canvas.enableAxis(QPOptions::axis(axis));
-}
-
-PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
-    QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
-    return new QPFont(t.font(), t.color());
-}
-
-void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
-    if(font != *axisFont(axis)) {
-        QPFont f(font);    
-        QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
-        t.setFont(f.asQFont());
-        t.setColor(f.asQColor());
-        m_canvas.setAxisTitle(QPOptions::axis(axis), t);
-        if(!t.isEmpty()) m_canvas.enableAxis(QPOptions::axis(axis));
-    }
-}
-
-bool QPCanvas::colorBarShown(PlotAxis axis) const {
-    return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled(); }
-
-void QPCanvas::showColorBar(bool show, PlotAxis axis) {
-    QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
-    
-    if(!show) {
-        scale->setColorBarEnabled(false);
-        return;
-    }
-    
-    QPRasterPlot* r = NULL;
-    for(unsigned int i = 0; i < m_plotItems.size(); i++) {
-        r = dynamic_cast<QPRasterPlot*>(m_plotItems[i].second);
-        if(r != NULL) break;
-    }
-    
-    if(r == NULL) {
-        scale->setColorBarEnabled(false);
-        return;
-    }
-    
-    pair<double, double> v = r->rasterData()->valueRange();
-    scale->setColorBarEnabled(true);
-    
-    if(r->dataFormat() == PlotRasterData::SPECTROGRAM) {
-        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
-                           r->colorMap());
-    } else {
-        vector<double>* vals = r->rasterData()->colorBarValues();
-        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
-                           QPOptions::rasterMap(*vals));
-        delete vals;
-    }
-
-    m_canvas.enableAxis(QPOptions::axis(axis), true);
-    if(v.first != v.second) setAxisRange(axis, v.first, v.second);
-    else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
-}
-
-
-bool QPCanvas::autoIncrementColors() const { return m_autoIncColors; }
-
-void QPCanvas::setAutoIncrementColors(bool autoInc) {
-    m_autoIncColors = autoInc; }
-
-bool QPCanvas::exportToFile(const PlotExportFormat& format) {
-    return exportCanvas(this, format); }
-
-String QPCanvas::fileChooserDialog(const String& title,
-        const String& directory) {
-    QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
-            directory.c_str());
-    return filename.toStdString();
-}
-
-PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
-                                 PlotCoordinate::System newSystem) const {
-    if(coord.system() == newSystem) return coord;
-    
-    if(coord.system() == PlotCoordinate::WORLD) {
-        if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-            pair<double, double> range = axisRange(X_BOTTOM);
-            double x = (coord.x() - range.first)/(range.second - range.first);            
-            range = axisRange(Y_LEFT);
-            double y = (coord.y() - range.first)/(range.second - range.first);
-            
-            return PlotCoordinate(x, y, newSystem);
-            
-        } else if(newSystem == PlotCoordinate::PIXEL) {
-            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-            double x = map.xTransform(coord.x());
-            map = m_canvas.canvasMap(QwtPlot::yLeft);
-            double y = map.xTransform(coord.y());
-            
-            return PlotCoordinate(x, y, newSystem);
-        }
-        
-    } else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
-        if(newSystem == PlotCoordinate::WORLD ||
-           newSystem == PlotCoordinate::PIXEL) {
-            pair<double, double> range = axisRange(X_BOTTOM);
-            double x = (coord.x()*(range.first - range.second)) + range.first;
-            range = axisRange(Y_LEFT);
-            double y = (coord.y()*(range.first - range.second)) + range.first;
-            
-            if(newSystem == PlotCoordinate::PIXEL) {
-                QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-                x = map.xTransform(x);
-                map = m_canvas.canvasMap(QwtPlot::yLeft);
-                y = map.xTransform(y);
-            }
-            
-            return PlotCoordinate(x, y, newSystem);
-
-        }
-        
-    } else if(coord.system() == PlotCoordinate::PIXEL) {
-        if(newSystem == PlotCoordinate::WORLD ||
-           newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-            double x = map.invTransform(coord.x());
-            map = m_canvas.canvasMap(QwtPlot::yLeft);
-            double y = map.invTransform(coord.y());
-            
-            if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-                pair<double, double> r = axisRange(X_BOTTOM);
-                x = (x - r.first) / (r.second - r.first);
-                r = axisRange(Y_LEFT);
-                y = (y - r.first) / (r.second - r.first);
-            }
-            
-            return PlotCoordinate(x, y, newSystem);
-        }
-        
-    }
-    
-    // somehow invalid
-    return coord;
-}
-
-vector<double> QPCanvas::textWidthHeightDescent(const String& text,
-                                                PlotFontPtr font) const {
-    vector<double> v(3, 0);
-
-    QFontMetrics mets(QPFont(*font).asQFont());
-    v[0] = mets.width(text.c_str());
-    v[1] = mets.ascent();
-    v[2] = mets.descent();
-    
-    return v;
-}
-
-PlotFactory* QPCanvas::implementationFactory() const { return new QPFactory();}
-
-
-void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
-
-void QPCanvas::releaseDrawing() {
-    PRE_REPLOT
-    QCoreApplication::processEvents();
-    m_canvas.releaseDrawing();
-    POST_REPLOT
-}
-
-bool QPCanvas::drawingIsHeld() const { return m_canvas.drawingIsHeld(); }
 
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     if(item.null() || !item->isValid()) return false;
@@ -803,8 +744,10 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
 }
 
 vector<PlotItemPtr> QPCanvas::allPlotItems() const {
-    vector<PlotItemPtr> v(m_plotItems.size());
-    for(unsigned int i = 0; i < v.size(); i++) v[i] = m_plotItems[i].first;
+    vector<PlotItemPtr> v(m_plotItems.size() + m_layeredItems.size());
+    unsigned int i = 0, n = m_plotItems.size();
+    for(; i < m_plotItems.size(); i++) v[i] = m_plotItems[i].first;
+    for(; i < v.size(); i++) v[i] = m_layeredItems[i - n].first;
     return v;
 }
 
@@ -908,8 +851,17 @@ void QPCanvas::clearLayer(PlotCanvasLayer layer) {
 }
 
 
-bool QPCanvas::selectLineShown() const {
-    return m_picker.rubberBandPen().style() != Qt::NoPen; }
+void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
+
+void QPCanvas::releaseDrawing() {
+    PRE_REPLOT
+    QCoreApplication::processEvents();
+    m_canvas.releaseDrawing();
+    POST_REPLOT
+}
+
+bool QPCanvas::drawingIsHeld() const { return m_canvas.drawingIsHeld(); }
+
 
 void QPCanvas::setSelectLineShown(bool shown) {
     if(shown != selectLineShown()) {
@@ -928,29 +880,43 @@ void QPCanvas::setSelectLine(const PlotLine& line) {
 }
 
 
-bool QPCanvas::gridXMajorShown() const { return m_canvas.grid().xEnabled(); }
-void QPCanvas::setGridXMajorShown(bool s) { m_canvas.grid().enableX(s); }
-bool QPCanvas::gridXMinorShown() const { return m_canvas.grid().xMinEnabled();}
-void QPCanvas::setGridXMinorShown(bool s) { m_canvas.grid().enableXMin(s); }
-bool QPCanvas::gridYMajorShown() const { return m_canvas.grid().yEnabled(); }    
-void QPCanvas::setGridYMajorShown(bool s) { m_canvas.grid().enableY(s); }
-bool QPCanvas::gridYMinorShown() const { return m_canvas.grid().yMinEnabled();}
-void QPCanvas::setGridYMinorShown(bool s) { m_canvas.grid().enableYMin(s); }
+bool QPCanvas::gridShown(bool* xMajor, bool* xMinor, bool* yMajor,
+        bool* yMinor) const {
+    bool ret = false;
+    
+    bool tmp = m_canvas.grid().xEnabled();
+    ret |= tmp;
+    if(xMajor != NULL) *xMajor = tmp;
+    
+    ret |= tmp = m_canvas.grid().xMinEnabled();
+    if(xMinor != NULL) *xMinor = tmp;
+    
+    ret |= tmp = m_canvas.grid().yEnabled();
+    if(yMajor != NULL) *yMajor = tmp;
+    
+    ret |= tmp = m_canvas.grid().yMinEnabled();
+    if(yMinor != NULL) *yMinor = tmp;
+    
+    return ret;
+}
+
+void QPCanvas::showGrid(bool xMajor, bool xMinor, bool yMajor,bool yMinor) {
+    m_canvas.grid().enableX(xMajor);
+    m_canvas.grid().enableXMin(xMinor);
+    m_canvas.grid().enableY(yMajor);
+    m_canvas.grid().enableYMin(yMinor);
+}
 
 PlotLinePtr QPCanvas::gridMajorLine() const {
     return new QPLine(m_canvas.grid().majPen()); }
 
 void QPCanvas::setGridMajorLine(const PlotLine& line) {
     if(line != *gridMajorLine()) {
-        const QPLine* l = dynamic_cast<const QPLine*>(&line);
-        bool del = l == NULL;
-        if(l == NULL) l = new QPLine(line);
+        QPLine l(line);
         
-        m_canvas.grid().enableX(l->style() != PlotLine::NOLINE);
-        m_canvas.grid().enableY(l->style() != PlotLine::NOLINE);
-        m_canvas.grid().setMajPen(l->asQPen());
-        
-        if(del) delete l;
+        m_canvas.grid().enableX(l.style() != PlotLine::NOLINE);
+        m_canvas.grid().enableY(l.style() != PlotLine::NOLINE);
+        m_canvas.grid().setMajPen(l.asQPen());
     }
 }
 
@@ -959,15 +925,11 @@ PlotLinePtr QPCanvas::gridMinorLine() const {
 
 void QPCanvas::setGridMinorLine(const PlotLine& line) {
     if(line != *gridMinorLine()) {
-        const QPLine* l = dynamic_cast<const QPLine*>(&line);
-        bool del = l == NULL;
-        if(l == NULL) l = new QPLine(line);
+        QPLine l(line);
         
-        m_canvas.grid().enableXMin(l->style() != PlotLine::NOLINE);
-        m_canvas.grid().enableYMin(l->style() != PlotLine::NOLINE);
-        m_canvas.grid().setMinPen(l->asQPen());
-        
-        if(del) delete l;
+        m_canvas.grid().enableXMin(l.style() != PlotLine::NOLINE);
+        m_canvas.grid().enableYMin(l.style() != PlotLine::NOLINE);
+        m_canvas.grid().setMinPen(l.asQPen());
     }
 }
 
@@ -1009,105 +971,99 @@ void QPCanvas::setLegendFont(const PlotFont& font) {
 }
 
 
-void QPCanvas::registerMouseTool(PlotMouseToolPtr tool, bool activate,
-        bool blocking) {
-    if(tool.null()) return;
-    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
-        if(m_mouseTools[i] == tool) return;
-    attachTool(tool);
-    m_mouseTools.push_back(tool);
-    tool->setActive(activate);
-    tool->setBlocking(blocking);
+bool QPCanvas::autoIncrementColors() const { return m_autoIncColors; }
+
+void QPCanvas::setAutoIncrementColors(bool autoInc) {
+    m_autoIncColors = autoInc; }
+
+bool QPCanvas::exportToFile(const PlotExportFormat& format) {
+    return exportCanvas(this, format); }
+
+String QPCanvas::fileChooserDialog(const String& title,
+        const String& directory) {
+    QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
+            directory.c_str());
+    return filename.toStdString();
 }
 
-vector<PlotMouseToolPtr> QPCanvas::allMouseTools() const{ return m_mouseTools;}
+PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
+                                 PlotCoordinate::System newSystem) const {
+    if(coord.system() == newSystem) return coord;
+    
+    if(coord.system() == PlotCoordinate::WORLD) {
+        if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
+            pair<double, double> range = axisRange(X_BOTTOM);
+            double x = (coord.x() - range.first)/(range.second - range.first);            
+            range = axisRange(Y_LEFT);
+            double y = (coord.y() - range.first)/(range.second - range.first);
+            
+            return PlotCoordinate(x, y, newSystem);
+            
+        } else if(newSystem == PlotCoordinate::PIXEL) {
+            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
+            double x = map.xTransform(coord.x());
+            map = m_canvas.canvasMap(QwtPlot::yLeft);
+            double y = map.xTransform(coord.y());
+            
+            return PlotCoordinate(x, y, newSystem);
+        }
+        
+    } else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
+        if(newSystem == PlotCoordinate::WORLD ||
+           newSystem == PlotCoordinate::PIXEL) {
+            pair<double, double> range = axisRange(X_BOTTOM);
+            double x = (coord.x()*(range.first - range.second)) + range.first;
+            range = axisRange(Y_LEFT);
+            double y = (coord.y()*(range.first - range.second)) + range.first;
+            
+            if(newSystem == PlotCoordinate::PIXEL) {
+                QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
+                x = map.xTransform(x);
+                map = m_canvas.canvasMap(QwtPlot::yLeft);
+                y = map.xTransform(y);
+            }
+            
+            return PlotCoordinate(x, y, newSystem);
 
-vector<PlotMouseToolPtr> QPCanvas::activeMouseTools() const {
-    vector<PlotMouseToolPtr> v;
-    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
-        if(m_mouseTools[i]->isActive()) v.push_back(m_mouseTools[i]);
+        }
+        
+    } else if(coord.system() == PlotCoordinate::PIXEL) {
+        if(newSystem == PlotCoordinate::WORLD ||
+           newSystem == PlotCoordinate::NORMALIZED_WORLD) {
+            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
+            double x = map.invTransform(coord.x());
+            map = m_canvas.canvasMap(QwtPlot::yLeft);
+            double y = map.invTransform(coord.y());
+            
+            if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
+                pair<double, double> r = axisRange(X_BOTTOM);
+                x = (x - r.first) / (r.second - r.first);
+                r = axisRange(Y_LEFT);
+                y = (y - r.first) / (r.second - r.first);
+            }
+            
+            return PlotCoordinate(x, y, newSystem);
+        }
+        
+    }
+    
+    // somehow invalid
+    return coord;
+}
+
+vector<double> QPCanvas::textWidthHeightDescent(const String& text,
+                                                PlotFontPtr font) const {
+    vector<double> v(3, 0);
+
+    QFontMetrics mets(QPFont(*font).asQFont());
+    v[0] = mets.width(text.c_str());
+    v[1] = mets.ascent();
+    v[2] = mets.descent();
+    
     return v;
 }
 
-void QPCanvas::unregisterMouseTool(PlotMouseToolPtr tool) {
-    if(tool.null()) return;
-    for(unsigned int i = 0; i < m_mouseTools.size(); i++) {
-        if(m_mouseTools[i] == tool) {
-            m_mouseTools.erase(m_mouseTools.begin() + i);
-            detachTool(tool);
-            return;
-        }
-    }
-}
-
-PlotStandardMouseToolGroupPtr QPCanvas::standardMouseTools() {
-    if(m_standardTools.null()) {
-        m_standardTools = QPFactory().standardMouseTools();
-        registerMouseTool(m_standardTools, false, true);
-    }
-    return m_standardTools;
-}
-
-
-PlotMutexPtr QPCanvas::mutex() const { return new QPMutex(); }
-
-
-// Macro for the handlers because they got very repetitive.
-#define QPC_HANDLER1(TYPE,MEMBER)                                             \
-void QPCanvas::register##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler,   \
-        PlotCoordinate::System system) {                                      \
-    if(handler.null()) return;                                                \
-    for(unsigned int i = 0; i < MEMBER .size(); i++)                          \
-        if( MEMBER [i].first == handler) return;                              \
-    MEMBER .push_back(pair<Plot##TYPE##EventHandlerPtr,                       \
-            PlotCoordinate::System>(handler, system));                        \
-}                                                                             \
-                                                                              \
-vector<Plot##TYPE##EventHandlerPtr> QPCanvas::all##TYPE##Handlers() const {   \
-    vector<Plot##TYPE##EventHandlerPtr> v( MEMBER .size());                   \
-    for(unsigned int i = 0; i < v.size(); i++) v[i] = MEMBER [i].first;       \
-    return v;                                                                 \
-}                                                                             \
-                                                                              \
-void QPCanvas::unregister##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler){\
-    for(unsigned int i = 0; i < MEMBER .size(); i++) {                        \
-        if( MEMBER [i].first == handler) {                                    \
-            MEMBER .erase( MEMBER .begin() + i);                              \
-            break;                                                            \
-        }                                                                     \
-    }                                                                         \
-}
-
-// Second macro which doesn't have the PlotCoordiate::System stuff.
-#define QPC_HANDLER2(TYPE,MEMBER)                                             \
-void QPCanvas::register##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler) { \
-    if(handler.null()) return;                                                \
-    for(unsigned int i = 0; i < MEMBER .size(); i++)                          \
-        if( MEMBER [i] == handler) return;                                    \
-    MEMBER .push_back(handler);                                               \
-}                                                                             \
-                                                                              \
-vector<Plot##TYPE##EventHandlerPtr> QPCanvas::all##TYPE##Handlers() const {   \
-    return MEMBER; }                                                          \
-                                                                              \
-void QPCanvas::unregister##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler){\
-    for(unsigned int i = 0; i < MEMBER .size(); i++) {                        \
-        if( MEMBER [i] == handler) {                                          \
-            MEMBER .erase( MEMBER .begin() + i);                              \
-            break;                                                            \
-        }                                                                     \
-    }                                                                         \
-}
-
-QPC_HANDLER1(Select, m_selectHandlers)
-QPC_HANDLER1(Click, m_clickHandlers)
-QPC_HANDLER1(MousePress, m_pressHandlers)
-QPC_HANDLER1(MouseRelease, m_releaseHandlers)
-QPC_HANDLER1(MouseDrag, m_dragHandlers)
-QPC_HANDLER1(MouseMove, m_moveHandlers)
-QPC_HANDLER1(Wheel, m_wheelHandlers)
-QPC_HANDLER2(Key, m_keyHandlers)
-QPC_HANDLER2(Resize, m_resizeHandlers)
+PlotFactory* QPCanvas::implementationFactory() const { return new QPFactory();}
 
 
 QPLayeredCanvas& QPCanvas::asQwtPlot() { return m_canvas; }
@@ -1135,105 +1091,24 @@ PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) {
 }
 
 void QPCanvas::mousePressEvent(QMouseEvent* event) {
-    vector<PlotMouseToolPtr> active = activeMouseTools();
-    if(active.size() == 0 && m_pressHandlers.size() == 0) {
-        event->ignore();
-        return;
-    }
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
     else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
-    
-    double x = event->globalX(), y = event->globalY();
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p(rect.left(), rect.top());
-    p = m_canvas.canvas()->mapToGlobal(p);
-    
-    PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-    PlotCoordinate wcoord = convertCoordinate(pcoord, PlotCoordinate::WORLD);
-    PlotCoordinate ncoord = convertCoordinate(wcoord,
-                                            PlotCoordinate::NORMALIZED_WORLD);
-    PlotMousePressEvent pe(this, t, pcoord);
-    PlotMousePressEvent we(this, t, wcoord);
-    PlotMousePressEvent ne(this, t, ncoord);
-    
-    for(unsigned int i = 0; i < active.size(); i++) {
-        switch(active[i]->getCoordinateSystem()) {
-        case PlotCoordinate::WORLD: active[i]->handleMousePress(we); break;
-        case PlotCoordinate::PIXEL: active[i]->handleMousePress(pe); break;
-        case PlotCoordinate::NORMALIZED_WORLD:
-            active[i]->handleMousePress(ne); break;
-            
-        default: continue;
-        }
-        if(active[i]->isBlocking() && active[i]->lastEventWasHandled()) {
-            event->accept();
-            return;
-        }
-    }
-    
-    for(unsigned int i = 0; i < m_pressHandlers.size(); i++) {
-        if(m_pressHandlers[i].second == PlotCoordinate::PIXEL)
-            m_pressHandlers[i].first->handleMousePress(pe);
-        else if(m_pressHandlers[i].second == PlotCoordinate::WORLD)
-            m_pressHandlers[i].first->handleMousePress(we);
-        else if(m_pressHandlers[i].second == PlotCoordinate::NORMALIZED_WORLD)
-            m_pressHandlers[i].first->handleMousePress(ne);
-    }
+
+    PlotCoordinate pcoord = globalPosToPixelCoord(event);
+    if(notifyPressHandlers(t, pcoord)) event->accept();
+    else                               event->ignore();
 }
 
-void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
-    vector<PlotMouseToolPtr> active = activeMouseTools();
-    if(active.size() == 0 && m_clickHandlers.size() == 0 &&
-       m_releaseHandlers.size() == 0) {
-        event->ignore();
-        return;
-    }
-    
+void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {    
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
     else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
     
-    double x = event->globalX(), y = event->globalY();
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p(rect.left(), rect.top());
-    p = m_canvas.canvas()->mapToGlobal(p);
-    
-    PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-    PlotCoordinate wcoord = convertCoordinate(pcoord, PlotCoordinate::WORLD);
-    PlotCoordinate ncoord = convertCoordinate(wcoord,
-                                           PlotCoordinate::NORMALIZED_WORLD);
-    PlotMouseReleaseEvent pe(this, t, pcoord);
-    PlotMouseReleaseEvent we(this, t, wcoord);
-    PlotMouseReleaseEvent ne(this, t, ncoord);
-    
-    bool blocked = false;
-    for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-        switch(active[i]->getCoordinateSystem()) {
-        case PlotCoordinate::WORLD: active[i]->handleMouseRelease(we); break;
-        case PlotCoordinate::PIXEL: active[i]->handleMouseRelease(pe); break;
-        case PlotCoordinate::NORMALIZED_WORLD:
-            active[i]->handleMouseRelease(ne); break;
-            
-        default: continue;
-        }
-        if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-            blocked = true;
-    }
-    
-    for(unsigned int i = 0; !blocked && i < m_releaseHandlers.size(); i++) {
-        if(m_releaseHandlers[i].second == PlotCoordinate::PIXEL)
-            m_releaseHandlers[i].first->handleMouseRelease(pe);
-        else if(m_releaseHandlers[i].second == PlotCoordinate::WORLD)
-            m_releaseHandlers[i].first->handleMouseRelease(we);
-        else if(m_releaseHandlers[i].second ==
-            PlotCoordinate::NORMALIZED_WORLD)
-            m_releaseHandlers[i].first->handleMouseRelease(ne);
-    }
+    PlotCoordinate pcoord = globalPosToPixelCoord(event);
+    bool accept = notifyReleaseHandlers(t, pcoord);
     
     if(event->button() == Qt::LeftButton) {
-        if(m_releaseHandlers.size() > 0) event->accept();
-        
         if(!m_ignoreNextRelease) {
             m_timer.start(QApplication::doubleClickInterval());
             m_clickEvent = event;
@@ -1243,223 +1118,65 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
     } else if(event->button() == Qt::RightButton ||
               event->button() == Qt::MidButton) {
         // Also send a click event
-        PlotMouseEvent::Button t= event->button() == Qt::RightButton ?
-                                PlotMouseEvent::CONTEXT:PlotMouseEvent::MIDDLE;
-        PlotClickEvent pe2(this, t, pcoord);
-        PlotClickEvent we2(this, t, wcoord);
-        PlotClickEvent ne2(this, t, ncoord);
-        
-        blocked = false;
-        for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-            switch(active[i]->getCoordinateSystem()) {
-            case PlotCoordinate::WORLD:
-                active[i]->handleClick(we2); break;
-            case PlotCoordinate::PIXEL:
-                active[i]->handleClick(pe2); break;
-            case PlotCoordinate::NORMALIZED_WORLD:
-                active[i]->handleClick(ne2); break;
-                
-            default: continue;
-            }
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-                blocked = true;
-        }
-        
-        for(unsigned int i = 0; !blocked && i < m_clickHandlers.size(); i++) {
-            if(m_clickHandlers[i].second == PlotCoordinate::PIXEL)
-                m_clickHandlers[i].first->handleClick(pe2);
-            else if(m_clickHandlers[i].second == PlotCoordinate::WORLD)
-                m_clickHandlers[i].first->handleClick(we2);
-            else if(m_clickHandlers[i].second ==
-                PlotCoordinate::NORMALIZED_WORLD)
-                m_clickHandlers[i].first->handleClick(ne2);
-        }
+        accept |= notifyClickHandlers(t, pcoord);
     }
-    event->accept();
+    
+    if(accept) event->accept();
+    else       event->ignore();
 }
 
 void QPCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
     m_ignoreNextRelease = true;
     m_timer.stop();
     
-    vector<PlotMouseToolPtr> active = activeMouseTools();
-    if(active.size() == 0 && m_clickHandlers.size() == 0 &&
-       m_pressHandlers.size() == 0) {
-        event->ignore();
-        return;
-    }
+    PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
-    // event->x() and event->y() are relative to the whole QwtPlot, not just
-    // the canvas, so adjust accordingly
-    double x = event->globalX(), y = event->globalY();
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p(rect.left(), rect.top());
-    p = m_canvas.canvas()->mapToGlobal(p);
+    // Send a double-click and a release event.
+    bool accept = notifyClickHandlers(PlotMouseEvent::DOUBLE, pcoord);
+    accept |= notifyReleaseHandlers(PlotMouseEvent::DOUBLE, pcoord);
     
-    PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-    PlotCoordinate wcoord = convertCoordinate(pcoord, PlotCoordinate::WORLD);
-    PlotCoordinate ncoord = convertCoordinate(wcoord,
-            PlotCoordinate::NORMALIZED_WORLD);
-    
-    // also a press event
-    PlotMousePressEvent pe(this, PlotMouseEvent::DOUBLE, pcoord);
-    PlotMousePressEvent we(this, PlotMouseEvent::DOUBLE, wcoord);
-    PlotMousePressEvent ne(this, PlotMouseEvent::DOUBLE, ncoord);
-    
-    bool blocked = false;
-    for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-        switch(active[i]->getCoordinateSystem()) {
-        case PlotCoordinate::WORLD:
-            active[i]->handleMousePress(we); break;
-        case PlotCoordinate::PIXEL:
-            active[i]->handleMousePress(pe); break;
-        case PlotCoordinate::NORMALIZED_WORLD:
-            active[i]->handleMousePress(ne); break;
-            
-        default: continue;
-        }
-        if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-            blocked = true;
-    }
-
-    for(unsigned int i = 0; !blocked && i < m_pressHandlers.size(); i++) {
-        if(m_pressHandlers[i].second == PlotCoordinate::PIXEL)
-            m_pressHandlers[i].first->handleMousePress(pe);
-        else if(m_pressHandlers[i].second == PlotCoordinate::WORLD)
-            m_pressHandlers[i].first->handleMousePress(we);
-        else if(m_pressHandlers[i].second == PlotCoordinate::NORMALIZED_WORLD)
-            m_pressHandlers[i].first->handleMousePress(ne);
-    }
-    
-    PlotClickEvent pe2(this, PlotMouseEvent::DOUBLE, pcoord);
-    PlotClickEvent we2(this, PlotMouseEvent::DOUBLE, wcoord);
-    PlotClickEvent ne2(this, PlotMouseEvent::DOUBLE, ncoord);
-    
-    blocked = false;
-    for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-        switch(active[i]->getCoordinateSystem()) {
-        case PlotCoordinate::WORLD:
-            active[i]->handleClick(we2); break;
-        case PlotCoordinate::PIXEL:
-            active[i]->handleClick(pe2); break;
-        case PlotCoordinate::NORMALIZED_WORLD:
-            active[i]->handleClick(ne2); break;
-            
-        default: continue;
-        }
-        if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-            blocked = true;
-    }
-    
-    for(unsigned int i = 0; !blocked && i < m_clickHandlers.size(); i++) {
-        if(m_clickHandlers[i].second == PlotCoordinate::PIXEL)
-            m_clickHandlers[i].first->handleClick(pe2);
-        else if(m_clickHandlers[i].second == PlotCoordinate::WORLD)
-            m_clickHandlers[i].first->handleClick(we2);
-        else if(m_clickHandlers[i].second == PlotCoordinate::NORMALIZED_WORLD)
-            m_clickHandlers[i].first->handleClick(ne2);
-    }
-    
-    event->accept();
+    if(accept) event->accept();
+    else       event->ignore();
 }
 
 void QPCanvas::trackerMouseEvent(QMouseEvent* event) {
-    vector<PlotMouseToolPtr> active = activeMouseTools();
-    if(active.size() == 0 && m_dragHandlers.size() == 0 &&
-       m_moveHandlers.size() == 0) {
-        event->ignore();
-        return;
-    }
-    
-    double x = event->globalX(), y = event->globalY();
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p(rect.left(), rect.top());
-    p = m_canvas.canvas()->mapToGlobal(p);
-    
-    PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-    PlotCoordinate wcoord = convertCoordinate(pcoord, PlotCoordinate::WORLD);
-    PlotCoordinate ncoord = convertCoordinate(wcoord,
-            PlotCoordinate::NORMALIZED_WORLD);
-    
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
     else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
     
-    if(active.size() > 0 || m_moveHandlers.size() > 0) {
-        PlotMouseMoveEvent pe(this, t, pcoord);
-        PlotMouseMoveEvent we(this, t, wcoord);
-        PlotMouseMoveEvent ne(this, t, ncoord);
-        
-        bool blocked = false;
-        for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-            switch(active[i]->getCoordinateSystem()) {
-            case PlotCoordinate::WORLD:
-                active[i]->handleMouseMove(we); break;
-            case PlotCoordinate::PIXEL:
-                active[i]->handleMouseMove(pe); break;
-            case PlotCoordinate::NORMALIZED_WORLD:
-                active[i]->handleMouseMove(ne); break;
-                
-            default: continue;
-            }
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-                blocked = true;
-        }
-        
-        for(unsigned int i = 0; !blocked && i < m_moveHandlers.size(); i++) {
-            if(m_moveHandlers[i].second == PlotCoordinate::PIXEL)
-                m_moveHandlers[i].first->handleMouseMove(pe);
-            else if(m_moveHandlers[i].second == PlotCoordinate::WORLD)
-                m_moveHandlers[i].first->handleMouseMove(we);
-            else if(m_moveHandlers[i].second==PlotCoordinate::NORMALIZED_WORLD)
-                m_moveHandlers[i].first->handleMouseMove(ne);
-        }
-    }
+    PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
-    if(m_inDraggingMode && (active.size() > 0 || m_dragHandlers.size() > 0)) {    
-        PlotMouseDragEvent pe2(this, t, pcoord);
-        PlotMouseDragEvent we2(this, t, wcoord);
-        PlotMouseDragEvent ne2(this, t, ncoord);
-        
-        bool blocked = false;
-        for(unsigned int i = 0; !blocked && i < active.size(); i++) {
-            active[i]->handleMouseDrag(we2);
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-                blocked = true;
-        }
-        
-        for(unsigned int i = 0; !blocked && i < m_dragHandlers.size(); i++) {
-            if(m_dragHandlers[i].second == PlotCoordinate::PIXEL)
-                m_dragHandlers[i].first->handleMouseDrag(pe2);
-            else if(m_dragHandlers[i].second == PlotCoordinate::WORLD)
-                m_dragHandlers[i].first->handleMouseDrag(we2);
-            else if(m_dragHandlers[i].second==PlotCoordinate::NORMALIZED_WORLD)
-                m_dragHandlers[i].first->handleMouseDrag(ne2);
-        }
-    }
+    if(m_canvas.canvas()->cursor().shape()!= QPOptions::cursor(NORMAL_CURSOR)){
+        QRect crect(m_canvas.canvas()->parentWidget()->mapToGlobal(
+                    m_canvas.canvas()->pos()), m_canvas.canvas()->size());
+        if(crect.contains(event->globalPos()))
+            QWidget::setCursor(m_canvas.canvas()->cursor());
+        else unsetCursor();
+    } else unsetCursor();
     
-    event->accept();
+    bool accept = notifyMoveHandlers(t, pcoord);
+    
+    // Also notify drag handlers if necessary.
+    if(m_inDraggingMode) accept |= notifyDragHandlers(t, pcoord);
+    
+    if(accept) event->accept();
+    else       event->ignore();
 }
 
 void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
-    if(m_keyHandlers.size() == 0) {
-        event->ignore();
-        return;
-    }
-    
     int key = event->key();
     QString text = event->text();
     Qt::KeyboardModifiers mods = QApplication::keyboardModifiers();
     
-    PlotKeyEvent* e = NULL;
+    char c = ' ';
     vector<PlotKeyEvent::Modifier> modifiers;
+    bool accept = false;
     
     if(key >= Qt::Key_F1 && key <= Qt::Key_F35) {
         modifiers.push_back(PlotKeyEvent::F);
         int i = key - Qt::Key_F1;
-        char c = '1' + i;
-        
-        e = new PlotKeyEvent(this, c, modifiers);
+        c = '1' + i;
+        accept = true;
 
     } else if((key >= Qt::Key_0 && key <= Qt::Key_9) ||
               (key >= Qt::Key_A && key <= Qt::Key_Z)) {        
@@ -1470,9 +1187,7 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         if(mods.testFlag(Qt::ShiftModifier))
             modifiers.push_back(PlotKeyEvent::SHIFT);
         
-        int i;
-        char c;
-        
+        int i;        
         if(key >= Qt::Key_0 && key <= Qt::Key_9) {
             i = key - Qt::Key_0;
             c = '0' + i;
@@ -1480,146 +1195,56 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
             i = key - Qt::Key_A;
             c = 'a' + i;
         }
+        accept = true;
         
-        e = new PlotKeyEvent(this, c, modifiers);
-        
-    } else if(text == "!") {
+    } /* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
+              text == "%" || text == "^" || text == "&" || text == "*" ||
+              text == "(" || text == ")") {
         if(mods.testFlag(Qt::ControlModifier))
             modifiers.push_back(PlotKeyEvent::CONTROL);
         if(mods.testFlag(Qt::AltModifier))
             modifiers.push_back(PlotKeyEvent::ALT);
         modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '1', modifiers);
-    } else if(text == "@") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '2', modifiers);
-    } else if(text == "#") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '3', modifiers);
-    } else if(text == "$") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '4', modifiers);
-    } else if(text == "%") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '5', modifiers);
-    } else if(text == "^") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '6', modifiers);
-    } else if(text == "&") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '7', modifiers);
-    } else if(text == "*") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '8', modifiers);
-    } else if(text == "(") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '9', modifiers);
-    } else if(text == ")") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        e = new PlotKeyEvent(this, '0', modifiers);
-    }
+        if(text == "!")      c = '1';
+        else if(text == "@") c = '2';
+        else if(text == "#") c = '3';
+        else if(text == "$") c = '4';
+        else if(text == "%") c = '5';
+        else if(text == "^") c = '6';
+        else if(text == "&") c = '7';
+        else if(text == "*") c = '8';
+        else if(text == "(") c = '9';
+        else if(text == ")") c = '0';
+    } */
     
-    if(e != NULL) {
-        for(unsigned int i = 0; i < m_keyHandlers.size(); i++)
-            m_keyHandlers[i]->handleKey(*e);
-        delete e;
-        event->accept();
-    } else event->ignore();
+    if(accept) accept = notifyKeyHandlers(c, modifiers);
+    
+    if(accept) event->accept();
+    else       event->ignore();
 }
 
 void QPCanvas::wheelEvent(QWheelEvent* event) {
-    vector<PlotMouseToolPtr> active = activeMouseTools();
-    if(active.size() > 0 || m_wheelHandlers.size() > 0) {
-        // event->x() and event->y() are relative to the whole QwtPlot, not
-        // just the canvas, so adjust accordingly
-        double x = event->globalX(), y = event->globalY();
-        QRect rect = m_canvas.canvas()->contentsRect();
-        QPoint p(rect.left(), rect.top());
-        p = m_canvas.canvas()->mapToGlobal(p);
-        int delta = (event->delta() / 8) / 15;
-        
-        PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-        PlotCoordinate wcoord = convertCoordinate(pcoord,
-                PlotCoordinate::WORLD);
-        PlotCoordinate ncoord = convertCoordinate(wcoord,
-                PlotCoordinate::NORMALIZED_WORLD);        
-        PlotWheelEvent pe(this, delta, pcoord);
-        PlotWheelEvent we(this, delta, wcoord);
-        PlotWheelEvent ne(this, delta, ncoord);
-        
-        for(unsigned int i = 0; i < active.size(); i++) {
-            active[i]->handleWheel(we);
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled()) {
-                event->accept();
-                return;
-            }
-        }
-        
-        for(unsigned int i = 0; i < m_wheelHandlers.size(); i++) {
-            if(m_wheelHandlers[i].second == PlotCoordinate::PIXEL)
-                m_wheelHandlers[i].first->handleWheel(pe);
-            else if(m_wheelHandlers[i].second == PlotCoordinate::WORLD)
-                m_wheelHandlers[i].first->handleWheel(we);
-            else if(m_wheelHandlers[i].second ==
-                PlotCoordinate::NORMALIZED_WORLD)
-                m_wheelHandlers[i].first->handleWheel(ne);
-        }
-        event->accept();
-    } else event->ignore();
+    int delta = (event->delta() / 8) / 15;
+    PlotCoordinate pcoord = globalPosToPixelCoord(event);
+    
+    if(notifyWheelHandlers(delta, pcoord)) event->accept();
+    else                                   event->ignore();
 }
 
 void QPCanvas::resizeEvent(QResizeEvent* event) {
-    if(m_resizeHandlers.size() > 0) {
-        QSize o = event->oldSize(), n = event->size();
-        PlotResizeEvent e(this, o.width(), o.height(), n.width(), n.height());
-        for(unsigned int i = 0; i < m_resizeHandlers.size(); i++)
-            m_resizeHandlers[i]->handleResize(e);
+    QSize o = event->oldSize(), n = event->size();
+    if(notifyResizeHandlers(o.width(), o.height(), n.width(), n.height()))
         event->accept();
-    } else event->ignore();
+    else event->ignore();
 }
 
 
 // Private Methods //
 
-void QPCanvas::resetStacks() {
-    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
-        m_mouseTools[i]->reset();
+PlotCoordinate QPCanvas::globalPosToPixelCoord(int x, int y) {
+    QRect rect = m_canvas.canvas()->contentsRect();
+    QPoint p = m_canvas.canvas()->mapToGlobal(rect.topLeft());
+    return PlotCoordinate(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
 }
 
 
@@ -1632,106 +1257,25 @@ void QPCanvas::regionSelected(const QwtDoubleRect& region) {
            t = (region.top() > region.bottom())? region.top(): region.bottom(),
            b = (region.bottom() < region.top())? region.bottom(): region.top();
            
-    vector<PlotMouseToolPtr> active = activeMouseTools();
     if(!region.isValid()) {
-        // it was really a click
-        if(m_clickHandlers.size() == 0 && active.size() == 0) return;
-        
-        PlotCoordinate wc(l, t);
-        PlotCoordinate nc = convertCoordinate(wc,
-                PlotCoordinate::NORMALIZED_WORLD);
-        PlotCoordinate pc = convertCoordinate(wc, PlotCoordinate::PIXEL);        
-        PlotClickEvent pe(this, PlotMouseEvent::SINGLE, pc);
-        PlotClickEvent we(this, PlotMouseEvent::SINGLE, wc);
-        PlotClickEvent ne(this, PlotMouseEvent::SINGLE, nc);
-        
-        for(unsigned int i = 0; i < active.size(); i++) {
-            switch(active[i]->getCoordinateSystem()) {
-            case PlotCoordinate::WORLD: active[i]->handleClick(we); break;
-            case PlotCoordinate::PIXEL: active[i]->handleClick(pe); break;
-            case PlotCoordinate::NORMALIZED_WORLD:
-                active[i]->handleClick(ne); break;
-            default: continue;
-            }
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-                return;
-        }
-        
-        for(unsigned int i = 0; i < m_clickHandlers.size(); i++) {
-            if(m_clickHandlers[i].second == PlotCoordinate::PIXEL)
-                m_clickHandlers[i].first->handleClick(pe);
-            else if(m_clickHandlers[i].second == PlotCoordinate::WORLD)
-                m_clickHandlers[i].first->handleClick(we);
-            else if(m_clickHandlers[i].second ==
-                PlotCoordinate::NORMALIZED_WORLD)
-                m_clickHandlers[i].first->handleClick(ne);
-        }
+        // It was really a click.
+        PlotCoordinate wcoord(l, t, PlotCoordinate::WORLD);
+        notifyClickHandlers(PlotMouseEvent::SINGLE, wcoord);
+
     } else {
-        if(m_selectHandlers.size() == 0 && active.size() == 0) return;
-        
-        PlotRegion wreg(PlotCoordinate(l, t), PlotCoordinate(r, b));
-        PlotRegion nreg(convertCoordinate(wreg.upperLeft(),
-                PlotCoordinate::NORMALIZED_WORLD), convertCoordinate(
-                        wreg.lowerRight(), PlotCoordinate::NORMALIZED_WORLD));
-        PlotRegion preg(convertCoordinate(wreg.upperLeft(),
-                PlotCoordinate::PIXEL), convertCoordinate(wreg.lowerRight(),
-                        PlotCoordinate::PIXEL));    
-        PlotSelectEvent pe(this, preg);
-        PlotSelectEvent we(this, wreg);
-        PlotSelectEvent ne(this, nreg);
-        
-        for(unsigned int i = 0; i < active.size(); i++) {
-            switch(active[i]->getCoordinateSystem()) {
-            case PlotCoordinate::WORLD: active[i]->handleSelect(we); break;
-            case PlotCoordinate::PIXEL: active[i]->handleSelect(pe); break;
-            case PlotCoordinate::NORMALIZED_WORLD:
-                active[i]->handleSelect(ne); break;
-            default: continue;
-            }
-            if(active[i]->isBlocking() && active[i]->lastEventWasHandled())
-                return;
-        }
-        
-        for(unsigned int i = 0; i < m_selectHandlers.size(); i++) {
-            if(m_selectHandlers[i].second == PlotCoordinate::PIXEL)
-                m_selectHandlers[i].first->handleSelect(pe);
-            else if(m_selectHandlers[i].second == PlotCoordinate::WORLD)
-                m_selectHandlers[i].first->handleSelect(we);
-            else if(m_selectHandlers[i].second ==
-                PlotCoordinate::NORMALIZED_WORLD)
-                m_selectHandlers[i].first->handleSelect(ne);
-        }
+        PlotRegion wreg(PlotCoordinate(l, t, PlotCoordinate::WORLD),
+                        PlotCoordinate(r, b, PlotCoordinate::WORLD));
+        notifySelectHandlers(wreg);
     }
 }
 
 void QPCanvas::timeout() {    
-    // single click has occurred
-    
+    // single click has occurred    
     m_timer.stop();
     
-    double x = m_clickEvent->globalX(), y = m_clickEvent->globalY();
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p(rect.left(), rect.top());
-    p = m_canvas.canvas()->mapToGlobal(p);
-    
-    PlotCoordinate pcoord(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-    PlotCoordinate wcoord = convertCoordinate(pcoord, PlotCoordinate::WORLD);
-    PlotCoordinate ncoord = convertCoordinate(wcoord,
-            PlotCoordinate::NORMALIZED_WORLD);
-    
-    PlotClickEvent pe(this, PlotMouseEvent::SINGLE, pcoord);
-    PlotClickEvent we(this, PlotMouseEvent::SINGLE, wcoord);
-    PlotClickEvent ne(this, PlotMouseEvent::SINGLE, ncoord);
-    for(unsigned int i = 0; i < m_clickHandlers.size(); i++) {
-        if(m_clickHandlers[i].second == PlotCoordinate::PIXEL)
-            m_clickHandlers[i].first->handleClick(pe);
-        else if(m_clickHandlers[i].second == PlotCoordinate::WORLD)
-            m_clickHandlers[i].first->handleClick(we);
-        else if(m_clickHandlers[i].second == PlotCoordinate::NORMALIZED_WORLD)
-            m_clickHandlers[i].first->handleClick(ne);
-    }
-    
-    m_clickEvent->accept();
+    PlotCoordinate pcoord = globalPosToPixelCoord(m_clickEvent);
+    if(notifyClickHandlers(PlotMouseEvent::SINGLE, pcoord))
+        m_clickEvent->accept();
 }
 
 }

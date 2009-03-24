@@ -45,7 +45,7 @@ namespace casa {
 
 // Enum for the four plot axes.
 enum PlotAxis {
-    X_BOTTOM, X_TOP, Y_LEFT, Y_RIGHT
+    X_BOTTOM = 1, X_TOP = 2, Y_LEFT = 4, Y_RIGHT = 8
 };
 
 // Enum for possible axis scales.
@@ -72,8 +72,8 @@ enum PlotCursor {
 // interaction-type items (i.e. annotations and selections).  The layers share
 // axes and are otherwise transparent to the user.
 enum PlotCanvasLayer {
-    MAIN,      // "Main" or base layer.
-    ANNOTATION // Annotations or top layer.
+    MAIN       = 1, // "Main" or bottom layer.
+    ANNOTATION = 2  // Annotations or top layer.
 };
 
 
@@ -367,11 +367,23 @@ public:
     
     // ABSTRACT METHODS //
     
-    // Returns the size, in pixels, of this symbol.
+    // Returns the size, in pixels, of this symbol.  If this symbol is a
+    // character, the height corresponds to the font size (in either pixels or
+    // points, see heightIsPixel()).
     virtual pair<double, double> size() const = 0;
     
-    // Sets the size of the symbol in pixels.
-    virtual void setSize(double width, double height) = 0;
+    // Sets the size of the symbol in pixels.  The heightIsPixel parameter is
+    // used for character symbols and indicates whether the given height is in
+    // points or pixels.
+    virtual void setSize(double width, double height,
+            bool heightIsPixel = true) = 0;
+    
+    // Gets/Sets whether the set height is in pixels or points, ONLY for
+    // character symbols.
+    // <group>
+    virtual bool heightIsPixel() const = 0;    
+    virtual void setHeightIsPixel(bool pixel = true) = 0;
+    // </group>
     
     // Returns the symbol style.
     virtual Symbol symbol() const = 0;

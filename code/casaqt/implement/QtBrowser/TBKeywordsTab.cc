@@ -66,17 +66,8 @@ TBNewKeyword::TBNewKeyword(vector<String>* fields, QWidget* parent):
         typeChooser->addItem((name + " (" + t + ")").c_str());
     }
     
-    QGridLayout* valueLayout = new QGridLayout(valueFrame);
-#if QT_VERSION >= 0x040300
-    valueLayout->setHorizontalSpacing(0);
-    valueLayout->setVerticalSpacing(0);
-    valueLayout->setContentsMargins(0, 0, 0, 0);
-#else
-    valueLayout->setSpacing(0);
-    valueLayout->setMargin(0);
-#endif
     typesWidget = new TBTypes(types->at(0));
-    valueLayout->addWidget(typesWidget, 0, 0, 1, 1);
+    TBConstants::insert(valueFrame, typesWidget);
     connect(typeChooser, SIGNAL(currentIndexChanged(int)),
             this, SLOT(typeChanged(int)));
 }

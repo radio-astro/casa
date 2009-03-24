@@ -46,9 +46,9 @@ public:
     virtual ~PlotAnnotation() { }
     
     
-    // Implements PlotItem::indexedDrawCount().  Provides default
-    // implementation that returns 1.
-    virtual unsigned int indexedDrawCount() const { return 1; }
+    // Implements PlotItem::drawCount().  Provides default implementation that
+    // returns 1.
+    virtual unsigned int drawCount() const { return 1; }
     
     // ABSTRACT METHODS //
     

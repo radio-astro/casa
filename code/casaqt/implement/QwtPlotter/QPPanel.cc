@@ -193,11 +193,7 @@ void QPCheckbox::checkboxDeleted() { m_checkbox = NULL; }
 QPPanel::QPPanel() {
     m_frame = new QFrame();
     QHBoxLayout* l = new QHBoxLayout(m_frame);
-#if QT_VERSION >= 0x040300
     l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setMargin(0);
-#endif
     l->setSpacing(3);
     
     connect(m_frame, SIGNAL(destroyed()), SLOT(frameDeleted()));

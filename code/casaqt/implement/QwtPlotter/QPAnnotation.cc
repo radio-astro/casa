@@ -229,11 +229,7 @@ void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
     
         if(m_orient != 0) {
             painter->rotate(m_orient);
-#if QT_VERSION >= 0x040300
             p = painter->worldTransform().inverted().map(p);
-#else
-            p = painter->worldMatrix().inverted().map(p);
-#endif
         }
     
         QRectF r(p, m_label.textSize(m_label.font()));

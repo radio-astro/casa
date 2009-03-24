@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotWidgets.qo.h>
 
+#include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <QCloseEvent>
@@ -39,49 +40,6 @@ namespace casa {
 //////////////////////////////
 // PLOTMSWIDGET DEFINITIONS //
 //////////////////////////////
-
-void PlotMSWidget::putInFrame(QFrame* frame, QWidget* widget) {
-    if(frame == NULL || widget == NULL) return;
-    
-    QHBoxLayout* l = new QHBoxLayout(frame);
-    l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(0);
-    l->addWidget(widget);
-}
-
-QScrollArea* PlotMSWidget::putInScrollArea(QWidget* widget, bool showFrame) {
-    if(widget == NULL) return NULL;
-    
-    QWidget* parent = widget->parentWidget();    
-    QScrollArea* sa = new QScrollArea();
-    
-    if(parent != NULL && parent->layout() != NULL) {
-        QLayout* l = parent->layout();
-        int index = l->indexOf(widget);
-        if(index >= 0) {
-            // QLayout subclasses.
-            QBoxLayout* bl; QGridLayout* gl;
-            if((bl = dynamic_cast<QBoxLayout*>(l)) != NULL) {
-                bl->removeWidget(widget);
-                bl->insertWidget(index, sa);
-                
-            } else if((gl = dynamic_cast<QGridLayout*>(l)) != NULL) {
-                int row, col, rowSpan, colSpan;
-                gl->getItemPosition(index, &row, &col, &rowSpan, &colSpan);
-                gl->removeWidget(widget);                
-                gl->addWidget(sa, row, col, rowSpan, colSpan);
-            }
-        }
-    }
-    
-    sa->setWidget(widget);
-    sa->setWidgetResizable(true);
-    sa->setSizePolicy(widget->sizePolicy());
-    if(!showFrame) sa->setFrameShape(QFrame::NoFrame);
-    
-    return sa;
-}
-
 
 PlotMSWidget::PlotMSWidget(PlotFactoryPtr factory, QWidget* parent) :
         QWidget(parent), itsFactory_(factory) { }
@@ -155,7 +113,7 @@ PlotFillWidget::PlotFillWidget(PlotFactoryPtr factory, bool showAlpha,
         QWidget* parent) : PlotMSWidget(factory, parent) {
     setupUi(this);
     itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
-    putInFrame(colorFrame, itsColorWidget_);
+    QtUtilities::putInFrame(colorFrame, itsColorWidget_);
     
     setFill(factory->areaFill("black"));
     
@@ -218,7 +176,8 @@ PlotLineWidget::PlotLineWidget(PlotFactoryPtr factory, bool useCompact,
     stackedWidget->setCurrentIndex(useCompact ? 0 : 1);
     
     itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
-    putInFrame(useCompact ? cColorFrame : nColorFrame, itsColorWidget_);
+    QtUtilities::putInFrame(useCompact ? cColorFrame : nColorFrame,
+                            itsColorWidget_);
     
     setLine(factory->line("black"));
     
@@ -296,8 +255,8 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
     setupUi(this);
     itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill);
     itsLineWidget_ = new PlotLineWidget(factory, false, showAlphaLine);
-    putInFrame(fillFrame, itsFillWidget_);
-    putInFrame(outlineFrame, itsLineWidget_);
+    QtUtilities::putInFrame(fillFrame, itsFillWidget_);
+    QtUtilities::putInFrame(outlineFrame, itsLineWidget_);
     outlineFrame->setEnabled(false);
     
     if(!showCustom) outlineCustomFrame->setVisible(false);
@@ -611,91 +570,5 @@ void PlotRangeWidget::rangeChanged() {
     if(isCustom() != isCustom_ || r.first != from_ || r.second != to_)
         emit differentFromSet();
 }
-
-
-////////////////////////////////////
-// PLOTPROGRESSWIDGET DEFINITIONS //
-////////////////////////////////////
-
-PlotProgressWidget::PlotProgressWidget(bool allowBackground,
-        bool allowPauseResume, bool allowCancel, QWidget* parent) :
-        QWidget(parent, Qt::Dialog) {
-    setupUi(this);
-    
-    setWindowModality(Qt::WindowModal);
-    
-    connect(backgroundButton, SIGNAL(clicked()), SLOT(background()));
-    connect(pauseButton, SIGNAL(clicked(bool)), SLOT(pauseResume(bool)));
-    connect(cancelButton, SIGNAL(clicked()), SLOT(cancel()));
-    
-    setAllowedOperations(allowBackground, allowPauseResume, allowCancel);
-}
-
-PlotProgressWidget::~PlotProgressWidget() { }
-
-
-void PlotProgressWidget::setAllowedOperations(bool background, bool pauseResume,
-        bool cancel) {
-    itsMutex_.lock();
-    backgroundButton->setEnabled(background);
-    pauseButton->setEnabled(pauseResume);
-    cancelButton->setEnabled(cancel);
-    itsMutex_.unlock();
-}
-
-QMutex& PlotProgressWidget::mutex() { return itsMutex_; }
-
-void PlotProgressWidget::initialize(const String& operationName) {
-    itsMutex_.lock();
-    operationLabel->setText(operationName.c_str());
-    progressBar->setValue(0);
-    statusLabel->setText("Starting " + QString(operationName.c_str()) + ".");
-    itsMutex_.unlock();
-}
-
-void PlotProgressWidget::setStatus(const String& status) {
-    itsMutex_.lock();
-    statusLabel->setText(status.c_str());
-    itsMutex_.unlock();
-}
-
-void PlotProgressWidget::setProgress(unsigned int progress) {
-    itsMutex_.lock();
-    if(progress > 100) progress = 100;
-    progressBar->setValue(progress);
-    itsMutex_.unlock();
-}
-
-void PlotProgressWidget::setProgress(unsigned int progress, const String& status) {
-    itsMutex_.lock();
-    if(progress > 100) progress = 100;
-    progressBar->setValue(progress);
-    statusLabel->setText(status.c_str());
-    itsMutex_.unlock();
-}
-
-void PlotProgressWidget::finalize() {
-    itsMutex_.lock();
-    progressBar->setValue(100);
-    statusLabel->setText("Finished " + operationLabel->text() + ".");
-    itsMutex_.unlock();
-}
-
-void PlotProgressWidget::closeEvent(QCloseEvent* event) {
-    background();
-    event->ignore();
-}
-
-void PlotProgressWidget::background() { emit backgroundRequested(); }
-
-void PlotProgressWidget::pauseResume(bool pause) {
-    itsMutex_.lock();
-    pauseButton->setText(pause ? "Resume" : "Pause");
-    itsMutex_.unlock();
-    if(pause) emit pauseRequested();
-    else      emit resumeRequested();
-}
-
-void PlotProgressWidget::cancel() { emit cancelRequested(); }
 
 }

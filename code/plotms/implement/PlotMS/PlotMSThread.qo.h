@@ -27,10 +27,10 @@
 #ifndef PLOTMSTHREAD_QO_H_
 #define PLOTMSTHREAD_QO_H_
 
+#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/PlotCanvas.h>
 #include <msvis/MSVis/VisSet.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
-#include <plotms/PlotMS/PlotWidgets.qo.h>
 
 #include <QThread>
 
@@ -39,7 +39,9 @@
 namespace casa {
 
 //# Forward Declarations
+class PlotMSCacheThreadHelper;
 class PlotMSData;
+class PlotMSExportThreadHelper;
 class PlotMSPlot;
 class PlotMSPlotter;
 
@@ -47,36 +49,36 @@ class PlotMSPlotter;
 // Useful macro for using post-thread methods.
 #define PMS_POST_THREAD_METHOD(CLASS, METHOD)                                 \
 public:                                                                       \
-    static void METHOD (void* obj) {                                          \
+    static void METHOD (void* obj, bool wasCanceled) {                        \
         CLASS * cobj = static_cast< CLASS *>(obj);                            \
-        if(cobj != NULL) cobj -> METHOD##_();                                 \
+        if(cobj != NULL) cobj -> METHOD##_(wasCanceled);                      \
     }                                                                         \
                                                                               \
 private:                                                                      \
-    void METHOD##_();
+    void METHOD##_(bool wasCanceled);
 
 // Typedefs for using post-thread methods.
 // <group>
 typedef void* PMSPTObject;
-typedef void PMSPTMethod(PMSPTObject);
-// </grooup>
+typedef void PMSPTMethod(PMSPTObject, bool);
+// </group>
 
 
 // Abstract class for a threaded operation for plotms.  PlotMSThread does not
 // directly inherit from QThread in case the threading is happening elsewhere
 // in the code (such as a plotter implementation that threads its own drawing).
 // Classes that want to run PlotMSThreads should:
-// 1) Provide a PlotProgressWidget in the main (GUI) thread.
+// 1) Provide a QtProgressWidget in the main (GUI) thread.
 // 2) Connect the finishedOperation() signal to a slot as needed.
 // 3) Call startOperation() to start the thread.
 // 4) Call the post-thread method after completion, if there is one.
-class PlotMSThread : public virtual QObject {
+class PlotMSThread : public QObject {
     Q_OBJECT
     
 public:
     // Constructor which takes the progress widget to use, and an optional
     // post-thread method that should be called when the thread is finished.
-    PlotMSThread(PlotProgressWidget* progress,
+    PlotMSThread(QtProgressWidget* progress,
             PMSPTMethod postThreadMethod = NULL,
             PMSPTObject postThreadObject = NULL);
     
@@ -107,16 +109,25 @@ signals:
     // has just completed.
     void finishedOperation(PlotMSThread* thread);
     
-    // These signals are used to update the PlotProgressWidget across different
+    // These signals are used to update the QtProgressWidget across different
     // threads.  They shouldn't need to be used by other classes, even
     // children.
     // <group>
-    void initializeProgress(const String& operationName);
-    void updateProgress(unsigned int progress, const String& status);
+    void initializeProgress(const QString& operationName);
+    void updateProgress(unsigned int progress, const QString& status);
     void finalizeProgress();
     // </group>
     
 protected:
+    // ABSTRACT METHODS //
+    
+    // Returns true if the threaded finished due to be canceled, false
+    // otherwise.
+    virtual bool wasCanceled() const = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
     // Access for subclasses to initialize the progress widget with the given
     // operation name.
     void initializeProgressWidget(const String& operationName);
@@ -126,6 +137,9 @@ protected:
     
     // Access for subclasses to finalize the progress widget.
     void finalizeProgressWidget();
+    
+    // Access for subclasses to set allowed operations on the progress widget.
+    void setAllowedOperations(bool background, bool pauseResume, bool cancel);
     
 protected slots:
     // For when the user requests "background" for the thread.
@@ -142,7 +156,7 @@ protected slots:
     
 private:
     // Progress widget.
-    PlotProgressWidget* itsProgressWidget_;
+    QtProgressWidget* itsProgressWidget_;
     
     // Method/Object to run when thread is finished.
     // <group>
@@ -154,25 +168,25 @@ private:
 
 // SUBCLASSES OF PLOTMSTHREAD //
 
-// Subclass of PlotMSThread for releasing/redrawing a list of canvases for
-// plotting implementations that have their own threaded drawing.
+// Subclass of PlotMSThread that handles following the progress of canvas
+// drawing.
 class PlotMSDrawThread : public PlotMSThread, public PlotOperationWatcher {
     Q_OBJECT
     
 public:
-    // Constructor which releases/redraws all canvases on the given plotter.
-    // A post-thread method can also be given.
+    // Constructor which takes the plotter, and optional post-thread method
+    // parameters.
     PlotMSDrawThread(PlotMSPlotter* plotter,
             PMSPTMethod postThreadMethod = NULL,
             PMSPTObject postThreadObject = NULL);
     
-    // Constructor which releases/redraws all canvases associated with the
-    // given plot.  A post-thread method can also be given.
-    PlotMSDrawThread(PlotMSPlot* plot);
-    
     // Destructor.
     ~PlotMSDrawThread();
     
+    
+    // Updates the internal list of canvases based upon the parent
+    // PlotMSPlotter.
+    void updatePlotterCanvases();
     
     // Implements PlotMSThread::startOperation().
     void startOperation();
@@ -180,74 +194,72 @@ public:
     // Implements PlotOperationWatcher::operationChanged().
     void operationChanged(const PlotOperation& operation);
     
-signals:
-    // Cross-thread signal, for internal use.
-    void updateOperations();
+protected:
+    // Implements PlotMSThread::wasCanceled().
+    bool wasCanceled() const;
     
 protected slots:
-    // Implements PlotMSThread::background().
+    // Implements PlotMSThread::background().  Currently is unimplemented.
     void background();
     
-    // Implements PlotMSThread::pause().
+    // Implements PlotMSThread::pause().  Currently is unimplemented.
     void pause();
     
-    // Implements PlotMSThread::resume().
+    // Implements PlotMSThread::resume().  Currently is unimplemented.
     void resume();
     
-    // Implements PlotMSThread::cancel().
+    // Implements PlotMSThread::cancel().  Currently is unimplemented.
     void cancel();
     
 private:
-    // Canvases.
-    vector<PlotCanvasPtr> itsCanvases_;
+    // Parent plotter.
+    PlotMSPlotter* itsPlotter_;
     
     // Operations.
     vector<PlotOperationPtr> itsOperations_;
     
-    // Last set progresses.
-    vector<unsigned int> itsLastProgresses_;
+    // Mutex for accessing operations.
+    QMutex itsOperationsMutex_;
     
-    // Last set status.
-    String itsLastStatus_;
+    // Flag for if thread is currently running or not.
+    bool isRunning_;
     
-    // Flag for whether an update has been posted and needs to update the GUI.
-    bool itsLastUpdateWaiting_;
+    // Flag indicating that one or more operations tried to call
+    // operationChanged() while the operations mutex was locked.
+    bool itsOperationFlag_;
     
-    // Mutex.
-    PlotMutexPtr itsOpMutex_, itsUpdateMutex_;
-    
-    
-    // Should be called from the constructor.
-    void initialize(const vector<PlotCanvasPtr>& canvases);
-    
-private slots:
-    // Cross-thread slot, for internal use.
-    void operationsUpdated();
+    // Flag for whether thread was canceled or not.
+    bool wasCanceled_;
 };
 
 
-// Subclass of PlotMSThread for loading/releases axes in a PlotMSCache.
-class PlotMSCacheThread : public PlotMSThread, public virtual QThread {
+// Subclass of PlotMSThread for loading axes in a PlotMSCache.
+class PlotMSCacheThread : public PlotMSThread {
     Q_OBJECT
     
     friend class PlotMSCache;
+    friend class PlotMSCacheThreadHelper;
     
 public:
-    // Constructor which takes the PlotMSData, the axes, and whether the axes
-    // are being loaded or released.
+    // Constructor which takes the PlotMSData, the axes and data columns, the
+    // averaging, a flag for whether to call setupPlot after the loading, and
+    // optional post-thread method parameters.
     PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data, bool loadAxes);
+            const vector<PMS::DataColumn>& data,
+            const PlotMSAveraging& averaging, bool setupPlot = false,
+            PMSPTMethod postThreadMethod = NULL,
+            PMSPTObject postThreadObject = NULL);
     
     // Destructor.
     ~PlotMSCacheThread();
     
     
     // Implements PlotMSThread::startOperation().
-    void startOperation() { start(); }
+    void startOperation();
     
 protected:
-    // Implements QThread::run().
-    void run();
+    // Implements PlotMSThread::wasCanceled().
+    bool wasCanceled() const;
     
     // Allows the cache to set the progress.
     void setProgress(unsigned int progress) {
@@ -261,13 +273,13 @@ protected:
     void setProgressAndStatus(unsigned int progress, const String& status);
     
 protected slots:
-    // Implements PlotMSThread::background().
+    // Implements PlotMSThread::background().  Currently is unimplemented.
     void background();
     
-    // Implements PlotMSThread::pause().
+    // Implements PlotMSThread::pause().  Currently is unimplemented.
     void pause();
     
-    // Implements PlotMSThread::resume().
+    // Implements PlotMSThread::resume().  Currently is unimplemented.
     void resume();
     
     // Implements PlotMSThread::cancel().
@@ -286,11 +298,11 @@ private:
     // Axes data columns.
     vector<PMS::DataColumn> itsAxesData_;
     
-    // Whether the axes should be loaded or released.
-    bool itsLoadAxes_;
-    
     // MS averaging.
     PlotMSAveraging itsAveraging_;
+    
+    // Whether to set up the cache afterwards.
+    bool itsSetupPlot_;
     
     // Last set progress.
     unsigned int itsLastProgress_;
@@ -298,9 +310,121 @@ private:
     // Last set status.
     String itsLastStatus_;
     
+    // Flag for whether thread was canceled or not.
+    bool wasCanceled_;
+    
 private slots:
     // Slot for when the QThread finishes.
     void threadFinished();
+};
+
+
+// Helper class for PlotMSCacheThread that actually does the work in a new
+// QThread.
+class PlotMSCacheThreadHelper : public QThread {
+public:
+    // Constructor that takes parent.
+    PlotMSCacheThreadHelper(PlotMSCacheThread& parent);
+    
+    // Destructor.
+    ~PlotMSCacheThreadHelper();
+
+protected:
+    // Implements QThread::run().
+    void run();
+    
+private:
+    // Parent.
+    PlotMSCacheThread& itsParent_;
+};
+
+
+// Subclass of PlotMSThread for exporting a plot.
+class PlotMSExportThread : public PlotMSThread, public PlotOperationWatcher {
+    Q_OBJECT
+    
+    friend class PlotMSExportThreadHelper;
+    
+public:
+    // Constructor which takes the plot to export, the export format
+    // parameters, and optional post-thread method parameters.
+    PlotMSExportThread(PlotMSPlot* plot, const PlotExportFormat& format,
+            PMSPTMethod postThreadMethod = NULL,
+            PMSPTObject postThreadObject = NULL);
+    
+    // Destructor.
+    ~PlotMSExportThread();
+    
+    
+    // Implements PlotMSThread::startOperation().
+    void startOperation();
+    
+    // Implements PlotOperationWatcher::operationChanged().
+    void operationChanged(const PlotOperation& operation);
+    
+protected:
+    // Implements PlotMSThread::wasCanceled().
+    bool wasCanceled() const;
+    
+protected slots:
+    // Implements PlotMSThread::background().  Currently is unimplemented.
+    void background();
+    
+    // Implements PlotMSThread::pause().  Currently is unimplemented.
+    void pause();
+    
+    // Implements PlotMSThread::resume().  Currently is unimplemented.
+    void resume();
+    
+    // Implements PlotMSThread::cancel().  Currently is unimplemented.
+    void cancel();
+    
+private:
+    // Plot.
+    PlotMSPlot* itsPlot_;
+    
+    // Format.
+    PlotExportFormat itsFormat_;
+    
+    // Export operations.
+    vector<PlotOperationPtr> itsOperations_;
+    
+    // Mutex.
+    QMutex itsMutex_;
+    
+    // Helper.
+    PlotMSExportThreadHelper* itsHelper_;
+    
+private slots:
+    // Slot for when the QThread finishes.
+    void threadFinished();
+};
+
+
+// Helper class for PlotMSExportThread that actually does the work in a new
+// QThread.
+class PlotMSExportThreadHelper : public QThread {
+    Q_OBJECT
+    
+    friend class PlotMSExportThread;
+    
+public:
+    // Constructor that takes parent.
+    PlotMSExportThreadHelper(PlotMSExportThread& parent);
+    
+    // Destructor.
+    ~PlotMSExportThreadHelper();
+    
+protected:
+    // Implements QThread::run().
+    void run();
+    
+private:
+    // Parent.
+    PlotMSExportThread& itsParent_;
+    
+    // Stores the result of the export.
+    bool itsExportResult_;
 };
 
 

@@ -28,6 +28,7 @@
 
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
 
+#include <casaqt/QtUtilities/QtUtilities.h>
 #include <graphics/GenericPlotter/PlotCanvasLayout.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
@@ -41,17 +42,15 @@ namespace casa {
 //      printer, custom layer
 // TODO PlotData: possible indexing bug in PlotRasterDataImpl
 // TODO PlotLogger: log messages for function entering, object
-//      creation/deletion
+//      creation/deletion, export
 // TODO QPCanvas: pixmap cache for stack
-// TODO QPCurve: test which is faster: setting the pen multiple times and
+// TODO QPPlotter: find way of continuing pen style
+// TODO QPRasterPlot: different origins, fix contour line offset problem,
+//      printing to PS
+// TODO QPScatterPlot: test which is faster: setting the pen multiple times and
 //      going through the data once, or setting the pen twice and going through
 //      the data twice.  also test which is faster: multiple for loops or
 //      single for loop with if statements
-// TODO QPPlotter: find way of continuing pen style, reduce number of draws in
-//      qwtplottertest
-// TODO QPRasterPlot: different origins, fix contour line offset problem,
-//      printing to PS
-// TODO QPSymbol: character width
 
 ///////////////////////////
 // QPPLOTTER DEFINITIONS //
@@ -404,21 +403,12 @@ void QPPlotter::setupCanvasFrame() {
     PlotLayoutGrid* g = dynamic_cast<PlotLayoutGrid*>(&(*m_layout));
     if(l != NULL) {
         // single layout
-        QHBoxLayout* hbl = new QHBoxLayout(canvasFrame);
-#if QT_VERSION >= 0x040300
-        hbl->setContentsMargins(0, 0, 0, 0);
-#else
-        hbl->setMargin(0);
-#endif
-        hbl->addWidget(dynamic_cast<QPCanvas*>(l->canvas().operator->()));
+        QtUtilities::putInFrame(canvasFrame,
+                dynamic_cast<QPCanvas*>(l->canvas().operator->()));
     } else if(g != NULL) {
         // grid layout
         QGridLayout* qgl = new QGridLayout(canvasFrame);
-#if QT_VERSION >= 0x040300
         qgl->setContentsMargins(0, 0, 0, 0);
-#else
-        qgl->setMargin(0);
-#endif
         qgl->setSpacing(g->spacing());
         
         PlotGridCoordinate coord(0, 0);
@@ -472,11 +462,7 @@ void QPPlotter::initialize() {
     // Set up panel frame
     panelFrame->setVisible(false);
     QVBoxLayout* l = new QVBoxLayout(panelFrame);
-#if QT_VERSION >= 0x040300
     l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setMargin(0);
-#endif
     l->setSpacing(3);
     
     // Connect widgets.

@@ -47,11 +47,7 @@ namespace casa {
 
 PlotSlicer::PlotSlicer(): QHBoxLayout(), complex(false) {
     setSpacing(3);
-#if QT_VERSION >= 0x040300
     setContentsMargins(0, 0, 0, 0);
-#else
-    setMargin(0);
-#endif
     complexChooser = new QComboBox();
     complexChooser->addItem("Amplitude");
     complexChooser->addItem("Phase");

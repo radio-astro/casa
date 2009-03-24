@@ -113,7 +113,7 @@ QPRasterPlot::~QPRasterPlot() { }
 
 bool QPRasterPlot::isValid() const { return m_data.isValid(); }
 
-unsigned int QPRasterPlot::indexedDrawCount() const {
+unsigned int QPRasterPlot::drawCount() const {
     if(m_canvas == NULL) return 0;
 
     QRect prect = totalArea();
@@ -226,7 +226,7 @@ void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
     QRect adjArea = canvasRect;    
     
     // adjust for draw index and draw count if needed
-    if(drawIndex > 0 || drawCount < indexedDrawCount()) {
+    if(drawIndex > 0 || drawCount < this->drawCount()) {
         QRect prect = totalArea();
         if(adjArea.isValid()) {
             int height = adjArea.height(), left = adjArea.left(),

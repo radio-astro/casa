@@ -29,6 +29,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
+#include <casaqt/QtUtilities/QtUtilities.h>
 
 #include <fstream>
 #include <limits>
@@ -75,13 +76,6 @@ int PlotMSPlotter::execLoop() {
     }
 }
 
-void PlotMSPlotter::doThreadedRedraw(PlotMSPlot* plot) {
-    if(plot != NULL)
-        doThreadedOperation(new PlotMSDrawThread(plot));
-    else
-        doThreadedOperation(new PlotMSDrawThread(this));
-}
-
 void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
     if(t == NULL) return;
     
@@ -89,16 +83,10 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
         // no currently running thread, so start this one
         itsCurrentThread_ = t;
         connect(itsCurrentThread_, SIGNAL(finishedOperation(PlotMSThread*)),
-                SLOT(currentThreadFinished()));
+                SLOT(currentThreadFinished()));        
         
-        // disable widgets and resizing
+        // disable and show progress GUI
         setEnabled(false);
-        itsMinSize_ = minimumSize();
-        itsMaxSize_ = maximumSize();
-        setMinimumSize(size());
-        setMaximumSize(size());
-        
-        // show progress GUI
         QRect rect = itsThreadProgress_->geometry();
         rect.moveCenter(geometry().center());
         itsThreadProgress_->move(rect.topLeft());
@@ -111,6 +99,39 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
         // there is a currently running thread, so add to waiting list
         itsWaitingThreads_.push_back(t);
     }
+}
+
+bool PlotMSPlotter::canvasDrawBeginning(PlotOperationPtr drawOperation,
+        bool drawingIsThreaded, int drawnLayersFlag) {    
+    if(!drawingIsThreaded) {
+        cout << "PlotMSPlotter does not currently support threading for "
+             << "plotter implementations that do not do threaded drawing "
+             << "themselves." << endl;
+        return true;
+    }
+    
+    PlotMSDrawThread* dt;
+    
+    if(itsCurrentThread_ != NULL) {
+        dt = dynamic_cast<PlotMSDrawThread*>(itsCurrentThread_);
+        if(dt != NULL) {
+            // We're already redrawing, so just make sure the thread is
+            // up-to-date with all canvases.
+            dt->updatePlotterCanvases();
+        } else {
+            // Not a draw thread, so queue the drawing thread itself (although
+            // the actual drawing is still being done in the background).  If
+            // the drawing finishes before the current thread, when the drawing
+            // thread starts it will immediately exit.
+            dt = new PlotMSDrawThread(this);
+            itsWaitingThreads_.push_back(dt);
+        }
+        return true;
+    }
+
+    dt = new PlotMSDrawThread(this);
+    doThreadedOperation(dt);    
+    return true;
 }
 
 
@@ -134,7 +155,9 @@ void PlotMSPlotter::holdDrawing() {
 }
 
 void PlotMSPlotter::releaseDrawing() {
-    doThreadedRedraw();
+    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
+    for(unsigned int i = 0; i < canvases.size(); i++)
+        canvases[i]->releaseDrawing();
 }
 
 
@@ -236,13 +259,6 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
     if(!isQt_) itsPlotter_->close();
 }
 
-void PlotMSPlotter::resizeEvent(QResizeEvent* event) {
-    QMainWindow::resizeEvent(event);
-    //cout << "PlotMSPlotter::resizeEvent() " << isVisible() << endl;
-    //if(isVisible()) doThreadedRedraw();
-    // TODO
-}
-
 
 // Private Methods //
 
@@ -310,7 +326,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     // Set up threads //    
     itsCurrentThread_ = NULL;
-    itsThreadProgress_ = new PlotProgressWidget(false, false, false, this);
+    itsThreadProgress_ = new QtProgressWidget(false, false, false, true, this);
     itsThreadProgress_->setVisible(false);
     itsThreadProgress_->setWindowIcon(windowIcon());
     
@@ -359,11 +375,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // sensible.
     isQt_ = imp == Plotter::QWT && itsPlotter_->isQWidget();
     if(isQt_) {
-        QHBoxLayout* l = new QHBoxLayout(frame);
-        l->setContentsMargins(0, 0, 0, 0);
         QWidget* w = dynamic_cast<QWidget*>(itsPlotter_.operator->());
         w->setContentsMargins(0, 0, 0, 0);
-        l->addWidget(w);
+        QtUtilities::putInFrame(frame, w);
     }
     
     // Force window to set size before drawing to avoid unnecessary redraws.
@@ -412,17 +426,15 @@ void PlotMSPlotter::currentThreadFinished() {
     if(itsWaitingThreads_.size() > 0) {
         itsCurrentThread_ = itsWaitingThreads_[0];
         itsWaitingThreads_.erase(itsWaitingThreads_.begin());
-        connect(itsCurrentThread_, SIGNAL(finishedOperation()),
+        connect(itsCurrentThread_, SIGNAL(finishedOperation(PlotMSThread*)),
                 SLOT(currentThreadFinished()));
         itsCurrentThread_->startOperation();
     } else {
-        // re-enable and allow resizing
-        setMinimumSize(itsMinSize_);
-        setMaximumSize(itsMaxSize_);
         setEnabled(true);
-        
-        // hide progress GUI
         itsThreadProgress_->setVisible(false);
+        
+        // Update plot tab.
+        itsPlotTab_->plotsChanged(itsParent_->getPlotManager());
     }
 }
 

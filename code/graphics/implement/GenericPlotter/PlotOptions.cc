@@ -211,6 +211,7 @@ void PlotSymbol::setColor(const String& color) {
 
 PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
     setSize(rh.size());
+    setHeightIsPixel(rh.heightIsPixel());
     setUSymbol(rh.symbolUChar());
     setSymbol(rh.symbol());
     setLine(rh.line());
@@ -223,6 +224,7 @@ bool PlotSymbol::operator==(const PlotSymbol& rh) const {
     if(size()== rh.size() && size()== pair<double, double>(0, 0)) return true;
     return size() == rh.size() && symbol() == rh.symbol() &&
            (isCharacter() ? symbolChar() == rh.symbolChar() : true) &&
+           (isCharacter() ? heightIsPixel() == rh.heightIsPixel() : true) &&
            *line() == *rh.line() && *areaFill() == *rh.areaFill();
 }
 

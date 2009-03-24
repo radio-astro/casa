@@ -114,11 +114,7 @@ ParamPanel::ParamPanel(const QtParamGUI& parent, String name,
     setValue();
     
     QHBoxLayout* l = new QHBoxLayout(valueFrame);    
-#if QT_VERSION >= 0x040300
     l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setMargin(0);
-#endif
     l->setSpacing(3);
     l->addWidget(m_value);
     if(m_units != NULL) {

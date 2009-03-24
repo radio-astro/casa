@@ -110,6 +110,9 @@ protected:
     // Overrides PlotTool::attach().
     void attach(PlotCanvas* canvas);
     
+    // Overrides PlotTool::detach().
+    void detach();
+    
 private:
     QwtPlotPanner* m_panner; // Panner
     
@@ -120,7 +123,7 @@ private slots:
 
 
 // Subclass of PlotTrackerTool specific to Qwt plotter, using a QPTracker.
-class QPTrackerTool : public PlotTrackerTool {
+class QPTrackerTool : public PlotTrackerTool {    
 public:
     // Constructor which takes the tool's coordinate system.
     QPTrackerTool(PlotCoordinate::System sys = PlotCoordinate::WORLD);

@@ -52,13 +52,22 @@ class QPCanvas;
 class QPLayerItem : public virtual QwtPlotItem {
     friend class QPCanvas;
     friend class QPLayeredCanvas;
+    friend class QPDrawThread;
     
 public:
     // Constructor.
-    QPLayerItem() { }
+    QPLayerItem();
     
     // Destructor.
-    virtual ~QPLayerItem() { }
+    virtual ~QPLayerItem();
+    
+    
+    // Implements QwtPlotItem::draw().
+    virtual void draw(QPainter* p, const QwtScaleMap& xMap,
+            const QwtScaleMap& yMap, const QRect& canvasRect) const;
+    
+    // See PlotItem::drawSegments().
+    virtual unsigned int itemDrawSegments(unsigned int segmentThreshold) const;
     
     
     // ABSTRACT METHODS //
@@ -71,6 +80,21 @@ public:
     // used to avoid drawing attached items that are empty or otherwise have
     // nothing to draw.
     virtual bool shouldDraw() const = 0;
+    
+    // See PlotItem::drawCount().
+    virtual unsigned int itemDrawCount() const = 0;
+    
+    // See PlotItem::title().
+    virtual String itemTitle() const = 0;
+    
+protected:
+    // Like QwtPlotItem::draw() except that the child item should only draw
+    // drawCount items starting at drawIndex.  The indexing may not be
+    // applicable to all layer items (i.e., some items may draw everything in
+    // this call rather than segmenting).
+    virtual void draw_(QPainter* p, const QwtScaleMap& xMap,
+            const QwtScaleMap& yMap, const QRect& drawRect,
+            unsigned int drawIndex, unsigned int drawCount) const = 0;
 };
 
 
@@ -142,14 +166,6 @@ public:
     void setYAxis(PlotAxis y);
     
     
-    // QwtPlotItem methods //
-    
-    // Implements QwtPlotItem::draw().
-    void draw(QPainter* p, const QwtScaleMap& xMap, const QwtScaleMap& yMap,
-              const QRect& canvasRect) const {
-        draw_(p, xMap, yMap, canvasRect, 0, indexedDrawCount()); }
-    
-    
     // QPLayerItem methods //
     
     // Implements QPLayerItem::itemChanged() to only redraw the canvas layer
@@ -158,6 +174,12 @@ public:
     
     // Implements QPLayerItem::shouldDraw().
     virtual bool shouldDraw() const { return isValid(); }
+    
+    // Implements QPLayerItem::itemDrawCount().
+    unsigned int itemDrawCount() const{ return shouldDraw()? drawCount() : 0; }
+    
+    // Implements QPLayerItem::itemTitle().
+    String itemTitle() const { return title(); }
     
     
     // QPPlotItem methods //
@@ -210,13 +232,6 @@ protected:
     
     // Returns the class name for the child, for logging purposes.
     virtual const String& className() const = 0;
-    
-    // Like QwtPlotItem::draw() except that the child item should only draw
-    // drawCount items starting at drawIndex.  This is not applicable to all
-    // plot items (like some shapes).
-    virtual void draw_(QPainter* p, const QwtScaleMap& xMap,
-            const QwtScaleMap& yMap, const QRect& drawRect,
-            unsigned int drawIndex, unsigned int drawCount) const = 0;
 };
 
 
@@ -240,19 +255,28 @@ public:
     // </group>
     
     // Draws the given items, sorted by z-order, using the given painter, rect,
-    // and maps.
+    // and maps.  If PlotOperation parameters are given, they are updated as
+    // needed.
     // <group>
     static void drawItem(const QPLayerItem* item, QPainter* painter,
             const QRect& rect, const QwtScaleMap maps[QwtPlot::axisCnt]);
-    static void drawItem(const QPPlotItem* item, QPainter* painter,
+    static void drawItem(const QPLayerItem* item, QPainter* painter,
             const QRect& rect, const QwtScaleMap maps[QwtPlot::axisCnt],
             unsigned int drawIndex, unsigned int drawCount);
     static void drawItems(const QList<const QPLayerItem*>& items,
             QPainter* painter, const QRect& rect,
-            const QwtScaleMap maps[QwtPlot::axisCnt]);
+            const QwtScaleMap maps[QwtPlot::axisCnt],
+            PlotOperationPtr op = PlotOperationPtr(),
+            unsigned int currentSegment = 0, unsigned int totalSegments = 0,
+            unsigned int segmentThreshold =
+                QPDrawThread::DEFAULT_SEGMENT_THRESHOLD);
     static void drawItems(const QList<const QPPlotItem*>& items,
             QPainter* painter, const QRect& rect,
-            const QwtScaleMap maps[QwtPlot::axisCnt]);
+            const QwtScaleMap maps[QwtPlot::axisCnt],
+            PlotOperationPtr op = PlotOperationPtr(),
+            unsigned int currentSegment = 0, unsigned int totalSegments = 0,
+            unsigned int segmentThreshold =
+                QPDrawThread::DEFAULT_SEGMENT_THRESHOLD);
     // </group>
     
     

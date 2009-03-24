@@ -87,6 +87,9 @@ public:
     // </group>
     
     
+    // See PlotMSCache::readyForPlotting().
+    bool cacheReady() const;
+    
     // See PlotMSCache::clear().
     void clearCache();
     

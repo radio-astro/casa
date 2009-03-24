@@ -161,7 +161,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -236,7 +236,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -292,7 +292,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().
+    // Implements QPLayerItem::draw_().
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -356,7 +356,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -449,7 +449,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -516,7 +516,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().
+    // Implements QPLayerItem::draw_().
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -607,7 +607,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
@@ -684,7 +684,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().  Ignores draw index and count.
+    // Implements QPLayerItem::draw_().  Ignores draw index and count.
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;

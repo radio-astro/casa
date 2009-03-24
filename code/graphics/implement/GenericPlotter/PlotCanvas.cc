@@ -26,6 +26,8 @@
 //# $Id: $
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
+#include <graphics/GenericPlotter/PlotFactory.h>
+
 namespace casa {
 
 ////////////////////////////
@@ -87,6 +89,7 @@ bool PlotCanvas::legendPositionIsInternal(LegendPosition p) {
 }
 
 const String PlotCanvas::OPERATION_DRAW = "draw_items";
+const String PlotCanvas::OPERATION_EXPORT = "export";
 
 
 // Non-Static //
@@ -108,17 +111,60 @@ void PlotCanvas::setBackground(const String& color,
     setBackground(*bg);
 }
 
+bool PlotCanvas::axisShown(PlotAxis axis) const { return shownAxes() & axis; }
+
+void PlotCanvas::showAxis(PlotAxis axis, bool show) {
+    int axes = shownAxes();
+    if(show) axes |= axis;
+    else     axes &= !axis;
+    showAxes(axes);
+}
+
 void PlotCanvas::showAxes(PlotAxis xAxis, PlotAxis yAxis, bool show) {
-    showAxis(xAxis, show);
-    showAxis(yAxis, show);
+    int axes = shownAxes();
+    if(show) axes |= xAxis | yAxis;
+    else     axes &= !xAxis && !yAxis;
+    showAxes(axes);
 }
 
 void PlotCanvas::showAxes(bool show) {
-    showAxis(X_BOTTOM, show);
-    showAxis(X_TOP, show);
-    showAxis(Y_LEFT, show);
-    showAxis(Y_RIGHT, show);
+    if(show) showAxes(X_BOTTOM | X_TOP | Y_LEFT | Y_RIGHT);
+    else     showAxes(0);
 }
+
+void PlotCanvas::setAxesScales(PlotAxis xAxis, PlotAxisScale xScale,
+            PlotAxis yAxis, PlotAxisScale yScale) {
+    setAxisScale(xAxis, xScale);
+    setAxisScale(yAxis, yScale);
+}
+
+void PlotCanvas::showCartesianAxis(PlotAxis mirrorAxis, bool show,
+        bool hideNormalAxis) {
+    switch(mirrorAxis) {
+    case X_BOTTOM: case X_TOP:
+        showCartesianAxis(mirrorAxis, Y_LEFT, show, hideNormalAxis);
+        break;
+    case Y_LEFT: case Y_RIGHT:
+        showCartesianAxis(mirrorAxis, X_BOTTOM, show, hideNormalAxis);
+        break;
+    }
+}
+
+void PlotCanvas::showCartesianAxes(bool show, bool hideNormal) {
+    showCartesianAxis(X_BOTTOM, show, hideNormal);
+    showCartesianAxis(Y_LEFT, show, hideNormal);
+}
+
+void PlotCanvas::clearAxesLabels() {
+    setAxisLabel(X_BOTTOM, "");
+    setAxisLabel(X_TOP, "");
+    setAxisLabel(Y_LEFT, "");
+    setAxisLabel(Y_RIGHT, "");
+}
+
+void PlotCanvas::setAxisFont(PlotAxis axis, const PlotFontPtr font) {
+    if(!font.null()) setAxisFont(axis, *font); }
+
 
 PlotRegion PlotCanvas::axesRanges(PlotAxis xAxis, PlotAxis yAxis) const {
     pair<double, double> x = axisRange(xAxis), y = axisRange(yAxis);
@@ -142,8 +188,8 @@ void PlotCanvas::setAxesRanges(PlotAxis xAxis,
                   yRange.second);
 }
 
-void PlotCanvas::setAxesRegion(const PlotRegion& region, PlotAxis xAxis,
-        PlotAxis yAxis) {
+void PlotCanvas::setAxesRegion(PlotAxis xAxis, PlotAxis yAxis,
+        const PlotRegion& region) {
     PlotRegion r = region;
     if(region.upperLeft().system() != PlotCoordinate::WORLD ||
        region.lowerRight().system() != PlotCoordinate::WORLD)
@@ -179,52 +225,10 @@ bool PlotCanvas::canvasAxesStackMove(int delta) {
     
     PlotRegion r = convertRegion(stack.moveAndReturn(delta),
                                  PlotCoordinate::WORLD);
-    setAxesRegion(r, stack.currentXAxis(), stack.currentYAxis());    
+    setAxesRegion(stack.currentXAxis(), stack.currentYAxis(), r);    
     return true;
 }
 
-void PlotCanvas::showCartesianAxis(PlotAxis mirrorAxis, bool show,
-        bool hideNormalAxis) {
-    switch(mirrorAxis) {
-    case X_BOTTOM: case X_TOP:
-        showCartesianAxis(mirrorAxis, Y_LEFT, show, hideNormalAxis);
-        break;
-    case Y_LEFT: case Y_RIGHT:
-        showCartesianAxis(mirrorAxis, X_BOTTOM, show, hideNormalAxis);
-        break;
-    }
-}
-
-void PlotCanvas::showCartesianAxes(bool show, bool hideNormal) {
-    showCartesianAxis(X_BOTTOM, show, hideNormal);
-    showCartesianAxis(Y_LEFT, show, hideNormal);
-}
-
-void PlotCanvas::clearAxesLabels() {
-    setAxisLabel(X_BOTTOM, "");
-    setAxisLabel(X_TOP, "");
-    setAxisLabel(Y_LEFT, "");
-    setAxisLabel(Y_RIGHT, "");
-}
-
-void PlotCanvas::setAxisFont(PlotAxis axis, const PlotFontPtr font) {
-    if(!font.null()) setAxisFont(axis, *font); }
-    
-
-PlotRegion PlotCanvas::convertRegion(const PlotRegion& region,
-        PlotCoordinate::System newSystem) const {
-    PlotCoordinate upperLeft = convertCoordinate(region.upperLeft(),
-                               newSystem);
-    PlotCoordinate lowerRight = convertCoordinate(region.lowerRight(),
-                                newSystem);
-    return PlotRegion(upperLeft, lowerRight);
-}
-
-vector<double>
-PlotCanvas::annotationWidthHeightDescent(const PlotAnnotationPtr annot) const {
-    if(annot.null()) return vector<double>();
-    else return textWidthHeightDescent(annot->text(), annot->font());
-}
 
 bool PlotCanvas::plot(PlotPtr plot, bool overplot) {
     if(!overplot) clearPlots();
@@ -279,14 +283,14 @@ PC_ALL(Annotation, PlotAnnotation)
 
 unsigned int PlotCanvas::numPlotItems() const { return allPlotItems().size(); }
 
-unsigned int PlotCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
-    return layerPlotItems(layer).size(); }
-
 unsigned int PlotCanvas::numPlots() const { return allPlots().size(); }
 unsigned int PlotCanvas::numPoints() const { return allPoints().size(); }
 unsigned int PlotCanvas::numShapes() const { return allShapes().size(); }
 unsigned int PlotCanvas::numAnnotations() const {
     return allAnnotations().size(); }
+
+unsigned int PlotCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
+    return layerPlotItems(layer).size(); }
 
 unsigned int PlotCanvas::numLayerPlots(PlotCanvasLayer layer) const {
     return layerPlots(layer).size(); }
@@ -320,7 +324,194 @@ void PlotCanvas::clearItems() { removePlotItems(allPlotItems()); }
 
 void PlotCanvas::clearLayer(PlotCanvasLayer layer) {
     removePlotItems(layerPlotItems(layer)); }
+
+
+PlotOperationPtr PlotCanvas::operationDraw() {
+    return operationDraw(PlotMutexPtr());
+}
+
+PlotOperationPtr PlotCanvas::operationDraw(PlotMutexPtr m) {
+    if(m_drawOperation.null())
+        m_drawOperation = new PlotOperation(OPERATION_DRAW, mutex());
+    if(!m.null()) m_drawOperation->setMutex(m);
+    return m_drawOperation;
+}
+
+void PlotCanvas::registerDrawWatcher(PlotDrawWatcherPtr watcher) {
+    if(watcher.null()) return;
     
+    for(unsigned int i = 0; i < m_drawWatchers.size(); i++)
+        if(m_drawWatchers[i] == watcher) return;
+    m_drawWatchers.push_back(watcher);
+}
+
+void PlotCanvas::unregisterDrawWatcher(PlotDrawWatcherPtr watcher) {
+    if(watcher.null()) return;
+    for(unsigned int i = 0; i < m_drawWatchers.size(); i++) {
+        if(m_drawWatchers[i] == watcher) {
+            m_drawWatchers.erase(m_drawWatchers.begin() + i);
+            return;
+        }
+    }
+}
+
+
+bool PlotCanvas::selectLineShown() const {
+    PlotLinePtr line = selectLine();
+    return !line.null() && line->style() != PlotLine::NOLINE;
+}
+
+void PlotCanvas::setSelectLine(const PlotLinePtr line) {
+    if(!line.null()) setSelectLine(*line);
+    else             setSelectLineShown(false);
+}
+
+void PlotCanvas::setSelectLine(const String& color, PlotLine::Style style,
+        double width) {
+    PlotLinePtr line = selectLine();
+    line->setColor(color);
+    line->setStyle(style);
+    line->setWidth(width);
+    setSelectLine(*line);
+}
+
+
+void PlotCanvas::showGrid(bool showAll) {
+    showGrid(showAll, showAll, showAll, showAll); }
+
+void PlotCanvas::showGridMajor(bool show) {
+    showGrid(show, gridXMinorShown(), show, gridYMinorShown()); }
+
+void PlotCanvas::showGridMinor(bool show) {
+    showGrid(gridXMajorShown(), show, gridYMajorShown(), show); }
+
+bool PlotCanvas::gridXMajorShown() const {
+    bool show;
+    gridShown(&show);
+    return show;
+}
+
+void PlotCanvas::showGridXMajor(bool s) {
+    showGrid(s, gridXMinorShown(), gridYMajorShown(), gridYMinorShown()); }
+
+bool PlotCanvas::gridXMinorShown() const {
+    bool show;
+    gridShown(NULL, &show);
+    return show;
+}
+
+void PlotCanvas::showGridXMinor(bool s) {
+    showGrid(gridXMajorShown(), s, gridYMajorShown(), gridYMinorShown()); }
+
+bool PlotCanvas::gridYMajorShown() const {
+    bool show;
+    gridShown(NULL, NULL, &show);
+    return show;
+}
+
+void PlotCanvas::showGridYMajor(bool s) {
+    showGrid(gridXMajorShown(), gridXMinorShown(), s, gridYMinorShown()); }
+
+bool PlotCanvas::gridYMinorShown() const {
+    bool show;
+    gridShown(NULL, NULL, NULL, &show);
+    return show;
+}
+
+void PlotCanvas::showGridYMinor(bool s) {
+    showGrid(gridXMajorShown(), gridXMinorShown(), gridYMajorShown(), s); }
+
+void PlotCanvas::setGridMajorLine(const PlotLinePtr line) {
+    if(!line.null()) setGridMajorLine(*line);
+    else             showGridMajor(false);
+}
+void PlotCanvas::setGridMajorLine(const String& color, PlotLine::Style style,
+        double width) {
+    PlotLinePtr line = gridMajorLine();
+    line->setColor(color);
+    line->setStyle(style);
+    line->setWidth(width);
+    setGridMajorLine(*line);
+}
+
+void PlotCanvas::setGridMinorLine(const PlotLinePtr line) {
+    if(!line.null()) setGridMinorLine(*line);
+    else             showGridMinor(false);
+}
+
+void PlotCanvas::setGridMinorLine(const String& color, PlotLine::Style style,
+        double width) {
+    PlotLinePtr line = gridMinorLine();
+    line->setColor(color);
+    line->setStyle(style);
+    line->setWidth(width);
+    setGridMinorLine(*line);
+}
+
+
+void PlotCanvas::setLegendLine(const PlotLinePtr line) {
+    if(!line.null()) setLegendLine(*line);
+    else             setLegendLine("000000", PlotLine::NOLINE);
+}
+
+void PlotCanvas::setLegendLine(const String& color, PlotLine::Style style,
+        double width) {
+    PlotLinePtr line = legendLine();
+    line->setColor(color);
+    line->setStyle(style);
+    line->setWidth(width);
+    setLegendLine(*line);
+}
+
+void PlotCanvas::setLegendFill(const PlotAreaFillPtr area) {
+    if(!area.null()) setLegendFill(*area);
+    else             setLegendFill("000000", PlotAreaFill::NOFILL);
+}
+
+void PlotCanvas::setLegendFill(const String& color,
+        PlotAreaFill::Pattern pattern) {
+    PlotAreaFillPtr fill = legendFill();
+    fill->setColor(color);
+    fill->setPattern(pattern);
+    setLegendFill(*fill);
+}
+
+void PlotCanvas::setLegendFont(const PlotFontPtr font) {
+    if(!font.null()) setLegendFont(*font); }
+
+
+PlotOperationPtr PlotCanvas::operationExport() {
+    return operationDraw(PlotMutexPtr()); }
+PlotOperationPtr PlotCanvas::operationExport(PlotMutexPtr m) {
+    if(m_exportOperation.null())
+        m_exportOperation = new PlotOperation(OPERATION_EXPORT, mutex());
+    if(!m.null()) m_exportOperation->setMutex(m);
+    return m_exportOperation;
+}
+
+PlotRegion PlotCanvas::convertRegion(const PlotRegion& region,
+        PlotCoordinate::System newSystem) const {
+    PlotCoordinate upperLeft = convertCoordinate(region.upperLeft(),
+                               newSystem);
+    PlotCoordinate lowerRight = convertCoordinate(region.lowerRight(),
+                                newSystem);
+    return PlotRegion(upperLeft, lowerRight);
+}
+
+
+vector<double>
+PlotCanvas::annotationWidthHeightDescent(const PlotAnnotationPtr annot) const {
+    if(annot.null()) return vector<double>();
+    else return textWidthHeightDescent(annot->text(), annot->font());
+}
+
+PlotMutexPtr PlotCanvas::mutex() const {
+    PlotFactory* f = implementationFactory();
+    PlotMutexPtr m = f->mutex();
+    delete f;
+    return m;
+}
+
 vector<vector<pair<unsigned int, unsigned int> > >*
 PlotCanvas::locate(const PlotRegion& r) const {
     PlotRegion region = convertRegion(r, PlotCoordinate::WORLD);
@@ -380,119 +571,237 @@ void PlotCanvas::locateAndLog(const PlotRegion& region,
     logger->postMessage(msg);
 }
 
-void PlotCanvas::setSelectLine(const PlotLinePtr line) {
-    if(!line.null()) setSelectLine(*line);
-    else             setSelectLineShown(false);
+
+void PlotCanvas::registerMouseTool(PlotMouseToolPtr tool, bool activate,
+        bool blocking) {
+    if(tool.null()) return;
+    
+    tool->setActive(activate);
+    tool->setBlocking(blocking);
+    
+    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
+        if(m_mouseTools[i] == tool) return;
+    
+    m_mouseTools.push_back(tool);
+    tool->attach(this);
 }
 
-void PlotCanvas::setSelectLine(const String& color, PlotLine::Style style,
-        double width) {
-    PlotLinePtr line = selectLine();
-    line->setColor(color);
-    line->setStyle(style);
-    line->setWidth(width);
-    setSelectLine(*line);
+vector<PlotMouseToolPtr> PlotCanvas::allMouseTools() const {
+    return m_mouseTools; }
+
+vector<PlotMouseToolPtr> PlotCanvas::activeMouseTools() const {
+    vector<PlotMouseToolPtr> v;
+    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
+        if(m_mouseTools[i]->isActive()) v.push_back(m_mouseTools[i]);
+    return v;
 }
 
-void PlotCanvas::setGridShown(bool showAll) {
-    setGridXMajorShown(showAll);
-    setGridXMinorShown(showAll);
-    setGridYMajorShown(showAll);
-    setGridYMinorShown(showAll);
+void PlotCanvas::unregisterMouseTool(PlotMouseToolPtr tool) {
+    if(tool.null()) return;
+    for(unsigned int i = 0; i < m_mouseTools.size(); i++) {
+        if(m_mouseTools[i] == tool) {
+            m_mouseTools.erase(m_mouseTools.begin() + i);
+            tool->detach();
+            return;
+        }
+    }
 }
 
-void PlotCanvas::setGridShown(bool xMajor, bool xMinor, bool yMajor,
-        bool yMinor) {
-    setGridXMajorShown(xMajor);
-    setGridXMinorShown(xMinor);
-    setGridYMajorShown(yMajor);
-    setGridYMinorShown(yMinor);
+PlotStandardMouseToolGroupPtr PlotCanvas::standardMouseTools() {
+    if(m_standardTools.null()) {
+        PlotFactory* f = implementationFactory();
+        m_standardTools = f->standardMouseTools();
+        delete f;
+        registerMouseTool(m_standardTools, false, true);
+    }
+    return m_standardTools;
 }
 
-void PlotCanvas::setGridMajorShown(bool show) {
-    setGridXMajorShown(show);
-    setGridYMajorShown(show);
+
+// Macro for the handlers because they got very repetitive.
+#define PC_HANDLER1(TYPE,MEMBER)                                              \
+void PlotCanvas::register##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler, \
+        PlotCoordinate::System system) {                                      \
+    if(handler.null()) return;                                                \
+    for(unsigned int i = 0; i < MEMBER .size(); i++)                          \
+        if( MEMBER [i].first == handler) return;                              \
+    MEMBER .push_back(pair<Plot##TYPE##EventHandlerPtr,                       \
+            PlotCoordinate::System>(handler, system));                        \
+}                                                                             \
+                                                                              \
+vector<Plot##TYPE##EventHandlerPtr> PlotCanvas::all##TYPE##Handlers() const { \
+    vector<Plot##TYPE##EventHandlerPtr> v( MEMBER .size());                   \
+    for(unsigned int i = 0; i < v.size(); i++) v[i] = MEMBER [i].first;       \
+    return v;                                                                 \
+}                                                                             \
+                                                                              \
+void PlotCanvas::unregister##TYPE##Handler(Plot##TYPE##EventHandlerPtr hndlr){\
+    for(unsigned int i = 0; i < MEMBER .size(); i++) {                        \
+        if( MEMBER [i].first == hndlr) {                                      \
+            MEMBER .erase( MEMBER .begin() + i);                              \
+            break;                                                            \
+        }                                                                     \
+    }                                                                         \
 }
 
-void PlotCanvas::setGridMinorShown(bool show) {
-    setGridXMinorShown(show);
-    setGridYMinorShown(show);
+// Second macro which doesn't have the PlotCoordiate::System stuff.
+#define PC_HANDLER2(TYPE,MEMBER)                                              \
+void PlotCanvas::register##TYPE##Handler(Plot##TYPE##EventHandlerPtr handler){\
+    if(handler.null()) return;                                                \
+    for(unsigned int i = 0; i < MEMBER .size(); i++)                          \
+        if( MEMBER [i] == handler) return;                                    \
+    MEMBER .push_back(handler);                                               \
+}                                                                             \
+                                                                              \
+vector<Plot##TYPE##EventHandlerPtr> PlotCanvas::all##TYPE##Handlers() const { \
+    return MEMBER; }                                                          \
+                                                                              \
+void PlotCanvas::unregister##TYPE##Handler(Plot##TYPE##EventHandlerPtr hndlr){\
+    for(unsigned int i = 0; i < MEMBER .size(); i++) {                        \
+        if( MEMBER [i] == hndlr) {                                            \
+            MEMBER .erase( MEMBER .begin() + i);                              \
+            break;                                                            \
+        }                                                                     \
+    }                                                                         \
 }
 
-void PlotCanvas::setGridMajorLine(const PlotLinePtr line) {
-    if(!line.null()) setGridMajorLine(*line);
-    else             setGridMajorShown(false);
-}
-void PlotCanvas::setGridMajorLine(const String& color, PlotLine::Style style,
-        double width) {
-    PlotLinePtr line = gridMajorLine();
-    line->setColor(color);
-    line->setStyle(style);
-    line->setWidth(width);
-    setGridMajorLine(*line);
-}
-
-void PlotCanvas::setGridMinorLine(const PlotLinePtr line) {
-    if(!line.null()) setGridMinorLine(*line);
-    else             setGridMinorShown(false);
-}
-
-void PlotCanvas::setGridMinorLine(const String& color, PlotLine::Style style,
-        double width) {
-    PlotLinePtr line = gridMinorLine();
-    line->setColor(color);
-    line->setStyle(style);
-    line->setWidth(width);
-    setGridMinorLine(*line);
-}
-
-void PlotCanvas::setLegendLine(const PlotLinePtr line) {
-    if(!line.null()) setLegendLine(*line);
-    else             setLegendLine("000000", PlotLine::NOLINE);
-}
-
-void PlotCanvas::setLegendLine(const String& color, PlotLine::Style style,
-        double width) {
-    PlotLinePtr line = legendLine();
-    line->setColor(color);
-    line->setStyle(style);
-    line->setWidth(width);
-    setLegendLine(*line);
-}
-
-void PlotCanvas::setLegendFill(const PlotAreaFillPtr area) {
-    if(!area.null()) setLegendFill(*area);
-    else             setLegendFill("000000", PlotAreaFill::NOFILL);
-}
-
-void PlotCanvas::setLegendFill(const String& color,
-        PlotAreaFill::Pattern pattern) {
-    PlotAreaFillPtr fill = legendFill();
-    fill->setColor(color);
-    fill->setPattern(pattern);
-    setLegendFill(*fill);
-}
-
-void PlotCanvas::setLegendFont(const PlotFontPtr font) {
-    if(!font.null()) setLegendFont(*font); }
-
-PlotOperationPtr PlotCanvas::operationDraw() {
-    return operationDraw(PlotMutexPtr());
-}
-
-PlotOperationPtr PlotCanvas::operationDraw(PlotMutexPtr m) {
-    if(m_drawOperation.null())
-        m_drawOperation = new PlotOperation(OPERATION_DRAW, mutex());
-    if(!m.null()) m_drawOperation->setMutex(m);
-    return m_drawOperation;
-}
+PC_HANDLER1(Select, m_selectHandlers)
+PC_HANDLER1(Click, m_clickHandlers)
+PC_HANDLER1(MousePress, m_pressHandlers)
+PC_HANDLER1(MouseRelease, m_releaseHandlers)
+PC_HANDLER1(MouseDrag, m_dragHandlers)
+PC_HANDLER1(MouseMove, m_moveHandlers)
+PC_HANDLER1(Wheel, m_wheelHandlers)
+PC_HANDLER2(Key, m_keyHandlers)
+PC_HANDLER2(Resize, m_resizeHandlers)
 
 
 // Protected Methods //
 
-void PlotCanvas::attachTool(PlotToolPtr tool) {
-    if(!tool.null()) tool->attach(this); }
-void PlotCanvas::detachTool(PlotToolPtr tool) {
-    if(!tool.null()) tool->detach(); }
+void PlotCanvas::resetMouseTools() {
+    for(unsigned int i = 0; i < m_mouseTools.size(); i++)
+        m_mouseTools[i]->reset();
+}
+
+bool PlotCanvas::notifyDrawWatchers(PlotOperationPtr drawOperation,
+        bool drawingIsThreaded, int drawnLayersFlag) {
+    bool ret = true;
+    for(unsigned int i = 0; i < m_drawWatchers.size(); i++)
+        ret &= m_drawWatchers[i]->canvasDrawBeginning(drawOperation,
+                drawingIsThreaded, drawnLayersFlag);
+    return ret;
+}
+
+#define PC_EVENT_HELPER1(MEMBER)                                              \
+    vector<PlotMouseToolPtr> active = activeMouseTools();                     \
+    if( MEMBER .size() == 0 && active.size() == 0) return false;              \
+
+#define PC_SELECT_HELPER                                                      \
+    PlotRegion wreg = convertRegion(selectedRegion, PlotCoordinate::WORLD),   \
+        nreg= convertRegion(selectedRegion, PlotCoordinate::NORMALIZED_WORLD),\
+        preg= convertRegion(selectedRegion, PlotCoordinate::PIXEL);           \
+    PlotSelectEvent pe(this, preg), we(this, wreg), ne(this, nreg);
+
+#define PC_MOUSE_HELPER(EVENT)                                                \
+    PlotCoordinate wc = convertCoordinate(coord, PlotCoordinate::WORLD),      \
+        nc = convertCoordinate(coord, PlotCoordinate::NORMALIZED_WORLD),      \
+        pc = convertCoordinate(wc, PlotCoordinate::PIXEL);                    \
+    EVENT we(this, button, wc), ne(this, button, nc), pe(this, button, pc);   \
+
+#define PC_WHEEL_HELPER                                                       \
+    PlotCoordinate wc = convertCoordinate(coord, PlotCoordinate::WORLD),      \
+        nc = convertCoordinate(coord, PlotCoordinate::NORMALIZED_WORLD),      \
+        pc = convertCoordinate(wc, PlotCoordinate::PIXEL);                    \
+    PlotWheelEvent we(this, delta, wc), ne(this, delta, nc),                  \
+        pe(this, delta, pc);
+
+#define PC_EVENT_HELPER2(MEMBER,TYPE)                                         \
+    for(unsigned int i = 0; i < active.size(); i++) {                         \
+        switch(active[i]->getCoordinateSystem()) {                            \
+        case PlotCoordinate::WORLD: active[i]->handle##TYPE(we); break;       \
+        case PlotCoordinate::PIXEL: active[i]->handle##TYPE(pe); break;       \
+        case PlotCoordinate::NORMALIZED_WORLD:                                \
+            active[i]->handle##TYPE(ne); break;                               \
+        default: continue;                                                    \
+        }                                                                     \
+        if(active[i]->isBlocking()&& active[i]->lastEventWasHandled())        \
+            return true;                                                      \
+    }                                                                         \
+                                                                              \
+    for(unsigned int i = 0; i < MEMBER.size(); i++) {                         \
+        if(MEMBER[i].second == PlotCoordinate::WORLD)                         \
+            MEMBER[i].first->handle##TYPE(we);                                \
+        else if(MEMBER[i].second == PlotCoordinate::PIXEL)                    \
+            MEMBER[i].first->handle##TYPE(pe);                                \
+        else if(MEMBER[i].second == PlotCoordinate::NORMALIZED_WORLD)         \
+            MEMBER[i].first->handle##TYPE(ne);                                \
+    }                                                                         \
+    return true;
+
+#define PC_SELECT(MEMBER,TYPE)                                                \
+    PC_EVENT_HELPER1(MEMBER)                                                  \
+    PC_SELECT_HELPER                                                          \
+    PC_EVENT_HELPER2(MEMBER,TYPE)
+
+#define PC_MOUSE(MEMBER,EVENT,TYPE)                                           \
+    PC_EVENT_HELPER1(MEMBER)                                                  \
+    PC_MOUSE_HELPER(EVENT)                                                    \
+    PC_EVENT_HELPER2(MEMBER,TYPE)
+
+#define PC_WHEEL(MEMBER,TYPE)                                                 \
+    PC_EVENT_HELPER1(MEMBER)                                                  \
+    PC_WHEEL_HELPER                                                           \
+    PC_EVENT_HELPER2(MEMBER,TYPE)
+
+bool PlotCanvas::notifySelectHandlers(const PlotRegion& selectedRegion) {
+    PC_SELECT(m_selectHandlers,Select)
+}
+
+bool PlotCanvas::notifyClickHandlers(PlotMouseEvent::Button button,
+        const PlotCoordinate& coord) {
+    PC_MOUSE(m_clickHandlers,PlotClickEvent,Click)
+}
+
+bool PlotCanvas::notifyPressHandlers(PlotMouseEvent::Button button,
+        const PlotCoordinate& coord) {
+    PC_MOUSE(m_pressHandlers,PlotMousePressEvent,MousePress)
+}
+
+bool PlotCanvas::notifyReleaseHandlers(PlotMouseEvent::Button button,
+        const PlotCoordinate& coord) {
+    PC_MOUSE(m_releaseHandlers,PlotMouseReleaseEvent,MouseRelease)
+}
+
+bool PlotCanvas::notifyDragHandlers(PlotMouseEvent::Button button,
+        const PlotCoordinate& coord) {
+    PC_MOUSE(m_dragHandlers,PlotMouseDragEvent,MouseDrag)
+}
+
+bool PlotCanvas::notifyMoveHandlers(PlotMouseEvent::Button button,
+        const PlotCoordinate& coord) {
+    PC_MOUSE(m_moveHandlers,PlotMouseMoveEvent,MouseMove)
+}
+
+bool PlotCanvas::notifyWheelHandlers(int delta, const PlotCoordinate& coord) {
+    PC_WHEEL(m_wheelHandlers,Wheel)
+}
+
+#define PC_EVENT(MEMBER,EVENT,TYPE,...)                                       \
+    if(MEMBER.size() == 0) return false;                                      \
+    EVENT ev(this, __VA_ARGS__);                                              \
+    for(unsigned int i = 0; i < MEMBER.size(); i++)                           \
+        MEMBER[i]->handle##TYPE(ev);                                          \
+    return true;
+
+bool PlotCanvas::notifyKeyHandlers(char key,
+        const vector<PlotKeyEvent::Modifier>& modifiers) {
+    PC_EVENT(m_keyHandlers,PlotKeyEvent,Key,key,modifiers)
+}
+
+bool PlotCanvas::notifyResizeHandlers(int oldWidth, int oldHeight,
+        int newWidth, int newHeight) {
+    PC_EVENT(m_resizeHandlers,PlotResizeEvent,Resize,oldWidth,oldHeight,
+             newWidth,newHeight)
+}
 
 }

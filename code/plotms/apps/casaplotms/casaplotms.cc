@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
            yaxis = PMS::axis(PMS::DEFAULT_YAXIS);
     PlotMSLogger::Level log = PlotMSLogger::OFF;
+    PlotMSSelection select;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -48,6 +49,8 @@ int main(int argc, char* argv[]) {
     String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_MS = "ms",
            ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
            ARG_LOG2 = "--loglevel";
+    const vector<String>& selectFields = PlotMSSelection::fieldStrings();
+    
     for(int i = 1; i < argc; i++) {
         arg = arg2 = argv[i];
         arg2.downcase();
@@ -57,16 +60,29 @@ int main(int argc, char* argv[]) {
         if(arg2 == ARG_HELP1 || arg2 == ARG_HELP2) {
             cout << argv[0] << ": Stand-alone executable for CASA PlotMS."
                  << "\nAvailable arguments:\n"
-                 << "\t" << ARG_HELP1 << " or " << ARG_HELP2 << "\t\t\tPrints "
-                 << "this message then exits.\n"
-                 << "\t" << ARG_MS <<"=[ms]\t\t\t\tMS used for initial plot.\n"
-                 << "\t" << ARG_XAXIS << "=[axis]"
-                 << "\t\t\tX-Axis for initial plot (see documentation).\n"
-                 << "\t" << ARG_YAXIS << "=[axis]"
-                 << "\t\t\tY-Axis for initial plot (see documentation).\n"
-                 << "\t" << ARG_LOG1 << "=[lvl] or " << ARG_LOG2 << "=[lvl]\t"
+                 
+                 << "* " << ARG_HELP1 << " or " << ARG_HELP2 << "\n     "
+                 << "Prints this message then exits."
+                 
+                 << "\n* " << ARG_MS << "=[ms]\n     "
+                 << "Path to MS used for initial plot."
+                 
+                 << "\n* " << ARG_XAXIS << "=[axis]\n     "
+                 << "X-Axis for initial plot (see documentation)."
+                 
+                 << "\n* " << ARG_YAXIS << "=[axis]\n     "
+                 << "Y-Axis for initial plot (see documentation)."
+                 
+                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
                  << "Sets the plotter's log level to the given (see "
-                 << "documentation)." << endl;
+                 << "documentation).";
+            
+            for(unsigned int i = 0; i < selectFields.size(); i++) {
+                cout << "\n* " << selectFields[i] << "=[val]\n     "
+                     << "MS Selection parameter.";
+            }
+            
+            cout << endl;
             return 0;
         }
         
@@ -95,6 +111,12 @@ int main(int argc, char* argv[]) {
         else if(arg2 == ARG_LOG1 || arg2 == ARG_LOG2) {
             log = PlotMSLogger::level(arg3, &ok);
             if(!ok) log = PlotMSLogger::OFF;
+        } else {
+            for(unsigned int i = 0; i < selectFields.size(); i++) {
+                if(PMS::strEq(arg2, selectFields[i], true))
+                    select.setValue(PlotMSSelection::field(selectFields[i]),
+                                    arg3);
+            }
         }
     }
     
@@ -108,9 +130,10 @@ int main(int argc, char* argv[]) {
     // Set up parameters for single plot.
     PlotMSSinglePlotParameters plotparams(&plotms, ms);
     plotparams.setAxes(PMS::axis(xaxis), PMS::axis(yaxis));
+    plotparams.setSelection(select);
     
     // If single plot is set, add the plot to plotms.
-    if(plotparams.isSet()) plotms.addSinglePlot(&plotparams);
+    plotms.addSinglePlot(&plotparams);
     
     return plotms.execLoop();
 }

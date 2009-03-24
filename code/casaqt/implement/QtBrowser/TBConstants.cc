@@ -34,6 +34,7 @@
 #include <QHBoxLayout>
 
 #include <casa/OS/Time.h>
+#include <casaqt/QtUtilities/QtUtilities.h>
 
 #include <casa/namespace.h>
 
@@ -240,22 +241,10 @@ bool TBConstants::increment(vector<int>& shape, vector<int>& d) {
 }
 
 void TBConstants::insert(QFrame* frame, QWidget* widget) {
-    if(frame == NULL || widget == NULL) return;
-    
-    QHBoxLayout* layout = new QHBoxLayout(frame);
-    layout->setSpacing(0);
-#if QT_VERSION >= 0x040300
-    layout->setContentsMargins(0, 0, 0, 0);
-#else
-    layout->setMargin(0);
-#endif
-    layout->addWidget(widget);
-}
+    QtUtilities::putInFrame(frame, widget); }
 
 void TBConstants::insert(QFrame* frame, QLayout* layout) {
-    if(frame == NULL || layout == NULL) return;
-    frame->setLayout(layout);
-}
+    QtUtilities::putInFrame(frame, layout); }
 
 
 /* Data Types and Related Methods */

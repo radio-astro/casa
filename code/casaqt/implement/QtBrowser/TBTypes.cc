@@ -95,17 +95,8 @@ void TBTypes::setType(String t) {
 // Private Methods //
 
 void TBTypes::setupArray() {
-    QGridLayout* l = new QGridLayout(arrayValueFrame);
-#if QT_VERSION >= 0x040300
-    l->setHorizontalSpacing(0);
-    l->setVerticalSpacing(0);
-    l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setSpacing(0);
-    l->setMargin(0);
-#endif
     arrayTypes = new TBTypes(types->at(0), false);
-    l->addWidget(arrayTypes, 0, 0, 1, 1);
+    TBConstants::insert(arrayValueFrame, arrayTypes);
     connect(arrayDimSetButton, SIGNAL(clicked()), this, SLOT(arrayDimSet()));
     connect(arrayValSetButton, SIGNAL(clicked()), this, SLOT(arrayValSet()));
 }
@@ -116,17 +107,9 @@ void TBTypes::setupRecord() {
         String name = TBConstants::typeName(t);
         recordTypeChooser->addItem((name + " (" + t + ")").c_str());
     }
-    QGridLayout* l = new QGridLayout(recordValueFrame);
-#if QT_VERSION >= 0x040300
-    l->setHorizontalSpacing(0);
-    l->setVerticalSpacing(0);
-    l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setSpacing(0);
-    l->setMargin(0);
-#endif
+
     recordTypes = new TBTypes(types->at(0), false);
-    l->addWidget(recordTypes, 0, 0, 1, 1);
+    TBConstants::insert(recordValueFrame, recordTypes);
     connect(recordTypeChooser, SIGNAL(currentIndexChanged(int)),
             this, SLOT(recordChooserChanged(int)));
 }

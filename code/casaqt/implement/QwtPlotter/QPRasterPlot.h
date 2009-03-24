@@ -101,10 +101,10 @@ public:
     // Implements PlotItem::isValid().
     bool isValid() const;
     
-    // Implements PlotItem::indexedDrawCount().  This returns the number of
-    // points that are needed to fill in the raster plot in the current state
-    // of the canvas it is attached to.
-    unsigned int indexedDrawCount() const;
+    // Implements PlotItem::drawCount().  This returns the number of points
+    // that are needed to fill in the raster plot in the current state of the
+    // canvas it is attached to.
+    unsigned int drawCount() const;
 
     
     // QwtPlotItem Methods //
@@ -173,7 +173,7 @@ protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
     
-    // Implements QPPlotItem::draw_().
+    // Implements QPLayerItem::draw_().
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;

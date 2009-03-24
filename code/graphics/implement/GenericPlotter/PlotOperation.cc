@@ -33,7 +33,7 @@ namespace casa {
 ///////////////////////////////
 
 PlotOperation::PlotOperation(const String& name, PlotMutexPtr mutex) :
-        m_name(name), m_mutex(mutex) {
+        m_name(name), m_cancelRequested(false), m_mutex(mutex) {
     reset();
 }
 
@@ -53,6 +53,8 @@ unsigned int PlotOperation::currentProgress() const {
     PO_GETTER(unsigned int, m_currentProgress) }
 String PlotOperation::currentStatus() const {
     PO_GETTER(String, m_currentStatus) }
+bool PlotOperation::cancelRequested() const {
+    PO_GETTER(bool, m_cancelRequested) }
 
 
 #define PO_SETTER(NAME, TEMP, VAL)                                            \
@@ -73,6 +75,8 @@ void PlotOperation::setCurrentProgress(unsigned int val) {
 }
 void PlotOperation::setCurrentStatus(const String& val) {
     PO_SETTER(m_currentStatus, currentStatus(), val) }
+void PlotOperation::setCancelRequested(bool val) {
+    PO_SETTER(m_cancelRequested, cancelRequested(), val); }
 
 void PlotOperation::setMutex(PlotMutexPtr mutex) { m_mutex = mutex; }
 
@@ -98,6 +102,7 @@ void PlotOperation::reset() {
     m_isFinished = false;
     m_currentProgress = 0;
     m_currentStatus = "";
+    m_cancelRequested = false;
     notifyWatchers();
 }
 

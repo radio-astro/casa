@@ -32,10 +32,10 @@
 #include <plotms/PlotMS/PlotMSAction.h>
 #include <plotms/PlotMS/PlotMSData.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
-#include <plotms/PlotMS/PlotMSPlotManager.h>
 #include <plotms/PlotMS/PlotMSTabs.qo.h>
 #include <plotms/PlotMS/PlotMSThread.qo.h>
 
+#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 
 #include <QtGui>
@@ -51,7 +51,7 @@ class PlotMS;
 // High(ish)-level plotter class that manages the GUI (semi-) transparently to
 // the rest of PlotMS.
 class PlotMSPlotter : public QMainWindow, Ui::PlotterWindow,
-                      public PlotMSActionParameters {
+                      public PlotMSActionParameters, public PlotDrawWatcher {
     Q_OBJECT
     
 public:
@@ -77,7 +77,7 @@ public:
     // <group>
     PlotFactoryPtr getFactory() { return itsFactory_; }
     PlotterPtr getPlotter() { return itsPlotter_; }
-    PlotProgressWidget* getProgressWidget() { return itsThreadProgress_; }
+    QtProgressWidget* getProgressWidget() { return itsThreadProgress_; }
     PlotMSPlotTab* getPlotTab() { return itsPlotTab_; }
     PlotMSToolsTab* getToolsTab() { return itsToolsTab_; }
     PlotMSOptionsTab* getOptionsTab() { return itsOptionsTab_; }
@@ -102,15 +102,14 @@ public:
         return execLoop();
     }
     
-    // Does a threaded redraw of the plot canvases.  If the given plot object
-    // is not null, only the canvases associated with that plot are redrawn;
-    // otherwise all canvases on the plotter are redrawn.
-    void doThreadedRedraw(PlotMSPlot* plot = NULL);
-    
     // Runs the given operation thread, keeping GUI and progress information
     // synchronized as necessary.  The given thread will be deleted upon
     // completion.
     void doThreadedOperation(PlotMSThread* thread);
+    
+    // Implements PlotDrawWatcher::canvasDrawBeginning().
+    bool canvasDrawBeginning(PlotOperationPtr drawOperation,
+                bool drawingIsThreaded, int drawnLayersFlag);
     
     
     // GUI Methods //
@@ -195,9 +194,6 @@ protected:
     // execution loop).
     void closeEvent(QCloseEvent* event);
     
-    // Overrides QWidget::resizeEvent(), to have threaded drawing.
-    void resizeEvent(QResizeEvent* event);
-    
 private:
     // PlotMS parent.
     PlotMS* itsParent_;
@@ -224,16 +220,13 @@ private:
     QList<QToolButton*> itsToolButtons_;
     
     // Widget for displaying thread progress.
-    PlotProgressWidget* itsThreadProgress_;
+    QtProgressWidget* itsThreadProgress_;
     
     // Current thread (or NULL for none).
     PlotMSThread* itsCurrentThread_;
     
     // Waiting threads.
     vector<PlotMSThread*> itsWaitingThreads_;
-    
-    // Used to disallow resizing during a threaded operation.
-    QSize itsMinSize_, itsMaxSize_;
     
     // Flag for whether triggered QActions should trigger the associated PlotMS
     // action or not.  Should be false when the QAction's checked state is

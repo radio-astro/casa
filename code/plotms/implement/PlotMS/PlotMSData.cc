@@ -69,6 +69,8 @@ bool PlotMSData::minsMaxes(double& xMin, double& xMax, double& yMin,
 }
 
 
+bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
+
 void PlotMSData::clearCache() { itsCache_->clear(); }
 
 void PlotMSData::loadCache(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,

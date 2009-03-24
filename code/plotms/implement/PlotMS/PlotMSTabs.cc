@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSTabs.qo.h>
 
+#include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMS.h>
 
 namespace casa {
@@ -142,7 +143,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
     
     // Setup MS tab
     itsMSFileWidget_ = new PlotFileWidget(true, false);
-    PlotMSWidget::putInFrame(msLocationFrame, itsMSFileWidget_);
+    QtUtilities::putInFrame(msLocationFrame, itsMSFileWidget_);
     
     vector<PlotMSSelection::Field> fields = PlotMSSelection::fields();
     QGridLayout* l = new QGridLayout(msSelectionFrame);
@@ -158,8 +159,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
         itsSelectionValues_.insert(fields[i], val);
     }
     
-    PlotMSWidget::putInScrollArea(msSelectionFrame);
-    //PlotMSWidget::putInScrollArea(msAveragingFrame);
+    QtUtilities::putInScrollArea(msSelectionFrame);
+    //QtUtilities::putInScrollArea(msAveragingFrame);
     
     itsLabelDefaults_.insert(msLocationLabel, msLocationLabel->text());
     itsLabelDefaults_.insert(msSelectionLabel, msSelectionLabel->text());
@@ -194,8 +195,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
     
     itsXRangeWidget_ = new PlotRangeWidget();
     itsYRangeWidget_ = new PlotRangeWidget();
-    PlotMSWidget::putInFrame(axesXRangeFrame, itsXRangeWidget_);
-    PlotMSWidget::putInFrame(axesYRangeFrame, itsYRangeWidget_);
+    QtUtilities::putInFrame(axesXRangeFrame, itsXRangeWidget_);
+    QtUtilities::putInFrame(axesYRangeFrame, itsYRangeWidget_);
     
     itsLabelDefaults_.insert(axesXLabel, axesXLabel->text());
     itsLabelDefaults_.insert(axesXDataLabel, axesXDataLabel->text());
@@ -219,9 +220,9 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
             PMS::DEFAULT_SYMBOL(factory), false, false);
     itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory, 
             PMS::DEFAULT_MASKED_SYMBOL(factory), false, false);
-    PlotMSWidget::putInFrame(plotTitleFrame, itsPlotTitleWidget_);
-    PlotMSWidget::putInFrame(plotUFFrame, itsSymbolWidget_);
-    PlotMSWidget::putInFrame(plotFFrame, itsMaskedSymbolWidget_);
+    QtUtilities::putInFrame(plotTitleFrame, itsPlotTitleWidget_);
+    QtUtilities::putInFrame(plotUFFrame, itsSymbolWidget_);
+    QtUtilities::putInFrame(plotFFrame, itsMaskedSymbolWidget_);
     
     itsLabelDefaults_.insert(plotTitleLabel, plotTitleLabel->text());
     itsLabelDefaults_.insert(plotUFlabel, plotUFlabel->text());
@@ -242,8 +243,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
                        PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
     itsYLabelWidget_ = new PlotLabelWidget(
                        PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
-    PlotMSWidget::putInFrame(canvasXLabelFrame, itsXLabelWidget_);
-    PlotMSWidget::putInFrame(canvasYLabelFrame, itsYLabelWidget_);
+    QtUtilities::putInFrame(canvasXLabelFrame, itsXLabelWidget_);
+    QtUtilities::putInFrame(canvasYLabelFrame, itsYLabelWidget_);
     
     itsLabelDefaults_.insert(canvasTitleLabel, canvasTitleLabel->text());
     itsLabelDefaults_.insert(canvasLegendLabel, canvasLegendLabel->text());
@@ -254,7 +255,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
     
     // Setup export tab
     itsExportFileWidget_ = new PlotFileWidget(false, true);
-    PlotMSWidget::putInFrame(exportFileFrame, itsExportFileWidget_);
+    QtUtilities::putInFrame(exportFileFrame, itsExportFileWidget_);
     
     exportFormat->addItem("[by file extension]");
     vector<String> formats = PlotExportFormat::supportedFormatStrings();
@@ -741,10 +742,20 @@ void PlotMSPlotTab::msClear() {
 void PlotMSPlotTab::plot() {
     if(itsCurrentParameters_ != NULL) {
         PlotMSSinglePlotParameters params = currentlySetParameters();
-        if(params != *itsCurrentParameters_) {
-            itsCurrentParameters_->holdNotification(this);
-            *itsCurrentParameters_ = params;
-            itsCurrentParameters_->releaseNotification();
+        
+        // Plot if 1) parameters have changed, 2) cache loading was canceled
+        // previously.
+        bool pchanged = params != *itsCurrentParameters_,
+             cload = !itsCurrentPlot_->data().cacheReady();
+        if(pchanged || cload) {
+            if(pchanged) {
+                itsCurrentParameters_->holdNotification(this);
+                *itsCurrentParameters_ = params;
+                itsCurrentParameters_->releaseNotification();
+            } else if(cload) {
+                itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
+                        PlotMSWatchedParameters::CACHE, true);
+            }
             plotsChanged(itsPlotManager_);
         }
     }
@@ -782,13 +793,8 @@ void PlotMSPlotTab::exportClicked() {
         format.height = -1;
     }
     
-    if(itsCurrentPlot_->exportToFormat(format)) {
-        itsPlotter_->showMessage("Successfully exported plot to " +
-                                 format.location + "!", "Export Success");
-    } else {
-        itsPlotter_->showError("There was a problem exporting to file " +
-                               format.location + "!", "Export Error", false);
-    }
+    itsPlotter_->doThreadedOperation(
+            new PlotMSExportThread(itsCurrentPlot_, format));
 }
 
 

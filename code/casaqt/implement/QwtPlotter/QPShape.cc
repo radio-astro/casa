@@ -1014,11 +1014,7 @@ void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
         
         if(m_orient != 0) {
             painter->rotate(m_orient);
-#if QT_VERSION >= 0x040300
             painter->worldTransform().inverted().map(x, y, &x, &y);
-#else
-            painter->worldMatrix().inverted().map(x, y, &x, &y);
-#endif
         }
         
         // note: drawChord and drawArc are expecting 1/16ths of degrees

@@ -305,7 +305,7 @@
      if [ -f "$PCKGIMPD/$ELEMENT.cc" ]
      then
 #       Now actually produce the dependency list.
-        echo "	$ELEMENT.cc"
+        #echo "	$ELEMENT.cc"
         TARGET='${AIPSLIBS:%=%('$ELEMENT'.o)} : $(CODEINCD)/'
 
 #       Filter out 'lex' and 'bison' includes.
@@ -313,10 +313,15 @@
            $PCKGIMPD/$ELEMENT.cc > $ELEMENT.cc
 
 #       Apply the preprocessor.
-        $CPP $CPPOPTx $AIPSINCLx $ELEMENT.cc | sed -n \
-           -e '\%^#.*"'$CODEINCD'/.*/_[a-z]*_[u]*def\.h"%d' \
-           -e '\%^#.*"'$CODEINCD'%s#.*include/\(.*\)".*#'"$TARGET"'\1#p' | \
-           sort -u > $ELEMENT.$JOBIDENT
+#        $CPP $CPPOPTx $AIPSINCLx $ELEMENT.cc | sed -n \
+#           -e '\%^#.*"'$CODEINCD'/.*/_[a-z]*_[u]*def\.h"%d' \
+#           -e '\%^#.*"'$CODEINCD'%s#.*include/\(.*\)".*#'"$TARGET"'\1#p' | \
+#           sort -u > $ELEMENT.$JOBIDENT
+        $CPP -MM -MT '${AIPSLIBS:%=%('$ELEMENT'.o)}' $CPPOPTx $AIPSINCLx $ELEMENT.cc > $ELEMENT.$JOBIDENT
+        #echo $CPP -MM $CPPOPTx $AIPSINCLx $ELEMENT.cc \> $ELEMENT.$JOBIDENT
+        #echo $ELEMENT
+	#cat $ELEMENT.$JOBIDENT
+	   #echo $CPPOPTx $AIPSINCLx
         rm -f $ELEMENT.cc
      else
 #       A modified .h file has signalled a deleted .cc file.
@@ -402,10 +407,14 @@
               $PCKGIMPD/$ELEMENT.cc > $ELEMENT.cc
 
 #          Apply the preprocessor.
-           $CPP $CPPOPTx $AIPSINCLx $ELEMENT.cc | sed -n \
-              -e '\%^#.*/_[a-z][a-z]*_u*def\.h"%d' \
-              -e '\%^#.*"'$CODEINCD'%s#.*include/\(.*\)".*#'"$TARGET"'\1#p' | \
-              sort -u > $ELEMENT
+#           $CPP $CPPOPTx $AIPSINCLx $ELEMENT.cc | sed -n \
+#              -e '\%^#.*/_[a-z][a-z]*_u*def\.h"%d' \
+#              -e '\%^#.*"'$CODEINCD'%s#.*include/\(.*\)".*#'"$TARGET"'\1#p' | \
+#              sort -u > $ELEMENT
+           $CPP -MM -MT '${AIPSLIBS:%=%('$ELEMENT'.o)}' $CPPOPTx $AIPSINCLx $ELEMENT.cc >$ELEMENT
+           echo $CPP -MM $CPPOPTx $AIPSINCLx $ELEMENT.cc \>$ELEMENT
+	   #cat $ELEMENT
+	   #echo $CPPOPTx $AIPSINCLx
            rm -f $ELEMENT.cc
         else
 #          A modified .h file has signalled a deleted .cc file.
@@ -419,7 +428,8 @@
   done
 
 # Sort and install the updated list.
-  sort -u _list > $DPNDLIST
+#  sort -u _list > $DPNDLIST
+  mv _list $DPNDLIST
   mv -f _time.$JOBIDENT $DPNDTIME
   echo "Dependency list updated ($JOBIDENT)."
 

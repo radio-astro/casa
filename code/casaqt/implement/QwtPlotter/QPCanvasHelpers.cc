@@ -29,6 +29,7 @@
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 #include <casa/OS/Time.h>
+#include <casaqt/QtUtilities/QtLayeredLayout.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
 #include <qwt_painter.h>
@@ -288,8 +289,8 @@ QPLegendHolder::QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition ps,
     l->addItem(m_spaceBottom = new QSpacerItem(0, 0), 2, 0, 1, 3);
     
     // Add to canvas.
-    QGridLayout* canvLayout = dynamic_cast<QGridLayout*>(canvas->layout());
-    if(canvLayout != NULL) canvLayout->addWidget(this, 0, 0);
+    QtLayeredLayout* cl = dynamic_cast<QtLayeredLayout*>(canvas->layout());
+    if(cl != NULL) cl->addWidget(this);
     setPosition(ps);
     
     // Set up tracking, etc.
@@ -465,9 +466,9 @@ QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
 
 QPCartesianAxis::~QPCartesianAxis() { }
 
-void QPCartesianAxis::draw(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect&) const {
-    //QPCartesianScaleDraw* s = const_cast<QPCartesianScaleDraw*>(&m_scaleDraw);
+void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
+                  const QwtScaleMap& yMap, const QRect& drawRect,
+                  unsigned int drawIndex, unsigned int drawCount) const {
     QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
     if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) {
         s->move(QPOptions::round(xMap.xTransform(0.0)),

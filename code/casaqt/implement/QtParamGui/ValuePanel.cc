@@ -192,19 +192,11 @@ StandardValuePanel::StandardValuePanel(String paramName,
     complexSpinner2->setMaximum(numeric_limits<double>::max());
     
     QHBoxLayout* l = new QHBoxLayout(arrayItems);
-#if QT_VERSION >= 0x040300
     l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setMargin(0);
-#endif
     l->setSpacing(3);
     
     QVBoxLayout* lr = new QVBoxLayout(recordItemsFrame);
-#if QT_VERSION >= 0x040300
     lr->setContentsMargins(0, 0, 0, 0);
-#else
-    lr->setMargin(0);
-#endif
     lr->setSpacing(3);
     
     if(paramRecord.isDefined(QtParamGUI::RANGE)) {
@@ -1118,11 +1110,7 @@ QWidget* StandardValuePanel::arrayWidget() {
         QFrame* f = new QFrame();
         f->setFrameStyle(QFrame::NoFrame);
         QHBoxLayout* l = new QHBoxLayout(f);
-#if QT_VERSION >= 0x040300
         l->setContentsMargins(0, 0, 0, 0);
-#else
-        l->setMargin(0);
-#endif
         l->setSpacing(0);
         
         l->addWidget(new QLabel("("));
@@ -1220,11 +1208,7 @@ void StandardValuePanel::browse() {
 // RECORDPANEL DEFINITIONS //
 
 RecordItemPanel::RecordItemPanel(String paramName) {
-#if QT_VERSION >= 0x040300
     setContentsMargins(0, 0, 0, 0);
-#else
-    setMargin(0);
-#endif
     setSpacing(3);
     
     m_name = new QLineEdit();

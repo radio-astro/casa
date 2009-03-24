@@ -1133,12 +1133,7 @@ void QtParamGUI::setupRecord(vector<String> order) {
     QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>(frame->layout());
     if(layout == NULL) {
         layout = new QVBoxLayout(frame);
-
-#if QT_VERSION >= 0x040300
         layout->setContentsMargins(0, 0, 0, 0);
-#else
-        layout->setMargin(0);
-#endif
     } else {
         ParamPanel* p;
         for(unsigned int i = 0; i < m_panels.size(); i++) {
@@ -1898,11 +1893,7 @@ void QtParamGUI::setupDialog(QDialog* d, String taskName, String name,
                              const String& value) {
     d->setWindowTitle((taskName + ": " + name).c_str());
     QVBoxLayout* l = new QVBoxLayout(d);
-#if QT_VERSION >= 0x040300
     l->setContentsMargins(0, 0, 0, 0);
-#else
-    l->setMargin(0);
-#endif
     l->setSpacing(3);
 
     String str = "<b>";

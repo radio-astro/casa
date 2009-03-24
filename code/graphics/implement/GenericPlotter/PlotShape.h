@@ -46,9 +46,9 @@ public:
     virtual ~PlotShape() { }
     
     
-    // Implements PlotItem::indexedDrawCount().  Provides default
-    // implementation that returns 1.
-    virtual unsigned int indexedDrawCount() const { return 1; }
+    // Implements PlotItem::drawCount().  Provides default implementation that
+    // returns 1.
+    virtual unsigned int drawCount() const { return 1; }
     
     
     // ABSTRACT METHODS //
@@ -176,10 +176,9 @@ public:
     // Destructor.
     virtual ~PlotShapePolygon() { }
     
-    // Overrides PlotShape::indexedDrawCount().  Provides default
-    // implementation that returns the number of vertices.
-    virtual unsigned int indexedDrawCount() const {
-        return coordinates().size(); }
+    // Overrides PlotShape::drawCount().  Provides default implementation that
+    // returns the number of vertices.
+    virtual unsigned int drawCount() const { return coordinates().size(); }
 };
 
 
@@ -267,10 +266,9 @@ public:
     // Destructor.
     virtual ~PlotShapePath() { }
     
-    // Overrides PlotShape::indexedDrawCount().  Provides default
-    // implementation that returns the number of path points.
-    virtual unsigned int indexedDrawCount() const {
-        return coordinates().size(); }
+    // Overrides PlotShape::drawCount().  Provides default implementation that
+    // returns the number of path points.
+    virtual unsigned int drawCount() const { return coordinates().size(); }
 };
 
 
@@ -334,9 +332,9 @@ public:
     virtual ~PlotPoint() { }
     
     
-    // Implements PlotItem::indexedDrawCount().  Provides default
-    // implementation that returns 1.
-    virtual unsigned int indexedDrawCount() const { return 1; }
+    // Implements PlotItem::drawCount().  Provides default implementation that
+    // returns 1.
+    virtual unsigned int drawCount() const { return 1; }
     
     
     // ABSTRACT METHODS //

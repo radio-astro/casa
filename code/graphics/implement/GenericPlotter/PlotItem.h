@@ -39,12 +39,12 @@ class PlotCanvas;
 // x and y axis for drawing on the canvas.
 class PlotItem {
 public:
-    PlotItem() { }
+    // Constructor.
+    PlotItem();
     
-    virtual ~PlotItem() { }
-    
-    
-    // ABSTRACT METHODS //
+    // Destructor.
+    virtual ~PlotItem();
+
     
     // Returns the canvas this item is currently attached to, or NULL for none.
     virtual PlotCanvas* canvas() const = 0;
@@ -72,23 +72,28 @@ public:
 
     // Sets the item's axes.
     // <group>
-    virtual void setXAxis(PlotAxis x) = 0;    
-    virtual void setYAxis(PlotAxis y) = 0;    
-    virtual void setAxes(PlotAxis x, PlotAxis y) {
-        setXAxis(x);
-        setYAxis(y);
-    }
+    virtual void setXAxis(PlotAxis x) = 0;
+    virtual void setYAxis(PlotAxis y) = 0;
     // </group>
+    
+    // Sets both the item's axes at once.
+    // DEFAULT IMPLEMENTATION.
+    virtual void setAxes(PlotAxis x, PlotAxis y);
     
     // Returns the "draw count" for this item, which subjectively means how
     // many indexed draw operations this item needs to make.  This is used to
     // make comparative judgments about how long each item will take to draw,
     // and to possibly divide up the work for larger items.  For example, a
     // plot with 1000 data points might return 1000, while a square might
-    // return 1 for each drawn line.  Whatever number is returned, the item
-    // should expect to be able to draw given two indexes; for example, a plot
-    // should be able to draw from index 0 to index 100.
-    virtual unsigned int indexedDrawCount() const = 0;
+    // return 1.  Whatever number is returned, the item should expect to be
+    // able to draw given two indexes; for example, a plot should be able to
+    // draw from index 0 to index 100.
+    virtual unsigned int drawCount() const = 0;
+    
+    // Returns the number of draw segments for this item, using the given
+    // segment threshold.  See DrawCount().
+    // DEFAULT IMPLEMENTATION.
+    virtual unsigned int drawSegments(unsigned int segmentThreshold) const;
 };
 typedef CountedPtr<PlotItem> PlotItemPtr;
 

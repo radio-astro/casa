@@ -41,8 +41,7 @@ namespace casa {
 // TODO PlotMSPlotManager: unused canvases
 // TODO PlotMSPlotter: range padding, customize toolbars, override close event
 //                     to call PlotMS::close() in case there's cleanup needed
-// TODO PlotMSThread: background, pause/resume, cancel; export thread; draw
-//                    thread for non-threaded draws
+// TODO PlotMSThread: background, pause/resume; export cancel
 // TODO PlotMSWidgets: label creator
 // TODO PlotTool: make scrolling on standard tool group still do stack movement
 //                even when "none" tool is selected, display tracker value as

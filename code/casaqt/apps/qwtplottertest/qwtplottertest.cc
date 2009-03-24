@@ -58,7 +58,7 @@ public:
             
             PlotPointPtr point = m_factory->point(coord.x(), coord.y());
             point->setSymbol(m_symbol);
-            event.canvas()->plotPoint(point);
+            event.canvas()->plotItem(point, ANNOTATION);
             
             if(m_symbol->isCharacter()) {
                 char c = m_symbol->symbolChar();
@@ -177,8 +177,11 @@ int main(int argc, char** argv) {
         // Set up a plotter window with a single canvas
         PlotterPtr plotter = factory->plotter("Qwt Plotter Test");
         
-        plotter->showDefaultPanel(Plotter::HAND_TOOLS);
-        plotter->showDefaultPanel(Plotter::EXPORT_TOOLS);
+        /*
+        plotter->setLogEventFlags(PlotLogger::DRAW_TOTAL |
+                PlotLogger::DRAW_INDIVIDUAL | PlotLogger::METHODS_MAJOR |
+                PlotLogger::OBJECTS_MAJOR);
+        */
         
         // Get the canvas
         PlotCanvasPtr canvas = plotter->canvas();
@@ -194,13 +197,19 @@ int main(int argc, char** argv) {
         font->setBold();
         canvas->setTitleFont(font);
         
+        // Show default panels.
+        plotter->showDefaultPanel(Plotter::HAND_TOOLS);
+        plotter->showDefaultPanel(Plotter::EXPORT_TOOLS);
+        
         // Change background to a light grey
         PlotAreaFillPtr area = canvas->background();
         area->setColor("EEEEEE");
         canvas->setBackground(area);
         
         // Register example handler
-        ExampleHandler handler(factory, factory->symbol('a'));
+        PlotSymbolPtr charSymbol = factory->symbol('a');
+        charSymbol->setSize(12, 12, false); // set 12-point font
+        ExampleHandler handler(factory, charSymbol);
         // pass false to smart pointers so that it won't be deleted prematurely
         canvas->registerClickHandler(PlotClickEventHandlerPtr(&handler,false));
         canvas->registerKeyHandler(PlotKeyEventHandlerPtr(&handler, false));

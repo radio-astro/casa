@@ -32,7 +32,6 @@
 #include <plotms/PlotMS/PlotFillWidget.ui.h>
 #include <plotms/PlotMS/PlotLabelWidget.ui.h>
 #include <plotms/PlotMS/PlotLineWidget.ui.h>
-#include <plotms/PlotMS/PlotProgressWidget.ui.h>
 #include <plotms/PlotMS/PlotRangeWidget.ui.h>
 #include <plotms/PlotMS/PlotSymbolWidget.ui.h>
 
@@ -51,17 +50,6 @@ class PlotMSWidget : public QWidget {
     Q_OBJECT
     
 public:
-    //  Static //
-    
-    // Puts the given widget into the given frame.
-    static void putInFrame(QFrame* frame, QWidget* widget);
-    
-    // Puts the given widget into a QScrollArea, then replaces the widget in
-    // its parent's layout (if applicable), then returns the scroll area.
-    static QScrollArea* putInScrollArea(QWidget* widget,
-            bool showFrame = false);
-    
-    
     // Constructor which takes a PlotFactory and an optional parent widget.
     PlotMSWidget(PlotFactoryPtr factory, QWidget* parent = NULL);
     
@@ -372,79 +360,6 @@ private:
 private slots:
     // Slot for when the set range changes.
     void rangeChanged();
-};
-
-
-// GUI for displaying progress information.  It also shows "background",
-// "cancel", and "pause/resume" buttons for the user.  The parent of this
-// widget is responsible for implementing these behaviors as needed.
-class PlotProgressWidget : public QWidget, Ui::ProgressWidget {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes the PlotMS parent an optional parent widget.
-    PlotProgressWidget(bool allowBackground = true,
-            bool allowPauseResume = true, bool allowCancel = true,
-            QWidget* parent = NULL);
-    
-    // Destructor.
-    ~PlotProgressWidget();
-    
-    
-    // Sets which operations the user can request using this widget.
-    void setAllowedOperations(bool background, bool pauseResume, bool cancel);
-    
-    // Returns the mutex used for this widget.
-    QMutex& mutex();
-    
-public slots:
-    // Initializes the GUI with the given operation name.  Should be called
-    // before the operation starts.
-    void initialize(const String& operationName);
-
-    // Sets the status to the given.
-    void setStatus(const String& status);
-    
-    // Sets the progress percentage (0 - 100) to the given.
-    void setProgress(unsigned int progress);
-    
-    // Sets the progress percentage (0 - 100) and the status to the given.
-    void setProgress(unsigned int progress, const String& status);
-    
-    // Finalizes the GUI.  Should be called after the operation ends.
-    void finalize();
-    
-signals:
-    // Signal for when the user requests "background" for the thread.
-    void backgroundRequested();
-    
-    // Signal for when the user requests "pause" for the thread.
-    void pauseRequested();
-    
-    // Signal for when the user requests "resume" for the thread.
-    void resumeRequested();
-    
-    // Signal for when the user requests "cancel" for the thread.
-    void cancelRequested();
-    
-protected:
-    // Overrides QWidget::closeEvent().  Connects closing to the "background"
-    // signal.
-    void closeEvent(QCloseEvent* event);
-    
-private:    
-    // Mutex.
-    QMutex itsMutex_;
-    
-private slots:
-    // For the "background" button.
-    void background();
-    
-    // For the "pause"/"resume" button.
-    void pauseResume(bool pause);
-    
-    // For the "cancel" button.
-    void cancel();
 };
 
 }

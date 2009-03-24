@@ -121,31 +121,32 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     bool hold = drawingHeld();
     if(!hold && redrawRequired) holdDrawing();
     
+    itsTCLendLog_ = false;
+    itsTCLupdateCanvas_ = msUpdated || canvasUpdated || !params.isSet();
+    itsTCLupdatePlot_ = plotUpdated;
+    itsTCLrelease_ = !hold && redrawRequired;
+    
     // Update MS/cache as needed.
-    bool msSuccess = true;
+    bool msSuccess = true, callCacheLoaded = true;
     if(params.isSet()) {
         if(msUpdated || cacheUpdated) {
             startLogCache();
-
-            if(msUpdated) msSuccess = updateMS();
-
-            // Only update cache if MS opening succeeded.
-            if(msSuccess) updateCache();
-            else          itsData_.clearCache();
+            itsTCLendLog_ = true;
             
-            endLogCache();
-        }
-        
+            if(msUpdated) msSuccess = updateMS();
+            itsTCLupdateCanvas_ |= !msSuccess;
+            
+            // Only update cache if MS opening succeeded.
+            if(msSuccess) {
+                callCacheLoaded = !hasThreadedCaching();
+                updateCache();
+            } else itsData_.clearCache();
+        }        
     } else itsData_.clearCache();
     
-    // Update canvas as needed.
-    if(msUpdated || !msSuccess || canvasUpdated || !params.isSet())
-        updateCanvas();
-    
-    // Update plot as needed.
-    if(plotUpdated) updatePlot();
-    
-    if(!hold && redrawRequired) releaseDrawing();
+    // Do the rest immediately if 1) cache not updated, or 2) cache not
+    // threaded.  Otherwise wait for the thread to call cacheLoaded_().
+    if(callCacheLoaded) cacheLoaded_(false);
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
@@ -233,7 +234,9 @@ void PlotMSPlot::holdDrawing() {
 }
 
 void PlotMSPlot::releaseDrawing() {
-    itsParent_->getPlotter()->doThreadedRedraw(this);
+    //itsParent_->getPlotter()->doThreadedRedraw(this);
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
+        itsCanvases_[i]->releaseDrawing();
 }
 
 void PlotMSPlot::startLogCache() {
@@ -245,6 +248,20 @@ void PlotMSPlot::startLogCache() {
 void PlotMSPlot::endLogCache() {
     PlotMSLogger* log = itsParent_->loggerFor(PlotMSLogger::LOAD_CACHE);
     if(log != NULL) log->releaseMeasurement();
+}
+
+void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
+    // End log as needed.
+    if(itsTCLendLog_) endLogCache();
+    
+    // Update canvas as needed.
+    if(itsTCLupdateCanvas_) updateCanvas();
+    
+    // Update plot as needed.
+    if(itsTCLupdatePlot_) updatePlot();
+    
+    // Release drawing if needed.
+    if(itsTCLrelease_) releaseDrawing();
 }
 
 
@@ -306,6 +323,19 @@ bool PlotMSSinglePlot::assignCanvases() {
 }
 
 bool PlotMSSinglePlot::updateCache() {
+    vector<PMS::Axis> axes(2);
+    axes[0] = itsParameters_.xAxis();
+    axes[1] = itsParameters_.yAxis();
+    vector<PMS::DataColumn> data(2);
+    data[0] = itsParameters_.xDataColumn();
+    data[1] = itsParameters_.yDataColumn();
+    
+    PlotMSCacheThread* ct = new PlotMSCacheThread(this, axes, data,
+            itsParameters_.averaging(), true, &PlotMSPlot::cacheLoaded, this);
+    itsParent_->getPlotter()->doThreadedOperation(ct);
+    return true;
+    
+    /*
     try {
         // VisSet will be null on an error.
         if(itsParameters_.isSet() && itsVisSet_ != NULL) {
@@ -324,6 +354,7 @@ bool PlotMSSinglePlot::updateCache() {
         itsParent_->showError("Could not load cache, for unknown reasons!");
         return false;
     }
+    */
 }
 
 bool PlotMSSinglePlot::updateCanvas() {
@@ -397,11 +428,6 @@ bool PlotMSSinglePlot::updatePlot() {
         itsParent_->showError("Could not update plot, for unknown reasons!");
         return false;
     }
-}
-
-void PlotMSSinglePlot::cacheLoaded_() {
-    // TODO
-    cout << "PlotMSSinglePlot::cacheLoaded_()" << endl;
 }
 
 }

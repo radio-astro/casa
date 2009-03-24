@@ -5,22 +5,37 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>837</width>
+    <width>866</width>
     <height>507</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>Table Data Tab</string>
   </property>
-  <layout class="QGridLayout" >
-   <property name="margin" >
-    <number>3</number>
-   </property>
+  <layout class="QVBoxLayout" >
    <property name="spacing" >
     <number>3</number>
    </property>
-   <item row="0" column="0" colspan="2" >
+   <property name="leftMargin" >
+    <number>3</number>
+   </property>
+   <property name="topMargin" >
+    <number>3</number>
+   </property>
+   <property name="rightMargin" >
+    <number>3</number>
+   </property>
+   <property name="bottomMargin" >
+    <number>3</number>
+   </property>
+   <item>
     <widget class="QSplitter" name="splitter" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="orientation" >
       <enum>Qt::Horizontal</enum>
      </property>
@@ -35,10 +50,22 @@
        <number>0</number>
       </property>
       <layout class="QGridLayout" >
-       <property name="margin" >
+       <property name="leftMargin" >
         <number>3</number>
        </property>
-       <property name="spacing" >
+       <property name="topMargin" >
+        <number>3</number>
+       </property>
+       <property name="rightMargin" >
+        <number>3</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>3</number>
+       </property>
+       <property name="horizontalSpacing" >
+        <number>3</number>
+       </property>
+       <property name="verticalSpacing" >
         <number>3</number>
        </property>
        <item row="0" column="0" >
@@ -50,11 +77,20 @@
        </item>
        <item row="1" column="0" >
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>0</number>
-         </property>
          <property name="spacing" >
           <number>3</number>
+         </property>
+         <property name="leftMargin" >
+          <number>0</number>
+         </property>
+         <property name="topMargin" >
+          <number>0</number>
+         </property>
+         <property name="rightMargin" >
+          <number>0</number>
+         </property>
+         <property name="bottomMargin" >
+          <number>0</number>
          </property>
          <item>
           <widget class="QPushButton" name="restoreColsButton" >
@@ -97,23 +133,95 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" native="1" name="sideWidget" />
+     <widget class="QWidget" native="1" name="sideWidget" >
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </widget>
    </item>
-   <item row="1" column="1" >
+   <item>
     <layout class="QHBoxLayout" >
-     <property name="margin" >
-      <number>0</number>
-     </property>
      <property name="spacing" >
       <number>3</number>
      </property>
      <item>
+      <widget class="QLabel" name="label" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>PAGE NAVIGATION</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="firstButton" >
+       <property name="text" >
+        <string>First</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="backButton" >
+       <property name="text" >
+        <string>&lt;&lt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="pageLabel" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>[ page ]</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="forwardButton" >
+       <property name="text" >
+        <string>>></string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="lastButton" >
+       <property name="text" >
+        <string>Last</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>35</width>
+         <height>27</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QLineEdit" name="pageEdit" >
        <property name="sizePolicy" >
-        <sizepolicy>
-         <hsizetype>0</hsizetype>
-         <vsizetype>0</vsizetype>
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -150,13 +258,19 @@
        <property name="sizeHint" >
         <size>
          <width>40</width>
-         <height>20</height>
+         <height>27</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
       <widget class="QLabel" name="label_3" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text" >
         <string>Loading</string>
        </property>
@@ -165,9 +279,7 @@
      <item>
       <widget class="QLineEdit" name="loadEdit" >
        <property name="sizePolicy" >
-        <sizepolicy>
-         <hsizetype>0</hsizetype>
-         <vsizetype>0</vsizetype>
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -188,6 +300,12 @@
      </item>
      <item>
       <widget class="QLabel" name="label_2" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text" >
         <string>rows.</string>
        </property>
@@ -200,76 +318,8 @@
        </property>
        <property name="sizeHint" >
         <size>
-         <width>51</width>
+         <width>16</width>
          <height>27</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0" >
-    <layout class="QHBoxLayout" >
-     <property name="margin" >
-      <number>0</number>
-     </property>
-     <property name="spacing" >
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label" >
-       <property name="text" >
-        <string>PAGE NAVIGATION</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="firstButton" >
-       <property name="text" >
-        <string>First</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="backButton" >
-       <property name="text" >
-        <string>&lt;&lt;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="pageLabel" >
-       <property name="text" >
-        <string>[ page ]</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="forwardButton" >
-       <property name="text" >
-        <string>>></string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="lastButton" >
-       <property name="text" >
-        <string>Last</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer>
-       <property name="orientation" >
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType" >
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" >
-        <size>
-         <width>35</width>
-         <height>20</height>
         </size>
        </property>
       </spacer>
