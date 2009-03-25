@@ -43,7 +43,11 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
                     # print summary of input data
                     print "Initial Raw Scantable:"
                     print s
-
+            
+            # check if the data contains spectra
+            if (s.nchan()==1):
+               s = "Cannot process the input data. It contains only single channel data."
+               raise Exception, s
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'

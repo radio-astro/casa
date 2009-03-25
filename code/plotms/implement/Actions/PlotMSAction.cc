@@ -24,10 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotMSAction.h>
+#include <plotms/Actions/PlotMSAction.h>
 
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/PlotMS/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 namespace casa {
 
@@ -307,7 +307,7 @@ void PlotMSActionOnStack::doAction(PlotMS* plotms) {
     vector<PlotCanvasPtr> canv = itsPlot_->canvases();
     for(unsigned int i = 0; i < canv.size(); i++) {
         if(canv[i].null()) continue;
-        canv[i]->canvasAxesStackMove(delta);
+        canv[i]->axesStackMove(delta);
     }
 }
 

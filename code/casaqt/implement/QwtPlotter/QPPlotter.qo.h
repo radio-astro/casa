@@ -47,6 +47,8 @@ class PlotFactory;
 class QPPlotter : public QWidget, Ui::PlotterUI, public Plotter {
     Q_OBJECT
     
+    friend class QPCanvas;
+    
 public:
     // Static //
 
@@ -209,6 +211,14 @@ public:
 protected:
     // For catching resize events.
     void resizeEvent(QResizeEvent* event);
+    
+    // Logs the given object creation/destruction event, if needed.
+    void logObject(const String& className, void* address, bool creation,
+            const String& message = String());
+    
+    // Logs the given method enter/exit event, if needed.
+    void logMethod(const String& className, const String& methodName,
+            bool entering, const String& message = String());
     
 private:
     // Canvas layout.

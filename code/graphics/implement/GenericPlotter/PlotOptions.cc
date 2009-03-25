@@ -301,9 +301,23 @@ bool PlotRegion::isValid() const {
 // PLOTAXESSTACK DEFINITIONS //
 ///////////////////////////////
 
-PlotAxesStack::PlotAxesStack() : m_stackIndex(0) { }
+PlotAxesStack::PlotAxesStack(int lengthLimit) : m_lengthLimit(lengthLimit),
+        m_stackIndex(0) {
+    if(m_lengthLimit <= 1) m_lengthLimit = -1;
+}
 
 PlotAxesStack::~PlotAxesStack() { }
+
+
+int PlotAxesStack::lengthLimit() const { return m_lengthLimit; }
+void PlotAxesStack::setLengthLimit(int lengthLimit) {
+    if(lengthLimit <= 1) lengthLimit = -1;
+    if(m_lengthLimit != lengthLimit) {
+        m_lengthLimit = lengthLimit;
+        if(lengthLimit > 0 && m_stack.size() > (unsigned int)lengthLimit)
+            shrinkStacks((unsigned int)lengthLimit);
+    }
+}
 
 bool PlotAxesStack::isValid() const { return m_stack.size() > 0; }
 unsigned int PlotAxesStack::stackIndex() const { return m_stackIndex; }
@@ -324,11 +338,24 @@ void PlotAxesStack::addRegion(const PlotRegion& region, PlotAxis xAxis,
         PlotAxis yAxis) {
     if(m_stack.size() == 0) setBase(region, xAxis, yAxis);
     else {
-        if(m_stack.size() != m_stackIndex + 2) {
-            m_stack.resize(m_stackIndex + 2);
-            m_axes.resize(m_stackIndex + 2);
-        }
-        m_stackIndex++;
+        unsigned int newSize = m_stackIndex + 2;
+        
+        if(m_lengthLimit > 0 && newSize > (unsigned int)m_lengthLimit) {
+            // resize by discarding old values
+            shrinkStacks((unsigned int)m_lengthLimit);
+            
+            // Check for special indexing case.  Otherwise we override the
+            // current stack index member.
+            if(m_stackIndex < (unsigned int)(m_lengthLimit - 1))
+                m_stackIndex++;
+            
+        } else if(m_stack.size() != newSize) {
+            m_stack.resize(newSize);
+            m_axes.resize(newSize);
+            m_stackIndex++;
+            
+        } else m_stackIndex++;
+        
         m_stack[m_stackIndex] = region;
         m_axes[m_stackIndex] = pair<PlotAxis, PlotAxis>(xAxis, yAxis);
     }
@@ -368,6 +395,49 @@ void PlotAxesStack::move(int delta) {
 PlotRegion PlotAxesStack::moveAndReturn(int delta) {
     move(delta);
     return currentRegion();
+}
+
+
+void PlotAxesStack::shrinkStacks(unsigned int n) {
+    if(n == 0 || m_stack.size() >= n) return;
+    
+    // Shorten the stacks.
+    unsigned int diff = m_stack.size() - n;
+    vector<PlotRegion> stack(n);
+    vector<pair<PlotAxis, PlotAxis> > axes(n);
+    
+    // Copy over bases.
+    stack[0] = m_stack[0];
+    axes[0] = m_axes[0];
+
+    if(m_stackIndex > 0 && m_stackIndex <= diff) {
+        // Current index is in the part that is to be discarded, so
+        // keep that member and copy over the rest, discarding the
+        // oldest.
+        stack[1] = m_stack[m_stackIndex];
+        axes[1] = m_axes[m_stackIndex];
+        
+        for(unsigned int i = 2; i < n; i++) {
+            stack[i] = m_stack[i + diff];
+            axes[i] = m_axes[i + diff];
+        }
+        
+        // Update stack index.
+        m_stackIndex = 1;
+        
+    } else {
+        // Copy over the rest, discarding the oldest.
+        for(unsigned int i = 1; i < n; i++) {
+            stack[i] = m_stack[i + diff];
+            axes[i] = m_axes[i + diff];
+        }
+        
+        // Update the stack index if not at base.
+        if(m_stackIndex > 0) m_stackIndex -= diff;
+    }
+    
+    m_stack = stack;
+    m_axes = axes;
 }
 
 

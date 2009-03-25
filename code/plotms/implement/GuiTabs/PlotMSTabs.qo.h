@@ -27,13 +27,13 @@
 #ifndef PLOTMSTABS_QO_H_
 #define PLOTMSTABS_QO_H_
 
-#include <plotms/PlotMS/PlotMSOptionsTab.ui.h>
-#include <plotms/PlotMS/PlotMSPlotTab.ui.h>
-#include <plotms/PlotMS/PlotMSToolsTab.ui.h>
+#include <plotms/GuiTabs/PlotMSOptionsTab.ui.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
+#include <plotms/GuiTabs/PlotMSToolsTab.ui.h>
 
+#include <plotms/Gui/PlotWidgets.qo.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
-#include <plotms/PlotMS/PlotMSPlotManager.h>
-#include <plotms/PlotMS/PlotWidgets.qo.h>
+#include <plotms/Plots/PlotMSPlotManager.h>
 
 #include <QLineEdit>
 #include <QMap>
@@ -142,6 +142,9 @@ private slots:
     
     // When the user changes the log level on the GUI.
     void logLevelChanged(const QString& newLevel);
+    
+    // When the user changes the log debug checkbox on the GUI.
+    void logDebugChanged(bool value);
 };
 
 

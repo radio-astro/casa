@@ -56,6 +56,8 @@ class QPPlotter;
 class QPCanvas : public QFrame, public PlotCanvas {
     Q_OBJECT
     
+    friend class QPAxesCache;
+    friend class QPDrawThread;
     friend class QPLayeredCanvas;
     friend class QPPlotItem;
     friend class QPPlotter;
@@ -69,8 +71,11 @@ public:
     // Convenient access to class name (QPCanvas).
     static const String CLASS_NAME;
     
-    // Convenient access to "origin" name for draw method for logging.
+    // Convenient access to "origin" names for logging.
+    // <group>
     static const String DRAW_NAME;
+    static const String EXPORT_NAME;
+    // </group>
     
     
     // Exports the given plotter to the given format.
@@ -208,6 +213,13 @@ public:
     
     // Implements PlotCanvas::setAxesRatioLocked().
     void setAxesRatioLocked(bool locked = true);
+    
+       
+    // Implements PlotCanvas::cachedAxesStackSizeLimit().
+    int cachedAxesStackSizeLimit() const;
+
+    // Implements PlotCanvas::setCachedAxesStackSizeLimit().
+    void setCachedAxesStackSizeLimit(int sizeInKilobytes);
 
 
     // Implements PlotCanvas::plotItem().  If the given items is NOT an
@@ -343,7 +355,10 @@ public:
     // QPCanvas Methods //
     
     // Provides access to the underlying QPLayeredCanvas.
+    // <group>
     QPLayeredCanvas& asQwtPlot();
+    const QPLayeredCanvas& asQwtPlot() const;
+    // </group>
     
     // Provides access to the QwtPlotPicker used for selection events.
     QwtPlotPicker& getSelecter();
@@ -366,8 +381,25 @@ protected:
     
     // Returns a PlotLogger to be used for the given measurement event.  If the
     // return value is NULL, then the event should NOT be logged, otherwise it
-    // should.  Should be used by QPPlotItems attached to the canvas.
-    PlotLoggerPtr loggerForEvent(PlotLogger::Event event);
+    // should.  Should be used by QPPlotItems attached to the canvas and friend
+    // classes.
+    PlotLoggerPtr loggerForEvent(PlotLogger::Event event) const;
+    
+    // See QPPlotter::logObject().  If called before setQPPlotter() is called,
+    // creates a queue that is then posted when setQPPlotter() is called.
+    void logObject(const String& className, void* address, bool creation,
+            const String& message = String());
+    
+    // See QPPlotter::logMethod().  Does NOT queue messages if called before
+    // setQPPlotter() is called.
+    void logMethod(const String& className, const String& methodName,
+            bool entering, const String& message = String());
+    
+    // Provides access to the cached axes stack.
+    // <group>
+    QPAxesCache& axesCache();
+    const QPAxesCache& axesCache() const;
+    // </group>
     
     // For catching Qt press events.
     void mousePressEvent(QMouseEvent* event);
@@ -391,6 +423,9 @@ private:
     // Parent QPPlotter.
     QPPlotter* m_parent;
     
+    // Queued log messages before parent is set.
+    vector<PlotLogObject> m_queuedLogs;
+    
     // Main QwtPlot object.
     QPLayeredCanvas m_canvas;
 
@@ -405,6 +440,9 @@ private:
     
     // Used for recalculating axes ranges if the ratio is locked.
     vector<double> m_axesRatios;
+    
+    // Cached axes stack.
+    QPAxesCache m_stackCache;
 
     // Whether auto-increment colors is turned on or not.
     bool m_autoIncColors;

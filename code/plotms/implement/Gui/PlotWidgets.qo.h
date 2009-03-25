@@ -27,13 +27,13 @@
 #ifndef PLOTWIDGETS_QO_H_
 #define PLOTWIDGETS_QO_H_
 
-#include <plotms/PlotMS/PlotColorWidget.ui.h>
-#include <plotms/PlotMS/PlotFileWidget.ui.h>
-#include <plotms/PlotMS/PlotFillWidget.ui.h>
-#include <plotms/PlotMS/PlotLabelWidget.ui.h>
-#include <plotms/PlotMS/PlotLineWidget.ui.h>
-#include <plotms/PlotMS/PlotRangeWidget.ui.h>
-#include <plotms/PlotMS/PlotSymbolWidget.ui.h>
+#include <plotms/Gui/PlotColorWidget.ui.h>
+#include <plotms/Gui/PlotFileWidget.ui.h>
+#include <plotms/Gui/PlotFillWidget.ui.h>
+#include <plotms/Gui/PlotLabelWidget.ui.h>
+#include <plotms/Gui/PlotLineWidget.ui.h>
+#include <plotms/Gui/PlotRangeWidget.ui.h>
+#include <plotms/Gui/PlotSymbolWidget.ui.h>
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 

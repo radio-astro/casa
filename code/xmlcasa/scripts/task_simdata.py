@@ -11,7 +11,7 @@
 
 
 import os
-from clean import clean_imp as clean
+from clean import clean
 from taskinit import *
 from simutil import *
 import pylab as pl

@@ -69,7 +69,9 @@ QPBarPlot::QPBarPlot(const BarPlot& copy) : m_data(copy.data()) {
     setItemAttribute(QwtPlotItem::AutoScale);
 }
 
-QPBarPlot::~QPBarPlot() { }
+QPBarPlot::~QPBarPlot() {
+    logDestruction();
+}
 
 
 // Public Methods //
@@ -138,6 +140,7 @@ void QPBarPlot::setAreaFill(const PlotAreaFill& areaFill) {
 void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     /*
     if(to < 0) to = m_data.size() - 1;
     if(to < from) qSwap(to, from);
@@ -173,6 +176,7 @@ void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
     }
     
     p->restore();
+    logMethod("draw_", false);
 }
 
 

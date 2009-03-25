@@ -139,7 +139,8 @@ bool QPPlotItem::isPlot(QPPlotItem* item) {
 
 // Constructors/Destructors //
 
-QPPlotItem::QPPlotItem() : m_canvas(NULL), m_layer(MAIN) { }
+QPPlotItem::QPPlotItem() : m_canvas(NULL), m_loggedCreation(false),
+        m_layer(MAIN) { }
 
 QPPlotItem::~QPPlotItem() { }
 
@@ -169,10 +170,13 @@ void QPPlotItem::setYAxis(PlotAxis y) {
 void QPPlotItem::itemChanged() {
     if(m_canvas != NULL) {
         QPLayeredCanvas& c = m_canvas->asQwtPlot();
+        /*
         bool oldMain = c.drawMain(), oldAnnotation = c.drawAnnotation();
         c.setDrawLayers(m_layer == MAIN, m_layer == ANNOTATION);
+        */
+        c.setLayerChanged(m_layer);
         QwtPlotItem::itemChanged();
-        c.setDrawLayers(oldMain, oldAnnotation);
+        //c.setDrawLayers(oldMain, oldAnnotation);
     }
 }
 
@@ -184,7 +188,13 @@ void QPPlotItem::attach(QPCanvas* canvas, PlotCanvasLayer layer) {
         detach();
         m_canvas = canvas;
         m_layer = layer;
-        if(canvas != NULL) canvas->asQwtPlot().attachLayeredItem(this);
+        if(canvas != NULL) {
+            canvas->asQwtPlot().attachLayeredItem(this);
+            if(!m_loggedCreation) {
+                canvas->logObject(className(), this, true);
+                m_loggedCreation = true;
+            }
+        }
     }
 }
 
@@ -200,6 +210,15 @@ PlotLoggerPtr QPPlotItem::loggerForEvent(PlotLogger::Event event) const {
     else return const_cast<QPCanvas*>(m_canvas)->loggerForEvent(event);
 }
 
+void QPPlotItem::logDestruction() {
+    if(m_canvas != NULL) m_canvas->logObject(className(), this, false); }
+
+void QPPlotItem::logMethod(const String& methodName, bool entering,
+        const String& message) const {
+    if(m_canvas != NULL)
+        m_canvas->logMethod(className(), methodName, entering, message);
+}
+
 PlotOperationPtr QPPlotItem::drawOperation() const {
     if(m_canvas == NULL) return PlotOperationPtr();
     else return m_canvas->operationDraw();
@@ -211,6 +230,8 @@ PlotOperationPtr QPPlotItem::drawOperation() const {
 //////////////////////////////
 
 // Static //
+
+const String QPDrawThread::CLASS_NAME = "QPDrawThread";
 
 const unsigned int QPDrawThread::DEFAULT_SEGMENT_THRESHOLD = 50000;
 
@@ -300,26 +321,23 @@ QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
     
     for(int i = 0; i < QwtPlot::axisCnt; i++) m_axesMaps[i] = maps[i];
     
-    bool hasMain = false, hasAnnotation = false;
-    for(int i = 0; (!hasMain || !hasAnnotation) && i < m_items.size(); i++) {
-        if(m_items[i]->canvasLayer() == MAIN) hasMain = true;
-        else                                  hasAnnotation = true;
-    }
+    QSet<PlotCanvasLayer> seenLayers;
+    for(int i = 0; i < m_items.size(); i++)
+        seenLayers.insert(m_items[i]->canvasLayer());
     
-    if(hasMain) {
-        m_mainImage = QImage(drawRect.size(), QImage::Format_ARGB32);
-        m_mainImage.fill(Qt::transparent);
-    }
-    
-    if(hasAnnotation) {
-        m_annotationImage = QImage(drawRect.size(), QImage::Format_ARGB32);
-        m_annotationImage.fill(Qt::transparent);
+    QImage* image;
+    foreach(PlotCanvasLayer layer, seenLayers) {
+        image = new QImage(drawRect.size(), QImage::Format_ARGB32);
+        image->fill(Qt::transparent);
+        m_images.insert(layer, image);
     }
     
     m_cancelFlag = false;
 }
 
-QPDrawThread::~QPDrawThread() { }
+QPDrawThread::~QPDrawThread() {
+    foreach(QImage* image, m_images) delete image;
+}
 
 unsigned int QPDrawThread::totalSegments() const {
     unsigned int segments = 0;
@@ -329,12 +347,33 @@ unsigned int QPDrawThread::totalSegments() const {
 }
 
 void QPDrawThread::run() {
-    if(m_items.size() == 0 || m_cancelFlag) return;
+    // Compile vector of unique, non-null QPCanvases.
+    vector<QPCanvas*> canvases;
+    QPCanvas* canvas;
+    bool found = false;
+    for(int i = 0; i < m_items.size(); i++) {
+        if(m_items[i] == NULL) continue;
+        canvas = dynamic_cast<QPCanvas*>(m_items[i]->canvas());
+        if(canvas == NULL) continue;
+        found = false;
+        for(unsigned int j = 0; !found && j < canvases.size(); j++)
+            if(canvases[j] == canvas) found = true;
+        if(!found) canvases.push_back(canvas);
+    }
+    
+    for(unsigned int i = 0; i < canvases.size(); i++)
+        canvases[i]->logMethod(CLASS_NAME, "run", true);
+    
+    if(m_items.size() == 0 || m_cancelFlag) {
+        for(unsigned int i = 0; i < canvases.size(); i++)
+            canvases[i]->logMethod(CLASS_NAME, "run", false);
+        return;
+    }
     
     // Set up painters.
-    QPainter mainPainter, annotationPainter;
-    if(!m_mainImage.isNull()) mainPainter.begin(&m_mainImage);
-    if(!m_annotationImage.isNull())annotationPainter.begin(&m_annotationImage);
+    QHash<PlotCanvasLayer, QPainter*> painters;
+    foreach(PlotCanvasLayer layer, m_images.keys())
+        painters.insert(layer, new QPainter(m_images.value(layer)));
 
     // Set up log and operation.
     PlotLoggerPtr log= m_items[0]->loggerForEvent(PlotLogger::DRAW_INDIVIDUAL);
@@ -358,7 +397,7 @@ void QPDrawThread::run() {
         
         // Update temp variables.
         item = m_items[i];
-        painter= item->canvasLayer() == MAIN? &mainPainter: &annotationPainter;
+        painter = painters.value(item->canvasLayer());
         drawCount = item->drawCount();
         
         // Update operation.
@@ -395,17 +434,29 @@ void QPDrawThread::run() {
         // Finish logging.
         if(!log.null()) log->releaseMeasurement();
     }
+    
+    // Clean up painters.
+    foreach(QPainter* painter, painters) delete painter;
+    painters.clear();
+    
+    for(unsigned int i = 0; i < canvases.size(); i++)
+        canvases[i]->logMethod(CLASS_NAME, "run", false);
 }
 
-void QPDrawThread::drawIntoCaches(QPainter& mainCache,
-        QPainter& annotationCache) {
-    if(!m_mainImage.isNull()) mainCache.drawImage(m_drawRect, m_mainImage);
-    if(!m_annotationImage.isNull())
-        annotationCache.drawImage(m_drawRect, m_annotationImage);
+QImage QPDrawThread::drawResult(PlotCanvasLayer layer, bool clearResult) {
+    QHash<PlotCanvasLayer,QImage*>&i=const_cast<QPDrawThread*>(this)->m_images;
     
-    // Clear up memory.
-    m_mainImage = QImage();
-    m_annotationImage = QImage();
+    QImage ret;
+    QImage* image = i.value(layer);
+    if(image != NULL) {
+        ret = *image;
+        if(clearResult) {
+            delete image;
+            i.remove(layer);
+        }
+    }
+    
+    return ret;
 }
 
 void QPDrawThread::cancel() { m_cancelFlag = true; }

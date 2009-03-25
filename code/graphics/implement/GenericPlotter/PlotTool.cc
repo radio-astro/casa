@@ -341,13 +341,13 @@ void PlotZoomTool::handleMouseEvent(const PlotEvent& event) {
         
     // on wheel go through zoom stack 
     } else if((w = dynamic_cast<const PlotWheelEvent*>(&event)) != NULL) {
-        m_canvas->canvasAxesStackMove(w->delta());
+        m_canvas->axesStackMove(w->delta());
         m_lastEventHandled = true;
         
     // go to base on right click, zoom in 50% centered on double click
     } else if((c = dynamic_cast<const PlotClickEvent*>(&event)) != NULL) {
         if(c->button() == PlotClickEvent::CONTEXT) {
-            m_canvas->canvasAxesStackMove(0);
+            m_canvas->axesStackMove(0);
             m_lastEventHandled = true;
             
         } else if(c->button() == PlotClickEvent::DOUBLE) {
@@ -380,7 +380,7 @@ void PlotZoomTool::reset() {
 
 void PlotZoomTool::attach(PlotCanvas* canvas) {
     PlotMouseTool::attach(canvas);
-    if(canvas != NULL) m_stack = &canvas->canvasAxesStack();
+    if(canvas != NULL) m_stack = &canvas->axesStack();
     if(canvas != NULL && m_active) {
         if(!m_selLine.null()) m_canvas->setSelectLine(m_selLine);
         else                  m_canvas->setSelectLineShown(false);
@@ -494,12 +494,12 @@ void PlotPanTool::handleMouseEvent(const PlotEvent& event) {
     
     // stack navigation
     } else if((w = dynamic_cast<const PlotWheelEvent*>(&event)) != NULL) {
-        m_canvas->canvasAxesStackMove(w->delta());
+        m_canvas->axesStackMove(w->delta());
         m_lastEventHandled = true;
         
     } else if((c = dynamic_cast<const PlotClickEvent*>(&event)) != NULL) {
         if(c->button() == PlotClickEvent::CONTEXT) {
-            m_canvas->canvasAxesStackMove(0);
+            m_canvas->axesStackMove(0);
             m_lastEventHandled = true;
         }
     }
@@ -515,7 +515,7 @@ void PlotPanTool::reset() {
 void PlotPanTool::attach(PlotCanvas* canvas) {
     PlotMouseTool::attach(canvas);
     if(canvas != NULL) {
-        m_stack = &canvas->canvasAxesStack();
+        m_stack = &canvas->axesStack();
         if(m_active && m_stack->size() == 0)
             m_stack->setBase(m_canvas->axesRanges(m_xAxis, m_yAxis),
                              m_xAxis, m_yAxis);

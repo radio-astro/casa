@@ -36,17 +36,25 @@ namespace casa {
 
 // Static //
 
-int PlotMSLogger::levelToEventFlag(Level level) {
+int PlotMSLogger::levelToEventFlag(Level level, bool debug) {
+    int events = PlotLogger::NO_EVENTS;
+    
+    // Use fall-through behavior of switch to cumulatively add flags.
     switch(level) {
-    case LOW:  return PlotLogger::DRAW_TOTAL | LOAD_CACHE;
-    case MED:  return PlotLogger::DRAW_TOTAL | PlotLogger::METHODS_MAJOR |
-                      LOAD_CACHE;
-    case HIGH: return PlotLogger::DRAW_TOTAL | PlotLogger::DRAW_INDIVIDUAL |
-                      PlotLogger::METHODS_MAJOR | PlotLogger::OBJECTS_MAJOR |
-                      INITIALIZE_GUI | LOAD_CACHE;
+    case HIGH: events |= PlotLogger::DRAW_INDIVIDUAL | INITIALIZE_GUI;
+    
+    case MED:  events |= PlotLogger::EXPORT_TOTAL | PlotLogger::MSG_WARN;
+    
+    case LOW:  events |= PlotLogger::DRAW_TOTAL | PlotLogger::MSG_ERROR |
+                         LOAD_CACHE;
 
-    default: return PlotLogger::NO_EVENTS;
+    default: break;
     }
+    
+    if(debug) events |= PlotLogger::METHODS_MAJOR | PlotLogger::OBJECTS_MAJOR |
+                        PlotLogger::MSG_INFO;
+    
+    return events;
 }
 
 
@@ -63,8 +71,10 @@ void PlotMSLogger::setParent(PlotMS* p) {
     else          itsLogger_ = PlotLoggerPtr();
 }
 
-void PlotMSLogger::setLevel(Level level) {
-    if(itsParent_ != NULL) itsParent_->getParameters().setLogLevel(level); }
+void PlotMSLogger::setLevel(Level level, bool debug) {
+    if(itsParent_ != NULL)
+        itsParent_->getParameters().setLogLevel(level, debug);
+}
 
 
 void PlotMSLogger::postMessage(const PlotLogMessage& message) {

@@ -174,14 +174,14 @@ int main(int argc, char** argv) {
         // Get the qwt factory
         PlotFactoryPtr factory = plotterImplementation(Plotter::QWT);
     
-        // Set up a plotter window with a single canvas
-        PlotterPtr plotter = factory->plotter("Qwt Plotter Test");
+        // Indicate which log events to use.
+        int logEvents = PlotLogger::NO_EVENTS;
         
-        /*
-        plotter->setLogEventFlags(PlotLogger::DRAW_TOTAL |
-                PlotLogger::DRAW_INDIVIDUAL | PlotLogger::METHODS_MAJOR |
-                PlotLogger::OBJECTS_MAJOR);
-        */
+        //logEvents |= PlotLogger::MSG_INFO;
+        
+        // Set up a plotter window with a single canvas
+        PlotterPtr plotter = factory->plotter("Qwt Plotter Test", true, true,
+                logEvents);
         
         // Get the canvas
         PlotCanvasPtr canvas = plotter->canvas();

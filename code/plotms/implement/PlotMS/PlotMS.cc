@@ -29,23 +29,22 @@
 namespace casa {
 
 // TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//                    for new plots
+//      for new plots
 // TODO PlotMSCache: multi-region locate
 // TODO PlotMSData: have stack list of caches so that common MS/Selections can
-//                  be shared across different plots
+//      be shared across different plots
 // TODO PlotMSLogger: log source (std out, text widget, casapy logger), better
-//                    locate message, log message for parameters updated, log
-//                    message for # of plotted points
-// TODO PlotMSParameters: canvas background, fonts, grids, spacing
+//      locate message, log message for parameters updated, log message for #
+//      of plotted points
+// TODO PlotMSParameters: canvas background, fonts, grids, spacing, cartesian
+//      axes, limit zoom/pan cache size
 // TODO PlotMSPlot: different colors within one plot, different types
 // TODO PlotMSPlotManager: unused canvases
 // TODO PlotMSPlotter: range padding, customize toolbars, override close event
-//                     to call PlotMS::close() in case there's cleanup needed
-// TODO PlotMSThread: background, pause/resume; export cancel
+//      to call PlotMS::close() in case there's cleanup needed
+// TODO PlotMSThread: background, pause/resume
 // TODO PlotMSWidgets: label creator
-// TODO PlotTool: make scrolling on standard tool group still do stack movement
-//                even when "none" tool is selected, display tracker value as
-//                time when needed, set tracker font
+// TODO PlotTool: display tracker value as time when needed, set tracker font
 
 ////////////////////////
 // PLOTMS DEFINITIONS //
@@ -103,7 +102,7 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
     if(&params == &itsParameters_) {
         // We only care about PlotMS's parameters.
         itsLogEventFlag_ = PlotMSLogger::levelToEventFlag(
-                                 itsParameters_.logLevel());
+                itsParameters_.logLevel(), itsParameters_.logDebug());
         itsLogger_.setEventFlags_(itsLogEventFlag_);
     }
 }

@@ -27,11 +27,11 @@
 #ifndef PLOTMS_H_
 #define PLOTMS_H_
 
-#include <plotms/PlotMS/PlotMSAction.h>
+#include <plotms/Actions/PlotMSAction.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
-#include <plotms/PlotMS/PlotMSPlotManager.h>
-#include <plotms/PlotMS/PlotMSPlotter.qo.h>
+#include <plotms/Plots/PlotMSPlotManager.h>
 
 namespace casa {
 

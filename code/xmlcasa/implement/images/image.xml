@@ -9042,8 +9042,8 @@ need to replace masked pixel values after you have created the image.
 #
 print "\t----\t newimagefromfits Ex 1 \t----"
 # Assume we can find test fits file using
-# AIPSPATH environment variable
-pathname=os.environ.get("AIPSPATH")
+# CASAPATH environment variable
+pathname=os.environ.get("CASAPATH")
 pathname=pathname.split()[0]
 datapath=pathname+'/data/demo/Images/imagetestimage.fits'
 im1=ia.newimagefromfits('./myimage', datapath, overwrite=true)

@@ -34,9 +34,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
-    <param type="string" name="telescopeparm" subparam='true'>
+    <param type="any" name="telescopeparm" subparam='true'>
 	    <description>param of telescope for flux conversion</description>
-	    <value></value>
+            <any type='variant' limittype='string doubleArray'/>
+	    <value type='string'/>
     </param>
 
     <param type="string" name="specunit">

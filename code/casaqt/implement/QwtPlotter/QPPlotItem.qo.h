@@ -34,6 +34,7 @@
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/PlotOperation.h>
 
+#include <QHash>
 #include <QPainter>
 #include <QThread>
 
@@ -210,6 +211,10 @@ protected:
     // Attached canvas (or NULL for none).
     QPCanvas* m_canvas;
     
+    // Flag for whether this object's creation has been logged or not.  This
+    // happens the first time the item is attached to a canvas.
+    bool m_loggedCreation;
+    
     // Which layer this item is in.
     PlotCanvasLayer m_layer;
     
@@ -223,6 +228,14 @@ protected:
     // Provides access to QPCanvas's log measurement event methods for
     // children.
     PlotLoggerPtr loggerForEvent(PlotLogger::Event event) const;
+    
+    // Provides access to logging destruction, for children.  Should be called
+    // in children's destructor.
+    void logDestruction();
+    
+    // Provides access to log method enter/exit, for children.
+    void logMethod(const String& methodName, bool entering,
+            const String& message = String()) const;
     
     // Provides access to QPCanvas's draw operation for children.
     PlotOperationPtr drawOperation() const;
@@ -245,6 +258,9 @@ class QPDrawThread : public QThread {
     
 public:
     // Static //
+    
+    // Convenient access to class name.
+    static const String CLASS_NAME;
     
     // Returns the default segment threshold.
     static const unsigned int DEFAULT_SEGMENT_THRESHOLD;
@@ -300,9 +316,10 @@ public:
     // finished.
     void run();
     
-    // Draws the two images into the given painters, using the draw rectangle
-    // given at constructor.  Should be done AFTER the thread is finished.
-    void drawIntoCaches(QPainter& mainCache, QPainter& annotationCache);
+    // Returns the image result for the given layer.  Should only be done AFTER
+    // the thread is finished.  If clearResult is true, then the resulting
+    // image is removed from the thread's images.
+    QImage drawResult(PlotCanvasLayer layer, bool clearResult = true);
     
 public slots:
     // Cancels this thread.  If the thread is currently running, it will finish
@@ -316,8 +333,8 @@ private:
     // Axes maps.
     QwtScaleMap m_axesMaps[QwtPlot::axisCnt];
     
-    // Images to draw into for the main and annotation cache, respectively.
-    QImage m_mainImage, m_annotationImage;
+    // Images to draw into.
+    QHash<PlotCanvasLayer, QImage*> m_images;
     
     // Drawing rectangle.
     QRect m_drawRect;

@@ -38,7 +38,170 @@
 
 #include <iomanip>
 
+
+uint qHash(const QPAxesCache::Key& key) { return key.hash(); }
+
 namespace casa {
+
+/////////////////////////////
+// QPAXESCACHE DEFINITIONS //
+/////////////////////////////
+
+// 500 MB limit, where an approx. 500 x 400 image is ~1MB
+const int QPAxesCache::DEFAULT_MEMORY_LIMIT_KB = 500000;
+
+const String QPAxesCache::CLASS_NAME = "QPAxesCache";
+
+
+QPAxesCache::QPAxesCache(QPCanvas& canvas, int memLimitKb) : m_canvas(canvas),
+        m_cache(memLimitKb > 0 ? memLimitKb : DEFAULT_MEMORY_LIMIT_KB) { }
+
+QPAxesCache::~QPAxesCache() { }
+
+
+unsigned int QPAxesCache::size() const { return (unsigned int)m_cache.size(); }
+
+int QPAxesCache::memorySize() const { return m_cache.totalCost(); }
+
+int QPAxesCache::memoryLimit() const { return m_cache.maxCost(); }
+
+void QPAxesCache::setMemoryLimit(int memoryLimitKb) {
+    if(memoryLimitKb <= 0) memoryLimitKb = DEFAULT_MEMORY_LIMIT_KB;
+    if(memoryLimitKb != m_cache.maxCost()) m_cache.setMaxCost(memoryLimitKb);
+}
+
+QSize QPAxesCache::currImageSize() const {
+    Value* v = m_cache.object(Key(m_canvas));
+    if(v == NULL || v->size() == 0) return QSize();
+    else return v->constBegin()->size();
+}
+
+void QPAxesCache::clear() { m_cache.clear(); }
+
+void QPAxesCache::clearLayer(PlotCanvasLayer layer) {
+    Value* v;
+    foreach(Key key, m_cache.keys()) {
+        v = m_cache.object(key);
+        if(v != NULL) {
+            v->remove(layer);
+            if(v->size() == 0) m_cache.remove(key);
+        }
+    }
+}
+
+void QPAxesCache::clearLayers(int layersFlag) {
+    Value* v;
+    foreach(Key key, m_cache.keys()) {
+        v = m_cache.object(key);
+        if(v != NULL) {
+            foreach(PlotCanvasLayer layer, v->keys())
+                if(layersFlag & layer) v->remove(layer);
+            if(v->size() == 0) m_cache.remove(key);
+        }
+    }
+}
+
+bool QPAxesCache::currHasImage() const {
+    Value* v = m_cache.object(Key(m_canvas));
+    return v != NULL && v->size() > 0;
+}
+
+bool QPAxesCache::currHasImage(PlotCanvasLayer layer) const {
+    Value* v = m_cache.object(Key(m_canvas));
+    return v != NULL && v->contains(layer);
+}
+
+QImage QPAxesCache::currImage(PlotCanvasLayer layer) {
+    Value* v = m_cache.object(Key(m_canvas));
+    if(v == NULL) return QImage();
+    else          return v->value(layer);
+}
+
+void QPAxesCache::addCurrImage(PlotCanvasLayer layer, const QImage& image) {
+    Key key(m_canvas);
+    Value* value = m_cache.take(key);
+    if(value == NULL) value = new Value();
+    value->insert(layer, QImage(image));
+    m_cache.insert(key, value, value->memorySize());
+}
+
+
+//////////////////////////////////
+// QPAXESCACHE::KEY DEFINITIONS //
+//////////////////////////////////
+
+QPAxesCache::Key::Key() { }
+
+QPAxesCache::Key::Key(const QPCanvas& canvas) {
+    setValue(canvas); }
+
+QPAxesCache::Key::~Key() { }
+
+
+void QPAxesCache::Key::setValue(const QPCanvas& canvas) {
+    clear();
+    
+    vector<PlotItemPtr> items = canvas.allPlotItems();
+    QSet<PlotAxis> axes;
+    for(unsigned int i = 0; i < items.size(); i++) {
+        if(items[i].null()) continue;
+        axes.insert(items[i]->xAxis());
+        axes.insert(items[i]->yAxis());
+    }
+    
+    QSetIterator<PlotAxis> iter(axes);
+    PlotAxis axis;
+    pair<double, double> range;
+    while(iter.hasNext()) {
+        axis = iter.next();
+        range = canvas.axisRange(axis);
+        insert(axis, QPair<double, double>(range.first, range.second));
+    }
+}
+
+uint QPAxesCache::Key::hash() const {
+    // Not terribly efficient/unique, but it'll do..
+    
+    vector<PlotAxis> axes = PlotCanvas::allAxes();
+    QString axesStr;
+    double from, to;
+    QStringList values;
+    for(unsigned int i = 0; i < axes.size(); i++) {
+        if(contains(axes[i])) {
+            axesStr += "1";
+            from = value(axes[i]).first;
+            to = value(axes[i]).second;
+        } else {
+            axesStr += "0";
+            from = 0;
+            to = 0;
+        }
+        values << QString::number(from, 'e') << QString::number(to, 'e');
+    }
+    values.prepend(axesStr);
+    return qHash(values.join(""));
+}
+
+
+////////////////////////////////////
+// QPAXESCACHE::VALUE DEFINITIONS //
+////////////////////////////////////
+
+QPAxesCache::Value::Value() { }
+QPAxesCache::Value::Value(const QMap<PlotCanvasLayer, QImage>& copy) :
+        QMap<PlotCanvasLayer, QImage>(copy) { }
+QPAxesCache::Value::~Value() { }
+
+int QPAxesCache::Value::memorySize() const {
+    // From QPixmapCache documentation:
+    // A pixmap takes roughly (width * height * depth)/8 bytes of memory.
+    int size = 0;
+    foreach(QImage image, *this)
+        size += (image.size().width() * image.size().height() * image.depth())/
+                (8 * 1000);
+    return size;
+}
+
 
 ///////////////////////////////
 // QPMOUSEFILTER DEFINITIONS //
@@ -412,16 +575,6 @@ void QPBaseItem::qpDetach() {
     if(m_canvas != NULL) {
         QwtPlotItem::detach();
         m_canvas = NULL;
-    }
-}
-
-void QPBaseItem::itemChanged() {
-    if(m_canvas != NULL) {
-        QPLayeredCanvas& c = m_canvas->asQwtPlot();
-        bool oldMain = c.drawMain(), oldAnnotation = c.drawAnnotation();
-        c.setDrawLayers(false, false);
-        QwtPlotItem::itemChanged();
-        c.setDrawLayers(oldMain, oldAnnotation);
     }
 }
 

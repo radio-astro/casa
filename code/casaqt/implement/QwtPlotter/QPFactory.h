@@ -63,11 +63,22 @@ public:
     using PlotFactory::areaFill;
 
     
+    // Implements PlotFactory::canvasHasThreadedDrawing().
+    bool canvasHasThreadedDrawing() const { return true; }
+    
+    // Implements PlotFactory::canvasHasCahcedLayerDrawing().
+    bool canvasHasCachedLayerDrawing() const { return true; }
+    
+    // Implements PlotFactory::canvasHasCachedAxesStack().
+    bool canvasHasCachedAxesStack() const { return true; }
+    
+    
     // Implements PlotFactory::execLoop().
     int execLoop();
     
     // Implements PlotFactory::implementation().
     Plotter::Implementation implementation() const { return Plotter::QWT; }
+    
     
     // Implements PlotFactory::plotter().
     PlotterPtr plotter(const String& windowTitle = "Qwt Plotter",
@@ -83,9 +94,6 @@ public:
     
     // Implements PlotFactory::canvas().
     PlotCanvasPtr canvas(bool smartDelete = true) const;
-    
-    // Implements PlotFactory::canvasHasThreadedDrawing().
-    bool canvasHasThreadedDrawing() const;
     
     // Implements PlotFactory::panel().
     PlotPanelPtr panel(bool smartDelete = true) const;
@@ -111,7 +119,6 @@ public:
             const String& title = "Raster Plot",
             PlotRasterData::Format format = PlotRasterData::RGB32,
             bool smartDelete = true) const;
-
     
     // Implements PlotFactory::annotation().
     PlotAnnotationPtr annotation(const String& text,
@@ -254,9 +261,16 @@ public:
     static const unsigned int DEFAULT_ERROR_CAP;
     
 private:
-    int argc; char** argv;
-    QApplication* app;
-    bool createdQApp;
+    // For passing into QApplication constructor.
+    // <group>
+    int m_argc; char** m_argv;
+    // </group>
+    
+    // QApplication.
+    QApplication* m_app;
+    
+    // Flag for whether we created the application or not.
+    bool m_createdQApp;
 };
 
 }

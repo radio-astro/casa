@@ -22,7 +22,7 @@
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
-# Copyright 2007, Associated Universities Inc., Washington DC
+# Copyright 2009, Associated Universities Inc., Washington DC
 #
 import sys
 import os
@@ -32,7 +32,7 @@ from taskinit import casalog
 from taskmanager import tm
 import task_</xsl:text><xsl:value-of select="$taskname"/>
 <xsl:text>
-def </xsl:text><xsl:value-of select="@name"/><xsl:text>_imp(</xsl:text><xsl:apply-templates select="aps:input"/>
+def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-templates select="aps:input"/>
 <xsl:text>
         """</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
@@ -82,22 +82,15 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>_imp(</xsl:text><xsl:appl
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
         if trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) and casac.cu.verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
-            casalog.post('')
-	    casalog.post('##########################################')
-	    casalog.post('##### Begin Task: </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">           #####')
-	    casalog.post('')
 	    result = task_</xsl:text><xsl:value-of select="$taskname"/>.<xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
 </xsl:for-each><xsl:text disable-output-escaping="yes">
-            casalog.post('')
-	    casalog.post('##### End Task: </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">           #####')
-	    casalog.post('##########################################')
 	else :
 	  result = False
         return result
 </xsl:text>
 </xsl:template>
 
-<xsl:template match="aps:input"> <xsl:call-template name="doargs2"/>):
+<xsl:template match="aps:input"> <xsl:call-template name="doargs3"/>):
 </xsl:template>
 <xsl:template match="aps:shortdescription"><xsl:value-of select="."/></xsl:template>
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
@@ -109,7 +102,25 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>_imp(</xsl:text><xsl:appl
 <xsl:template name="doargs2">
 <xsl:for-each select="aps:param"><xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:for-each>
 </xsl:template>
- 
+
+<xsl:template name="doargs3">
+<xsl:for-each select="aps:param">
+<xsl:choose>
+<xsl:when test="@type='any'"><xsl:value-of select="@name"/>=<xsl:call-template name="handleonevalue"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='variant'"><xsl:value-of select="@name"/>=<xsl:call-template name="handleonevalue"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='record'"><xsl:value-of select="@name"/>=<xsl:call-template name="handleonevalue"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='string'"><xsl:value-of select="@name"/>=&apos;<xsl:value-of select="aps:value"/>&apos;<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='boolArray'"><xsl:value-of select="@name"/>=[<xsl:value-of select="aps:value"/>]<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='stringArray'"><xsl:value-of select="@name"/>=[<xsl:apply-templates select="aps:value"><xsl:with-param name="arraytype"><xsl:value-of>string</xsl:value-of></xsl:with-param></xsl:apply-templates>]<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='intArray'"><xsl:value-of select="@name"/>=[<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:when test="@type='doubleArray'"><xsl:value-of select="@name"/>=[<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+<xsl:otherwise>
+<xsl:value-of select="@name"/>=<xsl:if test="@units!=''">&apos;</xsl:if><xsl:value-of select="aps:value"/><xsl:if test="@units!=''"><xsl:value-of select="@units"/>&apos;</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:for-each>
+</xsl:template>
+
 <xsl:template match="aps:param">
 <xsl:text>        </xsl:text><xsl:value-of select="@name"/> = myf[&apos;<xsl:value-of select="@name"/>&apos;]
 </xsl:template>
@@ -286,6 +297,41 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>_imp(</xsl:text><xsl:appl
 
 <xsl:template name="handlevalue">
 <xsl:for-each select="aps:value">
+<xsl:choose>
+<xsl:when test="@type='string'">
+<xsl:text>&apos;</xsl:text><xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of><xsl:text>&apos;</xsl:text>
+</xsl:when>
+<xsl:when test="@type='vector' or ends-with(@type, 'Array')">
+<xsl:text>[</xsl:text><xsl:choose>
+<xsl:when test="count(aps:value)">
+<xsl:for-each select="aps:value"><xsl:value-of select="."/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:for-each>
+</xsl:when>
+<xsl:otherwise>
+<xsl:value-of select="."/>
+</xsl:otherwise>
+</xsl:choose><xsl:text>]</xsl:text>
+</xsl:when>
+<xsl:when test="@type='record'">
+<xsl:text>[</xsl:text><xsl:choose>
+<xsl:when test="count(aps:value)">
+<xsl:call-template name="handlevalue"/>
+</xsl:when>
+<xsl:otherwise>
+<xsl:value-of select="."/>
+</xsl:otherwise>
+</xsl:choose><xsl:text>]</xsl:text>
+</xsl:when>
+<xsl:otherwise>
+<xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>
+</xsl:otherwise>
+</xsl:choose>
+<xsl:if test="position()&lt;last()">, </xsl:if>
+</xsl:for-each>
+</xsl:template>
+
+
+<xsl:template name="handleonevalue">
+<xsl:for-each select="aps:value[position() eq 1]">
 <xsl:choose>
 <xsl:when test="@type='string'">
 <xsl:text>&apos;</xsl:text><xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of><xsl:text>&apos;</xsl:text>

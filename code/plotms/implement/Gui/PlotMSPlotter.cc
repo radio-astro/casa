@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotMSPlotter.qo.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 
 #include <plotms/PlotMS/PlotMS.h>
 
@@ -369,7 +369,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // Set up plotter
     itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
             PlotMSLogger::levelToEventFlag(
-            itsParent_->getParameters().logLevel()), false);
+            itsParent_->getParameters().logLevel(),
+            itsParent_->getParameters().logDebug()), false);
     
     // If Qt, put in window.  Otherwise, just hope that it does something
     // sensible.

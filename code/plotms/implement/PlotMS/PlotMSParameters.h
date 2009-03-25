@@ -88,7 +88,7 @@ public:
                      //  The canvas needs to be updated.
         PLOT   = 8,  // The plot options (symbol, title, ...).  The plot needs
                      //  to be updated.
-        LOG    = 16, // The log (level, ...).
+        LOG    = 16, // The log (level, debug messages, ...).
         
         NONE = 0,                    // Nothing changed.
         ALL  = MS | CACHE | CANVAS | // Everything changed.
@@ -205,7 +205,8 @@ private:
 class PlotMSParameters : public PlotMSWatchedParameters {
 public:
     // Constructor.
-    PlotMSParameters(PlotMSLogger::Level logLevel = PlotMSLogger::OFF);
+    PlotMSParameters(PlotMSLogger::Level logLevel = PlotMSLogger::OFF,
+            bool debug = false);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
@@ -221,9 +222,12 @@ public:
     // Returns the current log level.
     PlotMSLogger::Level logLevel() const;
     
+    // Returns the current log debug flag.
+    bool logDebug() const;
+    
     // Sets the current log level.  Note: this will notify any watchers unless
     // notifications are being held.
-    void setLogLevel(PlotMSLogger::Level level);
+    void setLogLevel(PlotMSLogger::Level level, bool debug);
     
     // Implements PlotMSWatchedParameters::equals().  Will return false if the
     // other parameters are not of type PlotMSParameters.
@@ -236,6 +240,9 @@ public:
 private:
     // Log level.
     PlotMSLogger::Level itsLogLevel_;
+    
+    // Log debug flag.
+    bool itsLogDebug_;
 };
 
 }

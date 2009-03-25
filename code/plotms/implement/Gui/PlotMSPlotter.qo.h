@@ -27,13 +27,13 @@
 #ifndef PLOTMSPLOTTER_QO_H_
 #define PLOTMSPLOTTER_QO_H_
 
-#include <plotms/PlotMS/PlotMSPlotter.ui.h>
+#include <plotms/Gui/PlotMSPlotter.ui.h>
 
-#include <plotms/PlotMS/PlotMSAction.h>
-#include <plotms/PlotMS/PlotMSData.h>
+#include <plotms/Actions/PlotMSAction.h>
+#include <plotms/Actions/PlotMSThread.qo.h>
+#include <plotms/Data/PlotMSData.h>
+#include <plotms/GuiTabs/PlotMSTabs.qo.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
-#include <plotms/PlotMS/PlotMSTabs.qo.h>
-#include <plotms/PlotMS/PlotMSThread.qo.h>
 
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>

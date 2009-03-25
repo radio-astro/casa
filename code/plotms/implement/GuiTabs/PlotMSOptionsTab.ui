@@ -114,6 +114,13 @@
       <widget class="QComboBox" name="logLevel" />
      </item>
      <item>
+      <widget class="QCheckBox" name="logDebug" >
+       <property name="text" >
+        <string>Debug Msgs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer>
        <property name="orientation" >
         <enum>Qt::Horizontal</enum>

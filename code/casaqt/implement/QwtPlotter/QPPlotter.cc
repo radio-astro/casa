@@ -41,9 +41,6 @@ namespace casa {
 // TODO PlotCanvas: way of providing custom tick labels for axes, print to
 //      printer, custom layer
 // TODO PlotData: possible indexing bug in PlotRasterDataImpl
-// TODO PlotLogger: log messages for function entering, object
-//      creation/deletion, export
-// TODO QPCanvas: pixmap cache for stack
 // TODO QPPlotter: find way of continuing pen style
 // TODO QPRasterPlot: different origins, fix contour line offset problem,
 //      printing to PS
@@ -86,6 +83,8 @@ bool QPPlotter::initColors() {
 QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
         QWidget(parent), m_layout(NULL), m_emitResize(true),
         m_logEvents(logEventFlags) {
+    logObject(CLASS_NAME, this, true);
+    
     initialize();
     
     if(canvas != NULL) {    
@@ -97,6 +96,8 @@ QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
 QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
         QWidget* parent) : QWidget(parent), m_layout(layout),
         m_emitResize(true), m_logEvents(logEventFlags) {
+    logObject(CLASS_NAME, this, true);
+    
     initialize();
     
     if(!m_layout.null()) {
@@ -118,7 +119,9 @@ QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
     }
 }
 
-QPPlotter::~QPPlotter() { }
+QPPlotter::~QPPlotter() {
+    logObject(CLASS_NAME, this, false);
+}
 
 
 // Public Methods //
@@ -180,6 +183,7 @@ void QPPlotter::close() { QWidget::close(); }
 
 PlotCanvasLayoutPtr QPPlotter::canvasLayout() { return m_layout; }
 void QPPlotter::setCanvasLayout(PlotCanvasLayoutPtr layout) {
+    logMethod(CLASS_NAME, "setCanvasLayout", true);
     if(layout != m_layout) {
         m_canvasTools.clear();
         m_layout = layout;
@@ -190,9 +194,11 @@ void QPPlotter::setCanvasLayout(PlotCanvasLayoutPtr layout) {
             showDefaultPanel(EXPORT_TOOLS, exportBox->isVisible());
         }
     }
+    logMethod(CLASS_NAME, "setCanvasLayout", false);
 }
 
 void QPPlotter::canvasLayoutChanged(PlotCanvasLayout& layout) {
+    logMethod(CLASS_NAME, "canvasLayoutChanged", true);
     if(&layout == &(*m_layout)) {
         // check if just the spacing changed
         PlotLayoutGrid* g = dynamic_cast<PlotLayoutGrid*>(&layout);
@@ -221,6 +227,7 @@ void QPPlotter::canvasLayoutChanged(PlotCanvasLayout& layout) {
         m_canvasTools.clear();
         setupCanvasFrame();
     }
+    logMethod(CLASS_NAME, "canvasLayoutChanged", false);
 }
 
 
@@ -333,7 +340,10 @@ PlotFactory* QPPlotter::implementationFactory() const {
     return new QPFactory(); }
 
 bool QPPlotter::exportToFile(const PlotExportFormat& format) {
-    return QPCanvas::exportPlotter(this, format); }
+    logMethod(CLASS_NAME, "exportToFile", true);
+    return QPCanvas::exportPlotter(this, format);
+    logMethod(CLASS_NAME, "exportToFile", false);
+}
 
 String QPPlotter::fileChooserDialog(const String& title,
         const String& directory) {
@@ -380,12 +390,28 @@ void QPPlotter::resizeEvent(QResizeEvent* event) {
     } else event->ignore();
 }
 
+void QPPlotter::logObject(const String& className, void* address,
+        bool creation, const String& message) {
+    if(m_logEvents & PlotLogger::OBJECTS_MAJOR)
+        logger()->postMessage(
+                PlotLogObject(className, address, creation, message));
+}
+
+void QPPlotter::logMethod(const String& className, const String& methodName,
+        bool entering, const String& message) {
+    if(m_logEvents & PlotLogger::METHODS_MAJOR)
+        logger()->postMessage(
+                PlotLogMethod(className, methodName, entering, message));
+}
+
 
 // Private Methods //
 
 void QPPlotter::setupCanvasFrame() {
+    logMethod(CLASS_NAME, "setupCanvasFrame", true);
     if(m_layout.null()) {
         if(canvasFrame->layout() != NULL) delete canvasFrame->layout();
+        logMethod(CLASS_NAME, "setupCanvasFrame", false);
         return;
     }
     
@@ -438,6 +464,8 @@ void QPPlotter::setupCanvasFrame() {
     // Set the parent of the canvases to this plotter.
     for(unsigned int i = 0; i < canvases.size(); i++)
         dynamic_cast<QPCanvas&>(*canvases[i]).setQPPlotter(this);
+        
+    logMethod(CLASS_NAME, "setupCanvasFrame", false);
 }
 
 void QPPlotter::initialize() {

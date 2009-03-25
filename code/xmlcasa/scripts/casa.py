@@ -98,78 +98,97 @@ vpmanager = __vpmanagerhome__.create( )
 vlafillertask = __vlafillertaskhome__.create( )
 atmosphere = __atmospherehome__.create( )
 
-from task_imstat import imstat
-from task_fringecal import fringecal
-from task_oldclean import oldclean
-from task_sdcoadd import sdcoadd
-from task_flagdata import flagdata
-from task_split import split
-from task_sdscale import sdscale
-from task_importvla import importvla
-from task_hanningsmooth import hanningsmooth
-from task_widefield import widefield
-from task_immoments import immoments
-from task_uvcontsub import uvcontsub
-from task_listhistory import listhistory
-from task_mosaic import mosaic
-from task_sdtpimaging import sdtpimaging
-from task_importfits import importfits
-from task_imfit import imfit
-from task_invert import invert
-from task_sdlist import sdlist
-from task_deconvolve import deconvolve
-from task_simdata import simdata
-from task_importasdm import importasdm
-from task_uvmodelfit import uvmodelfit
-from task_polcal import polcal
-from task_clearcal import clearcal
-from task_bandpass import bandpass
-from task_clearplot import clearplot
-from task_sdfit import sdfit
-from task_listvis import listvis
-from task_sdbaseline import sdbaseline
-from task_accum import accum
-from task_concat import concat
-from task_listobs import listobs
-from task_feather import feather
-from task_imregrid import imregrid
-from task_sdstat import sdstat
-from task_newclean import newclean
-from task_sdsave import sdsave
-from task_listcal import listcal
-from task_plotxy import plotxy
-from task_ft import ft
-from task_importuvfits import importuvfits
-from task_sdflag import sdflag
-from task_sdaverage import sdaverage
-from task_setjy import setjy
-from task_clean import clean
-from task_sdplot import sdplot
-from task_immath import immath
-from task_imhead import imhead
-from task_sdsmooth import sdsmooth
-from task_find import find
-from task_gaincal import gaincal
-from task_fluxscale import fluxscale
-from task_applycal import applycal
-from task_plotants import plotants
-from task_exportuvfits import exportuvfits
-from task_plotcal import plotcal
-from task_flagmanager import flagmanager
-from task_specfit import specfit
-from task_viewer import viewer
-from task_exportfits import exportfits
-from task_blcal import blcal
-from task_uvsub import uvsub
-from task_imcontsub import imcontsub
-from task_imstat import imstat
-from task_newflagdata import newflagdata
-from task_clearstat import clearstat
-from task_flagautocorr import flagautocorr
-from task_browsetable import browsetable
-from task_makemask import makemask
-from task_smoothcal import smoothcal
-from task_imval import imval
-from task_sdcal import sdcal
-from task_vishead import vishead
+from imstat import imstat
+from fringecal import fringecal
+from oldclean import oldclean
+from flagdata import flagdata
+from split import split
+from importvla import importvla
+from hanningsmooth import hanningsmooth
+from widefield import widefield
+from immoments import immoments
+from uvcontsub import uvcontsub
+from listhistory import listhistory
+from mosaic import mosaic
+from importfits import importfits
+from imfit import imfit
+from invert import invert
+from deconvolve import deconvolve
+from simdata import simdata
+from importasdm import importasdm
+from uvmodelfit import uvmodelfit
+from polcal import polcal
+from clearcal import clearcal
+from bandpass import bandpass
+from clearplot import clearplot
+from listvis import listvis
+from accum import accum
+from concat import concat
+from listobs import listobs
+from feather import feather
+from imregrid import imregrid
+from newclean import newclean
+from listcal import listcal
+from plotxy import plotxy
+from ft import ft
+from importuvfits import importuvfits
+from setjy import setjy
+from clean import clean
+from immath import immath
+from imhead import imhead
+from find import find
+from gaincal import gaincal
+from fluxscale import fluxscale
+from applycal import applycal
+from plotants import plotants
+from exportuvfits import exportuvfits
+from plotcal import plotcal
+from flagmanager import flagmanager
+from specfit import specfit
+from viewer import viewer
+from exportfits import exportfits
+from blcal import blcal
+from uvsub import uvsub
+from imcontsub import imcontsub
+from imstat import imstat
+from newflagdata import newflagdata
+from clearstat import clearstat
+from flagautocorr import flagautocorr
+from browsetable import browsetable
+from makemask import makemask
+from smoothcal import smoothcal
+from imval import imval
+from vishead import vishead
 
+
+##
+## asap may not be available with every casa installation
+##
+try:
+    from sdcoadd import sdcoadd
+    from sdscale import sdscale
+    from sdtpimaging import sdtpimaging
+    from sdlist import sdlist
+    from sdfit import sdfit
+    from sdbaseline import sdbaseline
+    from sdstat import sdstat
+    from sdsave import sdsave
+    from sdflag import sdflag
+    from sdaverage import sdaverage
+    from sdplot import sdplot
+    from sdsmooth import sdsmooth
+    from sdcal import sdcal
+except ImportError:
+    sdcoadd = None
+    sdscale = None
+    sdtpimaging = None
+    sdlist = None
+    sdfit = None
+    sdbaseline = None
+    sdstat = None
+    sdsave = None
+    sdflag = None
+    sdaverage = None
+    sdplot = None
+    sdsmooth = None
+    sdcal = None

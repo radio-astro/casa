@@ -60,10 +60,10 @@ public:
     
     
     // Constructor.
-    Plotter() { }
+    Plotter();
     
     // Destructor.
-    virtual ~Plotter() { }
+    virtual ~Plotter();
     
     
     // ABSTRACT METHODS //
@@ -216,31 +216,21 @@ public:
     // IMPLEMENTED METHODS //
     
     // See PlotCanvasLayout::canvasAt().
-    virtual PlotCanvasPtr canvasAt(const PlotLayoutCoordinate& coord) {
-        PlotCanvasLayoutPtr layout = canvasLayout();
-        if(!layout.null()) return layout->canvasAt(coord);
-        else               return PlotCanvasPtr();
-    }
+    virtual PlotCanvasPtr canvasAt(const PlotLayoutCoordinate& coord);
     
     // See PlotCanvasLayout::canvas().
-    virtual PlotCanvasPtr canvas() {
-        PlotCanvasLayoutPtr layout = canvasLayout();
-        if(!layout.null()) return layout->canvas();
-        else               return PlotCanvasPtr();
-    }
+    virtual PlotCanvasPtr canvas();
     
     // Sets the layout to a single layout with the given canvas.
-    virtual void setCanvas(PlotCanvasPtr canvas) {
-        if(!canvas.null())
-            setCanvasLayout(PlotCanvasLayoutPtr(new PlotLayoutSingle(canvas)));
-    }
+    virtual void setCanvas(PlotCanvasPtr canvas);
     
     // Gets the PlotLogger associated with this Plotter.  There should be
     // exactly one PlotLogger per Plotter.
-    virtual PlotLoggerPtr logger() {
-        static PlotLoggerPtr logger = new PlotLogger(this);
-        return logger;
-    }
+    virtual PlotLoggerPtr logger();
+    
+protected:
+    // Logger.
+    PlotLoggerPtr m_logger;
 };
 typedef CountedPtr<Plotter> PlotterPtr;
 

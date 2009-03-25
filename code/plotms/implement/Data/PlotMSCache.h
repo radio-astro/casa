@@ -27,9 +27,9 @@
 #ifndef PLOTMSCACHE_H_
 #define PLOTMSCACHE_H_
 
+#include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
-#include <plotms/PlotMS/PlotMSThread.qo.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>

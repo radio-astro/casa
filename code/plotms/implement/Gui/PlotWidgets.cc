@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotWidgets.qo.h>
+#include <plotms/Gui/PlotWidgets.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMSConstants.h>

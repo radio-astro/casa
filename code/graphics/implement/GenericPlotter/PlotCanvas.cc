@@ -88,6 +88,32 @@ bool PlotCanvas::legendPositionIsInternal(LegendPosition p) {
            p == INT_LLEFT;
 }
 
+vector<PlotAxis> PlotCanvas::allAxes() {
+    vector<PlotAxis> v(4);
+    v[0] = X_BOTTOM; v[1] = X_TOP; v[2] = Y_LEFT; v[3] = Y_RIGHT;
+    return v;
+}
+
+int PlotCanvas::allAxesFlag() {
+    int flag = 0;
+    vector<PlotAxis> v = allAxes();
+    for(unsigned int i = 0; i < v.size(); i++) flag |= v[i];
+    return flag;
+}
+
+vector<PlotCanvasLayer> PlotCanvas::allLayers() {
+    vector<PlotCanvasLayer> v(2);
+    v[0] = MAIN; v[1] = ANNOTATION;
+    return v;
+}
+
+int PlotCanvas::allLayersFlag() {
+    int flag = 0;
+    vector<PlotCanvasLayer> v = allLayers();
+    for(unsigned int i = 0; i < v.size(); i++) flag |= v[i];
+    return flag;
+}
+
 const String PlotCanvas::OPERATION_DRAW = "draw_items";
 const String PlotCanvas::OPERATION_EXPORT = "export";
 
@@ -97,6 +123,29 @@ const String PlotCanvas::OPERATION_EXPORT = "export";
 PlotCanvas::PlotCanvas() { }
 
 PlotCanvas::~PlotCanvas() { }
+
+
+bool PlotCanvas::hasThreadedDrawing() const {
+    PlotFactory* f = implementationFactory();
+    bool ret = f != NULL && f->canvasHasThreadedDrawing();
+    delete f;
+    return ret;
+}
+
+bool PlotCanvas::hasCachedLayerDrawing() const {
+    PlotFactory* f = implementationFactory();
+    bool ret = f != NULL && f->canvasHasCachedLayerDrawing();
+    delete f;
+    return ret;
+}
+
+bool PlotCanvas::hasCachedAxesStack() const {
+    PlotFactory* f = implementationFactory();
+    bool ret = f != NULL && f->canvasHasCachedAxesStack();
+    delete f;
+    return ret;
+}
+
 
 void PlotCanvas::setTitleFont(const PlotFontPtr font) {
     if(!font.null()) setTitleFont(*font); }
@@ -212,10 +261,12 @@ void PlotCanvas::moveAxesRanges(PlotAxis xAxis, double xDelta,
     setAxesRanges(xAxis, x.first, x.second, yAxis, y.first, y.second);
 }
 
-PlotAxesStack& PlotCanvas::canvasAxesStack() { return m_stack; }
 
-bool PlotCanvas::canvasAxesStackMove(int delta) {
-    PlotAxesStack& stack = canvasAxesStack();
+PlotAxesStack& PlotCanvas::axesStack() { return m_stack; }
+const PlotAxesStack& PlotCanvas::axesStack() const { return m_stack; }
+
+bool PlotCanvas::axesStackMove(int delta) {
+    PlotAxesStack& stack = axesStack();
     if(!stack.isValid()) return false;
     
     unsigned int index = stack.stackIndex(), size = stack.size();
@@ -228,6 +279,12 @@ bool PlotCanvas::canvasAxesStackMove(int delta) {
     setAxesRegion(stack.currentXAxis(), stack.currentYAxis(), r);    
     return true;
 }
+
+int PlotCanvas::axesStackLengthLimit() const {
+    return axesStack().lengthLimit(); }
+
+void PlotCanvas::setAxesStackLengthLimit(int lengthLimit) {
+    axesStack().setLengthLimit(lengthLimit); }
 
 
 bool PlotCanvas::plot(PlotPtr plot, bool overplot) {

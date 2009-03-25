@@ -114,6 +114,20 @@ public:
     // not.
     static bool legendPositionIsInternal(LegendPosition p);
     
+    // Returns a vector containing all values in the PlotAxis enum, ordered
+    // from lowest value to highest value.
+    static vector<PlotAxis> allAxes();
+    
+    // Returns the or'ed value of all PlotAxis enum values.
+    static int allAxesFlag();
+    
+    // Returns a vector containing all values in the PlotCanvasLayer enum,
+    // ordered from lowest value to highest value.
+    static vector<PlotCanvasLayer> allLayers();
+    
+    // Returns the or'ed value of all PlotCanvasLayer enum values.
+    static int allLayersFlag();
+    
     // Convenient access to operation names.
     // <group>
     static const String OPERATION_DRAW;
@@ -129,6 +143,21 @@ public:
     // Destructor.
     virtual ~PlotCanvas();
 
+    
+    // Support Methods //
+    
+    // See PlotFactory::canvasHasThreadedDrawing().
+    // DEFAULT IMPLEMENTATION.
+    virtual bool hasThreadedDrawing() const;
+    
+    // See PlotFactory::canvasHasCachedLayerDrawing().
+    // DEFAULT IMPLEMENTATION.
+    virtual bool hasCachedLayerDrawing() const;
+    
+    // See PlotFactory::hasCachedAxesStack().
+    // DEFAULT IMPLEMENTATION.
+    virtual bool hasCachedAxesStack() const;
+    
     
     // GUI Methods //
     
@@ -350,22 +379,47 @@ public:
     // Sets whether the axes ratio is locked or not.
     virtual void setAxesRatioLocked(bool locked = true) = 0;
     
+    
+    // Stack Methods //
+    
     // Returns a single PlotAxesStack associated with this canvas.  Note that
     // the canvas itself doesn't modify/use this stack AT ALL; it is expressly
     // for outside tools/classes/etc to have a single stack per canvas.
     // DEFAULT IMPLEMENTATION.
-    virtual PlotAxesStack& canvasAxesStack();
+    // <group>
+    virtual PlotAxesStack& axesStack();
+    virtual const PlotAxesStack& axesStack() const;
+    // </group>
     
     // Convenience method to move along the PlotAxesStack associated with this
-    // canvas (see canvasAxesStack()).  Calls the stack's moveAndReturn method,
-    // and then sets the axes ranges to the returned PlotRegion.  If delta is
-    // 0, the stack is moved to its base; otherwise it moves forward or
-    // backward from the current stack index (see
-    // PlotAxesStack::moveAndReturn()).  Returns true if the operation
-    // succeeded, false otherwise (for invalid delta).
+    // canvas (see axesStack()).  Calls the stack's moveAndReturn method, and
+    // then sets the axes ranges to the returned PlotRegion.  If delta is 0,
+    // the stack is moved to its base; otherwise it moves forward or backward
+    // from the current stack index (see PlotAxesStack::moveAndReturn()).
+    // Returns true if the operation succeeded, false otherwise (for invalid
+    // delta).
     // DEFAULT IMPLEMENTATION.
-    virtual bool canvasAxesStackMove(int delta);
-
+    virtual bool axesStackMove(int delta);
+    
+    // Gets/Sets the length limit on the PlotAxesStack associated with this
+    // canvas.  See PlotAxesStack::lengthLimit() and
+    // PlotAxesStack::setLengthLimit().
+    // DEFAULT IMPLEMENTATION.
+    // <group>
+    virtual int axesStackLengthLimit() const;
+    virtual void setAxesStackLengthLimit(int lengthLimit);
+    // </group>
+    
+    // Gets/Sets the size limit, in kilobytes, on the draw cache for the axes
+    // stack associated with this canvas (see
+    // PlotFactory::canvasHasCachedAxesStack()).  A zero or negative value
+    // means no limit.  NOTE: Only valid for implementations that supports a
+    // cached axes stack.
+    // <group>
+    virtual int cachedAxesStackSizeLimit() const = 0;
+    virtual void setCachedAxesStackSizeLimit(int sizeInKilobytes) = 0;
+    // </group>
+    
     
     // Plot Methods //
     
@@ -776,134 +830,91 @@ public:
     
     // Event Handler Methods //
     
-    // Registers the given select event handler with the given coordinate
-    // system.
+    // Manage select handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerSelectHandler(PlotSelectEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered select event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotSelectEventHandlerPtr> allSelectHandlers() const;
-    
-    // Unregisters the given select event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterSelectHandler(PlotSelectEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given click event handler with the given coordinate
-    // system.
+    // Manage click handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerClickHandler(PlotClickEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered click event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotClickEventHandlerPtr> allClickHandlers() const;
-    
-    // Unregisters the given click event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterClickHandler(PlotClickEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given mouse press event handler with the given coordinate
-    // system.
+    // Manage mouse press handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerMousePressHandler(PlotMousePressEventHandlerPtr hndlr,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered mouse press event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotMousePressEventHandlerPtr>
             allMousePressHandlers() const;
-    
-    // Unregisters the given mouse press event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterMousePressHandler(
             PlotMousePressEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given mouse release event handler with the given
-    // coordinate system.
+    // Manage mouse release handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerMouseReleaseHandler(
             PlotMouseReleaseEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered mouse release event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotMouseReleaseEventHandlerPtr>
             allMouseReleaseHandlers() const;
-    
-    // Unregisters the given mouse release event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterMouseReleaseHandler(
             PlotMouseReleaseEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given mouse drag handler (only between press and release)
-    // with the given coordinate system.
+    // Manage mouse drag handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerMouseDragHandler(PlotMouseDragEventHandlerPtr h,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered mouse drag event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotMouseDragEventHandlerPtr> allMouseDragHandlers() const;
-    
-    // Unregisters the given mouse drag event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterMouseDragHandler(PlotMouseDragEventHandlerPtr h);
+    // </group>
     
-    // Registers the given mouse move handler with the given coordinate system.
-    // NOTE: since this can be costly, it should be avoided if possible.
-    // Implementation canvases are expected to conserve resources if no move
-    // handlers are registered.
+    // Manage mouse move handlers.  NOTE: since this can be costly, it should
+    // be avoided if possible.  Implementation canvases are expected to
+    // conserve resources if no move handlers are registered.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerMouseMoveHandler(PlotMouseMoveEventHandlerPtr h,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered mouse move event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotMouseMoveEventHandlerPtr> allMouseMoveHandlers() const;
-    
-    // Unregisters the given mouse move event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterMouseMoveHandler(PlotMouseMoveEventHandlerPtr h);
+    // </group>
     
-    // Registers the given wheel event handler with the given coordinate
-    // system.
+    // Manage wheel handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerWheelHandler(PlotWheelEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    
-    // Returns a list of all registered wheel event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotWheelEventHandlerPtr> allWheelHandlers() const;
-    
-    // Unregisters the given wheel event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterWheelHandler(PlotWheelEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given select event handler.
+    // Manage key handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerKeyHandler(PlotKeyEventHandlerPtr handler);
-    
-    // Returns a list of all registered select event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotKeyEventHandlerPtr> allKeyHandlers() const;
-    
-    // Unregisters the given select event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterKeyHandler(PlotKeyEventHandlerPtr handler);
+    // </group>
     
-    // Registers the given resize event handler.
+    // Manage resize handlers.
     // DEFAULT IMPLEMENTATION.
+    // <group>
     virtual void registerResizeHandler(PlotResizeEventHandlerPtr handler);
-    
-    // Returns a list of all registered resize event handlers.
-    // DEFAULT IMPLEMENTATION.
     virtual vector<PlotResizeEventHandlerPtr> allResizeHandlers() const;
-    
-    // Unregisters the given resize event handler.
-    // DEFAULT IMPLEMENTATION.
     virtual void unregisterResizeHandler(PlotResizeEventHandlerPtr handler);
+    // </group>
     
 protected:    
     // One-per-canvas axes stack.

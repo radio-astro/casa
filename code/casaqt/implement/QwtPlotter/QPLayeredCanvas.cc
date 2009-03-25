@@ -44,31 +44,9 @@ QPLayer::~QPLayer() { }
 void QPLayer::clearImage() const {
     const_cast<QImage&>(m_cachedImage) = QImage(); }
 
-void QPLayer::initializeImage(const QSize& size,
-        const QwtScaleMap maps[QwtPlot::axisCnt]) const {
+void QPLayer::initializeImage(const QSize& size, unsigned int fillValue) const{
     const_cast<QImage&>(m_cachedImage) = QImage(size, QImage::Format_ARGB32);
-    const_cast<QImage&>(m_cachedImage).fill(Qt::transparent);
-    
-    for(int i = 0; i < QwtPlot::axisCnt; i++)
-        const_cast<QwtScaleMap&>(m_cachedMaps[i]) = maps[i];
-}
-
-bool QPLayer::scaleMapsChanged(const QwtScaleMap maps[QwtPlot::axisCnt]) const{
-    if(m_cachedImage.isNull()) return true;
-    if(maps == m_cachedMaps) return false;
-    
-    QList<const QPLayerItem*> it = items();
-    const QPLayerItem* li;
-    for(int i = 0; i < it.size(); i++) {
-        li = it[i];
-        if(li == NULL || !li->shouldDraw()) continue;
-        if(maps[li->xAxis()].s1() != m_cachedMaps[li->xAxis()].s1() ||
-           maps[li->xAxis()].s2() != m_cachedMaps[li->xAxis()].s2() ||
-           maps[li->yAxis()].s1() != m_cachedMaps[li->yAxis()].s1() ||
-           maps[li->yAxis()].s2() != m_cachedMaps[li->yAxis()].s2())
-            return true;
-    }
-    return false;
+    const_cast<QImage&>(m_cachedImage).fill(fillValue);
 }
 
 bool QPLayer::hasItemsToDraw() const {
@@ -114,8 +92,7 @@ void QPLayer::cacheItems(const QRect& canvasRect,
 }
 
 void QPLayer::drawCache(QPainter* painter, const QRect& rect) const {
-    if(!m_cachedImage.isNull())
-        painter->drawImage(rect.x(), rect.y(), m_cachedImage);
+    if(!m_cachedImage.isNull()) painter->drawImage(rect, m_cachedImage);
 }
 
 QImage& QPLayer::cachedImage() { return m_cachedImage; }
@@ -185,6 +162,11 @@ QList<const QPLayerItem*> QPBaseLayer::items() const { QPL_ITEMS_CONST }
 // QPLAYEREDCANVAS DEFINITIONS //
 /////////////////////////////////
 
+// Static //
+
+const String QPLayeredCanvas::CLASS_NAME = "QPLayeredCanvas";
+
+
 // Constructors/Destructors //
 
 QPLayeredCanvas::QPLayeredCanvas(QPCanvas* parent, QWidget* parentWidget) :
@@ -197,24 +179,32 @@ QPLayeredCanvas::QPLayeredCanvas(const QwtText& title, QPCanvas* parent,
     initialize();
 }
 
-QPLayeredCanvas::~QPLayeredCanvas() { }
+QPLayeredCanvas::~QPLayeredCanvas() {
+    foreach(QPCanvasLayer* layer, m_layers)
+        delete layer;
+}
 
 
 // Public Methods //
 
-QList<const QPPlotItem*> QPLayeredCanvas::allLayerItems(bool includeMain,
-        bool includeAnnotation) const {
+QList<const QPPlotItem*> QPLayeredCanvas::allLayerItems(int layersFlag) const {
     QList<const QPPlotItem*> list;
     
-    if(includeMain)       list << m_layerMain.canvasItems();
-    if(includeAnnotation) list << m_layerAnnotation.canvasItems();
+    const QPCanvasLayer* l;
+    foreach(PlotCanvasLayer layer, m_layers.keys())
+        if(layersFlag & layer)
+            list << (l = m_layers.value(layer))->canvasItems();
     
     return list;
 }
 
 void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
         const QwtPlotPrintFilter& filter) const {
-    if(painter == NULL) return;
+    m_parent->logMethod(CLASS_NAME, "print", true);
+    if(painter == NULL) {
+        m_parent->logMethod(CLASS_NAME, "print", false);
+        return;
+    }
     
     // Set up operation.
     PlotOperationPtr op = m_parent->operationExport();
@@ -235,6 +225,7 @@ void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
         op->finish();
         op->setCurrentStatus("Saving to file (may take a while)...");
     }
+    m_parent->logMethod(CLASS_NAME, "print", false);
 }
 
 bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
@@ -282,10 +273,7 @@ bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
 void QPLayeredCanvas::attachLayeredItem(QPPlotItem* item) {
     if(item == NULL) return;
     
-    QPCanvasLayer* layer = NULL;
-    if(item->canvasLayer() == MAIN)            layer = &m_layerMain;
-    else if(item->canvasLayer() == ANNOTATION) layer = &m_layerAnnotation;
-    
+    QPCanvasLayer* layer = m_layers.value(item->canvasLayer());    
     if(layer == NULL) return;
     
     if(!layer->containsItem(item)) {
@@ -297,10 +285,7 @@ void QPLayeredCanvas::attachLayeredItem(QPPlotItem* item) {
 void QPLayeredCanvas::detachLayeredItem(QPPlotItem* item) {
     if(item == NULL) return;
     
-    QPCanvasLayer* layer = NULL;
-    if(item->canvasLayer() == MAIN)            layer = &m_layerMain;
-    else if(item->canvasLayer() == ANNOTATION) layer = &m_layerAnnotation;
-    
+    QPCanvasLayer* layer = m_layers.value(item->canvasLayer());    
     if(layer == NULL) return;
     
     if(layer->containsItem(item)) {
@@ -309,62 +294,145 @@ void QPLayeredCanvas::detachLayeredItem(QPPlotItem* item) {
     }
 }
 
-void QPLayeredCanvas::drawBaseItems() { replot(false, false); }
-
 void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
+    m_parent->logMethod(CLASS_NAME, "drawItems", true);
     if(m_printPainters.contains(painter)) {
         printItems(painter, rect, maps, pf);
+        m_parent->logMethod(CLASS_NAME, "drawItems", false);
+        return;
+    }
+
+    PlotLoggerPtr infoLog = m_parent->loggerForEvent(PlotLogger::MSG_INFO);
+    
+    // We can used a cached image if:
+    // 1) none of the items have changed, which is checked via the
+    //    m_changedLayers member;
+    // 2) the axes match (both ranges and which axes have items attached to
+    //    them), which is taken care of by the QPAxesCache::Key class; and
+    // 3) the cached image has the same size as the drawing rect.
+    QPAxesCache& axesCache = m_parent->axesCache();
+    bool cacheAvailable = axesCache.currHasImage() &&               // check #2
+                          axesCache.currImageSize() == rect.size(); // check #3
+    
+    // Always draw the base items.
+    m_layerBase.initializeImage(rect.size(),
+            canvas()->palette().color(QPalette::Window).rgba());
+    m_layerBase.cacheItems(rect, maps);
+    
+    // See which layers need to be drawn.
+    QHash<PlotCanvasLayer, bool> draw;
+    bool anyDraw = false;
+    foreach(PlotCanvasLayer layer, m_layers.keys()) {
+        // check #1
+        draw[layer] = !cacheAvailable || changedLayer(layer) ||
+                      (m_layers.value(layer)->hasItemsToDraw() &&
+                      !axesCache.currHasImage(layer));
+        anyDraw |= draw[layer];
+    }
+    //useAxesCache &= !anyDraw; // check #1
+    
+    // If drawing isn't needed, just draw the cache(s) as needed.
+    if(m_drawingHeld || m_isPrinting || !anyDraw) {
+        if(!infoLog.null()) {
+            stringstream ss;
+            ss << "Drawing caches";
+            if(m_drawingHeld || m_isPrinting) {
+               ss << " because:";
+               if(m_drawingHeld) ss << " drawing is held";
+               if(m_isPrinting) {
+                   if(m_drawingHeld) ss << ",";
+                   ss << " canvas is printing";
+               }
+            }
+            ss << '.';
+            infoLog->postMessage(CLASS_NAME, "drawItems", ss.str());
+        }
+        
+        //if(useAxesCache) {
+            m_layerBase.drawCache(painter, rect);
+            
+            QImage image;
+            foreach(PlotCanvasLayer layer, m_layers.keys()) {
+                image = axesCache.currImage(layer);
+                if(!image.isNull()) painter->drawImage(rect, image);
+            }            
+        //} else paintCaches(painter, rect);
+
+        m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     }
     
-    // Always draw the base items.
-    m_layerBase.initializeImage(rect.size(), maps);
-    m_layerBase.cacheItems(rect, maps);
-    
-    bool drawMain = m_drawMain || (m_layerMain.hasItemsToDraw() &&
-                    m_layerMain.scaleMapsChanged(maps)),
-         drawAnnotation=m_drawAnnotation||(m_layerAnnotation.hasItemsToDraw()&&
-                        m_layerAnnotation.scaleMapsChanged(maps));
-    
-    // If drawing is held, just draw pixmap caches.
-    if(m_drawingHeld || m_isPrinting || (!drawMain && !drawAnnotation)) {
-        paintCaches(painter, rect);
-        return;
+    // We want to clear the cache if:
+    // 1) the cached image size is different from our draw rect (indicating a
+    //    resize), or
+    // 2) one or more items have changed, in which case just the relevant
+    //    layer caches need to be cleared.
+    bool clearCache = axesCache.size() > 0 && // check #1
+                      axesCache.currImageSize() != rect.size();
+
+    if(clearCache) {
+        // Only clear cache if new size is larger than cache size.  Shrinking
+        // images won't lose data.
+        QSize cacheSize = axesCache.currImageSize(), rectSize = rect.size();
+        clearCache = cacheSize.isValid() &&
+                     (rectSize.width() > cacheSize.width() ||
+                     rectSize.height() > cacheSize.height());
+    }
+     
+    if(clearCache) {
+        if(!infoLog.null())
+            infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache "
+                    "because canvas size has changed.");
+        axesCache.clear();
+    } else if(anyChangedLayer()) { // check #2
+        if(!infoLog.null())
+            infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache of "
+                    "changed layers.");
+        // clear out just those layers that have changed
+        axesCache.clearLayers(changedLayersFlag());
     }
     
     // Check if a drawing thread is currently underway.
     if(m_drawThread != NULL) {
+        if(!infoLog.null())
+            infoLog->postMessage(CLASS_NAME, "drawItems", "A draw thread is "
+                    "currently running.  Canceling it and restarting draw.");
+        
         const_cast<bool&>(m_redrawWaiting) = true;
         paintCaches(painter, rect);
         const_cast<QPDrawThread*&>(m_drawThread)->cancel();
+        m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     } else const_cast<bool&>(m_redrawWaiting) = false;
     
-    bool doMain = drawMain && m_layerMain.hasItemsToDraw(),
-         doAnnotation = drawAnnotation && m_layerAnnotation.hasItemsToDraw(),
-         doDraw = doMain || doAnnotation;
-    
-    // Set up caches.
-    if(drawMain)       m_layerMain.initializeImage(rect.size(), maps);
-    if(drawAnnotation) m_layerAnnotation.initializeImage(rect.size(), maps);
+    /*
+    QHash<PlotCanvasLayer, bool> doDraw;
+    anyDraw = false;
+    foreach(PlotCanvasLayer layer, m_layers.keys()) {
+        doDraw[layer] = draw[layer] && m_layers.value(layer)->hasItemsToDraw();
+        anyDraw |= doDraw[layer];
+    }
+    */
         
     // Set up operation.
     PlotOperationPtr op = m_parent->operationDraw();
     if(!op.null()) op->reset();
     
+    int drawLayers = 0;
+    foreach(PlotCanvasLayer layer, m_layers.keys())
+        if(draw[layer]) drawLayers |= layer;
+    
     // Notify draw watchers as needed.
-    if(doDraw) {
-        int drawnLayersFlag = 0;
-        if(doMain) drawnLayersFlag |= MAIN;
-        if(doAnnotation) drawnLayersFlag |= ANNOTATION;
-        bool res = m_parent->notifyDrawWatchers(op, true, drawnLayersFlag);
+    if(anyDraw) {
+        bool res = m_parent->notifyDrawWatchers(op, true, drawLayers);
         
         // The draw watchers told us not to continue, so assume they know what
         // they're doing.
         if(!res) {
             paintCaches(painter, rect);
             if(!op.null()) op->finish();
+            m_parent->logMethod(CLASS_NAME, "drawItems", false);
             return;
         }
     }
@@ -373,9 +441,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     
     // Set up drawing thread.
     QPDrawThread* drawThread = NULL;
-    if(doDraw) {
-        drawThread = new QPDrawThread(allLayerItems(drawMain, drawAnnotation),
-                                      maps, rect);
+    if(anyDraw) {
+        drawThread = new QPDrawThread(allLayerItems(drawLayers), maps, rect);
         connect(drawThread, SIGNAL(finished()), SLOT(itemDrawingFinished()));
         connect(drawThread, SIGNAL(terminated()), SLOT(itemDrawingFinished()));
         const_cast<QPDrawThread*&>(m_drawThread) = drawThread;
@@ -384,39 +451,65 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     // Start logging.
     PlotLoggerPtr log;
     if(m_parent != NULL) log= m_parent->loggerForEvent(PlotLogger::DRAW_TOTAL);
-    if(!log.null() && doDraw)
+    if(!log.null() && anyDraw)
         log->markMeasurement(QPCanvas::CLASS_NAME, QPCanvas::DRAW_NAME);
             
     // Start drawing thread if needed.
-    if(doDraw)
+    if(anyDraw) {
+        if(!infoLog.null()) {
+            String layers;
+            foreach(PlotCanvasLayer layer, draw.keys()) {
+                if(draw[layer]) {
+                    if(layers.length() > 0) layers += ", ";
+                    layers += String::toString((int)layer);
+                }
+            }
+
+            infoLog->postMessage(CLASS_NAME, "drawItems", "Starting draw "
+                    "thread for layer(s): " + layers + ".");
+        }
+        
         drawThread->start();
-    else {
+    } else {
         // Finish operation.
         PlotOperationPtr op;
         if(m_parent != NULL) op = m_parent->operationDraw();
         if(!op.null()) op->finish();
         
-        // Draw pixmaps on widget.
+        // Update and draw caches.
+        foreach(PlotCanvasLayer layer, m_layers.keys())
+            m_layers.value(layer)->cachedImage() = axesCache.currImage(layer);        
         paintCaches(painter, rect);
     }
+    
+    m_parent->logMethod(CLASS_NAME, "drawItems", false);
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {    
+        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
+    m_parent->logMethod(CLASS_NAME, "printItems", true);
+    
     // Determine total draw segments.
-    PlotOperationPtr op = m_parent->operationExport();
-    unsigned int bseg = m_layerBase.itemDrawSegments(),
-                 mseg = m_layerMain.itemDrawSegments(),
-                 aseg = m_layerAnnotation.itemDrawSegments();
-    unsigned int nseg = bseg + mseg + aseg;
+    unsigned int bseg = m_layerBase.itemDrawSegments();
+    unsigned int nseg = bseg;
+    QList<QPCanvasLayer*> layers = m_layers.values();
+    QVector<unsigned int> segments(layers.size());
+    for(int i = 0; i < layers.size(); i++) {
+        segments[i] = layers[i]->itemDrawSegments();
+        nseg += segments[i];
+    }
     bool drawLegend = m_parent->m_legend->legendShown() &&
                       m_parent->m_legend->isInternal();
     if(drawLegend) nseg++;
     
     // Draw layers.
+    PlotOperationPtr op = m_parent->operationExport();
     m_layerBase.drawItems(painter, rect, maps, op, 0, nseg);
-    m_layerMain.drawItems(painter, rect, maps, op, bseg, nseg);
-    m_layerAnnotation.drawItems(painter, rect, maps, op, bseg + mseg, nseg);
+    unsigned int index = bseg;
+    for(int i = 0; i < layers.size(); i++) {
+        layers[i]->drawItems(painter, rect, maps, op, index, nseg);
+        index += segments[i];
+    }
     
     // Draw internal legend if needed.
     if(drawLegend) {
@@ -432,6 +525,8 @@ void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
         printLegend_(painter, legendRect);
         QwtPainter::setMetricsMap(old);
     }
+    
+    m_parent->logMethod(CLASS_NAME, "printItems", false);
 }
 
 void QPLayeredCanvas::printLegend(QPainter* painter, const QRect& rect) const {
@@ -459,27 +554,35 @@ void QPLayeredCanvas::releaseDrawing() {
     replot();
 }
 
-void QPLayeredCanvas::replot(bool drawMain, bool drawAnnotation) {
-    bool oldMain = m_drawMain, oldAnnotation = m_drawAnnotation;
-    setDrawLayers(drawMain, drawAnnotation);
-    replot();
-    setDrawLayers(oldMain, oldAnnotation);
+void QPLayeredCanvas::setLayerChanged(PlotCanvasLayer layer) {
+    m_changedLayers.insert(layer, true); }
+void QPLayeredCanvas::setLayersChanged(int layersFlag) {
+    foreach(PlotCanvasLayer layer, m_changedLayers.keys())
+        if(layersFlag & layer) m_changedLayers.insert(layer, true);
 }
 
-void QPLayeredCanvas::setDrawLayers(bool main, bool annotation) {
-    m_drawMain = main;
-    m_drawAnnotation = annotation;
+bool QPLayeredCanvas::changedLayer(PlotCanvasLayer layer) const {
+    return m_changedLayers.contains(layer) && m_changedLayers.value(layer); }
+
+bool QPLayeredCanvas::anyChangedLayer() const {
+    foreach(PlotCanvasLayer layer, m_changedLayers.keys())
+        if(m_changedLayers.value(layer)) return true;
+    return false;
 }
 
-bool QPLayeredCanvas::drawMain() const { return m_drawMain; }
-bool QPLayeredCanvas::drawAnnotation() const { return m_drawAnnotation; }
+int QPLayeredCanvas::changedLayersFlag() const {
+    int flag = 0;
+    foreach(PlotCanvasLayer layer, m_changedLayers.keys())
+        if(m_changedLayers.value(layer)) flag |= layer;
+    return flag;
+}
 
 const QPGrid& QPLayeredCanvas::grid() const { return m_grid; }
 QPGrid& QPLayeredCanvas::grid() { return m_grid; }
 
-const QMap<PlotAxis, QPCartesianAxis*>& QPLayeredCanvas::cartesianAxes() const{
+const QHash<PlotAxis, QPCartesianAxis*>& QPLayeredCanvas::cartesianAxes()const{
     return m_cartAxes; }
-QMap<PlotAxis, QPCartesianAxis*>& QPLayeredCanvas::cartesianAxes() {
+QHash<PlotAxis, QPCartesianAxis*>& QPLayeredCanvas::cartesianAxes() {
     return m_cartAxes; }
 
 bool QPLayeredCanvas::cartesianAxisShown(PlotAxis axis) const {
@@ -515,7 +618,12 @@ void QPLayeredCanvas::installLegendFilter(QWidget* legendFrame) {
 // Private Methods //
 
 void QPLayeredCanvas::initialize() {
-    m_drawMain = m_drawAnnotation = true;
+    vector<PlotCanvasLayer> layers = PlotCanvas::allLayers();
+    for(unsigned int i = 0; i < layers.size(); i++) {
+        m_layers[layers[i]] = new QPCanvasLayer();
+        m_changedLayers[layers[i]] = false;
+    }
+    
     m_drawingHeld = false;
     m_legendFrame = NULL;
     m_drawThread = NULL;
@@ -541,29 +649,39 @@ void QPLayeredCanvas::initialize() {
 
 void QPLayeredCanvas::paintCaches(QPainter* painter, const QRect& rect) const {
     if(painter == NULL) return;
+    
     m_layerBase.drawCache(painter, rect);
-    m_layerMain.drawCache(painter, rect);
-    m_layerAnnotation.drawCache(painter, rect);
+    
+    foreach(QPCanvasLayer* layer, m_layers)
+        layer->drawCache(painter, rect);
 }
 
 
 // Private Slots //
 
 void QPLayeredCanvas::itemDrawingFinished() {
-    if(m_drawThread == NULL) return;
+    m_parent->logMethod(CLASS_NAME, "itemDrawingFinished", true);
+
+    if(m_drawThread == NULL) {
+        m_parent->logMethod(CLASS_NAME, "itemDrawingFinished", false);
+        return;
+    }
         
     if(m_drawThread->isRunning() || !m_drawThread->isFinished()) {
         m_drawThread->cancel();
+        m_parent->logMethod(CLASS_NAME, "itemDrawingFinished", false);
         return;
     }
         
     // Update caches.
-    QPainter mainPainter(&m_layerMain.cachedImage()),
-             annotationPainter(&m_layerAnnotation.cachedImage());
-    m_drawThread->drawIntoCaches(mainPainter, annotationPainter);
-    mainPainter.end();
-    annotationPainter.end();
-        
+    QImage result;
+    foreach(PlotCanvasLayer layer, m_layers.keys()) {
+        result = m_drawThread->drawResult(layer);
+        if(!result.isNull()) m_parent->axesCache().addCurrImage(layer, result);
+        m_layers.value(layer)->cachedImage() = m_parent->axesCache().currImage(
+                                               layer);
+    }
+    
     // Cleanup.
     delete m_drawThread;
     m_drawThread = NULL;
@@ -578,9 +696,13 @@ void QPLayeredCanvas::itemDrawingFinished() {
     if(m_parent != NULL) op = m_parent->operationDraw();
     if(!op.null()) op->finish();
     
-    // Draw pixmaps on widget.
-    if(!m_redrawWaiting) replot(false, false);
-    else                 replot();
+    // Update layer changed flags, and draw pixmaps on widget (or start new
+    // draw if redraw waiting flag is on).
+    foreach(PlotCanvasLayer layer, m_changedLayers.keys())
+        m_changedLayers.insert(layer, m_redrawWaiting);
+    replot();
+
+    m_parent->logMethod(CLASS_NAME, "itemDrawingFinished", false);
 }
 
 }

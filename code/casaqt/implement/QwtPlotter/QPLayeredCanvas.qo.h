@@ -57,17 +57,10 @@ public:
     // Clears the cache image.
     virtual void clearImage() const;
     
-    // Initializes the cache image to the given size using a transparent base
-    // color, and sets the cache maps to the given.
+    // Initializes the cache image to the given size using the given color for
+    // a fill base (see QImage::fill()).
     virtual void initializeImage(const QSize& size,
-            const QwtScaleMap maps[QwtPlot::axisCnt]) const;
-    
-    // Returns whether or not the cached image needs to be redrawn, given a new
-    // list of QwtScaleMaps.  This returns true if any of the attached items
-    // both 1) should be drawn (see QPLayerItem::shouldDraw()), and 2) use axes
-    // that have changed.
-    virtual bool scaleMapsChanged(
-            const QwtScaleMap maps[QwtPlot::axisCnt]) const;
+            unsigned int fillValue = Qt::transparent) const;
     
     // Returns whether this layer has at least one item for which
     // QPLayerItem::shouldDraw() returns true.
@@ -125,9 +118,6 @@ public:
 protected:
     // Cached image.
     QImage m_cachedImage;
-    
-    // Cached image maps.
-    QwtScaleMap m_cachedMaps[QwtPlot::axisCnt];
 };
 
 
@@ -213,12 +203,17 @@ private:
 class QPLayeredCanvas : public QwtPlot {
     Q_OBJECT
     
+    friend class QPAxesCache;
     friend class QPCanvas;
     friend class QPPlotItem;
     friend class QPBaseItem;
     friend class QPLegendHolder;
     
 public:
+    // Convenient access to class name.
+    static const String CLASS_NAME;
+    
+    
     // Constructor which takes parent canvas (optional) parent widget.
     QPLayeredCanvas(QPCanvas* parent, QWidget* parentWidget = NULL);
     
@@ -240,12 +235,11 @@ public:
     
     // Returns a list of all attached QPPlotItems on this canvas.
     QList<const QPPlotItem*> allAttachedItems() const {
-        return allLayerItems(true, true); }
+        return allLayerItems(PlotCanvas::allLayersFlag()); }
     
     // Returns a list of the QPPlotItems attached to this canvas in the
-    // layers as indicated.
-    QList<const QPPlotItem*> allLayerItems(bool includeMain,
-            bool includeAnnotations) const;
+    // layers as indicated (an or'ed value of PlotCanvasLayer enum values).
+    QList<const QPPlotItem*> allLayerItems(int layersFlag) const;
     
     
     // Draw Methods //
@@ -273,9 +267,6 @@ protected:
     
     // Draw Methods //
     
-    // Redraws the "base" layer items and updates the canvas with the caches.
-    void drawBaseItems();
-    
     // Overrides QwtPlot::drawItems().
     void drawItems(QPainter* painter, const QRect& rect,
                    const QwtScaleMap maps[axisCnt],
@@ -300,24 +291,28 @@ protected:
     void releaseDrawing();
     // </group>
     
-    // Compounds a call to setDrawLayers and replot, resetting the draw flags
-    // afterwards.
-    void replot(bool drawMain, bool drawAnnotation);
-
     
     // Layer Methods //
     
-    // Sets whether to redraw the layers on the next draw cycle (true), or to
-    // use the cached version (false).  Should be set immediately prior to a
-    // replot, and then immediately after with both set to true (for resizing,
-    // etc.).
-    void setDrawLayers(bool main, bool annotation);
-    
-    // Returns whether each of the given layers is set to be drawn or not.
+    // Sets whether items in the layers have changed or not.  Each layer has
+    // a changed flag that is or'ed with the given value.  These flags are
+    // reset to false after the next draw.
     // <group>
-    bool drawMain() const;
-    bool drawAnnotation() const;
+    void setLayerChanged(PlotCanvasLayer layer);
+    void setLayersChanged(int layersFlag);
+    void setAllLayersChanged() {
+        setLayersChanged(PlotCanvas::allLayersFlag()); }
     // </group>
+    
+    // Returns whether the given layer has changed or not since the last draw.
+    bool changedLayer(PlotCanvasLayer layer) const;
+    
+    // Returns whether any layer has changed since the last draw or not.
+    bool anyChangedLayer() const;
+    
+    // Returns the or'ed value of PlotCanvasLayers which have changed since the
+    // last draw.
+    int changedLayersFlag() const;
     
     
     // Base Items Methods //
@@ -330,8 +325,8 @@ protected:
     
     // Provides access to the cartesian axes.
     // <group>
-    const QMap<PlotAxis, QPCartesianAxis*>& cartesianAxes() const;
-    QMap<PlotAxis, QPCartesianAxis*>& cartesianAxes();
+    const QHash<PlotAxis, QPCartesianAxis*>& cartesianAxes() const;
+    QHash<PlotAxis, QPCartesianAxis*>& cartesianAxes();
     // </group>
     
     // See PlotCanvas::cartesianAxisShown().
@@ -352,20 +347,14 @@ private:
     QPCanvas* m_parent;
     
     
-    // Canvas layers.
-    // <group>
-    QPCanvasLayer m_layerMain;
-    QPCanvasLayer m_layerAnnotation;
-    // </group>
-    
     // Base layer.
-    QPBaseLayer m_layerBase;    
+    QPBaseLayer m_layerBase;
     
-    // Layer draw flags.
-    // <group>
-    bool m_drawMain;
-    bool m_drawAnnotation;
-    // </group>
+    // Canvas layers.
+    QMap<PlotCanvasLayer, QPCanvasLayer*> m_layers;
+    
+    // Layer changed flags.
+    QHash<PlotCanvasLayer, bool> m_changedLayers;
     
     
     // Flag for whether drawing is currently held or not.
@@ -388,7 +377,7 @@ private:
     QPGrid m_grid;
     
     // Cartesian axes.
-    QMap<PlotAxis, QPCartesianAxis*> m_cartAxes;
+    QHash<PlotAxis, QPCartesianAxis*> m_cartAxes;
 
     
     // Legend frame to watch for events.

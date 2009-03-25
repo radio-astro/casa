@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
            yaxis = PMS::axis(PMS::DEFAULT_YAXIS);
     PlotMSLogger::Level log = PlotMSLogger::OFF;
+    bool logDebug = false;
     PlotMSSelection select;
   
     // Parse arguments.
@@ -48,7 +49,8 @@ int main(int argc, char* argv[]) {
     bool ok;
     String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_MS = "ms",
            ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
-           ARG_LOG2 = "--loglevel";
+           ARG_LOG2 = "--loglevel", ARG_LOGDEBUG1 = "-ld",
+           ARG_LOGDEBUG2 = "--logdebug";
     const vector<String>& selectFields = PlotMSSelection::fieldStrings();
     
     for(int i = 1; i < argc; i++) {
@@ -64,6 +66,13 @@ int main(int argc, char* argv[]) {
                  << "* " << ARG_HELP1 << " or " << ARG_HELP2 << "\n     "
                  << "Prints this message then exits."
                  
+                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
+                 << "Sets the plotter's log level to the given (see "
+                 << "documentation)."
+                 
+                 << "\n* " <<ARG_LOGDEBUG1<<" or "<<ARG_LOGDEBUG2<< "\n     "
+                 << "Turns on/off logging debug messages."
+                 
                  << "\n* " << ARG_MS << "=[ms]\n     "
                  << "Path to MS used for initial plot."
                  
@@ -71,15 +80,11 @@ int main(int argc, char* argv[]) {
                  << "X-Axis for initial plot (see documentation)."
                  
                  << "\n* " << ARG_YAXIS << "=[axis]\n     "
-                 << "Y-Axis for initial plot (see documentation)."
-                 
-                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
-                 << "Sets the plotter's log level to the given (see "
-                 << "documentation).";
+                 << "Y-Axis for initial plot (see documentation).";
             
             for(unsigned int i = 0; i < selectFields.size(); i++) {
                 cout << "\n* " << selectFields[i] << "=[val]\n     "
-                     << "MS Selection parameter.";
+                     << "MS Selection parameter for initial plot.";
             }
             
             cout << endl;
@@ -89,6 +94,9 @@ int main(int argc, char* argv[]) {
         if((index = arg.find("=")) < arg.size() - 1) {
             arg2 = arg.before(index); arg2.downcase();
             arg3 = arg.after(index);
+            
+        } else if(arg2 == ARG_LOGDEBUG1 || arg2 == ARG_LOGDEBUG2) {
+            logDebug = true;
             
         } else if(i < argc - 1) {
             arg3 = argv[++i];
@@ -121,7 +129,7 @@ int main(int argc, char* argv[]) {
     }
     
     // Set up parameters for plotms.
-    PlotMSParameters params(log);
+    PlotMSParameters params(log, logDebug);
     
     // Set up plotms object.
     PlotMS plotms(params);

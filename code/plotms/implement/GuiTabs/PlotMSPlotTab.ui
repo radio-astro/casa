@@ -1905,7 +1905,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="PlotMSPlotter.qrc" />
+  <include location="../Gui/PlotMSPlotter.qrc" />
  </resources>
  <connections>
   <connection>
@@ -2059,12 +2059,60 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>225</x>
-     <y>162</y>
+     <x>228</x>
+     <y>223</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>240</x>
-     <y>160</y>
+     <x>253</x>
+     <y>223</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>msAveragingChannel</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>msAveragingChannelValue</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>92</x>
+     <y>214</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>120</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>msAveragingChannel</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>msAveragingChannelValueLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>92</x>
+     <y>218</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>238</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>msAveragingChannel</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>msAveragingChannelValueLabel2</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>101</x>
+     <y>219</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>258</x>
+     <y>218</y>
     </hint>
    </hints>
   </connection>

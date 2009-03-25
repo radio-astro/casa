@@ -44,22 +44,24 @@ namespace casa {
 // QPFACTORY DEFINITIONS //
 ///////////////////////////
 
-QPFactory::QPFactory() : argc(0), argv(NULL), app(NULL), createdQApp(false) {
+QPFactory::QPFactory() : m_argc(0), m_argv(NULL), m_app(NULL),
+        m_createdQApp(false) {
     if(qApp == NULL) {
-        app = new QApplication(argc, argv);
-        createdQApp = true;
-    } else app = qApp;
+        m_app = new QApplication(m_argc, m_argv);
+        m_createdQApp = true;
+    } else m_app = qApp;
 }
 
 QPFactory::~QPFactory() {
-    if(createdQApp) delete app;
+    if(m_createdQApp) delete m_app;
 }
 
 
 int QPFactory::execLoop() {
     QApplication::processEvents();
-    return app->exec();
+    return m_app->exec();
 }
+
 
 PlotterPtr QPFactory::plotter(const String& windowTitle, bool showSingleCanvas,
         bool showGUI, int logEventFlags, bool smartDelete) const {
@@ -90,8 +92,6 @@ PlotterPtr QPFactory::plotter(unsigned int nrows, unsigned int ncols,
 
 PlotCanvasPtr QPFactory::canvas(bool smartDelete) const {
     return PlotCanvasPtr(new QPCanvas(), smartDelete); }
-
-bool QPFactory::canvasHasThreadedDrawing() const { return true; }
 
 PlotPanelPtr QPFactory::panel(bool smartDelete) const {
     return PlotPanelPtr(new QPPanel(), smartDelete); }
@@ -127,7 +127,6 @@ RasterPlotPtr QPFactory::rasterPlot(PlotRasterDataPtr data,const String& title,
     if(data.null() || !data->isValid()) return RasterPlotPtr();
     else return RasterPlotPtr(new QPRasterPlot(data,format,title),smartDelete);
 }
-
 
 PlotAnnotationPtr QPFactory::annotation(const String& text,
         const PlotCoordinate& coord, bool smartDelete) const {

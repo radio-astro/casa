@@ -260,7 +260,9 @@ QPRectangle::QPRectangle(const PlotShapeRectangle& copy) : QPShape(copy) {
     setCoordinates(copy.coordinates());
 }
 
-QPRectangle::~QPRectangle() { }
+QPRectangle::~QPRectangle() {
+    logDestruction();
+}
 
 
 bool QPRectangle::isValid() const { return boundingRect().isValid(); }
@@ -307,6 +309,7 @@ void QPRectangle::setRectCoordinates(const PlotCoordinate& ul,
 void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
         const QRect r = transform(xMap, yMap, rect);
@@ -314,6 +317,7 @@ void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
         painter->setBrush(m_area.asQBrush());        
         painter->drawRect(r);
     }
+    logMethod("draw_", false);
 }
 
 
@@ -341,7 +345,9 @@ QPEllipse::QPEllipse(const PlotShapeEllipse& copy) : QPShape(copy) {
     setCoordinates(copy.coordinates());
 }
 
-QPEllipse::~QPEllipse() { }
+QPEllipse::~QPEllipse() {
+    logDestruction();
+}
 
 
 bool QPEllipse::isValid() const { return boundingRect().isValid(); }
@@ -410,6 +416,7 @@ void QPEllipse::setCenter(const PlotCoordinate& center) {
 void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
         int x, y, width, height;
@@ -443,6 +450,7 @@ void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
         painter->setBrush(m_area.asQBrush());
         painter->drawEllipse(r);
     }
+    logMethod("draw_", false);
 }
 
 
@@ -463,7 +471,9 @@ QPPolygon::QPPolygon(const PlotShapePolygon& copy) : QPShape(copy) {
     setCoordinates(copy.coordinates());
 }
 
-QPPolygon::~QPPolygon() { }
+QPPolygon::~QPPolygon() {
+    logDestruction();
+}
 
 
 bool QPPolygon::isValid() const {
@@ -507,6 +517,7 @@ void QPPolygon::setCoordinates(const vector<PlotCoordinate>& c) {
 void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     if(isValid() && m_canvas != NULL) {
         unsigned int n = m_coords.size();
         if(drawIndex >= n) return;
@@ -527,6 +538,7 @@ void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
         painter->setBrush(m_area.asQBrush());
         painter->drawPolygon(p);
     }
+    logMethod("draw_", false);
 }
 
 
@@ -553,7 +565,9 @@ QPLineShape::QPLineShape(const PlotShapeLine& copy) {
     m_marker.setItemAttribute(QwtPlotItem::AutoScale, false);
 }
 
-QPLineShape::~QPLineShape() { }
+QPLineShape::~QPLineShape() {
+    logDestruction();
+}
 
 
 bool QPLineShape::isValid() const { return true; }
@@ -605,8 +619,10 @@ PlotAxis QPLineShape::axis() const { return m_axis; }
 void QPLineShape::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     const_cast<QwtPlotMarker&>(m_marker).setLinePen(m_line.asQPen());
     m_marker.draw(painter, xMap, yMap, canvasRect);
+    logMethod("draw_", false);
 }
 
 
@@ -631,7 +647,9 @@ QPArrow::QPArrow(const PlotShapeArrow& copy) {
     setArrowSize(copy.arrowSize());
 }
 
-QPArrow::~QPArrow() { }
+QPArrow::~QPArrow() {
+    logDestruction();
+}
 
 
 bool QPArrow::isValid() const { return boundingRect().isValid(); }
@@ -708,6 +726,7 @@ void QPArrow::setArrowSize(double size) {
 void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid() || m_from.x() == m_to.x() || m_from.y() == m_to.y()) {        
         painter->setPen(m_line.asQPen());
@@ -771,6 +790,7 @@ void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
             }
         }
     }
+    logMethod("draw_", false);
 }
 
 
@@ -791,7 +811,9 @@ QPPath::QPPath(const vector<PlotCoordinate>& points) : QPShape(),
 QPPath::QPPath(const PlotShapePath& copy) : QPShape(copy),
         m_coords(copy.coordinates()) { }
 
-QPPath::~QPPath() { }
+QPPath::~QPPath() {
+    logDestruction();
+}
 
 
 bool QPPath::isValid() const { return m_coords.size() > 1; }
@@ -830,8 +852,12 @@ void QPPath::setCoordinates(const vector<PlotCoordinate>& coords) {
 void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     unsigned int n = m_coords.size();
-    if(n <= 1 || m_canvas == NULL || drawIndex >= n) return;
+    if(n <= 1 || m_canvas == NULL || drawIndex >= n) {
+        logMethod("draw_", false);
+        return;
+    }
     
     if(drawIndex + drawCount > n) drawCount = n - drawIndex;
     n = drawIndex + drawCount;
@@ -883,6 +909,7 @@ void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
     painter->drawPolyline(QPolygon(v));
     
     painter->restore();
+    logMethod("draw_", false);
 }
 
 
@@ -908,7 +935,9 @@ QPArc::QPArc(const PlotShapeArc& copy) : QPShape(copy),
     m_orient %= 360;
 }
 
-QPArc::~QPArc() { }
+QPArc::~QPArc() {
+    logDestruction();
+}
 
 
 bool QPArc::isValid() const { return boundingRect().isValid(); }
@@ -987,6 +1016,7 @@ void QPArc::setOrientation(int o) {
 void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     if(m_canvas != NULL) {
         painter->save();
         painter->setBrush(m_area.asQBrush());
@@ -1030,6 +1060,7 @@ void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
         
         painter->restore();
     }
+    logMethod("draw_", false);
 }
 
 
@@ -1069,7 +1100,9 @@ QPPoint::QPPoint(const PlotPoint& copy) : m_symbol(copy.symbol()),
     setItemAttribute(QwtPlotItem::AutoScale);
 }
 
-QPPoint::~QPPoint() { }
+QPPoint::~QPPoint() {
+    logDestruction();
+}
 
 
 QwtDoubleRect QPPoint::boundingRect() const {
@@ -1128,6 +1161,7 @@ void QPPoint::setSymbol(const PlotSymbol& s) {
 void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     painter->save();
     
     if(m_symbol.symbol() != PlotSymbol::PIXEL) {
@@ -1149,6 +1183,7 @@ void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
     m_symbol.draw(painter, rect);
     
     painter->restore();
+    logMethod("draw_", false);
 }
 
 #endif

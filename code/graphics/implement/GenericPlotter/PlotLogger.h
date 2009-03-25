@@ -349,12 +349,17 @@ public:
     // Events that someone may want to log.  Specifying more than one event can
     // be used by doing a bitwise or of one or more enum values into a flag.
     enum Event {
-        DRAW_TOTAL         = 1, // Replotting/redrawing the whole GUI.
-        DRAW_INDIVIDUAL    = 2, // Replotting/redrawing each plot item.
-        METHODS_MAJOR      = 4, // Entering/exiting major methods.
-        OBJECTS_MAJOR      = 8, // Creation/deletion of major objects.
+        DRAW_TOTAL      = 1,   // Replotting/redrawing the whole GUI.
+        DRAW_INDIVIDUAL = 2,   // Replotting/redrawing each plot item.
+        METHODS_MAJOR   = 4,   // Entering/exiting major methods.
+        OBJECTS_MAJOR   = 8,   // Creation/deletion of major objects.
+        EXPORT_TOTAL    = 16,  // Exporting canvases to file.
         
-        NO_EVENTS          = 0 // No measurement events.
+        MSG_INFO        = 32,  // Messages with information.
+        MSG_WARN        = 64,  // Messages with warnings.
+        MSG_ERROR       = 128, // Messages with errors.
+        
+        NO_EVENTS       = 0    // No measurement events.
     };
     
     

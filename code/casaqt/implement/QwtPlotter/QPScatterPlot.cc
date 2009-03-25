@@ -100,7 +100,9 @@ QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
     setItemAttribute(QwtPlotItem::AutoScale);
 }
 
-QPScatterPlot::~QPScatterPlot() { }
+QPScatterPlot::~QPScatterPlot() {
+    logDestruction();
+}
 
 
 // Public Methods //
@@ -243,20 +245,15 @@ void QPScatterPlot::setErrorCapSize(unsigned int capSize) {
 void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& brect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     unsigned int n = m_data->size();
-    if(!isValid() || n == 0 || drawIndex >= n) return;
+    if(!isValid() || n == 0 || drawIndex >= n) {
+        logMethod("draw_", false);
+        return;
+    }
         
     if(drawIndex + drawCount > n) drawCount = n - drawIndex;
     n = drawIndex + drawCount;
-    
-    /*
-    if(from < 0) from = 0;
-    unsigned int n = m_data->size();
-    if(to <= from) to = (int)n;
-    n = min(n, (unsigned int)to);
-    unsigned int s = (unsigned int)from;
-    if(s == n) return;
-    */
 
     p->save();
     
@@ -461,7 +458,8 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         }
     }
 
-    p->restore();    
+    p->restore();
+    logMethod("draw_", false);
 }
 
 }

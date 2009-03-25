@@ -45,19 +45,31 @@ def getput_keyw(mode, vis, key, hdindex, hdvalue='', hdref=None):
             try:
                 i = int(hdindex)
             except (ValueError, TypeError):
-                i = None                        # hdindex is not convertable to an int.
+                i = None           # hdindex is not convertable to an int.
 
             if isinstance(i, int):
                 # Get full column, change one element, write it back. Not
                 # efficient but columns used by this task are short
 
-                c = list(tb.getcol(col))
-                # numpy arrays don't expand flexibly => convert to python list
-                
+                c = tb.getcol(col)
+
+                # Must be careful here:
+                if isinstance(c[0], basestring):
+                    # The new hdvalue may be longer than
+                    # the current string.
+                    # numpy arrays do *not* expand flexibly,
+                    # therefore convert to a python list
+                    c = list(c)
+                # else: For numerical values,
+                # the size of the array needs to be unchanged,
+                # otherwise the following tb.putcol() will fail,
+                # therefore let c still be a numpy array
+
                 c[i] = hdvalue
+                
                 tb.putcol(col, c)
             else:
-                tb.putcol(col, hdvalue)       # hdvalue expected to be an array
+                tb.putcol(col, hdvalue)  # hdvalue expected to be an array
                                 
         value = None
     else:

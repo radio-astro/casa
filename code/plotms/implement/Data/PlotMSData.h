@@ -27,7 +27,7 @@
 #ifndef PLOTMSDATA_H_
 #define PLOTMSDATA_H_
 
-#include <plotms/PlotMS/PlotMSCache.h>
+#include <plotms/Data/PlotMSCache.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
 
 #include <casa/Arrays/Vector.h>

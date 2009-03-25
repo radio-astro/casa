@@ -107,14 +107,14 @@ can be calculated by simply integrating the H2O profile.
      </param>
 
      <param type="double" direction="in" name="pressure" units="mbar">
-     <description>Ambient pressure - Quantity with units of pressure
+     <description>Ambient pressure - Quantity with units of pressure, mbar
        </description>
      <value>560.0</value>
      </param>
 
      <param type="double" direction="in" name="maxAltitude" units="km">
      <description>altitude of the top pf the modelled atmosphere -
-        Quantity with dimension of length, kilometer
+        Quantity with dimension of length, and units of kilometer
         </description>
      <value>48.0</value>
      </param>
@@ -143,7 +143,7 @@ can be calculated by simply integrating the H2O profile.
 
      <param type="double" direction="in" name="h0" units="km">
      <description>scale height for water( exp distribution ) -
-       Quantity with the dimension of length, kilometer </description>
+       Quantity with the dimension of length, and units of kilometer </description>
      <value>2.0</value>
      </param>
 
@@ -197,7 +197,7 @@ atmospheric parameters.change.
      </param>
 
      <param type="double" direction="in" name="pressure" units="mbar">
-     <description>Ambient ground pressure - Quantity with units of pressure
+     <description>Ambient ground pressure - Quantity with units of pressure, mbar
        </description>
      <value>560.0</value>
      </param>
@@ -215,7 +215,7 @@ atmospheric parameters.change.
 
      <param type="double" direction="in" name="h0" units="km">
      <description>scale height for water( exp distribution ) -
-       Quantity with the dimension of length, kilometer </description>
+       Quantity with the dimension of length, and units of kilometer </description>
      <value>2.0</value>
      </param>
 </input>
@@ -244,13 +244,13 @@ print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
      </param>
 
      <param type="double" direction="out" name="pressure" units="mbar">
-     <description>Ambient pressure - Quantity with units of pressure
+     <description>Ambient pressure - Quantity with units of pressure, mbar
        </description>
      </param>
 
      <param type="double" direction="out" name="maxAltitude" units="km">
      <description>altitude of the top pf the modelled atmosphere -
-        Quantity with dimension of length, kilometer
+        Quantity with dimension of length, and units of kilometer
         </description>
      </param>
 
@@ -274,7 +274,7 @@ print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
 
      <param type="double" direction="out" name="h0" units="km">
      <description>Water vapor scale height ( exp distribution ) -
-       Quantity with the dimension of length, kilometer </description>
+       Quantity with the dimension of length, and units of kilometer </description>
      </param>
 
      <param type="string" direction="out" name="atmType">
@@ -376,7 +376,7 @@ Get the atmospheric profile.
 <output>
      <param type="double"  name="thickness" units="m">
      <description>thickness of every atmospheric layer -
-        Quantum with a vector value and dimension of length, m
+        Quantum with a vector value and unit of length, m
         </description>
      </param>
 
@@ -479,7 +479,7 @@ using the above atmospheric parameters.
 
 </input>
 
-<returns type="int">Number of layers in the atmospheric profile</returns>
+<returns type="int">Number of channels in the first spectral window</returns>
 
 <example>
 \begin{verbatim}
@@ -493,6 +493,7 @@ nb=2
 fC=quantity([88.,90.],'GHz')
 fW=quantity([.5,.5],'GHz')
 fR=quantity([.125,.125],'GHz')
+at.initSpectralWindow(nb,fC,fW,fR)
 \end{verbatim}
 </example>
 
@@ -514,20 +515,20 @@ having no sideband.
 
      <param type="double" direction="in" name="fCenter" units="GHz">
      <description>frequencies -
-         Quantum with a vector value and unit of frequency, GHz
+         Quantum with a double value and unit of frequency, GHz
          </description>
      <value>350</value>
      </param>
 
      <param type="double" direction="in" name="fWidth" units="GHz">
-     <description>frequency width - Quantum with a vector value and unit of frequency, GHz
+     <description>frequency width of band - Quantum with a double value and unit of frequency, GHz
         </description>
      <value>0.008</value>
      </param>
 
      <param type="double" direction="in" name="fRes" units="GHz">
      <description>resolution inside band -
-        Quantum with a vector value and unit frequency, GHz
+        Quantum with a double value and unit frequency, GHz
         </description>
      <value>0.002</value>
      </param>
@@ -552,8 +553,14 @@ print "New spectral window has ", nc, " channels"
    <method type="function" name="getNumSpectralWindows">
    <shortdescription>Get number of spectral windows</shortdescription>
 
-   <returns type="int">Number of spectral windows</returns>
-   </method>
+<returns type="int">Number of spectral windows</returns>
+<example>
+\begin{verbatim}
+numSpw = at.getNumSpectralWindows()
+print "There are ", numSpw, " spectral windows"
+\end{verbatim}
+</example>
+</method>
 
 
    <method type="function" name="getNumChan">
@@ -574,78 +581,78 @@ Return the number of channels of ith band ( passes in as parameter ).
 
 <example>
 \begin{verbatim}
-numSpw = at.getNumSpectralWindows()
-print "There are ", numSpw, " spectral windows"
+for spwid in range(at.getNumSpectralWindows()):
+        numCh = at.getNumChan(spwid)
+        print "Spectral window ", spwid, " has ", numCh, " frequency channels"
 \end{verbatim}
 </example>
-
 </method>
 
  
    <method type="function" name="getRefChan">
-   <shortdescription>Get the reference channel of given spectral window
+   <shortdescription>Get the reference channel of a given spectral window
    </shortdescription>
-   <description>
-    Return the reference channel of the given spectral window
-   </description>
-   <input>
+<description>
+Return the reference channel of the given spectral window
+</description>
+<input>
       <param type="int" direction="in" name="spwid">
       <description>Int standing for spectral window id (0-based)</description>
       <value>0</value>
      </param>
-   </input>
-   <returns type="int"> Reference channel number.</returns>
-   <example>
-   \begin{verbatim}
+</input>
+<returns type="int"> Reference channel number.</returns>
+<example>
+\begin{verbatim}
 rc = at.getRefChan()
 print "Reference channel retrieved: ", rc
-    \end{verbatim}
-    </example>
-    </method>
+\end{verbatim}
+</example>
+</method>
 
  
    <method type="function" name="getRefFreq">
    <shortdescription>Get the reference frequency of given spectral window
    </shortdescription>
-   <description>
-      Return the reference frequency of the given spectral window
-   </description>
-   <input>
+<description>
+Return the reference frequency of the given spectral window
+</description>
+<input>
       <param type="int" direction="in" name="spwid">
       <description>Int standing for spectral window id (0-based)</description>
       <value>0</value>
      </param>
-   </input>
-   <returns type="Quantity">Reference channel frequency.</returns>
-   <example>
-   \begin{verbatim}
+</input>
+<returns type="Quantity">Reference channel frequency.</returns>
+<example>
+\begin{verbatim}
 rf = at.getRefFreq()
 print "Reference frequency retrieved: ", rf.value, rf.units
-    \end{verbatim}
-    </example>
-    </method>
+\end{verbatim}
+</example>
+</method>
 
  
    <method type="function" name="getChanSep">
    <shortdescription>Get the channel separation for regularly spaced grid for spectral window
    </shortdescription>
-   <description>
-      Return the channel separation of the given spectral window
-   </description>
-   <input>
+<description>
+Return the channel separation of the given spectral window
+</description>
+<input>
       <param type="int" direction="in" name="spwid">
       <description>Int standing for spectral window id (0-based)</description>
       <value>0</value>
      </param>
-   </input>
-   <returns type="Quantity">Channel separation.</returns>
-   <example>
-   \begin{verbatim}
+</input>
+<returns type="Quantity">Channel separation.</returns>
+<example>
+\begin{verbatim}
 cs = at.getChanSep()
 print "Channel separation retrieved: ", cs.value, cs.units
-    \end{verbatim}
-    </example>
-    </method>
+\end{verbatim}
+</example>
+</method>
 
  
    <method type="function" name="getChanFreq">
@@ -700,7 +707,7 @@ print at.getSpectralWindow().value,at.getSpectralWindow().units
 
 sg = at.getSpectralWindow()
 for i in range(len(sg.value)):
-    print s.value[i], s.units
+    print sg.value[i], sg.units
 
     \end{verbatim}
     </example>
@@ -844,7 +851,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The dryOpacity of channel nc.</returns>
+<returns type="double">The dryOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -865,7 +872,7 @@ print "Total Dry Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.get
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated Dry Continuum Opacity for one channel in a band.
 
 </description>
 
@@ -879,7 +886,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The dryContOpacity of channel nc.</returns>
+<returns type="double">The dryContOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -900,7 +907,7 @@ print "Total Dry Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated O2 Lines Opacity for one channel in a band.
 
 </description>
 
@@ -914,7 +921,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The O2LinesOpacity of channel nc.</returns>
+<returns type="double">The O2LinesOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -935,7 +942,7 @@ print "Total O2 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated O3 Lines Opacity for one channel in a band.
 
 </description>
 
@@ -949,7 +956,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The O3LinesOpacity of channel nc.</returns>
+<returns type="double">The O3LinesOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -970,7 +977,7 @@ print "Total O3 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated CO Lines Opacity for one channel in a band.
 
 </description>
 
@@ -984,7 +991,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The COLinesOpacity of channel nc.</returns>
+<returns type="double">The COLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1005,7 +1012,7 @@ print "Total CO Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated N2O Lines Opacity for one channel in a band.
 
 </description>
 
@@ -1019,7 +1026,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The N2OLinesOpacity of channel nc.</returns>
+<returns type="double">The N2OLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1040,7 +1047,7 @@ print "Total N2O Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", 
    
 <description>
 
-Get the integrated Wet Opacity for channel nc.
+Get the integrated Wet Opacity for one channel in a band.
 
 </description>
 
@@ -1058,7 +1065,7 @@ Get the integrated Wet Opacity for channel nc.
 </input>
 
 
-<returns type="Quantity">The Web Opacity of channel nc. Units of mm-1.</returns>
+<returns type="Quantity">The Wet Opacity of channel nc in band spwid. Units of mm-1.</returns>
 
 <example>
 \begin{verbatim}
@@ -1092,7 +1099,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The H2OLinesOpacity of channel nc.</returns>
+<returns type="double">The H2OLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1109,11 +1116,11 @@ print "Total H2O Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", 
 </method>
 
    <method type="function" name="getH2OContOpacity">
-   <shortdescription>get the integrated H2O Cont Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
+   <shortdescription>get the integrated H2O Continuum Opacity along the atmospheric path for channel nc in spectral window spwid</shortdescription>
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated H2O Continuum Opacity for one channel in a band.
 
 </description>
 
@@ -1127,7 +1134,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>0</value>
      </param>
 </input>
-<returns type="double">The H2OContOpacity of channel nc.</returns>
+<returns type="double">The H2OContOpacity of channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1144,11 +1151,11 @@ print "Total H2O Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", a
 </method>
 
    <method type="function" name="getDryOpacitySpec">
-   <shortdescription>get the integrated optical depth on each channel of a band</shortdescription>
+   <shortdescription>get the integrated Dry optical depth on each channel of a band</shortdescription>
    
 <description>
 
-Get the integrated optical depth on each channel in a band.
+Get the integrated Dry optical depth on each channel in a band.
 
 </description>
 
@@ -1190,11 +1197,11 @@ Out[3]:
 </method>
 
    <method type="function" name="getWetOpacitySpec">
-   <shortdescription>get the integrated optical depth on each channel of a band</shortdescription>
+   <shortdescription>get the integrated Wet optical depth on each channel of a band</shortdescription>
    
 <description>
 
-Get the integrated optical depth on each channel in a band.
+Get the integrated optical Wet depth on each channel in a band.
 
 </description>
 
@@ -1243,14 +1250,15 @@ for s in range(at.getNumSpectralWindows()):
 
 \end{verbatim}
 </example>
-
 </method>
+
 
    <method type="function" name="getDispersivePhaseDelay">
    <shortdescription>get the integrated zenith H2O Atmospheric Phase Delay</shortdescription>
    
 <description>
-Get the integrated zenith H2O Atmospheric Phase Delay (Dispersive part) for the current conditions, for channel number nc of spectral window spwid.
+Get the integrated zenith H2O Atmospheric Phase Delay (Dispersive part) 
+for the current conditions, for channel number nc of spectral window spwid.
 </description>
 
 <input>
@@ -1265,7 +1273,7 @@ Get the integrated zenith H2O Atmospheric Phase Delay (Dispersive part) for the 
 
 </input>
 
-<returns type="Quantity">The integrated Atmospheric Phase Delay for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1283,10 +1291,10 @@ for spwid in range(numSpw):
 
 
    <method type="function" name="getDispersiveWetPhaseDelay">
-   <shortdescription>get the integrated dispersive Atmospheric Phase Delay</shortdescription>
+   <shortdescription>get the integrated dispersive wet Atmospheric Phase Delay</shortdescription>
    
 <description>
-Function to retrieve the integrated Atmospheric Phase Delay
+Function to retrieve the integrated wet Atmospheric Phase Delay
 (Dispersive part) along the atmospheric path corresponding to the 1st
 guess water column.
 </description>
@@ -1303,7 +1311,7 @@ guess water column.
 
 </input>
 
-<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc.</returns>
+<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1319,11 +1327,12 @@ for spwid in range(numSpw):
 </example>
 </method>
 
+
    <method type="function" name="getNonDispersiveWetPhaseDelay">
-   <shortdescription>get the integrated nondispersive Atmospheric Phase Delay</shortdescription>
+   <shortdescription>get the integrated nondispersive wet Atmospheric Phase Delay</shortdescription>
    
 <description>
-Function to retrieve the integrated Atmospheric Phase Delay
+Function to retrieve the integrated wet Atmospheric Phase Delay
 (NonDispersive part) along the atmospheric path corresponding to the 1st
 guess water column.
 </description>
@@ -1340,7 +1349,7 @@ guess water column.
 
 </input>
 
-<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc.</returns>
+<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1357,10 +1366,10 @@ for spwid in range(numSpw):
 </method>
 
    <method type="function" name="getNonDispersiveDryPhaseDelay">
-   <shortdescription>get the integrated nondispersive Atmospheric Phase Delay</shortdescription>
+   <shortdescription>get the integrated nondispersive dry Atmospheric Phase Delay</shortdescription>
    
 <description>
-Function to retrieve the integrated Atmospheric Phase Delay
+Function to retrieve the integrated dry Atmospheric Phase Delay
 (NonDispersive part) along the atmospheric path corresponding to the 1st
 guess water column.
 </description>
@@ -1377,7 +1386,7 @@ guess water column.
 
 </input>
 
-<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc.</returns>
+<returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1414,7 +1423,7 @@ window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Phase Delay channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Phase Delay channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1436,7 +1445,7 @@ for spwid in range(numSpw):
    
 <description>
 Retrieve the integrated Atmospheric Path length (Dispersive part)
-along the atmospheric path corresponding to the 1st guess water column
+along the atmospheric path corresponding to the user water column
 for channel nc in spectral window spwid.
 </description>
 
@@ -1452,11 +1461,11 @@ for channel nc in spectral window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
-w = at.getStartupWaterContent()
+w = at.getUserWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1473,7 +1482,7 @@ print "(",100*(at.getDispersivePathLength().value /  w.value)/(at.getNonDispersi
    <shortdescription>get the integrated wet Atmospheric Dispersive Path</shortdescription>
    
 <description>
-Retrieve the integrated Atmospheric Path length (Dispersive part)
+Retrieve the integrated wet Atmospheric Path length (Dispersive part)
 along the atmospheric path corresponding to the 1st guess water column
 for channel nc in spectral window spwid.
 </description>
@@ -1490,11 +1499,11 @@ for channel nc in spectral window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
-w = at.getStartupWaterContent()
+w = at.getGroundWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1511,7 +1520,7 @@ print "(",100*(at.getDispersiveWetPathLength().value /  w.value)/(at.getNonDispe
    <shortdescription>get the integrated wet Atmospheric NonDispersive Path</shortdescription>
    
 <description>
-Retrieve the integrated Atmospheric Path length (NonDispersive part)
+Retrieve the integrated wet Atmospheric Path length (NonDispersive part)
 along the atmospheric path corresponding to the 1st guess water column
 for channel nc in spectral window spwid.
 </description>
@@ -1528,20 +1537,30 @@ for channel nc in spectral window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
+w = at.getGroundWH2O()
+nb = 1
+fC = quantity([850.0],'GHz')
+fW = quantity([0.5],'GHz')
+nfR = quantity([0.5],'GHz')
+at.initSpectralWindow(nb,fC,fW,fR)
+print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersiveWetPathLength().value /  w.value, " meters per mm of water vapor"
+print "(",100*(at.getDispersiveWetPathLength().value /  w.value)/(at.getNonDispersiveWetPathLength().value / w.value), "% of the Non-dispersive one )"
+
+\end{verbatim}
 </example>
 </method>
 
    <method type="function" name="getNonDispersiveDryPathLength">
-   <shortdescription>get the integrated wet Atmospheric NonDispersive Path</shortdescription>
+   <shortdescription>get the integrated dry Atmospheric NonDispersive Path</shortdescription>
    
 <description>
-Retrieve the integrated Atmospheric Path length (NonDispersive part)
+Retrieve the integrated dry Atmospheric Path length (NonDispersive part)
 along the atmospheric path corresponding to the 1st guess water column
-for channel nc in spectral window spwid.
+for channel nc in spectral window spwid. 
 </description>
 
 <input>
@@ -1556,11 +1575,11 @@ for channel nc in spectral window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
-w = at.getStartupWaterContent()
+w = at.getGroundWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1573,11 +1592,14 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 </example>
 </method>
 
+
    <method type="function" name="getO2LinesPathLength">
    <shortdescription>get the integrated O2 lines Path</shortdescription>
    
 <description>
-
+Retrieve the integrated Atmospheric Phase Delay (due to O2 Lines) along 
+the atmospheric path corresponding to the 1st guess water column
+for channel nc in spectral window spwid. 
 </description>
 
 <input>
@@ -1592,7 +1614,7 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 
 </input>
 
-<returns type="Quantity">The integrated Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1600,12 +1622,15 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 \end{verbatim}
 </example>
 </method>
+
 
    <method type="function" name="getO3LinesPathLength">
    <shortdescription>get the integrated O3 lines Path</shortdescription>
    
 <description>
-
+Retrieve the integrated Atmospheric Phase Delay (due to O3 Lines) along 
+the atmospheric path corresponding to the 1st guess water column
+for channel nc in spectral window spwid. 
 </description>
 
 <input>
@@ -1620,7 +1645,7 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 
 </input>
 
-<returns type="Quantity">The integrated Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1628,12 +1653,15 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 \end{verbatim}
 </example>
 </method>
+
 
    <method type="function" name="getCOLinesPathLength">
    <shortdescription>get the integrated CO lines Path</shortdescription>
    
 <description>
-
+Retrieve the integrated Atmospheric Path length (due to CO Lines) 
+along the atmospheric path corresponding to the 1st guess water column 
+for channel nc in spectral window spwid. 
 </description>
 
 <input>
@@ -1648,7 +1676,7 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 
 </input>
 
-<returns type="Quantity">The integrated Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1656,12 +1684,15 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 \end{verbatim}
 </example>
 </method>
+
 
    <method type="function" name="getN2OLinesPathLength">
    <shortdescription>get the integrated N2O lines Path</shortdescription>
    
 <description>
-
+Retrieve the integrated Atmospheric Path length (due to N2O Lines) 
+along the atmospheric path corresponding to the 1st guess water column 
+for channel nc in spectral window spwid. 
 </description>
 
 <input>
@@ -1676,7 +1707,7 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 
 </input>
 
-<returns type="Quantity">The integrated Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
@@ -1685,13 +1716,13 @@ print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispe
 </example>
 </method>
 
+
    <method type="function" name="getNonDispersivePathLength">
    <shortdescription>get the integrated Atmospheric Non-Dispersive Path</shortdescription>
    
 <description>
-Retrieve the integrated Atmospheric Path length (Non-Dispersive part)
-along the atmospheric path corresponding to the 1st guess water column
-for channel nc in spectral window spwid.
+Get the integrated zenith H2O Atmospheric Path length (Non-Dispersive 
+part) for the current conditions, for channel nc in spectral window spwid.
 </description>
 
 <input>
@@ -1706,11 +1737,11 @@ for channel nc in spectral window spwid.
 
 </input>
 
-<returns type="Quantity">The integrated Atmoospheric Path Length for channel nc.</returns>
+<returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
 \begin{verbatim}
-w = at.getStartupWaterContent()
+w = at.getUserWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1723,9 +1754,10 @@ print "(",100*(at.getDispersivePathLength().value /  w.value)/(at.getNonDispersi
 </example>
 </method>
 
+
    <method type="function" name="getAbsH2OLines">
    <shortdescription>
-Get H2O lines Absorption Coefficient at layer nl and frequency channel nf
+Get H2O lines Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
@@ -1765,16 +1797,17 @@ ac = at.getAbsH2OLines(0,0,0)
 print "H2O lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
-
 </method>
+
 
     <method type="function" name="getAbsH2OCont">
    <shortdescription>
-Get H2O continuum Absorption Coefficient at layer nl and frequency channel nf
+Get H2O continuum Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get H2O continuum Absorption Coefficient at layer nl and frequency channel nf
+Get H2O continuum Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -1805,7 +1838,7 @@ Get H2O continuum Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsH2OCont(0,0)
+ac = at.getAbsH2OCont(0,0,0)
 print "H2OCont absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -1815,11 +1848,12 @@ print "H2OCont absorption coefficient for layer 0, channel 0 is ", ac.value, ac.
  
    <method type="function" name="getAbsO2Lines">
    <shortdescription>
-Get O2 lines Absorption Coefficient at layer nl and frequency channel nf
+Get O2 lines Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get O2 lines Absorption Coefficient at layer nl and frequency channel nf
+Get O2 lines Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -1850,7 +1884,7 @@ Get O2 lines Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsO2Lines(0,0)
+ac = at.getAbsO2Lines(0,0,0)
 print "O2 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -1860,11 +1894,12 @@ print "O2 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac
  
    <method type="function" name="getAbsDryCont">
    <shortdescription>
-Get H2O lines Absorption Coefficient at layer nl and frequency channel nf
+Get Dry Continuum Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get Dry Continuum Absorption Coefficient at layer nl and frequency channel nf
+Get Dry Continuum Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -1895,7 +1930,7 @@ Get Dry Continuum Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsDryCont(0,0)
+ac = at.getAbsDryCont(0,0,0)
 print "Dry Continuum absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -1905,11 +1940,12 @@ print "Dry Continuum absorption coefficient for layer 0, channel 0 is ", ac.valu
  
    <method type="function" name="getAbsO3Lines">
    <shortdescription>
-Get O3 lines Absorption Coefficient at layer nl and frequency channel nf
+Get O3 lines Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get O3 lines Absorption Coefficient at layer nl and frequency channel nf
+Get O3 lines Absorption Coefficient at layer nl,  
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -1940,7 +1976,7 @@ Get O3 lines Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsO3Lines(0,0)
+ac = at.getAbsO3Lines(0,0,0)
 print "O3 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -1950,11 +1986,12 @@ print "O3 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac
  
    <method type="function" name="getAbsCOLines">
    <shortdescription>
-Get CO lines Absorption Coefficient at layer nl and frequency channel nf
+Get CO lines Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get CO lines Absorption Coefficient at layer nl and frequency channel nf
+Get CO lines Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -1985,7 +2022,7 @@ Get CO lines Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsCOLines(0,0)
+ac = at.getAbsCOLines(0,0,0)
 print "CO lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -1995,11 +2032,12 @@ print "CO lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac
  
    <method type="function" name="getAbsN2OLines">
    <shortdescription>
-Get N2O lines Absorption Coefficient at layer nl and frequency channel nf
+Get N2O lines Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get N2O lines Absorption Coefficient at layer nl and frequency channel nf
+Get N2O lines Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -2030,7 +2068,7 @@ Get N2O lines Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsN2OLines(0,0)
+ac = at.getAbsN2OLines(0,0,0)
 print "N2O lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -2040,11 +2078,12 @@ print "N2O lines absorption coefficient for layer 0, channel 0 is ", ac.value, a
  
    <method type="function" name="getAbsTotalDry">
    <shortdescription>
-Get H2O lines Absorption Coefficient at layer nl and frequency channel nf
+Get Total Dry Absorption Coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get total dry Absorption Coefficient at layer nl and frequency channel nf
+Get total dry Absorption Coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -2075,7 +2114,7 @@ Get total dry Absorption Coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsTotalDry(0,0)
+ac = at.getAbsTotalDry(0,0,0)
 print "Total dry absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -2085,11 +2124,12 @@ print "Total dry absorption coefficient for layer 0, channel 0 is ", ac.value, a
  
    <method type="function" name="getAbsTotalWet">
    <shortdescription>
-Get total wet absorption coefficient at layer nl and frequency channel nf
+Get total wet absorption coefficient at layer nl and frequency channel nf in spectral window spwid
    </shortdescription>
    
 <description>
-Get total wet absorption coefficient at layer nl and frequency channel nf
+Get total wet absorption coefficient at layer nl, 
+spectral window spwid and frequency channel nf
 </description>
 
 <input>
@@ -2120,7 +2160,7 @@ Get total wet absorption coefficient at layer nl and frequency channel nf
 
 <example>
 \begin{verbatim}
-ac = at.getAbsTotalWet(0,0)
+ac = at.getAbsTotalWet(0,0,0)
 print "Total wet absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
 \end{verbatim}
 </example>
@@ -2221,7 +2261,7 @@ print "(INPUT CHANGE) Air mass: ", at.getAirMass()
    <shortdescription>Set the sky background temperature</shortdescription>
    
 <description>
- 	Set sky background temperature.
+ 	Set sky background temperature in SkyStatus without performing water vapor retrieval
 </description>
 
 <input>

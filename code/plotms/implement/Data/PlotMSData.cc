@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotMSData.h>
+#include <plotms/Data/PlotMSData.h>
 
 #include <plotms/PlotMS/PlotMS.h>
 

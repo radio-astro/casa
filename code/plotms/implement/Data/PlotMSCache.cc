@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotMSCache.h>
+#include <plotms/Data/PlotMSCache.h>
 
 #include <casa/OS/Timer.h>
 #include <casa/Quanta/MVTime.h>

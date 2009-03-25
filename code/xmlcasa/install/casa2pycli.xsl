@@ -26,6 +26,7 @@
 #
 import sys
 import os
+import casac
 import string
 import time
 import inspect
@@ -33,7 +34,9 @@ import gc
 import numpy
 from odict import odict
 from taskmanager import tm
-from </xsl:text><xsl:value-of select="$taskname"/> import <xsl:value-of select="$taskname"/>_imp
+from task_</xsl:text><xsl:value-of select="$taskname"/> import <xsl:value-of select="$taskname"/>
+<xsl:text>
+from task_</xsl:text><xsl:value-of select="$taskname"/> import casalog
 <xsl:text>
 class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
@@ -131,8 +134,35 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:choose>
 </xsl:for-each>
 
-<xsl:text disable-output-escaping="yes">
 	result = None
+
+#
+#    The following is work around to avoid a bug with current python translation
+#
+        mytmp = {}
+<xsl:for-each select="aps:param">
+<xsl:choose>
+
+<xsl:when test="@units">
+        if type(<xsl:value-of select="@name"/>) == str :
+           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = casac.qa.quantity(<xsl:value-of select="@name"/>)
+        else :
+           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/>
+</xsl:when>
+<xsl:otherwise>
+        mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:for-each>
+<xsl:text disable-output-escaping="yes">
+        pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
+        trec = casac.cu.torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
+</xsl:text>
+<xsl:text disable-output-escaping="yes">
+        casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
+        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.cu.verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
+	    return False
+
 	try :
           if async :
 	    count = 0
@@ -149,7 +179,14 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    self.rkey = key
 	    self.__async__[key] = result
           else :
-              result = <xsl:value-of select="$taskname"/>_imp(<xsl:call-template name="doargs2"/>)
+              casalog.post('')
+              casalog.post('##########################################')
+              casalog.post('##### Begin Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('')
+              result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
+              casalog.post('')
+              casalog.post('##### End Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
           saveinputs = myf['saveinputs']

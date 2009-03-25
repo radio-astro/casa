@@ -64,6 +64,7 @@ double QPCanvas::zOrder = 1;
 
 const String QPCanvas::CLASS_NAME = "QPCanvas";
 const String QPCanvas::DRAW_NAME = "drawItems";
+const String QPCanvas::EXPORT_NAME = "export";
 
 bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
     vector<PlotCanvasPtr> canvases;
@@ -80,15 +81,50 @@ bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
 
 bool QPCanvas::exportHelper(QWidget* grabWidget,
         vector<PlotCanvasPtr>& canvases, const PlotExportFormat& format) {
-    if(format.location.empty()) return false;
+    if(format.location.empty() || ((format.type == PlotExportFormat::JPG ||
+       format.type == PlotExportFormat::PNG) && grabWidget == false))
+        return false;
+    
+    // Compile vector of unique, non-null QPCanvases.
+    vector<QPCanvas*> qcanvases;
+    QPCanvas* canv;
+    bool found = false;
+    for(unsigned int i = 0; i < canvases.size(); i++) {
+        if(canvases[i].null()) continue;
+        canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
+        if(canv == NULL) continue;
+        
+        found = false;
+        for(unsigned int j = 0; !found && j < qcanvases.size(); j++)
+            if(qcanvases[j] == canv) found = true;
+        if(!found) qcanvases.push_back(canv);
+    }
+    
+    if(qcanvases.size() == 0) return false;
     
     bool wasCanceled = false;
+    bool ret = false;
+    
+    // Compile vector of unique, non-null loggers for export event.
+    vector<PlotLoggerPtr> loggers;
+    PlotLoggerPtr logger;
+    for(unsigned int i = 0; i < qcanvases.size(); i++) {        
+        logger = qcanvases[i]->loggerForEvent(PlotLogger::EXPORT_TOTAL);
+        if(logger.null()) continue;
+        
+        found = false;
+        for(unsigned int j = 0; !found && j < loggers.size(); j++)
+            if(loggers[j] == logger) found = true;
+        if(!found) loggers.push_back(logger);
+    }
+    
+    // Start logging.
+    for(unsigned int i = 0; i < loggers.size(); i++)
+        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME);
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {
-        if(grabWidget == NULL) return false; // Check for null widget.
-        
+       format.type == PlotExportFormat::PNG) {        
         QImage image;
         
         // Just grab the widget if: 1) screen resolution, or 2) high resolution
@@ -124,27 +160,18 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             image = QImage(width, height, QImage::Format_ARGB32);
             
             // Fill with background color.
-            QPCanvas* canv;
-            for(unsigned int i = 0; i < canvases.size(); i++) {
-                if(canvases[i].null()) continue;
-                canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
-                if(canv == NULL) continue;
-                image.fill(canv->palette().color(
-                           canv->backgroundRole()).rgba());
-                break;
-            }
+            canv = qcanvases[0];
+            image.fill(canv->palette().color(canv->backgroundRole()).rgba());
             
             // Print each canvas.
             QPainter painter(&image);
             double widthRatio  = ((double)width)  / grabWidget->width(),
                    heightRatio = ((double)height) / grabWidget->height();
             QRect geom, printGeom, imageRect(0, 0, width, height);
-            PlotFontPtr titleFont;
+            QwtText title; QColor titleColor;
             PlotOperationPtr op;
-            for(unsigned int i = 0; i < canvases.size(); i++) {
-                if(canvases[i].null()) continue;
-                canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
-                if(canv == NULL) continue;
+            for(unsigned int i = 0; i < qcanvases.size(); i++) {
+                canv = qcanvases[i];
                 
                 geom = canv->geometry();
                 printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
@@ -152,7 +179,7 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
                                   (int)((geom.width() * widthRatio) + 0.5),
                                   (int)((geom.height() * heightRatio) + 0.5));
                 printGeom &= imageRect;
-                titleFont = canv->titleFont();
+                titleColor = canv->asQwtPlot().title().color();
                 
                 op = canv->operationExport();
                 if(!op.null()) wasCanceled |= op->cancelRequested();
@@ -160,7 +187,11 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
                 canv->asQwtPlot().print(&painter, printGeom);
                 
                 // For bug where title color changes after a print.
-                if(!titleFont.null()) canv->setTitleFont(titleFont);
+                title = canv->asQwtPlot().title();
+                if(title.color() != titleColor) {
+                    title.setColor(titleColor);
+                    canv->asQwtPlot().setTitle(title);
+                }
                 
                 if(!op.null()) wasCanceled |= op->cancelRequested();
                 if(wasCanceled) break;
@@ -179,13 +210,13 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
         
         // Save to file.
-        return !wasCanceled && !image.isNull() &&
-               image.save(format.location.c_str(),
-               PlotExportFormat::exportFormat(format.type).c_str(), f);
+        ret = !wasCanceled && !image.isNull() &&
+              image.save(format.location.c_str(),
+              PlotExportFormat::exportFormat(format.type).c_str(), f);
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {
+              format.type == PlotExportFormat::PDF) {        
         // Set resolution.
         QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
         if(format.resolution == PlotExportFormat::HIGH)
@@ -203,14 +234,11 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         printer.setColorMode(QPrinter::Color);
         
         // Print each canvas.
-        QPCanvas* canv;
         bool flag = false;
-        PlotFontPtr titleFont;
+        QwtText title; QColor titleColor;
         PlotOperationPtr op;
-        for(unsigned int i = 0; i < canvases.size(); i++) {
-            if(canvases[i].null()) continue;
-            canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
-            if(canv == NULL) continue;
+        for(unsigned int i = 0; i < qcanvases.size(); i++) {
+            canv = qcanvases[i];
             
             // don't do new page only for first non-null canvas
             if(flag) printer.newPage();
@@ -220,22 +248,31 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             printer.setOrientation(canv->width() >= canv->height() ?
                                    QPrinter::Landscape : QPrinter::Portrait);
                   
-            titleFont = canv->titleFont();
+            titleColor = canv->asQwtPlot().title().color();
             op = canv->operationExport();
             if(!op.null()) wasCanceled |= op->cancelRequested();
             if(wasCanceled) break;
             canv->asQwtPlot().print(printer);
             
             // For bug where title color changes after a print.
-            if(!titleFont.null()) canv->setTitleFont(titleFont);
+            title = canv->asQwtPlot().title();
+            if(title.color() != titleColor) {
+                title.setColor(titleColor);
+                canv->asQwtPlot().setTitle(title);
+            }
             
             if(!op.null()) wasCanceled |= op->cancelRequested();
             if(wasCanceled) break;
         }
-        return !wasCanceled;
+        
+        ret = !wasCanceled;
     }
     
-    return false;
+    // End logging.
+    for(unsigned int i = 0; i < loggers.size(); i++)
+        loggers[i]->releaseMeasurement();
+    
+    return ret;
 }
 
 unsigned int QPCanvas::axisIndex(PlotAxis a) {
@@ -262,10 +299,13 @@ PlotAxis QPCanvas::axisIndex(unsigned int i) {
 // Constructors/Destructors //
 
 QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
-        m_axesRatioLocked(false), m_axesRatios(4, 1), m_autoIncColors(false),
-        m_picker(m_canvas.canvas()), m_mouseFilter(m_canvas.canvas()),
-        m_legendFontSet(false), m_inDraggingMode(false),
-        m_ignoreNextRelease(false), m_timer(this), m_clickEvent(NULL) {
+        m_axesRatioLocked(false), m_axesRatios(4, 1), m_stackCache(*this),
+        m_autoIncColors(false), m_picker(m_canvas.canvas()),
+        m_mouseFilter(m_canvas.canvas()), m_legendFontSet(false),
+        m_inDraggingMode(false), m_ignoreNextRelease(false), m_timer(this),
+        m_clickEvent(NULL) {
+    logObject(CLASS_NAME, this, true);
+    
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
@@ -300,7 +340,13 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
 }
 
-QPCanvas::~QPCanvas() { }
+QPCanvas::~QPCanvas() {
+    vector<PlotMouseToolPtr> tools = allMouseTools();
+    for(unsigned int i = 0; i < tools.size(); i++)
+        unregisterMouseTool(tools[i]);
+    
+    logObject(CLASS_NAME, this, false);
+}
 
 
 // Public Methods //
@@ -347,21 +393,25 @@ void QPCanvas::setCursor(PlotCursor cursor) {
     m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); }
 
 void QPCanvas::refresh() {
+    logMethod(CLASS_NAME, "refresh", true);
     PRE_REPLOT
     QCoreApplication::processEvents();
     m_canvas.replot();
     POST_REPLOT
+    logMethod(CLASS_NAME, "refresh", false);
 }
 
 void QPCanvas::refresh(int drawLayersFlag) {
-    bool main= drawLayersFlag & MAIN, annotation= drawLayersFlag & ANNOTATION;
+    logMethod(CLASS_NAME, "refresh(int)", true);
     
-    if(main || annotation) {
+    if(drawLayersFlag != 0) {
         PRE_REPLOT
         QCoreApplication::processEvents();
-        m_canvas.replot(main, annotation);
+        m_canvas.setLayersChanged(drawLayersFlag);
+        m_canvas.replot();
         POST_REPLOT
     }
+    logMethod(CLASS_NAME, "refresh(int)", false);
 }
 
 
@@ -512,7 +562,11 @@ void QPCanvas::setAxisRange(PlotAxis axis, double from, double to) {
 
 void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
         PlotAxis yAxis, double yFrom, double yTo) {
-    if(xTo == xFrom && yTo == yFrom) return;
+    logMethod(CLASS_NAME, "setAxesRanges", true);
+    if(xTo == xFrom && yTo == yFrom) {
+        logMethod(CLASS_NAME, "setAxesRanges", false);
+        return;
+    }
     if(xTo < xFrom) {
         double temp = xTo;
         xTo = xFrom;
@@ -565,6 +619,8 @@ void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
     // restore canvas
     m_canvas.setAutoReplot(autoreplot);
     if(changed && autoreplot) m_canvas.replot();
+    
+    logMethod(CLASS_NAME, "setAxesRanges", false);
 }
 
 bool QPCanvas::axesAutoRescale() const {
@@ -614,6 +670,7 @@ void QPCanvas::setAxesAutoRescale(bool autoRescale) {
 }
 
 void QPCanvas::rescaleAxes() {
+    logMethod(CLASS_NAME, "rescaleAxes", true);
     m_axesRatioLocked = false;
     m_canvas.setAxisAutoScale(QPOptions::axis(X_BOTTOM));
     m_canvas.setAxisAutoScale(QPOptions::axis(X_TOP));
@@ -625,6 +682,7 @@ void QPCanvas::rescaleAxes() {
         m_canvas.replot();    
         POST_REPLOT
     }
+    logMethod(CLASS_NAME, "rescaleAxes", false);
 }
 
 bool QPCanvas::axesRatioLocked() const { return m_axesRatioLocked; }
@@ -651,12 +709,25 @@ void QPCanvas::setAxesRatioLocked(bool locked) {
 }
 
 
+int QPCanvas::cachedAxesStackSizeLimit() const {
+    return m_stackCache.memoryLimit(); }
+void QPCanvas::setCachedAxesStackSizeLimit(int sizeInKilobytes) {
+    m_stackCache.setMemoryLimit(sizeInKilobytes); }
+
+
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
-    if(item.null() || !item->isValid()) return false;
+    logMethod(CLASS_NAME, "plotItem", true);
+    if(item.null() || !item->isValid()) {
+        logMethod(CLASS_NAME, "plotItem", false);
+        return false;
+    }
     
     bool createdQPI;
     QPPlotItem* qitem = QPPlotItem::cloneItem(item, &createdQPI);
-    if(qitem == NULL) return false;
+    if(qitem == NULL) {
+        logMethod(CLASS_NAME, "plotItem", false);
+        return false;
+    }
     if(createdQPI) item = qitem;
     
     bool replot = m_canvas.autoReplot();
@@ -674,6 +745,7 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
         if((foundMain > -1 && layer == MAIN) ||
            (foundLayer > -1 && layer == ANNOTATION)) {
             m_canvas.setAutoReplot(replot);
+            logMethod(CLASS_NAME, "plotItem", false);
             return true;
         }
         
@@ -732,14 +804,16 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
         m_plotItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
     else
         m_layeredItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
+    m_canvas.setLayerChanged(layer);
     
     if(replot) {
         PRE_REPLOT
-        m_canvas.replot(layer == MAIN, layer != MAIN);
+        m_canvas.replot();
         POST_REPLOT
-    }
-    
+    }    
     m_canvas.setAutoReplot(replot);
+    
+    logMethod(CLASS_NAME, "plotItem", false);
     return true;
 }
 
@@ -772,7 +846,8 @@ unsigned int QPCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
 }
 
 void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
-    bool changedMain = false, changedLayer = false;
+    logMethod(CLASS_NAME, "removePlotItems", true);
+    int changedLayers = 0;
     bool replot = m_canvas.autoReplot();
     m_canvas.setAutoReplot(false);
     for(unsigned int i = 0; i < items.size(); i++) {
@@ -781,7 +856,7 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_plotItems[j].first) {
                 m_plotItems[j].second->detach();
                 m_plotItems.erase(m_plotItems.begin() + j);
-                changedMain = true;
+                changedLayers |= MAIN;
                 break;
             }
         }
@@ -789,20 +864,23 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_layeredItems[j].first) {
                 m_layeredItems[j].second->detach();
                 m_layeredItems.erase(m_layeredItems.begin() + j);
-                changedLayer = true;
+                changedLayers |= ANNOTATION;
                 break;
             }
         }
     }
-    if((changedMain || changedLayer) && replot) {
+    if(changedLayers != 0 && replot) {
         PRE_REPLOT
-        m_canvas.replot(changedMain, changedLayer);
+        m_canvas.setLayersChanged(changedLayers);
+        m_canvas.replot();
         POST_REPLOT
     }
     m_canvas.setAutoReplot(replot);
+    logMethod(CLASS_NAME, "removePlotItems", false);
 }
 
 void QPCanvas::clearPlotItems() {
+    logMethod(CLASS_NAME, "clearPlotItems", true);
     bool replot = m_canvas.autoReplot();
     m_canvas.setAutoReplot(false);
     for(unsigned int i = 0; i < m_plotItems.size(); i++)
@@ -811,15 +889,17 @@ void QPCanvas::clearPlotItems() {
         m_layeredItems[i].second->detach();
     m_plotItems.clear();
     m_layeredItems.clear();
+    m_canvas.setAllLayersChanged();
     
     if(replot) {
         PRE_REPLOT
-        m_canvas.replot(true, true);
+        m_canvas.replot();
         POST_REPLOT
     }
     
     m_usedColors.resize(0);
     m_canvas.setAutoReplot(replot);
+    logMethod(CLASS_NAME, "clearPlotItems", false);
 }
 
 void QPCanvas::clearPlots() {
@@ -828,6 +908,7 @@ void QPCanvas::clearPlots() {
 }
 
 void QPCanvas::clearLayer(PlotCanvasLayer layer) {
+    logMethod(CLASS_NAME, "clearLayer", true);
     bool autoreplot = m_canvas.autoReplot();
     m_canvas.setAutoReplot(false);
     if(layer == MAIN) {
@@ -839,25 +920,29 @@ void QPCanvas::clearLayer(PlotCanvasLayer layer) {
             m_layeredItems[i].second->detach();
         m_layeredItems.clear();    
     }
+    m_canvas.setLayerChanged(layer);
     
     if(autoreplot) {
         PRE_REPLOT
-        m_canvas.replot(layer == MAIN, layer != MAIN);
+        m_canvas.replot();
         POST_REPLOT
     }
     
     m_canvas.setAutoReplot(autoreplot);
     m_usedColors.resize(0);
+    logMethod(CLASS_NAME, "clearLayer", false);
 }
 
 
 void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
 
 void QPCanvas::releaseDrawing() {
+    logMethod(CLASS_NAME, "releaseDrawing", true);
     PRE_REPLOT
     QCoreApplication::processEvents();
     m_canvas.releaseDrawing();
     POST_REPLOT
+    logMethod(CLASS_NAME, "releaseDrawing", false);
 }
 
 bool QPCanvas::drawingIsHeld() const { return m_canvas.drawingIsHeld(); }
@@ -1067,6 +1152,7 @@ PlotFactory* QPCanvas::implementationFactory() const { return new QPFactory();}
 
 
 QPLayeredCanvas& QPCanvas::asQwtPlot() { return m_canvas; }
+const QPLayeredCanvas& QPCanvas::asQwtPlot() const { return m_canvas; }
 
 QwtPlotPicker& QPCanvas::getSelecter() { return m_picker; }
 
@@ -1081,14 +1167,41 @@ QSize QPCanvas::minimumSizeHint() const { return QSize(); }
 
 // Protected Methods //
 
-void QPCanvas::setQPPlotter(QPPlotter* parent) { m_parent = parent; }
+void QPCanvas::setQPPlotter(QPPlotter* parent) {
+    m_parent = parent;
+    if(parent != NULL) {
+        PlotLoggerPtr log = loggerForEvent(PlotLogger::OBJECTS_MAJOR);
+        if(!log.null())
+            for(unsigned int i = 0; i < m_queuedLogs.size(); i++)
+                log->postMessage(m_queuedLogs[i]);
+        m_queuedLogs.clear();
+    }
+}
 
-PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) {
+PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) const {
     if(event == PlotLogger::NO_EVENTS || m_parent == NULL)
         return PlotLoggerPtr();
     if(event & m_parent->logEventFlags()) return m_parent->logger();
     else                                  return PlotLoggerPtr();
 }
+
+void QPCanvas::logObject(const String& className, void* address, bool creation,
+        const String& message) {
+    if(m_parent != NULL)
+        m_parent->logObject(className, address, creation, message);
+    else
+        m_queuedLogs.push_back(
+                PlotLogObject(className, address, creation, message));
+}
+
+void QPCanvas::logMethod(const String& className, const String& methodName,
+        bool entering, const String& message) {
+    if(m_parent != NULL)
+        m_parent->logMethod(className, methodName, entering, message);
+}
+
+QPAxesCache& QPCanvas::axesCache() { return m_stackCache; }
+const QPAxesCache& QPCanvas::axesCache() const { return m_stackCache; }
 
 void QPCanvas::mousePressEvent(QMouseEvent* event) {
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;

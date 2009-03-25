@@ -76,7 +76,9 @@ QPAnnotation::QPAnnotation(const PlotAnnotation& copy) :
     if(m_orient >= 360 || m_orient <= -360) m_orient %= 360;
 }
 
-QPAnnotation::~QPAnnotation() { }
+QPAnnotation::~QPAnnotation() {
+    logDestruction();
+}
 
 
 // Public Methods //
@@ -214,6 +216,7 @@ const QwtText& QPAnnotation::asQwtText() const { return m_label; }
 void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
+    logMethod("draw_", true);
     if(!m_label.isEmpty() && m_canvas != NULL) {
         painter->save();
 
@@ -251,6 +254,7 @@ void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
 
         painter->restore();
     }
+    logMethod("draw_", false);
 }
 
 }

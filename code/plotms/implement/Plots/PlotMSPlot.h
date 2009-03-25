@@ -27,9 +27,9 @@
 #ifndef PLOTMSPLOT_H_
 #define PLOTMSPLOT_H_
 
+#include <plotms/Data/PlotMSData.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
-#include <plotms/PlotMS/PlotMSData.h>
-#include <plotms/PlotMS/PlotMSPlotParameters.h>
+#include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotFactory.h>

@@ -596,7 +596,7 @@ def init_plot( fitter, n ):
         fitter._p=asaplot()
         fitter._p.hold()
         fitter._p.clear()
-        fitter._p.set_panels(nrow, ncol)
+        fitter._p.set_panels(nrow, ncol, ganged=False)
 
 
 ### plot
@@ -637,12 +637,16 @@ def plot( fitter, irow, fitted, residual ):
 		myp.set_line(label=label0[0])
 	else:
 		myp.set_line(label=label0[1])
-	myp.plot(x,y)
+        xlim=[min(x),max(x)]
 	ymin=min(y)
 	ymax=max(y)
 	ymin=ymin-(ymax-ymin)*0.1
 	ymax=ymax+(ymax-ymin)*0.1
 	ylim=[ymin,ymax]
+        mya=myp.subplots[irow]['axes']
+        myp.axes.set_xlim(xlim)
+	myp.axes.set_ylim(ylim)
+	myp.plot(x,y)
 
         # plot fitted result
         if ( fitted ):
@@ -664,14 +668,16 @@ def plot( fitter, irow, fitted, residual ):
                 y=ma.masked_array(fitter.fitter.getfit(),mask=logical_not(allmsk))
                 myp.plot(x,y)
 
-        xlim=[min(x),max(x)]
-        myp.axes.set_xlim(xlim)
-	myp.axes.set_ylim(ylim)
         xlab=fitter.data._getabcissalabel(fitter._fittedrow)
         ylab=fitter.data._get_ordinate_label()
         tlab=fitter.data._getsourcename(fitter._fittedrow)
-        myp.set_axes('xlabel',xlab)
-        myp.set_axes('ylabel',ylab)
-        myp.set_axes('title',tlab)
+        if ( irow == 0 ):
+                myp.set_axes('title',tlab)
+        nr=myp.rows
+        nc=myp.cols
+        if ( irow % nr == 0 ):
+                myp.set_axes('ylabel',ylab)
+        if ( irow/nr == nc-1 ):
+                myp.set_axes('xlabel',xlab)
         myp.release()
         

@@ -106,7 +106,9 @@ QPRasterPlot::QPRasterPlot(const RasterPlot& copy) : m_data(copy.rasterData()),
     setDisplayMode(QwtPlotSpectrogram::ContourMode);
 }
 
-QPRasterPlot::~QPRasterPlot() { }
+QPRasterPlot::~QPRasterPlot() {
+    logDestruction();
+}
 
 
 // Public Methods //
@@ -221,7 +223,11 @@ void QPRasterPlot::setContourLines(const vector<double>& lines) {
 void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
           const QwtScaleMap& yMap, const QRect& canvasRect,
           unsigned int drawIndex, unsigned int drawCount) const {
-    if(!canvasRect.isValid()) return;
+    logMethod("draw_", true);
+    if(!canvasRect.isValid()) {
+        logMethod("draw_", false);
+        return;
+    }
     
     QRect adjArea = canvasRect;    
     
@@ -252,6 +258,7 @@ void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
     }
     
     QwtPlotSpectrogram::draw(painter, xMap, yMap, adjArea);
+    logMethod("draw_", false);
 }
 
 

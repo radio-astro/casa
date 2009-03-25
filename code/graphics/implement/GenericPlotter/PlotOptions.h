@@ -43,7 +43,8 @@ namespace casa {
 // ENUMS //
 ///////////
 
-// Enum for the four plot axes.
+// Enum for the four plot axes.  If this enum is changed, PlotCanvas::allAxes()
+// needs to be updated.
 enum PlotAxis {
     X_BOTTOM = 1, X_TOP = 2, Y_LEFT = 4, Y_RIGHT = 8
 };
@@ -70,7 +71,8 @@ enum PlotCursor {
 // one layer will not affect the others.  This is mainly used to separate items
 // that are costly to draw (i.e. scatter plots with many points) from
 // interaction-type items (i.e. annotations and selections).  The layers share
-// axes and are otherwise transparent to the user.
+// axes and are otherwise transparent to the user.  If this enum is changed,
+// PlotCanvas::allLayers() needs to be updated.
 enum PlotCanvasLayer {
     MAIN       = 1, // "Main" or bottom layer.
     ANNOTATION = 2  // Annotations or top layer.
@@ -531,9 +533,14 @@ public:
     bool operator!=(const PlotCoordinate& rh) const;
     
 private:
-    System m_system; // system
-    double m_x;      // x value
-    double m_y;      // y value
+    // Coordinate system.
+    System m_system;
+    
+    // X value.
+    double m_x;
+    
+    // Y value.
+    double m_y;
 };
 
 
@@ -577,23 +584,37 @@ public:
     bool isValid() const;
     
 private:
-    PlotCoordinate m_upperLeft;  // upper left coordinate
-    PlotCoordinate m_lowerRight; // lower right coordinate
+    // Upper-left coordinate.
+    PlotCoordinate m_upperLeft;
+    
+    // Lower-right coordinate.
+    PlotCoordinate m_lowerRight;
 };
 
 
 // A PlotAxesStack is basically a list of PlotRegions as well as axis
 // information that provides stack functionality such as a current index, and
 // moving up and down the stack.  A valid stack has a "base" followed by zero
-// or more PlotRegions.
+// or more PlotRegions.  A stack can optionally have a limit on its length;
+// adding to the stack after it reaches its length will remove the oldest
+// members after the base.  The smallest value this limit can be is 2, (base +
+// 1 value).
 class PlotAxesStack {
 public:
-    // Constructor for empty stack.
-    PlotAxesStack();
+    // Constructor for empty stack.  Length limits with values <= 1 mean no
+    // limit.
+    PlotAxesStack(int lengthLimit = -1);
     
     // Destructor.
     ~PlotAxesStack();
     
+    
+    // Gets/Sets the length limit on this stack.  Values <= 1 mean no limit.
+    // <group>
+    int lengthLimit() const;
+    void setLengthLimit(int lengthLimit);
+    void clearLengthLimit() { setLengthLimit(-1); }
+    // </group>
     
     // Returns whether the stack is valid (has size > 0) or not.
     bool isValid() const;
@@ -639,9 +660,23 @@ public:
     PlotRegion moveAndReturn(int delta);
     
 private:
-    vector<PlotRegion> m_stack;               // Stack.
-    vector<pair<PlotAxis, PlotAxis> > m_axes; // Axes.
-    unsigned int m_stackIndex;                // Stack index.
+    // Length limit.
+    int m_lengthLimit;
+    
+    // Region stack.
+    vector<PlotRegion> m_stack;
+    
+    // Axes stack.
+    vector<pair<PlotAxis, PlotAxis> > m_axes;
+    
+    // Stack index.
+    unsigned int m_stackIndex;
+    
+    
+    // Shrinks the region and axes stack to the given size, discarding the
+    // oldest UNLESS the stack index is in the elements to be discarded.  In
+    // this case, the element referenced by the index is also kept.
+    void shrinkStacks(unsigned int n);
 };
 
 

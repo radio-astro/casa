@@ -25,7 +25,7 @@
 //# $Id:  $
 #include <plotms/PlotMS/PlotMSParameters.h>
 
-#include <plotms/PlotMS/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 namespace casa {
 
@@ -145,8 +145,8 @@ void PlotMSWatchedParameters::updateFlags(int updateFlags, bool redrawRequired) 
 
 // Constructors/Destructors //
 
-PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel) :
-        itsLogLevel_(logLevel) { }
+PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel, bool debug) :
+        itsLogLevel_(logLevel), itsLogDebug_(debug) { }
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) :
         PlotMSWatchedParameters(copy) {
@@ -159,9 +159,12 @@ PlotMSParameters::~PlotMSParameters() { }
 // Public Methods //
 
 PlotMSLogger::Level PlotMSParameters::logLevel() const { return itsLogLevel_; }
-void PlotMSParameters::setLogLevel(PlotMSLogger::Level level) {
-    if(level != itsLogLevel_) {
+bool PlotMSParameters::logDebug() const { return itsLogDebug_; }
+
+void PlotMSParameters::setLogLevel(PlotMSLogger::Level level, bool debug) {
+    if(level != itsLogLevel_ || debug != itsLogDebug_) {
         itsLogLevel_ = level;
+        itsLogDebug_ = debug;
         updateFlag(LOG, true, false);
     }
 }
@@ -171,13 +174,14 @@ bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
     const PlotMSParameters* o = dynamic_cast<const PlotMSParameters*>(&other);
     if(o == NULL) return false;
     
-    if(updateFlags & LOG) return itsLogLevel_ == o->itsLogLevel_;
+    if(updateFlags & LOG) return itsLogLevel_ == o->itsLogLevel_ &&
+                                 itsLogDebug_ == o->itsLogDebug_;
     else                  return false;
 }
 
 PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
     PlotMSWatchedParameters::operator=(copy);
-    setLogLevel(copy.logLevel());
+    setLogLevel(copy.logLevel(), copy.logDebug());
     return *this;
 }
 

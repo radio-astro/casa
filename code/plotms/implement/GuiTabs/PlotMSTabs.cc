@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/PlotMS/PlotMSTabs.qo.h>
+#include <plotms/GuiTabs/PlotMSTabs.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -87,6 +87,7 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMS* parent, PlotMSPlotter* plotter) :
             SLOT(toolButtonStyleChanged(int)));
     connect(logLevel, SIGNAL(currentIndexChanged(const QString&)),
             SLOT(logLevelChanged(const QString&)));
+    connect(logDebug, SIGNAL(toggled(bool)), SLOT(logDebugChanged(bool)));
 }
 
 PlotMSOptionsTab::~PlotMSOptionsTab() { }
@@ -101,6 +102,10 @@ void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         logLevel->blockSignals(true);
         setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));
         logLevel->blockSignals(false);
+        
+        logDebug->blockSignals(true);
+        logDebug->setChecked(itsParameters_.logDebug());
+        logDebug->blockSignals(false);
     }
 }
 
@@ -118,9 +123,15 @@ void PlotMSOptionsTab::logLevelChanged(const QString& newLevel) {
     PlotMSLogger::Level l = PlotMSLogger::level(newLevel.toStdString(), &ok);
     if(ok) {
         itsParameters_.holdNotification(this);
-        itsParameters_.setLogLevel(l);
+        itsParameters_.setLogLevel(l, itsParameters_.logDebug());
         itsParameters_.releaseNotification();
     }
+}
+
+void PlotMSOptionsTab::logDebugChanged(bool value) {
+    itsParameters_.holdNotification(this);
+    itsParameters_.setLogLevel(itsParameters_.logLevel(), value);
+    itsParameters_.releaseNotification();
 }
 
 
@@ -655,9 +666,6 @@ void PlotMSPlotTab::tabChanged() {
                     newParams.selection() != params.selection());
         changedText(msAveragingLabel,
                     newParams.averaging() != params.averaging());
-        if(newParams.averaging().channel())
-            msAveragingChannelValue->setValue(100);
-        else msAveragingChannelValue->setValue(0);
         
         // Axes tab, widgets
         vector<pair<PMS::Axis,unsigned int> > laxes= plot->data().loadedAxes();
