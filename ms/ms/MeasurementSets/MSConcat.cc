@@ -64,7 +64,8 @@ namespace casa {
 MSConcat::MSConcat(MeasurementSet& ms):
   MSColumns(ms),
   itsMS(ms),
-  itsFixedShape(isFixedShape(ms.tableDesc())), newSourceIndex_p(-1)
+  itsFixedShape(isFixedShape(ms.tableDesc())), 
+  newSourceIndex_p(-1), newSPWIndex_p(-1)
 {
 
 
@@ -123,13 +124,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 void MSConcat::concatenate(const MeasurementSet& otherMS)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate"));
-  //  if (otherMS.tableInfo().subType() != "UVFITS") {
-  //    log << "Measurement set was not created from a UVFITS file."
-  //	<< LogIO::EXCEPTION;
-  //}
+
   log << "Appending " << otherMS.tableName() 
       << " to " << itsMS.tableName() << endl;
 
+
+  // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doImagingWeight=False, doModelData=False;
   Bool doFloatData=False;
   if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
@@ -144,7 +144,6 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
        	<< LogIO::EXCEPTION;
 
   }
-
   if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
       otherMS.tableDesc().isColumn("MODEL_DATA"))
     doModelData=True;
@@ -156,7 +155,6 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
     log << "You may wish to create this column by loading " 
 	<< otherMS.tableName() 
 	<< " in imager or calibrater "  	<< LogIO::EXCEPTION;
-
   }
   if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
       otherMS.tableDesc().isColumn("CORRECTED_DATA"))
@@ -166,7 +164,6 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
     log << itsMS.tableName() 
 	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
 	<< LogIO::EXCEPTION;
-
   if (itsMS.tableDesc().isColumn("IMAGING_WEIGHT") && 
       otherMS.tableDesc().isColumn("IMAGING_WEIGHT"))
     doImagingWeight=True;
@@ -176,6 +173,9 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
 	<< " has IMAGING_WEIGHT column but not " << otherMS.tableName() 
 	<< LogIO::EXCEPTION;
 
+  
+  // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
+  //   is the same
   const ROMSMainColumns otherMainCols(otherMS);
   if (otherMS.nrow() > 0) {
     if (itsFixedShape.nelements() > 0) {
@@ -189,6 +189,9 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
     }
     checkCategories(otherMainCols);
   }
+
+
+  // merge ANTENNA and FEED
   uInt oldRows = itsMS.antenna().nrow();
   const Block<uInt> newAntIndices = 
     copyAntennaAndFeed(otherMS.antenna(), otherMS.feed());
@@ -199,18 +202,12 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
 	<< " rows and matched " << matchedRows 
 	<< " from the antenna subtable" << endl;
   }
-  //See if there is a source table a concatenate and reindex that before
-  //the field. 
+
+  //See if there is a SOURCE table and concatenate and reindex it
   copySource(otherMS);
-  oldRows = itsMS.field().nrow();
-  const Block<uInt> newFldIndices = copyField(otherMS.field());
-  {
-    const uInt addedRows = itsMS.field().nrow() - oldRows;
-    const uInt matchedRows = otherMS.field().nrow() - addedRows;
-    log << "Added " << addedRows 
-	<< " rows and matched " << matchedRows 
-	<< " from the field subtable" << endl;
-  }
+
+
+  // DATA_DESCRIPTION
   oldRows = itsMS.dataDescription().nrow();
   const Block<uInt> newDDIndices = copySpwAndPol(otherMS.spectralWindow(),
 						 otherMS.polarization(),
@@ -222,6 +219,21 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
 	<< " rows and matched " << matchedRows 
 	<< " from the data description subtable" << endl;
   }
+
+  // correct the spw entries in the SOURCE table
+  updateSource();
+
+  // FIELD
+  oldRows = itsMS.field().nrow();
+  const Block<uInt> newFldIndices = copyField(otherMS.field());
+  {
+    const uInt addedRows = itsMS.field().nrow() - oldRows;
+    const uInt matchedRows = otherMS.field().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the field subtable" << endl;
+  }
+
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
   uInt curRow = itsMS.nrow();
@@ -272,7 +284,7 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
   ScalarColumn<Int>& thisStateId = stateId();
   const ROArrayColumn<Double>& otherUvw = otherMainCols.uvw();
   ArrayColumn<Double>& thisUvw = uvw();
-  //  const ROArrayColumn<Complex>& otherData = otherMainCols.data();
+
   ROArrayColumn<Complex> otherData;
   ArrayColumn<Complex> thisData;
   ROArrayColumn<Float> otherFloatData;
@@ -285,7 +297,7 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
     thisData.reference(data());
     otherData.reference(otherMainCols.data());
   }
-  // ArrayColumn<Complex>& thisData = data();
+
   const ROArrayColumn<Float>& otherSigma = otherMainCols.sigma();
   ArrayColumn<Float>& thisSigma = sigma();
   const ROArrayColumn<Float>& otherWeight = otherMainCols.weight();
@@ -301,13 +313,12 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
   ScalarColumn<Bool>& thisFlagRow = flagRow();
   const ROScalarColumn<Int>& otherObsId=otherMainCols.observationId();
   Vector<Int> obsIds=otherObsId.getColumn();
-  //Int numObsId=
+
+  // OBSERVATION
   copyObservation(otherMS.observation(), obsIds);
+  // POINTING
   copyPointing(otherMS.pointing(), newAntIndices);
 
-  // This needs to be fixed when I relaxe the restriction that the input MS
-  // must have been created using the uvfits filler.
-  //const Int curObsId =  observationId()(curRow-1) + 1;
   ScalarColumn<Int>& thisObsId = observationId();
   const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
   ArrayColumn<Float>& thisWeightSp = weightSpectrum();
@@ -681,14 +692,11 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
 	if(newSourceIndex_p.isDefined(oldIndex)){
 	  fieldCols.sourceId().put(fldMap[f], newSourceIndex_p(oldIndex));
 	}
-      }
-
- 
+      } 
     }
   }
   return fldMap;
 }
-
 
 Bool MSConcat::copySource(const MeasurementSet& otherms){
   doSource_p=False;
@@ -715,12 +723,22 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
       const ROTableRow otherSourceRow(otherSource);
       TableRow sourceRow(newSource);
       RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
+      RecordFieldId spwIdId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
+      // the spw ids
+      Vector<Int> otherSpectralWindowId=otherSourceCol.spectralWindowId().getColumn();
+
       for (Int k =0 ; k < numrows ; ++k){
 	sourceRecord = otherSourceRow.get(k);
-	newSourceIndex_p.define(otherId(k), maxSrcId+1+otherId(k)); 
 	//define a new source id
-
+	newSourceIndex_p.define(otherId(k), maxSrcId+1+otherId(k)); 
 	sourceRecord.define(sourceIdId, maxSrcId+1+otherId(k));
+
+	//define a new temporary spw id by subtracting 10000
+	// later to be replaced in updateSource
+	if(otherSpectralWindowId(k)>=0){
+	  sourceRecord.define(spwIdId, otherSpectralWindowId(k)-10000);
+	}	
+	
 	sourceRow.putMatchingFields(destRow, sourceRecord);
 
 	++destRow;
@@ -728,21 +746,53 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
 
       doSource_p=True;
     }
-
-      
-
-
   }
 
   return doSource_p;
+}
 
+Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPol 
+                              //   but before copyField!
+  Bool rval(False);
 
+  if(doSPW_p){ // the SPW table was rearranged
+    if(Table::isReadable(itsMS.sourceTableName())){
+      
+      MSSource& newSource=itsMS.source();
+      Int numrows_this=newSource.nrow();
+      
+      if(numrows_this > 0){  // the source table is not empty
+	
+	// the spw id
+	MSSourceColumns& sourceCol=source();
+	Vector<Int> thisSPWId=sourceCol.spectralWindowId().getColumn();
+	// convert the string containing the column spwid into a record field ID
+	RecordFieldId sourceSPWId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
+	
+	TableRow sourceRow(newSource);
+	TableRecord sourceRecord;
+
+	// loop over the columns of the (first) input table 
+	for (Int j =0 ; j < numrows_this ; ++j){
+	  if(thisSPWId(j)<-1){ // came from the second input table
+	    sourceRecord = sourceRow.get(j);
+	    sourceRecord.define(sourceSPWId, newSPWIndex_p(thisSPWId(j)+10000) );
+	    sourceRow.putMatchingFields(j, sourceRecord);
+	    rval = True;
+	  }
+	} // end for j
+      }
+      
+    }
+  }
+  return rval;
 }
 
 
 Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 				    const MSPolarization& otherPol,
 				    const MSDataDescription& otherDD) {
+
   const uInt nDDs = otherDD.nrow();
   Block<uInt> ddMap(nDDs);
   
@@ -759,22 +809,10 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 
   const ROMSDataDescColumns otherDDCols(otherDD);
   MSDataDescColumns& ddCols = dataDescription();
-  // Get a guess at the tolerance
-  /*  Double tolerance;
-  {
-    ROArrayColumn<Double> frequencies(spw,
-		    MSSpectralWindow::columnName(MSSpectralWindow::CHAN_FREQ));
-    Vector<Double> frequ=frequencies(0);
-    tolerance=max(frequ)/1.0e6;
-  }
-  
-  const Quantum<Double> freqTol(tolerance, "Hz");
-  */
+
   const Quantum<Double> freqTol=itsFreqTol;
-  const String& spwIdxName = 
-    MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID);
-  const String& polIdxName = 
-    MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID);
+  const String& spwIdxName = MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID);
+  const String& polIdxName = MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID);
   Vector<String> ddIndexCols(2);
   ddIndexCols(0) = spwIdxName;
   ddIndexCols(1) = polIdxName;
@@ -785,33 +823,36 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
   Vector<Stokes::StokesTypes> corrPol;
   itsChanReversed.resize(nDDs);
   itsChanReversed.set(False);
+  newSPWIndex_p.clear();
+  doSPW_p = False;
+  // loop over the rows of the other data description table
   for (uInt d = 0; d < nDDs; d++) {
     Bool matchedDD = True;
     DebugAssert(otherDDCols.spectralWindowId()(d) >= 0 &&
-		otherDDCols.spectralWindowId()(d) < 
-		static_cast<Int>(otherSpw.nrow()), AipsError);
-    const uInt otherSpwId = 
-      static_cast<uInt>(otherDDCols.spectralWindowId()(d));
+		otherDDCols.spectralWindowId()(d) < static_cast<Int>(otherSpw.nrow()), 
+		AipsError);
+    const uInt otherSpwId = static_cast<uInt>(otherDDCols.spectralWindowId()(d));
     DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
+
     Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
-    *newSpwPtr = 
-      spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
-		       static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
-		       otherSpwCols.totalBandwidthQuant()(otherSpwId),
-		       otherSpwCols.ifConvChain()(otherSpwId), freqTol, 
-		       otherFreqs, itsChanReversed[d]);
+    *newSpwPtr = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
+				  static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
+				  otherSpwCols.totalBandwidthQuant()(otherSpwId),
+				  otherSpwCols.ifConvChain()(otherSpwId), freqTol, 
+				  otherFreqs, itsChanReversed[d]);
     
     if (*newSpwPtr < 0) {
       // need to add a new entry in the SPECTRAL_WINDOW subtable
       *newSpwPtr= spw.nrow();
       spw.addRow();
       spwRow.putMatchingFields(*newSpwPtr, otherSpwRow.get(otherSpwId));
+      // fill map to be used by updateSource()
+      newSPWIndex_p.define(otherSpwId, *newSpwPtr); 
       // There cannot be an entry in the DATA_DESCRIPTION Table
       matchedDD = False;
+      doSPW_p = True;      
     }
     
-
-
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&
 		otherDDCols.polarizationId()(d) < 
 		static_cast<Int>(otherPol.nrow()), AipsError);

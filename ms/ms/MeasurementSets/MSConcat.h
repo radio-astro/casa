@@ -115,6 +115,7 @@ private:
 			    const MSPolarization& otherPol,
 			    const MSDataDescription& otherDD);
   Bool copySource(const MeasurementSet& otherms);
+  Bool updateSource();
 
   void updateModelDataKeywords();
 
@@ -124,7 +125,9 @@ private:
   Quantum<Double> itsDirTol;
   Vector<Bool> itsChanReversed;
   SimpleOrderedMap <Int, Int> newSourceIndex_p;
+  SimpleOrderedMap <Int, Int> newSPWIndex_p;
   Bool doSource_p;
+  Bool doSPW_p;
 };
 
 } //# NAMESPACE CASA - END
