@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the image continuum subtraction task                           -->
+<!-- step 1: construct region with the region manger tool, rg               -->
+<!-- step 2: do the subtraction, with ia.continuumsub (image analysis tool) -->
+<!--                                                                        -->
+<!-- TODO: Add polarization selection                                       -->
+<!--       Add fitorder option value                                        -->
+<!--       Verify that region selection with region manager works           -->
+<!--       Expand region selection                                          -->
+
+<task type="function" name="imcontsub">
+<shortdescription>Subtracts specified continuum channels from a spectral line data set</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true" >
+    	<description>Name of the input spectral line image</description>
+    	<value></value>
+        <example>inputfile=ngc5921_task.image</example>
+    </param>
+
+    <param type="string" name="linefile" >
+    	<description>Output line-cont image file name</description>
+    	<value></value>
+        <example>outline=ngc5921_line.image</example>
+    </param>
+
+    <param type="string" name="contfile" >
+    	<description>Output continuum image file name</description>
+    	<value></value>
+        <example>outcont=ngc5921_cont.image</example>
+    </param>
+
+
+    <param type="int" name="fitorder" >
+    	<description>Polynomial order for the continuum estimation</description>
+    	<value>0</value>
+	 
+        <example>fitorder=2</example>
+    </param>
+
+    <param type="string" name="region">
+        <description>Image region to process (see viewer)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="box">
+        <description>Select one or more box regions</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="chans" >
+	<description>Select the channel ranges for continuum</description>
+    	<value></value>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <value></value>
+    </param>
+
+    <constraints>
+    </constraints>
+</input>
+<returns type="void"/>
+
+
+
+<example>
+
+        The input is a spectral line image image.  If more than one spectral
+        window, they must be analyzed identically.   The
+        continuum channels are specified and two output images are made: a
+        continuum image and a continuum-subtracted spectral line image.
+
+	The continuum subtraction can be applied to either the whole image 
+	(default) or a selected regions.  Regions are specified via 
+	the box or region file constructed by the viewer.
+
+	Keyword arguments:
+	imagename -- Input spectral line image
+		Default: none; Example: imagename='ngc5921_task.im'
+	linefile -- Name of output line image
+		Default: none; Example: outline='ngc5921_line.im'
+	contfile -- Name of output continuum image
+		Default: none; Example: contfile='ngc5921_cont.im'
+        fitorder -- Polynomial order for the continuum estimation.
+                Default: 0; Example fitorder=2
+        region -- region file.
+                Use the viewer, then region manager to select regions of
+                   the image to process.  Similar to box, but graphical
+                Default: none
+                Example: region='myimage.im.rgn'
+	box --  A box region on the directional plane
+	        ONLY pixel values acceptable at this time.
+		Default: none (whole 2-D plane); Example: box='10,10,50,50'
+	chans -- channel numbers go select for the continuum,
+	        ONLY channel numbers accepted at this time.
+		Default: none (all); 
+                  Example: chans='3~6;>40'
+	stokes -- Stokes parameters to image, may or may not be separated
+                by commas but best if you use commas.
+                Default: none (all); Example: stokes='IQUV';
+                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+
+
+</example>
+
+
+</task>
+
+</casaxml>
+

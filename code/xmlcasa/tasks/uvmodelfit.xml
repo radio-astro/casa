@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="uvmodelfit">
+<shortdescription>Fit a single component source model to the uv data</shortdescription>
+<description>
+	Fit a single component source model to the uv data
+</description>
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Nome of input visibility file</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="field">
+		<description>Select field using field id(s) or field name(s)</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="spw">
+		<description>Select spectral window/channels</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="selectdata">
+		<description>Other data selection parameters</description>
+		<value>True</value>
+	</param>
+
+	<param type="string" name="timerange" subparam="true">
+		<description>Select data based on time range</description>
+		<value></value>
+	</param>
+
+	<param type="any" name="uvrange" subparam="true">
+		<description>Select data within uvrange (default units meters)</description>
+		<any type="variant"/>
+		<value type="string"></value>
+	</param>
+
+	<param type="string" name="antenna" subparam="true">
+		<description>Select data based on antenna/baseline</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="scan" subparam="true">
+		<description>Scan number range</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="msselect" subparam="true">
+		<description>Optional complex data selection (ignore for now)</description>
+		<value></value>
+	</param>
+
+	<param type="int" name="niter">
+		<description>Number of fitting iterations to execute</description>
+		<value>5</value>
+	</param>
+
+	<param type="string" name="comptype">
+		<description>component model type</description>
+		<value>P</value>
+		<allowed kind="enum">
+                   <value>P</value>
+                   <value>G</value>
+                   <value>D</value>
+		</allowed>
+	</param>
+
+	<param type="doubleArray" name="sourcepar">
+		<description>Starting guess for component parameters</description>
+		<value>
+		   <value>1.0</value>
+		   <value>0.0</value>
+		   <value>0.0</value>
+	        </value>
+	</param>
+
+	<param type="boolArray" name="varpar">
+		<description>Control which parameters to let vary in the fit</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="outfile">
+		<description>Optional output component list table</description>
+		<value></value>
+	</param>
+   <constraints>
+	<when param="selectdata">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="timerange"><value type="string"/></default>
+			<default param="uvrange"><value type="string"/></default>
+			<default param="antenna"><value type="string"/></default>
+			<default param="scan"><value type="string"/></default>
+			<default param="msselect"><value type="string"/></default>
+		</equals>
+	</when>
+   </constraints>
+</input>
+<example>
+
+	Fit a single component source model to the uv data:
+
+	Keyword arguments:
+	vis -- Name of input visibility file 
+		default: none; example: vis='ngc5921.ms'
+		
+	--- Data Selection
+        field -- Select data based on field id(s) or name(s)
+                default: '' (all); example: field='1'
+                field='0~2' # field ids inclusive from 0 to 2
+                field='3C*' # all field names starting with 3C
+        spw -- Select data based on spectral window
+                default: '' (all); example: spw='1'
+                spw='&lt;2' #spectral windows less than 2
+                spw='&gt;1' #spectral windows greater than 1
+	selectdata -- Select a subset of the visibility using MSSelection
+                default: False; example: selectdata=True
+        timerange  -- Select data based on time range:
+                default = '' (all); example,
+                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                Note: YYYY/MM/DD can be dropped as needed:
+                timerange='09:14:0~09:54:0' # this time range
+                timerange='09:44:00' # data within one integration of time
+                timerange='&gt;10:24:00' # data after this time
+                timerange='09:44:00+00:13:00' #data 13 minutes after time
+        uvrange -- Select data within uvrange (default units kilo-lambda)
+               default: '' (all); example:
+               uvrange='0~1000kl'; uvrange from 0-1000 kilo-lamgda
+               uvrange='&gt;4kl';uvranges greater than 4 kilo lambda
+               uvrange='0~1000km'; uvrange in kilometers
+        antenna -- Select data based on antenna/baseline
+                default: '' (all); example: antenna='5&amp;6' baseline 5-6
+                antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
+                antenna='5' # all baselines with antenna 5
+                antenna='5,6' # all baselines with antennas 5 and 6
+        scan -- Select data based on scan number - New, under developement
+                default: '' (all); example: scan='&gt;3'
+        msselect -- Optional data selection (field,spw,time,etc)
+                default:'' means select all; example:msselect='FIELD_ID==0', 
+		msselect='FIELD_ID IN [0,1,2]' means select fields 0,1 and 2
+		msselect='FIELD_ID &lt;= 1 means select fields 0, 1
+                msselect='FIELD_ID==0 &amp;&amp; ANTENNA1 IN [0] &amp;&amp; ANTENNA2 IN [2:26]'
+		   means select field 0 and antennas 0 to 26, except antenna 1.
+                Other msselect fields are: 'DATA_DESC_ID', 'SPECTRAL_WINDOW_ID',
+		'POLARIZATION_ID', 'SCAN_NUMBER', 'TIME', 'UVW'
+		See ccokbook for more details
+
+	niter -- Number of fitting iterations to execute
+		default: 5; example: niter=20
+	comptype -- component model type
+		default: 'P';
+		Options: 'P' (point source), 'G' (elliptical gaussian),
+		         'D' (elliptical disk)
+	sourcepar -- Starting guess for component parameters
+		IF comptype = 'P' then
+		  sourcepar = [flux,xoff,yoff] where
+		    flux = Jy, xoff = arcsec, yoff = arcsec.
+		IF comptype = 'G' or 'D', then
+		  sourcepar = [flux,xoff,yoff,majax,axrat,pos] where
+		    majax = arcsec, axrat &lt; 1, pos=angle in deg
+		default: [1,0,0];  (for comptype='P')
+	varypar -- Control which parameters to let vary in the fit
+		default: [] (all vary);
+		example: vary=[False,True,True]
+         examples:
+
+	     fit a point:
+	        comptype = 'P'
+		sourcepar = [0.4,0.2,-0.3];
+		varypar = [T,T,T]
+
+	     fit a circular Gaussian:
+		comptype = 'G'
+		sourcepar = [1.4,0.3,-0.2,0.3, 1, 0]
+		varypar    = [ T , T ,  T , T , F, F]
+		    
+
+	outfile -- Optional output component list table
+		default: ''; example: outfile='componentlist.cl'
+
+
+</example> 
+
+</task>
+</casaxml>

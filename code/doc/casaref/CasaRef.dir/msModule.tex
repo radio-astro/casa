@@ -1,0 +1,63 @@
+%% Copyright (C) 1999,2000,2001,2002,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+\providecommand{\dataSelectionURL}{http://almasw.hq.eso.org/almasw/bin/view/OFFLINE/DataSelection}
+\begin{ahmodule}{ms}{Module for measurement set operations}
+
+\begin{ahdescription}
+  A \casa\ measurement set is a \casa\ table which obeys
+  specific conventions. These conventions are defined in
+  \htmladdnormallink{note 229}{../../notes/229/229.html}. Like all
+  \casa\ tables the measurement set will always appear as a
+  directory which contains a number of files and directories.
+
+  Measurement set tables come in two slightly different versions,
+  single dish and interferometric. Single dish measurement sets
+  store the observed data as real numbers in the \verb|FLOAT_DATA|
+  column of the measurement set, whereas interferometric ones use
+  complex numbers in the \verb|DATA| column.
+
+  A measurement set table can contain data from a variety of
+  different observations with different spectral or polarimetric
+  configurations, different pointings and different instruments. To
+  do this it needs to handle data with differing shapes. The data
+  shape referred to here is two-dimensional with the length of the
+  axes being the number of correlations and the number of channels
+  in the data. A typical shape might be \verb|[4, 1]|, which could
+  correspond to a continuum observation where the
+  \verb|[RR, LL, RL, LR]| polarizations where correlated. In the
+  same measurement set there may be data with a shape of
+  \verb|[1, 32]|, which corresponds to a spectral line observation,
+  with 32~channels, where only the \verb|[XX]| polarizations are
+  correlated.
+
+\end{ahdescription}
+
+\ahobjs{}
+\ahfuncs{}
+
+\input{ms.htex}
+\input{msplot.htex}
+\end{ahmodule}

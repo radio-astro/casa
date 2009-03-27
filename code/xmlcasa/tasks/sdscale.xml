@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+<!-- This is the param set for sdscale -->
+
+<task type="function" name="sdscale" startup="false">
+
+  <shortdescription>ASAP SD task: scale the sd spectra</shortdescription>
+
+  <description>
+        ASAP SD task (based on the ALMATST5 recommendations):
+        Scale the sd spectra
+
+        Task Version 2008-01-29 TT
+</description>
+
+  <input>
+
+    <param type="string" name="sdfile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="double" name="factor">
+	    <description>scaling factor</description>
+	    <value>1.0</value>
+    </param>
+
+    <param type="bool" name="scaletsys">
+            <description>scaling of associated Tsys</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="outfile">
+            <description>if specified write the scaled data to a separate scantable file</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+        Keyword arguments:
+        sdfile -- name of input SD dataset
+        factor -- scaling factor
+                  default: 1 (no scaling)
+        scaletsys -- scaling of associated Tsys
+                    default: True
+        outfile -- output file name 
+                   outfile='' will write the data to a file named,
+                   &lt;sdfile&gt;_scaled&lt;factor&gt;
+                   default: ''
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+
+
+        DESCRIPTION:
+
+        Task sdscale performs scaling of single-dish spectra.
+        By setting scaletsys = True, associated Tsys is also scaled.
+        Tsys informations are written into the file 'sdscale.log' 
+        as well as they are displayed in the terminal window. 
+        The sdfile can be any of ASAP, MS, SDFITS, or RPFITS format.
+        If outfile name is given or outfile=''(default), the scaled data is written
+        to a new file with the same format as the input data (Note: in case of the
+        RPFITS format input data, it will be written to SDFITS format).
+
+  </example>
+
+</task>
+
+</casaxml>

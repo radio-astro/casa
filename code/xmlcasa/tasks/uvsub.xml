@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="uvsub">
+	<shortdescription>Subtract/add model from/to the corrected visibility data.</shortdescription>
+	<description>
+        This function subtracts model visibility data from corrected visibility
+        data leaving the residuals in the corrected data column.  If the
+        parameter 'reverse' is set true, the process is reversed.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+                        <example>vis='ngc5921.ms'</example>
+		</param>
+
+		<param type="bool" name="reverse">
+			<description>reverse the operation (add rather than subtract)</description>
+			<value>False</value>
+		</param>
+
+                <constraints>
+                </constraints>
+	</input>
+<returns type="void"/>
+
+<example>
+        Help for uvsub task
+
+        This function subtracts model visibility data from corrected visibility
+        data leaving the residuals in the corrected data column.  If the
+        parameter 'reverse' is set true, the process is reversed.
+
+        Keyword arguments:
+        vis -- Name of input visibility file (MS)
+                default: none; example: vis='ngc5921.ms'
+        reverse -- Reverse the operation (add rather than subtract)
+                default: False; example: reverse=true
+
+        uvsub(vis='ngc5921.ms', reverse=False)
+
+ </example>
+ </task>
+ </casaxml>

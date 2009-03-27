@@ -1,0 +1,216 @@
+%% Copyright (C) 1999,2000,2001,2002,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+\begin{ahmodule}{calibrater}{Module for synthesis calibration}
+\ahinclude{calibrater.g}
+
+\begin{ahdescription}
+
+The {\tt calibrater} module provides synthesis calibration
+capabilities within \aipspp. The primary purpose of this module is to
+solve for calibration components, and to optionally apply these
+corrections to the observed data. The calibration module is designed
+to be used in conjunction with the \ahlink{imager}{imager} module
+which provides support for synthesis imaging.
+
+The calibration model adopted by {\tt calibrater} is that of the
+Hamaker-Bregman-Sault measurement equation for synthesis radio
+telescopes (see \htmladdnormallink{\aipspp Note
+189}{../../notes/189/189.html}). This represents calibration corrections as
+matrices acting on 4-vectors representing the four possible
+correlations measured by an interferometer in full polarization. The
+calibration matrices cover a diversity of instrumental effects,
+including: parallactic angle and feed configuration (P,C), atmospheric
+phase (T), electronic gain (G), bandpass (B), instrumental
+polarization (D), baseline-based (correlator) corrections (M, MF), 
+and baseline-based fringe-fitting (K).
+
+The calibration data are stored in \aipspp tables and can be directly
+examined, manipulated or edited in the Glish command line interpreter
+(CLI) via the \ahlink{table}{table} tool. The calibration tables may be
+interpolated when applied to the observed uv-data.
+
+The solver allows the calibration components to be determined over
+different time intervals, thus allowing, as an example, the solution
+for atmospheric phase effects (T) over a much shorter interval than
+electronic gain terms (G). This also allows polarization
+self-calibration for time variable instrumental polarization
+corrections.
+
+The measurement equation is designed to model calibration effects for
+a generic radio telescope and the calibration and synthesis modules
+are, in general, not instrument specific.
+
+Each {\tt calibrater} tool created acts on a specified Measurement Set
+(MS), containing the observed uv-data. The Measurement Set format is
+described in (see \htmladdnormallink{\aipspp Note
+191}{../../notes/191/191.html}). The interaction of the {\tt calibrater}
+tool with specific MS data columns is important. The observed data, as
+recorded by the instrument, are stored in the {\bf DATA} column of the
+MS, and are referred to as the observed data. If calibration
+corrections are applied by {\tt calibrater}, the resulting calibrated
+data are stored in a separate {\bf CORRECTED\_DATA} column in the
+MS. These columns can be selected when imaging the data using the
+\ahlink{imager}{imager} tool. A further MS column is used by {\tt
+calibrater}, namely the {\bf MODEL\_DATA} column. The difference
+between the model data and corrected data columns is used to form
+$\chi^2$, when solving for individual calibration components. It is
+important to set the {\bf MODEL\_DATA} column before using {\tt
+calibrater} to solve for calibration. This can be done using the {\tt
+imager} functions \ahlink{setjy}{imager:imager.setjy} or
+\ahlink{ft}{imager:imager.ft}.
+
+The capabilities of the {\tt calibrater} module are made available by
+including the associated Glish initialization script for the module, as:
+
+\begin{verbatim}
+- include 'calibrater.g'
+T
+\end{verbatim}
+
+where a hyphen precedes user input. The Glish response is indicated
+without the prompt.
+
+A {\tt calibrater} tool is created and attached to a specified
+measurement set as indicated in the following example:
+
+\begin{verbatim}
+- c:=calibrater('3C273XC1.MS');
+T
+\end{verbatim}
+
+A variety of functions can be invoked for any given {\tt calibrater}
+tool. These functions fall broadly into two categories: i) functions
+which set parameters to be used by the calibrater; and ii) the
+execution of explicit calibration procedures such as solving for, or
+applying calibration corrections.
+
+Option (i) may equivalently be viewed as setting the state of the {\tt
+calibrater} tool. These functions are named with the prefix {\tt
+set}, such as in {\tt setdata} and {\tt setapply}. When created, the
+{\tt calibrater} tool sets default internal information for each of
+the calibration components (measurement equation correction
+matrices). This information is modified using the {\tt setapply}
+and {\tt setsolve} functions as shown in the following example:
+
+\begin{verbatim}
+#
+# Set the solution interval for the electronic gain matrix (G) to
+# 300 seconds, specify input and output calibration table names,
+# and enable this component for phase and amplitude solution.
+# Use antenna number 3 as the reference for the solutions.
+#
+- c.setapply ("G", 0.0, "gcal_in", "");
+T
+- c.setsolve ("G", 300, F, 3, "gcal_out", F);
+T
+\end{verbatim}
+
+Once the state of the {\tt calibrater} tool has been set, explicit
+calibration functions, as outlined in option (ii) above, are executed as
+follows:
+
+\begin{verbatim}
+#
+# Solve for the selected calibration components
+#
+- c.solve()
+T
+#
+# Apply the calibration components to the measurement set data
+#
+- c.correct()
+T
+\end{verbatim}
+\end{ahdescription}
+
+\begin{ahexample}
+
+The following example illustrates the quickest way to perform simple
+self-calibration, starting from an input FITS file in the local
+area. The {\tt imager} module should be consulted for detailed
+information on the imaging functions.
+
+\begin{verbatim}
+#
+# Include the synthesis scripts
+#
+include 'imager.g';
+include 'calibrater.g';
+include 'ms.g';
+#
+# Construct a measurement set from the input FITS file
+#
+m:=fitstoms (msfile='3C273XC1.MS', fitsfile='3C273XC1.FITS');
+m.close(); 
+m.done();
+#
+# Create an imager tool
+#
+sk:=imager('3C273XC1.MS');
+#
+# Set image parameters
+#
+sk.setimage (nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec');
+#
+# Make a dirty image and deconvolve using CLEAN
+#
+sk.image ('observed', image='3C273XC1.dirty');
+sk.clean (niter=1000, threshold='3mJy', model='3C273XC1.clean.model');
+#
+# Fourier transform the model to the uv-plane
+#
+sk.ft (model='3C273XC1.clean.model');
+#
+# Close the imager tool
+#
+sk.close();
+sk.done();
+#
+# Create a calibrater tool
+#
+c:=calibrater('3C273XC1.MS');
+#
+# Select solution for electronic gain (G) and atmospheric phase (T)
+#
+c.setsolve ("G", 300.0, F, 3, "gcal_out", F);
+c.setsolve ("T", 30.0, T, 3, "tcal_out", F);
+#
+# Solve for the selected G and T components
+#
+c.solve();
+#
+# Close the calibrater tool
+#
+c.close();
+\end{verbatim}
+\end{ahexample}
+
+%\ahobjs{}
+%\ahfuncs{}
+
+\input{calibrater.htex}
+                                                                                              
+\end{ahmodule}

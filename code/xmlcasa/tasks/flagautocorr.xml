@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="flagautocorr">
+	<shortdescription>Flag autocorrelations</shortdescription>
+	<description>
+	Flag autocorrelations:
+	Flags all autocorrelation data in the measurements set.
+	Unless these data will be specifically used in the subsequent
+	reductions, they should be flagged.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+                        <example>vis='ngc5921.ms'</example>
+		</param>
+	</input>
+<returns type="void"/>
+
+<example>
+
+	Flag autocorrelations:
+	Flags all autocorrelation data in the measurements set.
+	Unless these data will be specifically used in the subsequent
+	reductions, they should be flagged.
+
+	Keyword arguments:
+	vis -- Name of input visibility file (MS)
+		default: none. example: vis='ngc5921.ms'
+
+ </example>
+ </task>
+ </casaxml>
