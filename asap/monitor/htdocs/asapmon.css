@@ -1,0 +1,114 @@
+
+body {
+    font-family: verdana,sans-serif;
+    font-size: 8pt;
+}
+
+input, select {
+    font-size: 8pt;
+}
+
+input.plot {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-style: solid;
+    border-right-style: solid;
+    border-bottom-style: solid;
+    border-left-style: solid;
+    border-top-color: gray;
+    border-right-color: gray;
+    border-bottom-color: gray;
+    border-left-color: gray;
+}
+
+abbr, acronym {
+    text-decoration: none;
+    border: 0;
+    cursor: help;
+}
+
+#sourcelist,#filelist {
+    vertical-align: top;
+}
+
+tr,td {
+    padding:0;
+}
+
+legend {
+        color: white;
+        border: solid #8F8FB3;
+        border-width: 1px;
+        padding: 0.3em;
+        margin-bottom: 0.5em;
+        background-color: #ADADD9;
+        font-weight: bold;
+        letter-spacing: 0.2em;
+        font-size: smaller;
+}
+
+fieldset {
+    border: 0px solid;
+    border-top-width: 2px;
+    border-color: rgb(230,230,230);
+    border-top-color: #ABB8C7;
+    padding: 0.2em 0 0.5em 0.5em;
+    background-color: #F4F4F4;
+    width: auto;
+    margin-right: 0.5em;
+}
+
+fieldset.velocity {
+   //height: 45px;
+}
+
+.floatleft {
+  height: 22px;
+  float:left;
+}
+
+
+.labeled {
+    padding-left:0.5em;
+    padding-right:0.5em;
+    margin-left: 2px;
+    margin-right: 2px;
+    border: solid 1px #a4a4a4;
+}
+
+#plotrange {
+    //width:250px;
+}
+
+#prangeunit,#brangeunit {
+    color: #888888;
+}
+
+#velunit {
+//width:195px;
+padding-left:0px;
+float:left;
+}
+#velframe {
+//width:145px;
+padding-left:5px;
+float:left;
+display: none;
+
+}
+#veldoppler {
+//width:135px;
+padding-left:5px;
+float:left;
+display: none;
+}
+
+#velrest {
+//width:130px;
+padding-left:5px;
+float:left;
+display: none;
+}
+
