@@ -1,0 +1,15 @@
+name		:= ATM
+version := 0.06
+CXXFLAGS	:= -O2 -fPIC -I../include
+cc_impl		:= $(wildcard *.cpp)
+cc_obj		:= $(cc_impl:.cpp=.o)
+
+
+all: lib$(name).a lib$(name).so.$(version)
+
+lib$(name).so.$(version): $(cc_obj)
+	$(CXX) -shared -Wl,-soname,lib$(name).so.$(version) -o lib$(name).so.$(version) $^ && \
+		ln -s lib$(name).so.$(version) lib$(name).so
+
+lib$(name).a: $(cc_obj)
+	ar -cr $@ $^
