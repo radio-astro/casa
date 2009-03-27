@@ -1,7 +1,0 @@
-LVL  := $(C++OPTLVL)
-LVL0 := -O0
- 
-tWCLELMask := 0
-tImageExprGram := 0
- 
-C++OPTLVL = $(LVL$($*))

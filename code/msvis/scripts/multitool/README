@@ -1,8 +1,0 @@
-All of the files in this directory contain sample scripts that use more
-then one of the plotting tools on the same plot -- how cool!
-
-The scripts typically make use of the CASA mp, cp, and tp tools rather
-then the plotxy and plotcal tasks.
-
-If you have a cool script that you would like to add to the repository
-please send an email to ???.
