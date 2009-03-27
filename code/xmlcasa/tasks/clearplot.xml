@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="clearplot">
+
+  <shortdescription>Clear the matplotlib plotter and all layers</shortdescription>
+  <input>
+  </input>
+
+  <returns type="void"/>
+
+  <example>
+
+Run the task clearplot when you want to clear completely the matplotlib, but keep
+it available for additional plotting.
+
+Typing 'go clearplot()'  will not change the current task being scrutinized
+Typing 'clearplot()      will change the current task assignment to clearplot
+                         which is generally not what is desired.
+
+
+  </example>
+
+</task>
+
+</casaxml>

@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for (new) sdcal -->
+
+<task type="function" name="sdcal" startup="false">
+
+  <shortdescription>ASAP SD task: do sdaverage, sdsmooth, and sdbaseline in one task</shortdescription>
+
+  <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
+        
+        Combine sdaverage, sdsmooth, and sdbaseline to do standard single dish
+        calibration in a single task. 
+
+        Task Version 2008-01-28 TT
+        split and modified from Task Version 2007-03-04 STM
+</description>
+
+  <input>
+
+    <param type="string" name="sdfile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="fluxunit">
+	    <description>units for line flux (K,Jy) (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="telescopeparm" subparam='true'>
+	    <description>param of telescope for flux conversion</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="specunit">
+	    <description>units for spectral axis (channel,km/s,GHz)</description>
+	    <value></value>
+	    <allowed kind="enum">
+	    <value></value>
+	    <value>channel</value>
+	    <value>km/s</value>
+	    <value>GHz</value>
+	    <value>MHz</value>
+	    <value>kHz</value>
+	    <value>Hz</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="frame">
+	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="doppler">
+	    <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="calmode">
+	    <description>SD calibration mode (ps,nod,fs,fsotf,none)</description>
+	    <value>none</value>
+	    <allowed kind="enum">
+	    <value>ps</value>
+	    <value>nod</value>
+	    <value>fs</value>
+	    <value>fsotf</value>
+	    <value>none</value>
+    </allowed>
+    </param>
+
+    <param type="intArray" name="scanlist">
+	    <description>list of scans to use (e.g. [1,2,3,4])</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="field">
+	    <description>string for selection by source name</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="iflist">
+	    <description>list of IF ids to select (e.g. [0,1])</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="pollist">
+            <description>list of polarization ids to select (e.g. [0,1])</description>
+            <value></value>
+    </param>
+
+    <param type="intArray" name="channelrange">
+            <description>channel range selection (e.g. [0,5000])</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="average">
+            <description>data averaging (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+            <description>average integs within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="timeaverage" subparam="true">
+            <description>average scans over time (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="tweight" subparam="true">
+            <description>weighting for time averaging</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>var</value>
+            <value>tsys</value>
+            <value>tint</value>
+            <value>tintsys</value>
+            <value>median</value>
+            </allowed>
+    </param>
+
+    <param type="bool" name="averageall" subparam="true">
+            <description>set True only when averaging spectra with different spectral resolutions</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="polaverage" subparam="true">
+            <description>average over polarizations (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>var</value>
+            <value>tsys</value>
+            </allowed>
+    </param>
+
+
+    <param type="double" name="tau">
+            <description>atmospheric optical depth for correction</description>
+            <value>0.0</value>
+    </param>
+
+    <param type="string" name="kernel">
+            <description>type of spectral smoothing</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>hanning</value>
+            <value>gaussian</value>
+            <value>boxcar</value>
+            </allowed>
+    </param>
+
+    <param type="int" name="kwidth" subparam="true">
+            <description>width of spectral kernel in channels</description>
+            <value>5</value>
+    </param>
+
+    <param type="string" name="blmode">
+            <description>mode for baseline fitting</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>auto</value>
+            <value>list</value>
+	    <value>interact</value>
+            </allowed>
+    </param>
+
+    <param type="int" name="blpoly">
+            <description>order of baseline polynomial</description>
+            <value>5</value>
+    </param>
+
+    <param type="bool" name="verify">
+            <description>verify the results of baseline fitting</description>
+            <value>False</value>
+    </param>
+
+    <param type="intArray" name="masklist">
+            <description>list of mask regions to INCLUDE in BASELINE fit</description>
+            <value></value>
+    </param>
+
+    <param type="double" name="thresh" subparam='true'>
+            <description>S/N threshold for linefinder</description>
+            <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam='true'>
+            <description>channel averaging for broad lines</description>
+            <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam='true'>
+            <description>channels to drop at beginning and end of spectrum</description>
+            <value type='vector'><value>0</value></value>
+    </param>
+
+
+    <param type="string" name="outfile">
+	    <description>output file name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+    <param type="int" name="plotlevel">
+	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value>0</value>
+    </param>
+
+    <constraints>
+	    <when param="fluxunit">
+		<equals value=""/>
+		<equals value="K">
+			<default param="telescopeparm"><value>""</value></default>
+		</equals>
+	        <equals value="k">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	        <equals value="Jy">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	        <equals value="jy">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	    </when>
+            <when param="average">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                        <default param="scanaverage"><value type="bool">False</value></default>
+                        <default param="timeaverage"><value type="bool">False</value></default>
+                        <default param="tweight"><value type="string">none</value></default>
+                        <default param="averageall"><value type='bool'>False</value></default>
+                        <default param="polaverage"><value type="bool">False</value></default>
+                        <default param="pweight"><value type="string">none</value></default>
+                </equals>
+            </when>
+            <when param="kernel">
+                <equals value="none"/>
+                <equals value="hanning"/>
+                <equals value="gaussian">
+                        <default param="kwidth"><value>5</value></default>
+                </equals>
+                <equals value="boxcar">
+                        <default param="kwidth"><value>5</value></default>
+                </equals>
+            </when>
+            <when param="blmode">
+                <equals value="none"/>
+                <equals value="list"/>
+                <equals value="interact"/>
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+            </when>
+
+
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+  Keyword arguments:
+        sdfile -- name of input SD dataset
+        fluxunit -- units for line flux
+                options: 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparm='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparm=[0.743] gain in Jy/K
+                                 telescopeparm='FIX' to change default fluxunit
+                                 see description below
+
+        specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
+                default: '' (=current)
+                example: this will be the units for masklist
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+        calmode -- calibration mode
+                options: 'ps','nod','fs','fsotf','quotient','none'
+                default: 'none'
+                example: choose mode 'none' if you have
+                         already calibrated and want to
+                         try baselines or averaging
+        scanlist -- list of scan numbers to process
+                default: [] (use all scans)
+                example: [21,22,23,24]
+                         this selection is in addition to field,
+                         iflist, and pollist
+        field -- selection string for selecting scans by name
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                         this selection is in addition to scanlist,
+                         iflist, and pollist
+        iflist -- list of IF id numbers to select
+                default: [] (use all IFs)
+                example: [15]
+                         this selection is in addition to scanlist,
+                         field, and pollist
+        pollist -- list of polarization id numbers to select
+                default: [] (use all polarizations)
+                example: [1]
+                this selection is in addition to scanlist,
+                field, and iflist
+        channelrange -- channel range selection
+                default: [] (use all channel)
+                example: [0,5000]
+                         Note that specified values are recognized as 
+                         'channel' regardless of the value of specunit 
+        average -- averaging on spectral data 
+                options: (bool) True,False
+                default: False
+                &gt;&gt;&gt;average expandable parameter
+                 scanaverage -- average integrations within scans
+                         options: (bool) True,False
+                         default: False
+                         example: if True, this happens in read-in
+                         For GBT, set False!
+                 timeaverage -- average times for multiple scan cycles
+                         options: (bool) True,False
+                         default: False
+                         example: if True, this happens after calibration
+                 tweight -- weighting for time average
+                         options: 'none'
+                                  'var'   (1/var(spec) weighted)
+                                  'tsys'  (1/Tsys**2 weighted)
+                                  'tint'  (integration time weighted)
+                                  'tintsys'  (Tint/Tsys**2)
+                                  'median'  ( median averaging)
+                         default: 'none'
+                 averageall -- average multi-resolution spectra
+                               spectra are averaged by referring 
+                               their frequency coverage
+                         default: False
+                 polaverage -- average polarizations
+                         options: (bool) True,False
+                         default: False
+                 pweight -- weighting for polarization average
+                         options: 'none'
+                                  'var'  (1/var(spec) weighted)
+                                  'tsys' (1/Tsys**2 weighted)
+        tau -- atmospheric optical depth
+                default: 0.0 (no correction)
+        kernel -- type of spectral smoothing
+                options: 'none','hanning','gaussian','boxcar'
+                default: 'none'
+                &gt;&gt;&gt;kernel expandable parameter
+                 kwidth -- width of spectral smoothing kernel
+                         options: (int) in channels
+                         default: 5
+                         example: 5 or 10 seem to be popular for boxcar
+                                  ignored for hanning (fixed at 5 chans)
+                                  (0 will turn off gaussian or boxcar)
+        blmode -- mode for baseline fitting
+                options: (str) 'none','auto','list','interact'
+                default: 'none'
+                example: blmode='auto' uses expandable parameters
+                         in addition to blpoly to run linefinder
+                         to determine line-free regions
+                         USE WITH CARE! May need to tweak the parameters,
+                         thresh, avg_limit, and edge.
+                         blmode='interact' allows adding and deleting mask 
+                         regions by drawing rectangles on the plot with mouse. 
+                         Draw a rectangle with LEFT-mouse to ADD the region to 
+                         the mask and with RIGHT-mouse to DELETE the region. 
+
+            &gt;&gt;&gt; blmode expandable parameters
+                 thresh -- S/N threshold for linefinder
+                         default: 5
+                         example: a single channel S/N ratio above which the channel is
+                                  considered to be a detection
+                 avg_limit -- channel averaging for broad lines
+                         default: 4
+                         example: a number of consecutive channels not greater than
+                                  this parameter can be averaged to search for broad lines
+                 edge -- channels to drop at beginning and end of spectrum
+                         default: 0
+                         example: [1000] drops 1000 channels at beginning AND end
+                                  [1000,500] drops 1000 from beginning and 500 from end
+
+                 Note: For bad baselines threshold should be increased,
+                 and avg_limit decreased (or even switched off completely by
+                 setting this parameter to 1) to avoid detecting baseline
+                 undulations instead of real lines.
+
+        blpoly -- order of baseline polynomial
+                options: (int) (&lt;0 turns off baseline fitting)
+                default: 5
+                example: typically in range 2-9 (higher values
+                         seem to be needed for GBT)
+        verify -- verify the results of baseline fitting
+                options: (bool) True,False
+                default: False
+                WARNING: Currently this just asks whether you accept
+                         the displayed fit and if not, continues
+                         without doing any baseline fit.
+        masklist -- list of mask regions to INCLUDE in BASELINE fit
+                default: [] (entire spectrum)
+                example: [[1000,3000],[5000,7000]]
+                         if blmode='auto' then this mask will be applied
+                         before fitting
+        outfile -- Name of output file
+                default: '' (&lt;sdfile&gt;_cal)
+        outform -- format of output file
+                options: 'ASCII','SDFITS','MS','ASAP'
+                default: 'ASAP'
+                example: the ASAP format is easiest for further sd
+                         processing; use MS for CASA imaging.
+                         If ASCII, then will append some stuff to
+                         the outfile name
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+                WARNING: if outform='ASCII', this parameter is ignored
+        plotlevel -- control for plotting of results
+                options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+                default: 0 (no plotting)
+                example: plotlevel&lt;0 as abs(plotlevel), e.g.
+                         -1 =&gt; hardcopy of final plot (will be named
+                         &lt;outfile&gt;_calspec.eps)
+                WARNING: be careful plotting in fsotf mode!
+
+
+        DESCRIPTION:
+
+        Task sdcal performs data selection, calibration, and/or spectral
+        baseline fitting for single-dish spectra. This task internally calls the
+        tasks, sdaverage, sdsmooth, and sdbaseline and it can be used to run all the
+        three steps in one task execution.
+        By setting calmode='none'
+        one can run sdcal on already calibrated data, for further selection
+        , averaging and atmospheric optical depth correction.
+
+        If you give multiple IFs in iflist, then your scantable will have
+        multiple IFs.  This can be handled, but there can be funny interactions
+        later on.  We recommend you split each IF out into separate files
+        by re-running sdcal with each IF in turn.
+
+        ASAP recognizes the data of the "AT" telescopes, but currently
+        does not know about the GBT or any other telescope. This task
+        does know about GBT. Telescope name is obtained from the data.
+        If you wish to change the fluxunit (see below), by leaving
+        the sub-parameter telescopeparm unset (telescopeparm=''),
+        it will use internal telescope parameters for
+        flux conversion for the data from AT telescopes and it will use an
+        approximate aperture efficiency conversion for the GBT data.
+        If you give telescopeparm a list, then if the list has a single float it
+        is assumed to be the gain in Jy/K, if two or more elements they are assumed
+        to be telescope diameter (m) and aperture efficiency
+        respectively.
+
+        Note that sdcal assumes that the fluxunit is set correctly in
+        the data already.  If not, then set telescopeparm='FIX' and it
+        will set the default units to fluxunit without conversion.
+        NOTE: If the data in sdfile is an ms from GBT and the default flux
+        unit is missing and this task automatically fixes the default fluxunit
+        to 'K' before the conversion.
+
+  </example>
+
+</task>
+
+</casaxml>

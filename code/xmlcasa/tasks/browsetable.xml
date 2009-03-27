@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="browsetable">
+	<shortdescription>Browse a table (MS, calibration table, image)</shortdescription>
+	<description>
+	</description>
+	<input>
+		<param type="string" name="tablename" kind="table">
+			<description>Name of input table</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+       Brings up a browser that can open and display any CASA table
+               
+       Keyword arguments:
+       tablename -- Name of table file on disk (MS, calibration table, image)
+               default: none; example: tablename='ngc5921.ms'
+ </example>
+ </task>
+ </casaxml>

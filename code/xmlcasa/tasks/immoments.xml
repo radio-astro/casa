@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the image statitics task                         -->
+
+<task type="function" name="immoments">
+<shortdescription>Compute moments from an image</shortdescription>
+
+<description>
+</description>
+
+<input>
+    <param type="string" name="imagename" kind="image" mustexist="true" >
+    	<description>Name of the input image</description>
+    	<value></value>
+        <example>imagenam=ngc5921_task.image</example>
+    </param>
+
+    <param type="intArray" name="moments">
+        <description>List of moments you would like to compute</description>
+        <value>0</value>
+    </param>
+
+    <param type="any" name="axis" >
+	<description>The momement axis: ra, dec, lat, long, spectral, or stokes</description>
+ 	<any type='variant' limmittype='string int'/>
+    	<value type='string'>spectral</value>
+    </param>
+
+    <param type="any" name="region">
+        <description>Image Region.  Use viewer</description>
+	<any type='variant' limittype='string stringArray'/>
+        <value type='string'/>
+    </param>
+
+    <param type="string" name="box">
+        <description>Select one or more box regions</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="chans" >
+	<description>Select the channel(spectral) range</description>
+    	<value></value>
+	<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
+	<example>1.4km/s             # above the given velocity</example>
+        <example>!1~5                # Select all but the ange of channel numbers</example>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <value></value>
+	    <example>stokes=&quot;IQ&quot;</example>
+	    <example>stokes=&quot;RR,LL&quot;</example>
+    </param>
+
+    <param type="string" name="mask">
+	    <description>mask used for selecting the area of the image to calculate the moments on</description>
+	    <any type="variant"/>
+	    <value type="stringArray"></value>
+            <example>mask=&quot;my_file.image:no_noise&quot;</example>
+            <example>mask=&quot;some.image&gt;0.15&quot;</example>
+    </param>
+
+    <param type="any" name="includepix">
+    	<description>Range of pixel values to include</description>
+	<any type="variant" limittypes="int doubleArray intArray"/>
+	<value type="int">-1</value>
+    </param>
+
+    <param type="any" name="excludepix">
+    	<description>Range of pixel values to exclude</description>
+	<any type="variant" limittypes="int doubleArray intArray"/>
+	<value type="int">-1</value>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>Output image file name (or root for multiple moments) </description>
+	<value></value>
+    </param>
+
+</input>
+<returns type="void"/>
+
+<example>
+	The spectral moment distributions at each pixel are
+	determined.  See the cookbook and User Reference Manual for
+	mathematical details.
+
+	The main control of the calculation is given by parameter
+	moments:
+	
+        moments=-1  - mean value of the spectrum
+	moments=0   - integrated value of the spectrum
+	moments=1   - intensity weighted coordinate;traditionally used to get 
+		      'velocity fields'
+   	moments=2   - intensity weighted dispersion of the coordinate; traditionally
+		      used to get &quot;velocity dispersion&quot;
+	moments=3   - median of I
+	moments=4   - median coordinate
+	moments=5   - standard deviation about the mean of the spectrum
+	moments=6   - root mean square of the spectrum
+	moments=7   - absolute mean deviation of the spectrum
+	moments=8   - maximum value of the spectrum
+	moments=9   - coordinate of the maximum value of the spectrum
+	moments=10  - minimum value of the spectrum
+	moments=11  - coordinate of the minimum value of the spectrum
+
+	Keyword arguments:
+	imagename -- Name of input image
+		default: none; example: imagename=&quot;ngc5921_task.image&quot;
+	moments -- List of moments you would like to compute
+		default: 0 (integrated spectrum);example: moments=[0,1]
+		see list above
+	axis -- The moment axis
+		default: (spectral axis); example: axis=spec
+	        options: ra, dec, lattitude, longitude, spectral, stokes
+        mask -- Mask applied to the image before calculating the moments.
+                Default &quot;&quot; means no mask;  
+                Example: mask=&quot;orion.mask&quot;.  
+
+                Full description of the syntax can be found at
+                http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
+
+        region -- File path to an ImageRegion file.
+                Default: none; Example: region=&quot;myimage.im.rgn&quot;
+                  Not yet implemented
+	box --  A box region on the directional plane
+	        Only pixel values acceptable at this time.
+		Default: none (whole 2-D plane); 
+                  Example: box=&quot;10,10,50,50&quot;
+                      box = &quot;10,10,30,30,35,35,50,50&quot; (two boxes)
+	chans -- channel numbers
+	        Range of channel numbers to include in statistics
+                  All spectral windows are included
+		Default:&quot;&quot;= all;  Example: chans=&quot;3~20&quot;    
+	stokes -- Stokes parameters to analyze.
+                Default: none (all); Example: stokes=&quot;IQUV&quot;;  
+                                     Example:stokes=&quot;I,Q&quot;
+                Options: &quot;I&quot;,&quot;Q&quot;,&quot;U&quot;,&quot;V&quot;,&quot;RR&quot;,&quot;RL&quot;,&quot;LR&quot;,&quot;LL&quot;,&quot;XX&quot;,&quot;YX&quot;,&quot;XY&quot;,&quot;YY&quot;, ...
+	includepix -- Range of pixel values to include
+		default: [-1] (all pixels); example=[0.02,100.0]
+	excludepix -- Range of pixel values to exclude
+		default: [-1] (don&quot;t exclude pixels); example=[100.,200.]
+	outfile -- Output image file name (or root for multiple moments)
+		default: &quot;&quot; (input+auto-determined suffix);example: outfile=&quot;source_moment&quot;
+
+        Example for finding the 1-momment, intensity-weighted
+        coordinate, often used for finding velocity fields.
+        immoments( axis=&quot;spec&quot;, imagename=&quot;myimage&quot;, moment=1, outfile=&quot;velocityfields&quot; )
+
+        Example finding the spectral mean, -1 moment, on a specified region
+        of the image as defined by the box and stokes parameters
+        taskname=&quot;immoments&quot;
+        default()
+        imagename = &quot;myimage&quot;
+        moment    =  -1
+
+        axis      = &quot;spec&quot;
+        stoke     = &quot;I&quot;
+        box       = [55,12,97,32]
+        go
+
+        Example using a mask created with a second file to select the
+        data used to calculate the 0-moments, integrated values.  In
+        this case the mask is from the calibrated.im file and all values
+        that have a value greater than 0.5 will be positive in the mask..
+        immoments( &quot;clean.image&quot;, axis=&quot;spec&quot;, mask=&quot;calibrated.im>0.5&quot;, outfile=&quot;mom_withmask.im&quot; )
+
+</example>
+
+</task>
+
+</casaxml>

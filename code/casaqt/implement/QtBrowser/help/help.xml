@@ -1,0 +1,481 @@
+<help>
+    <category name="General Use">
+        <group name="Tasks">
+            <item name="Requirements">
+                CasaBrowser is meant to be distributed with the CASA system and
+                will not work as a standalone application.  When CASA is
+                installed, a Qt version of at least 4.3.0 is required.  In
+                addition, the Qwt library is also required to enable plotting.
+                The version of Qwt must be at least 5.0.2.
+            </item><item name="Usage">
+                Once CASA has been installed and built, the executable for
+                CasaBrowser can be found in the [CASA]/[architecture]/bin/
+                directory (for example: /casa/linux_gnu/bin).  Since this
+                directory is placed on the path, the executable should be
+                runnable from any location.<br /><br />
+                CasaBrowser can be run in two ways:<br />
+                <ul><li><code>casabrowser</code><br />
+                When run with no arguments, a CasaBrowser window will open without
+                any tables.  The menubar can be then be used to open table(s) as
+                desired.<br /></li>
+                <li><code>casabrowser path/to/table</code><br />
+                When run with one or more arguments, a CasaBrowser window will
+                open and display each of the provided tables (provided that they
+                are valid).</li></ul><h3> </h3><br />
+                CasaBrowser is also accessible from within casapy by using the
+                browsetable() command.
+            </item>
+        </group>
+        <group name="Information">
+            <item name="CASA Table Data Types">
+                The following datatypes are supported by the table browser:
+                <ul><li>Float</li>
+                    <li>Float Array</li>
+                    <li>Double<br />Date: a special type of Double</li>
+                    <li>Double Array</li>
+                    <li>Integer</li>
+                    <li>Integer Array</li>
+                    <li>Unsigned Integer</li>
+                    <li>Unsigned Integer Array</li>
+                    <li>Short Integer</li>
+                    <li>Short Integer Array</li>
+                    <li>Complex</li>
+                    <li>Complex Array</li>
+                    <li>DComplex</li>
+                    <li>DComplex Array</li>
+                    <li>Boolean</li>
+                    <li>Boolean Array</li>
+                    <li>String</li>
+                    <li>String Array</li>
+                    <li>Unsigned Character</li>
+                    <li>Unsigned Character Array</li>
+                    <li>Character</li>
+                    <li>Character Array</li>
+                    <li>Table</li>
+                    <li>Record</li></ul><h3> </h3><br />
+                The following CASA data types are not supported by the table
+                browser:
+                <ul><li>Unsigned Short Integer</li>
+                    <li>Unsigned Short Integer Array</li>
+                    <li>Other</li></ul><h3> </h3><br />
+                For more information see the CASA table documentation.
+            </item><item name="Useful Links">
+                <ul><li>CASA Homepage: http://casa.nrao.edu</li>
+                    <li>CASA Table Documentation:
+                        http://aips2.nrao.edu/docs/tables/implement/Tables.html
+                        </li>
+                    <li>TaQL Documentation:
+                         http://aips2.nrao.edu/docs/notes/199/199.html</li>
+                </ul><h3> </h3>
+            </item>
+        </group>
+    </category>
+    <category name="Browsing">
+        <group name="Tasks">
+            <item name="Open Table(s)">
+                There are two ways to open a CASA table: on the command-line or
+                through a file chooser dialog.<br />
+                <ul><li><b>Command-line</b>: See <a href="general_use.html#tasks1">Usage</a>.<br /> </li>
+                <li><b>File Chooser</b>: Once a CasaBrowser window has been opened,
+                files can be opened by selecting the <b>File - Open Table</b> menu
+                option or by using the <b>Ctrl+O</b> keyboard shortcut.<br />
+                <img src="images/1-opentable.png" /></li></ul><h3> </h3><br />
+                If opening the table succeeded, the table should appear in a new
+                tab.  If opening failed, an error message will appear with details
+                on the failure.
+            </item><item name="Open Table(s) with TaQL">
+                To open a table with TaQL (see <a href="general_use.html#information1">links</a>
+                for documentation), use the <b>File - Open TaQL (Ctrl+Shift+O)</b>
+                command.  You will be presented with a dialog to enter your
+                TaQL command.  There is a rudimentary TaQL command builder, but
+                currently it is somewhat primitive and only supports the
+                SELECT command.  If using the builder, be sure to click the
+                "Generate" button to generate the TaQL command before clicking
+                "Accept".
+                
+                <br /><br /><img src="images/23-taql.png" />
+            </item><item name="Close Table(s)">
+                There are three ways to close a table: <b>File - Close Table
+                (Ctrl+W)</b>, which closes the currently selected table; <b>File -
+                Close...</b>, which allows you to choose which of the opened
+                tables you wish to close; and <b>File - Close All</b>, which
+                closes all opened tables.<br />
+                <img src="images/2-closetable.png" />
+            </item><item name="Saved Views">
+                When you close a CasaBrowser window, the default behavior is to save the
+                currently opened "view."  A view consists of:
+                <ul><li>The last directory you opened a table from,</li>
+                    <li>A list of currently opened tables,</li>
+                    <li>Which table was currently selected.</li>
+                    <li>For each opened table:
+                        <ul><li>Which columns (if any) were hidden,</li>
+                            <li>Where each column was moved to (if they were moved),</li>
+                            <li>Which rows were loaded,</li>
+                            <li>The current row filter, if there was one,</li>
+                            <li>The field formats, if there were any,</li>
+                            <li>The current sort order (if any) of the fields.</li></ul>
+                    </li></ul><h3> </h3>
+                If you do not wish the view to be saved, this may be turned off in the
+                Options (see Browsing:Edit Options).
+            </item><item name="Edit Options">
+                Options for the CasaBrowser can be edited with the <b>Edit - Options</b>
+                command.  Currently, two options may be adjusted:
+                <ul><li><b>Save View on Close</b>: indicates whether, when the CasaBrowser
+                        is closed, the current view should be saved.  (See Browsing:Saved
+                        Views).</li>
+                    <li><b>Debug Threshold</b>: affects how much debugging output is
+                        printed to the console.  Messages that have a debug level that
+                        is greater than or equal to the threshold are printed.  For
+                        example, if the threshold is set to High, then only messages with
+                        a High level are printed, whereas a threshold of Medium will print
+                        High and Medium messages.</li></ul><h3> </h3>
+                <img src="images/22-options.png" />
+            </item><item name="View Table Information">
+                Information about an opened table can be viewed by using the
+                <b>View - Table Information (Ctrl+I)</b> menu command.  A table
+                information panel will open on the right side of the currently
+                selected table. Information about tables provided include:<br />
+                <ul><li>Location on disk</li>
+                    <li>Total number of rows</li>
+                    <li>Whether the table allows for insertion and/or deletion of
+                        rows</li>
+                    <li>List and description of fields:
+                        <ul><li>Field name</li>
+                            <li>Field type</li>
+                            <li>Field unit (if given)</li>
+                            <li>Field UCD (if given)</li>
+                            <li>Field ref (if given)</li>
+                            <li>Field precision (if given)</li>
+                            <li>Field width (if given)</li></ul></li></ul><h3> </h3><br />
+                The side panel can be closed with the "Close" button.<br />
+                <img src="images/3-tableinfo.png" />
+            </item><item name="View Table Data">
+                Each opened table has three tabs associated with it; the first and
+                topmost of these tabs is the data tab.  The data tab has two
+                primary components: the data table and page navigation.
+                <ul><li><b>Data Table</b>: a spreadsheet-like interface for viewing
+                table data.  The column headers consist of the table fields, and
+                the row headers indicate which rows of the table are currently
+                being viewed.<br /><br />
+                Clicking on a cell will highlight the cell, its row, and its
+                column.  Double-clicking on a cell, for most data types, will
+                enter into editing mode (see <a href="editing.html">Editing</a>);
+                some data types, however, have special behavior for
+                double-clicking:
+                <ul><li><i>Arrays</i>: Text displayed in the data cell for an
+                        array will either be a (potentially abbreviated) view of
+                        the array itself in the case of a one-dimensional array,
+                        or the shape of the array.  In either case,
+                        double-clicking will open an array viewer in a side panel
+                        on the right of the data tab.  The rows and columns in the
+                        array viewer table correspond to the rows and column in
+                        the underlying array.  In the case of an array having
+                        dimension greater than two, a two-dimensional "slice" of
+                        the array can be viewed at any given time.<br />
+                        <img src="images/4-viewarray.png" /></li>
+                    <li><i>Tables</i>: Double-clicking on a table will follow the
+                        reference to that table and open it in a separate tab (if
+                        the table exists).</li></ul><h3> </h3><br /></li>
+                <li><b>Page Navigation</b>: only a set number of rows are loaded
+                    from the table at one time.  Thus, conceptually, the table can
+                    be seen as being separated into "pages", each page containing
+                    the number of loaded rows.  At the bottom of the data tab are
+                    components that allow for page navigation and control.<br />
+                    <img src="images/5-pagenav.png" /></li></ul><h3> </h3>
+            </item><item name="View Table Keywords">
+                Each opened table has three tabs associated with it; the second and
+                middle of these tabs is the table keywords tab. Each table keyword
+                is displayed in a table in this component. Table keywords consist
+                of the keyword name, the keyword type, and the keyword value.
+                <br /><br />
+                One of the most common uses of the table keywords are to show the
+                table's subtables.  For these subtable keywords, the number of rows
+                are also shown.  Additionally, double-clicking on any subtable
+                keyword
+                will open the specified table in a new tab.
+            </item><item name="View Field Keywords">
+                Each opened table has three tabs associated with it; the third and
+                bottommost of these tabs is the field keywords tab.  Each field
+                keyword is displayed in a tree in this component. Field keywords
+                consist of the keyword name, the keyword type, and the keyword
+                value.
+            </item><item name="Follow Table References">
+                Any data item that has an integer type can be used as a row
+                reference into a subtable.  Right-clicking on a suitable data item
+                will bring up a context menu that will allow you to follow the
+                reference to any subtable defined in the table keywords.  If the
+                subtable is not currently open, it will be opened; if the subtable
+                is open, its tab will be selected.  The open table will then
+                scroll to and highlight the row referenced by the data item.<br />
+                <img src="images/6-followref.png" />
+            </item><item name="Field Options">
+                To view field options and information, right-click on a column
+                header.  A context menu will be presented with the following
+                options:
+                <ul> <li>Field Information: Displays a pop-up dialog with the
+                         field name and type along with any field keywords.
+                </li><li>Statistics: For numerical fields, statistical
+                         information can be displayed.  This includes the
+                         minimum, maximum, and mean.  NOTE: the statistics
+                         are only for the rows currently loaded in the browser.
+                </li><li>Format Field: see <a href="#tasks14">Format Data
+                         Display</a>.
+                </li><li>Hide Column: see <a href="#tasks15">Show/Hide Columns</a>.
+                </li></ul><h3> </h3>
+            </item><item name="Filter Rows">
+                The ability to filter rows based on data content is available
+                through the <b>View - Filter on Fields (Ctrl+Shift+F)</b> menu
+                command. (<b>Note</b>: Rows are filtered just on the display, not
+                on the underlying table!)  A filter consists of a set of rules;
+                each rule is a logical statement involving the values of one table
+                field.  Multiple rules are logically "and"ed together to form the
+                filter.<br /><br />
+                For example, suppose that all rows in which the VALID column is not
+                1 should be filtered out.  To do this, enter the rule: VALID is
+                equal to 1 and then run the filter.  All rows that do <b>not</b>
+                pass the filter rules are hidden in the view.  If the page is
+                changed, the filter is applied to the newly loaded rows.
+                <br /><br />
+                The current filter can be cleared with the <b>View - Clear Filter
+                (Ctrl+Shift+C)</b> menu command.
+                <br /><img src="images/7-filter.png" />
+            </item><item name="Search Rows">
+                Rows can be searched for by using the <b>Edit - Find (Ctrl+F)</b>
+                menu command.  A search is based on a set of rules; each rule is a
+                logical statement involving the values of one table field.
+                Multiple rules are logically "and"ed together to form the
+                search.<br /><br />
+                For example, suppose that you want to search for rows in which the
+                VALID column is equal to 1.  To do this, enter the rule: VALID is
+                equal  to 1 and then run the search.<br /><br />
+                The first rule to match the search rule is highlighted in the data
+                tab.  Running search again will open a new rule dialog.  To find
+                the next row that matches the search rule, use <b>Edit - Find Next
+                (F3)</b>, or to find the previous row that matches the search
+                rule, use <b>Edit - Find Previous (Shift+F3)</b>.
+            </item><item name="Sort Rows">
+                There are two ways to sort rows by their field values.  The first
+                is to click the field header in the data view, which will
+                alternate between sorting on that row in ascending and descending
+                order.  The header will have an arrow indicating the sort
+                order.<br />
+                <img src="images/17-sort1.png" /><br /><br />
+
+                The second way is to use the <b>Tools - Sort (Ctrl+S)</b> command.
+                A dialog will appear that will allow you to sort on multiple fields
+                simultaneously.  The sort is performed starting with the top field
+                and ending with the bottom field.  The header of the first field
+                will have an arrow indicating the sort order.
+
+                <br /><img src="images/18-sort2.png" /><br />
+                <img src="images/19-sort3.png" /><br /><br />
+
+                Note that sorting only sorts on the currently displayed items,
+                not the entire table.<br /><br />
+                To clear the current sort, use the <b>Clear Sort</b> button at the
+                bottom of the data display.
+            </item><item name="Format Data Display">
+                Displayed data can be formatted according to its type.  To format
+                data, use the <b>View - Format Display...</b> command and then
+                choose the field to format.  Depending on the type, different
+                formatting options may be displayed.  Once a desired format has
+                been configured, it can be applied with the <b>Set Format</b>
+                button.
+
+                <br /><img src="images/8-format.png" /><br /><br />
+
+                Once a format has been set, it can be cleared by once again
+                invoking the <b>View - Format Display...</b> command and then
+                clicking the <b>Clear Format</b> button.
+            </item><item name="Show/Hide Columns">
+                Any column can be shown or hidden in both the data and the keywords
+                tab.  Columns can be shown or hidden in the <b>View - Columns</b>
+                menu, or by right-clicking on the column header.<br />
+                <img src="images/9-hidecolumn.png" />
+            </item><item name="Move Columns">
+                Any column in the data table can be moved to an arbitrary location
+                in the table view.  <b>Note</b>: this does <b>not</b> change the
+                order of the columns in underlying table on disk; it is merely a
+                display change.  To restore the columns to their original order,
+                click the "Restore Columns" button.
+            </item>
+        </group>
+    </category>
+    
+    <category name="Editing">
+        <group name="Tasks">
+            <item name="Edit Data">
+                In order to edit data, you must first enable the editing mode in
+                the CasaBrowser.  (This is to prevent accidental changes.)<br />
+                <img src="images/10-edittable.png" /><br /><br />
+
+                Data can then be edited by double-clicking in the desired cell.
+                Once a new value has been entered, it is checked against the data
+                type to make sure the formatting is correct.  If an invalid value
+                has been entered (for example, letters in a numerical field), an
+                error message will be displayed and the data will revert to its
+                previous value.<br /><br />
+
+                <img src="images/11-editerror.png" /><br /><br />
+
+                When editing array data, the array must be first opened by
+                double-clicking the array so that it opens in a side-panel.
+                Specific cells can then be edited by double-clicking and typing
+                their new value.
+            </item><item name="Save Data">
+                Any changes made are immediately saved in the table on disk.
+                There is therefore no need to "save" any changes made.
+            </item><item name="Undo/Redo an Action">
+                All edit actions are stored such that they can be undone and redone.
+                The last performed action can be undone using the <b>Edit - Undo
+                (Ctrl+Z)</b> command; the last undone action can be redone using the
+                <b>Edit - Redo (Ctrl+Y)</b> command.<br />
+                <img src="images/12-undo.png" />
+            </item><item name="Insert Rows(s)">
+                If the table allows it, you may insert rows with the <b>Edit - Insert
+                Row(s)</b> command.  The number of rows to insert is then entered at
+                the prompt.  These rows are inserted at the end of the table and may
+                be edited as desired.  If you are on the last page of the table, the
+                loaded rows may refresh.  Note that if your table does not allow for
+                insertion of rows, this menu command will not be enabled.
+                <br /><img src="images/20-insert.png" />
+            </item><item name="Delete Row(s)">
+                If the table allows it, you may delete rows with the <b>Edit - Delete
+                Row(s)</b> command.  You then enter a comma-separated list of rows or
+                row ranges that you wish to delete at the prompt.  If any of the deleted
+                rows are on the page you are viewing, the loaded rows may refresh.  Note
+                that if your table does not allow for the deletion of rows, this menu
+                command will not be enabled.
+                <br /><img src="images/21-delete.png" />
+            </item>
+        </group>
+    </category>
+    
+    <category name="Plotting">
+        <group name="2D Plotting: Tasks">
+            <item name="Plot Field vs. Field">
+                To do 2D plotting, have at least one table open and then open a plotter
+                with the <b>Tools - Plot 2D (Ctrl+P)</b> command.<br />
+                <img src="images/15-plot.png" /><br /><br />
+
+                On the plotter window, choose which table you will be plotting with and
+                the rows you wish to plot.  You can then choose which fields will be used
+                for the X and Y axes.  Note that only "plottable" fields can be used; for
+                example, a String field could not be plotted.  For fields that contain
+                array values of a fixed dimension, you can choose which "slice" of the
+                array you want to plot.  Once the parameters have been chosen, there are
+                two ways to plot: overplot or clear and plot.  Overplot will add the
+                given plot to any pre-existing plots whereas clear and plot will clear
+                any previous plots.  Note that overplotting means that all plots will be
+                on the same scale, so you probably want to use similarly scaled data.
+                There are also formatting options for the plot image itself.
+                <br /><img src="images/16-plot.png" />
+            </item><item name="Apply Row Filter">
+                If there is a row filter on the table you are plotting (see
+                Browsing:Tasks:Filter Rows), you have the option to apply this filter
+                when plotting such that only rows that pass the filter are plotted.
+                To apply the filter, check the "Apply Current Filter" box.
+            </item><item name="Zooming">
+                Zooming can be accomplished by selecting the "Zoom" option in the
+                hand tool option box.  The region to be zoomed in on is then selected
+                using the mouse on the plot canvas.  This process can be repeated to
+                zoom in as far as desired.  The zoomer uses a zoom "stack" such that it
+                remembers all the zoom levels and is thus able to go back and forth in
+                the stack.  For example, once zoomed in you can zoom out one level
+                by clicking the "Out" button or in one level by clicking the "In"
+                button.  Scrolling the mouse wheel will also move out and in in the
+                zoom stack.  You can return to the topmost level by clicking the
+                "Base" button or by right-clicking on the canvas.  Note that these
+                actions are only available when the Zoom tool is selected.  Also
+                note that if another plot is added to the canvas, the zoomer is
+                reset.
+            </item><item name="Panning">
+                Panning can be accomplished by selecting the "Pan" option in the
+                hand tool option box.  The plot can then be panned by clicking
+                and dragging the canvas to the desired position.  This process
+                can be repeated to pan as far as desired.  To reset to the base
+                position, click the "Reset" button.  Note that these actions are
+                only available when the Pan tool is selected.  Also note that if
+                anothe rplot is added to the canvas, the panner is reset.
+            </item><item name="Selecting">
+                Selecting can be accomplished by selecting the "Select" option
+                in the hand tool option box.  The region to be selected is then
+                slsected using the mouse on the plot canvas.  Once a region has
+                been selected, the following actions may be performed on it:
+                <ul> <li>Locate: generates a list of all the rows that contain
+                         points in the selected region.  A window is displayed
+                         containing this information with the row numbers sorted.
+                         Displayed rows can then be highlighted in the browser by
+                         selecting the row to highlight and then clicking the
+                         "Highlight in Browser" button.  The "Next" button can
+                         be repeatedly clicked to move through the displayed rows.
+                </li><li>Clear: clears the selected region from the plot.
+                </li></ul><h3> </h3>
+                
+                Note that these actions are only available when the Select tool
+                is selected.  Also note that if another plot is added to the
+                canvas, the selected region is cleared.
+            </item><item name="Save As Image">
+                To save the current plot as an image, first select the image format you
+                wish to export as, then click the "Go" button.  You will be prompted to
+                choose a file to save to.  If there are any problems during the export,
+                an error dialog will appear; otherwise the export was successful.
+            </item>
+        </group>
+    </category>
+    
+    <category name="Other">
+        <group name="Tasks">
+            <item name="Export to VOTable">
+                To export to a VOTable XML format, use the <b>Export - VOTable</b>
+                command.  You will then be able to choose the file to save to.
+                Since the export process can take a while, it is possible to hide
+                the progress in the background to continue using the CasaBrowser
+                for other tasks.  When the export has completed, a message will be
+                displayed.  If the CasaBrowser is closed while the export is still
+                in progress, the behavior is undefined.  A warning will appear if
+                you attempt to close the CasaBrowser during an export.
+                <br /><img src="images/13-exportvotable.png" />
+            </item><item name="Check Validity">
+                Any test that extends a certain code interface can be used to
+                check the validity of opened tables.  Currently, three tests exist
+                for CASA tables:
+                <ul><li><b>ID Fields are valid</b>: fields that end in <i>_ID</i>
+                tend to have a special meaning in CASA tables in that they refer to
+                a row in a subtable that is located in the table keywords.  (For
+                example, a field called <i>ARRAY_ID</i> might refer to an
+                <i>ARRAY</i> subtable.)  This test checks if fields ending in
+                <i>_ID</i> have corresponding values in the table keywords.</li>
+                <li><b>Subtables exist</b>: This test checks if subtables referenced
+                in the table keywords exist on disk where the value says they should
+                be.</li>
+                <li><b>Subtables have data</b>: This test checks if subtables
+                referenced in the table keywords can be opened and have at least
+                one row of data in them.</li></ul><h3> </h3>
+                <img src="images/14-validity.png" />
+            </item><item name="Keyboard Shortcuts">
+                The following keyboard shortcuts are available:
+                <ul><li><b>Ctrl+O</b>: Open table.</li>
+                    <li><b>Ctrl+Shift+O</b>: Open TaQL table.</li>
+                    <li><b>Ctrl+W</b>: Close currently selected table.<br />
+                        <b>Ctrl+A</b>: Close all opened tables.</li>
+                    <li><b>Ctrl+Z</b>: Undo last action.<br />
+                        <b>Ctrl+Y</b>, <b>Ctrl+Shift+Z</b>: Redo last undone
+                         action.</li>
+                    <li><b>Ctrl+E</b>: Enable editing mode for currently selected
+                        table.</li>
+                    <li><b>Ctrl+I</b>: Show table information.</li>
+                    <li><b>Ctrl+P</b>: Open plotter.</li>
+                    <li><b>Ctrl+F</b>: Find.<br />
+                        <b>F3</b>: Find next.<br />
+                        <b>Shift+F3</b>: Find previous.</li>
+                    <li><b>Ctrl+Shift+F</b>: Filter on fields.<br />
+                        <b>Ctrl+Shift+C</b>: Clear current filter.</li>
+                    <li><b>Ctrl+S</b>: Sort.</li>
+                    <li><b>Ctrl+H</b>: Open help.</li>
+                    <li><b>Ctrl+Q</b>: Quit.</li>
+                    <li><b>Ctrl+Shift+Q</b>: Close All and Quit.</li></ul><h3> </h3>
+            </item>
+        </group>
+    </category>
+</help>

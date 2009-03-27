@@ -1,0 +1,724 @@
+#-----------------------------------------------------------------------------
+# makefile.imp: Generic AIPS++ class implementation makefile
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1992-2002
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# This GNU makefile is included by other AIPS++ makefiles and is not intended
+# for stand-alone use.
+#
+# Original: 1992/06/24 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+
+# AIPS++ fundamentals.
+#---------------------
+AIPSROOT := $(word 1, $(CASAPATH))
+LIBJAVAD := $(AIPSROOT)/java
+AIPSARCH := $(AIPSROOT)/$(word 2, $(CASAPATH))
+include $(AIPSARCH)/makedefs
+CASAXSLTDIR := $(AIPSROOT)/code/xmlcasa/install
+
+# Do not include template source files.
+#--------------------------------------
+#CPPOPT += -DAIPS_NO_TEMPLATE_SRC
+#CPPDBG += -DAIPS_NO_TEMPLATE_SRC
+
+PCKGMOD := $(subst /,-,$(subst /implement,,$(CODESUBD)))
+MODULE  := $(word 2,$(subst -,$(space),$(PCKGMOD)))
+
+# Get architecture-specific, module-specific definitions.
+-include $(INSTARCH)/$(PCKGMOD).defs
+
+# Temporary directories.
+#-----------------------
+TMPPCKGD := $(ARCHTMPD)/$(PACKAGE)
+PCKGDBGD := $(TMPPCKGD)/dbg
+PCKGOPTD := $(TMPPCKGD)/opt
+
+FIRST := $(shell amkdir -p ug=rwx,g+s,o=rx -v $(PCKGDBGD) $(PCKGOPTD))
+
+
+# Directory for extracted documents.
+#-----------------------------------
+DOCSAREA := $(AIPSDOCS)/$(CODESUBD)
+
+#
+# Stuff for code generation will need to be moved into makedefs
+GENERATEDCODE := $(ARCHTMPD)/gencode
+CGENXTIME := $(ARCHAUXD)/$(PCKGMOD)*.time
+CGENITIME := $(ARCHAUXD)/$(PCKGMOD)*.time
+CGENCTIME := $(ARCHAUXD)/$(PCKGMOD)*.time
+CGENHTIME := $(ARCHAUXD)/$(PCKGMOD)*.time
+XDOCTIME := $(DOCSAREA)/helpfiles/pytaskdocgenerated.time
+
+SAXONJAR := $(AIPSROOT)/code/xmlcasa/install/saxon8.jar
+SAXON := $(JAVABINFILE) -jar $(SAXONJAR)
+
+
+# Libraries.
+#-----------
+LIBOPTTOOL := $(LIBOPTD)/lib$(TOOL).$(SFXSTAT)
+LIBDBGTOOL := $(LIBDBGD)/lib$(TOOL).$(SFXSTAT)
+LIBDBG   := $(LIBDBGD)/lib$(PACKAGE).$(SFXSTAT)
+LIBOPT   := $(LIBOPTD)/lib$(PACKAGE).$(SFXSTAT)
+LIBJAR := $(LIBJAVAD)/lib/$(MODULE).jar
+LIBCASA := $(LIBOPTD)/libxmlcasa.$(SFXSTAT)
+LIBCASADBG := $(LIBDBGD)/libxmlcasa.$(SFXSTAT)
+
+AIPSLIBS :=
+ifneq "$(word 1,$(LIB$(PACKAGE)))" "defeat"
+   AIPSLIBS += $(LIBDBG)
+endif
+ifneq "$(word 2,$(LIB$(PACKAGE)))" "defeat"
+   AIPSLIBS += $(LIBOPT)
+endif
+
+ifdef AIPSLIBS
+   override LIB := lib
+else
+   override LIB :=
+endif
+
+ifndef PGMRINCD
+   override PGMRINCD := .
+endif
+
+ifndef PGMRLIBD
+   override PGMRLIBD := .
+endif
+
+PGMRLIBR := $(PGMRLIBD)/lib$(PACKAGE).$(SFXSTAT)
+ifeq "$(PGMRLIBD)" "."
+   ifneq "$(MODULE)" ""
+      ifeq "$(notdir $(CODESUBD))" "tmplinst"
+         PGMRLIBR := ../../lib$(PACKAGE).$(SFXSTAT)
+      else
+         PGMRLIBR := ../lib$(PACKAGE).$(SFXSTAT)
+      endif
+   endif
+endif
+
+
+LIBICONS := $(filter %.xbm, $(AIPSSRCS))
+AIPSGIFS := $(filter %.gif,$(AIPSSRCS))
+AIPSHTML := $(filter %.html,$(AIPSSRCS))
+CASAXML  := $(filter %.xml,$(AIPSSRCS))
+CASAHTEX := $(filter %.htex,$(AIPSSRCS))
+
+
+
+# Dependency lists.
+#------------------
+DPNDLIST := $(ARCHAUXD)/$(PCKGMOD).list
+DPNDTIME := $(ARCHAUXD)/$(PCKGMOD).time
+
+SCANDB   := $(ARCHAUXD)/docscan
+SCANTIME := $(ARCHAUXD)/docscan.time
+EXTRTIME := $(ARCHAUXD)/docextr.time
+
+ifndef PGMRAUXD
+   override PGMRAUXD := .
+endif
+
+PGMRLIST := $(PGMRAUXD)/$(PCKGMOD).list
+PGMRTIME := $(PGMRAUXD)/$(PCKGMOD).time
+
+
+# Library update control.
+#------------------------
+# Lock files.
+LOCKDBG  := $(PCKGDBGD)/BUILD.$(JOBIDENT)
+LOCKOPT  := $(PCKGOPTD)/BUILD.$(JOBIDENT)
+
+PGMRLOCK := $(PGMRAUXD)/$(PCKGMOD).lock
+
+# Don't update the system library for each module in recursive builds.
+UPDATELIB := updatelib
+ifneq "$(MODULE)" ""
+   ifneq "$(MAKELEVEL)" "0"
+      UPDATELIB :=
+      .PRECIOUS : $(PCKGDBGD)/%.o $(PCKGOPTD)/%.o
+   endif
+endif
+include $(AIPSROOT)/code/install/makefile.help
+
+
+# Pattern rules.
+#---------------
+%.pdf : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2tlatex.xsl
+	@ trap "$(RM) $(ARCHTMPD)/$*gcode" 1 2 3 15 ; \
+	amkdir pdf_files ;\
+        cat $(AIPSROOT)/code/install/docutils/tmpheader4tex >  pdf_files/$(@F:%.pdf=%.latex); \
+	TEXINPUTS=.:$(AIPSCODE)/doc/texinputs.dir:$(TEXINPUTS) ;\
+        $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2tlatex.xsl | sed -e "s/<?xml version.*//" | awk -f $(AIPSROOT)/code/install/docutils/xml2latex.awk >>  pdf_files/$(@F:%.pdf=%.latex); \
+	cat $(AIPSROOT)/code/install/docutils/tmptail4tex >>  pdf_files/$(@F:%.pdf=%.latex); \
+	cd pdf_files ; \
+	echo "$(htmlFLATEX) $(@F:%.pdf=%.latex)" ; \
+	echo "(1st pass)..." ; \
+	$(PDFLATEX) $(@F:%.pdf=%.latex); \
+	echo "(2nd pass)..." ; \
+	$(PDFLATEX) $(@F:%.pdf=%.latex); \
+	echo "(3rd pass)..." ; \
+	$(PDFLATEX) $(@F:%.pdf=%.latex)
+
+%.html : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2tlatex.xsl
+	@ trap "$(RM) $(ARCHTMPD)/$*gcode" 1 2 3 15 ; \
+        amkdir htmlfiles ;\
+        cat $(AIPSROOT)/code/install/docutils/tmpheader4tex >  htmlfiles/$(@F:%.html=%.latex); \
+	TEXINPUTS=.:$(AIPSCODE)/doc/texinputs.dir:$(TEXINPUTS) ;\
+        $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2tlatex.xsl | sed -e "s/<?xml version.*//" | awk -f $(AIPSROOT)/code/install/docutils/xml2latex.awk >>  html_files/$(@F:%.pdf=%.latex); \
+	cat $(AIPSROOT)/code/install/docutils/tmptail4tex >>  htmlfiles/$(@F:%.html=%.latex); \
+	cd htmlfiles ; \
+	echo "$(HTLATEX) $(@F:%.html=%.latex)" ; \
+	echo "(1st pass)..." ; \
+	$(HTLATEX) $(@F:%.html=%.latex); \
+	echo "(2nd pass)..." ; \
+	$(HTLATEX) $(@F:%.html=%.latex); \
+	echo "(3rd pass)..." ; \
+	$(HTLATEX) $(@F:%.html=%.latex)
+
+$(DOCSAREA)/helpfiles/%.htex : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2tlatex.xsl
+	@ trap "$(RM) $(ARCHTMPD)/$*gcode" 1 2 3 15 ; \
+          $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2tlatex.xsl | sed -e "s/<?xml version.*//" | awk -f $(AIPSROOT)/code/install/docutils/xml2latex.awk | sed -e "s/\\\'/\'/g" > $(DOCSAREA)/helpfiles/$(notdir $(basename $<)).htex
+	@ chmod 664  $(DOCSAREA)/helpfiles/$(notdir $(basename $<)).htex
+	@ touch $(AIPSROOT)/code/doc/taskref/TaskRef.dir
+
+helpfiles :  $(XDOCTIME) \
+          $(patsubst %.xml,$(XDOCTIME)(%.htex),$(filter %.xml,$(CASAXML)))
+
+# $(XDOCTIME)(%) :  $(CODEDIR)/*.xml $(AIPSROOT)/docs/casaref/helpfiles/%.htex $(AIPSROOT)/docs/casaref/helpfiles
+
+$(XDOCTIME)(%.htex) : $(XDOCTIME) $(DOCSAREA)/helpfiles/%.htex $(CODEDIR)/%.xml
+	-@ echo "	$*.htex"
+	 @ trap "$(RM) $(ARCHTMPD)/$*.htex" 1 2 3 15 ; \
+	   cat /dev/null > $(ARCHTMPD)/$*.htex; \
+	   $(AR) r $(XDOCTIME) $(ARCHTMPD)/$*.htex ; \
+	   $(RM) $(ARCHTMPD)/$*.htex
+
+$(XDOCTIME) : 
+	   @ cat /dev/null > $(ARCHTMPD)/$*gdocs ; \
+	   amkdir -p ug=rwx,g+s,o=rx -v $(DOCSAREA)/helpfiles ; \
+	   $(AR) r $(XDOCTIME) $(ARCHTMPD)/$*gdocs ; \
+	   $(RM) $(ARCHTMPD)/$*gdocs
+
+pytasks : 
+	cp /dev/null $(ARCHTMPD)/taskinfo
+	amkdir $(DOCSAREA)/helpfiles
+	cp /dev/null $(DOCSAREA)/helpfiles/tasksref.htex
+	for task in *.xml ; do \
+	$(SAXON) $$task  $(AIPSROOT)/code/xmlcasa/install/casa2tsum2.xsl >> $(ARCHTMPD)/taskinfo ; \
+	echo "\\input{$${task%.xml}.htex}" >> $(DOCSAREA)/helpfiles/tasksref.htex ; \
+	done 
+	echo >> $(ARCHTMPD)/taskinfo
+	echo "from tget import *" >> $(ARCHTMPD)/taskinfo
+	echo "from taskmanager import tm" >> $(ARCHTMPD)/taskinfo
+	grep "^from" $(ARCHTMPD)/taskinfo > $(AIPSARCH)/python/$(PYTHONVER)/tasks.py
+	echo "from odict import odict" > $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
+	echo "mytasks = odict()" >> $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
+	echo "tasksum = odict()" >> $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
+	egrep -v "^#?from" $(ARCHTMPD)/taskinfo >> $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
+	chmod 664 $(AIPSARCH)/python/$(PYTHONVER)/tasks.py
+	chmod 664 $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
+
+$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+
+$(AIPSARCH)/python/$(PYTHONVER)/%_cli.py : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2pycli.xsl
+	@ $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2pycli.xsl > $@
+	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
+	cp $< $(AIPSROOT)/share/xml
+	chmod 664 $@
+
+$(AIPSARCH)/python/$(PYTHONVER)/%.py : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2pyimp.xsl
+	@ $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2pyimp.xsl > $@
+	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
+	cp $< $(AIPSROOT)/share/xml
+	chmod 664 $@
+
+$(AIPSROOT)/share/xml/%.xml : $(CODEDIR)/%.defxml
+	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
+	cp $< $(AIPSROOT)/share/xml/%.xml
+	chmod 664 $@
+
+$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+	-@ echo "	$*.xml"
+	 @ trap "$(RM) $(ARCHTMPD)/$*.xml" 1 2 3 15 ; \
+	   cat /dev/null > $(ARCHTMPD)/$*.xml; \
+	   $(AR) r $(CGENXTIME) $(ARCHTMPD)/$*.xml ; \
+	   $(RM) $(ARCHTMPD)/$*.xml
+
+$(CGENITIME) : 
+	   cat /dev/null > $(ARCHTMPD)/$*gcode ; \
+	   $(AR) r $(CGENXTIME) $(ARCHTMPD)/$*gcode ; \
+	   $(RM) $(ARCHTMPD)/$*gcode
+
+#$(GENERATEDCODE) : 
+	 #-@ echo ""
+	  #@ amkdir -p ug=rwx,g+s,o=rx -v $@ ; \
+	   trap "$(RM) $(ARCHTMPD)/$*gcode" 1 2 3 15
+#	   cat /dev/null > $(ARCHTMPD)/$*gcode ; \
+#	   $(AR) r $(CGENXTIME) $(ARCHTMPD)/$*gcode ; \
+#	   $(RM) $(ARCHTMPD)/$*gcode
+
+gencode : $(CGENITIME) \
+          $(patsubst %.xml,$(CGENXTIME)(%.xml),$(filter %.xml,$(CASAXML)))
+	@ for i in $$SUBDIRS ; do \
+	     [ "$$i" = test ] && continue ; \
+	     if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	        echo "" ; \
+	        echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/$$i $@ ; \
+	     else \
+	        echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"$$i ; \
+	     fi ; \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+
+
+pythonlib : $(patsubst %.xml,$(CGENXTIME)(%.xml),$(filter %.xml,$(CASAXML)))
+
+# Programmer-oriented pattern rules.
+ifeq "$(MAKEMODE)" "programmer"
+   vpath %.cc $(CODEDIR)
+   vpath %.l  $(CODEDIR)
+   vpath %.y  $(CODEDIR)
+   vpath templates $(CODEDIR)
+
+   # Paths assumed by the programmer dependency lists.
+   vpath %.h  $(PGMRCODE)/include:$(CODEINCD)
+   vpath %.cc $(PGMRCODE)/include:$(CODEINCD)
+
+   mylib(%.o) : $(PGMRLIBR)(%.o)
+	@ if [ -f "$(PGMRLIBD)/$%" ] ; then \
+	     cd $(PGMRLIBD) ; \
+	     $(CXXAR) $(CXXARFLAGS) $(PGMRLIBR) $% ; \
+	     $(RM) $% ; \
+	     $(RANLIB) $(PGMRLIBR) ; \
+	  fi
+
+   $(PGMRLIBR)(%.o) : $(PGMRLIBD)/%.o ;
+
+   $(PGMRLIBD)/%.o : %.cc $(PGMRTIME)(%)
+	-@ echo ""
+	   $(C++) $(CPPFLAGS) $(PGMRINCL) -c $(C++FLAGS) -o $@ $<;
+
+   $(PGMRLIBD)/%.i : %.cc $(PGMRTIME)(%)
+	-@ echo ""
+	   $(CPP) $(CPPFLAGS) $(PGMRINCL) $< > $@
+
+   %.d : %.cc $(PGMRTIME)(%) FORCE
+	-@ echo ""
+	-@ echo "Programmer dependencies for $<:"
+	-@ sed -n -e '\#^$$(PGMRTIME)($*)#s#.* : #   #p' $(PGMRLIST)
+
+   $(PGMRTIME)(%) : %.cc $(PGMRINCD)/%.lcc $(PGMRINCD)/%.ycc
+	-@ echo ""
+	-@ echo "Updating dependencies for $<"
+	 @ for i in 10 9 8 7 6 5 4 3 2 1 ; do \
+	      [ ! -f "$(PGMRLOCK)" ] && break ; \
+	      echo "	waiting for lock file ($$i)..." ; \
+	      sleep 5 ; \
+	   done
+	-@ touch $(PGMRLIST)
+	 @ trap "$(RM) $(PGMRLOCK) $(PGMRLIST).$(PID)" 1 2 3 15 ; \
+	      TARGET='$$(PGMRTIME)($*) : ' ; \
+	      sed -n -e "\#^$$TARGET#!p" $(PGMRLIST) > $(PGMRLOCK) ; \
+	      $(CPP) $(CPPFLAGS) $(PGMRINCL) $< | \
+	      sed -n \
+	          -e '\%^# *[0-9][0-9]* ".*"%!d' \
+	          -e 's%.*"./\(.*\)".*%'"$$TARGET"'$$(THISDIR)/\1%p' \
+	          -e 's%.*"\([^</].*\)".*%'"$$TARGET"'$$(THISDIR)/\1%p' \
+	          -e 's%.*"$(CODEDIR)/\(.*\)".*%'"$$TARGET"'\1%p' \
+	          -e 's%.*"$(PGMRCODE)/\(include/.*\)".*%'"$$TARGET"'$$(PGMRCODE)/\1%p' \
+	          -e 's%.*"$(CODEINCD)/\(.*\)".*%'"$$TARGET"'\1%p' | \
+	      sort -u | sort -m - $(PGMRLOCK) > $(PGMRLIST).$(PID)
+	 @ if [ -f "$(PGMRLOCK)" ] ; then \
+	      mv -f $(PGMRLIST).$(PID) $(PGMRLIST) ; \
+	      $(RM) $(PGMRLOCK) ; \
+	      trap "$(RM) $(PGMRAUXD)/$*" 1 2 3 15 ; \
+	      cat /dev/null > $(PGMRAUXD)/$* ; \
+	      $(AR) r $(PGMRTIME) $(PGMRAUXD)/$* ; \
+	      $(RM) $(PGMRAUXD)/$* ; \
+	   fi
+
+   $(PGMRINCD)/%.lcc : %.l
+	-@ echo ""
+	$(FLEX) -t -P$(<F:.l=) $< > $@
+
+   $(PGMRINCD)/%.lcc : ;
+
+   $(PGMRINCD)/%.ycc : %.y
+	-@ echo ""
+	$(BISON) -p $(<F:.y=) -o $@ $<
+
+   $(PGMRINCD)/%.ycc : ;
+
+   ifneq "$(PGMRLIBD)" "."
+      %.o : $(PGMRLIBD)/%.o ;
+      %.i : $(PGMRLIBD)/%.i ;
+      %.lcc : $(PGMRINCD)/%.lcc ;
+      %.ycc : $(PGMRINCD)/%.ycc ;
+   endif
+
+   $(THISDIR)/%.cc : ;
+
+   % : $(PGMRLIBR)(%.o)
+	@ if [ -f "$(PGMRLIBD)/$@.o" ] ; then \
+	     cd $(PGMRLIBD) ; \
+	     $(CXXAR) $(CXXARFLAGS) $(PGMRLIBR) $@.o ; \
+	     $(RM) $@.o ; \
+	     $(RANLIB) $(PGMRLIBR) ; \
+	  fi
+endif
+
+# Defeat builtin pattern rules.
+%.i : %.cc
+%.o : %.cc
+(%) : %
+%   : %.cc
+
+
+# Static and static pattern rules.
+#---------------------------------
+.PRECIOUS : %.lcc %.ycc $(LIBDBG) $(LIBOPT) $(COMPONENTLIB) $(LIBJAR)\
+    $(PCKGDBGD)/%.lcc $(PCKGDBGD)/%.ycc $(PCKGOPTD)/%.lcc $(PCKGOPTD)/%.ycc \
+    $(AIPSGCODE)/impl/%.cc $(AIPSGCODE)/impl/casac/%.h $(DOCSAREA)/helpfiles/%.htex $(AIPSARCH)/python/$(PYTHONVER)/%.py $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+
+.PHONY : build_lock exorcise lib instsys depend ranlib updatelib mocs bin javalib dojars helpfiles
+
+allsys bin : gencode pythonlib helpfiles pytasks
+
+.cleancode ::
+	-$Q cd $(CODEDIR) && $(RM) *.lcc *.ycc *.i *.o *.cdb *.cyi
+
+.cleansys :: cleandocs
+	-$Q $(RM) $(ARCHAUXD)/$(PCKGMOD)*.list
+	-$Q $(RM) $(ARCHAUXD)/$(PCKGMOD)*.time
+	-$Q $(RM) $(LIBDBG)
+	-$Q $(RM) $(LIBOPT)
+	-$Q $(RM) -r $(AIPSARCH)/python/$(PYTHONVER)/*.py 
+	-$Q $(RM) -r $(AIPSARCH)/python/$(PYTHONVER)/*.pyc
+
+cleandocs ::
+	-$Q if [ -d $(DOCSAREA) ] ; then \
+	       cd $(DOCSAREA) && $(RM) -r $(filter-out %.xpm $(SUBDIRS) \
+	       $(patsubst %.h,%.html,$(filter %.h %.gif %.html,$(AIPSSRCS))), \
+	          $(notdir $(wildcard $(DOCSAREA)/*))) ... ; \
+	    fi
+
+# Scripts.
+$(LIBEXECS) : % : $(LIBEXECD)/% ;
+
+# Script icons.
+$(LIBICONS) : % : $(LIBICOND)/% ;
+
+docscan : $(patsubst %.h,$(SCANTIME)(%),$(filter %.h,$(AIPSSRCS)))
+	@ for i in $$SUBDIRS ; do \
+	     [ "$$i" = test ] && continue ; \
+	     if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	        echo "" ; \
+	        echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/$$i $@ ; \
+	     else \
+	        echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"$$i ; \
+	     fi ; \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+docextr : $(DOCSAREA) \
+    $(patsubst %.h,$(EXTRTIME)(%),$(filter %.h,$(AIPSSRCS))) \
+    $(addprefix $(DOCSAREA)/,$(AIPSGIFS) $(AIPSHTML))
+	@ for i in $$SUBDIRS ; do \
+	     [ "$$i" = test ] && continue ; \
+	     if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	        echo "" ; \
+	        echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/$$i $@ ; \
+	     else \
+	        echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"$$i ; \
+	     fi ; \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+$(DOCSAREA) :
+	-@ echo ""
+	 @ amkdir -p ug=rwx,g+s,o=rx -v $@
+
+$(DOCSAREA)/helpfiles :
+	-@ echo ""
+	 @ amkdir -p ug=rwx,g+s,o=rx -v $(DOCSAREA)/helpfiles
+
+runtests :
+	@ for i in $$SUBDIRS ; do \
+	     if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	        echo "" ; \
+	        echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/$$i $@ ; \
+	     else \
+	        echo $@[$(MAKELEVEL)]:"$(MAKEINDENT)"$$i ; \
+	     fi ; \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+# Programmer-oriented static rules.
+ifeq "$(MAKEMODE)" "programmer"
+   .PRECIOUS : $(PGMRLIBR) $(PGMRLIBD)/%.o $(PGMRLIBD)/%.i \
+               $(PGMRINCD)/%.lcc $(PGMRINCD)/%.ycc
+
+   .PHONY : %.d depend dependencies inst mylib mylibs update_mylib \
+            update_mylibs mocs helpfiles doc
+
+   all : $(PGMRINST) $(PGMRIMPS:%.cc=$(PGMRLIBR)(%.o)) update_mylib
+
+   .clean ::
+	- cd $(PGMRLIBD) && $(RM) *.i *.o *.cdb *.cyi a.out core
+	- cd $(PGMRINCD) && $(RM) *~ *% *.lcc *.ycc
+	- cd $(PGMRAUXD) && $(RM) *~ *% $(PCKGMOD).lock
+
+   .cleaner ::
+	- cd $(PGMRAUXD) && $(RM) $(PCKGMOD)*.*
+	- $(RM) $(PGMRLIBR)
+
+   .cleanest ::
+	- cd $(PGMRAUXD) && $(RM) *.time *.list
+	- cd $(PGMRLIBD) && $(RM) *.a
+	- $(RM) -r $(PGMRPTRD)
+	- $(RM) -r tmplinst
+
+   depend : $(PGMRIMPS:%.cc=$(PGMRTIME)(%)) ;
+
+   dependencies : depend $(AIPSIMPS:%.cc=$(PGMRTIME)(%))
+	@ for i in $$SUBDIRS ; do \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+   exorcise :
+	-@ if [ -f "$(PGMRLIST)" ] ; then \
+	      grep "(THISDIR)" $(PGMRLIST) | \
+	      awk '{print $$3}' | \
+	      sort -u | \
+	      while read RHS ; do \
+	         DFILE=`echo $$RHS | sed -e 's#\$$(THISDIR)#$(THISDIR)#'` ; \
+	         if [ ! -f "$$DFILE" ] ; then \
+	            grep "$$RHS" $(PGMRLIST) | \
+	            awk '{print $$1}' | \
+	            sort -u | \
+	            while read LHS ; do \
+	               TARGET=`echo $$LHS | sed -e '{s/.*(//;s/)$$//;}'` ; \
+	               echo "Deleting dependencies for $$TARGET because of" ; \
+	               echo "   $$DFILE" ; \
+	               grep -v "^$$LHS : " $(PGMRLIST) > $(PGMRLIST).$(PID) ; \
+	               mv $(PGMRLIST).$(PID) $(PGMRLIST) ; \
+	               $(AR) d $(PGMRTIME) $$TARGET ; \
+	               echo "Deleting $$TARGET.o from" ; \
+	               echo "   $(PGMRLIBR)" ; \
+	               $(AR) d $(PGMRLIBR) $$TARGET.o ; \
+	            done ; \
+	         fi ; \
+	      done ; \
+	   fi
+	-@ if [ -f "$(PGMRLIST)" ] ; then \
+	      grep PGMRCODE $(PGMRLIST) | \
+	      awk '{print $$3}' | \
+	      sort -u | \
+	      while read RHS ; do \
+	         DFILE=`echo $$RHS | sed -e 's#\$$(PGMRCODE)#$(PGMRCODE)#'` ; \
+	         if [ ! -f "$$DFILE" ] ; then \
+	            grep "$$RHS" $(PGMRLIST) | \
+	            awk '{print $$1}' | \
+	            sort -u | \
+	            while read LHS ; do \
+	               TARGET=`echo $$LHS | sed -e '{s/.*(//;s/)$$//;}'` ; \
+	               echo "Deleting dependencies for $$TARGET because of" ; \
+	               echo "   $$DFILE" ; \
+	               grep -v "^$$LHS : " $(PGMRLIST) > $(PGMRLIST).$(PID) ; \
+	               mv $(PGMRLIST).$(PID) $(PGMRLIST) ; \
+	               $(AR) d $(PGMRTIME) $$TARGET ; \
+	            done ; \
+	         fi ; \
+	      done ; \
+	   fi
+	-@ if [ ! -s "$(PGMRLIST)" ] ; then \
+	      $(RM) $(PGMRLIST) $(PGMRTIME) ; \
+	   fi
+	-@ if [ -d tmplinst ] ; then \
+	      if [ -f templates ] ; then \
+	         (cd tmplinst && mkinst -q ../templates) ; \
+	      else \
+	         (cd tmplinst && mkinst -q - < /dev/null) ; \
+	      fi ; \
+	      $(MAKE) -f $(THISDIR)/makefile -C tmplinst $@ ; \
+	   fi
+
+   mylibs : mylib
+	@ for i in $$SUBDIRS ; do \
+	     $(MAKE) -C $$i $@ ; \
+	  done
+
+   mylib : $(PGMRINST) $(PGMRLIBR);
+
+   inst : tmplinst FORCE
+	 @ $(MAKE) -f $(THISDIR)/makefile -C $< all
+
+   tmplinst : templates
+	-@ echo ""
+	 @ amkdir -p ug=rwx,g+s,o=rx -v $@
+	-@ echo ""
+	 @ case "$<" in \
+	   templates) \
+	      cd $@ && mkinst -q ../$< ; \
+	      ;; \
+	   *) \
+	      cd $@ && mkinst -q - < /dev/null ; \
+	      ;; \
+	   esac
+
+   $(PGMRLIBR) : $(PGMRIMPS:%.cc=$(PGMRLIBR)(%.o)) \
+                 $(AIPSIMPS:%.cc=$(PGMRLIBR)(%.o)) update_mylib ;
+
+    doxygen :    
+	@ mkdir -p doc; \
+        cp $(CODEINSD)/docutils/doxygen.cfg doc/doxygen.cfg; \
+        if [ "$(DOXYDOT)" != "" ]; then \
+                echo "HAVE_DOT         = YES" >> doc/doxygen.cfg; \
+                echo "DOT_PATH         = $(DOXYDOT)" >> doc/doxygen.cfg; \
+        fi; \
+        echo "OUTPUT_DIRECTORY = ./doc" >> doc/doxygen.cfg; \
+        echo "STRIP_FROM_PATH  = $(PGMRCODE)" >> doc/doxygen.cfg; \
+        echo "INPUT            = ." >> doc/doxygen.cfg; \
+        echo "IMAGE_PATH       = ." >> doc/doxygen.cfg; \
+        echo "INPUT_FILTER     = $(AIPSARCH)/bin/doxygen_pp" >> doc/doxygen.cfg; \
+        echo "GENERATE_TAGFILE = doc/casa.tag" >> doc/doxygen.cfg; \
+        $(RM) doc/doxygen.log;
+	$(DOXYGEN) doc/doxygen.cfg 2>&1 > doc/doxygen.log
+
+endif
+
+show_local :
+	-@ echo ""
+	-@ echo "Variables defined in the implement makefile"
+	-@ echo "==========================================="
+	-@ echo ""
+	-@ echo "System"
+	-@ echo "------"
+	-@ echo "MODULE  =$(MODULE)"
+	-@ echo "PCKGMOD =$(PCKGMOD)"
+	-@ echo ""
+	-@ echo "TMPPCKGD=$(TMPPCKGD)"
+	-@ echo "PCKGDBGD=$(PCKGDBGD)"
+	-@ echo "PCKGOPTD=$(PCKGOPTD)"
+	-@ echo ""
+	-@ echo "DOCSAREA=$(DOCSAREA)"
+	-@ echo ""
+	-@ echo "LIBDBG  =$(LIBDBG)"
+	-@ echo "LIBOPT  =$(LIBOPT)"
+	-@ echo "AIPSLIBS=$(AIPSLIBS)"
+	-@ echo "LOCKDBG =$(LOCKDBG)"
+	-@ echo "LOCKOPT =$(LOCKOPT)"
+	-@ echo "UPDATELIB=$(UPDATELIB)"
+	-@ echo ""
+	-@ echo "AIPSIMPS=$(AIPSIMPS)"
+	-@ echo "LIBEXECS=$(LIBEXECS)"
+	-@ echo "LIBICONS=$(LIBICONS)"
+	-@ echo "AIPSGIFS=$(AIPSGIFS)"
+	-@ echo "AIPSHTML=$(AIPSHTML)"
+	-@ echo ""
+	-@ echo "DPNDLIST=$(DPNDLIST)"
+	-@ echo "DPNDTIME=$(DPNDTIME)"
+	-@ echo ""
+	-@ echo "SCANTIME=$(SCANTIME)"
+	-@ echo "PYTHON=$(PYTHON)"
+	-@ echo "PYTHONVER=$(PYTHONVER)"
+	-@ echo ""
+	-@ echo "Programmer"
+	-@ echo "----------"
+	-@ echo "PGMRLIBR=$(PGMRLIBR)"
+	-@ echo ""
+	-@ echo "PGMRLIST=$(PGMRLIST)"
+	-@ echo "PGMRTIME=$(PGMRTIME)"
+	-@ echo ""
+	-@ echo "PGMRLOCK=$(PGMRLOCK)"
+	-@ echo ""
+	-@ echo "PGMRINCS=$(PGMRINCS)"
+	-@ echo "PGMRIMPS=$(PGMRIMPS)"
+	-@ echo ""
+	-@ echo "PGMRINST=$(PGMRINST)"
+
+help ::
+	-@ echo ""
+	-@ echo "Targets defined in the implement makefile"
+	-@ echo "========================================="
+	-@ echo ""
+	-@ echo "System"
+	-@ echo "------"
+	-@ echo "   lib(%.o): compile an object module and insert it into the"
+	-@ echo "             system libraries (debug and/or optimized)."
+	-@ echo "        lib: build the system libraries."
+	-@ echo "    version: compile version.o."
+	-@ echo "    instsys: generate and instantiate diy templates."
+	-@ echo "  updatelib: insert all object modules into the system"
+	-@ echo "             libraries and ranlib them."
+	-@ echo "     ranlib: ranlib the system libraries."
+	-@ echo "    docscan: scan C++ sources for class information."
+	-@ echo "    docextr: extract cxx2html documentation from the C++ sources."
+	-@ echo "    docdoxy: extract doxygen documentation from the C++ sources."
+	-@ echo "  cleandocs: delete defunct files from \$$(DOCSAREA)."
+	-@ echo "   runtests: run all test programs."
+	-@ echo ""
+	-@ echo "Programmer"
+	-@ echo "----------"
+	-@ echo " mylib(%.o): compile a class implementation file and insert"
+	-@ echo "             the resultant .o file into a private library."
+	-@ echo "          %: shorthand for mylib(%.o)."
+	-@ echo "        %.o: compile a class implementation file."
+	-@ echo "        %.i: preprocess a class implementation file."
+	-@ echo "        %.d: list dependencies for a class implementation"
+	-@ echo "             file."
+	-@ echo "      %.lcc: preprocess a lex file."
+	-@ echo "      %.ycc: preprocess a yacc file."
+	-@ echo "   cleanest: cleaner, and also delete all dependency files,"
+	-@ echo "             object libraries, and the template repository."
+	-@ echo "     depend: determine dependencies for \$$(PGMRIMPS)."
+	-@ echo "dependencies: depend, and also determine dependencies for"
+	-@ echo "             \$$(AIPSIMPS), and likewise for all subdirectories."
+	-@ echo "   exorcise: dispell vexatious spirits."
+	-@ echo "       inst: generate and instantiate diy templates."
+	-@ echo "   tmplinst: generate diy template instantiation files."
+	-@ echo "      mylib: build a private library from all local and"
+	-@ echo "             system sources."
+	-@ echo "     mylibs: invoke mylib in this directory and all"
+	-@ echo "             subdirectories."
+	-@ echo "update_mylib: insert all object modules into a private"
+	-@ echo "             library and ranlib it (if necessary)."
+	-@ echo "        doc: build doxygen documentation in doc subdir."
+
+
+# System dependency list.
+ifndef NODEP
+   -include $(DPNDLIST)
+endif
+
+# Programmer dependency list.
+ifeq "$(MAKEMODE)" "programmer"
+   -include $(PGMRLIST)
+endif
