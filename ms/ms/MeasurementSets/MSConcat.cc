@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSConcat.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: $
 
 #include <ms/MeasurementSets/MSConcat.h>
 #include <casa/Arrays/Vector.h>
@@ -65,7 +65,7 @@ MSConcat::MSConcat(MeasurementSet& ms):
   MSColumns(ms),
   itsMS(ms),
   itsFixedShape(isFixedShape(ms.tableDesc())), 
-  newSourceIndex_p(-1), newSPWIndex_p(-1)
+  newSourceIndex_p(-1), newSourceIndex2_p(-1), newSPWIndex_p(-1)
 {
 
 
@@ -206,7 +206,6 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
   //See if there is a SOURCE table and concatenate and reindex it
   copySource(otherMS);
 
-
   // DATA_DESCRIPTION
   oldRows = itsMS.dataDescription().nrow();
   const Block<uInt> newDDIndices = copySpwAndPol(otherMS.spectralWindow(),
@@ -220,8 +219,16 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
 	<< " from the data description subtable" << endl;
   }
 
-  // correct the spw entries in the SOURCE table
+  // correct the spw entries in the SOURCE table and remove redundant rows
+  oldRows = itsMS.source().nrow();
   updateSource();
+  {
+    uInt removedRows =  oldRows - itsMS.source().nrow();
+    if(removedRows>0){
+      log << "Removed " << removedRows 
+	  << " redundant rows from the source subtable" << endl;
+    }
+  }
 
   // FIELD
   oldRows = itsMS.field().nrow();
@@ -233,6 +240,7 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
 	<< " rows and matched " << matchedRows 
 	<< " from the field subtable" << endl;
   }
+
 
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
@@ -654,10 +662,7 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
   MSField& fld = itsMS.field();
   const ROTableRow otherFldRow(otherFld);
   RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
-  Vector<Int> origSourceIndex;
-  if(doSource_p){
-    origSourceIndex=otherFieldCols.sourceId().getColumn();
-  }
+
   TableRow fldRow(fld);
   for (uInt f = 0; f < nFlds; f++) {
     delayDir = otherFieldCols.delayDirMeas(f);
@@ -691,6 +696,12 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
 	Int oldIndex=fieldCols.sourceId()(fldMap[f]);
 	if(newSourceIndex_p.isDefined(oldIndex)){
 	  fieldCols.sourceId().put(fldMap[f], newSourceIndex_p(oldIndex));
+	}
+      } 
+      if(doSource2_p){
+	Int oldIndex=fieldCols.sourceId()(fldMap[f]);
+	if(newSourceIndex2_p.isDefined(oldIndex)){
+	  fieldCols.sourceId().put(fldMap[f], newSourceIndex2_p(oldIndex));
 	}
       } 
     }
@@ -737,8 +748,8 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
 	// later to be replaced in updateSource
 	if(otherSpectralWindowId(k)>=0){
 	  sourceRecord.define(spwIdId, otherSpectralWindowId(k)-10000);
-	}	
-	
+	}
+
 	sourceRow.putMatchingFields(destRow, sourceRecord);
 
 	++destRow;
@@ -753,39 +764,186 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
 
 Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPol 
                               //   but before copyField!
-  Bool rval(False);
 
-  if(doSPW_p){ // the SPW table was rearranged
-    if(Table::isReadable(itsMS.sourceTableName())){
-      
-      MSSource& newSource=itsMS.source();
-      Int numrows_this=newSource.nrow();
-      
-      if(numrows_this > 0){  // the source table is not empty
-	
-	// the spw id
-	MSSourceColumns& sourceCol=source();
-	Vector<Int> thisSPWId=sourceCol.spectralWindowId().getColumn();
-	// convert the string containing the column spwid into a record field ID
-	RecordFieldId sourceSPWId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
-	
-	TableRow sourceRow(newSource);
-	TableRecord sourceRecord;
+  doSource2_p = False;
 
-	// loop over the columns of the (first) input table 
-	for (Int j =0 ; j < numrows_this ; ++j){
-	  if(thisSPWId(j)<-1){ // came from the second input table
-	    sourceRecord = sourceRow.get(j);
+  if(Table::isReadable(itsMS.sourceTableName())){
+
+    MSSource& newSource=itsMS.source();
+    MSSourceColumns& sourceCol=source();
+
+    // the number of rows in the source table
+    Int numrows_this=newSource.nrow();
+
+    if(numrows_this > 0){  // the source table is not empty
+
+      TableRecord sourceRecord;
+      SimpleOrderedMap <Int, Int> tempSourceIndex(-1);
+      SimpleOrderedMap <Int, Int> tempSourceIndex2(-1);
+      tempSourceIndex.clear();
+      tempSourceIndex2.clear();
+      newSourceIndex2_p.clear();
+
+      // the source columns
+      Vector<Int> thisId=sourceCol.sourceId().getColumn();
+      Vector<Int> thisSPWId=sourceCol.spectralWindowId().getColumn();
+
+      // containers for the rows from the two input tables
+      TableRow sourceRow(newSource);
+
+      // convert the string containing the column name into a record field ID
+      RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
+      RecordFieldId sourceSPWId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
+      
+      // loop over the columns of the merged source table 
+      for (Int j =0 ; j < numrows_this ; ++j){
+	if(thisSPWId(j)<-1){ // came from the second input table
+	  sourceRecord = sourceRow.get(j);
+	  if(doSPW_p){ // the SPW table was rearranged
 	    sourceRecord.define(sourceSPWId, newSPWIndex_p(thisSPWId(j)+10000) );
-	    sourceRow.putMatchingFields(j, sourceRecord);
-	    rval = True;
 	  }
+	  else { // the SPW table did not have to be rearranged, just revert changes to SPW from copySource
+	    sourceRecord.define(sourceSPWId, thisSPWId(j)+10000 );
+	  }
+	  sourceRow.putMatchingFields(j, sourceRecord);
 	} // end for j
       }
-      
+
+      // Check if there are redundant rows and remove them creating map for copyField
+      // loop over the columns of the merged source table 
+      Vector<Bool> rowToBeRemoved(numrows_this, False);
+      vector<uint> rowsToBeRemoved;
+      for (uint j=0 ; j < numrows_this ; ++j){
+	// check if row j has an equivalent row somewhere else in the table
+	for (uint k=0 ; k < numrows_this ; ++k){
+	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
+	    if( sourceRowsIdentical(sourceCol, j, k) ){
+//	      cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+	      if(j<k){ // make entry in map for (k, j) and delete k
+		tempSourceIndex.define(thisId(k), thisId(j));
+		rowToBeRemoved(k) = True;
+		rowsToBeRemoved.push_back(k);
+	      }
+	      else{ // make entry in map for (j, k) and delete j
+		tempSourceIndex.define(thisId(j), thisId(k));
+		rowToBeRemoved(j) = True;
+		rowsToBeRemoved.push_back(j);
+	      }
+	    }
+	  }
+	}
+      } // end for j
+      if(rowsToBeRemoved.size()>0){
+	Vector<uInt> rowsTBR(rowsToBeRemoved);
+	newSource.removeRow(rowsTBR);
+//	cout << "Removed " << rowsToBeRemoved.size() << " redundant rows from SOURCE table." << endl;
+
+	// renumber the sources consecutively 
+	Int newNumrows_this=newSource.nrow(); // updated number of rows
+	Vector<Int> newThisId=sourceCol.sourceId().getColumn(); // updated vector if IDs
+	for (Int j=0 ; j < newNumrows_this ; ++j){
+	  if(newThisId(j) != j){ 
+	    sourceRecord = sourceRow.get(j);
+	    tempSourceIndex2.define(newThisId(j), j);
+	    sourceRecord.define(sourceIdId, j );
+	    sourceRow.putMatchingFields(j, sourceRecord);
+	  }
+	}
+	// create map for copyField
+	for (Int j=0 ; j < numrows_this ; ++j){ // loop over old indices
+	  if(tempSourceIndex.isDefined(j)){ // ID changed because of redundancy
+	    if(tempSourceIndex2.isDefined(tempSourceIndex(j))){ // ID changed also because of consec. renumbering
+	      newSourceIndex2_p.define(j, tempSourceIndex2(tempSourceIndex(j)));
+	    }
+	    else{ // ID only changed because of redundancy
+	      newSourceIndex2_p.define(j, tempSourceIndex(j));
+	    }
+	  }
+	  else if(tempSourceIndex2.isDefined(j)){ // ID only changed because of consec. renumbering
+	    newSourceIndex2_p.define(j, tempSourceIndex2(j));
+	  }
+	}
+	doSource2_p=True;
+      }
+   
+    } // end if(numrows_this > 0) 
+  }
+  return doSource2_p;
+}
+
+
+Bool MSConcat::sourceRowsIdentical(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
+
+  Bool areIdentical(False);
+
+  // test the non-optional columns first
+  if(sourceCol.calibrationGroup().areEQ(rowi, rowj) &&
+     sourceCol.code().areEQ(rowi, rowj) &&
+     sourceCol.name().areEQ(rowi, rowj) &&
+     sourceCol.numLines().areEQ(rowi, rowj) &&
+     sourceCol.spectralWindowId().areEQ(rowi, rowj) &&
+     sourceCol.direction().areEQ(rowi, rowj) &&
+     sourceCol.interval().areEQ(rowi, rowj) &&
+     sourceCol.properMotion().areEQ(rowi, rowj) &&
+     sourceCol.time().areEQ(rowi, rowj) 
+     ){
+    
+    //    cout << "All non-optionals equal" << endl;
+    
+    // test the optional columns next
+    areIdentical = True;
+    if(!(sourceCol.position().isNull())){
+      try {
+	areIdentical = sourceCol.position().areEQ(rowi, rowj);
+      }
+      catch (AipsError x) {
+	// row has invalid data
+	areIdentical = True;
+      }
+      //      if(!areIdentical) cout << "not equal position" << endl;
+    }
+    if(!(sourceCol.pulsarId().isNull())){
+      try {
+	areIdentical = sourceCol.pulsarId().areEQ(rowi, rowj);
+      }
+      catch (AipsError x) {
+	// row has invalid data
+	areIdentical = True;
+      }
+      //      if(!areIdentical) cout << "not equal pulsarId" << endl;
+    }
+    if(!(sourceCol.restFrequency().isNull())){
+      try {
+	areIdentical = sourceCol.restFrequency().areEQ(rowi, rowj);
+      }
+      catch (AipsError x) {
+	// row has invalid data
+	areIdentical = True;
+      }
+      //      if(!areIdentical) cout << "not equal restFrequency" << endl;
+    }
+    if(!(sourceCol.sysvel().isNull())){
+      try {
+	areIdentical = sourceCol.sysvel().areEQ(rowi, rowj);
+      }
+      catch (AipsError x) {
+	// row has invalid data
+	areIdentical = True;
+      }
+      //      if(!areIdentical) cout << "not equal sysvel" << endl;
+    }
+    if(!(sourceCol.transition().isNull())){
+      try {
+	areIdentical = sourceCol.transition().areEQ(rowi, rowj);
+      }
+      catch (AipsError x) {
+	// row has invalid data
+	areIdentical = True;
+      }
+      //      if(!areIdentical) cout << "not equal transition" << endl;
     }
   }
-  return rval;
+  return areIdentical;
 }
 
 

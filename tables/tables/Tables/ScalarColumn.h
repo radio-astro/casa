@@ -152,6 +152,7 @@ public:
 	get (rownr, value);
 	return value;
     }
+
     // </group>
 
     // Get the vector of all values in the column.
@@ -188,6 +189,10 @@ public:
 
     // Get the vector of some values in the column.
     Vector<T> getColumnCells (const RefRows& rownrs) const;
+
+    // test if two column entries are equal
+    Bool areEQ(uInt row_i, uInt row_j) const;
+
 
 private:
     // Assignment makes no sense for a readonly class.
