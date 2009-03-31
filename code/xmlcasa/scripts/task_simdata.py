@@ -470,7 +470,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         noise_any=False
     
         if noise_thermal:
-            if not (util.observatoryname == 'ALMA' or util.observatoryname == 'ACA'):
+            if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
                 msg("WARNING: thermal noise only works properly for ALMA/ACA",color=31)
                 
             noise_any=True
@@ -562,10 +562,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 outertaper=[]
                 innertaper=[]
 
-            if verbose:
-                msg("clean inputs:")
-                msg("clean(vis="+msfile+",imagename="+image+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode="+psfmode+",imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell="+str(cell)+",phasecenter="+str(imcenter)+",restfreq='',stokes="+stokes+",weighting="+weighting+",robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        #if verbose:
+        # print clean inputs no matter what, so user can use them.
+        msg("clean inputs:")
+        msg("clean(vis="+msfile+",imagename="+image+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode="+psfmode+",imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell="+str(cell)+",phasecenter="+str(imcenter)+",restfreq='',stokes="+stokes+",weighting="+weighting+",robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
 
+        if psfmode != "none": 
             if int(casalog.version().split()[2].split('.')[1]) <= 3:
                 # XXX 2.3.1 syntax:
                 clean(vis=msfile,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode="mosaic",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)

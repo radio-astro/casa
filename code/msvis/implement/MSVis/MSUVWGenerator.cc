@@ -13,10 +13,11 @@ namespace casa {
 
 // The UvwCoords ctor has lines for the antennas, antenna offsets, and station
 // positions.  This ctor assumes they're present in msc_p if present at all.
-MSUVWGenerator::MSUVWGenerator(MS &ms_ref) :
+  MSUVWGenerator::MSUVWGenerator(MS &ms_ref, const MBaseline::Types bltype,
+				 const Muvw::Types uvwtype) :
   msc_p(ms_ref),				    	
-  bl_csys_p(MBaseline::Ref(MBaseline::J2000)),	    
-  uvw_csys_p(Muvw::J2000),
+  bl_csys_p(MBaseline::Ref(bltype)),           // MBaseline::J2000
+  uvw_csys_p(uvwtype),                         // uvw_csys_p(Muvw::J2000)
   antColumns_p(msc_p.antenna()),
   antPositions_p(antColumns_p.positionMeas()),
   antOffset_p(antColumns_p.offsetMeas()),
@@ -134,6 +135,10 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   // and uvw_bl() is only called for baselines that are actually used.
   antUVW_p.resize(nant_p);
 
+  logSink() << LogOrigin("MSUVWGenerator", "make_uvws") << LogIO::NORMAL3;
+  
+  logSink() << LogIO::DEBUG1 << "timeRes_p: " << timeRes_p << LogIO::POST;
+
   Double oldTime = tOI[0] - 2.0 * timeRes_p;     // Ensure a call to uvw_an
   Int    oldFld  = -2;				 // on the 1st iteration.
   for(uInt row = 0; row < msc_p.nrow(); ++row){
@@ -153,16 +158,16 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
       }
     }
     catch(AipsError x){
-      LogIO logSink;
-      
-      logSink << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
-	      << LogIO::POST;
+      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+		<< LogIO::POST;
       throw(AipsError("Error in MSUVWGenerator::make_uvws."));
       return false;
     }
   }
   return true;
 }
+
+LogIO& MSUVWGenerator::logSink() {return sink_p;};
 
 // void MSUVWGenerator::get_ant_offsets(const MDirection& dir_with_a_frame)
 // {

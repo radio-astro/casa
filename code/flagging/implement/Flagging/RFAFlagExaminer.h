@@ -78,11 +78,11 @@ public:
 //  virtual IterMode iterTime ( uInt it );
 //  virtual IterMode iterRow  ( uInt ir );
 */
-  //virtual void iterFlag ( uInt it );
+  virtual void iterFlag ( uInt it );
 
   virtual void startData(){RFAFlagCubeBase::startData();return;};
   virtual void startFlag();
-  virtual void iterFlag( uInt it , Bool resetFlags=True);
+    //virtual void iterFlag( uInt it , Bool resetFlags=True);
   virtual void endFlag();
   virtual void finalize();
   virtual void initialize();
@@ -94,12 +94,12 @@ public:
 //  static const RecordInterface & getDefaults ();
 
 protected:
-  void processRow  ( uInt ifr,uInt it ) ;
-  Int totalflags,totalcount;
-  Int totalrowflags,totalrowcount;
-  Int accumTotalFlags, accumTotalCount, accumRowFlags, accumTotalRowCount, accumTotalRowFlags;
-  Int inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
-  Int outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
+    void processRow  ( uInt ifr,uInt it ) ;
+    Int totalflags,totalcount;
+    Int totalrowflags,totalrowcount;
+    Int accumTotalFlags, accumTotalCount, accumRowFlags, accumTotalRowCount, accumTotalRowFlags;
+    Int inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
+    Int outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
 };
 
     

@@ -74,15 +74,15 @@ public:
     // <group>
     unsigned int sizeMasked() const { return 0; }
     unsigned int sizeUnmasked() const { return size(); }
-    bool maskedAt(unsigned int index) const { return false; }
+    bool maskedAt(unsigned int index) const { return itsCache_->getFlagMask((int)index); }
     bool maskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
     bool unmaskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
     void xyAndMaskAt(unsigned int index, double& x, double& y,
             bool& mask) const {
-        xAndYAt(index, x, y);
-        mask = false;
+      mask = itsCache_->getFlagMask((int)index);
+      xAndYAt(index, x, y);
     }
     // </group>
     

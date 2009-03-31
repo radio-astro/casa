@@ -318,7 +318,9 @@ def show_flag_history( scan ):
         print 'History of channel flagging:'
         for i in xrange(len(hist)):
                 hists=hist[i].split('##')
-                if ( hists[1]=='sdflag' ):
+                if ( len(hists) <= 1 ):
+                        continue
+                elif ( hists[1]=='sdflag' ):
                         when=hists[0]
                         scans=hists[2].lstrip('scans=')
                         if (scans=='[]'):

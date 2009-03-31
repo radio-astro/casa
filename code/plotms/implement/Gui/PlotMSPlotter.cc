@@ -358,7 +358,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     connect(actionHoldRelease, SIGNAL(toggled(bool)),
             SLOT(actionHoldRelease_()));    
     connect(actionClearPlots, SIGNAL(triggered()), SLOT(actionClearPlots_()));
-    connect(actionQuit, SIGNAL(triggered()), SLOT(actionClearPlots_()));
+    connect(actionQuit, SIGNAL(triggered()), SLOT(actionQuit_()));
 
     connect(actionAbout, SIGNAL(triggered()), SLOT(showAbout()));
     connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));

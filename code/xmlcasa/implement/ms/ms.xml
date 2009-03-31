@@ -2947,6 +2947,13 @@ in spectral window 1.
        </description>
        <value>-1</value>
      </param>
+     <param type="string" name="uvtype">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
+     </param>
    </input>  
    <returns type="bool"/>
    <example>
@@ -2990,6 +2997,13 @@ in spectral window 1.
 	 Phase tracking centers for each field in fields, in the same order.
        </description>
        <value>-1</value>
+     </param>
+     <param type="string" direction="in" name="uvtype">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
      </param>
    </input>  
    <returns type="bool"/>

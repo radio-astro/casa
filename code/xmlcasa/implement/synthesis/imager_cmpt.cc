@@ -507,7 +507,7 @@ imager::makeimage(const std::string& type, const std::string& image, const std::
 bool
 imager::makemodelfromsd(const std::string& sdimage, const std::string& modelimage, const std::string& sdpsf, const std::string& maskimage)
 {
-  if(hasValidMS_p){
+  
 
     try {
    
@@ -521,9 +521,6 @@ imager::makemodelfromsd(const std::string& sdimage, const std::string& modelimag
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
-  } else {
-    *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-  }
   return False;
 }
 
@@ -1330,14 +1327,17 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const std::string& location, const double padding, const std::string& freqinterp, const bool usemodelcol, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const bool usemodelcol, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
 {
 
    Bool rstat(False);
    if(hasValidMS_p){
       try {
           MPosition mlocation;
-          mpFromString(mlocation, location);
+	  if ((String(location.toString()) != casa::String("")) && 
+	      (String(location.toString()) != casa::String("[]")) ){
+	    casaMPosition(location, mlocation);
+	  }
           rstat = itsImager->setoptions(String(ftmachine), cache, tile, 
 					String(gridfunction),
 					mlocation, padding, usemodelcol, 

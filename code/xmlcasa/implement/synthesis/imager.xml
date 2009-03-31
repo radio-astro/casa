@@ -3633,8 +3633,9 @@ especially in wide-field cleaning.
      <value>SF</value>
      </param>
 
-     <param type="MPosition" name="location">
+     <param type="any" name="location">
      <description>Location used in phase rotations</description>
+     <any type="variant" />
      <value></value>
      </param>
 

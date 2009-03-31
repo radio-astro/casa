@@ -161,20 +161,20 @@ namespace casa {
     // create record description on first entry
     if( !rec.nfields() )
       {
-	Vector<Int> plotscr(2,3); 
-	rec.define(RF_PLOTSCR,plotscr);
-	rec.define(RF_PLOTDEV,plotscr);
-	rec.define(RF_DEVFILE,"flagreport.ps/ps");
-	rec.defineRecord(RF_GLOBAL,Record());
-	rec.define(RF_TRIAL,False);
-	rec.define(RF_RESET,False);
+	Vector<Int> plotscr(2, 3); 
+	rec.define(RF_PLOTSCR, plotscr);
+	rec.define(RF_PLOTDEV, plotscr);
+	rec.define(RF_DEVFILE, "flagreport.ps/ps");
+	rec.defineRecord(RF_GLOBAL, Record());
+	rec.define(RF_TRIAL, False);
+	rec.define(RF_RESET, False);
 	
-	rec.setComment(RF_PLOTSCR,"Format of screen plots: [NX,NY] or False to disable");
-	rec.setComment(RF_PLOTDEV,"Format of hardcopy plots: [NX,NY], or False to disable");
-	rec.setComment(RF_DEVFILE,"Filename for hardcopy (a PGPlot 'filename/device')");
-	rec.setComment(RF_GLOBAL,"Record of global parameters applied to all methods");
-	rec.setComment(RF_TRIAL,"T for trial run (no flags written out)");
-	rec.setComment(RF_RESET,"T to reset existing flags before running");
+	rec.setComment(RF_PLOTSCR, "Format of screen plots: [NX, NY] or False to disable");
+	rec.setComment(RF_PLOTDEV, "Format of hardcopy plots: [NX, NY], or False to disable");
+	rec.setComment(RF_DEVFILE, "Filename for hardcopy (a PGPlot 'filename/device')");
+	rec.setComment(RF_GLOBAL, "Record of global parameters applied to all methods");
+	rec.setComment(RF_TRIAL, "T for trial run (no flags written out)");
+	rec.setComment(RF_RESET, "T to reset existing flags before running");
       }
     return rec;
   }
@@ -481,7 +481,9 @@ namespace casa {
 	os << "By selection " << originalms.nrow() << " rows are reduced to "
 	   << mssel_p->nrow() << LogIO::POST;
       }
-    else os << "Selection did not drop any rows" << LogIO::POST;
+    else {
+	os << "Selection did not drop any rows" << LogIO::NORMAL3;
+    }
     /* Channel selection */ // Always select all chans
     /* Create a vis iter */
     /*
@@ -641,11 +643,12 @@ namespace casa {
 	IPosition shp = baselinelist.shape();
 	if(dbg)cout << "Original shape of baselinelist : " << shp << endl;
 	IPosition transposed = shp;
-	transposed[0]=shp[1]; transposed[1]=shp[0];
+	transposed[0] = shp[1]; transposed[1] = shp[0];
 	Matrix<Int> blist(transposed);
-	for(Int i=0;i<shp[0];i++)
-	  for(Int j=0;j<shp[1];j++)
-	    blist(j,i) = baselinelist(i,j);
+
+	for(Int i=0; i < shp[0]; i++)
+	  for(Int j=0; j < shp[1]; j++)
+	    blist(j, i) = baselinelist(i, j);
 	// need to add 1 because RFASelector expects 1-based indices.
 	
 	RecordDesc flagDesc;       
@@ -727,7 +730,14 @@ namespace casa {
     return True;
   }
   
-  Bool Flagger::setmanualflags(Bool autocorr, Bool rowflag, Bool unflag, String clipexpr, Vector<Double> cliprange, String clipcolumn, Bool outside, Double quackinterval, String opmode)
+  Bool Flagger::setmanualflags(Bool autocorr, Bool rowflag,
+			       Bool unflag, 
+			       String clipexpr, 
+			       Vector<Double> cliprange, 
+			       String clipcolumn, 
+			       Bool outside, 
+			       Double quackinterval, 
+			       String opmode)
   {
      if (dbg)   cout << "setmanualflags: " 
              << "autocorr=" << autocorr << " rowflag=" << rowflag
@@ -767,13 +777,12 @@ namespace casa {
     if(spwlist.nelements()){ separatespw = True; nrec = spwlist.nelements();}
     else { separatespw = False; nrec = 1; }
     
-    for( Int i=0;i<nrec;i++ )
-      {
+    for( Int i=0; i < nrec; i++ ) {
 	Record selrec;
 	if(upcase(opmode).matches("FLAG")) 
-	  selrec.define("id",String("select"));
+	    selrec.define("id",String("select"));
 	if(upcase(opmode).matches("SUMMARY")) 
-	  selrec.define("id",String("flagexaminer"));
+	    selrec.define("id",String("flagexaminer"));
 	
 	/* Fill selections for all but spw, chan, corr */
 	fillSelections(selrec);
@@ -846,7 +855,7 @@ namespace casa {
 	  }
 	
 	// Operation related parameters.
-	if( upcase(opmode).matches("SUMMARY") )
+	if( 0 && upcase(opmode).matches("SUMMARY") )
 	  {
 	    /*
 	      RecordDesc flagDesc;       
@@ -893,11 +902,11 @@ namespace casa {
 	    /* Clip/FlagRange */
 	    /*Jira Casa 212 : Check if "clipexpr" has multiple comma-separated expressions
 	      and loop here, creating multiple clipRecs. The RFASelector will handle it. */
-	    if(clipexpr.length() && cliprange.nelements()==2 &&
-	       cliprange[0]<cliprange[1])
+	    if (clipexpr.length() && cliprange.nelements()==2 &&
+		cliprange[0]<cliprange[1])
 	      {
 		RecordDesc flagDesc;       
-		if( outside )
+		if ( outside )
 		  flagDesc.addField(RF_CLIP, TpRecord);
 		else
 		  flagDesc.addField(RF_FLAGRANGE, TpRecord);
@@ -913,7 +922,7 @@ namespace casa {
 		clipRec.define(RF_MIN, cliprange[0]);
 		clipRec.define(RF_MAX, cliprange[1]);
 		
-		if( outside )
+		if ( outside )
 		  {
 		    flagRec.defineRecord(RF_CLIP, clipRec);
 		    selrec.mergeField(flagRec, RF_CLIP, RecordInterface::OverwriteDuplicates);
@@ -976,7 +985,7 @@ namespace casa {
     
     //cerr << __FILE__ << __LINE__ << "the hello agent = " << hello << endl;
     
-    RFAApplyFlags::setIndices(&fi); // static memory
+    RFAApplyFlags::setIndices(&fi); // static memory!
 
     agent.define("id", String("applyflags"));
     addAgent(agent);
@@ -1568,20 +1577,24 @@ namespace casa {
 	      //cerr << agent_defaults;
 	      os<<"Unknown flagging method '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	    }
+
 	  // create parameter record by taking agent defaults, and merging in global
 	  // and specified options
 	  const RecordInterface & defparms(agent_defaults.asRecord(agent_id));
 	  Record parms(defparms);
 	  parms.merge(globopt,Record::OverwriteDuplicates); 
 	  parms.merge(agent_rec,Record::OverwriteDuplicates);
+
 	  // add the global reset argumnent
 	  parms.define(RF_RESET,reset_flags);
+
 	  // see if this is a different instance of an already activated agent
 	  if( agcounts.isDefined(agent_id) )
 	    {
 	      // increment the instance counter
 	      Int count = agcounts.asInt(agent_id)+1;
 	      agcounts.define(agent_id,count);
+
 	      // modify the agent name to include an instance count
 	      char s[1024];
 	      sprintf(s,"%s#%d",defparms.asString(RF_NAME).chars(),count);
@@ -1600,10 +1613,12 @@ namespace casa {
 	}
       
       acc.resize(nacc, True);
+
       // begin iterating over chunks
       uInt nchunk=0;
+
       // process just the first chunk because something's screwy  
-      for( vi.originChunks(); vi.moreChunks(); vi.nextChunk(),nchunk++ ) 
+      for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk(), nchunk++ ) 
 	{//Start of loop over chunks
 	  didSomething = 0;
 	  for( uInt i = 0; i<acc.nelements(); i++ ) acc[i]->initialize();
@@ -1612,6 +1627,7 @@ namespace casa {
 
 	  // limit frequency of progmeter updates (duh!)
 	  Int pm_update_freq = chunk.num(TIME)/200;
+
 	  // How much memory do we have?
 	  Int availmem = opt.isDefined("maxmem") ? 
 	    opt.asInt("maxmem") : HostInfo::memoryTotal()/1024;
@@ -1621,6 +1637,7 @@ namespace casa {
 	  if( RFFlagCube::numInstances() )
 	    {
 	      Int flagmem = RFFlagCube::estimateMemoryUse(chunk);
+
 	      // memory tight? use a disk-based flag cube
 	      if( flagmem>.75*availmem )
 		{
@@ -1675,7 +1692,7 @@ namespace casa {
 	    {
 	      uInt itime=0;
 	      chunk.newPass(npass);
-	      // count up who wants a data pass and who wants a dry pass    
+	      // count up who wants a data pass and who wants a dry pass
 	      Int ndata = sum(iter_mode==(Int)RFA::DATA);
 	      Int ndry  = sum(iter_mode==(Int)RFA::DRY);
 	      Int nactive = ndata+ndry;
@@ -1709,8 +1726,9 @@ namespace casa {
 		    anyActive=False;
 		    for( uInt i = 0; i<acc.nelements(); i++ ) 
 		      {
-			if ((acc[i]->getID() != "FlagExaminer") && (active_init(i)))
-			  anyActive=True;
+			  //if ((acc[i]->getID() != "FlagExaminer") && 
+			  if (active_init(i))
+			      anyActive=True;
 		      }
 
 		    for(uInt i=0;i<acc.nelements();i++) if (anyActive) acc[i]->initializeIter(itime);
@@ -1777,6 +1795,8 @@ namespace casa {
 	      else  // dry pass only
 		{
 		  sprintf(subtitle,"pass %d (dry)",npass+1);
+                  //cout << "-----------subtitle=" << subtitle << endl;
+
 		  ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq);
 		  // start pass for all active agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1808,15 +1828,20 @@ namespace casa {
 		} // end of dry pass
 	    } // end loop over passes
 	  
-	  if( !isFieldSet(opt,RF_TRIAL) && anyNE(active_init,False) )
+	  //cout << opt << endl;
+	  //cout << "any active = " << active_init << endl;
+
+	  if( !isFieldSet(opt, RF_TRIAL) && anyNE(active_init, False) )
 	    {
+		sprintf(subtitle,"pass (flag)");
+		//cout << "-----------subtitle=" << subtitle << endl;
+
 	      ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq);
 	      for( uInt i = 0; i<acc.nelements(); i++ ) 
 		if( active_init(i) )
 		  acc[i]->startFlag();
 	      uInt itime=0;
-	      for( vi.origin(); vi.more(); vi++,itime++ )
-		{
+	      for( vi.origin(); vi.more(); vi++,itime++ ) {
 		  progmeter.update(itime);
 
 		  chunk.newTime();
@@ -1827,35 +1852,36 @@ namespace casa {
 		  for( uInt i = 0; i<acc.nelements(); i++ ) 
 		    {
 		      //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
-		      if ((acc[i]->getID() != "FlagExaminer") && (active_init(i)))
-			anyActive=True;
+			if ((acc[i]->getID() != "FlagExaminer") && 
+			    active_init(i))
+			    anyActive=True;
 		    }
+
+		  //cout << "anyActive" << anyActive << endl;
+
 		  didSomething = (anyActive==True);
-		  for( uInt i = 0; i<acc.nelements(); i++ ) 
-		    {
-		      if( active_init(i) )
-			{
-			  //			if (acc[i]->getID() != "FlagExaminer" )
+		  for( uInt i = 0; i<acc.nelements(); i++ ) {
+		      if( active_init(i) ) {
+			  //if (acc[i]->getID() != "FlagExaminer" )
 			  acc[i]->iterFlag(itime);
-			}
+		      }
 		      if (anyActive) acc[i]->finalizeIter(itime);
-		    }
-		      
+		  }
+		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
-		    {
+		  {
 		      for(uInt ii=0;ii<vb.flagRow().nelements();ii++)
-			if (vb.flagRow()(ii) == True) outRowFlags++;
+			  if (vb.flagRow()(ii) == True) outRowFlags++;
 		      for(Int ii=0;ii<vb.flag().shape()(0);ii++)
-			for(Int jj=0;jj<vb.flag().shape()(1);jj++)
-			  if (vb.flag()(ii,jj) == True) outDataFlags++;
-		    }
-		}
-	      if (didSomething)
-		{
-// 		  for( uInt i = 0; i<acc.nelements(); i++ ) 
-// 		    if (acc[i]) acc[i]->finalize();
+			  for(Int jj=0;jj<vb.flag().shape()(1);jj++)
+			      if (vb.flag()(ii,jj) == True) outDataFlags++;
+		  }
+	      }  // for (vi ... )
+	      if (didSomething) {
+		  for( uInt i = 0; i < acc.nelements(); i++ ) 
+		      if (acc[i]) acc[i]->finalize();
 		  LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
-      
+		  
 		  osss << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " 
 		       << chunk.visBuf().spectralWindow() 
 		       << "  Total rows = " << totalRows

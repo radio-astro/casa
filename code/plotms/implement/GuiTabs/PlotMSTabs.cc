@@ -296,8 +296,14 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
         connect(selit.value(), SIGNAL(editingFinished()), SLOT(tabChanged()));
     }
     connect(msAveragingChannel, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingChannelValue, SIGNAL(valueChanged(int)),
+    connect(msAveragingChannelValue, SIGNAL(valueChanged(double)),
             SLOT(tabChanged()));
+    connect(msAveragingTime, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(msAveragingTimeValue, SIGNAL(valueChanged(double)),
+            SLOT(tabChanged()));
+    connect(msAveragingScan, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(msAveragingField, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(msAveragingBaseline, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     
     connect(msClearButton, SIGNAL(clicked()), SLOT(msClear()));
     connect(msPlotButton, SIGNAL(clicked()), SLOT(plot()));
@@ -402,8 +408,12 @@ PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
     params.setSelection(sel);
     PlotMSAveraging avg;
     avg.setChannel(msAveragingChannel->isChecked());
-    if(avg.channel())
-        avg.setChannelValue(msAveragingChannelValue->value() / 100.0);
+    if(avg.channel()) avg.setChannelValue(msAveragingChannelValue->value());
+    avg.setTime(msAveragingTime->isChecked());
+    if(avg.time()) avg.setTimeValue(msAveragingTimeValue->value());
+    avg.setScan(msAveragingScan->isChecked());
+    avg.setField(msAveragingField->isChecked());
+    avg.setBaseline(msAveragingBaseline->isChecked());
     params.setAveraging(avg);
     
     // Axes tab
@@ -472,7 +482,12 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     }
     const PlotMSAveraging& avg = params.averaging();
     msAveragingChannel->setChecked(avg.channel());
-    msAveragingChannelValue->setValue((int)(avg.channelValue() * 100));
+    msAveragingChannelValue->setValue(avg.channelValue());
+    msAveragingTime->setChecked(avg.time());
+    msAveragingTimeValue->setValue(avg.timeValue());
+    msAveragingScan->setChecked(avg.scan());
+    msAveragingField->setChecked(avg.field());
+    msAveragingBaseline->setChecked(avg.baseline());
     
     // Axes tab
     PMS::Axis xAxis = params.xAxis(), yAxis = params.yAxis();

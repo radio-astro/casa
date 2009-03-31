@@ -281,7 +281,7 @@ print '--Flagdata--'
 
 
 # Use flagdata() in vector mode => parameters must be vectors
-
+default('flagdata')
 vis = msfile1
 mode = 'manualflag'
 
@@ -583,6 +583,7 @@ print '--Flagdata--'
 #   final image RMS.
 #
 
+default('flagdata')
 vis = msfile2
 mode = 'manualflag'
 
@@ -613,7 +614,6 @@ autocorr[0] = true
 # Flag all data from antennas 8,9,18
 #
 
-#default('flagdata')
 #flagdata(vis=msfile2,antenna='9,10,19', mode='manualflag')
 
 antenna[1] = '9,10,19'

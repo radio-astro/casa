@@ -1,7 +1,21 @@
 import os
 from taskinit import *
 
-def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=None,uvrange=None,timerange=None,scan=None,feed=None,array=None,clipexpr=None,clipminmax=None,clipcolumn=None,clipoutside=None,quackinterval=None,autocorr=None,unflag=None,algorithm=None,column=None,expr=None,thr=None,window=None):
+def flagdata(vis = None, mode = None,
+	     spw = None, field = None,
+	     selectdata = None,
+	     antenna = None,
+	     uvrange = None,
+	     timerange = None,
+	     correlation = None,
+	     scan = None,
+	     feed = None, array = None,
+	     clipexpr = None, clipminmax = None,
+	     clipcolumn = None, clipoutside = None,
+	     quackinterval = None, autocorr = None,
+	     unflag = None, algorithm = None,
+	     column = None, expr = None,
+	     thr = None, window = None):
         """ All purpose flagging task based on selections:
 
         The task will select a subset of data explicitly for flagging,
@@ -110,7 +124,7 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 
 	"""
 
-	#Python script
+	casalog.origin('flagdata')
 
 	fg.clearflagselection(0)
 	
@@ -200,9 +214,9 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 			else:
 				fg.setdata();
 				fg.setmanualflags(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation,autocorrelation=autocorr,unflag=unflag,clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval);
-                        fg.setflagsummary();
                 if( mode == 'autoflag' ):
-                        fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
+                        fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,
+				   baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
                         rec = fg.getautoflagparams(algorithm=algorithm);
                         rec['expr'] = expr;
                         rec['thr'] = thr;
@@ -213,10 +227,9 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
                         #     rec['nbins'] = nbins;
                         #     rec['minpop'] = minpop;
                         fg.setautoflag(algorithm=algorithm,parameters=rec);
-                        fg.setflagsummary();
                 if( mode == 'summary' ):
                         fg.setdata();
-                        fg.setflagsummary(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
+			fg.setflagsummary(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
                 if( mode == 'query' ):
                         print "Sorry - not yet implemented !"
 			torun = False;

@@ -108,7 +108,7 @@ public:
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
 	      AZIMUTH,ELEVATION,PARANG,
-	      ROW)
+	      ROW,FLAG_ROW)
 
       // VEL_RADIO, VEL_OPTICAL, VEL_RELATIVISTIC
       // HOURANGLE, 
@@ -121,7 +121,7 @@ public:
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
 	      "Azimuth","Elevation","ParAng",
-	      "Row")
+	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",
     //              "vel_optical", "vel_relativistic", "u", "v", "w", "azimuth",
@@ -334,12 +334,40 @@ public:
     void setChannel(bool channel);
     // </group>
     
-    // Gets/Sets the channel averaging value, which will be a value between
-    // 0 and 1, inclusive.  This value indicates the "level" of averaging
-    // desired: 0 means no averaging, and 1 means full averaging.
+    // Gets/Sets the channel averaging value.
     // <group>
     double channelValue() const;
     void setChannelValue(double value);
+    // </group>
+    
+    // Gets/Sets whether time averaging is turned on or not.
+    // <group>
+    bool time() const;
+    void setTime(bool time);
+    // </group>
+    
+    // Gets/Sets the time averaging value.
+    // <group>
+    double timeValue() const;
+    void setTimeValue(double value);
+    // </group>
+    
+    // Gets/Sets whether scan averaging is turned on or not.
+    // <group>
+    bool scan() const;
+    void setScan(bool scan);
+    // </group>
+    
+    // Gets/Sets whether field averaging is turned on or not.
+    // <group>
+    bool field() const;
+    void setField(bool field);
+    // </group>
+    
+    // Gets/Sets whether baseline averaging is turned on or not.
+    // <group>
+    bool baseline() const;
+    void setBaseline(bool baseline);
     // </group>
     
     
@@ -356,6 +384,21 @@ private:
     bool itsChannel_;
     double itsChannelValue_;
     // </group>
+    
+    // Time averaging flag and value, respectively.
+    // <group>
+    bool itsTime_;
+    double itsTimeValue_;
+    // </group>
+    
+    // Scan averaging flag.
+    bool itsScan_;
+    
+    // Field averaging flag.
+    bool itsField_;
+    
+    // Baseline averaging flag.
+    bool itsBaseline_;
     
     
     // Sets the default values.

@@ -472,6 +472,121 @@ void VisBuffer::freqAveCubes()
 
 }
 
+
+void VisBuffer::channelAve(Float factor) 
+{
+  // TBD: Use weightSpec, if present, and update weightMat accordingly
+
+  // Discern # of input channels per output channel from factor
+  Int width(1);
+  if (factor>1.0) width=Int(factor);        // factor supplied in channel units
+  else width=Int(factor*Float(nChannel())); // factor supplied in fractional units
+
+  // The number of output channels
+  Int nChanOut((nChannel()+width-1)/width);
+
+  // Apply averaging to whatever data is present
+  if (visCubeOK_p)          chanAveVisCube(visCube(),width,nChanOut);
+  if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),width,nChanOut);
+  if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),width,nChanOut);
+  if (flagCubeOK_p)             chanAveFlagCube(flagCube(),width,nChanOut);
+
+  // Finally, collapse the frequency values themselves
+  Vector<Double> newFreq(nChanOut,0.0);
+  Vector<Int> newChan(nChanOut,0);
+  frequency(); // Ensure frequencies pre-filled
+  channel();
+  Int ichan=0;
+  for (Int ochan=0;ochan<nChanOut;++ochan) {
+    Int n=0;
+    while (n<width && ichan<nChannel()) {
+      newFreq(ochan)+=frequency()(ichan);
+      newChan(ochan)+=channel()(ichan);
+      ichan++;
+      n++;
+    }
+    if (n>0) {
+      newFreq(ochan)/=Double(n);
+      newChan(ochan)/=n;
+    }
+  }
+  // Install the new values
+  frequency().reference(newFreq);
+  channel().reference(newChan);
+  nChannel()=nChanOut;
+}
+
+void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int width,Int nChanOut) {
+
+  IPosition csh(data.shape());
+  Int nChan0=csh(1);
+  csh(1)=nChanOut;
+
+  Cube<Complex> newCube(csh); newCube=Complex(0.0);
+  Int nCor=nCorr();
+  Int ichan(0),n(0);
+  Vector<Int> ngood(nCor,0);
+  for (Int row=0; row<nRow(); row++) {
+    if (!flagRow()(row)) {
+      ichan=0;
+      for (Int ochan=0;ochan<nChanOut;++ochan) {
+	n=0;
+	ngood=0;
+	while (n<width && ichan<nChan0) {
+	  for (Int icor=0;icor<nCor;++icor) 
+	    if (!flagCube()(icor,ichan,row)) {
+	      newCube(icor,ochan,row)+=data(icor,ichan,row);
+	      ngood(icor)++;
+	    }
+	  ichan++;
+	  n++;
+	}
+	for (Int icor=0;icor<nCor;++icor) {
+	  if (ngood(icor)>0) {
+	    newCube(icor,ochan,row)*=Complex(1.0f/ngood(icor));
+	  }
+	}
+      }
+    }
+  }
+
+  // Install averaged info
+  data.reference(newCube);
+
+}
+
+void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int width,Int nChanOut) {
+
+  IPosition csh(flagcube.shape());
+  Int nChan0=csh(1);
+  csh(1)=nChanOut;
+
+  Cube<Bool> newFlag(csh); newFlag=True;
+  Int nCor=nCorr();
+  Int ichan(0),n(0);
+  for (Int row=0; row<nRow(); row++) {
+    if (!flagRow()(row)) {
+      ichan=0;
+      for (Int ochan=0;ochan<nChanOut;++ochan) {
+	n=0;
+	while (n<width && ichan<nChan0) {
+	  for (Int icor=0;icor<nCor;++icor) 
+	    if (!flagcube(icor,ichan,row)) 
+	      newFlag(icor,ochan,row)=False;
+	  ichan++;
+	  n++;
+	}
+      }
+    }
+  }
+  // Use averaged flags
+  flagcube.reference(newFlag);
+
+}
+
+
+
+
 // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
 void VisBuffer::sortCorr() {
  

@@ -92,7 +92,8 @@ public:
   //              table are in bl_an_p.
   //            - timeRes_p has been conservatively calculated using rough
   //              estimates of the maximum baseline length and field of view.
-  MSUVWGenerator(MS& ms_ref);
+  MSUVWGenerator(MS& ms_ref, const MBaseline::Types bltype,
+		 const Muvw::Types uvwtype);
 
   // Destructor
   ~MSUVWGenerator();
@@ -226,6 +227,10 @@ private:
 
   //************* Initialized later, if at all. ********************
   
+  // Log functions and variables
+  LogIO sink_p;
+  LogIO& logSink();
+
   //map<Tag, ArrayParam>      m_array_p;     // FIX: Tag
 
   // The UVW "positions" of each antenna being used during a time bin,
