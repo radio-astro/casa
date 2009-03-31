@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSConcat.h 19560 2006-08-18 00:59:12Z kgolap $
+//# $Id: $
 
 #ifndef MS_MSCONCAT_H
 #define MS_MSCONCAT_H
@@ -115,6 +115,9 @@ private:
 			    const MSPolarization& otherPol,
 			    const MSDataDescription& otherDD);
   Bool copySource(const MeasurementSet& otherms);
+  Bool updateSource();
+  Bool sourceRowsIdentical(const MSSourceColumns& sourceCol, 
+			   const uInt& rowi, const uInt& rowj);
 
   void updateModelDataKeywords();
 
@@ -124,7 +127,13 @@ private:
   Quantum<Double> itsDirTol;
   Vector<Bool> itsChanReversed;
   SimpleOrderedMap <Int, Int> newSourceIndex_p;
+  SimpleOrderedMap <Int, Int> newSourceIndex2_p;
+  SimpleOrderedMap <Int, Int> newSPWIndex_p;
+
   Bool doSource_p;
+  Bool doSource2_p;
+  Bool doSPW_p;
+
 };
 
 } //# NAMESPACE CASA - END

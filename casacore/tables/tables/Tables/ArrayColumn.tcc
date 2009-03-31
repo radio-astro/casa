@@ -1,4 +1,4 @@
-//# ArrayColumn.cc: Access to an array table column with arbitrary data type
+//# Arraycolumn.cc: Access to an array table column with arbitrary data type
 //# Copyright (C) 1994,1995,1996,1997,1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -510,7 +510,23 @@ void ROArrayColumn<T>::getColumnCells (const RefRows& rownrs,
 				       &arr);
 }
 
+template<class T>
+Bool ROArrayColumn<T>::areEQ (uInt row_i, uInt row_j) const
+{
+    Bool rval(False);
+    Array<T> arr_i;
+    Array<T> arr_j;
 
+    get(row_i, arr_i, True);
+    get(row_j, arr_j, True);
+    Int ni = arr_i.nelements();
+    Int nj = arr_j.nelements();
+    if( (ni==0 && nj==0) ||    // no data is regarded as equal
+	allEQ(arr_i, arr_j)){
+      rval = True;
+    }
+    return rval;
+}
 
 
 template<class T>
@@ -571,7 +587,7 @@ void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape)
 	}
     }
 }
-	
+
 template<class T>
 void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 			       const IPosition& tileShape)
@@ -588,7 +604,7 @@ void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 	}
     }
 }
-	
+
 template<class T>
 void ArrayColumn<T>::put (uInt rownr, const Array<T>& arr)
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitFlagsEngine.tcc 20539 2009-03-20 08:54:16Z gervandiepen $
+//# $Id: BitFlagsEngine.tcc 20541 2009-03-23 08:07:42Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/BitFlagsEngine.h>
@@ -272,14 +272,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void BitFlagsEngine<T>::mapOnGet (Array<Bool>& array,
                                     const Array<T>& stored)
   {
-    arrayTransform (stored, array, FlagsToBool(itsReadMask));
+    ///    arrayTransform (stored, array, FlagsToBool(itsReadMask));
   }
 
   template<typename T>
   void BitFlagsEngine<T>::mapOnPut (const Array<Bool>& array,
                                     Array<T>& stored)
   {
-    arrayTransformInPlace (stored, array, BoolToFlags(itsWriteMask));
+    ///    arraayTransformInPlace (stored, array, BoolToFlags(itsWriteMask));
   }
 
 } //# NAMESPACE CASA - END

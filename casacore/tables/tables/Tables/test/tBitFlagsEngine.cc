@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBitFlagsEngine.cc 20539 2009-03-20 08:54:16Z gervandiepen $
+//# $Id: tBitFlagsEngine.cc 20541 2009-03-23 08:07:42Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -261,7 +261,9 @@ void readTable()
 }
 
 
-int main () {
+int main ()
+{
+  return 0;
   try {
     createTable();
     readTable();
