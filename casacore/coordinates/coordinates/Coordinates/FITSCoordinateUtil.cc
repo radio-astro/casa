@@ -473,7 +473,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // this method takes header converts it into cSys and puts the remainer into recHeader
 
 
-	LogIO os(LogOrigin("FITSCoordinateUtil", "fromFITSHeader", WHERE));
+	LogIO os(LogOrigin("FITSCoordinateUtil", "fromFITSHeader"));
 	CoordinateSystem cSysTmp;
 
 	if (header.nelements()==0) {
@@ -497,7 +497,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[18]=tmp[17];tmp[17]=tmp[16];tmp[16]=tmp[15];tmp[15]=tmp[14];
 		all = all.append(tmp);
 		os << LogIO::WARN
-		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
+		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change GLON-FLT to GLON-CAR, etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
 		       header[i][3]=='P' && header[i][4]=='E' &&
@@ -509,7 +509,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
 		os << LogIO::WARN
-		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
+		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'GLON    ' to 'GLON-CAR', etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
 		       header[i][3]=='P' && header[i][4]=='E' &&
@@ -521,7 +521,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[15]='-'; tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
 		os << LogIO::WARN
-		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
+		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'OBSFREQ' to 'RESTFRQ'
 		       header[i][0]=='O' && header[i][1]=='B' && header[i][2]=='S' &&
 		       header[i][3]=='F' && header[i][4]=='R' &&
@@ -533,7 +533,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[4]='F'; tmp[5]='R'; tmp[6]='Q'; tmp[7]=' ';
 		all = all.append(tmp);
 		os << LogIO::WARN
-		   << "Header\n"<< header[i] << "\nrewrote as\n" << tmp << LogIO::POST;
+		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
+	    } else if (hsize >= 24 &&       // ignore "-SIP"
+		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
+		       header[i][3]=='P' && header[i][4]=='E' &&
+		       (header[i][5]=='1'|| header[i][5]=='2') &&
+		       header[i][19]=='-' && header[i][20]=='S' && 
+		       header[i][21]=='I' && header[i][22]=='P' && 
+		       header[i][23]=='\'') {
+		char tmp[hsize];
+		strncpy(tmp,header[i].c_str(),hsize+1);
+		tmp[19]='\'';tmp[20]=tmp[21]=tmp[22]=tmp[23]=' ';
+		all = all.append(tmp);
+		os << LogIO::WARN
+		   << "The SIP convention for representing distortion in FITS headers\n  is not part of FITS standard v3.0"
+		   << " and not yet supported by CASA.\n  Header\n  "<< header[i] << "\n  was interpreted as\n  " << tmp << LogIO::POST;
 	    } else {
 		all = all.append(header(i));
 	    }
