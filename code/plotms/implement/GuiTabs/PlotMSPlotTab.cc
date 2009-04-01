@@ -1,4 +1,4 @@
-//# PlotMSTabs.cc: Tab GUI widgets.
+//# PlotMSPlotTab.cc: Subclass of PlotMSTab for controlling plot parameters.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,123 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/GuiTabs/PlotMSTabs.qo.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
+#include <plotms/Actions/PlotMSExportThread.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
 namespace casa {
-
-///////////////////////////
-// PLOTMSTAB DEFINITIONS //
-///////////////////////////
-
-PlotMSTab::PlotMSTab(PlotMS* parent, PlotMSPlotter* plotter) :
-        itsParent_(parent), itsPlotter_(plotter) { }
-
-PlotMSTab::~PlotMSTab() { }
-
-
-void PlotMSTab::changedText(QLabel* label, bool changed) {
-    if(itsLabelDefaults_.contains(label))
-        label->setText(changedText(itsLabelDefaults_.value(label),
-                       changed));
-}
-
-QString PlotMSTab::changedText(const QString& t, bool changed) {
-    QString str(t);
-    str.replace(' ', "&nbsp;");
-    if(changed) str = "<font color=\"#FF0000\">"+ t + "</font>";
-    return str;
-}
-
-bool PlotMSTab::setChooser(QComboBox* chooser, const QString& value) {
-    for(int i = 0; i < chooser->count(); i++) {
-        if(chooser->itemText(i) == value) {
-            chooser->setCurrentIndex(i);
-            return true;
-        }
-    }
-    return false;
-}
-
-
-//////////////////////////////////
-// PLOTMSOPTIONSTAB DEFINITIONS //
-//////////////////////////////////
-
-PlotMSOptionsTab::PlotMSOptionsTab(PlotMS* parent, PlotMSPlotter* plotter) :
-        PlotMSTab(parent, plotter), itsParameters_(parent->getParameters()) {
-    setupUi(this);
-    
-    // Log levels
-    const vector<String>& levels = PlotMSLogger::levelStrings();
-    for(unsigned int i = 0; i < levels.size(); i++)
-        logLevel->addItem(levels[i].c_str());
-    setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));
-    
-    // Add self as watcher to plotms parameters.
-    itsParameters_.addWatcher(this);
-    
-    // Connect widgets
-    connect(buttonStyle, SIGNAL(currentIndexChanged(int)),
-            SLOT(toolButtonStyleChanged(int)));
-    connect(logLevel, SIGNAL(currentIndexChanged(const QString&)),
-            SLOT(logLevelChanged(const QString&)));
-    connect(logDebug, SIGNAL(toggled(bool)), SLOT(logDebugChanged(bool)));
-}
-
-PlotMSOptionsTab::~PlotMSOptionsTab() { }
-
-QList<QToolButton*> PlotMSOptionsTab::toolButtons() const {
-    return QList<QToolButton*>();
-}
-
-void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) {
-    if(&p == &itsParameters_) {
-        logLevel->blockSignals(true);
-        setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));
-        logLevel->blockSignals(false);
-        
-        logDebug->blockSignals(true);
-        logDebug->setChecked(itsParameters_.logDebug());
-        logDebug->blockSignals(false);
-    }
-}
-
-
-void PlotMSOptionsTab::toolButtonStyleChanged(int newIndex) {
-    Qt::ToolButtonStyle style = Qt::ToolButtonIconOnly;
-    if(newIndex == 1)      style = Qt::ToolButtonTextOnly;
-    else if(newIndex == 2) style = Qt::ToolButtonTextBesideIcon;
-    else if(newIndex == 3) style = Qt::ToolButtonTextUnderIcon;
-    itsPlotter_->setToolButtonStyle(style);
-}
-
-void PlotMSOptionsTab::logLevelChanged(const QString& newLevel) {
-    bool ok;
-    PlotMSLogger::Level l = PlotMSLogger::level(newLevel.toStdString(), &ok);
-    if(ok) {
-        itsParameters_.holdNotification(this);
-        itsParameters_.setLogLevel(l, itsParameters_.logDebug());
-        itsParameters_.releaseNotification();
-    }
-}
-
-void PlotMSOptionsTab::logDebugChanged(bool value) {
-    itsParameters_.holdNotification(this);
-    itsParameters_.setLogLevel(itsParameters_.logLevel(), value);
-    itsParameters_.releaseNotification();
-}
-
 
 ///////////////////////////////
 // PLOTMSPLOTTAB DEFINITIONS //
 ///////////////////////////////
 
-PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
-        PlotMSTab(parent, plotter), itsPlotManager_(parent->getPlotManager()),
+PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
+        itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
         itsUpdateFlag_(true) {
     setupUi(this);
@@ -169,6 +66,11 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
         l->addWidget(val, i, 1);
         itsSelectionValues_.insert(fields[i], val);
     }
+    
+    msAveragingChannelValue->setValidator(
+            new QDoubleValidator(msAveragingChannelValue));
+    msAveragingTimeValue->setValidator(
+            new QDoubleValidator(msAveragingTimeValue));
     
     QtUtilities::putInScrollArea(msSelectionFrame);
     //QtUtilities::putInScrollArea(msAveragingFrame);
@@ -296,10 +198,10 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter) :
         connect(selit.value(), SIGNAL(editingFinished()), SLOT(tabChanged()));
     }
     connect(msAveragingChannel, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingChannelValue, SIGNAL(valueChanged(double)),
+    connect(msAveragingChannelValue, SIGNAL(textChanged(const QString&)),
             SLOT(tabChanged()));
     connect(msAveragingTime, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingTimeValue, SIGNAL(valueChanged(double)),
+    connect(msAveragingTimeValue, SIGNAL(textChanged(const QString&)),
             SLOT(tabChanged()));
     connect(msAveragingScan, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     connect(msAveragingField, SIGNAL(toggled(bool)), SLOT(tabChanged()));
@@ -408,9 +310,19 @@ PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
     params.setSelection(sel);
     PlotMSAveraging avg;
     avg.setChannel(msAveragingChannel->isChecked());
-    if(avg.channel()) avg.setChannelValue(msAveragingChannelValue->value());
+    bool ok;
+    double d;
+    if(avg.channel()) {
+        d = msAveragingChannelValue->text().toDouble(&ok);
+        if(ok) avg.setChannelValue(d);
+        else   avg.setChannel(false);
+    }
     avg.setTime(msAveragingTime->isChecked());
-    if(avg.time()) avg.setTimeValue(msAveragingTimeValue->value());
+    if(avg.time()) {
+        d = msAveragingTimeValue->text().toDouble(&ok);
+        if(ok) avg.setTimeValue(d);
+        else   avg.setTime(false);
+    }
     avg.setScan(msAveragingScan->isChecked());
     avg.setField(msAveragingField->isChecked());
     avg.setBaseline(msAveragingBaseline->isChecked());
@@ -482,9 +394,9 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     }
     const PlotMSAveraging& avg = params.averaging();
     msAveragingChannel->setChecked(avg.channel());
-    msAveragingChannelValue->setValue(avg.channelValue());
+    msAveragingChannelValue->setText(QString::number(avg.channelValue()));
     msAveragingTime->setChecked(avg.time());
-    msAveragingTimeValue->setValue(avg.timeValue());
+    msAveragingTimeValue->setText(QString::number(avg.timeValue()));
     msAveragingScan->setChecked(avg.scan());
     msAveragingField->setChecked(avg.field());
     msAveragingBaseline->setChecked(avg.baseline());
@@ -772,6 +684,15 @@ void PlotMSPlotTab::plot() {
              cload = !itsCurrentPlot_->data().cacheReady();
         if(pchanged || cload) {
             if(pchanged) {
+                if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
+                   (params.xAxis() != itsCurrentParameters_->xAxis() ||
+                    params.yAxis() != itsCurrentParameters_->yAxis())) {
+                    vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
+                    for(unsigned int i = 0; i < canv.size(); i++)
+                        canv[i]->standardMouseTools()->selectTool()
+                               ->clearSelectedRects();
+                }
+                
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
@@ -818,127 +739,6 @@ void PlotMSPlotTab::exportClicked() {
     
     itsPlotter_->doThreadedOperation(
             new PlotMSExportThread(itsCurrentPlot_, format));
-}
-
-
-////////////////////////////////
-// PLOTMSTOOLSTAB DEFINITIONS //
-////////////////////////////////
-
-PlotMSToolsTab::PlotMSToolsTab(PlotMS* parent, PlotMSPlotter* plotter) :
-        PlotMSTab(parent, plotter) {
-    setupUi(this);
-    
-    // Get the actions that buttons will be connected to.
-    const QMap<PlotMSAction::Type, QAction*>& actionMap =
-        itsPlotter_->plotActionMap();
-    
-    // Set up hand tools
-    QAction* act = actionMap.value(PlotMSAction::TOOL_MARK_REGIONS);
-    connect(handMarkRegions, SIGNAL(toggled(bool)), act,
-            SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
-    act = actionMap.value(PlotMSAction::TOOL_ZOOM);
-    connect(handZoom, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
-    act = actionMap.value(PlotMSAction::TOOL_PAN);
-    connect(handPan, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
-    
-    // Set up selected regions
-    connect(regionsClear, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::CLEAR_REGIONS), SLOT(trigger()));
-    connect(regionsFlag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::FLAG), SLOT(trigger()));
-    connect(regionsUnflag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::UNFLAG), SLOT(trigger()));
-    connect(regionsLocate, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::LOCATE), SLOT(trigger()));
-    
-    // Set up stack
-    connect(stackBack, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_BACK), SLOT(trigger()));
-    connect(stackBase, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_BASE), SLOT(trigger()));
-    connect(stackForward, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_FORWARD), SLOT(trigger()));
-    
-    // Set up tracker
-    act = actionMap.value(PlotMSAction::TRACKER_HOVER);
-    connect(trackerHover, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), trackerHover, SLOT(setChecked(bool)));
-    act = actionMap.value(PlotMSAction::TRACKER_DISPLAY);
-    connect(trackerDisplay, SIGNAL(toggled(bool)), act,SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), trackerDisplay,SLOT(setChecked(bool)));
-    
-    // Set up iteration
-    connect(iterationFirst, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_FIRST), SLOT(trigger()));
-    connect(iterationPrev, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_PREV), SLOT(trigger()));
-    connect(iterationNext, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_NEXT), SLOT(trigger()));
-    connect(iterationLast, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_LAST), SLOT(trigger()));
-    
-    // Set up hold/release
-    act = actionMap.value(PlotMSAction::HOLD_RELEASE_DRAWING);
-    connect(holdReleaseDrawing, SIGNAL(toggled(bool)), act,
-            SLOT(setChecked(bool)));
-    connect(act, SIGNAL(changed()), SLOT(holdReleaseActionChanged()));
-}
-
-PlotMSToolsTab::~PlotMSToolsTab() { }
-
-QList<QToolButton*> PlotMSToolsTab::toolButtons() const {
-    return QList<QToolButton*>() << regionsClear << regionsFlag
-           << regionsUnflag << regionsLocate << stackBack << stackBase
-           << stackForward << iterationFirst << iterationPrev << iterationNext
-           << iterationLast;
-}
-
-void PlotMSToolsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) { }
-
-void PlotMSToolsTab::showIterationButtons(bool show) {
-    iterationBox->setVisible(show);
-}
-
-
-void PlotMSToolsTab::notifyTrackerChanged(PlotTrackerTool& tool) {
-    if(trackerDisplay->isChecked())
-        trackerEdit->setText(tool.getAnnotation()->text().c_str());
-}
-
-
-void PlotMSToolsTab::holdReleaseActionChanged() {
-    QAction* act = itsPlotter_->plotActionMap().value(
-                   PlotMSAction::HOLD_RELEASE_DRAWING);
-    holdReleaseDrawing->blockSignals(true);
-    holdReleaseDrawing->setChecked(act->isChecked());
-    holdReleaseDrawing->setText(act->text());
-    holdReleaseDrawing->blockSignals(false);
-}
-
-void PlotMSToolsTab::toolChanged() {
-    const QMap<PlotMSAction::Type, QAction*>& actionMap =
-        itsPlotter_->plotActionMap();
-    bool mark = actionMap[PlotMSAction::TOOL_MARK_REGIONS]->isChecked(),
-         zoom = actionMap[PlotMSAction::TOOL_ZOOM]->isChecked(),
-         pan  = actionMap[PlotMSAction::TOOL_PAN]->isChecked();
-    
-    handMarkRegions->blockSignals(true);
-    handZoom->blockSignals(true);
-    handPan->blockSignals(true);
-    
-    if(!mark && !zoom && !pan) handNone->setChecked(true);
-    else if(mark) handMarkRegions->setChecked(true);
-    else if(zoom) handZoom->setChecked(true);
-    else if(pan) handPan->setChecked(true);
-    
-    handMarkRegions->blockSignals(false);
-    handZoom->blockSignals(false);
-    handPan->blockSignals(false);
 }
 
 }

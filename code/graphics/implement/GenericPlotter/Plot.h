@@ -51,6 +51,10 @@ public:
     // Returns the data associated with this plot.
     virtual PlotDataPtr data() const = 0;
     
+    // Should be called whenever the underlying PlotData has changed, to let
+    // the plot and its attached canvas know that the plot needs to be redrawn.
+    virtual void dataChanged() = 0;
+    
     // It's likely that any plot subclass (scatter, bar, function, etc.) will
     // have lines of some sort, so it's safe to have in the base class.
     

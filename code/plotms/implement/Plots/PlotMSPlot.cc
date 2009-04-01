@@ -121,7 +121,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     bool hold = drawingHeld();
     if(!hold && redrawRequired) holdDrawing();
     
-    itsTCLendLog_ = false;
+    itsTCLendLog_ = itsTCLlogNumPoints_ = false;
     itsTCLupdateCanvas_ = msUpdated || canvasUpdated || !params.isSet();
     itsTCLupdatePlot_ = plotUpdated;
     itsTCLrelease_ = !hold && redrawRequired;
@@ -130,6 +130,12 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     bool msSuccess = true, callCacheLoaded = true;
     if(params.isSet()) {
         if(msUpdated || cacheUpdated) {
+            // Let the plot(s) know that the data will be updated.
+            for(unsigned int i = 0; i < itsPlots_.size(); i++)
+                itsPlots_[i]->dataChanged();
+            
+            itsTCLlogNumPoints_ = true;
+            
             startLogCache();
             itsTCLendLog_ = true;
             
@@ -250,6 +256,25 @@ void PlotMSPlot::endLogCache() {
     if(log != NULL) log->releaseMeasurement();
 }
 
+void PlotMSPlot::logNumPoints() {
+    PlotMSLogger* log = itsParent_->loggerFor(PlotMSLogger::NUM_POINTS);
+    if(log != NULL) {
+        PlotMaskedPointDataPtr data;
+        unsigned int total = 0, flagged = 0, unflagged = 0;
+        for(unsigned int i = 0; i < itsPlots_.size(); i++) {
+            data = itsPlots_[i]->maskedData();
+            total += data->size();
+            flagged += data->sizeMasked();
+            unflagged += data->sizeUnmasked();
+        }
+        
+        stringstream ss;
+        ss << "Plotted " << total << " points (" << unflagged << " unflagged, "
+           << flagged << " flagged).";
+        log->postMessage(PlotMS::CLASS_NAME, "plot", ss.str());
+    }
+}
+
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
     // End log as needed.
     if(itsTCLendLog_) endLogCache();
@@ -262,172 +287,9 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
     
     // Release drawing if needed.
     if(itsTCLrelease_) releaseDrawing();
-}
-
-
-//////////////////////////////////
-// PLOTMSSINGLEPLOT DEFINITIONS //
-//////////////////////////////////
-
-// Constructors/Destructors //
-
-PlotMSSinglePlot::PlotMSSinglePlot(PlotMS* parent) : PlotMSPlot(parent),
-        itsParameters_(itsFactory_) {
-    constructorSetup();
-}
-
-PlotMSSinglePlot::~PlotMSSinglePlot() { }
-
-
-// Public Methods //
-
-String PlotMSSinglePlot::name() const {
-    String title = itsParameters_.plotTitle();
-    if(!itsParameters_.isSet() || title.empty()) return "Single Plot";
-    else                                         return title;
-}
-
-unsigned int PlotMSSinglePlot::layoutNumRows() const { return 1; }
-unsigned int PlotMSSinglePlot::layoutNumCols() const { return 1; }
-
-const PlotMSPlotParameters& PlotMSSinglePlot::parameters() const {
-    return itsParameters_; }
-PlotMSPlotParameters& PlotMSSinglePlot::parameters() { return itsParameters_; }
-
-const PlotMSSinglePlotParameters& PlotMSSinglePlot::singleParameters() const {
-    return itsParameters_; }
-PlotMSSinglePlotParameters& PlotMSSinglePlot::singleParameters() {
-    return itsParameters_; }
-
-
-// Protected Methods //
-
-bool PlotMSSinglePlot::initializePlot() {
-    PlotMaskedPointDataPtr data(&itsData_, false);
-    itsPlot_ = itsFactory_->maskedPlot(data);
-    itsPlots_.push_back(itsPlot_);
-    return true;
-}
-
-bool PlotMSSinglePlot::assignCanvases() {
-    if(!itsPlot_.null() && itsCanvases_.size() > 0) {
-        // clear up any unused canvases (shouldn't happen)
-        itsCanvases_.resize(1);
-        
-        itsCanvas_ = itsCanvases_[0];        
-        itsCanvasMap_[&*itsPlot_] = itsCanvas_;
-        
-        return true;        
-    }
-    return false;
-}
-
-bool PlotMSSinglePlot::updateCache() {
-    vector<PMS::Axis> axes(2);
-    axes[0] = itsParameters_.xAxis();
-    axes[1] = itsParameters_.yAxis();
-    vector<PMS::DataColumn> data(2);
-    data[0] = itsParameters_.xDataColumn();
-    data[1] = itsParameters_.yDataColumn();
     
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, axes, data,
-            itsParameters_.averaging(), true, &PlotMSPlot::cacheLoaded, this);
-    itsParent_->getPlotter()->doThreadedOperation(ct);
-    return true;
-    
-    /*
-    try {
-        // VisSet will be null on an error.
-        if(itsParameters_.isSet() && itsVisSet_ != NULL) {
-            PMS::Axis x = itsParameters_.xAxis(), y = itsParameters_.yAxis();
-            itsData_.loadCache(*itsVisSet_, x, y, itsParameters_.xDataColumn(),
-                               itsParameters_.yDataColumn(),
-                               itsParameters_.averaging());
-            itsData_.setupCache(x, y);
-        }
-        return true;
-        
-    } catch(AipsError& err) {
-        itsParent_->showError("Could not load cache: " + err.getMesg());
-        return false;
-    } catch(...) {
-        itsParent_->showError("Could not load cache, for unknown reasons!");
-        return false;
-    }
-    */
-}
-
-bool PlotMSSinglePlot::updateCanvas() {
-    try {
-        // VisSet will be null on an error.
-        bool set = itsParameters_.isSet() && itsVisSet_ != NULL;
-        
-        PlotAxis x = itsParameters_.canvasXAxis(),
-                 y = itsParameters_.canvasYAxis();
-        
-        // Set axes scales
-        itsCanvas_->setAxisScale(x, PMS::axisScale(itsParameters_.xAxis()));
-        itsCanvas_->setAxisScale(y, PMS::axisScale(itsParameters_.yAxis()));
-        
-        // Custom ranges
-        itsCanvas_->setAxesAutoRescale(true);
-        if(set && itsParameters_.xRangeSet() && itsParameters_.yRangeSet())
-            itsCanvas_->setAxesRanges(x, itsParameters_.xRange(),
-                                      y, itsParameters_.yRange());
-        else if(set && itsParameters_.xRangeSet())
-            itsCanvas_->setAxisRange(x, itsParameters_.xRange());
-        else if(set && itsParameters_.yRangeSet())
-            itsCanvas_->setAxisRange(y, itsParameters_.yRange());
-        
-        // Axes labels
-        itsCanvas_->clearAxesLabels();
-        if(set) {
-            itsCanvas_->setAxisLabel(x, itsParameters_.canvasXAxisLabel());
-            itsCanvas_->setAxisLabel(y, itsParameters_.canvasYAxisLabel());
-        }
-        
-        // Show/hide axes
-        itsCanvas_->showAxes(false);
-        itsCanvas_->showAxis(x, set && itsParameters_.showXAxis());
-        itsCanvas_->showAxis(y, set && itsParameters_.showYAxis());
-        
-        // Legend
-        itsCanvas_->showLegend(set && itsParameters_.showLegend(),
-                               itsParameters_.legendPosition());
-        
-        // Canvas title
-        itsCanvas_->setTitle(set ? itsParameters_.canvasTitle() : "");    
-        return true;
-        
-    } catch(AipsError& err) {
-        itsParent_->showError("Could not update canvas: " + err.getMesg());
-        return false;
-    } catch(...) {
-        itsParent_->showError("Could not update canvas, for unknown reasons!");
-        return false;
-    }
-}
-
-bool PlotMSSinglePlot::updatePlot() {
-    try {
-        // Set symbols.
-        itsPlot_->setSymbol(itsParameters_.symbol());
-        itsPlot_->setMaskedSymbol(itsParameters_.maskedSymbol());    
-        
-        // Set item axes.
-        itsPlot_->setAxes(itsParameters_.canvasXAxis(),
-                          itsParameters_.canvasYAxis());
-        
-        // Set plot title.
-        itsPlot_->setTitle(itsParameters_.plotTitle());
-        return true;
-    } catch(AipsError& err) {
-        itsParent_->showError("Could not update plot: " + err.getMesg());
-        return false;
-    } catch(...) {
-        itsParent_->showError("Could not update plot, for unknown reasons!");
-        return false;
-    }
+    // Log number of points plotted, if needed.
+    if(itsTCLlogNumPoints_) logNumPoints();
 }
 
 }

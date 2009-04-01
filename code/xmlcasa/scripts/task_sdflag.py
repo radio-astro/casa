@@ -224,9 +224,18 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                     if ans.upper() == 'Y':
                         s.flag(masks,unflag)
                         params={}
-                        params['pols']=vars()['pols']
-                        params['ifs']=vars()['ifs']
-                        params['scans']=vars()['scans']
+                        if ( vars()['pols'] == [] ):
+                                params['pols']=list(s.getpolnos())
+                        else:
+                                params['pols']=vars()['pols']
+                        if ( vars()['ifs'] == [] ):
+                                params['ifs']=list(s.getifnos())
+                        else:
+                                params['ifs']=vars()['ifs']
+                        if ( vars()['scans'] == [] ):
+                                params['scans']=list(s.getscannos())
+                        else:
+                                params['scans']=vars()['scans']
                         params['mode']=vars()['flagmode']
                         params['maskflag']=vars()['maskflag']
                         #print "input parameters:\n", params
@@ -264,9 +273,26 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             else:
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     if ans.upper() == 'Y':
-                          s.flag(masks,unflag)
+                            s.flag(masks,unflag)
+                            params={}
+                            if ( vars()['pols'] == [] ):
+                                    params['pols']=list(s.getpolnos())
+                            else:
+                                    params['pols']=vars()['pols']
+                            if ( vars()['ifs'] == [] ):
+                                    params['ifs']=list(s.getifnos())
+                            else:
+                                    params['ifs']=vars()['ifs']
+                            if ( vars()['scans'] == [] ):
+                                    params['scans']=list(s.getscannos())
+                            else:
+                                    params['scans']=vars()['scans']
+                            params['mode']=vars()['flagmode']
+                            params['maskflag']=vars()['maskflag']
+                            #print "input parameters:\n", params
+                            s._add_history( "sdflag", params )
                     else:
-                          return
+                            return
 
             sel.reset()
             s.set_selection(sel)

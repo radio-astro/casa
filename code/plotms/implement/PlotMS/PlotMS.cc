@@ -29,7 +29,7 @@
 namespace casa {
 
 // TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots
+//      for new plots, move actions into one class.
 // TODO PlotMSCache: multi-region locate
 // TODO PlotMSData: have stack list of caches so that common MS/Selections can
 //      be shared across different plots

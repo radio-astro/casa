@@ -4,6 +4,9 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 import Tkinter as Tk
+### Start mod: 2009.03.23. kana ###
+from sdstat_cli import sdstat_cli as sdstat
+### End mod #######################
 
 def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
 
@@ -202,6 +205,10 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
 	    linewidthold=pl.rcParams['lines.linewidth']
+            ### Start mod: 2009.03.23. kana ###
+	    if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
+		    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
+	    ### End Mod #######################
 
             # Plotting
             if plottype=='pointing':
@@ -428,7 +435,10 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    sd.plotter._plotter.canvas.mpl_disconnect(sd.plotter._plotter.events['button_press'])
 			    sd.plotter._plotter.events['button_press']=None
 		    if plottype=='spectra':
-			    sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_select_spectrum)
+			    ### Start mod: 2009.03.23. kana ###
+			    #sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_select_spectrum)
+			    sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_event_switch)
+			    ### End Mod #######################
 
             # DONE
 
@@ -530,6 +540,117 @@ def _select_spectrum(event):
         # Finish events when mouse button is released
         theplot.events['button_release']=thecanvas.mpl_connect('button_release_event',discon)
 
+
+### Start mod: 2009.03.23. kana ###
+### Add a custom toolbar to ASAP plotter
+class CustomToolbarTkAgg:
+	def __init__(self,figmgr=None):
+		if figmgr is None: return
+		self.figmgr=figmgr
+		self.custombar=None
+		self._add_custom_toolbar()
+
+	def _add_custom_toolbar(self):
+		self.custombar=Tk.Frame(master=self.figmgr.window)
+		self.bSpec=self._NewButton(master=self.custombar,
+				      text='spec value',
+				      command=self.spec_show)
+		self.bStat=self._NewButton(master=self.custombar,
+				      text='statistics',
+				      command=self.stat_cal)
+		self.bQuit=self._NewButton(master=self.custombar,
+				      text='Quit',
+				      command=self.quit)
+		self.custombar.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
+
+		### temporary added
+		self.bStat.config(state=Tk.DISABLED)
+		###
+		self.bSpec.config(relief='sunken')
+		self.bStat.config(relief='raised')
+		self.mode='spec'
+		self.spec_show()
+		return self
+
+	def _NewButton(self, master, text, command, side=Tk.LEFT):
+		if(os.uname()[0] == 'Darwin'):
+			b = Tk.Button(master=master, text=text, command=command)
+		else:
+			b = Tk.Button(master=master, text=text, padx=2, pady=2, command=command)
+		b.pack(side=side)
+		return b
+	
+	def spec_show(self):
+		self.figmgr.toolbar.set_message('spec value: drag on a spec')
+		if self.mode == 'spec': return
+		self.bStat.config(relief='raised')
+		self.bSpec.config(relief='sunken')
+		self.mode='spec'
+
+	def stat_cal(self):
+		self.figmgr.toolbar.set_message('statistics: select a region')
+		if self.mode == 'stat': return
+		self.bSpec.config(relief='raised')
+		self.bStat.config(relief='sunken')
+		self.mode='stat'
+
+	def quit(self):
+		self.delete_bar()
+		sd.plotter._plotter.unmap()
+
+	def delete_bar(self):
+		self.custombar.destroy()
+		self.custombar=None		
+
+
+### callback a function according to the selected mode. 
+def _event_switch(event):
+        # Do not fire event when in zooming/panning mode
+	if not sd.plotter._plotter.figmgr.toolbar.mode == '': return
+        # When selected point is out of panels
+        if event.inaxes == None:
+		return
+	# Now acutual callback
+	if sd.plotter._plotter.figmgr.sdplotbar.mode == 'stat':
+		_single_mask(event)
+	else: _select_spectrum(event)
+
+def _single_mask(event):
+	if event.button ==1: baseval=False
+	elif event.button == 3: baseval=True
+	else: return
+	
+#	mask_sel=sd.interactivemask()
+#	mask_sel.scan=sd.plotter._data
+#	mask_sel._p=sd.plotter._plotter
+#	# Create initial mask
+#	mask_sel.mask=sd._n_bools(mask_sel.scan.nchan(),baseval)
+#	# Selected mask
+#	mask_sel._region_start(event)
+#        proceed = raw_input('press return: ')
+#	mask=mask_sel.get_mask()
+#	masklist=mask_sel.scan.get_masklist(mask=mask)
+#	print 'stat region:', masklist
+#	# Call sdstat()
+#	invertmask=False
+#	interactive=False
+#	statfile=''
+#        sdstat(mask_sel.scan, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile)
+#	sdstat.defaults()
+        invertmask=baseval
+	interactive=True
+	statfile=''
+	scan=sd.plotter._data
+	masklist=[min(scan._getabcissa()),max(scan._getabcissa())]
+#	sdstat(sdfile=sdfile, fluxunit=fluxunit, telescopeparm=telescopeparm, specunit=specunit, frame=frame, doppler=doppler, scanlist=scanlist, field=field, iflist=iflist, pollist=pollist, masklist=masklist, invertmask=invertmask, interactive=interactive, statfile='')
+#	if len(mask_sel._polygons)>0:
+#		# Remove old polygons
+#		for polygon in mask_sel._polygons: polygon.remove()
+#		mask_sel._polygons=[]
+#		#mask_sel._p.canvas.draw()
+#	del mask_sel
+
+### End mod #######################
 ### Construct Navigation Window
 #class Navigationwindow:
 #        def __init__(self,titp,titl):

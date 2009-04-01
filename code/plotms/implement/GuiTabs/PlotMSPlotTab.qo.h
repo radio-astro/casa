@@ -1,4 +1,4 @@
-//# PlotMSTabs.qo.h: Tab GUI widgets.
+//# PlotMSPlotTab.qo.h: Subclass of PlotMSTab for controlling plot parameters.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,129 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTMSTABS_QO_H_
-#define PLOTMSTABS_QO_H_
+#ifndef PLOTMSPLOTTAB_QO_H_
+#define PLOTMSPLOTTAB_QO_H_
 
-#include <plotms/GuiTabs/PlotMSOptionsTab.ui.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
-#include <plotms/GuiTabs/PlotMSToolsTab.ui.h>
 
 #include <plotms/Gui/PlotWidgets.qo.h>
-#include <plotms/PlotMS/PlotMSParameters.h>
+#include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
-
-#include <QLineEdit>
-#include <QMap>
 
 #include <casa/namespace.h>
 
 namespace casa {
-
-//# Forward declarations
-class PlotMS;
-class PlotMSPlotter;
-
-
-// Abstract parent for any widget that goes in the tabbed side panel of the
-// PlotMSPlotter.
-class PlotMSTab : public QWidget, public PlotMSParametersWatcher {
-    Q_OBJECT
-    
-public:
-    // Constructor that takes the parent and plotter for this tab.
-    PlotMSTab(PlotMS* parent, PlotMSPlotter* plotter);
-    
-    // Destructor.
-    virtual ~PlotMSTab();
-    
-    
-    // Returns all tool buttons on this tab.
-    virtual QList<QToolButton*> toolButtons() const = 0;
-    
-protected:
-    // Parent.
-    PlotMS* itsParent_;
-    
-    // Plotter.
-    PlotMSPlotter* itsPlotter_;
-    
-    // Default text for labels, so that they can be easily switched to red or
-    // normal depending on whether the item has changed or not.
-    QMap<QLabel*, QString> itsLabelDefaults_;
-    
-    
-    // Updates the text for the given label using the given changed flag.
-    // Uses the static changedText method along with the label default text in
-    // itsLabelDefaults_.
-    void changedText(QLabel* label, bool changed);
-    
-    
-    // Returns the given text altered as required by the changed flag.  If
-    // changed is false, the text is not changed (except to replace spaces with
-    // &nbsp;); if changed is true, the text is made red.
-    // <group>
-    static QString changedText(const QString& text, bool changed);
-    static QString changedText(const String& text, bool changed) {
-        QString str(text.c_str());
-        return changedText(str, changed); }
-    static QString changedText(const char* text, bool changed) {
-        QString str(text);
-        return changedText(str, changed); }
-    // </group>
-    
-    // Convenience methods for setting the current value of the given QComboBox
-    // to the given.
-    // <group>
-    static bool setChooser(QComboBox* chooser, const QString& value);
-    static bool setChooser(QComboBox* chooser, const String& value) {
-        QString str(value.c_str());
-        return setChooser(chooser, str); }
-    static bool setChooser(QComboBox* chooser, const char* value) {
-        QString str(value);
-        return setChooser(chooser, str); }
-    // </group>
-};
-
-
-// Subclass of PlotMSTab that handles options for PlotMSPlotter.  Currently:
-// * tool button style, and
-// * log level.
-// Watches PlotMS's PlotMSParameters for changes to update the GUI as needed.
-class PlotMSOptionsTab : public PlotMSTab, Ui::OptionsTab {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes the parent and plotter.
-    PlotMSOptionsTab(PlotMS* parent, PlotMSPlotter* plotter);
-    
-    // Destructor.
-    ~PlotMSOptionsTab();
-    
-    
-    // Implements PlotMSTab::toolButtons().
-    QList<QToolButton*> toolButtons() const;
-    
-    // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
-    // the GUI as needed if the given parameters are the PlotMS parent's
-    // parameters.
-    void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
-    
-private:
-    // Watched parameters for PlotMS.
-    PlotMSParameters& itsParameters_;
-    
-private slots:
-    // When the user changes the tool button style on the GUI.
-    void toolButtonStyleChanged(int newIndex);
-    
-    // When the user changes the log level on the GUI.
-    void logLevelChanged(const QString& newLevel);
-    
-    // When the user changes the log debug checkbox on the GUI.
-    void logDebugChanged(bool value);
-};
-
 
 // Subclass of PlotMSTab that manages PlotMSPlots in the GUI.  WARNING:
 // currently can only handle PlotMSSinglePlots.  Watches the current
@@ -158,7 +47,7 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     
 public:
     // Constructor which takes the parent and plotter.
-    PlotMSPlotTab(PlotMS* parent, PlotMSPlotter* plotter);
+    PlotMSPlotTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSPlotTab();
@@ -256,48 +145,6 @@ private slots:
     void exportClicked();
 };
 
-
-// Subclass of PlotMSTab that handles the tools for the current plot.  Watches
-// no parameters.
-class PlotMSToolsTab : public PlotMSTab, Ui::ToolsTab,
-                       public PlotTrackerToolNotifier {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes the parent and the plotter.
-    PlotMSToolsTab(PlotMS* parent, PlotMSPlotter* plotter);
-    
-    // Destructor.
-    ~PlotMSToolsTab();
-    
-    
-    // Implements PlotMSTab::toolButtons().
-    QList<QToolButton*> toolButtons() const;
-    
-    // Implements PlotMSParametersWatcher::parametersHaveChanged.  Currently
-    // does nothing.
-    void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
-    
-    
-    // Show/hide the iteration buttons on this tab.
-    void showIterationButtons(bool show);
-    
-protected:
-    // Implements PlotTrackerToolNotifier::notifyTrackerChanged().  Updates the
-    // tracker information in the line edit, if the proper checkbox is toggled.
-    void notifyTrackerChanged(PlotTrackerTool& tool);
-    
-private slots:
-    // Slot to update the text of the hold/release drawing button to reflect
-    // the current state the of the global hold/release action.
-    void holdReleaseActionChanged();
-    
-    // Slot to update the currently select tool based on the state of the
-    // global tool actions.
-    void toolChanged();
-};
-
 }
 
-#endif /* PLOTMSTABS_QO_H_ */
+#endif /* PLOTMSPLOTTAB_QO_H_ */

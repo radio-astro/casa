@@ -26,10 +26,10 @@
 //# $Id: $
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
-#include <plotms/PlotMS/PlotMS.h>
-
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
+#include <plotms/Actions/PlotMSDrawThread.qo.h>
+#include <plotms/PlotMS/PlotMS.h>
 
 #include <fstream>
 #include <limits>
@@ -312,9 +312,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::QUIT, actionQuit);
     
     // Set up tabs //    
-    itsPlotTab_ = new PlotMSPlotTab(itsParent_, this);
-    itsToolsTab_ = new PlotMSToolsTab(itsParent_, this);
-    itsOptionsTab_ = new PlotMSOptionsTab(itsParent_, this);
+    itsPlotTab_ = new PlotMSPlotTab(this);
+    itsToolsTab_ = new PlotMSToolsTab(this);
+    itsOptionsTab_ = new PlotMSOptionsTab(this);
     itsToolButtons_ << itsPlotTab_->toolButtons();
     itsToolButtons_ << itsToolsTab_->toolButtons();
     itsToolButtons_ << itsOptionsTab_->toolButtons();

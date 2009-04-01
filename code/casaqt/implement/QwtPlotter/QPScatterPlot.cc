@@ -116,12 +116,32 @@ bool QPScatterPlot::shouldDraw() const {
 }
 
 QwtDoubleRect QPScatterPlot::boundingRect() const {
+    bool ret;
     double xMin, xMax, yMin, yMax;
-    if(!const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(xMin,xMax,yMin,yMax))
-        return QwtDoubleRect();
+    
+    // Determine which bounding rect to return.
+    if(!m_maskedData.null()) {
+        bool showMasked = m_maskedLine.style() != PlotLine::NOLINE ||
+                          m_maskedSymbol.symbol() != PlotSymbol::NOSYMBOL,
+             showNormal = m_line.style() != PlotLine::NOLINE ||
+                          m_symbol.symbol() != PlotSymbol::NOSYMBOL;
+        PlotMaskedPointDataPtr data = m_maskedData;
+        
+        if(showMasked && !showNormal)
+            ret = data->maskedMinsMaxes(xMin, xMax, yMin, yMax);
+        else if(showNormal && !showMasked)
+            ret = data->unmaskedMinsMaxes(xMin, xMax, yMin, yMax);
+        else
+            ret = data->minsMaxes(xMin, xMax, yMin, yMax);
+        
+    } else {
+        ret = const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(
+                xMin, xMax, yMin, yMax);
+    }
     
     // have to switch y min and max for some reason..
-    return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
+    if(!ret) return QwtDoubleRect();
+    else return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
 }
 
 QWidget* QPScatterPlot::legendItem() const {

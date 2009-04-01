@@ -3,7 +3,7 @@ from vishead_util import *
 import re
 import shutil
 
-def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None):
+def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
     casalog.origin('fixvis')
     for arg in ('vis', 'outputvis', 'fldids', 'refcode', 'proj'):
         casalog.post("parameter %9s: %s" % (arg, eval(arg)), 'DEBUG1')
@@ -50,6 +50,15 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None):
         # Get field IDs before opening the ms so that tb doesn't interfere with
         # ms.
         allflds = getput_keyw('get', vis, ['FIELD', 'NAME'], '')[0]
+
+        # getput_keyw('get', vis, ['FIELD', 'PHASE_DIR'], '')   
+        # Out[135]: 
+        #({'r1': array([[[ 0.41377626]], [[ 0.57431281]]]),
+        #  'r2': array([[[ 1.13649565]], [[ 0.72813219]]]),
+        #  'r3': array([[[ 1.388739  ]], [[ 0.28956418]]]),
+        #  'r4': array([[[ 1.24585202]], [[ 0.78404044]]])},
+        # {'MEASINFO': {'Ref': 'B1950_VLA', 'type': 'direction'},
+        #  'QuantumUnits': array(['rad', 'rad'], dtype='|S4')})
 
         if not fldids:
             fldids = range(len(allflds))

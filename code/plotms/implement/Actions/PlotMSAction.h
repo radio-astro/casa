@@ -29,7 +29,10 @@
 
 #include <plotms/PlotMS/PlotMSConstants.h>
 
+#include <map>
+
 #include <casa/namespace.h>
+using namespace std;
 
 namespace casa {
 

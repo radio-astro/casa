@@ -32,7 +32,9 @@
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/Data/PlotMSData.h>
-#include <plotms/GuiTabs/PlotMSTabs.qo.h>
+#include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
 
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
@@ -75,6 +77,7 @@ public:
     
     // Accessor methods.
     // <group>
+    PlotMS* getParent() { return itsParent_; }
     PlotFactoryPtr getFactory() { return itsFactory_; }
     PlotterPtr getPlotter() { return itsPlotter_; }
     QtProgressWidget* getProgressWidget() { return itsThreadProgress_; }

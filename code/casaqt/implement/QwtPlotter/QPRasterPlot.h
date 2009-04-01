@@ -125,6 +125,9 @@ public:
     
     // Plot Methods //
     
+    // Implements Plot::dataChanged().
+    void dataChanged() { itemChanged(); }
+    
     // Implements Plot::linesShown().
     bool linesShown() const;
     

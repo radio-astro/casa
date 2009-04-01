@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="fixvis">
 
-<shortdescription> Performs visibility adjustments. </shortdescription>
+<shortdescription>Performs visibility adjustments.</shortdescription>
 <description>
      This corrects visibilities, and/or their (u, v, w) positions, for various
      effects that can be calculated without fitting a model to the data.
@@ -51,6 +51,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Projection code to use for the output.</description>
         <value></value>
         <example>proj = 'SIN'</example>
+    </param>
+    <param type="any" direction="in" name="ptcs">
+        <description>Phase tracking centers to use for the output.  Blank = use old ones.</description>
+	<any type="variant"/>
+        <value>""</value>
+        <example></example>
     </param>
 </input>
 
