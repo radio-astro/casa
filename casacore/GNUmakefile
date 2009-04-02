@@ -76,7 +76,9 @@ endif
 ## setup INSTDIR
 ##
 ifneq "$(INSTDIR)" ""
-instlib_path = $(INSTDIR)/lib/
+instlib_path := $(INSTDIR)/lib/
+else
+instlib_path :=
 endif
 
 ##
