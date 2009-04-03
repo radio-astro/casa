@@ -27,7 +27,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
-#include <casaqt/QtUtilities/QtUtilities.h>
+#include <casaqt/QtUtilities/QtLayeredLayout.h>
 #include <plotms/Actions/PlotMSDrawThread.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
@@ -86,7 +86,7 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
                 SLOT(currentThreadFinished()));        
         
         // disable and show progress GUI
-        setEnabled(false);
+        foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(false);
         QRect rect = itsThreadProgress_->geometry();
         rect.moveCenter(geometry().center());
         itsThreadProgress_->move(rect.topLeft());
@@ -144,8 +144,8 @@ void PlotMSPlotter::showIterationButtons(bool show) {
 }
 
 bool PlotMSPlotter::showQuestion(const String& message, const String& title) {
-    return QMessageBox::question(this, title.c_str(), message.c_str()) ==
-           QMessageBox::Yes;
+    return QMessageBox::question(this, title.c_str(), message.c_str(),
+           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
 }
 
 void PlotMSPlotter::holdDrawing() {
@@ -282,6 +282,22 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     setAnimated(false);
     
+    // Set up GUI //
+    if(menuWidget() != NULL) itsEnableWidgets_ << menuWidget();
+    QList<QToolBar*> toolbars = findChildren<QToolBar*>();
+    for(int i = 0; i < toolbars.size(); i++) itsEnableWidgets_ << toolbars[i];
+    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
+    for(int i = 0; i < docks.size(); i++) itsEnableWidgets_ << docks[i];
+    
+    QSplitter* splitter = new QSplitter(Qt::Horizontal);
+    splitter->setOpaqueResize(false);
+    itsEnableWidgets_ << splitter;
+    setCentralWidget(splitter);
+    
+    QTabWidget* tabWidget = new QTabWidget();
+    tabWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    splitter->addWidget(tabWidget);
+    
     // Action map //    
     itsActionMap_.insert(PlotMSAction::FLAG, actionFlag);
     itsActionMap_.insert(PlotMSAction::UNFLAG, actionUnflag);
@@ -319,14 +335,22 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsToolButtons_ << itsToolsTab_->toolButtons();
     itsToolButtons_ << itsOptionsTab_->toolButtons();
     
-    tabWidget->removeTab(0);
+    int maxWidth = itsPlotTab_->maximumWidth();
+    if(itsToolsTab_->maximumWidth() < maxWidth)
+        maxWidth = itsToolsTab_->maximumWidth();
+    if(itsOptionsTab_->maximumWidth() < maxWidth)
+        maxWidth = itsOptionsTab_->maximumWidth();
+    tabWidget->setMaximumWidth(maxWidth);
+    
+    //tabWidget->removeTab(0);
     tabWidget->addTab(itsPlotTab_, "Plots");
     tabWidget->addTab(itsToolsTab_, "Tools");
     tabWidget->addTab(itsOptionsTab_, "Options");
     
     // Set up threads //    
     itsCurrentThread_ = NULL;
-    itsThreadProgress_ = new QtProgressWidget(false, false, false, true, this);
+    itsThreadProgress_ = new QtProgressWidget(false, false, false, true, false,
+                                              this);
     itsThreadProgress_->setVisible(false);
     itsThreadProgress_->setWindowIcon(windowIcon());
     
@@ -378,7 +402,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     if(isQt_) {
         QWidget* w = dynamic_cast<QWidget*>(itsPlotter_.operator->());
         w->setContentsMargins(0, 0, 0, 0);
-        QtUtilities::putInFrame(frame, w);
+        w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        splitter->addWidget(w);
+        itsEnableWidgets_ << w;
     }
     
     // Force window to set size before drawing to avoid unnecessary redraws.
@@ -431,7 +457,7 @@ void PlotMSPlotter::currentThreadFinished() {
                 SLOT(currentThreadFinished()));
         itsCurrentThread_->startOperation();
     } else {
-        setEnabled(true);
+        foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(true);
         itsThreadProgress_->setVisible(false);
         
         // Update plot tab.

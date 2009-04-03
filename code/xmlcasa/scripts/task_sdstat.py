@@ -5,7 +5,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile):
+def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, overwrite):
 
 
         casalog.origin('sdstat')
@@ -15,6 +15,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
         ### Now the actual task code
         ###
         retValue={}
+        stdsave=sys.stdout
+        bbb=False
         try:
             if sdfile=='':
                 raise Exception, 'sdfile is undefined'
@@ -210,11 +212,14 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     print 'final mask list ('+lbl+') =',msks
 
 		    # Output line statistics to file
-		    if ( len(statfile) > 0 ):
-			    stdsave=sys.stdout
-			    sys.stdout=open( statfile,'w' )
-			    verbsave=sd.rcParams['verbose']
-			    sd.rcParams['verbose']=True
+                    if ( len(statfile) > 0 ):
+                            if ( not os.path.exists(statfile) or overwrite ):
+                                    sys.stdout=open( statfile,'w' )
+                                    verbsave=sd.rcParams['verbose']
+                                    sd.rcParams['verbose']=True
+                                    bbb=True
+                            else:
+                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
 
                     # Get statistic values
                     maxl=s.stats('max',msk)
@@ -239,11 +244,14 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
                     # Output line statistics to file
                     if ( len(statfile) > 0 ):
-                            stdsave=sys.stdout
-                            sys.stdout=open( statfile,'w' )
-			    verbsave=sd.rcParams['verbose']
-			    sd.rcParams['verbose']=True
-
+                            if ( not os.path.exists(statfile) or overwrite ):
+                                    sys.stdout=open( statfile,'w' )
+                                    verbsave=sd.rcParams['verbose']
+                                    sd.rcParams['verbose']=True
+                                    bbb=True
+                            else:
+                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
+                                    
                     maxl=s.stats('max',msk)
                     minl=s.stats('min',msk)
 		    maxabcl=s.stats('max_abc',msk)
@@ -260,10 +268,13 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
                     # Output line statistics to file
                     if ( len(statfile) > 0 ):
-                            stdsave=sys.stdout
-                            sys.stdout=open( statfile,'w' )
-			    verbsave=sd.rcParams['verbose']
-			    sd.rcParams['verbose']=True
+                            if ( not os.path.exists(statfile) or overwrite ):
+                                    sys.stdout=open( statfile,'w' )
+                                    verbsave=sd.rcParams['verbose']
+                                    sd.rcParams['verbose']=True
+                                    bbb=True
+                            else:
+                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
 
                     maxl=s.stats('max')
                     minl=s.stats('min')
@@ -420,16 +431,18 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
                     
             # Output to terminal if statfile is not empty
-            if ( len(statfile) > 0 ):
+            #if ( len(statfile) > 0 ):
+            #        if ( not os.path.exists(statfile) or overwrite ):
+            if bbb:
                     sys.stdout.close()
                     sys.stdout=stdsave
-		    if verbsave: 
-			    statout=open( statfile,'r' )
-			    linelist=statout.readlines()
-			    for i in range( len(linelist) ):
-				    print linelist[i],
-			    statout.close()
-		    sd.rcParams['verbose']=verbsave
+                    if verbsave: 
+                            statout=open( statfile,'r' )
+                            linelist=statout.readlines()
+                            for i in range( len(linelist) ):
+                                    print linelist[i],
+                            statout.close()
+                    sd.rcParams['verbose']=verbsave
 
             # Final clean up
             del s

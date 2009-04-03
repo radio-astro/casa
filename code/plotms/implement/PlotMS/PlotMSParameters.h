@@ -38,9 +38,10 @@ namespace casa {
 // * log level.
 class PlotMSParameters : public PlotMSWatchedParameters {
 public:
-    // Constructor.
+    // Constructor, with default parameter values.
     PlotMSParameters(PlotMSLogger::Level logLevel = PlotMSLogger::OFF,
-            bool debug = false, bool clearSelection = true);
+            bool debug = false, bool clearSelection = true,
+            int cachedImageWidth = -1, int cachedImageHeight = -1);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
@@ -70,6 +71,16 @@ public:
     void setClearSelectionsOnAxesChange(bool flag);
     // </group>
     
+    // Gets/Sets the cached image size.  See
+    // PlotCanvas::cachedAxesStackImageSize().
+    // <group>
+    pair<int, int> cachedImageSize() const;
+    void setCachedImageSize(int width, int height);
+    // </group>
+    
+    // Sets the cached image size to the current screen resolution.
+    void setCachedImageSizeToResolution();
+    
     
     // Implements PlotMSWatchedParameters::equals().  Will return false if the
     // other parameters are not of type PlotMSParameters.
@@ -88,6 +99,9 @@ private:
     
     // Clear selections on axes change flag.
     bool itsClearSelectionsOnAxesChange_;
+    
+    // Cached image sizes.
+    int itsCachedImageWidth_, itsCachedImageHeight_;
 };
 
 }

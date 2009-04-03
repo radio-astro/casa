@@ -286,6 +286,10 @@ int PlotCanvas::axesStackLengthLimit() const {
 void PlotCanvas::setAxesStackLengthLimit(int lengthLimit) {
     axesStack().setLengthLimit(lengthLimit); }
 
+pair<int, int> PlotCanvas::cachedAxesStackImageSize() const {
+    return pair<int, int>(-1, -1); }
+void PlotCanvas::setCachedAxesStackImageSize(int width, int height) { }
+
 
 bool PlotCanvas::plot(PlotPtr plot, bool overplot) {
     if(!overplot) clearPlots();

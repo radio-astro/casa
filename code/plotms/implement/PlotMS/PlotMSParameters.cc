@@ -25,6 +25,9 @@
 //# $Id:  $
 #include <plotms/PlotMS/PlotMSParameters.h>
 
+#include <QApplication>
+#include <QDesktopWidget>
+
 namespace casa {
 
 //////////////////////////////////
@@ -34,8 +37,11 @@ namespace casa {
 // Constructors/Destructors //
 
 PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel, bool debug,
-        bool clearSelection) : itsLogLevel_(logLevel), itsLogDebug_(debug),
-        itsClearSelectionsOnAxesChange_(clearSelection) { }
+        bool clearSelection, int cachedImageWidth, int cachedImageHeight) :
+        itsLogLevel_(logLevel), itsLogDebug_(debug),
+        itsClearSelectionsOnAxesChange_(clearSelection),
+        itsCachedImageWidth_(cachedImageWidth),
+        itsCachedImageHeight_(cachedImageHeight) { }
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) :
         PlotMSWatchedParameters(copy) {
@@ -68,6 +74,22 @@ void PlotMSParameters::setClearSelectionsOnAxesChange(bool flag) {
     }
 }
 
+pair<int, int> PlotMSParameters::cachedImageSize() const {
+    return pair<int, int>(itsCachedImageWidth_, itsCachedImageHeight_); }
+void PlotMSParameters::setCachedImageSize(int width, int height) {
+    if(width != itsCachedImageWidth_ || height != itsCachedImageHeight_) {
+        itsCachedImageWidth_ = width;
+        itsCachedImageHeight_ = height;
+        // it's not actually a change to LOG, but use that for now..
+        updateFlag(LOG, true, false);
+    }
+}
+
+void PlotMSParameters::setCachedImageSizeToResolution() {
+    QRect res = QApplication::desktop()->screenGeometry();
+    setCachedImageSize(res.width(), res.height());
+}
+
 
 bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
         int updateFlags) const {
@@ -77,7 +99,11 @@ bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
     if(updateFlags & LOG) return itsLogLevel_ == o->itsLogLevel_ &&
                                  itsLogDebug_ == o->itsLogDebug_ &&
                                  itsClearSelectionsOnAxesChange_ ==
-                                     o->itsClearSelectionsOnAxesChange_;
+                                     o->itsClearSelectionsOnAxesChange_ &&
+                                 itsCachedImageWidth_ ==
+                                     o->itsCachedImageWidth_ &&
+                                 itsCachedImageHeight_ ==
+                                     o->itsCachedImageHeight_;
     else                  return false;
 }
 
@@ -85,6 +111,8 @@ PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
     PlotMSWatchedParameters::operator=(copy);
     setLogLevel(copy.logLevel(), copy.logDebug());
     setClearSelectionsOnAxesChange(copy.clearSelectionsOnAxesChange());
+    pair<int, int> size = copy.cachedImageSize();
+    setCachedImageSize(size.first, size.second);
     return *this;
 }
 

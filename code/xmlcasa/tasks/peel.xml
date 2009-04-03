@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- Documentation here.                                                -->
+
+<task type="function" name="peel">
+
+<shortdescription>Do direction dependent selfcal(s) and optionally remove annoying sources.</shortdescription>
+<description>
+</description>
+
+<input>
+    <param type="string" name="vis" kind="ms" mustexist="true">
+        <description>Name of the input visibility set.</description>
+        <value></value>
+        <example>vis='ngc5921.ms'</example>
+    </param>
+    <param type="any" direction="in" name="dirs">
+        <description>List of directions to peel.</description>
+	<any type="variant"/>
+        <value>""</value>
+        <example></example>
+    </param>
+    <param type="bool" name="remove">
+      <!-- False: Leave their selfcalibrated versions in the data. -->
+      <description>Subtract the selfcalibrated source(s) from the data.</description>
+      <value>True</value>
+    </param>
+    <param type="string" name="calmode">
+      <description>Type of selfcal to do. (p: Phase only, a: Ampl only. ap: both</description>
+      <value>p</value>
+      <allowed kind="enum">
+	<value>a</value>
+	<value>p</value>
+	<value>ap</value>
+      </allowed>
+    </param>
+</input>
+
+<!-- DIRTY HACK: <description> does not currently (2009-03-10) make it into
+     help or ?, but <example> does. -->
+<!-- <description> -->
+<example>
+Unfortunately at some level gains are direction-dependent, typically
+because of either deviations between the true antenna voltage patterns and
+the models being used, and/or fluctuations in one layer or another of the
+Earth's atmosphere.  Bright sources located in the edges of the primary
+beam therefore corrupt images of the central portions of the primary beam
+in two ways.  The most obvious way is by throwing a corrupted version of
+the PSF across the image.  Since it is corrupted, it cannot be deconvolved
+away without first correcting the gains.  The second problem is that a
+bright source can dominate the solutions of "classical" selfcalibration,
+essentially forcing it to solve the gains for the direction of the bright
+source instead of the pointing center.
+
+Solving for and removing the effects of direction-dependent gains is known
+in various forms as "peeling", "modcal", or most prosaically,
+direction-dependent selfcalibration.  This task attempts
+direction-dependent selfcalibration in the requested list of directions,
+and optionally removes the associated sources.
+
+The usual risks of selfcalibration (imperfect model and possibly
+insufficient constraints) are particularly severe for peeling.  Approach it
+with trepidation and stop as soon as possible.  Peeling can ameliorate the
+effects of heterogeneous arrays, but it is better to use the right antenna
+voltage patterns a priori.
+
+Do not peel unless necessary.
+
+Still here?  All right...read carefully...
+
+Your desire to peel probably stems from the center of your "science field"
+being spoiled by the distorted PSFs of bright sources near the edge of the
+primary beam.  The fact that their PSFs are interfering with your field of
+interest means that your science sources are interfering with the sources
+to be peeled!  Thus before doing any peeling you should remove a model of
+your science field from the visibilities.  However, the model should not
+include any artifacts from the sources to be peeled.  The easiest way to
+produce such a model is to clean down to the threshhold of the brightest
+artifacts.  peel does not (yet) do this for you!  You are also of course
+responsible for returning the model of your science field to the
+visibilities once you have finished peeling.  Obviously, if your science
+sources are fainter than the artifacts, removing them and replacing them is
+not necessary.
+
+If more than one source must be peeled there is a chance (calculated using
+Murphy's Law) that they are interfering with each other.  peel does not yet
+simultaneously solve for the gains in more than direction, so interfering
+sources must be approached by peeling the brightest source down to the
+level of the brightest artifacts in its vicinity, and next peeling whatever
+is currently causing the worst artifacts, continuing as necessary.
+
+If the interactions are especially strong, the cycle will have to be
+iterated, refining the model(s) along the way.  The convergence is often
+safer and faster if the first iteration of the cycle only solves for the
+phases, and leaves phase + amplitude selfcalibration to the final
+iteration.
+
+Any given run of peel is nearly guaranteed to reduce the artifacts from the
+source being peeled, so it can be tempting to continue peeling until the
+artifacts drop below the noise.  Resist that temptation!  The number of
+fitted parameters accumulates with each peel, so repeated peels force the
+image toward the originally assumed model.  Even if the total number of
+fitted parameters remains much smaller than the number of visibilities, the
+interactions between peeled sources and the central field take their toll
+on the science field.  peel sees residual PSF sidelobes from the science
+region as artifacts that must be minimized.  Whether removing some flux
+from the science source(s) is a risk or a certainty, the number of peels
+should be kept down.  Overpeeling becomes easier to spot with experience,
+but the symptoms are strongly telescope-dependent.
+
+<!-- </description> -->
+
+<!-- <example> -->
+Example:
+
+# Start with a phase-only peel, and keep the source so it can be phase +
+# amplitude peeled if necessary.
+peel(vis='my.ms', calmode="p", remove=False)
+
+# Examine the result with viewer.
+
+# OK, do a phase + amplitude removal.
+peel(vis='my.ms', calmode="pa")
+</example>
+
+</task>
+
+</casaxml>

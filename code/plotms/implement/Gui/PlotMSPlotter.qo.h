@@ -210,6 +210,9 @@ private:
     // Plotter.
     PlotterPtr itsPlotter_;
     
+    // Widgets to be enabled/disabled during threading.
+    QList<QWidget*> itsEnableWidgets_;
+    
     // Plot tab.
     PlotMSPlotTab* itsPlotTab_;
     

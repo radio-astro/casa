@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading ui file 'QtProgressWidget.ui'
 **
-** Created: Tue Mar 24 10:50:49 2009
+** Created: Fri Apr 3 11:05:10 2009
 **      by: Qt User Interface Compiler version 4.4.0-beta1
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!
@@ -52,7 +52,6 @@ public:
     if (ProgressWidget->objectName().isEmpty())
         ProgressWidget->setObjectName(QString::fromUtf8("ProgressWidget"));
     ProgressWidget->resize(314, 107);
-    ProgressWidget->setAutoFillBackground(true);
     vboxLayout = new QVBoxLayout(ProgressWidget);
     vboxLayout->setSpacing(0);
     vboxLayout->setObjectName(QString::fromUtf8("vboxLayout"));

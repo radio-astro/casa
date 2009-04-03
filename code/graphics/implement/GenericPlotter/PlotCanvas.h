@@ -420,6 +420,18 @@ public:
     virtual void setCachedAxesStackSizeLimit(int sizeInKilobytes) = 0;
     // </group>
     
+    // Gets/Sets the size of the image used for the cached axes stack, in
+    // pixels.  The default implementation is set to (-1, -1) which means that
+    // the images are set to the current size of the canvas.  It could be
+    // useful to set this value to a large size so that, for example, resizing
+    // wouldn't require a redraw of the whole canvas but rather just resizing
+    // the larger image to a smaller one.
+    // DEFAULT IMPLEMENTATION.
+    // <group>
+    virtual pair<int, int> cachedAxesStackImageSize() const;
+    virtual void setCachedAxesStackImageSize(int width, int height);
+    // </group>
+    
     
     // Plot Methods //
     

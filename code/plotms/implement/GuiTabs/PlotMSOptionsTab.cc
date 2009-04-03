@@ -35,7 +35,8 @@ namespace casa {
 //////////////////////////////////
 
 PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
-        itsParameters_(parent->getParent()->getParameters()) {
+        itsParameters_(parent->getParent()->getParameters()),
+        itsChangeFlag_(true) {
     setupUi(this);
     
     // Log levels
@@ -47,6 +48,9 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
     // Add self as watcher to plotms parameters.
     itsParameters_.addWatcher(this);
     
+    // Update GUI.
+    parametersHaveChanged(itsParameters_, 0, false);
+    
     // Connect widgets
     connect(buttonStyle, SIGNAL(currentIndexChanged(int)),
             SLOT(toolButtonStyleChanged(int)));
@@ -55,6 +59,13 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
     connect(logDebug, SIGNAL(toggled(bool)), SLOT(logDebugChanged(bool)));
     connect(clearSelection, SIGNAL(toggled(bool)),
             SLOT(clearSelectionChanged(bool)));
+    connect(cacheSize, SIGNAL(toggled(bool)), SLOT(cachedImageSizeChanged()));
+    connect(cacheSizeWidth, SIGNAL(valueChanged(int)),
+            SLOT(cachedImageSizeChanged()));
+    connect(cacheSizeHeight, SIGNAL(valueChanged(int)),
+            SLOT(cachedImageSizeChanged()));
+    connect(cacheSizeResolution, SIGNAL(clicked()),
+            SLOT(cachedImageSizeScreenResolution()));
 }
 
 PlotMSOptionsTab::~PlotMSOptionsTab() { }
@@ -66,18 +77,21 @@ QList<QToolButton*> PlotMSOptionsTab::toolButtons() const {
 void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {
     if(&p == &itsParameters_) {
-        logLevel->blockSignals(true);
-        setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));
-        logLevel->blockSignals(false);
+        bool oldChange = itsChangeFlag_;
+        itsChangeFlag_ = false;
         
-        logDebug->blockSignals(true);
+        setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));        
         logDebug->setChecked(itsParameters_.logDebug());
-        logDebug->blockSignals(false);
-        
-        clearSelection->blockSignals(true);
+
         clearSelection->setChecked(
                 itsParameters_.clearSelectionsOnAxesChange());
-        clearSelection->blockSignals(false);
+        
+        pair<int, int> size = itsParameters_.cachedImageSize();
+        cacheSize->setChecked(size.first > 0 && size.second > 0);
+        cacheSizeWidth->setValue(size.first);
+        cacheSizeHeight->setValue(size.second);
+
+        itsChangeFlag_ = oldChange;
     }
 }
 
@@ -91,6 +105,8 @@ void PlotMSOptionsTab::toolButtonStyleChanged(int newIndex) {
 }
 
 void PlotMSOptionsTab::logLevelChanged(const QString& newLevel) {
+    if(!itsChangeFlag_) return;
+    
     bool ok;
     PlotMSLogger::Level l = PlotMSLogger::level(newLevel.toStdString(), &ok);
     if(ok) {
@@ -101,15 +117,46 @@ void PlotMSOptionsTab::logLevelChanged(const QString& newLevel) {
 }
 
 void PlotMSOptionsTab::logDebugChanged(bool value) {
+    if(!itsChangeFlag_) return;
+    
     itsParameters_.holdNotification(this);
     itsParameters_.setLogLevel(itsParameters_.logLevel(), value);
     itsParameters_.releaseNotification();
 }
 
 void PlotMSOptionsTab::clearSelectionChanged(bool value) {
+    if(!itsChangeFlag_) return;
+    
     itsParameters_.holdNotification(this);
     itsParameters_.setClearSelectionsOnAxesChange(value);
     itsParameters_.releaseNotification();
+}
+
+void PlotMSOptionsTab::cachedImageSizeChanged() {
+    if(!itsChangeFlag_) return;
+    
+    itsParameters_.holdNotification(this);
+    if(cacheSize->isChecked())
+        itsParameters_.setCachedImageSize(cacheSizeWidth->value(),
+                cacheSizeHeight->value());
+    else
+        itsParameters_.setCachedImageSize(-1, -1);
+    itsParameters_.releaseNotification();
+}
+
+void PlotMSOptionsTab::cachedImageSizeScreenResolution() {
+    if(!itsChangeFlag_) return;
+    
+    itsChangeFlag_ = false;
+    
+    itsParameters_.holdNotification(this);
+    itsParameters_.setCachedImageSizeToResolution();
+    pair<int, int> size = itsParameters_.cachedImageSize();
+    cacheSizeWidth->setValue(size.first);
+    cacheSizeHeight->setValue(size.second);
+    itsParameters_.releaseNotification();
+    
+    itsChangeFlag_ = true;
 }
 
 }

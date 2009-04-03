@@ -31,6 +31,7 @@
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
 #include <qwt_painter.h>
+#include <qwt_scale_widget.h>
 
 namespace casa {
 
@@ -42,11 +43,11 @@ QPLayer::QPLayer() { }
 QPLayer::~QPLayer() { }
 
 void QPLayer::clearImage() const {
-    const_cast<QImage&>(m_cachedImage) = QImage(); }
+    const_cast<QPImageCache&>(m_cachedImage) = QPImageCache(); }
 
 void QPLayer::initializeImage(const QSize& size, unsigned int fillValue) const{
-    const_cast<QImage&>(m_cachedImage) = QImage(size, QImage::Format_ARGB32);
-    const_cast<QImage&>(m_cachedImage).fill(fillValue);
+    const_cast<QPImageCache&>(m_cachedImage) = QPImageCache(size);
+    const_cast<QPImageCache&>(m_cachedImage).fill(fillValue);
 }
 
 bool QPLayer::hasItemsToDraw() const {
@@ -86,17 +87,17 @@ void QPLayer::cacheItems(const QRect& canvasRect,
         const QwtScaleMap maps[QwtPlot::axisCnt], PlotOperationPtr op,
         unsigned int currentSegment, unsigned int totalSegments,
         unsigned int segmentThreshold) const {
-    QPainter painter(&const_cast<QImage&>(m_cachedImage));
-    drawItems(&painter, canvasRect, maps, op, currentSegment, totalSegments,
-            segmentThreshold);
+    QPainter* painter = const_cast<QPImageCache&>(m_cachedImage).painter();
+    drawItems(painter, canvasRect, maps, op, currentSegment, totalSegments,
+              segmentThreshold);
+    delete painter;
 }
 
 void QPLayer::drawCache(QPainter* painter, const QRect& rect) const {
-    if(!m_cachedImage.isNull()) painter->drawImage(rect, m_cachedImage);
-}
+    m_cachedImage.paint(painter, rect); }
 
-QImage& QPLayer::cachedImage() { return m_cachedImage; }
-const QImage& QPLayer::cachedImage() const { return m_cachedImage; }
+QPImageCache& QPLayer::cachedImage() { return m_cachedImage; }
+const QPImageCache& QPLayer::cachedImage() const { return m_cachedImage; }
 
 
 ///////////////////////////////
@@ -198,6 +199,20 @@ QList<const QPPlotItem*> QPLayeredCanvas::allLayerItems(int layersFlag) const {
     return list;
 }
 
+QRect QPLayeredCanvas::canvasDrawRect() const {
+    QRect rect = canvas()->contentsRect();
+    
+    const QwtScaleWidget* s = axisWidget(QwtPlot::xBottom);
+    rect.setLeft(rect.left() + s->startBorderDist());
+    rect.setRight(rect.right() - s->endBorderDist());
+    
+    s = axisWidget(QwtPlot::yLeft);
+    rect.setBottom(rect.bottom() - s->startBorderDist());
+    rect.setTop(rect.top() + s->endBorderDist());
+    
+    return rect;
+}
+
 void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
         const QwtPlotPrintFilter& filter) const {
     m_parent->logMethod(CLASS_NAME, "print", true);
@@ -294,15 +309,19 @@ void QPLayeredCanvas::detachLayeredItem(QPPlotItem* item) {
     }
 }
 
-void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
+void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
         const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
     m_parent->logMethod(CLASS_NAME, "drawItems", true);
+    
     if(m_printPainters.contains(painter)) {
-        printItems(painter, rect, maps, pf);
+        printItems(painter, drawRect, maps, pf);
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     }
 
+    QRect rect = drawRect;
+    if(drawRect == canvas()->contentsRect()) rect = canvasDrawRect();
+    
     PlotLoggerPtr infoLog = m_parent->loggerForEvent(PlotLogger::MSG_INFO);
     
     // We can used a cached image if:
@@ -313,7 +332,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     // 3) the cached image has the same size as the drawing rect.
     QPAxesCache& axesCache = m_parent->axesCache();
     bool cacheAvailable = axesCache.currHasImage() &&               // check #2
-                          axesCache.currImageSize() == rect.size(); // check #3
+        axesCache.currImageSize().width() >= rect.size().width() && // check #3
+        axesCache.currImageSize().height() >= rect.size().height();
     
     // Always draw the base items.
     m_layerBase.initializeImage(rect.size(),
@@ -352,10 +372,10 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         //if(useAxesCache) {
             m_layerBase.drawCache(painter, rect);
             
-            QImage image;
+            QPImageCache image;
             foreach(PlotCanvasLayer layer, m_layers.keys()) {
                 image = axesCache.currImage(layer);
-                if(!image.isNull()) painter->drawImage(rect, image);
+                image.paint(painter, rect);
             }            
         //} else paintCaches(painter, rect);
 
@@ -364,12 +384,13 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     }
     
     // We want to clear the cache if:
-    // 1) the cached image size is different from our draw rect (indicating a
+    // 1) the cached image size is larger from our draw rect (indicating a
     //    resize), or
     // 2) one or more items have changed, in which case just the relevant
     //    layer caches need to be cleared.
     bool clearCache = axesCache.size() > 0 && // check #1
                       axesCache.currImageSize() != rect.size();
+    bool resize = false;
 
     if(clearCache) {
         // Only clear cache if new size is larger than cache size.  Shrinking
@@ -378,6 +399,13 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
         clearCache = cacheSize.isValid() &&
                      (rectSize.width() > cacheSize.width() ||
                      rectSize.height() > cacheSize.height());
+        
+        // Make sure the set fixed size is >= the current draw area.  Otherwise
+        // we'll end up in an infinite loop.
+        cacheSize = axesCache.fixedImageSize();
+        if(cacheSize.isValid())
+            resize = cacheSize.width() < rect.width() ||
+                     cacheSize.height() < rect.height();
     }
      
     if(clearCache) {
@@ -385,6 +413,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
             infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache "
                     "because canvas size has changed.");
         axesCache.clear();
+        
+        if(resize) axesCache.setFixedSize(QSize());
     } else if(anyChangedLayer()) { // check #2
         if(!infoLog.null())
             infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache of "
@@ -442,7 +472,9 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& rect,
     // Set up drawing thread.
     QPDrawThread* drawThread = NULL;
     if(anyDraw) {
-        drawThread = new QPDrawThread(allLayerItems(drawLayers), maps, rect);
+        QSize size = axesCache.fixedImageSize();
+        if(!size.isValid()) size = rect.size();
+        drawThread = new QPDrawThread(allLayerItems(drawLayers), maps, size);
         connect(drawThread, SIGNAL(finished()), SLOT(itemDrawingFinished()));
         connect(drawThread, SIGNAL(terminated()), SLOT(itemDrawingFinished()));
         const_cast<QPDrawThread*&>(m_drawThread) = drawThread;
@@ -674,7 +706,7 @@ void QPLayeredCanvas::itemDrawingFinished() {
     }
         
     // Update caches.
-    QImage result;
+    QPImageCache result;
     foreach(PlotCanvasLayer layer, m_layers.keys()) {
         result = m_drawThread->drawResult(layer);
         if(!result.isNull()) m_parent->axesCache().addCurrImage(layer, result);

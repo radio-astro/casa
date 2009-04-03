@@ -31,6 +31,7 @@
 
 #include <graphics/GenericPlotter/PlotItem.h>
 
+#include <casaqt/QwtPlotter/QPImageCache.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/PlotOperation.h>
 
@@ -248,11 +249,11 @@ protected:
 };
 
 
-// Thread for drawing multiple QPPlotItems into one of two QImages based on its
-// canvas layer.  Once the thread is finished, the QImages can be draw into the
-// canvas caches and shown on the GUI widget as needed.  The thread will emit a
-// signal after each "segment" is drawn, either the whole item for small items
-// or part of a large item.
+// Thread for drawing multiple QPPlotItems into QPImageCaches based on its
+// canvas layer.  Once the thread is finished, the QPImageCaches can be copied
+// to the canvas caches and shown on the GUI widget as needed.  The thread will
+// emit a signal after each "segment" is drawn, either the whole item for small
+// items or part of a large item.
 class QPDrawThread : public QThread {
     Q_OBJECT
     
@@ -299,9 +300,10 @@ public:
     // Non-Static //
     
     // Constructor which takes a list of items to draw, axes maps, the drawing
-    // rectangle, and an optional segment threshold.
+    // rectangle, an optional fixed image size, and an optional segment
+    // threshold.
     QPDrawThread(const QList<const QPPlotItem*>& items,
-            const QwtScaleMap maps[QwtPlot::axisCnt], const QRect& drawRect,
+            const QwtScaleMap maps[QwtPlot::axisCnt], QSize imageSize,
             unsigned int segmentTreshold = DEFAULT_SEGMENT_THRESHOLD);
     
     // Destructor.
@@ -319,7 +321,7 @@ public:
     // Returns the image result for the given layer.  Should only be done AFTER
     // the thread is finished.  If clearResult is true, then the resulting
     // image is removed from the thread's images.
-    QImage drawResult(PlotCanvasLayer layer, bool clearResult = true);
+    QPImageCache drawResult(PlotCanvasLayer layer, bool clearResult = true);
     
 public slots:
     // Cancels this thread.  If the thread is currently running, it will finish
@@ -334,10 +336,7 @@ private:
     QwtScaleMap m_axesMaps[QwtPlot::axisCnt];
     
     // Images to draw into.
-    QHash<PlotCanvasLayer, QImage*> m_images;
-    
-    // Drawing rectangle.
-    QRect m_drawRect;
+    QHash<PlotCanvasLayer, QPImageCache*> m_images;
     
     // Maximum number of draw items per segment.
     unsigned int m_segmentThreshold;

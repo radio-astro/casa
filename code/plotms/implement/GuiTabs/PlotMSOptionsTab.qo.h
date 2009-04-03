@@ -64,6 +64,9 @@ private:
     // Watched parameters for PlotMS.
     PlotMSParameters& itsParameters_;
     
+    // Flag for changing the parameters.
+    bool itsChangeFlag_;
+    
 private slots:
     // When the user changes the tool button style on the GUI.
     void toolButtonStyleChanged(int newIndex);
@@ -76,6 +79,12 @@ private slots:
     
     // When the user changes the "clear selection" on the GUI.
     void clearSelectionChanged(bool value);
+    
+    // When the user changes the cached image size.
+    void cachedImageSizeChanged();
+    
+    // When the user sets the cached image size to screen resolution.
+    void cachedImageSizeScreenResolution();
 };
 
 }

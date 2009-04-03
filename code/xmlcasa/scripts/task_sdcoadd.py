@@ -164,6 +164,7 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
                     else:
                         # only single polarization
                         print "Single polarization data - no need to average"
+                        spave=stave.copy()
                 else:
                     spave=stave.copy()
 

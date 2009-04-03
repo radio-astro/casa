@@ -58,7 +58,7 @@ public:
     virtual void clearImage() const;
     
     // Initializes the cache image to the given size using the given color for
-    // a fill base (see QImage::fill()).
+    // a fill base (see QPImageCache::fill()).
     virtual void initializeImage(const QSize& size,
             unsigned int fillValue = Qt::transparent) const;
     
@@ -102,8 +102,8 @@ public:
     
     // Returns the cached image.
     // <group>
-    QImage& cachedImage();
-    const QImage& cachedImage() const;
+    QPImageCache& cachedImage();
+    const QPImageCache& cachedImage() const;
     // </group>
     
     
@@ -117,7 +117,7 @@ public:
     
 protected:
     // Cached image.
-    QImage m_cachedImage;
+    QPImageCache m_cachedImage;
 };
 
 
@@ -240,6 +240,9 @@ public:
     // Returns a list of the QPPlotItems attached to this canvas in the
     // layers as indicated (an or'ed value of PlotCanvasLayer enum values).
     QList<const QPPlotItem*> allLayerItems(int layersFlag) const;
+    
+    // Returns the rect for drawing items.
+    QRect canvasDrawRect() const;
     
     
     // Draw Methods //

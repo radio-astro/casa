@@ -35,6 +35,8 @@
 #include <casaqt/QwtPlotter/QPScatterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
+#include <qwt_painter.h>
+
 namespace casa {
 
 /////////////////////////////
@@ -313,8 +315,8 @@ void QPDrawThread::drawItems(const QList<const QPPlotItem*>& items,
 // Non-Static //
 
 QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
-        const QwtScaleMap maps[QwtPlot::axisCnt], const QRect& drawRect,
-        unsigned int segmentTreshold) : m_items(items), m_drawRect(drawRect),
+        const QwtScaleMap maps[QwtPlot::axisCnt], QSize imageSize,
+        unsigned int segmentTreshold) : m_items(items),
         m_segmentThreshold(segmentTreshold) {
     qSort(m_items.begin(), m_items.end(), itemSortByZ);
     if(m_segmentThreshold == 0) m_segmentThreshold = DEFAULT_SEGMENT_THRESHOLD;
@@ -325,9 +327,9 @@ QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
     for(int i = 0; i < m_items.size(); i++)
         seenLayers.insert(m_items[i]->canvasLayer());
     
-    QImage* image;
+    QPImageCache* image;
     foreach(PlotCanvasLayer layer, seenLayers) {
-        image = new QImage(drawRect.size(), QImage::Format_ARGB32);
+        image = new QPImageCache(imageSize);
         image->fill(Qt::transparent);
         m_images.insert(layer, image);
     }
@@ -336,8 +338,7 @@ QPDrawThread::QPDrawThread(const QList<const QPPlotItem*>& items,
 }
 
 QPDrawThread::~QPDrawThread() {
-    foreach(QImage* image, m_images) delete image;
-}
+    foreach(QPImageCache* image, m_images) delete image; }
 
 unsigned int QPDrawThread::totalSegments() const {
     unsigned int segments = 0;
@@ -373,7 +374,7 @@ void QPDrawThread::run() {
     // Set up painters.
     QHash<PlotCanvasLayer, QPainter*> painters;
     foreach(PlotCanvasLayer layer, m_images.keys())
-        painters.insert(layer, new QPainter(m_images.value(layer)));
+        painters.insert(layer, m_images.value(layer)->painter());
 
     // Set up log and operation.
     PlotLoggerPtr log= m_items[0]->loggerForEvent(PlotLogger::DRAW_INDIVIDUAL);
@@ -386,6 +387,7 @@ void QPDrawThread::run() {
     String title;    
     double segmentsTotal = totalSegments(), progress;
     unsigned int segmentsDrawn = 0;
+    QRect drawRect(QPoint(0, 0), QSize(0, 0));
     
     // Item draw loop.
     for(int i = 0; i < m_items.size(); i++) {
@@ -399,6 +401,7 @@ void QPDrawThread::run() {
         item = m_items[i];
         painter = painters.value(item->canvasLayer());
         drawCount = item->drawCount();
+        drawRect.setSize(m_images.value(item->canvasLayer())->size());
         
         // Update operation.
         if(!op.null()) {
@@ -411,6 +414,12 @@ void QPDrawThread::run() {
         if(!log.null())
             log->markMeasurement(item->className(), QPPlotItem::DRAW_NAME);
         
+        // Set up maps.
+        m_axesMaps[QwtPlot::xBottom].setPaintInterval(0, drawRect.width());
+        m_axesMaps[QwtPlot::xTop].setPaintInterval(0, drawRect.width());
+        m_axesMaps[QwtPlot::yLeft].setPaintInterval(drawRect.height(), 0);
+        m_axesMaps[QwtPlot::yRight].setPaintInterval(drawRect.height(), 0);
+        
         // Segment draw loop.
         for(unsigned int j = 0; j < drawCount; j += m_segmentThreshold) {
             // Check the PlotOperation to see if cancel is requested.
@@ -420,8 +429,7 @@ void QPDrawThread::run() {
             if(m_cancelFlag) break;
             
             // Draw segment.
-            drawItem(item, painter, m_drawRect, m_axesMaps, j,
-                     m_segmentThreshold);
+            drawItem(item,painter,drawRect,m_axesMaps,j,m_segmentThreshold);
             
             // Update operation.
             if(!op.null()) {
@@ -443,11 +451,12 @@ void QPDrawThread::run() {
         canvases[i]->logMethod(CLASS_NAME, "run", false);
 }
 
-QImage QPDrawThread::drawResult(PlotCanvasLayer layer, bool clearResult) {
-    QHash<PlotCanvasLayer,QImage*>&i=const_cast<QPDrawThread*>(this)->m_images;
+QPImageCache QPDrawThread::drawResult(PlotCanvasLayer layer, bool clearResult) {
+    QHash<PlotCanvasLayer,QPImageCache*>& i =
+        const_cast<QPDrawThread*>(this)->m_images;
     
-    QImage ret;
-    QImage* image = i.value(layer);
+    QPImageCache ret;
+    QPImageCache* image = i.value(layer);
     if(image != NULL) {
         ret = *image;
         if(clearResult) {

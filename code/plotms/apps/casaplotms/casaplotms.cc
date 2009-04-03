@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
     PlotMSLogger::Level log = PlotMSLogger::OFF;
     bool logDebug = false;
     PlotMSSelection select;
+    bool cachedImageSizeToScreenResolution = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -50,7 +51,8 @@ int main(int argc, char* argv[]) {
     String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_MS = "ms",
            ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
            ARG_LOG2 = "--loglevel", ARG_LOGDEBUG1 = "-ld",
-           ARG_LOGDEBUG2 = "--logdebug";
+           ARG_LOGDEBUG2 = "--logdebug", ARG_CISTSR = "-cistsr",
+           ARG_CISTSR2 = "--cachedimagesizetoscreenresolution";
     const vector<String>& selectFields = PlotMSSelection::fieldStrings();
     
     for(int i = 1; i < argc; i++) {
@@ -72,6 +74,10 @@ int main(int argc, char* argv[]) {
                  
                  << "\n* " <<ARG_LOGDEBUG1<<" or "<<ARG_LOGDEBUG2<< "\n     "
                  << "Turns on/off logging debug messages."
+                 
+                 << "\n* " << ARG_CISTSR << " or " << ARG_CISTSR2 << "\n     "
+                 << "Toggles setting the cached image size to screen "
+                 << "resolution."
                  
                  << "\n* " << ARG_MS << "=[ms]\n     "
                  << "Path to MS used for initial plot."
@@ -97,6 +103,9 @@ int main(int argc, char* argv[]) {
             
         } else if(arg2 == ARG_LOGDEBUG1 || arg2 == ARG_LOGDEBUG2) {
             logDebug = true;
+            
+        } else if(arg2 == ARG_CISTSR || arg2 == ARG_CISTSR2) {
+            cachedImageSizeToScreenResolution = true;
             
         } else if(i < argc - 1) {
             arg3 = argv[++i];
@@ -130,6 +139,9 @@ int main(int argc, char* argv[]) {
     
     // Set up parameters for plotms.
     PlotMSParameters params(log, logDebug);
+    
+    if(cachedImageSizeToScreenResolution)
+        params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
     PlotMS plotms(params);

@@ -342,6 +342,7 @@ def show_flag_history( scan ):
         print ''
         print '--------------------------------------------------'
         print 'History of channel flagging:'
+        print '--------------------------------------------------'
         for i in xrange(len(hist)):
                 hists=hist[i].split('##')
                 if ( len(hists) <= 1 ):
