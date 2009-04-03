@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: Complex.h 20553 2009-03-31 03:20:57Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -327,11 +327,19 @@ Complex erfc(const Complex &in);
 } //# NAMESPACE CASA - END
 
 // Define real & complex conjugation for non-complex types
+// and put comparisons into std namespace.
 namespace std { 
-  inline float conj(float x) { return x; }
+  inline float  conj(float  x) { return x; }
   inline double conj(double x) { return x; }
-  inline float real(float x) { return x; }
+  inline float  real(float  x) { return x; }
   inline double real(double x) { return x; }
+  inline float  imag(float   ) { return 0; }
+  inline double imag(double  ) { return 0; }
+  
+  using casa::operator>;
+  using casa::operator>=;
+  using casa::operator<;
+  using casa::operator<=;
 }
 
 #endif

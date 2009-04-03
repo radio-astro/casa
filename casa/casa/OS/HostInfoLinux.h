@@ -138,11 +138,21 @@ HostMachineInfo::HostMachineInfo( ) : valid(1)
     /* get number of CPUs */
     {
 	cpus = 0;
-	FILE *fptr = fopen(CPUINFO, "r");
-	while ( p = fgets( buffer, sizeof(buffer), fptr ) ) {
+	fd = open(CPUINFO, O_RDONLY);
+	len = read(fd, buffer, sizeof(buffer)-1);
+	close(fd);
+	buffer[len] = '\0';
+	p = buffer;
+
+	/* be prepared for extra columns to appear by seeking
+	   to ends of lines */
+
+	while ( *p ) 
+	{
 	    if ( ! strncmp( p, "processor", 9 ) ) ++cpus;
+	    p = strchr(p, '\n');
+	    if ( *p == '\n' ) ++p;
 	}
-	fclose(fptr);
     }
 
     /* get system total memory */
