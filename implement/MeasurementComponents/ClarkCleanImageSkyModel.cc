@@ -53,6 +53,13 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+  ClarkCleanImageSkyModel::ClarkCleanImageSkyModel() : CleanImageSkyModel(), itsProgress(0) {
+
+
+
+}
+
+
 ClarkCleanImageSkyModel::~ClarkCleanImageSkyModel()
 { 
   if (itsProgress) delete itsProgress; 
@@ -85,6 +92,18 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   Int ny=image(0).shape()(1);
   Int npol=image(0).shape()(2);
   Int nchan=image(0).shape()(3);
+  Int polloop=1;
+  Vector<String> stokesID(npol, "");
+  if (!doPolJoint_p) {
+    polloop=npol;
+    CoordinateSystem cs=image(0).coordinates();
+    Int stokesindex=cs.findCoordinate(Coordinate::STOKES);
+    StokesCoordinate stcoord=cs.stokesCoordinate(stokesindex);
+    for (Int jj=0; jj < npol ; ++jj){
+      stokesID(jj)=Stokes::name(Stokes::type(stcoord.stokes()(jj)));      
+    }
+  }
+  
   
   Int newNx=nx;
   Int newNy=ny;
@@ -139,82 +158,90 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 			     xend, ybeg, yend);       
     }
 
-
-    LCBox imagebox(IPosition(4, xbeg, ybeg, 0, ichan), 
-		   IPosition(4, xend, yend, npol-1, ichan),
-		   image(0).shape());
-    LCBox psfbox(IPosition(4, 0, 0, 0, ichan), 
-		 IPosition(4, nx-1, ny-1, 0, ichan),
-		 PSF(0).shape());
-
-    SubLattice<Float> psf_sl(PSF(0), psfbox, False);
-    SubLattice<Float>  residual_sl(residual(0), imagebox, True);
-    SubLattice<Float>  model_sl=SubLattice<Float>   (image(0), imagebox, True);
-    
-    
-    ArrayLattice<Float> psftmp;
-
-    if(nx != newNx){
-
-      psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
-      psftmp.set(0.0);
-      Array<Float> tmparr=psf_sl.get();
-      psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
-      psf_sl=SubLattice<Float>(psftmp, True);
- 
-    }
-
-    TempLattice<Float> dirty_sl( residual_sl.shape());
-    dirty_sl.copyData(residual_sl);
-    TempLattice<Float> localmodel(model_sl.shape());
-    localmodel.set(0.0);
-
-    Float psfmax;
-    {
-      LatticeExprNode node = max(psf_sl);
-      psfmax = node.getFloat();
-    }
     if(nchan>1) {
-      os<<"Processing channel "<<ichan+1<<" of "<<nchan<<LogIO::POST;
+	os<<"Processing channel "<<ichan+1<<" of "<<nchan<<LogIO::POST;
     }
-    if((psfmax==0.0) ||(hasMask(0) && (mask_sl == 0)) ) {
-      os << "No data or blank mask for this channel: skipping" << LogIO::POST;
-    } else {
-      LatConvEquation eqn(psf_sl, residual_sl);
-      ClarkCleanLatModel cleaner( localmodel );
-      cleaner.setResidual(dirty_sl);
-      if (mask_sl != 0 ) cleaner.setMask( *mask_sl );
-
-      ClarkCleanProgress *cpp  = 0;
-      if (displayProgress_p) {
-	cpp = new ClarkCleanProgress( pgplotter_p );
-	cleaner.setProgress(*cpp);
+    for (Int ipol=0; ipol < polloop; ++ipol){
+      Int polbeg=0;
+      Int polend=npol-1;
+      if(!doPolJoint_p){
+	polbeg=ipol;
+	polend=ipol;
+	os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
       }
+      LCBox imagebox(IPosition(4, xbeg, ybeg, polbeg, ichan), 
+		     IPosition(4, xend, yend, polend, ichan),
+		     image(0).shape());
+      LCBox psfbox(IPosition(4, 0, 0, 0, ichan), 
+		   IPosition(4, nx-1, ny-1, 0, ichan),
+		   PSF(0).shape());
 
-      cleaner.setGain(gain());
-      cleaner.setNumberIterations(numberIterations());
-      cleaner.setThreshold(threshold()); 
-      cleaner.setPsfPatchSize(IPosition(2,51,51)); 
-      cleaner.setHistLength(1024);
-      cleaner.setMaxNumPix(32*1024);
-      cleaner.setCycleFactor(cycleFactor_p);
-      // clean if there is no mask or if it has mask AND mask is not empty 
-      cleaner.solve(eqn);
-      cleaner.setChoose(False);
-      os << "Clean used " << cleaner.numberIterations() << " iterations" 
-	 << " to get to a max residual of " << cleaner.threshold() 
-	 << LogIO::POST;
-
-      LatticeExpr<Float> expr= model_sl + localmodel; 
-      model_sl.copyData(expr);
-      
- 
-      converged =  (cleaner.getMaxResidual() < threshold()) 
-	|| (cleaner.numberIterations()==0);
-      //      if (cpp != 0 ) delete cpp; cpp=0;
-      //      if (pgp != 0 ) delete pgp; pgp=0;
-    }
+      SubLattice<Float> psf_sl(PSF(0), psfbox, False);
+      SubLattice<Float>  residual_sl(residual(0), imagebox, True);
+      SubLattice<Float>  model_sl=SubLattice<Float>   (image(0), imagebox, True);
     
+    
+      ArrayLattice<Float> psftmp;
+      
+      if(nx != newNx){
+	
+	psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
+	psftmp.set(0.0);
+	Array<Float> tmparr=psf_sl.get();
+	psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
+	psf_sl=SubLattice<Float>(psftmp, True);
+ 
+      }
+      
+      TempLattice<Float> dirty_sl( residual_sl.shape());
+      dirty_sl.copyData(residual_sl);
+      TempLattice<Float> localmodel(model_sl.shape());
+      localmodel.set(0.0);
+      
+      Float psfmax;
+      {
+	LatticeExprNode node = max(psf_sl);
+	psfmax = node.getFloat();
+      }
+      
+      if((psfmax==0.0) ||(hasMask(0) && (mask_sl == 0)) ) {
+	os << "No data or blank mask for this channel: skipping" << LogIO::POST;
+      } else {
+	LatConvEquation eqn(psf_sl, residual_sl);
+	ClarkCleanLatModel cleaner( localmodel );
+	cleaner.setResidual(dirty_sl);
+	if (mask_sl != 0 ) cleaner.setMask( *mask_sl );
+	
+	ClarkCleanProgress *cpp  = 0;
+	if (displayProgress_p) {
+	  cpp = new ClarkCleanProgress( pgplotter_p );
+	  cleaner.setProgress(*cpp);
+	}
+	
+	cleaner.setGain(gain());
+	cleaner.setNumberIterations(numberIterations());
+	cleaner.setThreshold(threshold()); 
+	cleaner.setPsfPatchSize(IPosition(2,51,51)); 
+	cleaner.setHistLength(1024);
+	cleaner.setMaxNumPix(32*1024);
+	cleaner.setCycleFactor(cycleFactor_p);
+	// clean if there is no mask or if it has mask AND mask is not empty 
+	cleaner.solve(eqn);
+	cleaner.setChoose(False);
+	os << "Clean used " << cleaner.numberIterations() << " iterations" 
+	   << " to get to a max residual of " << cleaner.threshold() 
+	   << LogIO::POST;
+	
+	LatticeExpr<Float> expr= model_sl + localmodel; 
+	model_sl.copyData(expr);
+	
+ 
+	converged =  (cleaner.getMaxResidual() < threshold()) 
+	  || (cleaner.numberIterations()==0);
+	//      if (cpp != 0 ) delete cpp; cpp=0;
+	//      if (pgp != 0 ) delete pgp; pgp=0;
+      }
+    }
   }
   if (mask_sl != 0)  {
     delete mask_sl;

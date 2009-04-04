@@ -123,11 +123,17 @@ public:
   // <group>
   ImageInterface<Float>& mask(Int model=0);
   // </group>
+  //set to search for peak in I^2+Q^2+U^2+V^2 domain or each stokes plane seperately
+  //Ignored for hogbom and msclean for now
+  virtual void setJointStokesClean(Bool joint=True);
+
 
 protected:
 
   PtrBlock<ImageInterface<Float> * > mask_p;
   PtrBlock<ImageInterface<Float> * > fluxmask_p;
+  Bool doPolJoint_p;
+
 };
 
 
