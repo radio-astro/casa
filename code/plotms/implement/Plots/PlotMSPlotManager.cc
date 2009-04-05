@@ -96,9 +96,9 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
         itsPlots_[i]->detachFromCanvases();
         delete itsPlots_[i];
     }
-    itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
     itsPlots_.clear();
     itsPlotParameters_.clear();
+    itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
     notifyWatchers();
 }
 

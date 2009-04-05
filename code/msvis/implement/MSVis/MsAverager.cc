@@ -66,14 +66,16 @@ void MsAverager::reset(MS* ms, OutputMode mode) {
    outputMode = mode;
 
    if (!ms) {
-      SLog::slog()->out("Could not reset MsAverager: input MS is NULL",
-                "MsAverager", clname, LogMessage::WARN, True);    
+	   LogIO os(LogOrigin("MsAverager", "reset"));
+	   os << LogIO::WARN << "Could not reset MsAverager: input MS is NULL" << LogIO::POST;
+      //SLog::slog()->out("Could not reset MsAverager: input MS is NULL",
+                //"MsAverager", clname, LogMessage::WARN, True);    
       return;
    }
 
-   SLog::slog()->out(String("Number of selected rows is ") + 
-                 String::toString(ms->nrow()),
-                "MsAverager", clname, LogMessage::DEBUG1);    
+   //SLog::slog()->out(String("Number of selected rows is ") + 
+    //             String::toString(ms->nrow()),
+     //           "MsAverager", clname, LogMessage::DEBUG1);    
 
    pMS = ms;
    vs = 0;
@@ -255,8 +257,8 @@ void MsAverager::setAverager(
     //}
 
     if (aveTime == 0 && aveChan == 1) {
-        SLog::slog()->out("No averaging", 
-                          fnname, clname, LogMessage::NORMAL5); 
+        //SLog::slog()->out("No averaging", 
+                          //fnname, clname, LogMessage::NORMAL5); 
         aveOK = False;
         return;
     }
@@ -294,9 +296,13 @@ void MsAverager::setAverager(
        }
        //cout << "after checking the shape" << endl;
        if (chanChange > 1 || corrChange > 1) {
-          SLog::slog()->out("Average over variable shape of "
-                   "channel/polarization is not supported", 
-                   fnname, clname, LogMessage::WARN); 
+          //SLog::slog()->out("Average over variable shape of "
+                   //"channel/polarization is not supported", 
+                   //fnname, clname, LogMessage::WARN); 
+	  LogIO os(LogOrigin("MsAverager", "setAverager"));
+	  os << LogIO::WARN << "Average over variable shape of "
+             << "channel/polarization is not supported" 
+	     << LogIO::POST;
           aveOK = False;
           return;
        }
@@ -784,7 +790,7 @@ void MsAverager::setAverager(
             << " nAveChan=" << nAveChan << " nAveRow=" << nAveRow 
             << " nAvePol=" << nAvePol
             << endl;
-         SLog::slog()->out(os, fnname, clname, LogMessage::NORMAL5);
+         //SLog::slog()->out(os, fnname, clname, LogMessage::NORMAL5);
       }
 
       //cout << "iRow=" << iRow << endl;
@@ -795,7 +801,7 @@ void MsAverager::setAverager(
       {
          ostringstream os;
          os << aveRowMap;
-         SLog::slog()->out(os, fnname, clname, LogMessage::DEBUG1);
+         //SLog::slog()->out(os, fnname, clname, LogMessage::DEBUG1);
       }
 
       //cout << "putAveTable:" << setw(11) << rea << " real "
@@ -804,8 +810,12 @@ void MsAverager::setAverager(
 
    } 
    catch (const AipsError &x) {
-      SLog::slog()->out(String("Error: ") + x.getMesg(),
-             fnname, clname, LogMessage::WARN);
+      //SLog::slog()->out(String("Error: ") + x.getMesg(),
+             //fnname, clname, LogMessage::WARN);
+      LogIO os(LogOrigin("MsAverager", "setAverager"));
+      os << LogIO::WARN << "Error: "
+		   << x.getMesg()
+		   << LogIO::POST;
       aveOK = False;
       return ;
    }
@@ -1221,8 +1231,11 @@ Bool MsAverager::hasColumn(casa::String const& col) {
        if (cols(i) == col)
           return True;
     } 
-    SLog::slog()->out(String("No column '") + col + "' in the MS",
-             "hasColumn", clname, LogMessage::WARN);
+    //SLog::slog()->out(String("No column '") + col + "' in the MS",
+             //"hasColumn", clname, LogMessage::WARN);
+   LogIO os(LogOrigin("MsAverager", "hasColumn"));
+   os << LogIO::WARN << String("No column '") + col + "' in the MS"
+		   << LogIO::POST;
     return False;
 }
 
@@ -1244,8 +1257,11 @@ void MsAverager::getMap(Matrix<Int>& rowMap, Matrix<Int>& chanMap) {
 void MsAverager::getMS(MS& ms) {
     //cout << "getMS  aMS=" << aMS << endl;
     if (outputMode != MsAverager::TableMS) {
-       SLog::slog()->out(String("MS is not available in 'ListBuffer' mode"),
-             "getMS", clname, LogMessage::WARN);
+       //SLog::slog()->out(String("MS is not available in 'ListBuffer' mode"),
+             //"getMS", clname, LogMessage::WARN);
+       LogIO os(LogOrigin("MsAverager", "getMS"));
+       os << LogIO::WARN << String("MS is not available in 'ListBuffer' mode")
+		   << LogIO::POST;
        return;
     }
     //ms = aMS; 
@@ -1256,8 +1272,11 @@ void MsAverager::getXY(Vector<Double>& x, casa::Vector<Double>& y,
                        Vector<Int>& f, Int pol) {
 
   if (outputMode != MsAverager::ListBuffer) {
-     SLog::slog()->out(String("MS is not available in 'TableMS' mode"),
-             "getXY", clname, LogMessage::WARN);
+     //SLog::slog()->out(String("MS is not available in 'TableMS' mode"),
+             //"getXY", clname, LogMessage::WARN);
+     LogIO os(LogOrigin("MsAverager", "getXY"));
+     os << LogIO::WARN << String("MS is not available in 'TableMS' mode")
+		   << LogIO::POST;
      return;
   }
 

@@ -618,7 +618,7 @@ LIBxmlcasa     := defeat shatic defeat defeat defeat defeat
 # packages and should not need to be redefined in the site makedefs.
 LINKtableplot      := graphics 
 LINKcasaqt      := casaqt graphics 
-LINKmsvis       := msvis tableplot casaqt graphics 
+LINKmsvis       := msvis
 LINKcalibration := calibration msvis tableplot graphics 
 LINKionosphere  := ionosphere tableplot graphics 
 LINKflagging    := flagging msvis tableplot graphics 

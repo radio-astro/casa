@@ -1,3 +1,4 @@
+
 //# MFCleanImageSkyModel.cc: Implementation of MFCleanImageSkyModel class
 //# Copyrighogt (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -26,14 +27,22 @@
 //# $Id$
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Matrix.h>
 #include <synthesis/MeasurementComponents/MFCleanImageSkyModel.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/SubImage.h>
+#include <images/Regions/ImageRegion.h>
+#include <images/Regions/WCBox.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/RegionType.h>
+#include <lattices/Lattices/SubLattice.h>
+#include <lattices/Lattices/LCBox.h>
+
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
@@ -49,8 +58,6 @@
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
 
 
 
@@ -98,6 +105,8 @@ Bool MFCleanImageSkyModel::addResidual(Int image,
 // Clean solver
 Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
+
+  //blankOverlappingModels();
   LogIO os(LogOrigin("MFCleanImageSkyModel","solve"));
   Bool converged=True;
   //Make the PSFs, one per field
@@ -175,8 +184,22 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
                        yend(nmodels);
   Vector<Bool> isCubeMask(nmodels);
   isCubeMask.set(False);
-  Int nx, ny, npol;
+  Int nx, ny;
+  Int npol=image(0).shape()(2);
   Int nchan=image(0).shape()(3);
+  Int polloop=1;
+  Vector<String> stokesID(npol, "");
+  if (!doPolJoint_p) {
+    polloop=npol;
+    CoordinateSystem cs=image(0).coordinates();
+    Int stokesindex=cs.findCoordinate(Coordinate::STOKES);
+    StokesCoordinate stcoord=cs.stokesCoordinate(stokesindex);
+    for (Int jj=0; jj < npol ; ++jj){
+      stokesID(jj)=Stokes::name(Stokes::type(stcoord.stokes()(jj)));      
+    }
+  }
+
+
   PtrBlock<Matrix<Float> *>  lmaskCube(nmodels*nchan);
 
   for (model=0;model<numberOfModels();model++) {
@@ -351,8 +374,15 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	npol=image(model).shape()(2);
 	nchan=image(model).shape()(3);
 	
+	Int npolcube=npol;
+	if(!doPolJoint_p){
+	  npolcube=1;
+	}
 	if(cycle==1) {
-	  iterations[model].resize(nchan);
+	  if(doPolJoint_p)
+	    iterations[model].resize(nchan);
+	  else
+	    iterations[model].resize(nchan*npol);
 	  iterations[model]=0;
 	}
 	  
@@ -367,9 +397,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	     (abs(resmin(model))>cycleThreshold)) {
 
 	    os << "Processing model " << model << LogIO::POST;
-
+	    
 	    IPosition onePlane(4, nx, ny, 1, 1);
-	    IPosition oneCube(4, nx, ny, npol, 1);
+	    IPosition oneCube(4, nx, ny, npolcube, 1);
 	    
 	    //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
 	    
@@ -381,11 +411,11 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	    RO_LatticeIterator<Float> psfli(PSF(model),psfls);
 
 	    LatticeStepper fsls(ggS(model).shape(), oneCube,
-				IPosition(4,0,1,2,3));
+				IPosition(4,0,1,3,2));
 	    RO_LatticeIterator<Float> ggSli(ggS(model),fsls);
 
 	    LatticeStepper ls(image(model).shape(), oneCube,
-			      IPosition(4, 0, 1, 2, 3));
+			      IPosition(4, 0, 1, 3, 2));
 	    LatticeIterator<Float> imageStepli(residual(model), ls);
 	    LatticeIterator<Float> imageli(image(model), ls);
 	    LatticeIterator<Float> deltaimageli(deltaImage(model), ls);
@@ -402,12 +432,23 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
 	    // Now clean each channel
 	    Int chan=0;
+	    Int ipol=0;
 	    for (imageStepli.reset(),imageli.reset(),psfli.reset(),
 		   deltaimageli.reset(),ggSli.reset();
-		 !imageStepli.atEnd()&&(chan<nchan);
+		 !imageStepli.atEnd();
 		 imageStepli++,imageli++,psfli++,deltaimageli++,
 		   ggSli++,chan++) {
-
+	      if(!doPolJoint_p){
+		if(chan==0){
+		  os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
+		}
+		if(chan==nchan){
+		  chan=0;
+		  psfli.reset();
+		  ++ipol;
+		  os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
+		}
+	      }
 	      if(hasMask(model) && isCubeMask[model] && chan >0) {
 		maskArray.reference(*(lmaskCube[chan*nmodels+model])); 
 	      }
@@ -429,7 +470,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
 		for (Int iy=0;iy<ny;iy++) {
 		  for (Int ix=0;ix<nx;ix++) {
-		    for (Int pol=0;pol<npol;pol++) {
+		    for (Int pol=0;pol<npolcube;pol++) {
 		      //resid(ix,iy,pol)*=weight(ix,iy,pol);
 		      if(weight(ix,iy,pol)>0.0001) {
 			wmask(ix,iy)=1.0;
@@ -450,9 +491,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  const Float *lpsf_data(0), *lmask_data(0);
 		  lmask_data=wmask.getStorage(delete_itm);
 		  lpsf_data=psfli.cursor().getStorage(delete_itp);
-		  
 		  Int niter=numberIterations();
-		  Int starting_iteration = iterations[model](chan);
+		  Int starting_iteration = iterations[model](chan*npolcube+ipol);
 		  Int ending_iteration;
 
 		  Float g=gain();
@@ -465,7 +505,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  Int domaskI=1;
 		  hclean(ldeltaimage_data, limageStep_data, (Float*)lpsf_data,
 			 &domaskI, (Float*)lmask_data,
-			 &nx, &ny, &npol,
+			 &nx, &ny, &npolcube,
 			 &fxbeg, &fxend, &fybeg, &fyend, &niter,
 			 &starting_iteration, &ending_iteration,
 			 &g, &thres, &cycleSpeedup_p,
@@ -492,14 +532,14 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  deltaimageli.rwCursor()=step.addDegenerate(1);    
 		  */ 	  
 		  /////
-		  imageli.rwCursor()+=deltaimageli.cursor();
+		  //imageli.rwCursor()+=deltaimageli.cursor();
 		  psfli.cursor().freeStorage (lpsf_data, delete_itp);
 		  if (domask) {
 		    maskArray.freeStorage (lmask_data, delete_itm);
 		  }		  
-		  iterations[model](chan) = ending_iteration;
-		  maxIterations=(iterations[model](chan)>maxIterations) ?
-		    iterations[model](chan) : maxIterations;
+		  iterations[model](chan*npolcube+ipol) = ending_iteration;
+		  maxIterations=(iterations[model](chan*npolcube+ipol)>maxIterations) ?
+		    iterations[model](chan*npolcube+ipol) : maxIterations;
 		  modified_p=True;
 		  
 		} else {  // clark is the default for now
@@ -513,7 +553,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setMask(wmask);
 		  cleaner.setGain(gain());
 		  cleaner.setNumberIterations(numberIterations());
-		  cleaner.setInitialNumberIterations(iterations[model](chan));
+		  cleaner.setInitialNumberIterations(iterations[model](chan*npolcube+ipol));
 		  cleaner.setThreshold(cycleThreshold);
 		  cleaner.setPsfPatchSize(IPosition(2,51)); 
 		  cleaner.setMaxNumberMajorCycles(10);
@@ -526,9 +566,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		    cleaner.setProgress( *progress_p );
 		  }
 		  cleaner.solve(eqn);
-		  iterations[model](chan)=cleaner.numberIterations();
-		  maxIterations=(iterations[model](chan)>maxIterations) ?
-		    iterations[model](chan) : maxIterations;
+		  iterations[model](chan*npolcube+ipol)=cleaner.numberIterations();
+		  maxIterations=(iterations[model](chan*npolcube+ipol)>maxIterations) ?
+		    iterations[model](chan*npolcube+ipol) : maxIterations;
 		  modified_p=True;
 		  
 		  cleaner.getModel(deltaimageli.rwCursor());
@@ -548,7 +588,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  deltaimageli.rwCursor()=step.addDegenerate(1);
 		  */	  
 		  /////
-		  imageli.rwCursor()+=deltaimageli.cursor();
+		  //imageli.rwCursor()+=deltaimageli.cursor();
 		  eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
 		  os<<"Finished Clark clean inner cycle " << LogIO::POST;
@@ -559,7 +599,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		else{
 		  stop=False;
 		}
-		os << "Clean used " << iterations[model](chan) << " iterations" 
+		os << "Clean used " << iterations[model](chan*npolcube+ipol) << " iterations" 
 		   << " to approach a threshold of " << cycleThreshold
 		   << LogIO::POST; 
 	      }
@@ -575,8 +615,17 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	}
       }
 
-      if(maxIterations != oldMaxIterations)
+      if(maxIterations != oldMaxIterations){
 	oldMaxIterations=maxIterations;
+	blankOverlappingModels();
+	for(Int model=0; model < numberOfModels(); ++model){
+	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
+	  os << LatticeExprNode(sum(image(model))).getFloat() 
+	     << " Jy is the sum of clean components of model " 
+	     << model << LogIO::POST;
+	}
+
+      }
       else {
 	os << "No more clean occured in this major cycle - stopping now" << LogIO::POST;
 	stop=True;
@@ -624,6 +673,76 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   return(converged);
 };
   
+
+void MFCleanImageSkyModel::blankOverlappingModels(){
+  if(numberOfModels() == 1) 
+    return;
+  /////////////////////
+  /*  for (Int model=0;model<(numberOfModels()); ++model) {
+
+    
+      LatticeExprNode maxIm=max(deltaImage(model));
+      cout << "MAX model " << model << "    " << maxIm.getFloat() << endl;
+  }
+  */
+  //////////////
+  for (Int model=0;model<(numberOfModels()-1); ++model) {
+    CoordinateSystem cs0=deltaImage(model).coordinates();
+    IPosition iblc0(deltaImage(model).shape().nelements(),0);
+      
+      IPosition itrc0(deltaImage(model).shape());
+      itrc0=itrc0-Int(1);
+      LCBox lbox0(iblc0, itrc0, deltaImage(model).shape());
+
+      ImageRegion imagreg0(WCBox(lbox0, cs0));
+    for (Int nextmodel=model+1; nextmodel < numberOfModels(); ++nextmodel){
+      CoordinateSystem cs=deltaImage(nextmodel).coordinates();
+      IPosition iblc(deltaImage(nextmodel).shape().nelements(),0);
+      
+      IPosition itrc(deltaImage(nextmodel).shape());
+      itrc=itrc-Int(1);
+      
+      LCBox lbox(iblc, itrc, deltaImage(nextmodel).shape());
+
+      ImageRegion imagreg(WCBox(lbox, cs));
+      try{
+	SubImage<Float> partToMerge(deltaImage(nextmodel), imagreg0, True);
+	SubImage<Float> partToMask(deltaImage(model), imagreg, True);
+	LatticeRegion latReg0=imagreg0.toLatticeRegion(deltaImage(nextmodel).coordinates(), deltaImage(nextmodel).shape());
+	ArrayLattice<Bool> pixmerge(latReg0.get());
+	LatticeRegion latReg=imagreg.toLatticeRegion(deltaImage(model).coordinates(), deltaImage(model).shape());
+	ArrayLattice<Bool> pixmask(latReg.get());
+	/////////////////
+	/*Array<Bool> testoo;
+	testoo.assign(pixmask.get());
+       	cout << "Images " << model << "  and " << nextmodel << " shape " << pixmask.shape() << "  " << pixmerge.shape() << " number of T " << ntrue(testoo) << endl;
+	*/
+	////////////////
+	//LatticeExpr<Float> myexpr0(iif((pixmerge && (abs(partToMask) > abs(partToMerge))), partToMask, partToMerge) );
+	//partToMerge.copyData(myexpr0);
+	LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
+	partToMask.copyData(myexpr);
+
+      }
+      catch(...){
+	//most probably no overlap
+	continue;
+      }
+      //////////
+      /*
+      {
+	LatticeExprNode maxIm=max(image(model));
+	cout << "MAX model " << model << "    " << maxIm.getFloat() << endl;
+      }
+      */
+      /////////
+    
+    }
+    
+    
+    
+  }
+}
   
 // Find maximum residual
 Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,

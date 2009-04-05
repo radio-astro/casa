@@ -4530,9 +4530,11 @@ Bool Imager::clean(const String& algorithm,
 
     if( redoSkyModel_p || !sm_p){
       if(sm_p) delete sm_p;
-      if(algorithm=="clark") {
+      if(algorithm.substr(0,5)=="clark") {
 	// Support serial and parallel specializations
 	setClarkCleanImageSkyModel();
+	if(algorithm.contains("stokes"))
+	   sm_p->setJointStokesClean(False);
       }
       else if (algorithm=="hogbom") {
 	sm_p = new HogbomCleanImageSkyModel();
@@ -4558,9 +4560,12 @@ Bool Imager::clean(const String& algorithm,
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
       }
-      else if (algorithm=="mfclark" || algorithm=="mf") {
+      else if (algorithm.substr(0,7)=="mfclark" || algorithm=="mf") {
 	sm_p = new MFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("clark");
+	if(algorithm.contains("stokes"))
+	   sm_p->setJointStokesClean(False);
+
 	doMultiFields_p = True;
 	os << "Using Clark Clean" << LogIO::POST;
       }

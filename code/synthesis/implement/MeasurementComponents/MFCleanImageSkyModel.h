@@ -112,6 +112,8 @@ protected:
   Float maxOuter(Lattice<Float> & lat, const uInt nCenter );
   // Pointer to the progress display object
   ClarkCleanProgress *progress_p;
+  //Allow only one model to be valid in overlapping regions
+  void blankOverlappingModels();
 
 };
 

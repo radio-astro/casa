@@ -27,6 +27,7 @@
 #ifndef PLOTMSSELECTION_H_
 #define PLOTMSSELECTION_H_
 
+#include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
@@ -66,6 +67,13 @@ public:
     // Destructor.
     ~PlotMSSelection();
     
+    
+    // Converts this object to/from a record.  The record keys are the values
+    // of the Field enum in String form, and the values are the String values.
+    // <group>
+    void fromRecord(const RecordInterface& record);
+    Record toRecord() const;
+    // </group>
     
     // Applies this selection using the first MS into the second MS.  (See the
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)

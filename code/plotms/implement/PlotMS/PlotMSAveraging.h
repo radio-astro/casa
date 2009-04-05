@@ -27,7 +27,9 @@
 #ifndef PLOTMSAVERAGING_H_
 #define PLOTMSAVERAGING_H_
 
-//#include <casa/namespace.h>
+#include <casa/Containers/Record.h>
+
+#include <casa/namespace.h>
 
 namespace casa {
 
@@ -40,6 +42,15 @@ public:
     // Destructor.
     ~PlotMSAveraging();
     
+    
+    // Converts this object to/from a record.  The record keys/values currently
+    // are:
+    // { "channel" => bool, "channelValue" => double,
+    //   "time" => bool, "timeValue" => double,
+    //   "scan" => bool, "field" => bool, "baseline" => bool }
+    void fromRecord(const RecordInterface& record);
+    Record toRecord() const;
+    // </group>
     
     // Gets/Sets whether channel averaging is turned on or not.
     // <group>

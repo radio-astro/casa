@@ -50,7 +50,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     plotsChanged(itsPlotManager_);
     
     // Setup MS tab
-    itsMSFileWidget_ = new PlotFileWidget(true, false);
+    itsMSFileWidget_ = new QtFileWidget(true, false);
     QtUtilities::putInFrame(msLocationFrame, itsMSFileWidget_);
     
     vector<PlotMSSelection::Field> fields = PlotMSSelection::fields();
@@ -127,7 +127,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
             QHeaderView::Stretch);
     
     // Setup plot tab
-    itsPlotTitleWidget_ = new PlotLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
+    itsPlotTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     PlotFactoryPtr factory = itsPlotter_->getFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
             PMS::DEFAULT_SYMBOL(factory), false, false);
@@ -142,7 +142,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     itsLabelDefaults_.insert(plotFLabel, plotFLabel->text());
     
     // Setup canvas tab
-    itsCanvasTitleWidget_ = new PlotLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
+    itsCanvasTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     canvasTitleFrame->layout()->addWidget(itsCanvasTitleWidget_);
     QButtonGroup* group = new QButtonGroup(canvasTitleFrame);
     group->addButton(canvasTitleSameAsPlot);
@@ -152,10 +152,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     for(unsigned int i = 0; i < leg.size(); i++)
         canvasLegendChooser->addItem(leg[i].c_str());
     
-    itsXLabelWidget_ = new PlotLabelWidget(
-                       PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
-    itsYLabelWidget_ = new PlotLabelWidget(
-                       PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
+    itsXLabelWidget_= new QtLabelWidget(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
+    itsYLabelWidget_= new QtLabelWidget(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
     QtUtilities::putInFrame(canvasXLabelFrame, itsXLabelWidget_);
     QtUtilities::putInFrame(canvasYLabelFrame, itsYLabelWidget_);
     
@@ -167,7 +165,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     itsLabelDefaults_.insert(canvasYLabelLabel, canvasYLabelLabel->text());
     
     // Setup export tab
-    itsExportFileWidget_ = new PlotFileWidget(false, true);
+    itsExportFileWidget_ = new QtFileWidget(false, true);
     QtUtilities::putInFrame(exportFileFrame, itsExportFileWidget_);
     
     exportFormat->addItem("[by file extension]");

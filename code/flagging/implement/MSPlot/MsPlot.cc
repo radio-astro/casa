@@ -72,9 +72,9 @@
 #include <msvis/MSVis/MsAverager.h>
 
 //# Local (MsPlot) includes
-#include <msvis/MSPlot/MsPlot.h>
-#include <msvis/MSPlot/MsPlotConvert.h>
-#include <msvis/MSPlot/MsPlotHooks.h>
+#include <flagging/MSPlot/MsPlot.h>
+#include <flagging/MSPlot/MsPlotConvert.h>
+#include <flagging/MSPlot/MsPlotHooks.h>
 
 
 #define LOG0 0

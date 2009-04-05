@@ -46,8 +46,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-CleanImageSkyModel::CleanImageSkyModel() : ImageSkyModel()
+  CleanImageSkyModel::CleanImageSkyModel() : ImageSkyModel(), doPolJoint_p(True)
 {
+
+
 }
 
 Bool CleanImageSkyModel::addMask(Int thismodel, ImageInterface<Float>& mask)
@@ -139,7 +141,9 @@ Bool CleanImageSkyModel::addFluxMask(Int thismodel, ImageInterface<Float>& fluxM
   return True;
 }
 
-
+void  CleanImageSkyModel::setJointStokesClean(Bool joint) {
+  doPolJoint_p=joint;
+}
 
 } //# NAMESPACE CASA - END
 

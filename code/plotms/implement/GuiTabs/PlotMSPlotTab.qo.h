@@ -29,7 +29,8 @@
 
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
 
-#include <plotms/Gui/PlotWidgets.qo.h>
+#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
+#include <plotms/Gui/PlotRangeWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
@@ -84,12 +85,12 @@ public:
     
 private:
     // Widgets for file selection for the MS and export, respectively.
-    PlotFileWidget* itsMSFileWidget_, *itsExportFileWidget_;
+    QtFileWidget* itsMSFileWidget_, *itsExportFileWidget_;
     
     // Widgets for titles/labels for the plot, canvas, x axis, and y axis,
     // respectively.
-    PlotLabelWidget* itsPlotTitleWidget_, *itsCanvasTitleWidget_,
-                     *itsXLabelWidget_, *itsYLabelWidget_;
+    QtLabelWidget* itsPlotTitleWidget_, *itsCanvasTitleWidget_,
+                  *itsXLabelWidget_, *itsYLabelWidget_;
     
     // Widgets for symbols for unflagged and flagged points, respectively.
     PlotSymbolWidget* itsSymbolWidget_, *itsMaskedSymbolWidget_;

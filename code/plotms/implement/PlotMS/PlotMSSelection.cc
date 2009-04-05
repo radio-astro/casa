@@ -47,6 +47,24 @@ PlotMSSelection::PlotMSSelection() {
 
 PlotMSSelection::~PlotMSSelection() { }
 
+
+void PlotMSSelection::fromRecord(const RecordInterface& record) {
+    const vector<String>& fields = fieldStrings();
+    for(unsigned int i = 0; i < fields.size(); i++)
+        if(record.isDefined(fields[i])&&record.dataType(fields[i]) == TpString)
+            setValue(field(fields[i]), record.asString(fields[i]));
+}
+
+Record PlotMSSelection::toRecord() const {
+    Record record(Record::Variable);
+    
+    const vector<Field>& f = fields();
+    for(unsigned int i = 0; i < f.size(); i++)
+        record.define(field(f[i]), getValue(f[i]));
+    
+    return record;
+}
+
 void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
         Matrix<Int>& chansel) const {    
     // Set the selected MeasurementSet to be the same initially as the input

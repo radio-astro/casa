@@ -122,7 +122,9 @@ const String PlotCanvas::OPERATION_EXPORT = "export";
 
 PlotCanvas::PlotCanvas() { }
 
-PlotCanvas::~PlotCanvas() { }
+PlotCanvas::~PlotCanvas() {
+    operationDraw()->finish();
+}
 
 
 bool PlotCanvas::hasThreadedDrawing() const {

@@ -36,6 +36,42 @@ PlotMSAveraging::PlotMSAveraging() { setDefaults(); }
 PlotMSAveraging::~PlotMSAveraging() { }
 
 
+// { "channel" => bool, "channelValue" => double,
+//   "time" => bool, "timeValue" => double,
+//   "scan" => bool, "field" => bool, "baseline" => bool }
+void PlotMSAveraging::fromRecord(const RecordInterface& record) {
+    if(record.isDefined("channel") && record.dataType("channel") == TpBool)
+        itsChannel_ = record.asBool("channel");
+    if(record.isDefined("channelValue") &&
+       record.dataType("channelValue") == TpDouble)
+        itsChannelValue_ = record.asDouble("channelValue");
+    if(record.isDefined("time") && record.dataType("time") == TpBool)
+        itsTime_ = record.asBool("time");
+    if(record.isDefined("timeValue") &&
+       record.dataType("timeValue") == TpDouble)
+        itsTimeValue_ = record.asDouble("timeValue");
+    if(record.isDefined("scan") && record.dataType("scan") == TpBool)
+        itsScan_ = record.asBool("scan");
+    if(record.isDefined("field") && record.dataType("field") == TpBool)
+        itsField_ = record.asBool("field");
+    if(record.isDefined("baseline") && record.dataType("baseline") == TpBool)
+        itsBaseline_ = record.asBool("baseline");
+}
+
+Record PlotMSAveraging::toRecord() const {
+    Record rec(Record::Variable);
+    
+    rec.define("channel", itsChannel_);
+    rec.define("channelValue", itsChannelValue_);
+    rec.define("time", itsTime_);
+    rec.define("timeValue", itsTimeValue_);
+    rec.define("scan", itsScan_);
+    rec.define("field", itsField_);
+    rec.define("baseline", itsBaseline_);
+    
+    return rec;
+}
+
 bool PlotMSAveraging::channel() const { return itsChannel_; }
 void PlotMSAveraging::setChannel(bool channel) { itsChannel_ = channel; }
 

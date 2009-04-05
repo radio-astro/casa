@@ -37,7 +37,7 @@
 #include <vector>
 #include <xmlcasa/casac.h>
 #include <xmlcasa/ms/msplot_forward.h>
-#include <msvis/MSPlot/MsPlot.h>
+#include <flagging/MSPlot/MsPlot.h>
 
 // put includes here
 

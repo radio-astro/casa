@@ -649,7 +649,9 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 
     Long pixInMem=(memtot/8)*1024;
     nslice=1;
-    if(npix > (pixInMem/2)){
+
+    // cout << "npix " << npix << "  " << pixInMem << endl;
+    if(npix > (pixInMem/4)){
       //Lets slice it so grid is at most 1/6th of memory
       pixInMem=pixInMem/6;
       //One plane is
@@ -861,6 +863,14 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //slice=0;
 
   if(typeOfSlice==0){
+    
+    /////////////
+    /*if(!slice.null())
+      cout << "NUMBER of links " << slice.nrefs() << endl;
+    */
+   //////////
+
+
     //Double memoryMB=HostInfo::memoryFree()/1024.0/(4.0*(sm_->numberOfModels()));
     Double memoryMB=HostInfo::memoryTotal()/1024.0/(4.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
