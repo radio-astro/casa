@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <tables/Tables/TableRecord.h>
 #include <images/Regions/AipsIOReaderWriter.h>
 
