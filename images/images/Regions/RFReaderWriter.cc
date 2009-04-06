@@ -26,7 +26,7 @@
 //# $Id$
 #include <images/Regions/RFReaderWriter.h>
 #include <images/Regions/AipsIOReaderWriter.h>
-#include <images/Regions/DS9ReaderWriter.h>
+    //#include <images/Regions/DS9ReaderWriter.h>
 
 namespace casa {
 
@@ -121,7 +121,7 @@ RFReader* RFReaderWriter::readerForType(SupportedType type) {
     switch(type) {
 	//case AIPS_BOX  return new AipsBoxReaderWriter();
 	case AIPS_IO:  return new AipsIOReaderWriter();
-	case DS9:      return new DS9ReaderWriter();
+	//case DS9:      return new DS9ReaderWriter();
 	//case CASA_XML: return new XMLReaderWriter();
     
 	default: return NULL; // unknown
@@ -132,7 +132,7 @@ RFWriter* RFReaderWriter::writerForType(SupportedType type) {
     switch(type) {
 	//case AIPS_BOX: return new AipsBoxReaderWriter();
 	case AIPS_IO:  return new AipsIOReaderWriter();
-	case DS9:      return new DS9ReaderWriter();
+        //case DS9:      return new DS9ReaderWriter();
 	//case CASA_XML: return new XMLFileReaderWriter();
     
 	default: return NULL; // unknown
