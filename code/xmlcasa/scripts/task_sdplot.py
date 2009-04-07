@@ -8,7 +8,7 @@ import Tkinter as Tk
 from sdstat_cli import sdstat_cli as sdstat
 ### End mod #######################
 
-def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
+def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -126,6 +126,31 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             if ( specunit != '' ):
                     print "Changing spectral axis to "+specunit
                     s.set_unit(specunit)
+
+            # set rest frequency
+            if ( specunit == 'km/s' and restfreq != '' ):
+                    if ( type(restfreq) == float ):
+                            fval = restfreq
+                    else:
+                            # string with/without unit
+                            rf=restfreq.rstrip('Hz')
+                            if ( rf[len(rf)-1] == 'T' ):
+                                    #THz
+                                    fval = float(rf.rstrip('T'))*1.0e12
+                            elif ( rf[len(rf)-1] == 'G' ):
+                                    #GHz
+                                    fval = float(rf.rstrip('G'))*1.0e9
+                            elif ( rf[len(rf)-1] == 'M' ):
+                                    #MHz
+                                    fval = float(rf.rstrip('M'))*1.0e6
+                            elif ( rf[len(rf)-1] == 'k' ):
+                                    #kHz
+                                    fval = float(rf.rstrip('k'))*1.0e3
+                            else:
+                                    #Hz
+                                    fval = float(rf)
+                    print 'Set rest frequency to ', fval, ' Hz'
+                    s.set_restfreqs(freqs=fval)
 
             # reset frame and doppler if needed
             if ( frame != '' ):

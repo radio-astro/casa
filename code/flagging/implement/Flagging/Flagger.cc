@@ -1532,7 +1532,9 @@ namespace casa {
       VisibilityIterator &vi(vs_p->iter()); 
       VisBuffer vb(vi);
       
-      RFChunkStats chunk(vi,vb,*this,&pgp_screen,&pgp_report);
+      RFChunkStats chunk(vi, vb,
+			 *this,
+			 &pgp_screen, &pgp_report);
       
       // setup global options for flagging agents
       Record globopt(Record::Variable);
@@ -1589,8 +1591,7 @@ namespace casa {
 	  parms.define(RF_RESET,reset_flags);
 
 	  // see if this is a different instance of an already activated agent
-	  if( agcounts.isDefined(agent_id) )
-	    {
+	  if (agcounts.isDefined(agent_id)) {
 	      // increment the instance counter
 	      Int count = agcounts.asInt(agent_id)+1;
 	      agcounts.define(agent_id,count);
@@ -1603,7 +1604,9 @@ namespace casa {
 	  else
 	    agcounts.define(agent_id,1);
 	  // create agent based on name
-	  RFABase *agent = createAgent(agent_id,chunk,parms);
+	  RFABase *agent = createAgent(agent_id,
+				       chunk,
+				       parms);
 	  if( !agent )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
@@ -1617,9 +1620,11 @@ namespace casa {
       // begin iterating over chunks
       uInt nchunk=0;
 
-      // process just the first chunk because something's screwy  
-      for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk(), nchunk++ ) 
-	{//Start of loop over chunks
+      // process just the first chunk because something's screwy
+      for (vi.originChunks(); 
+	   vi.moreChunks(); 
+	   vi.nextChunk(), nchunk++) {
+	  //Start of loop over chunks
 	  didSomething = 0;
 	  for( uInt i = 0; i<acc.nelements(); i++ ) acc[i]->initialize();
 
@@ -1731,19 +1736,31 @@ namespace casa {
 			      anyActive=True;
 		      }
 
-		    for(uInt i=0;i<acc.nelements();i++) if (anyActive) acc[i]->initializeIter(itime);
+		    for(uInt i=0;i<acc.nelements();i++) {
+			if (anyActive) acc[i]->initializeIter(itime);
+		    }
 
-		    {
-		      for(uInt ii=0;ii<vb.flagRow().nelements();ii++)
+		    for(uInt ii=0;ii<vb.flagRow().nelements();ii++)
 			if (vb.flagRow()(ii) == True) inRowFlags++;
-		      totalRows += vb.flagRow().nelements();
-		      totalData += vb.flag().shape().product();
-		      for(Int ii=0;ii<vb.flag().shape()(0);ii++)
-			for(Int jj=0;jj<vb.flag().shape()(1);jj++)
-			  if (vb.flag()(ii,jj) == True) inDataFlags++;
+		    totalRows += vb.flagRow().nelements();
+		    totalData += vb.flagCube().shape().product();
+		    for(Int ii = 0;
+			ii < vb.flagCube().shape()(0);
+			ii++) {
+			
+			for(Int jj = 0;
+			    jj < vb.flagCube().shape()(1);
+			    jj++) {
+			    
+			    for(Int kk = 0;
+				kk < vb.flagCube().shape()(2);
+				kk++) {
+				
+				if (vb.flagCube()(ii,jj,kk)) inDataFlags++;
+			    }
+			}
 		    }
 		    
-	  
 		    // now, call individual VisBuffer iterators
 		    for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		      if( active(ival) ) {
@@ -1870,11 +1887,12 @@ namespace casa {
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
 		  {
-		      for(uInt ii=0;ii<vb.flagRow().nelements();ii++)
+		      for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
 			  if (vb.flagRow()(ii) == True) outRowFlags++;
-		      for(Int ii=0;ii<vb.flag().shape()(0);ii++)
-			  for(Int jj=0;jj<vb.flag().shape()(1);jj++)
-			      if (vb.flag()(ii,jj) == True) outDataFlags++;
+		      for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
+		      for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
+		      for(Int kk = 0; kk < vb.flagCube().shape()(2); kk++)
+			  if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
 		  }
 	      }  // for (vi ... )
 	      if (didSomething) {
@@ -1887,15 +1905,15 @@ namespace casa {
 		       << "  Total rows = " << totalRows
 		       << endl;
 		  osss << "Input:    "
-		       << "  Rows flagged = " << inRowFlags << " "
+		       << "  Rows flagged = " << inRowFlags << " " //" / " << totalRows << " "
 		       << "( " << 100.0*inRowFlags/totalRows << " %)."
-		       << "  Data flagged = " << inDataFlags << " "
+		       << "  Data flagged = " << inDataFlags << " " //" / " << totalData << " "
 		       << "( " << 100.0*inDataFlags/totalData << " %)."
 		       << endl;
 		  osss << "This run: "
-		       << "  Rows flagged = " << outRowFlags - inRowFlags << " "
+		       << "  Rows flagged = " << outRowFlags - inRowFlags << " " //" / " << totalRows << " "
 		       << "( " << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
-		       << "  Data flagged = "  << outDataFlags - inDataFlags << " " 
+		       << "  Data flagged = "  << outDataFlags - inDataFlags << " " //" / " << totalData << " " 
 		       << "( " << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
 		       << endl;
 		  osss << LogIO::POST;

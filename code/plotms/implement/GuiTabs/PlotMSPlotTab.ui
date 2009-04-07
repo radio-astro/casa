@@ -172,16 +172,16 @@
          </property>
          <layout class="QGridLayout" >
           <property name="leftMargin" >
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="topMargin" >
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="rightMargin" >
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="bottomMargin" >
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="horizontalSpacing" >
            <number>3</number>
@@ -189,6 +189,13 @@
           <property name="verticalSpacing" >
            <number>3</number>
           </property>
+          <item row="0" column="0" >
+           <widget class="QCheckBox" name="msAveragingChannel" >
+            <property name="text" >
+             <string>Channel</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="1" >
            <layout class="QHBoxLayout" >
             <property name="spacing" >
@@ -225,6 +232,13 @@
              </spacer>
             </item>
            </layout>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QCheckBox" name="msAveragingTime" >
+            <property name="text" >
+             <string>Time</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1" >
            <layout class="QHBoxLayout" >
@@ -316,44 +330,13 @@
             </item>
            </layout>
           </item>
-          <item row="3" column="1" >
-           <layout class="QHBoxLayout" >
-            <item>
-             <widget class="QCheckBox" name="msAveragingBaseline" >
-              <property name="enabled" >
-               <bool>false</bool>
-              </property>
-              <property name="text" >
-               <string>Baseline</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer>
-              <property name="orientation" >
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" >
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item row="0" column="0" >
-           <widget class="QCheckBox" name="msAveragingChannel" >
-            <property name="text" >
-             <string>Channel</string>
+          <item row="3" column="0" colspan="2" >
+           <widget class="QCheckBox" name="msAveragingBaseline" >
+            <property name="enabled" >
+             <bool>true</bool>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="0" >
-           <widget class="QCheckBox" name="msAveragingTime" >
             <property name="text" >
-             <string>Time</string>
+             <string>Baseline</string>
             </property>
            </widget>
           </item>
@@ -2183,22 +2166,6 @@
   <connection>
    <sender>msAveragingTime</sender>
    <signal>toggled(bool)</signal>
-   <receiver>msAveragingBaseline</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>65</x>
-     <y>185</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>122</x>
-     <y>235</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>msAveragingTime</sender>
-   <signal>toggled(bool)</signal>
    <receiver>msAveragingScan</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
@@ -2223,8 +2190,8 @@
      <y>185</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>182</x>
-     <y>188</y>
+     <x>254</x>
+     <y>196</y>
     </hint>
    </hints>
   </connection>
@@ -2239,8 +2206,8 @@
      <y>160</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>197</x>
-     <y>166</y>
+     <x>254</x>
+     <y>172</y>
     </hint>
    </hints>
   </connection>

@@ -49,6 +49,16 @@ if (os.uname()[0]=='Darwin'):
 #           logger_path = os.path.join(fsRef.as_pathname(), 'Contents', 'MacOS', 'casalogger')
 
 def casalogger(logfile='casapy.log'):
+    """
+    Spawn a new casalogger using logfile as the filename.
+    You should only call this if the casalogger dies or you close it
+    and restart it again.
+
+    Note: if you changed the name of the log file using casalog.setlogfile
+    you will need to respawn casalogger with the new log filename. Eventually,
+    we will figure out how to signal the casalogger with the new name but not
+    for a while.
+    """
     pid=9999
     if (os.uname()[0]=='Darwin'):
         pid=os.spawnvp(os.P_NOWAIT,logger_path,[logger_path, logfile])

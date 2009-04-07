@@ -1664,14 +1664,31 @@ coordsys::setlineartransform(const std::string& coordinateType,
   if (shape.size() == 0) {
     *itsLog << "The value array is empty" << LogIO::EXCEPTION;
   }
-  std::vector<double> valueVector = v_value.getDoubleVec();
+
+  // Get the data into a CASA array of double values.
   Array<Double> value;
   value.resize(IPosition(shape));
-  int i = 0;
-  for (Array<Double>::iterator iter = value.begin();
-       iter!=value.end(); iter++) {
-    *iter = valueVector[i++];
-  }
+
+  if ( v_value.type() == ::casac::variant::DOUBLEVEC ) {
+      
+      std::vector<double> valueVector;
+      valueVector = v_value.getDoubleVec();
+      int i = 0;
+      for (Array<Double>::iterator iter = value.begin();
+	   iter!=value.end(); iter++) {
+	  *iter = valueVector[i++];
+      }
+  } else if ( v_value.type() == ::casac::variant::INTVEC ) {
+      std::vector<int> valueVector;
+      valueVector = v_value.getIntVec();
+      int i = 0;
+      for (Array<Double>::iterator iter = value.begin();
+	   iter!=value.end(); iter++) {
+	  *iter = (Double)valueVector[i++];
+      }
+  } else
+      *itsLog << "The value array is not a double or integer array" << LogIO::EXCEPTION;
+
   //
   const Coordinate::Type type = stringToType (coordinateType);
   Int c = findCoordinate (type, True);
@@ -1698,6 +1715,7 @@ coordsys::setlineartransform(const std::string& coordinateType,
   } else {
     *itsLog << "Coordinate type not yet handled " << LogIO::EXCEPTION;
     }
+
   return true;
 }
 

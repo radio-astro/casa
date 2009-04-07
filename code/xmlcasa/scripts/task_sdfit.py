@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, plotlevel):
+def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
@@ -492,8 +492,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             # Store fit
             if ( fitfile != '' ):
                     #f.store_fit(fitfile)
-                    print fitparams
-                    store_fit("gauss", fitfile, fitparams, s)
+                    #print fitparams
+                    store_fit("gauss", fitfile, fitparams, s, overwrite)
 
                 
             # Final clean up
@@ -513,11 +513,15 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                 
 
 ### store_fit
-def store_fit(func, fitfile, value, scan):
+def store_fit(func, fitfile, value, scan, overwrite):
         outname=os.path.expandvars(fitfile)
         outname=os.path.expanduser(outname)
         if os.path.exists(outname):
-                os.system('rm '+outname)
+                if overwrite:
+                        os.system('rm '+outname)
+                else:
+                        print fitfile+' already exists.'
+                        return
                 
         outfile=file(outname, 'w')
 

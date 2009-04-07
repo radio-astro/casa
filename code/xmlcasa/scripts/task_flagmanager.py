@@ -39,7 +39,7 @@ def flagmanager(vis=None,mode=None,versionname=None,comment=None,merge=None):
                         raise Exception, 'Visibility data set not found - please verify the name'
 		if (mode=='list'):
 			fg.getflagversionlist()
-			print 'See logger for flag versions for this file'
+			print 'See logger for flag versions for this MS'
 		elif (mode=='save'):
 			fg.saveflagversion(versionname=versionname,comment=comment,merge=merge)
 		elif (mode=='restore'):
