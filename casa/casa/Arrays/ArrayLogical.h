@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.h 20553 2009-03-31 03:20:57Z gervandiepen $
+//# $Id: ArrayLogical.h 20557 2009-04-02 14:11:08Z gervandiepen $
 
 #ifndef CASA_ARRAYLOGICAL_H
 #define CASA_ARRAYLOGICAL_H
@@ -202,44 +202,6 @@ template<class T> LogicalArray operator == (const Array<T> &l,
 					    const Array<T> &r);
 template<class T> LogicalArray operator != (const Array<T> &l,
 					    const Array<T> &r);
-
-
-
-#define VECLOG_LA_OP_AA(OP,TYP) \
-template<class T> \
-inline LogicalArray operator OP (const TYP <T> &l, \
-				 const TYP <T> &r) {\
-  return (dynamic_cast<const Array<T> &>(l) OP \
-	  dynamic_cast<const Array<T> &>(r)); }
-
-VECLOG_LA_OP_AA ( <=, Vector  )
-VECLOG_LA_OP_AA ( <,  Vector  )
-VECLOG_LA_OP_AA ( >=, Vector  )
-VECLOG_LA_OP_AA ( >,  Vector  )
-VECLOG_LA_OP_AA ( ==, Vector  )
-VECLOG_LA_OP_AA ( !=, Vector  )
-VECLOG_LA_OP_AA ( &&, Vector  )
-VECLOG_LA_OP_AA ( ||, Vector  )
-
-VECLOG_LA_OP_AA ( <=, Matrix  )
-VECLOG_LA_OP_AA ( <,  Matrix  )
-VECLOG_LA_OP_AA ( >=, Matrix  )
-VECLOG_LA_OP_AA ( >,  Matrix  )
-VECLOG_LA_OP_AA ( ==, Matrix  )
-VECLOG_LA_OP_AA ( !=, Matrix  )
-VECLOG_LA_OP_AA ( &&, Matrix  )
-VECLOG_LA_OP_AA ( ||, Matrix  )
-
-VECLOG_LA_OP_AA ( <=, Cube  )
-VECLOG_LA_OP_AA ( <,  Cube  )
-VECLOG_LA_OP_AA ( >=, Cube  )
-VECLOG_LA_OP_AA ( >,  Cube  )
-VECLOG_LA_OP_AA ( ==, Cube  )
-VECLOG_LA_OP_AA ( !=, Cube  )
-VECLOG_LA_OP_AA ( &&, Cube  )
-VECLOG_LA_OP_AA ( ||, Cube  )
-
-#undef VECLOG_LA_OP_AA
 
 template<class T> LogicalArray near(const Array<T> &l, const Array<T> &r,
 				    Double tol);
@@ -460,6 +422,7 @@ template<class T> Array<uInt> partialNFalse (const Array<T>& array,
 
 // </group>
 
+// Define logical Functors.
 // <group>
 class AllFunc {
 public:

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 20553 2009-03-31 03:20:57Z gervandiepen $
+//# $Id: Complex.h 20557 2009-04-02 14:11:08Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -215,6 +215,12 @@ inline Bool operator<  (const DComplex& left, const DComplex& right)
 // <group name=math>
 inline Double fabs(const DComplex &val) { return std::abs(val); }
 inline Float fabs(const Complex &val) { return std::abs(val); }
+
+inline DComplex square(const DComplex &val) { return val*val; }
+inline Complex square(const Complex &val) { return val*val; }
+
+inline DComplex cube(const DComplex &val) { return val*val*val; }
+inline Complex cube(const Complex &val) { return val*val*val; }
 
 // The log10 should be in stl
 // <group>
