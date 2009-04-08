@@ -395,7 +395,7 @@ endif
 ### object files whose source files have been removed or renamed
 ###
 define orphan-objects
-  perl -e 'use File::Find; %source = ( ); @removed = ( ); sub find_source { if ( -f $$_ && m/\.(?:cc|c|f)$$/ ) { s/\.(?:cc|c|f)$$//; $$source{"$$File::Find::dir/$$_"} = 1; } } sub find_orphan { if ( -f $$_ && m/\.o$$/ ) { my $$file = $$_; my $$src = $$File::Find::dir; $$src =~ s|/$1$$|| if "$1" ne ""; $$src = "$$src/$$file"; $$src =~ s|\.o$$||; if ( ! defined $$source{$$src} ) { push(@removed, "$$File::Find::dir/$$file"); unlink($$file); my $$dep = $$file; $$dep =~ s|\.o$$|.dep|; if ( -f $$dep ) { push(@removed, "$$File::Find::dir/$$dep"); unlink($$dep); } } } } find( { wanted => \&find_source }, "$2" ); find( { wanted => \&find_orphan }, "$2" ); if ( scalar(@removed) > 0 ) { print "removed object files which no longer have a source file:\n"; print "\t" . join("\n\t",@removed) . "\n"; }'
+  perl -e 'use File::Find; %source = ( ); @removed = ( ); sub find_source { if ( -f $$_ && m/\.(?:cc|c|f)$$/ ) { s/\.(?:cc|c|f)$$//; $$source{"$$File::Find::dir/$$_"} = 1; } } sub find_orphan { return unless ("$1" eq "" || $$File::Find::dir =~ m/$1/); if ( -f $$_ && m/\.o$$/ ) { my $$file = $$_; my $$src = $$File::Find::dir; $$src =~ s|/$1$$|| if "$1" ne ""; $$src = "$$src/$$file"; $$src =~ s|\.o$$||; if ( ! defined $$source{$$src} ) { push(@removed, "$$File::Find::dir/$$file"); unlink($$file); my $$dep = $$file; $$dep =~ s|\.o$$|.dep|; if ( -f $$dep ) { push(@removed, "$$File::Find::dir/$$dep"); unlink($$dep); } } } } find( { wanted => \&find_source }, "$2" ); find( { wanted => \&find_orphan }, "$2" ); if ( scalar(@removed) > 0 ) { print "removed object files which no longer have a source file:\n"; print "\t" . join("\n\t",@removed) . "\n"; }'
 endef
 
 ###
