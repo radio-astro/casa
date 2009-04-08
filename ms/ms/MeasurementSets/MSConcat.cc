@@ -778,10 +778,14 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
     if(numrows_this > 0){  // the source table is not empty
 
       TableRecord sourceRecord;
+
+      // maps for recording the changes in source id
       SimpleOrderedMap <Int, Int> tempSourceIndex(-1);
       SimpleOrderedMap <Int, Int> tempSourceIndex2(-1);
+      SimpleOrderedMap <Int, Int> tempSourceIndex3(-1);
       tempSourceIndex.clear();
       tempSourceIndex2.clear();
+      tempSourceIndex3.clear();
       newSourceIndex2_p.clear();
 
       // the source columns
@@ -817,51 +821,120 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){
 	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
-	    if( sourceRowsIdentical(sourceCol, j, k) ){
-//	      cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
-	      if(j<k){ // make entry in map for (k, j) and delete k
-		tempSourceIndex.define(thisId(k), thisId(j));
-		rowToBeRemoved(k) = True;
-		rowsToBeRemoved.push_back(k);
-	      }
-	      else{ // make entry in map for (j, k) and delete j
-		tempSourceIndex.define(thisId(j), thisId(k));
-		rowToBeRemoved(j) = True;
-		rowsToBeRemoved.push_back(j);
+	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source and spw id)
+	      if(sourceCol.spectralWindowId().areEQ(j, k)){ // also the SPW id is the same
+//		cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+		// delete one of the rows
+		if(j<k){ // make entry in map for (k, j) and delete k
+		  tempSourceIndex.define(thisId(k), thisId(j));
+		  rowToBeRemoved(k) = True;
+		  rowsToBeRemoved.push_back(k);
+		}
+		else{ // make entry in map for (j, k) and delete j
+		  tempSourceIndex.define(thisId(j), thisId(k));
+		  rowToBeRemoved(j) = True;
+		  rowsToBeRemoved.push_back(j);
+		}
 	      }
 	    }
 	  }
 	}
       } // end for j
-      if(rowsToBeRemoved.size()>0){
+
+      Int newNumrows_this = numrows_this; // copy of number of rows
+      Vector<Int> newThisId(thisId);      // copy of vector of IDs
+
+      if(rowsToBeRemoved.size()>0){ // actually remove the rows
 	Vector<uInt> rowsTBR(rowsToBeRemoved);
 	newSource.removeRow(rowsTBR);
 //	cout << "Removed " << rowsToBeRemoved.size() << " redundant rows from SOURCE table." << endl;
+	newNumrows_this=newSource.nrow(); // update number of rows 
+ 	sourceCol.sourceId().getColumn(newThisId, True); // update vector if IDs
+      }
 
-	// renumber the sources consecutively 
-	Int newNumrows_this=newSource.nrow(); // updated number of rows
-	Vector<Int> newThisId=sourceCol.sourceId().getColumn(); // updated vector if IDs
+      // renumber consecutively
+      Bool rowsRenumbered(False);
+      for (Int j=0 ; j < newNumrows_this ; ++j){
+	if(newThisId(j) != j){ 
+	  sourceRecord = sourceRow.get(j);
+	  tempSourceIndex2.define(newThisId(j), j);
+	  sourceRecord.define(sourceIdId, j );
+	  sourceRow.putMatchingFields(j, sourceRecord);
+	  rowsRenumbered = True;
+	}
+      }
+	
+      // give equivalent rows the same source id 
+      Bool rowsRenamed(False);
+      Int nDistinctSources = newNumrows_this;
+      for (uint j=0 ; j < newNumrows_this ; ++j){
+	// check if row j has an equivalent row somewhere down in the table
+	for (uint k=j+1 ; k < newNumrows_this ; ++k){
+	  if( sourceRowsEquivalent(sourceCol, j, k) && 
+	      !sourceCol.sourceId().areEQ(j, k)){ // all columns are the same except source id (not testing spw id),
+	                                          // spw id must be different, otherwise row would have been deleted above
+//	    cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
+//		 << newThisId(k) << " mapped to " << newThisId(j) << endl;
+	    // give same source id
+	    // make entry in map for (k, j) and rename k
+	    tempSourceIndex3.define(newThisId(k), newThisId(j));
+	    sourceRecord = sourceRow.get(k);
+	    sourceRecord.define(sourceIdId, newThisId(j) );
+	    sourceRow.putMatchingFields(k, sourceRecord);
+	    rowsRenamed = True;
+	    nDistinctSources--;
+	  } 
+	}
+      } // end for j
+
+//      cout << "Ndistinct = " << nDistinctSources << endl;
+
+      if(rowsRenamed){ 	// reduce ID values to minimal range
+ 	sourceCol.sourceId().getColumn(newThisId, True); // update vector if IDs
+	Int counter = 0;
 	for (Int j=0 ; j < newNumrows_this ; ++j){
-	  if(newThisId(j) != j){ 
+	  if(newThisId(j) >= nDistinctSources){ 
 	    sourceRecord = sourceRow.get(j);
-	    tempSourceIndex2.define(newThisId(j), j);
-	    sourceRecord.define(sourceIdId, j );
+	    tempSourceIndex3.define(newThisId(j), nDistinctSources-counter-1 );
+	    sourceRecord.define(sourceIdId, nDistinctSources-counter-1 );
 	    sourceRow.putMatchingFields(j, sourceRecord);
+	    counter++;
 	  }
 	}
+      }
+
+      if(rowsToBeRemoved.size()>0 || rowsRenamed){
 	// create map for copyField
 	for (Int j=0 ; j < numrows_this ; ++j){ // loop over old indices
 	  if(tempSourceIndex.isDefined(j)){ // ID changed because of redundancy
-	    if(tempSourceIndex2.isDefined(tempSourceIndex(j))){ // ID changed also because of consec. renumbering
-	      newSourceIndex2_p.define(j, tempSourceIndex2(tempSourceIndex(j)));
+	    if(tempSourceIndex2.isDefined(tempSourceIndex(j))){ // ID changed also because of renumbering
+	      if( tempSourceIndex3.isDefined(tempSourceIndex2(tempSourceIndex(j))) ){ // ID also changed because of renaming
+		newSourceIndex2_p.define(j, tempSourceIndex3(tempSourceIndex2(tempSourceIndex(j))) ); // abc
+	      }
+	      else { // ID changed because of redundancy and renumberning
+		  newSourceIndex2_p.define(j, tempSourceIndex2(tempSourceIndex(j))); // ab
+	      }
 	    }
-	    else{ // ID only changed because of redundancy
-	      newSourceIndex2_p.define(j, tempSourceIndex(j));
+	    else{ 
+	      if( tempSourceIndex3.isDefined(tempSourceIndex(j)) ){ // ID  changed because of redundancy and renaming
+		newSourceIndex2_p.define(j, tempSourceIndex3(tempSourceIndex(j))); // ac		
+	      }
+	      else { // ID only changed because of redundancy
+		newSourceIndex2_p.define(j, tempSourceIndex(j)); // a
+	      }
 	    }
 	  }
-	  else if(tempSourceIndex2.isDefined(j)){ // ID only changed because of consec. renumbering
-	    newSourceIndex2_p.define(j, tempSourceIndex2(j));
+	  else if(tempSourceIndex2.isDefined(j)){ 
+	    if( tempSourceIndex3.isDefined(tempSourceIndex2(j)) ){ // ID  changed because of renumbering and renaming
+	      newSourceIndex2_p.define(j, tempSourceIndex3(tempSourceIndex2(j))); // bc
+	    }
+	    else { // ID only changed because of renumbering
+	      newSourceIndex2_p.define(j, tempSourceIndex2(j)); // b
+	    }
 	  }
+	  else if(tempSourceIndex3.isDefined(j)){ // ID only changed because of renaming
+	      newSourceIndex2_p.define(j, tempSourceIndex3(j)); // c
+	    }
 	}
 	doSource2_p=True;
       }
@@ -872,16 +945,18 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 }
 
 
-Bool MSConcat::sourceRowsIdentical(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
+Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
+  // check if the two SOURCE table rows are identical IGNORING SOURCE_ID and SPW_ID
 
-  Bool areIdentical(False);
+  Bool areEquivalent(False);
 
   // test the non-optional columns first
   if(sourceCol.calibrationGroup().areEQ(rowi, rowj) &&
      sourceCol.code().areEQ(rowi, rowj) &&
      sourceCol.name().areEQ(rowi, rowj) &&
      sourceCol.numLines().areEQ(rowi, rowj) &&
-     sourceCol.spectralWindowId().areEQ(rowi, rowj) &&
+     // do NOT test SPW ID!
+     // sourceCol.spectralWindowId().areEQ(rowi, rowj) &&
      sourceCol.direction().areEQ(rowi, rowj) &&
      sourceCol.interval().areEQ(rowi, rowj) &&
      sourceCol.properMotion().areEQ(rowi, rowj) &&
@@ -891,59 +966,59 @@ Bool MSConcat::sourceRowsIdentical(const MSSourceColumns& sourceCol, const uInt&
     //    cout << "All non-optionals equal" << endl;
     
     // test the optional columns next
-    areIdentical = True;
+    areEquivalent = True;
     if(!(sourceCol.position().isNull())){
       try {
-	areIdentical = sourceCol.position().areEQ(rowi, rowj);
+	areEquivalent = sourceCol.position().areEQ(rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
-	areIdentical = True;
+	areEquivalent = True;
       }
-      //      if(!areIdentical) cout << "not equal position" << endl;
+      //      if(!areEquivalent) cout << "not equal position" << endl;
     }
     if(!(sourceCol.pulsarId().isNull())){
       try {
-	areIdentical = sourceCol.pulsarId().areEQ(rowi, rowj);
+	areEquivalent = sourceCol.pulsarId().areEQ(rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
-	areIdentical = True;
+	areEquivalent = True;
       }
-      //      if(!areIdentical) cout << "not equal pulsarId" << endl;
+      //      if(!areEquivalent) cout << "not equal pulsarId" << endl;
     }
     if(!(sourceCol.restFrequency().isNull())){
       try {
-	areIdentical = sourceCol.restFrequency().areEQ(rowi, rowj);
+	areEquivalent = sourceCol.restFrequency().areEQ(rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
-	areIdentical = True;
+	areEquivalent = True;
       }
-      //      if(!areIdentical) cout << "not equal restFrequency" << endl;
+      //      if(!areEquivalent) cout << "not equal restFrequency" << endl;
     }
     if(!(sourceCol.sysvel().isNull())){
       try {
-	areIdentical = sourceCol.sysvel().areEQ(rowi, rowj);
+	areEquivalent = sourceCol.sysvel().areEQ(rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
-	areIdentical = True;
+	areEquivalent = True;
       }
-      //      if(!areIdentical) cout << "not equal sysvel" << endl;
+      //      if(!areEquivalent) cout << "not equal sysvel" << endl;
     }
     if(!(sourceCol.transition().isNull())){
       try {
-	areIdentical = sourceCol.transition().areEQ(rowi, rowj);
+	areEquivalent = sourceCol.transition().areEQ(rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
-	areIdentical = True;
+	areEquivalent = True;
       }
-      //      if(!areIdentical) cout << "not equal transition" << endl;
+      //      if(!areEquivalent) cout << "not equal transition" << endl;
     }
   }
-  return areIdentical;
+  return areEquivalent;
 }
 
 

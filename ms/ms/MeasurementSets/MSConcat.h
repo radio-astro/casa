@@ -116,7 +116,7 @@ private:
 			    const MSDataDescription& otherDD);
   Bool copySource(const MeasurementSet& otherms);
   Bool updateSource();
-  Bool sourceRowsIdentical(const MSSourceColumns& sourceCol, 
+  Bool sourceRowsEquivalent(const MSSourceColumns& sourceCol, 
 			   const uInt& rowi, const uInt& rowj);
 
   void updateModelDataKeywords();
