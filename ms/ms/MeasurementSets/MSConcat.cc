@@ -614,9 +614,10 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   RecordFieldId antField(antIndxName);
   
   for (uInt a = 0; a < nAntIds; a++) {
-    const Int newAntId = 
-      antCols.matchAntenna(otherAntCols.positionMeas()(a), tol);
-    if (newAntId >= 0) {
+    const Int newAntId = antCols.matchAntenna(otherAntCols.name()(a), 
+					      otherAntCols.positionMeas()(a), tol);
+    if (newAntId >= 0 && 
+	antCols.station()(newAntId)==otherAntCols.station()(a) ) { // require that also the STATION matches
       antMap[a] = newAntId;
       // Should really check that the FEED table contains all the entries for
       // this antenna and that they are the same. I'll just assume this for
