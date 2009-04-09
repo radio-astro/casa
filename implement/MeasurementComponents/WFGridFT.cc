@@ -187,8 +187,8 @@ void WFGridFT::initMapsMulti(const VisBuffer& vb, Int nmaps, Int nth) {
   // pixel
   {
     Vector<Double> pixelPhaseCenter(2);
-    pixelPhaseCenter(0)=Double(image->shape()(0))/2.0;
-    pixelPhaseCenter(1)=Double(image->shape()(1))/2.0;
+    pixelPhaseCenter(0)=Double(image->shape()(0) / 2);
+    pixelPhaseCenter(1)=Double(image->shape()(1) / 2);
     directionCoord.toWorld(mImage_p, pixelPhaseCenter);
   
     //   mImageHolder.resize(nmaps);
