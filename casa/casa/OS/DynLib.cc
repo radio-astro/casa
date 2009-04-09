@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         ", but not its " + funcName + " function");
       }
       // Execute the register function.
-      reinterpret_cast<void(*)()>(initfunc)();
+      reinterpret_cast<void(*)()>((void(*)())initfunc)();
     }
   }
 
