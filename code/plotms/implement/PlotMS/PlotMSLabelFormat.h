@@ -48,23 +48,23 @@ public:
     // Static //
     
     // Separator that goes before and after tags.
-    static const String TAGSEPARATOR;
+    static const String& TAGSEPARATOR();
     
     // Tag for axes, both the single case and the double case.  This tag is
     // replaced with the axis name (see PMS::axis()) during generation.
     // <group>
-    static const String TAG_AXIS;
-    static const String TAG_XAXIS;
-    static const String TAG_YAXIS;
+    static const String& TAG_AXIS();
+    static const String& TAG_XAXIS();
+    static const String& TAG_YAXIS();
     // </group>
     
     // Tag for axes units, both the single case and the double case.  This tag
     // is replaced with the axis unit name (see PMS::axisUnit()) during
     // generation.
     // <group>
-    static const String TAG_UNIT;
-    static const String TAG_XUNIT;
-    static const String TAG_YUNIT;
+    static const String& TAG_UNIT();
+    static const String& TAG_XUNIT();
+    static const String& TAG_YUNIT();
     // </group>
     
     // Tags for if/endif for axes units.  Parts of the format that are
@@ -73,17 +73,16 @@ public:
     // "TAG_IF_UNIT(sample text)TAG_ENDIF_UNIT" would copy over "(sample text)"
     // only if the given unit was NOT PMS::UNONE.
     // <group>
-    static const String TAG_IF_UNIT;
-    static const String TAG_IF_XUNIT;
-    static const String TAG_IF_YUNIT;
-    static const String TAG_ENDIF_UNIT;
-    static const String TAG_ENDIF_XUNIT;
-    static const String TAG_ENDIF_YUNIT;
+    static const String& TAG_IF_UNIT();
+    static const String& TAG_IF_XUNIT();
+    static const String& TAG_IF_YUNIT();
+    static const String& TAG_ENDIF_UNIT();
+    static const String& TAG_ENDIF_XUNIT();
+    static const String& TAG_ENDIF_YUNIT();
     // </group>
     
     // Convenience method to surround the given tag with the separator.
-    static String TAG(const String& tag) {
-        return TAGSEPARATOR + tag + TAGSEPARATOR; }
+    static String TAG(const String& tag);
     
     
     // Non-Static //

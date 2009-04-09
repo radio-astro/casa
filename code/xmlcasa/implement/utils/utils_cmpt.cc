@@ -18,6 +18,9 @@
 #include <xmlcasa/xerces/stdcasaXMLUtil.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/String.h>
+#include <casa/OS/File.h>
+#include <casa/OS/DOos.h>
+#include <tables/Tables/Table.h>
 #include <casa/System/Aipsrc.h>
 
 
@@ -192,6 +195,47 @@ utils::getrc(const std::string& rcvar)
 		  rstat1 = "Unknown value";
   }
   string rstat(rstat1.c_str());
+  return rstat;
+}
+
+bool
+utils::removetable(const std::vector<std::string> &tablenames)
+{
+  bool rstat(true);
+  try {
+     *itsLog << LogOrigin("utils", "removetable");
+     for(vector<std::string>::const_iterator iter = tablenames.begin();
+		     iter != tablenames.end(); iter++){
+       String fileName(*iter);
+       if (fileName.empty()) {
+          *itsLog << LogIO::WARN << "Empty filename" << LogIO::POST;
+          rstat = false;
+       }
+       File f(fileName);
+       if (! f.exists()) {
+           *itsLog << LogIO::WARN << fileName << " does not exist." << LogIO::POST;
+          rstat = false;
+       }
+
+// Now try and blow it away.  If it's open, tabledelete won't delete it.
+       String message;
+       if(rstat && Table::isReadable(fileName)){
+          if (Table::canDeleteTable(message, fileName, True)) {
+             Table::deleteTable(fileName, True);
+          } else {
+             *itsLog << LogIO::WARN << "Cannot delete file " << fileName
+             << " because " << message << LogIO::POST;
+          }
+       } else {
+           *itsLog << LogIO::WARN << "Cannot delete file " << fileName
+           << " because it's not a table." << LogIO::POST;
+       }
+  }
+    } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+       << LogIO::POST;
+       RETHROW(x);
+  }
   return rstat;
 }
 

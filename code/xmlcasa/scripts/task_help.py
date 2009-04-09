@@ -5,22 +5,22 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         flagdata       listcal      sdplot
-   applycal      flagmanager    listhistory  sdsave
-   bandpass      fluxscale      listobs      sdscale
-   browsetable   ft             listvis      sdsmooth
-   clean         gaincal        makemask     sdstat
-   clearcal      hanningsmooth  mosaic       setjy
-   clearplot     imcontsub      plotants     smoothcal
-   clearstat     imhead         plotcal      specfit
-   concat        immoments      plotxy       split
-   deconvolve    importfits     sdaverage    tget
-   exportfits    importuvfits   sdbaseline   uvcontsub
-   exportuvfits  importvla      sdcal        uvmodelfit
-   feather       imregrid       sdciadd      viewer
-   filecatalog   imstat         sdfit        vishead
-   find          imval          sdflag
-   fixvis        invert         sdlist
+   accum         flagdata       listcal      sdlist
+   applycal      flagmanager    listhistory  sdplot    
+   bandpass      fluxscale      listobs      sdsave    
+   browsetable   ft             listvis      sdscale   
+   clean         gaincal        makemask     sdsmooth  
+   clearcal      hanningsmooth  peel         sdstat    
+   clearplot     imcontsub      plotants     setjy     
+   clearstat     imhead         plotcal      smoothcal 
+   concat        immoments      plotxy       specfit   
+   deconvolve    importfits     sdaverage    split     
+   exportfits    importuvfits   sdbaseline   tget      
+   exportuvfits  importvla      sdcal        uvcontsub 
+   feather       imregrid       sdciadd      uvmodelfit
+   filecatalog   imstat         sdfit        viewer    
+   find          imval          sdflag       vishead   
+   fixvis        invert         
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta 0 release):
@@ -97,11 +97,11 @@ def tasklist():
       print 'Available tasks: \n'
       print 'Import/Export    Information  Data Editing  Display/Plot'
       print '-------------    -----------  ------------  ------------'
-      print 'importvla        listcal      fixvis        clearplot'
-      print '(importasdm)     listhistory  flagautocorr  plotants '
-      print 'importfits       listobs      flagdata      plotcal'    
-      print 'importuvfits     listvis      flagmanager   plotxy'
-      print 'exportfits       imhead       plotxy        viewer'
+      print 'importvla        listcal      flagautocorr  clearplot'
+      print '(importasdm)     listhistory  flagdata      plotants '
+      print 'importfits       listobs      flagmanager   plotcal'    
+      print 'importuvfits     listvis      plotxy        plotxy'
+      print 'exportfits       imhead                     viewer'
       print 'exportuvfits     imstat'
       print '                 vishead'
       print ''
@@ -113,12 +113,12 @@ def tasklist():
       print '(blcal)          ft                         tasklist'
       print 'gaincal          invert                     browsetable'
       print 'fluxscale        makemask                   clearplot'
-      print '(fringecal)      mosaic                     clearstat'
+      print '(fringecal)      peel                       clearstat'
       print 'clearcal                                    concat'
       print 'listcal                                     filecatalog'
       print 'smoothcal                                   startup'
       print 'polcal                                      split'
-      print 'hanningsmooth                                  '
+      print 'hanningsmooth                               fixvis'
       print '                                                 '
       print ''
       print 'Image Analysis   Simulation   Single Dish'
@@ -141,5 +141,3 @@ def tasklist():
          print '------------------'
          for key in mytasks.keys() :
              print key
-
-

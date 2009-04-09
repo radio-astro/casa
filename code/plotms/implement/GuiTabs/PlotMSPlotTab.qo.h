@@ -30,6 +30,8 @@
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
 
 #include <casaqt/QtUtilities/QtPlotWidget.qo.h>
+#include <plotms/Gui/PlotMSAveragingWidget.qo.h>
+#include <plotms/Gui/PlotMSSelectionWidget.qo.h>
 #include <plotms/Gui/PlotRangeWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
@@ -87,6 +89,12 @@ private:
     // Widgets for file selection for the MS and export, respectively.
     QtFileWidget* itsMSFileWidget_, *itsExportFileWidget_;
     
+    // Widget for MS selection.
+    PlotMSSelectionWidget* itsMSSelectionWidget_;
+    
+    // Widget for MS averaging.
+    PlotMSAveragingWidget* itsMSAveragingWidget_;
+    
     // Widgets for titles/labels for the plot, canvas, x axis, and y axis,
     // respectively.
     QtLabelWidget* itsPlotTitleWidget_, *itsCanvasTitleWidget_,
@@ -97,9 +105,6 @@ private:
     
     // Widgets for the range for the x axis and y axis, respectively.
     PlotRangeWidget* itsXRangeWidget_, *itsYRangeWidget_;
-    
-    // Widgets for MS selection.
-    QMap<PlotMSSelection::Field, QLineEdit*> itsSelectionValues_;
     
     // Reference to plot manager.
     PlotMSPlotManager& itsPlotManager_;

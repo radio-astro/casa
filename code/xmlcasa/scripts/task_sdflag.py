@@ -269,6 +269,10 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                     ym = ma.masked_array(y,mask=allmskarr)
                     myp.plot(x,ym)
                     myp.axes.set_xlim(xlim)
+                    if ( plotlevel < 0 ):
+                            # Hardcopy - currently no way w/o screen display first
+                            pltfile=project+'_flag.eps'
+                            myp.save(pltfile)
                     myp.release()
             else:
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)

@@ -189,7 +189,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     te->setReadOnly(true);  
     QLabel *label = new QLabel(this);
     label->setText("<font color=\"blue\">Coordinate:</font>");
-    label->setAlignment(Qt::AlignBottom | Qt::AlignRight);
+    label->setAlignment((Qt::Alignment)(Qt::AlignBottom | Qt::AlignRight));
     ctype = new QComboBox(this);
     ctype->addItem("velocity");
     ctype->addItem("frequency");

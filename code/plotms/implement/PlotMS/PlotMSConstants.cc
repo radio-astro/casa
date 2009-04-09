@@ -123,10 +123,10 @@ const PlotAxis PMS::DEFAULT_CANVAS_XAXIS = X_BOTTOM;
 const PlotAxis PMS::DEFAULT_CANVAS_YAXIS = Y_LEFT;
 
 const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS) +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT) + " (" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT);
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT()) + " (" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT()) + ")" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
 
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
@@ -150,7 +150,7 @@ PlotSymbolPtr PMS::DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory) {
 }
 
 const String PMS::DEFAULT_TITLE_FORMAT =
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS) + " vs. " +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS);
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
 
 }

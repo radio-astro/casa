@@ -1,0 +1,283 @@
+<ui version="4.0" >
+ <class>AveragingWidget</class>
+ <widget class="QWidget" name="AveragingWidget" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>222</width>
+    <height>130</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Averaging Widget</string>
+  </property>
+  <layout class="QGridLayout" >
+   <property name="leftMargin" >
+    <number>3</number>
+   </property>
+   <property name="topMargin" >
+    <number>3</number>
+   </property>
+   <property name="rightMargin" >
+    <number>3</number>
+   </property>
+   <property name="bottomMargin" >
+    <number>3</number>
+   </property>
+   <property name="horizontalSpacing" >
+    <number>3</number>
+   </property>
+   <item row="0" column="0" >
+    <widget class="QCheckBox" name="channel" >
+     <property name="text" >
+      <string>Channel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>3</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="channelValue" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="channelLabel" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>channels</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QCheckBox" name="time" >
+     <property name="text" >
+      <string>Time</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>3</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="timeValue" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="timeLabel" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>seconds</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="1" >
+    <layout class="QHBoxLayout" >
+     <item>
+      <widget class="QCheckBox" name="scan" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>Scan</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="field" >
+       <property name="enabled" >
+        <bool>false</bool>
+       </property>
+       <property name="text" >
+        <string>Field</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0" colspan="2" >
+    <widget class="QCheckBox" name="baseline" >
+     <property name="enabled" >
+      <bool>true</bool>
+     </property>
+     <property name="text" >
+      <string>Baseline</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>channel</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>channelValue</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>13</x>
+     <y>18</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>82</x>
+     <y>16</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>channel</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>channelLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>16</x>
+     <y>27</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>179</x>
+     <y>15</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>time</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>timeValue</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>10</x>
+     <y>48</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>83</x>
+     <y>51</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>time</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>timeLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>36</x>
+     <y>52</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>199</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>time</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>scan</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>43</x>
+     <y>56</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>83</x>
+     <y>80</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>time</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>field</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>56</x>
+     <y>54</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>179</x>
+     <y>90</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

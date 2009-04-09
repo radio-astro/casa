@@ -603,20 +603,23 @@ void TBDataTab::clearAllFormats() {
 // Protected Methods //
 
 void TBDataTab::contextMenuEvent(QContextMenuEvent* event) {    
-    QPoint pos = event->pos();
+    QPoint gpos = event->globalPos();
+    QRect tRect(tableWidget->mapToGlobal(QPoint(0, 0)), tableWidget->size());
+    QRect vhRect(tableWidget->verticalHeader()->mapToGlobal(QPoint(0, 0)),
+            tableWidget->verticalHeader()->size());
+    QRect hhRect(tableWidget->horizontalHeader()->mapToGlobal(QPoint(0, 0)),
+            tableWidget->horizontalHeader()->size());
     
-    // should be able to just do, for example, tableWidget->horizontalHeader()
-    // ->rect().contains(pos), but Qt doesn't correctly report the size of
-    // the header as of 4.3.2, so do it using x/y coordinates instead.
+    // We don't care if it's outside the table or within the vertical header.
+    if(!tRect.contains(gpos) || vhRect.contains(gpos)) {
+        event->ignore();
+        return;
+    }
     
-    bool hx = pos.x() >= tableWidget->verticalHeader()->width();
-    bool tx = pos.x() <= tableWidget->width();
-    bool hy = pos.y() <= tableWidget->horizontalHeader()->height();
-    
-    // right click on table column headers
-    if(hx && tx && hy) {
-        int col = tableWidget->horizontalHeader()->visualIndexAt(event->x());
-        col = tableWidget->horizontalHeader()->logicalIndex(col);
+    // right click on column headers
+    if(hhRect.contains(gpos)) {
+        QHeaderView* hv = tableWidget->horizontalHeader();
+        int col = hv->logicalIndexAt(hv->mapFromGlobal(gpos));
         if(col < 0) return;
         
         clickedHeader = col;
@@ -637,17 +640,19 @@ void TBDataTab::contextMenuEvent(QContextMenuEvent* event) {
         a = menu->addAction("Hide Column");
         connect(a, SIGNAL(triggered()), this, SLOT(hideColumn()));
         
-        menu->exec(event->globalPos());
-        
-        event->accept();
+        menu->exec(gpos);
         
     // right click on table data
-    } else if(hx && tx) {
+    } else {
         int x = tableWidget->currentRow();
         int y = tableWidget->currentColumn();
         
         if(x < 0 || y < 0) return;
 
+        QMenu* menu = new QMenu();
+        QAction* copy = menu->addAction("Copy");
+        connect(copy, SIGNAL(triggered()), SLOT(copyData()));
+        
         String type = table->field(y)->getType();
         if(TBConstants::typeIsIndexable(type)) {
             double d = table->dataAt(x, y)->asDouble();
@@ -664,7 +669,6 @@ void TBDataTab::contextMenuEvent(QContextMenuEvent* event) {
 
             if(subtables.size() == 0) return;
             
-            QMenu* menu = new QMenu();
             QMenu* follow = new QMenu("Follow subtable index reference");
 
             for(unsigned int i = 0; i < subtables.size(); i++)
@@ -674,12 +678,11 @@ void TBDataTab::contextMenuEvent(QContextMenuEvent* event) {
                     this, SLOT(referenceMenuClicked(QAction*)));
 
             menu->addMenu(follow);
-            menu->exec(event->globalPos());
-            event->accept();
         }
+        menu->exec(gpos);
     }
     
-    if(!event->isAccepted()) event->ignore();
+    event->accept();
 }
 
 // Private Methods //
@@ -990,6 +993,12 @@ void TBDataTab::clearSort() {
     tableWidget->blockSignals(false);
     QApplication::restoreOverrideCursor();
     emit sortCleared();
+}
+
+void TBDataTab::copyData() {
+    QList<QTableWidgetItem*> sel = tableWidget->selectedItems();
+    if(sel.size() < 1) return;
+    QApplication::clipboard()->setText(sel[0]->text());
 }
 
 }

@@ -258,8 +258,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
   
   // Cursor Position Tracking
 
-  trkgDockWidget_->setAllowedAreas(Qt::BottomDockWidgetArea |
-				   Qt::TopDockWidgetArea);
+  trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea |
+				   Qt::TopDockWidgetArea));
   
 //trkgDockWidget_->setFeatures(QDockWidget::DockWidgetMovable |
 //  			       QDockWidget::DockWidgetFloatable);
@@ -292,8 +292,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 					// (to outline inner frame (in Ui))
    
 
-  animDockWidget_->setAllowedAreas(Qt::BottomDockWidgetArea |
-				   Qt::TopDockWidgetArea);
+  animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea |
+				   Qt::TopDockWidgetArea));
   
   animDockWidget_->toggleViewAction()->setText("Animator");
   

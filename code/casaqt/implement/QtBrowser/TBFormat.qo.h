@@ -264,6 +264,10 @@ private slots:
     // Slot for when the user changes a font or color parameter.  The
     // QFontColor in the value-dependent vector is updated accordingly.
     void valuesChanged();
+    
+private:
+    // Unlimited decimals constant.
+    static const int UNLIMITED_DECIMALS;
 };
 
 }

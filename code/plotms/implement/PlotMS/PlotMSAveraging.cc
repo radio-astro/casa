@@ -32,82 +32,79 @@ namespace casa {
 // PLOTMSAVERAGING DEFINITIONS //
 /////////////////////////////////
 
+// Static //
+
+bool PlotMSAveraging::fieldHasValue(Field f) {
+    return f == CHANNEL || f == TIME; }
+
+const String PlotMSAveraging::RKEY_VALUE = "Value";
+
+
+// Non-Static //
+
 PlotMSAveraging::PlotMSAveraging() { setDefaults(); }
 PlotMSAveraging::~PlotMSAveraging() { }
 
 
-// { "channel" => bool, "channelValue" => double,
-//   "time" => bool, "timeValue" => double,
-//   "scan" => bool, "field" => bool, "baseline" => bool }
-void PlotMSAveraging::fromRecord(const RecordInterface& record) {
-    if(record.isDefined("channel") && record.dataType("channel") == TpBool)
-        itsChannel_ = record.asBool("channel");
-    if(record.isDefined("channelValue") &&
-       record.dataType("channelValue") == TpDouble)
-        itsChannelValue_ = record.asDouble("channelValue");
-    if(record.isDefined("time") && record.dataType("time") == TpBool)
-        itsTime_ = record.asBool("time");
-    if(record.isDefined("timeValue") &&
-       record.dataType("timeValue") == TpDouble)
-        itsTimeValue_ = record.asDouble("timeValue");
-    if(record.isDefined("scan") && record.dataType("scan") == TpBool)
-        itsScan_ = record.asBool("scan");
-    if(record.isDefined("field") && record.dataType("field") == TpBool)
-        itsField_ = record.asBool("field");
-    if(record.isDefined("baseline") && record.dataType("baseline") == TpBool)
-        itsBaseline_ = record.asBool("baseline");
+void PlotMSAveraging::fromRecord(const RecordInterface& record) {    
+    const vector<String>& fields = fieldStrings();
+    String sf; Field f;
+    for(unsigned int i = 0; i < fields.size(); i++) {
+        sf = fields[i]; f = field(sf);
+        if(record.isDefined(sf) && record.dataType(sf) == TpBool)
+            setFlag(f, record.asBool(sf));
+        if(fieldHasValue(f)) {
+            sf += RKEY_VALUE;
+            if(record.isDefined(sf) && record.dataType(sf) == TpDouble)
+                setValue(f, record.asDouble(sf));
+        }
+    }
 }
 
 Record PlotMSAveraging::toRecord() const {
     Record rec(Record::Variable);
     
-    rec.define("channel", itsChannel_);
-    rec.define("channelValue", itsChannelValue_);
-    rec.define("time", itsTime_);
-    rec.define("timeValue", itsTimeValue_);
-    rec.define("scan", itsScan_);
-    rec.define("field", itsField_);
-    rec.define("baseline", itsBaseline_);
+    const vector<Field>& f = fields();
+    for(unsigned int i = 0; i < f.size(); i++) {
+        rec.define(field(f[i]), getFlag(f[i]));
+        if(fieldHasValue(f[i]))
+            rec.define(field(f[i]) + RKEY_VALUE, getValue(f[i]));
+    }
     
     return rec;
 }
 
-bool PlotMSAveraging::channel() const { return itsChannel_; }
-void PlotMSAveraging::setChannel(bool channel) { itsChannel_ = channel; }
+bool PlotMSAveraging::getFlag(Field f) const {
+    return const_cast<map<Field, bool>&>(itsFlags_)[f]; }
+void PlotMSAveraging::setFlag(Field f, bool on) { itsFlags_[f] = on; }
 
-double PlotMSAveraging::channelValue() const { return itsChannelValue_; }
-void PlotMSAveraging::setChannelValue(double value) {
-    itsChannelValue_ = value; }
-
-bool PlotMSAveraging::time() const { return itsTime_; }
-void PlotMSAveraging::setTime(bool time) { itsTime_ = time; }
-
-double PlotMSAveraging::timeValue() const { return itsTimeValue_; }
-void PlotMSAveraging::setTimeValue(double value) { itsTimeValue_ = value; }
-
-bool PlotMSAveraging::scan() const { return itsScan_; }
-void PlotMSAveraging::setScan(bool scan) { itsScan_ = scan; }
-
-bool PlotMSAveraging::field() const { return itsField_; }
-void PlotMSAveraging::setField(bool field) { itsField_ = field; }
-
-bool PlotMSAveraging::baseline() const { return itsBaseline_; }
-void PlotMSAveraging::setBaseline(bool baseline) { itsBaseline_ = baseline; }
-
-
-bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
-    return itsChannel_ == other.itsChannel_ &&
-           (!itsChannel_ || itsChannelValue_ == other.itsChannelValue_) &&
-           itsTime_ == other.itsTime_ &&
-           (!itsTime_ || itsTimeValue_ == other.itsTimeValue_) &&
-           itsScan_ == other.itsScan_ && itsField_ == other.itsField_ &&
-           itsBaseline_ == other.itsBaseline_;
+double PlotMSAveraging::getValue(Field f) const {
+    if(!fieldHasValue(f)) return 0;
+    else return const_cast<map<Field, double>&>(itsValues_)[f];
+}
+void PlotMSAveraging::setValue(Field f, double value) {
+    if(fieldHasValue(f)) itsValues_[f] = value;
 }
 
 
-void PlotMSAveraging::setDefaults() {
-    itsChannel_ = itsTime_ = itsScan_ = itsField_ = itsBaseline_ = false;
-    itsChannelValue_ = itsTimeValue_ = 0;
+bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
+    vector<Field> f = fields();
+    for(unsigned int i = 0; i < f.size(); i++) {
+        if(getFlag(f[i]) != other.getFlag(f[i])) return false;
+        if(fieldHasValue(f[i]) && getFlag(f[i]) &&
+           getValue(f[i]) != other.getValue(f[i])) return false;
+    }
+    
+    return true;
+}
+
+
+void PlotMSAveraging::setDefaults() {    
+    vector<Field> f = fields();
+    for(unsigned int i = 0; i < f.size(); i++) {
+        itsFlags_[f[i]] = false;
+        if(fieldHasValue(f[i])) itsValues_[f[i]] = 0;
+    }
 }
 
 }

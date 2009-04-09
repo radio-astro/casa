@@ -1,6 +1,7 @@
 import os
 import string
 from taskinit import *
+import pylab as pl
 
 from parameter_check import *
 
@@ -139,6 +140,9 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
 			       markersize=markersize,
 			       fontsize=fontsize)
 		cp.plot(xaxis,yaxis)
+              
+                if (showgui):
+                   pl.gcf().show()
 
 		if ( len(figfile) > 0 ) :
 			cp.savefig( figfile ); 

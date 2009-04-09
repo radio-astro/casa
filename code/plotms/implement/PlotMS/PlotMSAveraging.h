@@ -28,6 +28,9 @@
 #define PLOTMSAVERAGING_H_
 
 #include <casa/Containers/Record.h>
+#include <plotms/PlotMS/PlotMSConstants.h>
+
+#include <map>
 
 #include <casa/namespace.h>
 
@@ -36,6 +39,26 @@ namespace casa {
 // Specifies averaging parameters for an MS.
 class PlotMSAveraging {
 public:
+    // Static //
+    
+    // Enum and methods to define the different fields for an MS averaging.
+    // All fields have a bool flag for on/off, and some of them also have a
+    // double value (see fieldHasValue()).  Fields are off by default, with a
+    // default double value of 0 if applicable.
+    // <group>
+    PMS_ENUM1(Field, fields, fieldStrings, field,
+              CHANNEL, TIME, SCAN, FIELD, BASELINE)
+    PMS_ENUM2(Field, fields, fieldStrings, field,
+              "channel", "time", "scan", "field", "baseline")
+    // </group>
+              
+    // Returns true if the given field has a double value associated with it or
+    // not.
+    static bool fieldHasValue(Field f);
+    
+    
+    // Non-Static //
+    
     // Constructor, which uses default values.
     PlotMSAveraging();
     
@@ -43,55 +66,49 @@ public:
     ~PlotMSAveraging();
     
     
-    // Converts this object to/from a record.  The record keys/values currently
-    // are:
-    // { "channel" => bool, "channelValue" => double,
-    //   "time" => bool, "timeValue" => double,
-    //   "scan" => bool, "field" => bool, "baseline" => bool }
+    // Converts this object to/from a record.  Each field will have a key that
+    // is its enum name, with a bool value for its flag value.  Fields that
+    // also have double values will have an additional key that is its enum
+    // name + "Value" (i.e. "channelValue" for CHANNEL) with a double value.
+    // <group>
     void fromRecord(const RecordInterface& record);
     Record toRecord() const;
     // </group>
     
-    // Gets/Sets whether channel averaging is turned on or not.
+    // Gets/Sets the on/off value for the given field.
     // <group>
-    bool channel() const;
-    void setChannel(bool channel);
+    bool getFlag(Field f) const;
+    void getFlag(Field f, bool& flag) const { flag = getFlag(f); }
+    void setFlag(Field f, bool on);
     // </group>
     
-    // Gets/Sets the channel averaging value.
+    // Gets/Sets the double value for the given field, if applicable.
     // <group>
-    double channelValue() const;
-    void setChannelValue(double value);
+    double getValue(Field f) const;
+    void getValue(Field f, double& value) const { value = getValue(f); }
+    void setValue(Field f, double value);
     // </group>
     
-    // Gets/Sets whether time averaging is turned on or not.
+    // Convenience methods for returning the standard field values.
     // <group>
-    bool time() const;
-    void setTime(bool time);
+    bool channel() const { return getFlag(CHANNEL); }
+    double channelValue() const { return getValue(CHANNEL); }
+    bool time() const { return getFlag(TIME); }
+    double timeValue() const { return getValue(TIME); }
+    bool scan() const { return getFlag(SCAN); }
+    bool field() const { return getFlag(FIELD); }
+    bool baseline() const { return getFlag(BASELINE); }
     // </group>
     
-    // Gets/Sets the time averaging value.
+    // Convenience methods for setting the standard field values.
     // <group>
-    double timeValue() const;
-    void setTimeValue(double value);
-    // </group>
-    
-    // Gets/Sets whether scan averaging is turned on or not.
-    // <group>
-    bool scan() const;
-    void setScan(bool scan);
-    // </group>
-    
-    // Gets/Sets whether field averaging is turned on or not.
-    // <group>
-    bool field() const;
-    void setField(bool field);
-    // </group>
-    
-    // Gets/Sets whether baseline averaging is turned on or not.
-    // <group>
-    bool baseline() const;
-    void setBaseline(bool baseline);
+    void setChannel(bool channel) { setFlag(CHANNEL, channel); }
+    void setChannelValue(double value) { setValue(CHANNEL, value); }
+    void setTime(bool time) { setFlag(TIME, time); }
+    void setTimeValue(double value) { setValue(TIME, value); }
+    void setScan(bool scan) { setFlag(SCAN, scan); }
+    void setField(bool field) { setFlag(FIELD, field); }
+    void setBaseline(bool baseline) { setFlag(BASELINE, baseline); }
     // </group>
     
     
@@ -103,30 +120,20 @@ public:
     // </group>
     
 private:
-    // Channel averaging flag and value, respectively.
-    // <group>
-    bool itsChannel_;
-    double itsChannelValue_;
-    // </group>
+    // Averaging field values.
+    map<Field, bool> itsFlags_;
     
-    // Time averaging flag and value, respectively.
-    // <group>
-    bool itsTime_;
-    double itsTimeValue_;
-    // </group>
-    
-    // Scan averaging flag.
-    bool itsScan_;
-    
-    // Field averaging flag.
-    bool itsField_;
-    
-    // Baseline averaging flag.
-    bool itsBaseline_;
-    
+    // Averaging field double values.
+    map<Field, double> itsValues_;
+
     
     // Sets the default values.
     void setDefaults();
+    
+    
+    // String constant for what to append to the enum name in the record to
+    // get the key for the double value.
+    static const String RKEY_VALUE;
 };
 
 }

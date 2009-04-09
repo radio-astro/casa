@@ -5,34 +5,53 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>541</width>
-    <height>420</height>
+    <width>653</width>
+    <height>434</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>Format</string>
   </property>
   <layout class="QVBoxLayout" >
-   <property name="margin" >
-    <number>9</number>
-   </property>
    <property name="spacing" >
+    <number>3</number>
+   </property>
+   <property name="leftMargin" >
+    <number>3</number>
+   </property>
+   <property name="topMargin" >
+    <number>3</number>
+   </property>
+   <property name="rightMargin" >
+    <number>3</number>
+   </property>
+   <property name="bottomMargin" >
     <number>3</number>
    </property>
    <item>
     <layout class="QGridLayout" >
-     <property name="margin" >
+     <property name="leftMargin" >
       <number>0</number>
      </property>
-     <property name="spacing" >
+     <property name="topMargin" >
+      <number>0</number>
+     </property>
+     <property name="rightMargin" >
+      <number>0</number>
+     </property>
+     <property name="bottomMargin" >
+      <number>0</number>
+     </property>
+     <property name="horizontalSpacing" >
+      <number>3</number>
+     </property>
+     <property name="verticalSpacing" >
       <number>3</number>
      </property>
      <item row="1" column="0" >
       <widget class="QLabel" name="label_3" >
        <property name="sizePolicy" >
-        <sizepolicy>
-         <hsizetype>0</hsizetype>
-         <vsizetype>0</vsizetype>
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -45,9 +64,7 @@
      <item row="0" column="0" >
       <widget class="QLabel" name="label" >
        <property name="sizePolicy" >
-        <sizepolicy>
-         <hsizetype>0</hsizetype>
-         <vsizetype>0</vsizetype>
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -102,9 +119,7 @@
    <item>
     <widget class="QGroupBox" name="formatBox" >
      <property name="sizePolicy" >
-      <sizepolicy>
-       <hsizetype>0</hsizetype>
-       <vsizetype>0</vsizetype>
+      <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -113,10 +128,19 @@
       <string>Format</string>
      </property>
      <layout class="QVBoxLayout" >
-      <property name="margin" >
+      <property name="spacing" >
        <number>3</number>
       </property>
-      <property name="spacing" >
+      <property name="leftMargin" >
+       <number>3</number>
+      </property>
+      <property name="topMargin" >
+       <number>3</number>
+      </property>
+      <property name="rightMargin" >
+       <number>3</number>
+      </property>
+      <property name="bottomMargin" >
        <number>3</number>
       </property>
       <item>
@@ -138,26 +162,49 @@
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>9</number>
-         </property>
          <property name="spacing" >
+          <number>3</number>
+         </property>
+         <property name="leftMargin" >
+          <number>3</number>
+         </property>
+         <property name="topMargin" >
+          <number>3</number>
+         </property>
+         <property name="rightMargin" >
+          <number>3</number>
+         </property>
+         <property name="bottomMargin" >
           <number>3</number>
          </property>
          <item>
           <widget class="QLabel" name="label_2" >
            <property name="text" >
-            <string>Decimal Places:</string>
+            <string>Precision:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="unlimitedCheckBox" >
+          <widget class="QRadioButton" name="decDefault" >
            <property name="text" >
-            <string>Unlimited</string>
+            <string>Default</string>
            </property>
            <property name="checked" >
             <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="decUnlimited" >
+           <property name="text" >
+            <string>Unlimited</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="decCustom" >
+           <property name="text" >
+            <string>Custom</string>
            </property>
           </widget>
          </item>
@@ -208,10 +255,19 @@
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>9</number>
-         </property>
          <property name="spacing" >
+          <number>3</number>
+         </property>
+         <property name="leftMargin" >
+          <number>3</number>
+         </property>
+         <property name="topMargin" >
+          <number>3</number>
+         </property>
+         <property name="rightMargin" >
+          <number>3</number>
+         </property>
+         <property name="bottomMargin" >
           <number>3</number>
          </property>
          <item>
@@ -249,10 +305,19 @@
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>9</number>
-         </property>
          <property name="spacing" >
+          <number>3</number>
+         </property>
+         <property name="leftMargin" >
+          <number>3</number>
+         </property>
+         <property name="topMargin" >
+          <number>3</number>
+         </property>
+         <property name="rightMargin" >
+          <number>3</number>
+         </property>
+         <property name="bottomMargin" >
           <number>3</number>
          </property>
          <item>
@@ -317,18 +382,25 @@
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>9</number>
-         </property>
          <property name="spacing" >
+          <number>3</number>
+         </property>
+         <property name="leftMargin" >
+          <number>3</number>
+         </property>
+         <property name="topMargin" >
+          <number>3</number>
+         </property>
+         <property name="rightMargin" >
+          <number>3</number>
+         </property>
+         <property name="bottomMargin" >
           <number>3</number>
          </property>
          <item>
           <widget class="QLineEdit" name="dateEdit" >
            <property name="sizePolicy" >
-            <sizepolicy>
-             <hsizetype>0</hsizetype>
-             <vsizetype>0</vsizetype>
+            <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -382,11 +454,20 @@ p, li { white-space: pre-wrap; }
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" >
-         <property name="margin" >
-          <number>9</number>
-         </property>
          <property name="spacing" >
           <number>0</number>
+         </property>
+         <property name="leftMargin" >
+          <number>3</number>
+         </property>
+         <property name="topMargin" >
+          <number>3</number>
+         </property>
+         <property name="rightMargin" >
+          <number>3</number>
+         </property>
+         <property name="bottomMargin" >
+          <number>3</number>
          </property>
          <item>
           <widget class="QLabel" name="label_4" >
@@ -400,11 +481,11 @@ p, li { white-space: pre-wrap; }
            <property name="enabled" >
             <bool>false</bool>
            </property>
-           <property name="maximum" >
-            <number>15</number>
-           </property>
            <property name="minimum" >
             <number>0</number>
+           </property>
+           <property name="maximum" >
+            <number>15</number>
            </property>
            <property name="value" >
             <number>5</number>
@@ -463,10 +544,22 @@ p, li { white-space: pre-wrap; }
       <string>Font</string>
      </property>
      <layout class="QGridLayout" >
-      <property name="margin" >
+      <property name="leftMargin" >
        <number>3</number>
       </property>
-      <property name="spacing" >
+      <property name="topMargin" >
+       <number>3</number>
+      </property>
+      <property name="rightMargin" >
+       <number>3</number>
+      </property>
+      <property name="bottomMargin" >
+       <number>3</number>
+      </property>
+      <property name="horizontalSpacing" >
+       <number>3</number>
+      </property>
+      <property name="verticalSpacing" >
        <number>3</number>
       </property>
       <item row="1" column="0" >
@@ -488,10 +581,22 @@ p, li { white-space: pre-wrap; }
       </item>
       <item rowspan="2" row="0" column="1" >
        <layout class="QGridLayout" >
-        <property name="margin" >
+        <property name="leftMargin" >
          <number>0</number>
         </property>
-        <property name="spacing" >
+        <property name="topMargin" >
+         <number>0</number>
+        </property>
+        <property name="rightMargin" >
+         <number>0</number>
+        </property>
+        <property name="bottomMargin" >
+         <number>0</number>
+        </property>
+        <property name="horizontalSpacing" >
+         <number>3</number>
+        </property>
+        <property name="verticalSpacing" >
          <number>3</number>
         </property>
         <item row="0" column="6" >
@@ -503,11 +608,11 @@ p, li { white-space: pre-wrap; }
         </item>
         <item row="0" column="2" colspan="2" >
          <widget class="QSpinBox" name="fontSizeSpinner" >
-          <property name="maximum" >
-           <number>72</number>
-          </property>
           <property name="minimum" >
            <number>8</number>
+          </property>
+          <property name="maximum" >
+           <number>72</number>
           </property>
          </widget>
         </item>
@@ -585,11 +690,20 @@ p, li { white-space: pre-wrap; }
    </item>
    <item>
     <layout class="QHBoxLayout" >
-     <property name="margin" >
-      <number>0</number>
-     </property>
      <property name="spacing" >
       <number>3</number>
+     </property>
+     <property name="leftMargin" >
+      <number>0</number>
+     </property>
+     <property name="topMargin" >
+      <number>0</number>
+     </property>
+     <property name="rightMargin" >
+      <number>0</number>
+     </property>
+     <property name="bottomMargin" >
+      <number>0</number>
      </property>
      <item>
       <spacer>
@@ -630,7 +744,6 @@ p, li { white-space: pre-wrap; }
   </layout>
  </widget>
  <tabstops>
-  <tabstop>unlimitedCheckBox</tabstop>
   <tabstop>decimalsSpinBox</tabstop>
   <tabstop>sfCheckBox</tabstop>
   <tabstop>boolTrueFalse</tabstop>
@@ -657,30 +770,14 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections>
   <connection>
-   <sender>unlimitedCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>decimalsSpinBox</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>110</x>
-     <y>109</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>205</x>
-     <y>109</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pushButton_3</sender>
    <signal>clicked()</signal>
    <receiver>Format</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>508</x>
-     <y>399</y>
+     <x>642</x>
+     <y>495</y>
     </hint>
     <hint type="destinationlabel" >
      <x>428</x>
@@ -695,12 +792,12 @@ p, li { white-space: pre-wrap; }
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>50</x>
-     <y>362</y>
+     <x>64</x>
+     <y>459</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>48</x>
-     <y>299</y>
+     <x>62</x>
+     <y>433</y>
     </hint>
    </hints>
   </connection>
@@ -711,12 +808,28 @@ p, li { white-space: pre-wrap; }
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>311</x>
-     <y>222</y>
+     <x>446</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>207</x>
-     <y>225</y>
+     <x>288</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>decCustom</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>decimalsSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>293</x>
+     <y>120</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>346</x>
+     <y>123</y>
     </hint>
    </hints>
   </connection>

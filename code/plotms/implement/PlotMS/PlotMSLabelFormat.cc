@@ -34,22 +34,39 @@ namespace casa {
 
 // Static //
 
-const String PlotMSLabelFormat::TAGSEPARATOR = "%%";
+const String& PlotMSLabelFormat::TAGSEPARATOR() {
+    static const String str("%%"); return str; }
 
-const String PlotMSLabelFormat::TAG_AXIS = "axis";
-const String PlotMSLabelFormat::TAG_XAXIS = "xaxis";
-const String PlotMSLabelFormat::TAG_YAXIS = "yaxis";
+const String& PlotMSLabelFormat::TAG_AXIS() {
+    static const String str("axis"); return str; }
+const String& PlotMSLabelFormat::TAG_XAXIS() {
+    static const String str("xaxis"); return str; }
+const String& PlotMSLabelFormat::TAG_YAXIS() {
+    static const String str("yaxis"); return str; }
 
-const String PlotMSLabelFormat::TAG_UNIT = "unit";
-const String PlotMSLabelFormat::TAG_XUNIT = "xunit";
-const String PlotMSLabelFormat::TAG_YUNIT = "yunit";
+const String& PlotMSLabelFormat::TAG_UNIT() {
+    static const String str("unit"); return str; }
+const String& PlotMSLabelFormat::TAG_XUNIT() {
+    static const String str("xunit"); return str; }
+const String& PlotMSLabelFormat::TAG_YUNIT() {
+    static const String str("yunit"); return str; }
 
-const String PlotMSLabelFormat::TAG_IF_UNIT = "ifunit";
-const String PlotMSLabelFormat::TAG_IF_XUNIT = "ifxunit";
-const String PlotMSLabelFormat::TAG_IF_YUNIT = "ifyunit";
-const String PlotMSLabelFormat::TAG_ENDIF_UNIT = "endifunit";
-const String PlotMSLabelFormat::TAG_ENDIF_XUNIT = "endifxunit";
-const String PlotMSLabelFormat::TAG_ENDIF_YUNIT = "endifyunit";
+const String& PlotMSLabelFormat::TAG_IF_UNIT() {
+    static const String str("ifunit"); return str; }
+const String& PlotMSLabelFormat::TAG_IF_XUNIT() {
+    static const String str("ifxunit"); return str; }
+const String& PlotMSLabelFormat::TAG_IF_YUNIT() {
+    static const String str("ifyunit"); return str; }
+const String& PlotMSLabelFormat::TAG_ENDIF_UNIT() {
+    static const String str("endifunit"); return str; }
+const String& PlotMSLabelFormat::TAG_ENDIF_XUNIT() {
+    static const String str("endifxunit"); return str; }
+const String& PlotMSLabelFormat::TAG_ENDIF_YUNIT() {
+    static const String str("endifyunit"); return str; }
+
+String PlotMSLabelFormat::TAG(const String& tag) {
+    return TAGSEPARATOR() + tag + TAGSEPARATOR(); }
+
 
 String PlotMSLabelFormat::getLabel(const String& format, PMS::Axis axis,
             PMS::Axis xAxis, PMS::Axis yAxis) {
@@ -65,28 +82,28 @@ String PlotMSLabelFormat::getLabel(const String& format, PMS::Axis axis,
         if(tokenWasTag) {
             tag = "";
             
-            if(PMS::strEq(token, TAG_AXIS, true)) tag = PMS::axis(axis);
-            else if(PMS::strEq(token, TAG_XAXIS, true)) tag = PMS::axis(xAxis);
-            else if(PMS::strEq(token, TAG_YAXIS, true)) tag =  PMS::axis(yAxis);
-            else if(PMS::strEq(token, TAG_UNIT, true))
+            if(PMS::strEq(token, TAG_AXIS(), true)) tag = PMS::axis(axis);
+            else if(PMS::strEq(token, TAG_XAXIS(), true)) tag=PMS::axis(xAxis);
+            else if(PMS::strEq(token, TAG_YAXIS(), true)) tag=PMS::axis(yAxis);
+            else if(PMS::strEq(token, TAG_UNIT(), true))
                 tag = PMS::axisUnit(unit);
-            else if(PMS::strEq(token, TAG_XUNIT, true))
+            else if(PMS::strEq(token, TAG_XUNIT(), true))
                 tag = PMS::axisUnit(xUnit);
-            else if(PMS::strEq(token, TAG_YUNIT, true))
+            else if(PMS::strEq(token, TAG_YUNIT(), true))
                 tag = PMS::axisUnit(yUnit);
-            else if(PMS::strEq(token, TAG_IF_UNIT, true))
+            else if(PMS::strEq(token, TAG_IF_UNIT(), true))
                 ifUnit = true;
-            else if(PMS::strEq(token, TAG_IF_XUNIT, true))
+            else if(PMS::strEq(token, TAG_IF_XUNIT(), true))
                 ifXUnit = true;
-            else if(PMS::strEq(token, TAG_IF_YUNIT, true))
+            else if(PMS::strEq(token, TAG_IF_YUNIT(), true))
                 ifYUnit = true;
-            else if(PMS::strEq(token, TAG_ENDIF_UNIT, true))
+            else if(PMS::strEq(token, TAG_ENDIF_UNIT(), true))
                 ifUnit = false;
-            else if(PMS::strEq(token, TAG_ENDIF_XUNIT, true))
+            else if(PMS::strEq(token, TAG_ENDIF_XUNIT(), true))
                 ifXUnit = false;
-            else if(PMS::strEq(token, TAG_ENDIF_YUNIT, true))
+            else if(PMS::strEq(token, TAG_ENDIF_YUNIT(), true))
                 ifYUnit = false;
-            else tag = TAGSEPARATOR + token + TAGSEPARATOR;
+            else tag = TAG(token);
         } else tag = token;
         
         if((!ifUnit || unit != PMS::UNONE) && (!ifXUnit || xUnit != PMS::UNONE)
@@ -104,9 +121,9 @@ bool PlotMSLabelFormat::nextToken(String& format, String& token,
         return false;
     }
     
-    unsigned int i = format.find(TAGSEPARATOR), j;
+    unsigned int i = format.find(TAGSEPARATOR()), j;
     if(i >= format.size() ||
-       (j = format.find(TAGSEPARATOR, i + 1)) >= format.size()) {
+       (j = format.find(TAGSEPARATOR(), i + 1)) >= format.size()) {
         // no more tags left
         token = format;
         tokenWasTag = false;
@@ -116,9 +133,9 @@ bool PlotMSLabelFormat::nextToken(String& format, String& token,
 
     if(i == 0) {
         // tag is next token
-        token = format.substr(TAGSEPARATOR.size(), j - TAGSEPARATOR.size());
+        token= format.substr(TAGSEPARATOR().size(), j - TAGSEPARATOR().size());
         tokenWasTag = true;
-        format = format.substr(j + TAGSEPARATOR.size());        
+        format = format.substr(j + TAGSEPARATOR().size());        
     } else {
         // text is next token
         token = format.substr(0, i);

@@ -287,7 +287,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               Options: 'inf' (~infinite), 
                        'int' (per integration)
                        any float or integer value with or without units
-              examples: solint='1m'; solint='60s', solint=60 --> 1 minute
+              examples: solint='1min'; solint='60s'; solint=60 --> 1 minute
                         solint='0s'; solint=0; solint='int' --> per integration
                         solint-'-1s'; solint='inf' --> ~infinite, up to boundaries
                         interacts with combine

@@ -178,7 +178,15 @@
                           a_arch=aix
                        } else {
                           if (~ `{uname -s} Darwin) {
-                             a_arch=darwin
+			     if (test -d $a_root/darwin) {
+			         a_arch=darwin
+			     } else {
+				 if (test -d $a_root/osx) {
+				     a_arch=osx
+				 } else {
+				     a_arch=darwin
+				 }
+			     }
                           } else {
                              a_arch=UNKNOWN_ARCH
                        }

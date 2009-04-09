@@ -626,6 +626,7 @@ String TBConstants::date(double d, int numDecimals) {
     return ss.str();
 }
 
+const int TBConstants::DEFAULT_DECIMALS = -1;
 const int TBConstants::DEFAULT_DATE_DECIMALS = 2;
 
 bool TBConstants::dateFormatIsValid(String& d) {
@@ -786,15 +787,19 @@ String TBConstants::sitoa(short int n) {
     return ss.str();
 }
 
-String TBConstants::ftoa(float f) {
+String TBConstants::ftoa(float f, int decimals, bool sf) {
     stringstream ss;
-    ss << setprecision(32) << f;
+    if(decimals >= 0) ss << setprecision(decimals);
+    if(sf) ss << scientific;
+    ss << f;
     return ss.str();
 }
 
-String TBConstants::dtoa(double d) {
+String TBConstants::dtoa(double d, int decimals, bool sf) {
     stringstream ss;
-    ss << setprecision(64) << d;
+    if(decimals >= 0) ss << setprecision(decimals);
+    if(sf) ss << scientific;
+    ss << d;
     return ss.str();
 }
 

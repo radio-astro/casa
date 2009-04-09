@@ -191,6 +191,33 @@ void TBViewArray::clearFormat(QFontColor* f) {
     update = oldUpdate;
 }
 
+
+// Protected Methods //
+
+void TBViewArray::contextMenuEvent(QContextMenuEvent* event) {
+    // Make sure right-click is on table widget.
+    QPoint pos = event->globalPos();
+    QRect rect(table->mapToGlobal(QPoint(0, 0)), table->size());
+    if(rect.contains(pos)) {
+        // Make sure a cell is selected (shouldn't be necessary).
+        if(table->currentRow() < 0 || table->currentColumn() < 0) {
+            event->ignore();
+            return;
+        }
+        
+        // TODO
+        
+        // Show menu.
+        QMenu* menu = new QMenu();
+        QAction* copy = menu->addAction("Copy");
+        connect(copy, SIGNAL(triggered()), SLOT(copyData()));
+        menu->exec(pos);
+        event->accept();
+        
+    } else event->ignore();
+}
+
+
 // Private Methods //
 
 void TBViewArray::setup(String first, String second) {
@@ -489,6 +516,13 @@ void TBViewArray::cellDoubleClicked(int row, int col) {
         tTabs->getBrowser()->displayError(message);
     }
 }
+
+void TBViewArray::copyData() {
+    QList<QTableWidgetItem*> sel = table->selectedItems();
+    if(sel.size() < 1) return;
+    QApplication::clipboard()->setText(sel[0]->text());
+}
+
 
 //////////////////////////////
 // TBARRAYPANEL DEFINITIONS //

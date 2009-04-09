@@ -4,9 +4,6 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 import Tkinter as Tk
-### Start mod: 2009.03.23. kana ###
-from sdstat_cli import sdstat_cli as sdstat
-### End mod #######################
 
 def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, plotfile, overwrite):
 
@@ -230,10 +227,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
 	    linewidthold=pl.rcParams['lines.linewidth']
-            ### Start mod: 2009.03.23. kana ###
 	    if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
 		    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
-	    ### End Mod #######################
 
             # Plotting
             if plottype=='pointing':
@@ -460,19 +455,91 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 			    sd.plotter._plotter.canvas.mpl_disconnect(sd.plotter._plotter.events['button_press'])
 			    sd.plotter._plotter.events['button_press']=None
 		    if plottype=='spectra':
-			    ### Start mod: 2009.03.23. kana ###
-			    #sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_select_spectrum)
 			    sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_event_switch)
-			    ### End Mod #######################
-
             # DONE
 
         except Exception, instance:
                 print '***Error***',instance
                 return
 
+########################################
+##    Helper functions for sdplot     ##
+########################################
+### Add a custom toolbar to ASAP plotter
+class CustomToolbarTkAgg:
+	def __init__(self,figmgr=None):
+		if figmgr is None: return
+		self.figmgr=figmgr
+		self.custombar=None
+		self._add_custom_toolbar()
 
-### select the nearest spectrum in pick radius. 
+	def _add_custom_toolbar(self):
+		self.custombar=Tk.Frame(master=self.figmgr.window)
+		self.bSpec=self._NewButton(master=self.custombar,
+				      text='spec value',
+				      command=self.spec_show)
+		self.bStat=self._NewButton(master=self.custombar,
+				      text='statistics',
+				      command=self.stat_cal)
+		self.bQuit=self._NewButton(master=self.custombar,
+				      text='Quit',
+				      command=self.quit,
+				      side=Tk.RIGHT)
+		self.custombar.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
+
+		### temporary added
+		#self.bStat.config(state=Tk.DISABLED)
+		###
+		self.bSpec.config(relief='sunken')
+		self.bStat.config(relief='raised')
+		self.mode='spec'
+		self.spec_show()
+		return self
+
+	def _NewButton(self, master, text, command, side=Tk.LEFT):
+		if(os.uname()[0] == 'Darwin'):
+			b = Tk.Button(master=master, text=text, command=command)
+		else:
+			b = Tk.Button(master=master, text=text, padx=2, pady=2, command=command)
+		b.pack(side=side)
+		return b
+	
+	def spec_show(self):
+		self.figmgr.toolbar.set_message('spec value: drag on a spec')
+		if self.mode == 'spec': return
+		self.bStat.config(relief='raised')
+		self.bSpec.config(relief='sunken')
+		self.mode='spec'
+
+	def stat_cal(self):
+		self.figmgr.toolbar.set_message('statistics: select a region')
+		if self.mode == 'stat': return
+		self.bSpec.config(relief='raised')
+		self.bStat.config(relief='sunken')
+		self.mode='stat'
+
+	def quit(self):
+		self.delete_bar()
+		sd.plotter._plotter.unmap()
+
+	def delete_bar(self):
+		self.custombar.destroy()
+		self.custombar=None		
+
+### callback a function according to the selected mode. 
+def _event_switch(event):
+        # Do not fire event when in zooming/panning mode
+	if not sd.plotter._plotter.figmgr.toolbar.mode == '': return
+        # When selected point is out of panels
+        if event.inaxes == None:
+		return
+	# Now acutual callback
+	if sd.plotter._plotter.figmgr.sdplotbar.mode == 'stat':
+		_single_mask(event)
+	else: _select_spectrum(event)
+
+### select the nearest spectrum in pick radius
+###    and display spectral value on the toolbar. 
 def _select_spectrum(event):
         # Do not fire event when in zooming/panning mode
         mode = sd.plotter._plotter.figmgr.toolbar.mode
@@ -566,126 +633,139 @@ def _select_spectrum(event):
         theplot.events['button_release']=thecanvas.mpl_connect('button_release_event',discon)
 
 
-### Start mod: 2009.03.23. kana ###
-### Add a custom toolbar to ASAP plotter
-class CustomToolbarTkAgg:
-	def __init__(self,figmgr=None):
-		if figmgr is None: return
-		self.figmgr=figmgr
-		self.custombar=None
-		self._add_custom_toolbar()
-
-	def _add_custom_toolbar(self):
-		self.custombar=Tk.Frame(master=self.figmgr.window)
-		self.bSpec=self._NewButton(master=self.custombar,
-				      text='spec value',
-				      command=self.spec_show)
-		self.bStat=self._NewButton(master=self.custombar,
-				      text='statistics',
-				      command=self.stat_cal)
-		self.bQuit=self._NewButton(master=self.custombar,
-				      text='Quit',
-				      command=self.quit)
-		self.custombar.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
-
-		### temporary added
-		self.bStat.config(state=Tk.DISABLED)
-		###
-		self.bSpec.config(relief='sunken')
-		self.bStat.config(relief='raised')
-		self.mode='spec'
-		self.spec_show()
-		return self
-
-	def _NewButton(self, master, text, command, side=Tk.LEFT):
-		if(os.uname()[0] == 'Darwin'):
-			b = Tk.Button(master=master, text=text, command=command)
-		else:
-			b = Tk.Button(master=master, text=text, padx=2, pady=2, command=command)
-		b.pack(side=side)
-		return b
-	
-	def spec_show(self):
-		self.figmgr.toolbar.set_message('spec value: drag on a spec')
-		if self.mode == 'spec': return
-		self.bStat.config(relief='raised')
-		self.bSpec.config(relief='sunken')
-		self.mode='spec'
-
-	def stat_cal(self):
-		self.figmgr.toolbar.set_message('statistics: select a region')
-		if self.mode == 'stat': return
-		self.bSpec.config(relief='raised')
-		self.bStat.config(relief='sunken')
-		self.mode='stat'
-
-	def quit(self):
-		self.delete_bar()
-		sd.plotter._plotter.unmap()
-
-	def delete_bar(self):
-		self.custombar.destroy()
-		self.custombar=None		
-
-
-### callback a function according to the selected mode. 
-def _event_switch(event):
-        # Do not fire event when in zooming/panning mode
-	if not sd.plotter._plotter.figmgr.toolbar.mode == '': return
-        # When selected point is out of panels
-        if event.inaxes == None:
-		return
-	# Now acutual callback
-	if sd.plotter._plotter.figmgr.sdplotbar.mode == 'stat':
-		_single_mask(event)
-	else: _select_spectrum(event)
-
+### Calculate statistics of the selected area. 
 def _single_mask(event):
 	if event.button ==1: baseval=False
 	elif event.button == 3: baseval=True
 	else: return
-	
-#	mask_sel=sd.interactivemask()
-#	mask_sel.scan=sd.plotter._data
-#	mask_sel._p=sd.plotter._plotter
-#	# Create initial mask
-#	mask_sel.mask=sd._n_bools(mask_sel.scan.nchan(),baseval)
-#	# Selected mask
-#	mask_sel._region_start(event)
-#        proceed = raw_input('press return: ')
-#	mask=mask_sel.get_mask()
-#	masklist=mask_sel.scan.get_masklist(mask=mask)
-#	print 'stat region:', masklist
-#	# Call sdstat()
-#	invertmask=False
-#	interactive=False
-#	statfile=''
-#        sdstat(mask_sel.scan, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile)
-#	sdstat.defaults()
-        invertmask=baseval
-	interactive=True
-	statfile=''
-	scan=sd.plotter._data
-	masklist=[min(scan._getabcissa()),max(scan._getabcissa())]
-#	sdstat(sdfile=sdfile, fluxunit=fluxunit, telescopeparm=telescopeparm, specunit=specunit, frame=frame, doppler=doppler, scanlist=scanlist, field=field, iflist=iflist, pollist=pollist, masklist=masklist, invertmask=invertmask, interactive=interactive, statfile='')
-#	if len(mask_sel._polygons)>0:
-#		# Remove old polygons
-#		for polygon in mask_sel._polygons: polygon.remove()
-#		mask_sel._polygons=[]
-#		#mask_sel._p.canvas.draw()
-#	del mask_sel
 
-### End mod #######################
-### Construct Navigation Window
-#class Navigationwindow:
-#        def __init__(self,titp,titl):
-#		self.window=Tk.Tk()
-#		self.window.title('Navigator')
-#		self.frame=Tk.Frame(self.window)
-#		self.frame.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
-#		self.posi=Tk.StringVar(master=self.window)
-#		initstr='Selected: [ %s, %s ]\nDrag mouse.'%(titp,titl)
-#		self.posi.set(initstr)
-#		self.label=Tk.Label(self.frame,textvariable=self.posi,justify=Tk.LEFT,height=3,width=20,padx=5,pady=5)
-#		self.label.pack(expand=1,side=Tk.LEFT,fill=Tk.BOTH)
+	mask_sel=mask_selection()
+	mask_sel.scan=sd.plotter._data
+	mask_sel._p=sd.plotter._plotter
+	# Create initial mask
+	mask_sel.mask=sd._n_bools(mask_sel.scan.nchan(),baseval)
+	# Selected mask
+	mask_sel._region_start(event)
+
+
+class mask_selection:
+	
+	def __init__(self):
+		"""
+		Create a interactive masking object
+		"""
+		self.scan=None
+		self.rect={}
+		self.xold=None
+		self.yold=None
+		self.xdataold=None
+		self.ydataold=None
+		self.mask=None
+		self._polygons=[]
+		self._p=None
+
+	def _region_start(self,event):
+		# Do not fire event when in zooming/panning mode
+		mode = self._p.figmgr.toolbar.mode
+		if not mode =='':
+			return
+		# Return if selected point is out of panel
+		if event.inaxes == None: return
+		# Select mask/unmask region with mask
+		height = self._p.canvas.figure.bbox.height()
+		self.rect = {'button': event.button, 'axes': event.inaxes,
+			     'fig': None, 'height': height,
+			     'x': event.x, 'y': height - event.y,
+			     'world': [event.xdata, event.ydata,
+				       event.xdata, event.ydata],
+			     'pixel': [event.x, height - event.y,
+				       event.x, height -event.y]}
+		self._p.register('motion_notify', self._region_draw)
+		self._p.register('button_release', self._region_end)
+
+	def _region_draw(self,event):
+		self._p.canvas._tkcanvas.delete(self.rect['fig'])
+		sameaxes=(event.inaxes == self.rect['axes'])
+		if sameaxes: 
+			xnow=event.x
+			ynow=event.y
+			self.xold=xnow
+			self.yold=ynow
+			self.xdataold=event.xdata
+			self.ydataold=event.ydata
+		else:
+			xnow=self.xold
+			ynow=self.yold
+			
+		self.rect['fig'] = self._p.canvas._tkcanvas.create_rectangle(
+			self.rect['x'], self.rect['y'],
+			xnow, self.rect['height'] - ynow)
+
+	def _region_end(self,event):
+		height = self._p.canvas.figure.bbox.height()
+		self._p.register('motion_notify', None)
+		self._p.register('button_release', None)
+		
+		self._p.canvas._tkcanvas.delete(self.rect['fig'])
+                
+		if event.inaxes == self.rect['axes']: 
+			xend=event.x
+			yend=event.y
+			xdataend=event.xdata
+			ydataend=event.ydata
+		else:
+			xend=self.xold
+			yend=self.yold
+			xdataend=self.xdataold
+			ydataend=self.ydataold
+			
+		self.rect['world'][2:4] = [xdataend, ydataend]
+		self.rect['pixel'][2:4] = [xend, height - yend]
+		self._update_mask()
+		########## ADDED - 2009.04.01 kana
+		masklist=self.scan.get_masklist(mask=self.mask)
+		print 'stat region:', masklist
+		# Call sdstat()
+		invertmask=False
+		interactive=False
+		statfile=''
+		self.scan.stats(stat='max',mask=self.mask)
+		self.scan.stats(stat='min',mask=self.mask)
+		self.scan.stats(stat='sum',mask=self.mask)
+		self.scan.stats(stat='mean',mask=self.mask)
+		self.scan.stats(stat='median',mask=self.mask)
+		self.scan.stats(stat='rms',mask=self.mask)
+		self.scan.stats(stat='stddev',mask=self.mask)
+		#if len(self._polygons)>0:
+		#	# Remove old polygons
+		#	for polygon in self._polygons: polygon.remove()
+		#	self._polygons=[]
+		#        #mask_sel._p.canvas.draw()
+
+		########## ADDED
+
+	def _update_mask(self):
+		from asap import mask_and, mask_or
+		# Min and Max for new mask
+		xstart=self.rect['world'][0]
+		xend=self.rect['world'][2]
+		if xstart <= xend: newlist=[xstart,xend]
+		else: newlist=[xend,xstart]
+		# Mask or unmask
+		invmask=None
+		if self.rect['button'] == 1:
+			invmask=False
+			mflg='Mask'
+		elif self.rect['button'] == 3:
+			invmask=True
+			mflg='UNmask'
+		print mflg+': ',newlist
+		newmask=self.scan.create_mask(newlist,invert=invmask)
+		# Logic operation to update mask
+		if invmask:
+			self.mask=mask_and(self.mask,newmask)
+		else:
+			self.mask=mask_or(self.mask,newmask)
+		# Plot masked regions
+		#self._plot_mask()
 

@@ -53,27 +53,12 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     itsMSFileWidget_ = new QtFileWidget(true, false);
     QtUtilities::putInFrame(msLocationFrame, itsMSFileWidget_);
     
-    vector<PlotMSSelection::Field> fields = PlotMSSelection::fields();
-    QGridLayout* l = new QGridLayout(msSelectionFrame);
-    l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(3);    
-    QLabel* label; QLineEdit* val;
-    for(unsigned int i = 0; i < fields.size(); i++) {
-        label = new QLabel(QString(PlotMSSelection::field(fields[i]).c_str()));
-        label->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-        l->addWidget(label, i, 0);        
-        val = new QLineEdit();       
-        l->addWidget(val, i, 1);
-        itsSelectionValues_.insert(fields[i], val);
-    }
-    
-    msAveragingChannelValue->setValidator(
-            new QDoubleValidator(msAveragingChannelValue));
-    msAveragingTimeValue->setValidator(
-            new QDoubleValidator(msAveragingTimeValue));
-    
+    itsMSSelectionWidget_ = new PlotMSSelectionWidget();
+    QtUtilities::putInFrame(msSelectionFrame, itsMSSelectionWidget_);
     QtUtilities::putInScrollArea(msSelectionFrame);
-    //QtUtilities::putInScrollArea(msAveragingFrame);
+    
+    itsMSAveragingWidget_ = new PlotMSAveragingWidget();
+    QtUtilities::putInFrame(msAveragingFrame, itsMSAveragingWidget_);
     
     itsLabelDefaults_.insert(msLocationLabel, msLocationLabel->text());
     itsLabelDefaults_.insert(msSelectionLabel, msSelectionLabel->text());
@@ -190,20 +175,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     
     // Connect ms
     connect(itsMSFileWidget_, SIGNAL(changed()), SLOT(tabChanged()));
-    QMapIterator<PlotMSSelection::Field,QLineEdit*> selit(itsSelectionValues_);
-    while (selit.hasNext()) {
-        selit.next();
-        connect(selit.value(), SIGNAL(editingFinished()), SLOT(tabChanged()));
-    }
-    connect(msAveragingChannel, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingChannelValue, SIGNAL(textChanged(const QString&)),
-            SLOT(tabChanged()));
-    connect(msAveragingTime, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingTimeValue, SIGNAL(textChanged(const QString&)),
-            SLOT(tabChanged()));
-    connect(msAveragingScan, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingField, SIGNAL(toggled(bool)), SLOT(tabChanged()));
-    connect(msAveragingBaseline, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(itsMSSelectionWidget_, SIGNAL(changed()), SLOT(tabChanged()));
+    connect(itsMSAveragingWidget_, SIGNAL(changed()), SLOT(tabChanged()));
     
     connect(msClearButton, SIGNAL(clicked()), SLOT(msClear()));
     connect(msPlotButton, SIGNAL(clicked()), SLOT(plot()));
@@ -299,32 +272,8 @@ PlotMSPlot* PlotMSPlotTab::currentPlot() const { return itsCurrentPlot_; }
 PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
     // MS tab
     PlotMSSinglePlotParameters params(itsParent_, itsMSFileWidget_->getFile());
-    PlotMSSelection sel;
-    QMapIterator<PlotMSSelection::Field, QLineEdit*> i(itsSelectionValues_);
-    while(i.hasNext()) {
-         i.next();
-         sel.setValue(i.key(), i.value()->text().toStdString());
-     }
-    params.setSelection(sel);
-    PlotMSAveraging avg;
-    avg.setChannel(msAveragingChannel->isChecked());
-    bool ok;
-    double d;
-    if(avg.channel()) {
-        d = msAveragingChannelValue->text().toDouble(&ok);
-        if(ok) avg.setChannelValue(d);
-        else   avg.setChannel(false);
-    }
-    avg.setTime(msAveragingTime->isChecked());
-    if(avg.time()) {
-        d = msAveragingTimeValue->text().toDouble(&ok);
-        if(ok) avg.setTimeValue(d);
-        else   avg.setTime(false);
-    }
-    avg.setScan(msAveragingScan->isChecked());
-    avg.setField(msAveragingField->isChecked());
-    avg.setBaseline(msAveragingBaseline->isChecked());
-    params.setAveraging(avg);
+    params.setSelection(itsMSSelectionWidget_->getValue());
+    params.setAveraging(itsMSAveragingWidget_->getValue());
     
     // Axes tab
     params.setXAxis(PMS::axis(axesXChooser->currentText().toStdString()));
@@ -383,21 +332,9 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     itsCurrentParameters_ = &params;
     
     // MS tab
-    itsMSFileWidget_->setFile(params.isSet() ? params.filename() : "");
-    const PlotMSSelection& sel = params.selection();
-    QMapIterator<PlotMSSelection::Field, QLineEdit*> i(itsSelectionValues_);
-    while(i.hasNext()) {
-         i.next();
-         i.value()->setText(sel.getValue(i.key()).c_str());
-    }
-    const PlotMSAveraging& avg = params.averaging();
-    msAveragingChannel->setChecked(avg.channel());
-    msAveragingChannelValue->setText(QString::number(avg.channelValue()));
-    msAveragingTime->setChecked(avg.time());
-    msAveragingTimeValue->setText(QString::number(avg.timeValue()));
-    msAveragingScan->setChecked(avg.scan());
-    msAveragingField->setChecked(avg.field());
-    msAveragingBaseline->setChecked(avg.baseline());
+    itsMSFileWidget_->setFile(params.isSet() ? params.filename() : "");\
+    itsMSSelectionWidget_->setValue(params.selection());
+    itsMSAveragingWidget_->setValue(params.averaging());
     
     // Axes tab
     PMS::Axis xAxis = params.xAxis(), yAxis = params.yAxis();
@@ -665,11 +602,8 @@ void PlotMSPlotTab::tabChanged() {
 
 void PlotMSPlotTab::msClear() {
     itsMSFileWidget_->setFile("");
-    QMapIterator<PlotMSSelection::Field, QLineEdit*> i(itsSelectionValues_);
-    while(i.hasNext()) {
-         i.next();
-         i.value()->setText("");
-    }
+    itsMSSelectionWidget_->setValue(PlotMSSelection());
+    itsMSAveragingWidget_->setValue(PlotMSAveraging());
 }
 
 void PlotMSPlotTab::plot() {

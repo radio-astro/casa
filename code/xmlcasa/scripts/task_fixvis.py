@@ -5,7 +5,7 @@ import shutil
 
 def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
     casalog.origin('fixvis')
-    for arg in ('vis', 'outputvis', 'fldids', 'refcode', 'proj'):
+    for arg in ('vis', 'outputvis', 'fldids', 'refcode', 'proj', 'ptcs'):
         casalog.post("parameter %9s: %s" % (arg, eval(arg)), 'DEBUG1')
 
     if refcode or proj:

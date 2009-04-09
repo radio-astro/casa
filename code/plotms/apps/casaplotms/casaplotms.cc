@@ -42,7 +42,8 @@ int main(int argc, char* argv[]) {
     PlotMSLogger::Level log = PlotMSLogger::OFF;
     bool logDebug = false;
     PlotMSSelection select;
-    bool cachedImageSizeToScreenResolution = false;
+    PlotMSAveraging averaging;
+    bool cachedImageSizeToScreenResolution = false, usePixels = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -51,9 +52,11 @@ int main(int argc, char* argv[]) {
     String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_MS = "ms",
            ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
            ARG_LOG2 = "--loglevel", ARG_LOGDEBUG1 = "-ld",
-           ARG_LOGDEBUG2 = "--logdebug", ARG_CISTSR = "-cistsr",
-           ARG_CISTSR2 = "--cachedimagesizetoscreenresolution";
-    const vector<String>& selectFields = PlotMSSelection::fieldStrings();
+           ARG_LOGDEBUG2 = "--logdebug", ARG_CISTSR = "-c",
+           ARG_CISTSR2 = "--cachedimagesizetoscreenresolution",
+           ARG_PIXELS1 = "-p", ARG_PIXELS2 = "--pixels";
+    const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
+                          averagingFields = PlotMSAveraging::fieldStrings();
     
     for(int i = 1; i < argc; i++) {
         arg = arg2 = argv[i];
@@ -68,32 +71,48 @@ int main(int argc, char* argv[]) {
                  << "* " << ARG_HELP1 << " or " << ARG_HELP2 << "\n     "
                  << "Prints this message then exits."
                  
-                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
-                 << "Sets the plotter's log level to the given (see "
-                 << "documentation)."
+                 << "\n* " << ARG_MS << "=[ms]\n     "
+                 << "Path to MS used for initial plot."
                  
-                 << "\n* " <<ARG_LOGDEBUG1<<" or "<<ARG_LOGDEBUG2<< "\n     "
-                 << "Turns on/off logging debug messages."
-                 
+                 << "\n* " << ARG_XAXIS << "=[axis], " << ARG_YAXIS
+                 << "=[axis]\n     "
+                 << "Axes for initial plot (see documentation).";
+            
+            if(selectFields.size() > 0) cout << "\n*";
+            for(unsigned int i = 0; i < selectFields.size(); i++) {
+                if(i > 0) cout << ',';
+                cout << " " << selectFields[i] << "=[val]";           
+            }
+            if(selectFields.size() > 0)
+                cout << "\n     MS Selection parameters for initial plot.";
+            
+            if(averagingFields.size() > 0) cout << "\n*";
+            for(unsigned int i = 0; i < averagingFields.size(); i++) {
+                if(i > 0) cout << ',';
+                cout << " avg" << averagingFields[i];
+                if(PlotMSAveraging::fieldHasValue(PlotMSAveraging::field(
+                        averagingFields[i]))) {
+                    cout << "[=val]";
+                }      
+            }
+            if(averagingFields.size() > 0)
+                cout << "\n     MS Averaging parameters for initial plot.";
+            
+            cout << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
+                 << "Use pixels instead of symbols for initial plot."
+            
                  << "\n* " << ARG_CISTSR << " or " << ARG_CISTSR2 << "\n     "
                  << "Toggles setting the cached image size to screen "
                  << "resolution."
                  
-                 << "\n* " << ARG_MS << "=[ms]\n     "
-                 << "Path to MS used for initial plot."
-                 
-                 << "\n* " << ARG_XAXIS << "=[axis]\n     "
-                 << "X-Axis for initial plot (see documentation)."
-                 
-                 << "\n* " << ARG_YAXIS << "=[axis]\n     "
-                 << "Y-Axis for initial plot (see documentation).";
+                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
+                 << "Sets the plotter's log level to the given (see "
+                 << "documentation)."
             
-            for(unsigned int i = 0; i < selectFields.size(); i++) {
-                cout << "\n* " << selectFields[i] << "=[val]\n     "
-                     << "MS Selection parameter for initial plot.";
-            }
+                 << "\n* " <<ARG_LOGDEBUG1<<" or "<<ARG_LOGDEBUG2<< "\n     "
+                 << "Turns on/off logging debug messages."
             
-            cout << endl;
+                 << endl;
             return 0;
         }
         
@@ -107,6 +126,9 @@ int main(int argc, char* argv[]) {
         } else if(arg2 == ARG_CISTSR || arg2 == ARG_CISTSR2) {
             cachedImageSizeToScreenResolution = true;
             
+        } else if(arg2 == ARG_PIXELS1 || arg2 == ARG_PIXELS2) {
+            usePixels = true;
+            
         } else if(i < argc - 1) {
             arg3 = argv[++i];
             if(arg3.size() == 0) continue;
@@ -118,7 +140,14 @@ int main(int argc, char* argv[]) {
             // log is last argument, use PlotMSLogger::MED
             arg3 = PlotMSLogger::level(PlotMSLogger::MED);
             
-        } else continue;
+        } else {
+            arg3 = "";
+            bool found = false;
+            for(unsigned int i = 0; !found && i < averagingFields.size(); i++)
+                if(PMS::strEq(arg2, "avg" + averagingFields[i], true))
+                    found = true;
+            if(!found) continue;
+        }
         
         if(arg2[arg2.size() - 1] == '=') arg2.erase(arg2.size() - 1);
         
@@ -129,10 +158,26 @@ int main(int argc, char* argv[]) {
             log = PlotMSLogger::level(arg3, &ok);
             if(!ok) log = PlotMSLogger::OFF;
         } else {
-            for(unsigned int i = 0; i < selectFields.size(); i++) {
-                if(PMS::strEq(arg2, selectFields[i], true))
+            bool found = false;
+            for(unsigned int i = 0; !found && i < selectFields.size(); i++) {
+                if(PMS::strEq(arg2, selectFields[i], true)) {
                     select.setValue(PlotMSSelection::field(selectFields[i]),
                                     arg3);
+                    found = true;
+                }
+            }
+            PlotMSAveraging::Field f;
+            double d;
+            for(unsigned int i = 0; !found && i < averagingFields.size(); i++){
+                if(PMS::strEq(arg2, "avg" + averagingFields[i], true)) {
+                    f = PlotMSAveraging::field(averagingFields[i]);
+                    averaging.setFlag(f, true);
+                    if(PlotMSAveraging::fieldHasValue(f) && !arg3.empty()) {
+                        if(sscanf(arg3.c_str(), "%lf", &d) >= 1)
+                            averaging.setValue(f, d);
+                    }
+                    found = true;
+                }
             }
         }
     }
@@ -151,6 +196,13 @@ int main(int argc, char* argv[]) {
     PlotMSSinglePlotParameters plotparams(&plotms, ms);
     plotparams.setAxes(PMS::axis(xaxis), PMS::axis(yaxis));
     plotparams.setSelection(select);
+    plotparams.setAveraging(averaging);
+    
+    if(usePixels) {
+        PlotSymbolPtr sym = plotparams.symbol();
+        sym->setSymbol(PlotSymbol::PIXEL);
+        plotparams.setSymbol(sym);
+    }
     
     // If single plot is set, add the plot to plotms.
     plotms.addSinglePlot(&plotparams);

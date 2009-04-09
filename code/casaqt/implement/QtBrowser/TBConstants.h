@@ -341,6 +341,9 @@ public:
     // julian seconds.
     static String date(double d, int numDecimals = -1);
     
+    // Holds the default number of decimals displayed in a number.
+    static const int DEFAULT_DECIMALS;
+    
     // Holds the default number of decimals displayed in a date.
     static const int DEFAULT_DATE_DECIMALS;
     
@@ -424,10 +427,10 @@ public:
     static String sitoa(short int n);
 
     // Converts the given float into its String representation and returns it.
-    static String ftoa(float f);
+    static String ftoa(float f, int decimals = -1, bool scientific = false);
 
     // Converts the given double into its String representation and returns it.
-    static String dtoa(double d);
+    static String dtoa(double d, int decimals = -1, bool scientific = false);
 
     // Converts the given String into its int representation.  Returns the
     // result of sscanf.

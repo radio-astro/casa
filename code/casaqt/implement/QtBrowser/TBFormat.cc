@@ -50,9 +50,10 @@ QFontColor::~QFontColor() { }
 
 // Constructors/Destructors //
 
-TBFormat::TBFormat() : allFont(NULL), fonts(), decimalPlaces(-1),
-                       scientificFormat(false), boolFormat(DEFAULT),
-                       dateFormat("%y-%m-%d-%h:%n:%s"), vectorThreshold(-1) { }
+TBFormat::TBFormat() : allFont(NULL), fonts(),
+        decimalPlaces(TBConstants::DEFAULT_DECIMALS), scientificFormat(false),
+        boolFormat(DEFAULT), dateFormat("%y-%m-%d-%h:%n:%s"),
+        vectorThreshold(-1) { }
 
 TBFormat::~TBFormat() {
     if(allFont != NULL) delete allFont;
@@ -195,41 +196,17 @@ void TBFormat::applyTo(QTableWidgetItem* item, TBData* data) {
                 str = TBConstants::date(data->asDouble(), decimalPlaces);
             }
             
-        } else if(scientificFormat) {
-            String format = "%";
-            if(decimalPlaces > -1)
-                format += "0." + TBConstants::itoa(decimalPlaces);
-            format += "E";
-            
-            if(TBConstants::typeIsComplex(type)) {
-                pair<double, double> c = data->asDComplex();
-
-                char buffer[131];
-                format = "(" + format + "," + format + ")";
-                sprintf(buffer, format.c_str(), c.first, c.second);
-                str = String(buffer);
-            } else {
-                char buffer[70];
-                sprintf(buffer, format.c_str(), data->asDouble());
-                str = String(buffer);
-            }
-            
-        } else if(decimalPlaces > -1) {
+        } else if(scientificFormat || decimalPlaces > -1) {
             if(type == TBConstants::TYPE_FLOAT ||
                type == TBConstants::TYPE_DOUBLE) {
-                char buffer[64];
-                String format = "%0." + TBConstants::itoa(decimalPlaces) +
-                                    "lf";
-                sprintf(buffer, format.c_str(), data->asDouble());
-                str = String(buffer);
+                str = TBConstants::dtoa(data->asDouble(), decimalPlaces,
+                        scientificFormat);
+
             } else if(TBConstants::typeIsComplex(type)) {
                 pair<double, double> c = data->asDComplex();
-
-                char buffer[131];
-                String format = "(%0." + TBConstants::itoa(decimalPlaces) +
-                "lf,%0." + TBConstants::itoa(decimalPlaces) + "lf)";
-                sprintf(buffer, format.c_str(), c.first, c.second);
-                str = String(buffer);
+                str = "(" + TBConstants::dtoa(c.first, decimalPlaces,
+                      scientificFormat) + "," + TBConstants::dtoa(c.second,
+                      decimalPlaces, scientificFormat) + ")";
             }
         
         } else if(type == TBConstants::TYPE_BOOL && boolFormat != DEFAULT) {
@@ -312,6 +289,11 @@ TBFormatter::TBFormatter(String fd, String t, int i, QFontColor fc, QWidget* p)
         dateFrame->hide();
         vectorFrame->hide();
 
+        if(TBConstants::DEFAULT_DECIMALS > -1) {
+            decCustom->setChecked(true);
+            decimalsSpinBox->setValue(TBConstants::DEFAULT_DECIMALS);
+        }
+        
         listWidget->addItem("Nonnegative values");
         listWidget->addItem("Negative values");
         
@@ -341,6 +323,11 @@ TBFormatter::TBFormatter(String fd, String t, int i, QFontColor fc, QWidget* p)
         dateFrame->hide();
         vectorFrame->hide();
 
+        if(TBConstants::DEFAULT_DECIMALS > -1) {
+            decCustom->setChecked(true);
+            decimalsSpinBox->setValue(TBConstants::DEFAULT_DECIMALS);
+        }
+        
         listWidget->addItem("Nonnegative amplitude values");
         listWidget->addItem("Negative amplitude values");
         
@@ -351,7 +338,7 @@ TBFormatter::TBFormatter(String fd, String t, int i, QFontColor fc, QWidget* p)
         vectorFrame->hide();
         
         if(TBConstants::DEFAULT_DATE_DECIMALS > -1) {
-            unlimitedCheckBox->setChecked(false);
+            decCustom->setChecked(true);
             decimalsSpinBox->setValue(TBConstants::DEFAULT_DATE_DECIMALS);
         }
 
@@ -380,11 +367,14 @@ TBFormatter::~TBFormatter() {
 }
 
 void TBFormatter::setFormat(TBFormat* f) {
-    if(f->getDecimalPlaces() >= 0) {
-        unlimitedCheckBox->setChecked(false);
+    if(f->getDecimalPlaces() == UNLIMITED_DECIMALS) {
+        decUnlimited->setChecked(true);
+        decimalsSpinBox->setValue(0);
+    } else if(f->getDecimalPlaces() >= 0) {
+        decCustom->setChecked(true);
         decimalsSpinBox->setValue(f->getDecimalPlaces());
     } else {
-        unlimitedCheckBox->setChecked(true);
+        decDefault->setChecked(true);
         decimalsSpinBox->setValue(0);
     }
     sfCheckBox->setChecked(f->getScientificFormat());
@@ -491,8 +481,10 @@ void TBFormatter::setFormat() {
         f->setScientificFormat(sfCheckBox->isChecked());
     }
     if(decimalFrame->isVisible()) {
-        if(unlimitedCheckBox->isChecked()) {
+        if(decDefault->isChecked()) {
             f->setDecimalPlaces(-1);
+        } else if(decUnlimited->isChecked()) {
+            f->setDecimalPlaces(UNLIMITED_DECIMALS);
         } else {
             f->setDecimalPlaces(decimalsSpinBox->value());
         }
@@ -560,5 +552,8 @@ void TBFormatter::valuesChanged() {
 
     delete f;
 }
+
+
+const int TBFormatter::UNLIMITED_DECIMALS = 64;
 
 }

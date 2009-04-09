@@ -241,7 +241,7 @@ signals:
 protected:
     // Catches the right-click event; if the right click is on a table cell and
     // the displayed data could be an index, show the subtable index reference
-    // menu.
+    // menu.  Also show action for copying to the clipboard.
     void contextMenuEvent(QContextMenuEvent* event);
     
 private:
@@ -382,6 +382,9 @@ private slots:
     // Slot for the clear sort button.  Clears the sort on the table by moving
     // the rows back to their original order.
     void clearSort();
+
+    // Slot for copying the currently selected text into the system clipboard.
+    void copyData();
 };
 
 }

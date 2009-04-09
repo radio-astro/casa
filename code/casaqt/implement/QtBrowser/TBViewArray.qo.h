@@ -104,6 +104,10 @@ public:
     // QFontColor (which should be the default table cell font and color).
     void clearFormat(QFontColor* f);
     
+protected:
+    // Catches the right-click event to allow for copying.
+    void contextMenuEvent(QContextMenuEvent* event);
+    
 private:
     // Table backend.
     // <group>
@@ -179,6 +183,9 @@ private slots:
     // editable and the table is currently in editing mode, the user is then
     // allowed to edit the cell data.
     void cellDoubleClicked(int row, int col);
+    
+    // Slot for copying the currently selected text into the system clipboard.
+    void copyData();
 };
 
 // <summary>

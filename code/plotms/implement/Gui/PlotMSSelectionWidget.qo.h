@@ -1,7 +1,5 @@
-//#---------------------------------------------------------------------------
-//# ASTEHeader.h: Class for ASTE data header.
-//#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# PlotMSSelectionWidget.qo.h: GUI widget for editing a PlotMSSelection.
+//# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,50 +23,50 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-//#---------------------------------------------------------------------------
-//# Original: 2008/10/30, Takeshi Nakazato, NAOJ
-//#---------------------------------------------------------------------------
+//# $Id: $
+#ifndef PLOTMSSELECTIONWIDGET_QO_H_
+#define PLOTMSSELECTIONWIDGET_QO_H_
 
-#ifndef ASTE_HEADER_H
-#define ASTE_HEADER_H
+#include <casaqt/QtUtilities/QtEditingWidget.qo.h>
+#include <plotms/PlotMS/PlotMSSelection.h>
 
-#define ASTE_ARYMAX 8
+#include <casa/namespace.h>
 
-#include <atnf/PKSIO/NROHeader.h>
+namespace casa {
 
-#include <string>
+// Widget for editing a PlotMSSelection object.
+class PlotMSSelectionWidget : public QtEditingWidget {
+    Q_OBJECT
+    
+public:
+    // Constructor that takes an optional parent.
+    PlotMSSelectionWidget(QWidget* parent = NULL);
+    
+    // Destructor.
+    ~PlotMSSelectionWidget();
+    
+    
+    // Gets/Sets the currently displayed value.
+    // <group>
+    PlotMSSelection getValue() const;
+    void setValue(const PlotMSSelection& selection);
+    // </group>
+    
+private:
+    // Last set value.
+    PlotMSSelection itsValue_;
+    
+    // Changed flag.
+    bool itsFlag_;
+    
+    // Value widgets.
+    QMap<PlotMSSelection::Field, QLineEdit*> itsValues_;
+    
+private slots:
+    // Slot for when a GUI widget value changes.
+    void selectionChanged();
+};
 
-using namespace std ;
+}
 
-// <summary>
-// Class specific for ASTE data header.
-// </summary>
-
-// 
-// ASTEHeader
-//
-// Class for ASTE data header.
-//
-class ASTEHeader : public NROHeader
-{
- public:
-  // constructor
-  ASTEHeader() ;
-
-  // destructor
-  ~ASTEHeader() ;
-
-  // data initialization 
-  void initialize() ;
-
-  // data finalization
-  void finalize() ;
-  
-  // fill header from file 
-  int fill( FILE *fp, bool sameEndian ) ;
-  int fill( string name ) ;
-} ;
-
-
-#endif /* ASTE_HEADER_H */
+#endif /* PLOTMSSELECTIONWIDGET_QO_H_ */
