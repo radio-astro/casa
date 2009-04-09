@@ -823,7 +823,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	for (uint k=0 ; k < numrows_this ; ++k){
 	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
 	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source and spw id)
-	      if(sourceCol.spectralWindowId().areEQ(j, k)){ // also the SPW id is the same
+	      if(areEQ(sourceCol.spectralWindowId(),j, k)){ // also the SPW id is the same
 //		cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
 		// delete one of the rows
 		if(j<k){ // make entry in map for (k, j) and delete k
@@ -872,7 +872,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	// check if row j has an equivalent row somewhere down in the table
 	for (uint k=j+1 ; k < newNumrows_this ; ++k){
 	  if( sourceRowsEquivalent(sourceCol, j, k) && 
-	      !sourceCol.sourceId().areEQ(j, k)){ // all columns are the same except source id (not testing spw id),
+	      !areEQ(sourceCol.sourceId(),j, k)){ // all columns are the same except source id (not testing spw id),
 	                                          // spw id must be different, otherwise row would have been deleted above
 //	    cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
 //		 << newThisId(k) << " mapped to " << newThisId(j) << endl;
@@ -952,16 +952,16 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
   Bool areEquivalent(False);
 
   // test the non-optional columns first
-  if(sourceCol.calibrationGroup().areEQ(rowi, rowj) &&
-     sourceCol.code().areEQ(rowi, rowj) &&
-     sourceCol.name().areEQ(rowi, rowj) &&
-     sourceCol.numLines().areEQ(rowi, rowj) &&
+  if(areEQ(sourceCol.calibrationGroup(), rowi, rowj) &&
+     areEQ(sourceCol.code(), rowi, rowj) &&
+     areEQ(sourceCol.name(), rowi, rowj) &&
+     areEQ(sourceCol.numLines(), rowi, rowj) &&
      // do NOT test SPW ID!
-     // sourceCol.spectralWindowId().areEQ(rowi, rowj) &&
-     sourceCol.direction().areEQ(rowi, rowj) &&
-     sourceCol.interval().areEQ(rowi, rowj) &&
-     sourceCol.properMotion().areEQ(rowi, rowj) &&
-     sourceCol.time().areEQ(rowi, rowj) 
+     // areEQ(sourceCol.spectralWindowId(), rowi, rowj) &&
+     areEQ(sourceCol.direction(), rowi, rowj) &&
+     areEQ(sourceCol.interval(), rowi, rowj) &&
+     areEQ(sourceCol.properMotion(), rowi, rowj) &&
+     areEQ(sourceCol.time(), rowi, rowj) 
      ){
     
     //    cout << "All non-optionals equal" << endl;
@@ -970,7 +970,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     areEquivalent = True;
     if(!(sourceCol.position().isNull())){
       try {
-	areEquivalent = sourceCol.position().areEQ(rowi, rowj);
+	areEquivalent = areEQ(sourceCol.position(), rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
@@ -980,7 +980,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     }
     if(!(sourceCol.pulsarId().isNull())){
       try {
-	areEquivalent = sourceCol.pulsarId().areEQ(rowi, rowj);
+	areEquivalent = areEQ(sourceCol.pulsarId(), rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
@@ -990,7 +990,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     }
     if(!(sourceCol.restFrequency().isNull())){
       try {
-	areEquivalent = sourceCol.restFrequency().areEQ(rowi, rowj);
+	areEquivalent = areEQ(sourceCol.restFrequency(), rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
@@ -1000,7 +1000,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     }
     if(!(sourceCol.sysvel().isNull())){
       try {
-	areEquivalent = sourceCol.sysvel().areEQ(rowi, rowj);
+	areEquivalent = areEQ(sourceCol.sysvel(), rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
@@ -1010,7 +1010,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
     }
     if(!(sourceCol.transition().isNull())){
       try {
-	areEquivalent = sourceCol.transition().areEQ(rowi, rowj);
+	areEquivalent = areEQ(sourceCol.transition(), rowi, rowj);
       }
       catch (AipsError x) {
 	// row has invalid data
