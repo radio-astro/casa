@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: Complex.h 20557 2009-04-02 14:11:08Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -216,6 +216,12 @@ inline Bool operator<  (const DComplex& left, const DComplex& right)
 inline Double fabs(const DComplex &val) { return std::abs(val); }
 inline Float fabs(const Complex &val) { return std::abs(val); }
 
+inline DComplex square(const DComplex &val) { return val*val; }
+inline Complex square(const Complex &val) { return val*val; }
+
+inline DComplex cube(const DComplex &val) { return val*val*val; }
+inline Complex cube(const Complex &val) { return val*val*val; }
+
 // The log10 should be in stl
 // <group>
 #if defined(NEEDS_LOG10_COMPLEX)
@@ -327,11 +333,19 @@ Complex erfc(const Complex &in);
 } //# NAMESPACE CASA - END
 
 // Define real & complex conjugation for non-complex types
+// and put comparisons into std namespace.
 namespace std { 
-  inline float conj(float x) { return x; }
+  inline float  conj(float  x) { return x; }
   inline double conj(double x) { return x; }
-  inline float real(float x) { return x; }
+  inline float  real(float  x) { return x; }
   inline double real(double x) { return x; }
+  inline float  imag(float   ) { return 0; }
+  inline double imag(double  ) { return 0; }
+  
+  using casa::operator>;
+  using casa::operator>=;
+  using casa::operator<;
+  using casa::operator<=;
 }
 
 #endif

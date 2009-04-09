@@ -58,7 +58,7 @@ namespace casa {
     if (!is_initialized_fftw) {
       int numCPUs = HostInfo::numCPUs();
       int nthreads;
-      cerr << "Number of threads is " << numCPUs << endl;
+      // cerr << "Number of threads is " << numCPUs << endl;
       if (numCPUs <= 1) {
 	nthreads = 1;
       }
