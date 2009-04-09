@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynLib.cc 20554 2009-03-31 03:22:03Z gervandiepen $
+//# $Id: DynLib.cc 20566 2009-04-09 16:16:30Z gervandiepen $
 
 //# Includes
 #include <casa/OS/DynLib.h>
@@ -62,6 +62,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         ", but not its " + funcName + " function");
       }
       // Execute the register function.
+      // We need to cast the void* from dlsym to a function pointer,
+      // a function without arguments returning void.
+      // This is not permitted as they are different kind of pointers,
+      // so the compiler might issue a warning.
+      // On RHEL4 gcc-3.4.6 gave an error for a reinterpret_cast,
+      // so we have to use a C-style cast.
+      ///      reinterpret_cast<void(*)()>(initfunc)();
       ((void(*)())initfunc)();
     }
   }
