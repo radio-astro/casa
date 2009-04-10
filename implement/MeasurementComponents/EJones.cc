@@ -97,7 +97,7 @@ void EGainCurve::setApply(const Record& applypar) {
   }
 
   if ( !Table::isReadable(calTableName()) )
-    throw(AipsError("No Gain curve data available!"));
+    throw(AipsError("Gain curve table "+calTableName()+" is unreadable or absent."));
 
   // Open raw gain table
   Table rawgaintab(calTableName());
