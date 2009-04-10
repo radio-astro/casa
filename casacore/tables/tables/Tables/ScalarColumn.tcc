@@ -193,22 +193,6 @@ void ROScalarColumn<T>::getColumnCells (const RefRows& rownrs,
     baseColPtr_p->getScalarColumnCells (rownrs, &vec);
 }
 
-template<class T>
-Bool ROScalarColumn<T>::areEQ(uInt row_i, uInt row_j) const
-{
-  T value_i, value_j;
-  get(row_i, value_i);
-  get(row_j, value_j);
-  if(value_i == value_j){
-    return True;
-  }
-  else {
-    return False;
-  } 
-}
-
-
-
 
 template<class T>
 ScalarColumn<T>::ScalarColumn()

@@ -330,9 +330,6 @@ public:
     void baseGet (uInt rownr, Array<T>& array) const
       { baseColPtr_p->get (rownr, &array); }
 
-    // test if the arrays in the two given rows are identical
-    Bool areEQ (uInt row_i, uInt row_j) const;
-
 
 
 private:

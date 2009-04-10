@@ -136,6 +136,35 @@ private:
 
 };
 
+template<class T>
+Bool areEQ(const ROScalarColumn<T>& col, uInt row_i, uInt row_j) 
+{
+  T value_i, value_j;
+  col.get(row_i, value_i);
+  col.get(row_j, value_j);
+  return (value_i == value_j);
+}
+
+template<class T>
+Bool areEQ(const ROArrayColumn<T>& col, uInt row_i, uInt row_j) 
+{
+  Bool rval(False);
+  Array<T> arr_i;
+  Array<T> arr_j;
+  
+  col.get(row_i, arr_i, True);
+  col.get(row_j, arr_j, True);
+  Int ni = arr_i.nelements();
+  Int nj = arr_j.nelements();
+  if( (ni==0 && nj==0) ||    // no data is regarded as equal
+      allEQ(arr_i, arr_j)){
+    rval = True;
+  }
+  return rval;
+}
+
+
+
 } //# NAMESPACE CASA - END
 
 #endif

@@ -510,24 +510,6 @@ void ROArrayColumn<T>::getColumnCells (const RefRows& rownrs,
 				       &arr);
 }
 
-template<class T>
-Bool ROArrayColumn<T>::areEQ (uInt row_i, uInt row_j) const
-{
-    Bool rval(False);
-    Array<T> arr_i;
-    Array<T> arr_j;
-
-    get(row_i, arr_i, True);
-    get(row_j, arr_j, True);
-    Int ni = arr_i.nelements();
-    Int nj = arr_j.nelements();
-    if( (ni==0 && nj==0) ||    // no data is regarded as equal
-	allEQ(arr_i, arr_j)){
-      rval = True;
-    }
-    return rval;
-}
-
 
 template<class T>
 ArrayColumn<T>::ArrayColumn()
