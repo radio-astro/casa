@@ -173,8 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
 
     //shift from center
-    pixFieldDir(0)=pixFieldDir(0)- Double(nx)/2.0;
-    pixFieldDir(1)=pixFieldDir(1)- Double(ny)/2.0;
+    pixFieldDir(0)=pixFieldDir(0)- Double(nx / 2);
+    pixFieldDir(1)=pixFieldDir(1)- Double(ny / 2);
 
     //phase gradient per pixel to apply
     pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);

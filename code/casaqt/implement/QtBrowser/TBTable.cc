@@ -250,13 +250,13 @@ vector<String> TBTable::getRowHeaders() {
 }
 
 TBArrayData* TBTable::loadArray(unsigned int row, unsigned int col) {
-    if(row >= data.size())
-        row -= rowIndex;
+    unsigned int localRow = row;
+    if(localRow >= data.size()) localRow -= rowIndex;
     
-    if(ready&& 0 <= row&& row < data.size()&& 0 <= col&& col < fields.size()){
+    if(ready && localRow < data.size() && col < fields.size()) {
         String type = fields.at(col)->getType();
         if(TBConstants::typeIsArray(type)) {
-            TBArrayData* d = (TBArrayData*)data.at(row)->at(col);
+            TBArrayData* d = (TBArrayData*)data.at(localRow)->at(col);
             if(!d->isLoaded()) driver->loadArray(d, row, col);
             return d;
         } else return NULL;
@@ -264,8 +264,9 @@ TBArrayData* TBTable::loadArray(unsigned int row, unsigned int col) {
 }
 
 bool TBTable::releaseArray(unsigned int row, unsigned int col) {
+    if(row >= data.size()) row -= rowIndex;
     
-    if(ready&& 0 <= row&& row < data.size()&& 0 <= col&& col < fields.size()){
+    if(ready && row < data.size() && col < fields.size()) {
         String type = fields.at(col)->getType();
         if(TBConstants::typeIsArray(type)) {
             TBArrayData* d = (TBArrayData*)data.at(row)->at(col);

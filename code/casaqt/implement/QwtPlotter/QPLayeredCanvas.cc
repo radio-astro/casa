@@ -453,6 +453,12 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
     foreach(PlotCanvasLayer layer, m_layers.keys())
         if(draw[layer]) drawLayers |= layer;
     
+    // TODO
+    /*
+    foreach(PlotCanvasLayer layer, m_layers.keys())
+        if(draw[layer]) anyDraw &= m_layers.value(layer)->hasItemsToDraw();
+    */
+    
     // Notify draw watchers as needed.
     if(anyDraw) {
         bool res = m_parent->notifyDrawWatchers(op, true, drawLayers);
