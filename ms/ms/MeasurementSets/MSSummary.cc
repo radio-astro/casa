@@ -264,6 +264,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
       Int widthFieldId = 5;
       Int widthField = 13;
       Int widthnrow = 7;
+      Int widthInttim = 7;
 
       // Set up iteration over OBSID and ARRID:
       Block<String> icols(2);
@@ -291,7 +292,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	datetime.replace(25,timeref.length(),timeref);
 	datetime.replace(25+timeref.length(),1,")");
 	os << datetime;
-	os << "Scan  FldId FieldName    nVis     SpwIds" << endl;
+	os << "Scan  FldId FieldName    nVis   Int(s)   SpwIds" << endl;
 
 	// Setup iteration over timestamps within this iteration:
 	Block<String> jcols(2);
@@ -312,7 +313,10 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	Double lastday(0.0), day(0.0);
 	Bool firsttime(True);
 	Int thisnrow(0);
-      
+	Double meanIntTim(0.0);
+
+	os.output().precision(3);
+
 	// Iterate over timestamps:
 	while (!stiter.pastEnd()) {
 
@@ -322,6 +326,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 
 	  // relevant columns
 	  ROTableVector<Double> timecol(t,"TIME");
+	  ROTableVector<Double> inttim(t,"EXPOSURE");
 	  ROTableVector<Int> scncol(t,"SCAN_NUMBER");
 	  ROTableVector<Int> fldcol(t,"FIELD_ID");
 	  ROTableVector<Int> ddicol(t,"DATA_DESC_ID");
@@ -375,6 +380,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
 
+	      if (thisnrow>0) 
+		meanIntTim/=thisnrow;
+	      else
+		meanIntTim=0.0;
+
 	      // this MJD
 	      day=floor(MVTime(btime/C::day).day());
 	    
@@ -406,6 +416,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	      if (name.length()>12) name.replace(11,1,'*');
 	      os.output().width(widthField); os << name.at(0,12);
 	      os.output().width(widthnrow); os << thisnrow;
+	      os.output().width(widthInttim); os << meanIntTim;
 	      os.output().width(widthLead); os << " ";
 	      os << spwids;
 	      os << endl;
@@ -431,6 +442,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 
 	  thisnrow+=nrow;
 
+	  meanIntTim+=sum(inttim.makeVector());
+
 	  // for comparison at next timestamp
 	  lastfldids.resize(); lastfldids=fldids;
 	  lastddids.resize(); lastddids=ddids;
@@ -439,6 +452,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	  // push iteration
 	  stiter.next();
 	} // end of time iteration
+
+	if (thisnrow>0) 
+	  meanIntTim/=thisnrow;
+	else
+	  meanIntTim=0.0;
 
 	// this MJD
 	day=floor(MVTime(btime/C::day).day());
@@ -471,6 +489,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose)
 	if (name.length()>12) name.replace(11,1,'*');
 	os.output().width(widthField); os << name.at(0,12);
 	os.output().width(widthnrow); os << thisnrow;
+	os.output().width(widthInttim); os << meanIntTim;
 	os.output().width(widthLead);  os << "  ";
 	os << spwids;
 	os << endl;
@@ -728,6 +747,9 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
 	os << "Field "<<fld<<" not found in FIELD table"<<endl;
       }
     } 
+
+    os << "   (nVis = Total number of time/baseline visibilities per field) " << endl;
+
   }
   os << endl << LogIO::POST;
 }
@@ -904,7 +926,10 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
       os.output().width(widthName);	os<< name.at(0,12);
       //	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,10);
       //	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,10);
-      os.output().width(widthSpw);	os<< msSC.spectralWindowId()(row);
+      os.output().width(widthSpw);	
+      Int spwid=msSC.spectralWindowId()(row);
+      if (spwid<0) os<< "any";
+      else os<<spwid;
       os.output().width(widthRF);	os<< msSC.restFrequency()(row)(ip)/1.0e6; 
       os.output().width(widthVel);	os<< msSC.sysvel()(row)(ip)/1.0e3;
       os << endl;
