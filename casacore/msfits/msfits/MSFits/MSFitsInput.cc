@@ -90,6 +90,8 @@
 #include <casa/System/ProgressMeter.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
+#include <casa/iostream.h>
+#include <casa/iomanip.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -1496,7 +1498,13 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
      if (doSMA) mount="ALT-AZ"; 
      ant.flagRow().put(row,False);
      ant.mount().put(row,mount);
-     ant.name().put(row,String::toString(id(i)));
+     if(doVLARot){
+	ostringstream oss;
+	oss << "VA" << setw(2) << setfill('0') << id(i);
+        ant.name().put(row,oss.str());
+     }else{
+        ant.name().put(row,String::toString(id(i)));
+     }
      Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      ant.offset().put(row,offsets);
      ant.station().put(row,name(i));
