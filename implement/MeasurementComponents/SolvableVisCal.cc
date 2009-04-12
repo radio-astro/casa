@@ -68,6 +68,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   fInterpType_(""),
   spwMap_(vs.numberSpw(),-1),
   refant_(-1),
+  minblperant_(4),
   solved_(False),
   apmode_(""),
   solint_("inf"),
@@ -104,6 +105,7 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   fInterpType_(""),
   spwMap_(1,-1),
   refant_(-1),
+  minblperant_(4),
   solved_(False),
   apmode_(""),
   solint_("inf"),
@@ -467,9 +469,11 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("refant"))
     refant()=solve.asInt("refant");
 
+  if (solve.isDefined("minblperant"))
+    minblperant()=solve.asInt("minblperant");
+
   if (solve.isDefined("apmode"))
     apmode()=solve.asString("apmode");
-
   apmode().upcase();
 
   if (solve.isDefined("append"))
@@ -1259,7 +1263,6 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
   // Recursively apply threshold on baselines per antenna
   //  Currently, we insist on at least 3 baselines per antenna
   //  (This will eventually be a user-specified parameter: blperant)
-  Int minblperant(3);
   Vector<Bool> antOK(nAnt(),True);  // nominally OK
   Vector<Int> blperant(nAnt(),0);
   Int iant=0;
@@ -1267,7 +1270,7 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
     if (antOK(iant)) {   // avoid reconsidering already bad ones
       Int nbl=ntrue(blwtsum.column(iant)>0.0);
       blperant(iant)=nbl;
-      if (nbl<minblperant) {
+      if (nbl<minblperant()) {
 	// some baselines available, but not enough
 	//  so eliminate this antenna 
 	antOK(iant)=False;
@@ -1281,7 +1284,7 @@ Bool SolvableVisCal::verifyConstraints(VisBuffGroupAcc& vbag) {
     ++iant;
   }
 
-  //  cout << "  blperant = " << blperant << endl;
+  //  cout << "  blperant = " << blperant << " (minblperant = " << minblperant() << endl;
   //  cout << "  antOK    = " << antOK << endl;
   //  cout << "  ntrue(antOK) = " << ntrue(antOK) << endl;
 

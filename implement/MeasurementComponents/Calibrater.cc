@@ -224,125 +224,6 @@ Bool Calibrater::initCalSet(const Int& calSet)
   }
 }
 
-// Select data
-void Calibrater::setdata(const String& mode, 
-			 const Int& nchan, const Int& start, const Int& step,
-			 const MRadialVelocity& mStart,
-			 const MRadialVelocity& mStep,
-			 const String& msSelect)
-{
-// Define primary measurement set selection criteria
-// Inputs:
-//    mode         const String&            Frequency/velocity selection mode
-//                                          ("channel", "velocity" or 
-//                                           "opticalvelocity")
-//    nchan        const Int&               No of channels to select
-//    start        const Int&               Start channel to select
-//    step         const Int&               Channel increment
-//    mStart       const MRadialVelocity&   Start radial vel. to select
-//    mStep        const MRadialVelocity&   Radial velocity increment
-//    msSelect     const String&            MS selection string (TAQL)
-// Output to private data:
-//
-  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL3;
-
-  try {
-    
-    logSink() << "Selecting data" << LogIO::POST;
-    
-    // Apply selection to the original MeasurementSet
-    logSink() << "Performing selection on MeasurementSet" << LogIO::POST;
-
-    // Delete VisSet and selected MS
-    if (vs_p) {
-      delete vs_p;
-      vs_p=0;
-    };
-    if (mssel_p) {
-      delete mssel_p;
-      mssel_p=0;
-    };
-
-    // Force a re-sort of the MS
-    if (ms_p->keywordSet().isDefined("SORTED_TABLE")) {
-      ms_p->rwKeywordSet().removeField("SORTED_TABLE");
-    };
-    if (ms_p->keywordSet().isDefined("SORT_COLUMNS")) {
-      ms_p->rwKeywordSet().removeField("SORT_COLUMNS");
-    };
-
-    // Re-make the sorted table as necessary
-    if (!ms_p->keywordSet().isDefined("SORTED_TABLE")) {
-      Block<int> sort(0);
-      Matrix<Int> noselection;
-      VisSet vs(*ms_p,sort,noselection);
-    }
-    Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
-      
-    Int len = msSelect.length();
-    Int nspace = msSelect.freq (' ');
-    Bool nullSelect=(msSelect.empty() || nspace==len);
-    if (!nullSelect) {
-      // Apply the TAQL selection string, to remake the selected MS
-      String parseString="select from $1 where " + msSelect;
-      mssel_p=new MeasurementSet(tableCommand(parseString,sorted));
-      AlwaysAssert(mssel_p, AipsError);
-
-      // Rename the selected MS as */SELECTED_TABLE
-      mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
-      nullSelect=(mssel_p->nrow()==0);
-
-      // Null selection wasn't intended!
-      if (nullSelect)
-	throw(AipsError("Specified msselect failed to select any data."));
-
-    };
-
-    if (nullSelect) {
-      // Selection of whole MS intended
-      if (mssel_p) {
-	delete mssel_p; 
-	mssel_p=0;
-      };
-      logSink() << LogIO::NORMAL
-		<< "Selection is empty: reverting to sorted MeasurementSet"
-		<< LogIO::POST;
-      mssel_p=new MeasurementSet(sorted);
-    } else {
-      mssel_p->flush();
-    }
-
-
-    if(mssel_p->nrow()!=ms_p->nrow()) {
-      logSink() << "By selection " << ms_p->nrow() << 
-	" rows are reduced to " << mssel_p->nrow() << LogIO::POST;
-    }
-    else {
-      logSink() << "Selection did not drop any rows" << LogIO::POST;
-    }
-    
-    // Now, re-create the associated VisSet
-    if(vs_p) delete vs_p; vs_p=0;
-    Block<int> sort(0);
-    Matrix<Int> noselection;
-    vs_p = new VisSet(*mssel_p,sort,noselection);
-    AlwaysAssert(vs_p, AipsError);
-
-
-    // Now do channel selection
-    selectChannel(mode,nchan,start,step,mStart,mStep);
-    
-
-  } catch (AipsError x) {
-    // Re-initialize with the existing MS
-    logSink() << LogOrigin("Calibrater","setdata",WHERE) 
-	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-	      << LogIO::POST;
-    initialize(*ms_p,False);
-    throw(AipsError("Error in Calibrater::setdata()"));
-  } 
-};
-
 
 // Select data (using MSSelection syntax)
 void Calibrater::selectvis(const String& time,
@@ -378,7 +259,7 @@ void Calibrater::selectvis(const String& time,
 //    msSelect     const String&            MS selection string (TAQL)
 // Output to private data:
 //
-  logSink() << LogOrigin("Calibrater","setdata") << LogIO::NORMAL3;
+  logSink() << LogOrigin("Calibrater","selectvis") << LogIO::NORMAL3;
   
   try {
 
@@ -704,6 +585,7 @@ Bool Calibrater::setsolve (const String& type,
                            const Bool& append,
                            const Double& preavg, 
 			   const String& apmode,
+			   const Int& minblperant,
                            const String& refant,
 			   const Bool& solnorm,
 			   const Float& minsnr,
@@ -721,6 +603,7 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("minblperant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
   solveparDesc.addField ("solnorm", TpBool);
@@ -739,6 +622,7 @@ Bool Calibrater::setsolve (const String& type,
   upmode.upcase();
   solvepar.define ("apmode", upmode);
   solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("minblperant", minblperant);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
   solvepar.define ("solnorm", solnorm);
@@ -2184,7 +2068,7 @@ void Calibrater::accumulate(const String& intab,
     // If creating a new cumulative table, it must span the whole dataset,
     //   so reset data selection to whole MS, and setup iterator
     if (t>0.0) {
-      setdata("none",0);
+      selectvis();
       Block<Int> columns;
       columns.resize(4);
       columns[0]=MS::ARRAY_ID;
