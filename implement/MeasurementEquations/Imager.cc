@@ -5929,17 +5929,20 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  
 	  CoordinateSystem csys(tmodimage->coordinates());
 
-	  // Check direction consistency:
-	  //	  Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
-	  //	  DirectionCoordinate spcsys=csys.directionCoordinate(icoord);
-	  // TBD, using MVDirection::separation....
-
 	  Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
 	  SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
 	  spcsys.setReferenceValue(Vector<Double>(1,medianFreq));
 	  spcsys.setWorldAxisUnits(Vector<String>(1,mfreq.getUnit().getName()));
 	  csys.replaceCoordinate(spcsys,icoord);
 	  tmodimage->setCoordinateInfo(csys);
+	  
+
+	  // Check direction consistency (reported in log message below)
+	  Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
+	  DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
+	  MVDirection mvd;
+	  dircsys.toWorld(mvd,dircsys.referencePixel());
+	  Double sep=position.getValue().separation(mvd,"\"").getValue();
 	  
 	  Float sumI=sum(modimage.get());
 	  
@@ -5949,13 +5952,17 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  // scale the image
 	  tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
 
-	  
 	  os << "Using model image " << modimage.name()
+	     << LogIO::POST;
+
+	  os << "The model image's reference pixel is " << sep << " arcsec from "
+	     << fieldName << "'s phase center."
 	     << LogIO::POST;
 	  
 	  os << "Scaling model image to I=" << fluxUsed(0)
 	     << " Jy for visibility prediction."
 	     << LogIO::POST;
+
 	}
 	else {
 	  // Make a component list for use in ft
