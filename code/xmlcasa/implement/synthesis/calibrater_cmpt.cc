@@ -228,6 +228,7 @@ calibrater::setsolve(const std::string& type,
 		     const bool phaseonly, 
 		     const std::string& apmode,
 		     const ::casac::variant& refant,
+		     const int minblperant,
 		     const bool solnorm,
 		     const float minsnr,
 		     const std::string& combine,
@@ -257,6 +258,7 @@ calibrater::setsolve(const std::string& type,
 
     // Forward to Calibrater object
     itsCalibrater->setsolve(type,toCasaString(t),table,append,preavg,mode,
+			    minblperant,
 			    toCasaString(refant),solnorm,minsnr,combine,fillgaps,
 			    cfcache,painc);
     

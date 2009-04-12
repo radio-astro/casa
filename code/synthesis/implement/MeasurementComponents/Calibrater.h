@@ -59,15 +59,6 @@ class Calibrater
   // Destructor
   ~Calibrater();
   
-  // Set uv-data selection criteria
-  void setdata(const String& mode="none", 
-	       const Int& nchan=1,
-	       const Int& start=0, 
-	       const Int& step=1,
-	       const MRadialVelocity& mStart=MRadialVelocity(),
-	       const MRadialVelocity& mStep=MRadialVelocity(),
-	       const String& msSelect="");
-
 
   // Set uv-data selection via MSSelection
   void selectvis(const String& time="",
@@ -129,6 +120,7 @@ class Calibrater
 		 const Bool& append,
 		 const Double& preavg, 
 		 const String& apmode="AP",
+		 const Int& minblperant=4,
 		 const String& refant="",
 		 const Bool& solnorm=False,
 		 const Float& minsnr=0.0f,

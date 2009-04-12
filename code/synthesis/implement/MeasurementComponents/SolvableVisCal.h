@@ -75,6 +75,7 @@ public:
   inline String&      fInterpType()    { return fInterpType_; };
   inline Vector<Int>& spwMap()         { return spwMap_; };
   inline Int&         refant()         { return refant_; };
+  inline Int&         minblperant()    { return minblperant_; };
   inline String&      apmode()         { return apmode_; };
   inline String&      solint()         { return solint_; };
   inline Double&      preavg()         { return preavg_; };
@@ -360,6 +361,9 @@ private:
 
   // Refant
   Int refant_;
+
+  // Min baselines per ant for solve
+  Int minblperant_;
 
   // Solved-for flag
   Bool solved_;

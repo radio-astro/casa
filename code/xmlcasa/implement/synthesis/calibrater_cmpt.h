@@ -51,7 +51,7 @@ class calibrater
 
     bool setapply(const std::string& type = "", const double t = 0.0, const std::string& table = "", const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& interp = "linear", const std::string& select = "", const bool calwt = false, const std::vector<int>& spwmap = std::vector<int> (1, -1), const double opacity = 0.0);
 
-    bool setsolve(const std::string& type, const ::casac::variant& t, const std::string& table, const bool append = false, const double preavg = -1.0, const bool phaseonly = false, const std::string& apmode = "AP", const ::casac::variant& refant = ::casac::initialize_variant(""), const bool solnorm = false, const float minsnr = 0.0, const std::string& combine = "", const int fillgaps = 0, const std::string& cfcache = "", const float painc = 360.0);
+    bool setsolve(const std::string& type, const ::casac::variant& t, const std::string& table, const bool append = false, const double preavg = -1.0, const bool phaseonly = false, const std::string& apmode = "AP", const ::casac::variant& refant = ::casac::initialize_variant(""), const int minblperant = 4, const bool solnorm = false, const float minsnr = 0.0, const std::string& combine = "", const int fillgaps = 0, const std::string& cfcache = "", const float painc = 360.0);
 
     bool setsolvegainspline(const std::string& table = "", const bool append = false, const std::string& mode = "PHAS", const double splinetime = 10800, const double preavg = 0.0, const int npointaver = 10, const double phasewrap = 250, const ::casac::variant& refant = ::casac::initialize_variant(""));
 

@@ -4,7 +4,8 @@ from taskinit import *
 def gaincal(vis=None,caltable=None,
 	    field=None,spw=None,
 	    selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
-	    solint=None,combine=None,preavg=None,refant=None,minsnr=None,solnorm=None,
+	    solint=None,combine=None,preavg=None,refant=None,minblperant=None,
+	    minsnr=None,solnorm=None,
 	    gaintype=None,calmode=None,append=None,
 	    splinetime=None,npointaver=None,phasewrap=None,
 	    gaintable=None,gainfield=None,interp=None,spwmap=None,
@@ -84,10 +85,12 @@ def gaincal(vis=None,caltable=None,
 		phaseonly=False
 		if (gaintype=='G'):
 			cb.setsolve(type='G',t=solint,combine=combine,preavg=preavg,refant=refant,
+				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='T'):
 			cb.setsolve(type='T',t=solint,combine=combine,preavg=preavg,refant=refant,
+				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='GSPLINE'):
