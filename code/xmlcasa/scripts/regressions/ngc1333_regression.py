@@ -315,7 +315,7 @@ autocorr[0] = true
 #
 #flagdata(vis=msfile1,antenna='9', mode='manualflag')
 
-antenna[1] = '9'
+antenna[1] = 'VA09'
 
 #
 #################################################
@@ -343,13 +343,13 @@ timerange[2]='2003/05/02/21:40:58~2003/05/02/22:01:30'
 #
 #flagdata(vis=msfile1,mode='manualflag', antenna='14',
 #         timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
-antenna[3] = '14'
+antenna[3] = 'VA14'
 timerange[3] = '2003/05/02/18:50:50~2003/05/02/19:13:30'
 
 
 #flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
 #         timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
-antenna[4] = '15'
+antenna[4] = 'VA15'
 spw[4] = '0'
 timerange[4] ='2003/05/02/22:38:49~2003/05/02/22:39:11'
 
@@ -616,7 +616,7 @@ autocorr[0] = true
 
 #flagdata(vis=msfile2,antenna='9,10,19', mode='manualflag')
 
-antenna[1] = '9,10,19'
+antenna[1] = 'VA09,VA10,VA19'
 
 #
 # Flag antenna 14 for timerange.  ANTENNAID 14 is ANTENNANAME 15
@@ -627,7 +627,7 @@ antenna[1] = '9,10,19'
 #	 antenna='15',
 #	 timerange='2003/05/08/00:00:00~2003/05/08/20:00:00')
 
-antenna[2] = '15'
+antenna[2] = 'VA15'
 timerange[2] = '2003/05/08/00:00:00~2003/05/08/20:00:00'
 
 #  antenna '22' has a bad scan 144
@@ -635,7 +635,7 @@ timerange[2] = '2003/05/08/00:00:00~2003/05/08/20:00:00'
 #	 antenna='6,22',
 #	 scan='144')
 
-antenna[3] = '6,22'
+antenna[3] = 'VA06,VA22'
 scan[3] = '144'
 
 #

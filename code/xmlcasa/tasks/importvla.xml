@@ -89,6 +89,11 @@ importvla(archivefiles=None,vis=None,
 			   <value>new</value>
 		   </allowed>
 	   </param>
+
+	   <param type="bool" name="keepblanks" >
+		   <description>Scans with blank (empty) source names (i.e. tipping scans) will be filled. The default is to not fill.</description>
+		   <value>False</value>
+	   </param>
    </input>
    <example>
 

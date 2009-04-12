@@ -42,6 +42,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
         else:
             msg("WARN: don't know image units for %s" % image,color="31")
+            toJyarcsec=1.
         stats=ia.statistics(robust=True)
         im_max=stats['max']*toJyarcsec
         im_min=stats['min']*toJyarcsec
@@ -129,6 +130,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 incell=cell
             # should we be using incell since there is not an image?
             if verbose: msg("creating an image from your clean components")
+            components_only=True
             modelimage=project+'.model.im'
             ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
             cs=ia.coordsys()
@@ -145,6 +147,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             cl.done()
             ia.done() # to make sure its saved to disk at the start
         else:
+            components_only=False
             if (complist != ''):
                 msg("WARNING: I can't use clean components AND an image yet - using image",color=31)
         
@@ -442,16 +445,19 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
 
-
-
             
             ##################################################################
             # do actual calculation of visibilities from the model image:
 
+        if not components_only:
+            # right now this is ok - if we only had components,
+            # we have created modelimage4d from them but if
+            # we had components and model image they are not yet combined
             if verbose: msg("predicting from "+modelimage4d)
             sm.predict(imagename=[modelimage4d], complist=complist)
             
         else:   # if we're doing only components
+            if verbose: msg("predicting from "+complist)
             sm.predict(complist=complist)
             
         sm.done()
@@ -478,7 +484,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             noisymsfile = project + ".noisy.ms"
             msg('adding thermal noise to ' + noisymsfile)
 
-            (eta_p, eta_s, eta_b, eta_t, eta_q, t_rx) = util.noisetemp()
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
@@ -565,7 +571,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         #if verbose:
         # print clean inputs no matter what, so user can use them.
         msg("clean inputs:")
-        msg("clean(vis="+msfile+",imagename="+image+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode="+psfmode+",imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell="+str(cell)+",phasecenter="+str(imcenter)+",restfreq='',stokes="+stokes+",weighting="+weighting+",robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        msg("clean(vis='"+msfile+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode='"+psfmode+"',imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
 
         if psfmode != "none": 
             if int(casalog.version().split()[2].split('.')[1]) <= 3:

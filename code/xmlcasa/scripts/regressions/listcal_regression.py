@@ -149,10 +149,10 @@ def load_ngc4826(prefix,msname,caltable):
              spw='0~3:0;1;62;63,4~11:0;1;30;31,12~15:0;1;62;63')
     # Flag correlator glitch
     print ""
-    print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
+    print "Flagging bad correlator field 8 antenna VA03&VA09 spw 15 all channels"
     print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
     print ""
-    flagdata(vis=msname, mode='manualflag', field='8', spw='15', antenna='3&9', timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
+    flagdata(vis=msname, mode='manualflag', field='8', spw='15', antenna='VA03&VA09', timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
     print "Completed pre-calibration flagging"
     ##########################################################################
     # Use Flagmanager to save a copy of the flags so far
@@ -246,7 +246,7 @@ def load_jupiter6cm(prefix,msname,caltable):
     gainopacity = 0.0
     
     # reference antenna 11 (11=VLA:N1)
-    calrefant = '11'
+    calrefant = 'VA11'
     
     gtable = calprefix + '.gcal'
     ftable = calprefix + '.fluxscale'
@@ -355,7 +355,7 @@ def load_jupiter6cm(prefix,msname,caltable):
     # Selfcal parameters
     #
     # reference antenna 11 (11=VLA:N1)
-    calrefant = '11'
+    calrefant = 'VA11'
     
     #
     # Filenames
@@ -816,7 +816,7 @@ default(listcal)
 vis                 =     msname        #  Name of input visibility file
 caltable            = caltableName      #  Input calibration table to list
 field               = '1310+323'        #  Field name or index; ''==>all
-antenna             =   '3~5,10'        #  Antenna name or index; ''==>all; antenna='3'
+antenna             =   'VA03~VA05,VA10'        #  Antenna name or index; ''==>all; antenna='3'
 spw                 =        '0'        #  Spectral window and channel: ''==>all; spw='5:0~10'
 listfile            = outputFilename    #  Disk file to write output: ''==>to terminal
 pagerows            =          9        #  Rows per page

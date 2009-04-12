@@ -64,7 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="checkinputs">
       <description>graphically verify parameters [yes|no|only]</description>
-      <value>yes</value>
+      <value>no</value>
 	<allowed kind="enum">
 	  <value>yes</value>
 	  <value>no</value>
@@ -286,6 +286,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Plot simulation result images,figures</description>
       <value>True</value>
     </param>
+
+    <param type="bool" name="verbose">
+      <description></description>
+      <value>False</value>
+    </param>
+
         
     
 <!--  CONSTRAINTS  -->    

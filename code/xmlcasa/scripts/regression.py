@@ -29,9 +29,9 @@ DO_COORDSYSTEST         = True
 DO_IMAGEPOLTEST         = True
 DO_IMAGETEST            = True
 #---------
-DO_IC2233               = True
+DO_IC2233               = False
 #---------
-DO_POINTING             = True
+DO_POINTING             = False
 #---------
 ###############################
 

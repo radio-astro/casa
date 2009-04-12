@@ -477,6 +477,8 @@ void VisBuffer::channelAve(Float factor)
 {
   // TBD: Use weightSpec, if present, and update weightMat accordingly
 
+  if (factor<=0.0) return;
+
   // Discern # of input channels per output channel from factor
   Int width(1);
   if (factor>1.0) width=Int(factor);        // factor supplied in channel units

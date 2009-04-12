@@ -62,7 +62,7 @@ importuvfits(fitsfile=datapath,vis='n1333.ms')
 importtime=time.time()
 print '--Split Data--'
 default('split')
-split(vis='n1333.ms',outputvis='B0319_0317.ms',datacolumn='data',field='14',antenna='3 & 17')
+split(vis='n1333.ms',outputvis='B0319_0317.ms',datacolumn='data',field='14',antenna='VA03 & VA17')
 splittime=time.time()
 
 print '--Plot antenna array and uv coverage--'

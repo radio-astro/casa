@@ -206,7 +206,7 @@ datacolumn          =     'data'        #  Column to list: data, corrected, mode
 field               =         ''        #  Field names or index to be listed: ''==>all
 spw                 =  '0~1:0~9'        #  Spectral window:channels: '\*'==>all, spw='1:5~57'
 selectdata          =       True        #  Other data selection parameters
-antenna             =      '6&7'        #  Antenna/baselines: ''==>all, antenna = '3'
+antenna             =      'VA06&VA07'        #  Antenna/baselines: ''==>all, antenna = '3'
 timerange           = '<03:33:48'       #  Time range: ''==>all
 correlation         =         ''        #  Correlations: ''==>all, correlation = 'RR RL'
 scan                =         ''        #  Scan numbers
@@ -300,7 +300,7 @@ datacolumn          =     'data'               #  Column to list: data, correcte
 field               =       '12'               #  Field names or index to be listed: ''==>all
 spw                 =        '0'               #  Spectral window:channels: '\*'==>all, spw='1:5~57'
 selectdata          =       True               #  Other data selection parameters
-antenna             =    '16&22'               #  Antenna/baselines: ''==>all, antenna = '3'
+antenna             =    'VA16&VA22'               #  Antenna/baselines: ''==>all, antenna = '3'
 timerange           = '<1999/04/16/18:31:36.6' #  Time range: ''==>all
 correlation         = 'LL LR RR'               #  Correlations: ''==>all, correlation = 'RR RL'
 scan                =       '76'               #  Scan numbers
@@ -349,7 +349,7 @@ else:
 default(listvis)
 vis                 = msname            #  Name of input visibility file
 selectdata          =       True        #  Other data selection parameters
-antenna             =       '10'        #  Antenna/baselines: ''==>all, antenna = '3'
+antenna             =       'VA10'        #  Antenna/baselines: ''==>all, antenna = '3'
 scan                =        '1'        #  Scan numbers
 listfile            = outputFilename    #  Output file
 go(listvis)

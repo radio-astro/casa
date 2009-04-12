@@ -75,7 +75,8 @@ vlafillertask::fill(const std::string& msname,
 		    const bool applytsys,
 		    const bool keepautocorr, 
 		    const std::string& antnamescheme, 
-		    const int useday)
+		    const int useday,
+		    const bool keepblanks)
 {
    VLALogicalRecord *in(0);
    Int logProgress = 0;
@@ -93,6 +94,7 @@ vlafillertask::fill(const std::string& msname,
       //  TBD: provide user control for this
       filters.addFilter(VLAObsModeFilter());
 
+      filters.addFilter(VLASourceFilter(source, qualifier, keepblanks));
       if(!(project == "all"))
       {
          filters.addFilter(VLAProjectFilter(project));

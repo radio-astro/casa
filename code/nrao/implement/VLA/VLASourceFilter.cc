@@ -35,15 +35,18 @@
 
 VLASourceFilter::VLASourceFilter()
   :itsSource(""),
-   itsQual(INT_MIN)
+   itsQual(INT_MIN),
+   itsKeepBlanks(False)
 {
   DebugAssert(ok(), AipsError);
 }
 
 VLASourceFilter::VLASourceFilter(const String& sourceName,
-				 const Int sourceQual) 
+				 const Int sourceQual,
+				 const Bool keepblanks) 
   :itsSource(sourceName),
-   itsQual(sourceQual)
+   itsQual(sourceQual),
+   itsKeepBlanks(keepblanks)
 {
   itsSource.upcase();
   DebugAssert(ok(), AipsError);
@@ -51,7 +54,8 @@ VLASourceFilter::VLASourceFilter(const String& sourceName,
 
 VLASourceFilter::VLASourceFilter(const VLASourceFilter& other) 
   :itsSource(other.itsSource),
-   itsQual(other.itsQual)
+   itsQual(other.itsQual),
+   itsKeepBlanks(other.itsKeepBlanks)
 {
   DebugAssert(ok(), AipsError);
 }
@@ -64,6 +68,7 @@ VLASourceFilter& VLASourceFilter::operator=(const VLASourceFilter& other) {
   if (this != &other) {
     itsSource = other.itsSource;
     itsQual = other.itsQual;
+    itsKeepBlanks = other.itsKeepBlanks;
   }
   DebugAssert(ok(), AipsError);
   return *this;
@@ -72,6 +77,10 @@ VLASourceFilter& VLASourceFilter::operator=(const VLASourceFilter& other) {
 Bool VLASourceFilter::passThru(const VLALogicalRecord& record) const {
 //   cerr << "This record source name: |" << record.SDA().sourceName()
 //        << "| \trequired source name: |" << itsSource << "|";
+  String sourceName = record.SDA().sourceName();
+  //cerr  << sourceName << " "<< itsSource.empty()  << " " << itsKeepBlanks << " " << sourceName.length() << " " << sourceName.matches(RXwhite) << endl;
+  if(!itsKeepBlanks && (sourceName.empty() || sourceName.matches(RXwhite))) 
+    return False;
   if (!itsSource.empty() && !record.SDA().sourceName().matches(itsSource)) {
     return False;
   }
@@ -80,7 +89,7 @@ Bool VLASourceFilter::passThru(const VLALogicalRecord& record) const {
 //     cerr << " NO source match" << endl;
 //   cerr << "This record source qualifier: |" << record.SDA().sourceQual()
 //        << "| \trequired source qualifier: |" << itsQual << "|";
-  if (itsQual != INT_MIN && itsQual != record.SDA().sourceQual()) {
+  if (itsQual >= 0 && itsQual != record.SDA().sourceQual()) {
 //     cerr << "full match" << endl;
     return False;
   } 
