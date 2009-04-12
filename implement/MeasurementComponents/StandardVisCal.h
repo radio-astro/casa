@@ -294,12 +294,17 @@ public:
   // SNR is 1/err for D-terms (?)
   virtual void formSolveSNR();
 
+  // D-specific post-solve stuff
+  virtual void globalPostSolveTinker();
+
   // D-specific reReference
   // TBD: non-triv impl
   virtual void reReference() { cout << "reReference!" << endl;};
 
   virtual void applyRefAnt();
 
+  // Method to list the D results
+  virtual void logResults();
 
 protected:
 
