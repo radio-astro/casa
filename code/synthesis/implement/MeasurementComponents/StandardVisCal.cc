@@ -37,6 +37,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/GenSort.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
 #include <casa/System/Aipsrc.h>
@@ -771,7 +772,7 @@ void DJones::guessPar(VisBuffer& vb) {
     Vector<Complex> ce(2);
     ce(0)=Complex(1.0);
     Complex d,md;
-    Float wt,a;
+    Float wt,a(0.0);
     for (Int irow=0;irow<vb.nRow();++irow) {
       if (!vb.flagRow()(irow)  &&
 	  vb.antenna1()(irow)!=vb.antenna2()(irow)) {
@@ -851,6 +852,16 @@ void DJones::formSolveSNR() {
     }
 }
 
+void DJones::globalPostSolveTinker() {
+
+  // call parent
+  SolvableVisJones::globalPostSolveTinker();
+
+  // if not freqdep, report results to the logger
+  logResults();
+
+}
+
 						       
 void DJones::applyRefAnt() {
 
@@ -917,6 +928,75 @@ void DJones::applyRefAnt() {
   } // ispw
 
 }
+
+void DJones::logResults() {
+
+  // Don't bother, if the Ds are channelized
+  if (freqDepPar()) return;
+
+  Vector<String> rl(2);
+  rl(0)="R: ";
+  rl(1)="L: ";
+
+  const ROMSAntennaColumns ac(MeasurementSet(msName()).antenna());
+  Vector<String> antNames(ac.name().getColumn());
+
+  Vector<uInt> ord;
+  genSort(ord,antNames);
+
+  logSink() << "The instrumental polarization solutions are: " << LogIO::POST;
+
+  logSink().output().precision(4);
+
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    
+    currSpw()=ispw;
+    
+    if (cs().nTime(ispw)>0) {
+
+      if (cs().nTime(ispw)>1)
+	logSink() << " Spw " << ispw << " has a time-dep D solution." << endl;
+      else {
+    
+	logSink() << " Spw " << ispw << ":" << endl;
+	
+	// References to ease access to solutions
+	Array<Complex> sol(cs().par(ispw));
+	Array<Bool> sok(cs().parOK(ispw));
+	
+	IPosition ip(4,0,0,0,0);
+
+	logSink().output().setf(ios::left, ios::adjustfield);
+
+	for (Int iant=0;iant<sol.shape()(2);++iant) {
+	  ip(2)=ord(iant);
+	  logSink() << "  Ant=" << antNames(ord(iant)) << ": ";
+	  for (Int ipar=0;ipar<2;++ipar) {
+	    logSink() << rl(ipar);
+	    ip(0)=ipar;
+	    if (sok(ip)) {
+	      logSink() << "A="; 
+	      logSink().output().width(10);
+	      logSink() << abs(sol(ip));
+	      logSink() << " P=";
+	      logSink().output().width(8);
+	      logSink() << arg(sol(ip))*180.0/C::pi;
+	      if (ipar==0) logSink() << " ; ";
+	    }
+	    else {
+	      logSink().output().width(26);
+	      logSink() << "(flagged)" << " ";
+	    }
+	  } // ipol
+	  logSink() << endl;
+	} // iant
+	logSink() << LogIO::POST;
+      } // nTime==1
+    } // nTime>0
+  } // ispw
+
+}
+
 
 
 // Fill the trivial DJ matrix elements
