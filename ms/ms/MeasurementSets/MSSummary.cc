@@ -906,10 +906,8 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
     os.output().width(widthVel);	os << "SysVel(km/s)";
     os << endl;
     
-    IPosition ip(2,0,0);
-    
     os.output().precision(12);
-    
+
     // Loop through rows
     for (uInt row=0; row<msSC.direction().nrow(); row++) {
       MDirection mRaDec=msSC.directionMeas()(row);
@@ -930,8 +928,21 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
       Int spwid=msSC.spectralWindowId()(row);
       if (spwid<0) os<< "any";
       else os<<spwid;
-      os.output().width(widthRF);	os<< msSC.restFrequency()(row)(ip)/1.0e6; 
-      os.output().width(widthVel);	os<< msSC.sysvel()(row)(ip)/1.0e3;
+
+      Vector<Double> restfreq=msSC.restFrequency()(row);
+      Vector<Double> sysvel=msSC.sysvel()(row);
+      os.output().width(widthRF);
+      if (restfreq.nelements()>0)
+	os<< restfreq(0)/1.0e6;
+      else 
+	os<< "-";
+      //	os<< "      ---      ";
+      os.output().width(widthVel);
+      if (sysvel.nelements()>0)
+	os<< sysvel(0)/1.0e3;
+      else
+	os<< "-";
+      //	os<< "     ---     ";
       os << endl;
     }
   }
