@@ -5410,11 +5410,12 @@ ImageAnalysis::summary(Record& header, const String& doppler, const Bool list,
 
 Bool
 ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
-	      const Bool optical, const Int bitpix,
-	      const Double minpix, const Double maxpix,
-	      Record& pRegion, const String& mask,
-	      const Bool overwrite, const Bool dropDeg,
-	      const Bool degLast)
+		      const Bool optical, const Int bitpix,
+		      const Double minpix, const Double maxpix,
+		      Record& pRegion, const String& mask,
+		      const Bool overwrite, 
+		      const Bool dropDeg, const Bool degLast,
+		      const Bool dropStokes, const Bool stokesLast)
 {
 
     *itsLog << LogOrigin("ImageAnalysis", "tofits");
@@ -5444,8 +5445,38 @@ ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
     // to ImageRegion and make SubImage.
     ImageRegion* pRegionRegion = 0;
     ImageRegion* pMaskRegion = 0;
+
+    IPosition keepAxes;
+    if(!dropDeg){
+      if(dropStokes){
+	CoordinateSystem cSys = pImage_p->coordinates();
+	if(cSys.findCoordinate(Coordinate::STOKES)>=0 && cSys.nCoordinates()>1){ 
+	  // Stokes axis exists and its not the only one
+	  Vector<String> cNames = cSys.worldAxisNames();
+	  // cout << "cNames = " << cNames << endl;
+	  keepAxes = IPosition(cNames.size()-1);
+	  uInt j = 0;
+	  for(uInt i=0; i<cNames.size(); i++){
+	    if(cNames(i) != "Stokes"){ // not Stokes?
+	      keepAxes(j) = i; // keep it
+	      j++;
+	    }
+	  }
+	}
+	// cout << "keepAxes = " << keepAxes << endl;
+	// else: nothing to drop
+      }
+    }
+
+
     AxesSpecifier axesSpecifier;
-    if (dropDeg) axesSpecifier = AxesSpecifier(False);
+    if (dropDeg){ // just drop all degenerate axes
+      axesSpecifier = AxesSpecifier(False);
+    }
+    else if(!keepAxes.empty()){ // specify which axes to keep
+      axesSpecifier = AxesSpecifier(keepAxes);
+    }
+          
     SubImage<Float> subImage =
       makeSubImage (pRegionRegion, pMaskRegion, *pImage_p,
 		    *(tweakedRegionRecord(&pRegion)), mask, True,
@@ -5457,7 +5488,11 @@ ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
                                               HostInfo::memoryFree()/1024,
                                               velocity, optical,
                                               bitpix, minpix, maxpix,
-					      overwrite, degLast);
+					      overwrite, 
+					      False, //  deglast default
+					      False, //  verbose default
+					      stokesLast
+					      );
     if (!ok) *itsLog << error  << LogIO::EXCEPTION;
 
     return ok;
