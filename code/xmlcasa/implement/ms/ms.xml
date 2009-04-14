@@ -477,6 +477,15 @@ the ms definition itself. -->
      <description>start a new server tool (IGNORED!!!)</description>
      <value>false</value>
      </param>
+
+     <param type="string" name="antnamescheme">
+     <description>For VLA only, antenna name scheme, old style is just antenna number, new style prepends VA or EV</description>
+     <value>old</value>
+     <allowed type="enum">
+	     <value>old</value>
+	     <value>new</value>
+     </allowed>
+     </param>
   </input>
   <returns type="bool"/>
 

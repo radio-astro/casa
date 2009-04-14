@@ -142,6 +142,7 @@ msfile = prefix + '.ms'
 # Use task importuvfits
 fitsfile = fitsdata
 vis = msfile
+antnamescheme = 'new'
 importuvfits()
 
 # Note that there will be a ngc5921.ms.flagversions

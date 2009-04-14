@@ -242,6 +242,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 if display==True:
                     pl.figure(currfignum+1)
                     pl.clf()
+        else:
+            model_min,model_max, model_rms = statim(modelimage,plot=False,incell=incell)
 
 
 
@@ -369,7 +371,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                     ia.done()
                 
 
-            if inbright=="default":
+            if (inbright=="unchanged") or (inbright=="default"):
                 scalefactor=1.
             else:
                 # scale to input Jy/arcsec
@@ -389,7 +391,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             modelia.done();
 
 
-            # now open rescaled output image
+            # now open spatially rescaled output image
             modelia.open(modelimage4d)            
             # and overwrite the input shapes with the 4d shapes
             insize=modelia.shape()

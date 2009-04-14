@@ -190,7 +190,7 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
 
 bool
 ms::fromfits(const std::string& msfile, const std::string &fitsfile, const bool nomodify, const bool lock, 
-             const int obstype, const std::string &host, bool forcenewserver)
+             const int obstype, const std::string &host, bool forcenewserver, const std::string& antnamescheme)
 {
 try {
    // bool rstat(False);
@@ -202,7 +202,9 @@ try {
       try {
       */
 	*itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
-       MSFitsInput msfitsin(msfile, fitsfile);
+       String namescheme(antnamescheme);
+       namescheme.downcase();
+       MSFitsInput msfitsin(msfile, fitsfile, (namescheme=="new"));
        msfitsin.readFitsFile(obstype);
       *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
        /*

@@ -218,6 +218,7 @@ msfile1 = prefix1 + '.ms'
 # Use task importuvfits
 fitsfile = fitsdata1
 vis = msfile1
+antnamescheme="new"
 importuvfits()
 
 # Record import time
@@ -521,6 +522,7 @@ msfile2 = prefix2 + '.ms'
 # Use task importuvfits
 fitsfile = fitsdata2
 vis = msfile2
+antnamescheme='new'
 importuvfits()
 
 # Note that there will be a ngc5921.ms.flagversions

@@ -58,7 +58,7 @@ startProc = time.clock()
 
 print '--Import--'
 default('importuvfits')
-importuvfits(fitsfile=datapath,vis='n1333.ms')
+importuvfits(fitsfile=datapath,vis='n1333.ms',antnamescheme='new')
 importtime=time.time()
 print '--Split Data--'
 default('split')
