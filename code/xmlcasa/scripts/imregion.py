@@ -190,7 +190,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 		    if ( not _imregion_units_given(coords) ):
 			#for coordIndex  in range( len( coords ) ):
 			#    coords[coordIndex]+='pix'
-			blarg='blarg'
+			no_op='noop'
 		    else:
 			raise Exception, "Sorry! Coordinates are accepted in pixel values only"
 
@@ -383,7 +383,6 @@ def __parse_spectral( spectString='', min=0, max=0 ):
     #print "max: ", max
 
     values=spectString.split('~')
-    #print "VALUES: ", values
     if ( len(values)==2 ):
 	# We have a min and max value
 	if ( values[0] == '-1' ):
@@ -423,11 +422,22 @@ def __parse_spectral( spectString='', min=0, max=0 ):
 	    retValue[1]=max
 	elif( values[0]== '-1' ):
 	    retValue[0]=min
-	    retValue[1]=max	    	    
+	    retValue[1]=max
 	else:
-	    retValue[0]=retValue[1]=values[0]
+	    # We have a single spectral value.
+	    try:
+		value=int(values[0])
+	    except:
+		raise Exception, "Invalid spectral specification "\
+		      +str( values[0] )			  
+	    if ( int(values[0]) >= int(min) and int(values[0]) <= int(max) ):
+		retValue[0]=retValue[1]=values[0]
+	    else:
+		raise Exception, "Invalid spectral specification "\
+		  +str( values[0] )
+	    return retValue		
     else:
-	raise Exception, "Invalid spectral specification"+str( values )
+	raise Exception, "Invalid spectral coordinate value: "+str(values)
 	return retValue
     
     ## Do a sanity checks to make sure we are in the proper range.

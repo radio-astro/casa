@@ -137,7 +137,7 @@ class simutil:
         ####could not fit pointings then single pointing
         if(len(pointings)==0):
             pointings.append(direction)
-        self.msg("Using %i generated pointing(s)" % len(pointings))
+        self.msg("using %i generated pointing(s)" % len(pointings))
         self.pointings=pointings
         return len(pointings), pointings
 

@@ -19,10 +19,10 @@ def run():
     #####locate the regression script
     lepath=locatescript('ngc4826_tutorial_regression.py')
     print 'Script used is ',lepath
-    regstate=True
+    gl['regstate']=True
     execfile(lepath, gl)
-    print 'regstate =', regstate
-    if not regstate:
+    print 'regstate =', gl['regstate']
+    if not gl['regstate']:
         raise Exception, 'regstate = False'
 
 ###return the images that will be templated and compared in future runs

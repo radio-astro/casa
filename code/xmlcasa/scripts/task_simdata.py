@@ -115,7 +115,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # uses imsize*cell, or could use insize*incell I suppose
 
         nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
+        if nfld==1:
+            imagermode=''
+        else:
+            imagermode="mosaic"
         ave , off = util.average_direction(pointings)
+
         nbands = 1;    
         fband  = 'band'+startfreq
 
@@ -131,7 +136,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # should we be using incell since there is not an image?
             if verbose: msg("creating an image from your clean components")
             components_only=True
-            modelimage=project+'.model.im'
+            modelimage=project+'.ccmodel.im'
             ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
             cs=ia.coordsys()
             epoch,ra,dec=util.direction_splitter(direction)
@@ -167,8 +172,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             incelly=qa.quantity(incelly,'rad')
             # warn if incells are not square 
             if not incellx == incelly:
-                msg("Input pixels are not square!",color="31")
-                msg("Using incell=incellx=%s" % incellx,color="31")
+                msg("input pixels are not square!",color="31")
+                msg("using incell=incellx=%s" % incellx,color="31")
             incell=qa.convert(incellx,'arcsec')
         else:
             incellx=incell
@@ -288,7 +293,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # pointing exactly in the middle of the mosaic.
         if type(direction) == list:
             imcenter , discard = util.average_direction(direction)
-            msg("Using phasecenter " + imcenter)
+            msg("using phasecenter " + imcenter)
             if verbose:
                 print direction
                 for dir in direction:
@@ -461,9 +466,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         else:   # if we're doing only components
             if verbose: msg("predicting from "+complist)
             sm.predict(complist=complist)
-            
+
         sm.done()
-        sm.close()
         
         msg('generation of measurement set ' + msfile + ' complete.')
 
@@ -508,7 +512,6 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             sm.setdata();                # currently defaults to fld=0,spw=0
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             sm.setapply(type='TOPAC',opacity=tau0);  # arrange opac corruption
-            # XXX VERIFY that this is just an attenuation!
             # NewMSSimulator needs 2-temp formula not just t_atm
             sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
@@ -563,28 +566,29 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 msg("inverting to "+image)
             else:
                 image=imgroot+'.clean'
-                msg("cleaning to "+image)
-            msg("using phase center="+imcenter)
-        
-            if uvtaper == False:
-                outertaper=[]
-                innertaper=[]
+                msg("cleaning to "+image)            
+        else:
+            image=imgroot+'.clean'
+
+        if uvtaper == False:
+            outertaper=[]
+            innertaper=[]
 
         #if verbose:
         # print clean inputs no matter what, so user can use them.
         msg("clean inputs:")
-        msg("clean(vis='"+msfile+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode='"+psfmode+"',imagermode='mosaic',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
 
         if psfmode != "none": 
             if int(casalog.version().split()[2].split('.')[1]) <= 3:
                 # XXX 2.3.1 syntax:
-                clean(vis=msfile,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode="mosaic",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+                clean(vis=mstoimage,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode=imagermode,ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
                 # XXX 2.4.0 syntax:
             else:
-                clean(vis=msfile, imagename=image, field='', spw='', selectdata=False,
+                clean(vis=mstoimage, imagename=image, field='', spw='', selectdata=False,
                       timerange='', uvrange='', antenna='', scan='', mode="channel",
                       interpolation='nearest', niter=niter, gain=0.1, threshold=threshold,
-                      psfmode=psfmode, imagermode="mosaic", ftmachine="mosaic",
+                      psfmode=psfmode, imagermode=imagermode, ftmachine="mosaic",
                       mosweight=False, scaletype="SAULT", multiscale=[],
                       negcomponent=-1, interactive=False, mask=[], nchan=nchan,
                       start=0, width=1, imsize=imsize, cell=cell, phasecenter=imcenter,
@@ -810,9 +814,6 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                     pl.subplot(236)
                 else:
                     pl.subplot(224)
-                # ia.open(imgroot+".convolved.im")
-                # beam=ia.restoringbeam()
-                # ia.done()
                 ia.open(image+".psf")
                 beamcs=ia.coordsys()
                 beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)

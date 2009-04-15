@@ -2658,8 +2658,9 @@ image::tofits(const std::string& fitsfile, const bool velocity,
 	      const bool optical, const int bitpix,
 	      const double minpix, const double maxpix,
 	      const ::casac::record& region, const ::casac::variant& vmask,
-	      const bool overwrite, const bool dropDeg,
-	      const bool degLast, const bool async)
+	      const bool overwrite, 
+	      const bool dropdeg, const bool deglast,
+	      const bool dropstokes, const bool stokeslast, const bool async)
 {
   bool rstat(false);
   try {
@@ -2668,31 +2669,14 @@ image::tofits(const std::string& fitsfile, const bool velocity,
 
     Record *pRegion = toRecord(region);
     String mask = vmask.toString();
-    if(mask == "[]")
-	    mask = "";
-
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-
-       rstat=itsImage->tofits(fitsfile, velocity, optical, bitpix, minpix, 
-			   maxpix, *pRegion, mask, overwrite, dropDeg,
-			   degLast);
-       /*
-    Table::relinquishAutoLocks(True);
-    if(!fork()){
-       try{
-       } catch (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       } catch (...) {
-          *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-       }
-       exit(rstat);
+    if(mask == "[]") {
+      mask = "";
     }
-    int dummy;
-    wait(&dummy);
-    if(dummy)
-	    rstat=true;
-	    */
+    
+    rstat=itsImage->tofits(fitsfile, velocity, optical, bitpix, minpix, 
+			   maxpix, *pRegion, mask, overwrite, 
+			   dropdeg, deglast,
+			   dropstokes, stokeslast);
     delete pRegion;
     //
   } catch (AipsError x) {

@@ -199,7 +199,7 @@ class image
 
     std::vector<std::string> summary(::casac::record& header, const std::string& doppler = "RADIO", const bool list = true, const bool pixelorder = true);
 
-    bool tofits(const std::string& outfile = "", const bool velocity = false, const bool optical = true, const int bitpix = -32, const double minpix = 1, const double maxpix = -1, const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool overwrite = false, const bool dropdeg = false, const bool deglast = false, const bool async = false);
+    bool tofits(const std::string& outfile = "", const bool velocity = false, const bool optical = true, const int bitpix = -32, const double minpix = 1, const double maxpix = -1, const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool overwrite = false, const bool dropdeg = false, const bool deglast = false, const bool dropstokes = false, const bool stokeslast = true, const bool async = false);
 
     bool toASCII(const std::string& outfile, const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const std::string& sep = " ", const std::string& format = "%e", const double maskvalue = -999, const bool overwrite = false);
 

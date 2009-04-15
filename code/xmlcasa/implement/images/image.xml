@@ -8530,6 +8530,16 @@ listed in square brackets.
      <value>false</value>
      </param>
   
+     <param type="bool" direction="in" name="dropstokes">
+     <description>Drop Stokes axis?</description>
+     <value>false</value>
+     </param>
+  
+     <param type="bool" direction="in" name="stokeslast">
+     <description>Put Stokes axis last in header?</description>
+     <value>true</value>
+     </param>
+  
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
@@ -8575,6 +8585,13 @@ The output mask is the combination (logical OR) of the default input
 Sometimes it is useful to drop axes of length one (degenerate axes)
 because not all FITS readers can handle them.  Use the {\stfaf dropdeg}
 argument if you want to do this. 
+If you want to specifically only drop a degenerate Stokes axis, use the {\stfaf dropstokes}
+argument.
+
+If you want to place degenerate axes last in the FITS header,
+use the {\stfaf deglast} argument.
+If you want to make sure that the Stokes axis is placed last in the FITS header,
+use the {\stfaf stokeslast} argument.
 
 </description>
 
