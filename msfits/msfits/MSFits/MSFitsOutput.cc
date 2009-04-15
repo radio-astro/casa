@@ -1267,22 +1267,28 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     *polcalb = 0.0;
 
     Block<Int> id(nant);
-    Bool useAntId = True;
+    Bool useAntName = True;
     for (uInt a = 0; a < nant; a++) {
-      const String& antName = antid(a) ;
+      String antName = antid(a) ;   // antid here is from the NAME column
+
+      // For *VLA*, may need to strip off leading VA or EA
+      if (arrayName.contains("VLA")) {
+	if (!antName.matches(RXint))
+	  antName=antName.after("A");
+      }
+
+      // Attempt to interpret as an integer
       if (antName.matches(RXint) ) {
 	id[a] = atoi(antName.chars());
       }
-      else if (arrayname.contains("VLA") && antName.after("A").matches(RXint)) {
-	// VLA data filled directly to CASA might have prepended "VA" or "EA" 
-	String number=antName.after("A");
-	id[a] = atoi(number.chars());
-      } else {
-	useAntId = False;
+      else {
+	useAntName = False;
 	break;
       }
     }
-    if (useAntId == False) {
+    // at least one antenna name failed to resolve as a number, 
+    //   so punt and use indices+1
+    if (useAntName == False) {
       for (uInt a = 0; a < nant; a++) {
 	id[a] = a + 1; // 1 relative antenna numbers in FITS
       }
