@@ -70,7 +70,7 @@ void doOpens()
       String name2("tImageUtilities_tmp/fits.img");
       Bool ok = ImageFITSConverter::ImageToFITS(error, img, name2,
                                                 64, True, True, -32, 1, -1,
-                                                True);
+                                                True, False, True, True);
       if (ok);			// Satisfy compiler
 //
       {
