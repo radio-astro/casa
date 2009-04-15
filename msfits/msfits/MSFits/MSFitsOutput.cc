@@ -1270,8 +1270,13 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     Bool useAntId = True;
     for (uInt a = 0; a < nant; a++) {
       const String& antName = antid(a) ;
-      if (antName.matches(RXint)) {
+      if (antName.matches(RXint) ) {
 	id[a] = atoi(antName.chars());
+      }
+      else if (arrayname.contains("VLA") && antName.after("A").matches(RXint)) {
+	// VLA data filled directly to CASA might have prepended "VA" or "EA" 
+	String number=antName.after("A");
+	id[a] = atoi(number.chars());
       } else {
 	useAntId = False;
 	break;
