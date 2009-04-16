@@ -37,19 +37,26 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                                qa.convert(bm['minor'],'arcsec')['value']*pl.pi/4)
             else:
                 toJyarcsec=1.
+            pix=ia.summary()['header']['incr']
+            toJypix=toJyarcsec*abs(pix[0]*pix[1])*206265.0**2
         elif imunit == 'Jy/pixel':
             pix=ia.summary()['header']['incr']
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
+            toJypix=1.
         else:
             msg("WARN: don't know image units for %s" % image,color="31")
             toJyarcsec=1.
+            toJypix=1.
         stats=ia.statistics(robust=True)
-        im_max=stats['max']*toJyarcsec
-        im_min=stats['min']*toJyarcsec
+        #im_max=stats['max']*toJyarcsec
+        #im_min=stats['min']*toJyarcsec
+        im_max=stats['max']*toJypix
+        im_min=stats['min']*toJypix
         imsize=ia.shape()[0:2]
         reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
         stats=ia.statistics(region=reg1)
-        im_rms=stats['rms']*toJyarcsec
+        #im_rms=stats['rms']*toJyarcsec
+        im_rms=stats['rms']*toJypix
         if len(im_rms)==0: im_rms=0.
         data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
         data_array=pl.array(data_array)
@@ -379,13 +386,14 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             if (inbright=="unchanged") or (inbright=="default"):
                 scalefactor=1.
             else:
-                # scale to input Jy/arcsec
-                if type(incell)==str:
-                    incell=qa.quantity(incell)
-                inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
+                # scale to Jy/arcsec
+                #if type(incell)==str:
+                #    incell=qa.quantity(incell)
+                #inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
                 stats=modelia.statistics()
                 highvalue=stats['max']
-                scalefactor=inbrightpix/highvalue
+                #scalefactor=inbrightpix/highvalue                
+                scalefactor=float(inbright)/highvalue.max()
 
 
             # arr is the chunk of the input image
@@ -505,6 +513,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
+            if os.path.exists(noisymsfile):
+                cu.removetable(noisymsfile)
             os.system("cp -r "+msfile+" "+noisymsfile)
             # XXX check for and copy flagversions file as well
             

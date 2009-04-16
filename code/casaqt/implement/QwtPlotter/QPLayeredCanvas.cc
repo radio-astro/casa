@@ -200,15 +200,15 @@ QList<const QPPlotItem*> QPLayeredCanvas::allLayerItems(int layersFlag) const {
 }
 
 QRect QPLayeredCanvas::canvasDrawRect() const {
-    QRect rect = canvas()->contentsRect();
+    QRect rect;
     
-    const QwtScaleWidget* s = axisWidget(QwtPlot::xBottom);
-    rect.setLeft(rect.left() + s->startBorderDist());
-    rect.setRight(rect.right() - s->endBorderDist());
+    QwtScaleMap s = canvasMap(xBottom);
+    rect.setLeft((int)(s.p1() + 0.5));
+    rect.setRight((int)(s.p2() + 0.5));
     
-    s = axisWidget(QwtPlot::yLeft);
-    rect.setBottom(rect.bottom() - s->startBorderDist());
-    rect.setTop(rect.top() + s->endBorderDist());
+    s = canvasMap(QwtPlot::yLeft);
+    rect.setBottom((int)(s.p1() + 0.5));
+    rect.setTop((int)(s.p2() + 0.5));
     
     return rect;
 }
@@ -309,18 +309,26 @@ void QPLayeredCanvas::detachLayeredItem(QPPlotItem* item) {
     }
 }
 
-void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
-    m_parent->logMethod(CLASS_NAME, "drawItems", true);
+void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
+        const QwtScaleMap cMaps[axisCnt], const QwtPlotPrintFilter& pf) const {
+    m_parent->logMethod(CLASS_NAME, "drawItems", true);    
     
     if(m_printPainters.contains(painter)) {
-        printItems(painter, drawRect, maps, pf);
+        printItems(painter, cRect, cMaps, pf);
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     }
-
-    QRect rect = drawRect;
-    if(drawRect == canvas()->contentsRect()) rect = canvasDrawRect();
+    
+    // Adjust drawing rectangle and scale maps for drawing into a cached image.
+    QRect rect = cRect;
+    if(cRect == canvas()->contentsRect()) rect = canvasDrawRect();
+    
+    QwtScaleMap maps[axisCnt];
+    for(int i = 0; i < axisCnt; i++) {
+        maps[i] = cMaps[i];
+        if(i == xBottom || i == xTop) maps[i].setPaintInterval(0,rect.width());
+        else maps[i].setPaintInterval(0, rect.height());
+    }
     
     PlotLoggerPtr infoLog = m_parent->loggerForEvent(PlotLogger::MSG_INFO);
     
@@ -335,11 +343,6 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
         axesCache.currImageSize().width() >= rect.size().width() && // check #3
         axesCache.currImageSize().height() >= rect.size().height();
     
-    // Always draw the base items.
-    m_layerBase.initializeImage(rect.size(),
-            canvas()->palette().color(QPalette::Window).rgba());
-    m_layerBase.cacheItems(rect, maps);
-    
     // See which layers need to be drawn.
     QHash<PlotCanvasLayer, bool> draw;
     bool anyDraw = false;
@@ -350,7 +353,6 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
                       !axesCache.currHasImage(layer));
         anyDraw |= draw[layer];
     }
-    //useAxesCache &= !anyDraw; // check #1
     
     // If drawing isn't needed, just draw the cache(s) as needed.
     if(m_drawingHeld || m_isPrinting || !anyDraw) {
@@ -369,15 +371,13 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
             infoLog->postMessage(CLASS_NAME, "drawItems", ss.str());
         }
         
-        //if(useAxesCache) {
-            m_layerBase.drawCache(painter, rect);
+        m_layerBase.drawItems(painter, cRect, cMaps);
             
-            QPImageCache image;
-            foreach(PlotCanvasLayer layer, m_layers.keys()) {
-                image = axesCache.currImage(layer);
-                image.paint(painter, rect);
-            }            
-        //} else paintCaches(painter, rect);
+        QPImageCache image;
+        foreach(PlotCanvasLayer layer, m_layers.keys()) {
+            image = axesCache.currImage(layer);
+            image.paint(painter, rect);
+        }
 
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
@@ -430,20 +430,15 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
                     "currently running.  Canceling it and restarting draw.");
         
         const_cast<bool&>(m_redrawWaiting) = true;
-        paintCaches(painter, rect);
+        
+        m_layerBase.drawItems(painter, cRect, cMaps);
+        foreach(QPCanvasLayer* layer, m_layers)
+            layer->drawCache(painter, rect);
+        
         const_cast<QPDrawThread*&>(m_drawThread)->cancel();
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     } else const_cast<bool&>(m_redrawWaiting) = false;
-    
-    /*
-    QHash<PlotCanvasLayer, bool> doDraw;
-    anyDraw = false;
-    foreach(PlotCanvasLayer layer, m_layers.keys()) {
-        doDraw[layer] = draw[layer] && m_layers.value(layer)->hasItemsToDraw();
-        anyDraw |= doDraw[layer];
-    }
-    */
         
     // Set up operation.
     PlotOperationPtr op = m_parent->operationDraw();
@@ -469,7 +464,9 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
         // The draw watchers told us not to continue, so assume they know what
         // they're doing.
         if(!res) {
-            paintCaches(painter, rect);
+            m_layerBase.drawItems(painter, cRect, cMaps);
+            foreach(QPCanvasLayer* layer, m_layers)
+                layer->drawCache(painter, rect);
             if(!op.null()) op->finish();
             m_parent->logMethod(CLASS_NAME, "drawItems", false);
             return;
@@ -518,9 +515,11 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& drawRect,
         if(!op.null()) op->finish();
         
         // Update and draw caches.
-        foreach(PlotCanvasLayer layer, m_layers.keys())
-            m_layers.value(layer)->cachedImage() = axesCache.currImage(layer);        
-        paintCaches(painter, rect);
+        m_layerBase.drawItems(painter, cRect, cMaps);
+        foreach(PlotCanvasLayer layer, m_layers.keys()) {
+            m_layers.value(layer)->cachedImage() = axesCache.currImage(layer);
+            m_layers.value(layer)->drawCache(painter, rect);
+        }
     }
     
     m_parent->logMethod(CLASS_NAME, "drawItems", false);
@@ -687,16 +686,6 @@ void QPLayeredCanvas::initialize() {
     c->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
     c->setAttribute(Qt::WA_PaintOutsidePaintEvent, true); 
 }
-
-void QPLayeredCanvas::paintCaches(QPainter* painter, const QRect& rect) const {
-    if(painter == NULL) return;
-    
-    m_layerBase.drawCache(painter, rect);
-    
-    foreach(QPCanvasLayer* layer, m_layers)
-        layer->drawCache(painter, rect);
-}
-
 
 // Private Slots //
 

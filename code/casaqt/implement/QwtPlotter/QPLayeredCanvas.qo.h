@@ -390,9 +390,6 @@ private:
     // Initializes object (meant to be called from constructor).
     void initialize();
     
-    // Draws the layer caches into the given painter using the given rect.
-    void paintCaches(QPainter* painter, const QRect& rect) const;
-    
 private slots:
     // Slot for when the current draw thread is finished.
     void itemDrawingFinished();
