@@ -298,52 +298,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {return verifyShapes(pb.shape(),sky.shape());}
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
   protected:
-    
-    // Padding in FFT
-    Float padding_p;
-    
-    Int nint(Double val) {return Int(floor(val+0.5));};
-    
-    // Make the PB part of the convolution function
-    Int makePBPolnCoords(//const ImageInterface<Complex>& image,
-			 CoordinateSystem& coord, const VisBuffer& vb);
-    // Locate convolution functions on the disk
-    Int locateConvFunction(Int Nw, Int polInUse, const VisBuffer& vb, Float &pa);
-    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
-    // Find the convolution function
-    void findConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb);
-    void makeConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb, Float pa);
-    
-    Int nWPlanes_p;
-    
-    // Get the appropriate data pointer
-    Array<Complex>* getDataPointer(const IPosition&, Bool);
-    
-    void ok();
-    
-    void init();
-    //    Int getVisParams();
-    Int getVisParams(const VisBuffer& vb);
-    // Is this record on Grid? check both ends. This assumes that the
-    // ends bracket the middle
-    Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
-    
-    // Image cache
-    LatticeCache<Complex> * imageCache;
-    
-    // Sizes
-    Long cachesize;
-    Int tilesize;
-    
-    // Gridder
-    ConvolveGridder<Double, Complex>* gridder;
-    
-    // Is this tiled?
-    Bool isTiled;
-    
-    // Array lattice
+    //** Members which are set in the initialization list of the c'tor. **
+    Float				padding_p;	// Padding in FFT
+    Int					nWPlanes_p;
+    LatticeCache<Complex> *		imageCache;
+    Long				cachesize;
+    Int					tilesize;
+    ConvolveGridder<Double, Complex>*	gridder;
+    Bool				isTiled;
     //Lattice<Complex> * arrayLattice;
     CountedPtr<Lattice<Complex> > arrayLattice;
     
@@ -352,10 +314,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Lattice<Complex>* lattice;
     CountedPtr<Lattice<Complex> > lattice;
     
-    Float maxAbsData;
-    
-    // Useful IPositions
-    IPosition centerLoc, offsetLoc;
+    Float			maxAbsData;
+    IPosition			centerLoc, offsetLoc;	// Useful IPositions    
+    MSPointingColumns*		mspc;
+    MSAntennaColumns*		msac;
+    MDirection::Convert*	pointingToImage;
+    Bool			usezero_p;	// Grid/degrid zero spacing points?
+    Bool			doPBCorrection;
+    Unit			Second, Radian, Day;
+    Int				noOfPASteps;
+    Bool			pbNormalized, resetPBs;
+    Bool			avgPBSaved;
+    ConvFuncDiskCache		cfCache;
+    ParAngleChangeDetector	paChangeDetector;
+    Vector<Int>			cfStokes;
+    Vector<Complex>		Area;
+            
+    //** End of members which are set in the initialization list of the c'tor. **
     
     // Image Scaling and offset
     Vector<Double> uvScale, uvOffset;
@@ -363,24 +338,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Array for non-tiled gridding
     Array<Complex> griddedData;
     
-    // Pointing columns
-    MSPointingColumns* mspc;
-    
-    // Antenna columns
-    MSAntennaColumns* msac;
-    
     DirectionCoordinate directionCoord;
-    
-    MDirection::Convert* pointingToImage;
     
     Vector<Double> xyPos;
     
     MDirection worldPosMeas;
     
     Int priorCacheSize;
-    
-    // Grid/degrid zero spacing points?
-    Bool usezero_p;
     
     Array<Complex> convFunc;
     Int convSize;
@@ -411,11 +375,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int wConvSize;
     
     Int lastIndex_p;
-    
-    Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		 const Double& interval);
-    
-    Bool getXYPos(const VisBuffer& vb, Int row);
     //    VPSkyJones *vpSJ;
     //
     // The PA averaged (and potentially antenna averaged) PB for
@@ -428,7 +387,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Int polInUse, bandID_p;
     Int maxConvSupport;
-    Bool avgPBSaved;
     //
     // Percentage of the peak of the PB after which the image is set
     // to zero.
@@ -439,22 +397,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double HPBW, Diameter_p, sigma;
     Int Nant_p;
     Int doPointing;
-    Bool doPBCorrection;
     Bool makingPSF;
     
-    Unit Second, Radian, Day;
-    Array<Float> l_offsets,m_offsets;
-    Int noOfPASteps;
+    Array<Float> l_offsets, m_offsets;
     Vector<Float> pbPeaks;
-    Bool pbNormalized,resetPBs;
     Vector<Float> paList;
-    ConvFuncDiskCache cfCache;
     Double currentCFPA;
-    ParAngleChangeDetector paChangeDetector;
-    Vector<Int> cfStokes;
-    Vector<Complex> Area;
     Double cfRefFreq_p;
     //    VLACalcIlluminationConvFunc vlaPB;
+    
+    
+    Int nint(Double val) {return Int(floor(val+0.5));};
+    
+    // Make the PB part of the convolution function
+    Int makePBPolnCoords(//const ImageInterface<Complex>& image,
+			 CoordinateSystem& coord, const VisBuffer& vb);
+    // Locate convolution functions on the disk
+    Int locateConvFunction(Int Nw, Int polInUse, const VisBuffer& vb, Float &pa);
+    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
+    // Find the convolution function
+    void findConvFunction(const ImageInterface<Complex>& image,
+			  const VisBuffer& vb);
+    void makeConvFunction(const ImageInterface<Complex>& image,
+			  const VisBuffer& vb, Float pa);
+    
+    // Get the appropriate data pointer
+    Array<Complex>* getDataPointer(const IPosition&, Bool);
+    
+    void ok();
+    
+    void init();
+    //    Int getVisParams();
+    Int getVisParams(const VisBuffer& vb);
+    // Is this record on Grid? check both ends. This assumes that the
+    // ends bracket the middle
+    Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+    
+    Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
+		 const Double& interval);
+    
+    Bool getXYPos(const VisBuffer& vb, Int row);
     //
     //----------------------------------------------------------------------
     //

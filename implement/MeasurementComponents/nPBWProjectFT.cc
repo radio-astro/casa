@@ -1491,7 +1491,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	if(found) 
 	  {
-	    Int maxR=R;//max(ndx(0),ndx(1));
+	    //Int maxR=R;//max(ndx(0),ndx(1));
 	    for(Int ipol=0;ipol<polInUse;ipol++)
 	      {
 		convSupport(iw,ipol,lastPASlot)=Int(R/Float(convSampling));
