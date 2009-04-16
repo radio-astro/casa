@@ -108,7 +108,7 @@ public:
    Bool setMS (const MeasurementSet& ms);
 
 // List all header information.
-   void list (LogIO& os, Bool verbose=False);
+   void list (LogIO& os, Bool verbose=False) const;
 
 // List a title for the Summary.
    void listTitle (LogIO& os) const;
@@ -118,13 +118,13 @@ public:
    void listWhere (LogIO& os, Bool verbose=False) const;
 
 // List what was observed (Field and Main tables)
-   void listWhat (LogIO& os, Bool verbose=False);
+   void listWhat (LogIO& os, Bool verbose=False) const;
 
 // List how data were obtained (SpectralWindow, Feed, and Antenna tables)
    void listHow (LogIO& os, Bool verbose=False) const;
 
 // List main table
-   void listMain (LogIO& os, Bool verbose=False);
+   void listMain (LogIO& os, Bool verbose=False) const;
 
 // List subtables
 // <group>
@@ -155,7 +155,7 @@ private:
    void clearFlags (LogIO& os) const;
 
 // For keeping track of the number of vis per field
-   Vector<Int> nVisPerField_;
+   mutable Vector<Int> nVisPerField_;
 
 
 };
