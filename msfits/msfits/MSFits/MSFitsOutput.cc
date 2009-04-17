@@ -2117,8 +2117,22 @@ Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
 void MSFitsOutput::handleAntNumbers(const MeasurementSet& ms,
 				    Vector<Int>& antnumbers) {
 
-  // Determine proper antenna numbers for the UVFITS file
-  //  from the MS ANTENNA NAME column
+  // This method parses the MS ANTENNA NAME into a antenna
+  //  number appropriate for the UVFITS output
+  // For VLA antennas, the names are nominally numbers, and
+  //  may be prepended with EA or VA.  These prefixes are
+  //  properly stripped before the remaining string is parsed
+  //  as a number.
+  // For other telescopes, the name is used if it is a pure
+  //  integer; otherwise the index + 1 is used (NB: AIPS demands
+  //  one-basedness.)
+
+  // Discern if which telescope
+  ROMSObservationColumns obscol(ms.observation());
+  String arrayName;
+  if (obscol.nrow()>0)
+    arrayName=obscol.telescopeName()(0);
+
   ROMSAntennaColumns antcol(ms.antenna());
   ROScalarColumn<String> antname(antcol.name());
   Int nAnt=antcol.nrow();
@@ -2126,19 +2140,24 @@ void MSFitsOutput::handleAntNumbers(const MeasurementSet& ms,
   antnumbers.resize(nAnt);
 
   for (Int iant=0;iant<nAnt;++iant) {
-    // Trim any leading letters (e.g. 
-    String name=antname(iant).from(RXint);
+    String name;
+    if (arrayName.contains("VLA"))
+      // Trim leading EA/VA, if present
+      name=antname(iant).from(RXint);
+    else
+      name=antname(iant);
 
     if (name.matches(RXint)) 
       antnumbers(iant)=atoi(name.chars());
     else {
+      // at least one name isn't a number, so use use index+1 for ALL
       indgen(antnumbers);
       antnumbers+=1;
       break;
     }
   }
 
-  cout << "antnumbers = " << antnumbers << endl;
+  //  cout << "antnumbers = " << antnumbers << endl;
 
 }
 
