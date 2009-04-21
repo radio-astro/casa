@@ -177,7 +177,9 @@ PlotLineWidget::PlotLineWidget(PlotFactoryPtr factory, bool useCompact,
     setLine(factory->line("black"));
     
     if(useCompact) {
-        connect(cWidth, SIGNAL(valueChanged(int)), SLOT(lineChanged()));
+        cWidth->setValidator(new QIntValidator(1, 99, cWidth));
+        connect(cWidth, SIGNAL(textChanged(const QString&)),
+                SLOT(lineChanged()));
         connect(cStyle, SIGNAL(currentIndexChanged(int)), SLOT(lineChanged()));
     } else {
         connect(nWidth, SIGNAL(valueChanged(int)), SLOT(lineChanged()));
@@ -191,7 +193,7 @@ PlotLineWidget::~PlotLineWidget() { }
 PlotLinePtr PlotLineWidget::getLine() const {
     PlotLinePtr line = itsFactory_->line("");
     line->setWidth((stackedWidget->currentIndex() == 0) ?
-                   cWidth->value() : nWidth->value());
+                   cWidth->text().toInt() : nWidth->value());
     line->setStyle(lineStyle());
     line->setColor(itsColorWidget_->getColor());
     return line;
@@ -204,8 +206,9 @@ void PlotLineWidget::setLine(PlotLinePtr line) {
         
         itsLine_ = itsFactory_->line(*line);
         int width = (int)(line->width() + 0.5);
-        if(stackedWidget->currentIndex() == 0) cWidth->setValue(width);
-        else                                   nWidth->setValue(width);
+        if(stackedWidget->currentIndex() == 0)
+            cWidth->setText(QString::number(width));
+        else nWidth->setValue(width);
         setLineStyle(line->style());
         itsColorWidget_->setColor(line->color());
         

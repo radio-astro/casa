@@ -95,7 +95,7 @@
        <item>
         <widget class="QLabel" name="msLocationLabel" >
          <property name="text" >
-          <string>Location</string>
+          <string>File Location</string>
          </property>
          <property name="textFormat" >
           <enum>Qt::RichText</enum>
@@ -164,12 +164,6 @@
        </item>
        <item>
         <widget class="QFrame" name="msAveragingFrame" >
-         <property name="sizePolicy" >
-          <sizepolicy vsizetype="MinimumExpanding" hsizetype="Preferred" >
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="frameShape" >
           <enum>QFrame::NoFrame</enum>
          </property>
@@ -292,7 +286,7 @@
               </sizepolicy>
              </property>
              <property name="text" >
-              <string>In Cache</string>
+              <string>In Cache?</string>
              </property>
             </widget>
            </item>
@@ -325,7 +319,7 @@
             <item>
              <widget class="QLabel" name="axesXDataLabel" >
               <property name="text" >
-               <string>Data:</string>
+               <string>Data Column:</string>
               </property>
               <property name="textFormat" >
                <enum>Qt::RichText</enum>
@@ -447,18 +441,6 @@
            </property>
            <item>
             <widget class="QLabel" name="axesXRangeLabel" >
-             <property name="minimumSize" >
-              <size>
-               <width>60</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize" >
-              <size>
-               <width>60</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="text" >
               <string>Range:</string>
              </property>
@@ -472,6 +454,12 @@
            </item>
            <item>
             <widget class="QFrame" name="axesXRangeFrame" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="frameShape" >
               <enum>QFrame::NoFrame</enum>
              </property>
@@ -536,7 +524,7 @@
               </sizepolicy>
              </property>
              <property name="text" >
-              <string>In Cache</string>
+              <string>In Cache?</string>
              </property>
             </widget>
            </item>
@@ -569,7 +557,7 @@
             <item>
              <widget class="QLabel" name="axesYDataLabel" >
               <property name="text" >
-               <string>Data:</string>
+               <string>Data Column:</string>
               </property>
               <property name="textFormat" >
                <enum>Qt::RichText</enum>
@@ -691,18 +679,6 @@
            </property>
            <item>
             <widget class="QLabel" name="axesYRangeLabel" >
-             <property name="minimumSize" >
-              <size>
-               <width>60</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize" >
-              <size>
-               <width>60</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="text" >
               <string>Range:</string>
              </property>
@@ -716,6 +692,12 @@
            </item>
            <item>
             <widget class="QFrame" name="axesYRangeFrame" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="frameShape" >
               <enum>QFrame::NoFrame</enum>
              </property>
@@ -1014,7 +996,7 @@
        <item>
         <widget class="QLabel" name="plotTitleLabel" >
          <property name="text" >
-          <string>Title</string>
+          <string>Plot Title</string>
          </property>
          <property name="textFormat" >
           <enum>Qt::RichText</enum>
@@ -1150,7 +1132,7 @@
        <item>
         <widget class="QLabel" name="canvasTitleLabel" >
          <property name="text" >
-          <string>Title</string>
+          <string>Canvas Title</string>
          </property>
          <property name="textFormat" >
           <enum>Qt::RichText</enum>
@@ -1199,75 +1181,70 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="canvasLegendLabel" >
-         <property name="text" >
-          <string>Legend</string>
+        <layout class="QHBoxLayout" >
+         <property name="spacing" >
+          <number>0</number>
          </property>
-         <property name="textFormat" >
-          <enum>Qt::RichText</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QFrame" name="legendFrame" >
-         <property name="frameShape" >
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <layout class="QVBoxLayout" >
-          <property name="spacing" >
-           <number>3</number>
-          </property>
-          <property name="leftMargin" >
-           <number>0</number>
-          </property>
-          <property name="topMargin" >
-           <number>0</number>
-          </property>
-          <property name="rightMargin" >
-           <number>0</number>
-          </property>
-          <property name="bottomMargin" >
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QRadioButton" name="canvasLegendNone" >
-            <property name="text" >
-             <string>None</string>
-            </property>
-            <property name="checked" >
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" >
-            <property name="spacing" >
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QRadioButton" name="canvasLegend" >
-              <property name="text" >
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="canvasLegendChooser" >
-              <property name="enabled" >
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy" >
-               <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
+         <item>
+          <widget class="QCheckBox" name="canvasLegend" >
+           <property name="text" >
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="canvasLegendLabel" >
+           <property name="text" >
+            <string>Legend</string>
+           </property>
+           <property name="textFormat" >
+            <enum>Qt::RichText</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType" >
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>10</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QComboBox" name="canvasLegendChooser" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="Line" name="line_5" >
@@ -1293,6 +1270,12 @@
          </item>
          <item>
           <widget class="QLabel" name="canvasXAxisLabel" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text" >
             <string>Show X Axis</string>
            </property>
@@ -1300,19 +1283,6 @@
             <enum>Qt::RichText</enum>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer>
-           <property name="orientation" >
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" >
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </item>
@@ -1329,7 +1299,7 @@
            <number>3</number>
           </property>
           <property name="leftMargin" >
-           <number>20</number>
+           <number>15</number>
           </property>
           <property name="topMargin" >
            <number>0</number>
@@ -1342,31 +1312,22 @@
           </property>
           <item>
            <widget class="QLabel" name="canvasXLabelLabel" >
-            <property name="minimumSize" >
-             <size>
-              <width>60</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>60</width>
-              <height>16777215</height>
-             </size>
-            </property>
             <property name="text" >
-             <string>X Label:</string>
+             <string>Label:</string>
             </property>
             <property name="textFormat" >
              <enum>Qt::RichText</enum>
-            </property>
-            <property name="alignment" >
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QFrame" name="canvasXLabelFrame" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="frameShape" >
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -1402,6 +1363,12 @@
          </item>
          <item>
           <widget class="QLabel" name="canvasYAxisLabel" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text" >
             <string>Show Y Axis</string>
            </property>
@@ -1409,19 +1376,6 @@
             <enum>Qt::RichText</enum>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer>
-           <property name="orientation" >
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" >
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </item>
@@ -1438,7 +1392,7 @@
            <number>3</number>
           </property>
           <property name="leftMargin" >
-           <number>20</number>
+           <number>15</number>
           </property>
           <property name="topMargin" >
            <number>0</number>
@@ -1451,31 +1405,118 @@
           </property>
           <item>
            <widget class="QLabel" name="canvasYLabelLabel" >
-            <property name="minimumSize" >
-             <size>
-              <width>60</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>60</width>
-              <height>16777215</height>
-             </size>
-            </property>
             <property name="text" >
-             <string>Y Label:</string>
+             <string>Label:</string>
             </property>
             <property name="textFormat" >
              <enum>Qt::RichText</enum>
-            </property>
-            <property name="alignment" >
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QFrame" name="canvasYLabelFrame" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape" >
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow" >
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_12" >
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="canvasGridLabel" >
+         <property name="text" >
+          <string>Grid Lines</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="gridFrame" >
+         <property name="maximumSize" >
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="frameShape" >
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" >
+          <property name="leftMargin" >
+           <number>0</number>
+          </property>
+          <property name="topMargin" >
+           <number>0</number>
+          </property>
+          <property name="rightMargin" >
+           <number>0</number>
+          </property>
+          <property name="bottomMargin" >
+           <number>0</number>
+          </property>
+          <property name="horizontalSpacing" >
+           <number>3</number>
+          </property>
+          <property name="verticalSpacing" >
+           <number>3</number>
+          </property>
+          <item row="0" column="0" >
+           <widget class="QCheckBox" name="canvasGridMajor" >
+            <property name="text" >
+             <string>Major</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" >
+           <widget class="QFrame" name="canvasGridMajorFrame" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape" >
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow" >
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QCheckBox" name="canvasGridMinor" >
+            <property name="text" >
+             <string>Minor</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" >
+           <widget class="QFrame" name="canvasGridMinorFrame" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="frameShape" >
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -1494,8 +1535,8 @@
          </property>
          <property name="sizeHint" >
           <size>
-           <width>258</width>
-           <height>91</height>
+           <width>236</width>
+           <height>121</height>
           </size>
          </property>
         </spacer>
@@ -1829,12 +1870,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>71</x>
-     <y>66</y>
+     <x>83</x>
+     <y>146</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
+     <x>161</x>
+     <y>148</y>
     </hint>
    </hints>
   </connection>
@@ -1845,12 +1886,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>111</x>
-     <y>66</y>
+     <x>83</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
+     <x>155</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -1861,12 +1902,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>104</x>
-     <y>66</y>
+     <x>83</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
+     <x>173</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -1877,12 +1918,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>100</x>
-     <y>66</y>
+     <x>83</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
+     <x>245</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -1893,12 +1934,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>62</x>
-     <y>66</y>
+     <x>83</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
+     <x>245</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -1909,28 +1950,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>85</x>
-     <y>66</y>
+     <x>83</x>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>127</x>
-     <y>66</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>canvasLegend</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>canvasLegendChooser</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>72</x>
-     <y>66</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>97</x>
-     <y>66</y>
+     <x>263</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -1941,12 +1966,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>68</x>
-     <y>66</y>
+     <x>54</x>
+     <y>144</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>68</x>
-     <y>66</y>
+     <x>130</x>
+     <y>161</y>
     </hint>
    </hints>
   </connection>
@@ -1957,12 +1982,60 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>70</x>
-     <y>66</y>
+     <x>54</x>
+     <y>186</y>
     </hint>
     <hint type="destinationlabel" >
+     <x>135</x>
+     <y>203</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>canvasGridMajor</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>canvasGridMajorFrame</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
      <x>73</x>
-     <y>66</y>
+     <y>256</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>102</x>
+     <y>249</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>canvasGridMinor</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>canvasGridMinorFrame</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>71</x>
+     <y>278</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>105</x>
+     <y>276</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>canvasLegend</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>canvasLegendChooser</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>40</x>
+     <y>105</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>115</x>
+     <y>102</y>
     </hint>
    </hints>
   </connection>

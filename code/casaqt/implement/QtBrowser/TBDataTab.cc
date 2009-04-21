@@ -524,6 +524,8 @@ void TBDataTab::formatField(int index) {
 // Public Slots //
 
 void TBDataTab::showWidgetInSplitter(QWidget* widget, bool isArray) {
+    if(rightWidget->getCurrentWidget() != widget)
+        clearWidgetInSplitter();
     rightWidget->setWidget(widget, true);
     rightWidget->show();
     arrayOpened = isArray;
@@ -531,7 +533,7 @@ void TBDataTab::showWidgetInSplitter(QWidget* widget, bool isArray) {
 
 void TBDataTab::clearWidgetInSplitter() {
     QWidget* widget = rightWidget->getCurrentWidget();
-    if(arrayPanel != NULL) {
+    if(widget == arrayPanel) {
         arrayPanel->removeActionsAssociatedWithArrays();
         arrayPanel = NULL;
     }
@@ -839,7 +841,6 @@ void TBDataTab::doubleClicked(int row, int col) {
                 arrayPanel = new TBArrayPanel(ttabs);
                 connect(arrayPanel, SIGNAL(allArraysClosed()),
                         this, SLOT(clearWidgetInSplitter()));
-                rightWidget->setCloseButtonText("Close All");
                 show = true;
             }
             TBViewArray* va = new TBViewArray(ttabs, TBConstants::itoa(row +
@@ -852,7 +853,10 @@ void TBDataTab::doubleClicked(int row, int col) {
                 va->setShouldRelease(false);
                 delete va;
             }
-            if(show) showWidgetInSplitter(arrayPanel, true);
+            if(show) {
+                showWidgetInSplitter(arrayPanel, true);
+                rightWidget->setCloseButtonText("Close All");
+            }
         } else {
             ttabs->getBrowser()->displayError(
                                  "This cell has invalid or no data.");

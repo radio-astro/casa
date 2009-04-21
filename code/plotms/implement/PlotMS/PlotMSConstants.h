@@ -228,6 +228,12 @@ public:
     
     // Default title (canvas, plot, etc.) format, in String form.
     static const String DEFAULT_TITLE_FORMAT;
+    
+    // Default show grid flags.
+    static const bool DEFAULT_SHOW_GRID;
+    
+    // Default grid lines.
+    static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
 };
 
 }

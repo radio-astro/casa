@@ -153,4 +153,11 @@ const String PMS::DEFAULT_TITLE_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
 
+const bool PMS::DEFAULT_SHOW_GRID = false;
+
+PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("gray");
+    return factory->line(*line);
+}
+
 }

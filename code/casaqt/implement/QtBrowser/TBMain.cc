@@ -25,6 +25,7 @@
 //#
 //# $Id: $
 #include <casaqt/QtBrowser/TBMain.qo.h>
+
 #include <casaqt/QtBrowser/TBBrowser.qo.h>
 #include <casaqt/QtBrowser/TBAction.h>
 #include <casaqt/QtBrowser/TBTableTabs.qo.h>
@@ -40,6 +41,7 @@
 #include <casaqt/QtBrowser/TBOptions.qo.h>
 #include <casaqt/QtBrowser/TBTaQL.qo.h>
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
+#include <casaqt/QtBrowser/TBFileDialog.qo.h>
 
 namespace casa {
 
@@ -328,7 +330,7 @@ void TBMain::editTable(TBTableTabs* ttabs, bool edit) {
 void TBMain::openTable() {
     if(waiting) return;
 
-    QString f = QFileDialog::getExistingDirectory(this, tr("Find Data"),
+    QString f = TBFileDialog::getExistingTable(this, tr("Find Data"),
             lastDirectory.c_str());
     
     if(!f.isEmpty()) {

@@ -181,6 +181,20 @@ public:
     
     // Gets the canvas's title using the set format and axes.
     String canvasTitle() const;
+    
+    // Gets/Sets whether grid major/minor lines are shown.
+    // <group>
+    bool showGridMajor() const;
+    bool showGridMinor() const;
+    void setShowGrid(bool major, bool minor);
+    // </group>
+    
+    // Gets/Sets grid major/minor lines.
+    // <group>
+    PlotLinePtr gridMajorLine() const;
+    PlotLinePtr gridMinorLine() const;
+    void setGridLines(PlotLinePtr major, PlotLinePtr minor);
+    // </group>
 
     
     // Gets/Sets the symbol for normal and masked points.
@@ -241,6 +255,12 @@ private:
     
     // Canvas title format.
     PlotMSLabelFormat itsCanvasTitleFormat_;
+    
+    // Show grid major/minor lines.
+    bool itsCanvasGridMajor_, itsCanvasGridMinor_;
+    
+    // Grid major/minor lines.
+    PlotLinePtr itsCanvasGridMajorLine_, itsCanvasGridMinorLine_;
     
     // Normal and masked symbols.
     PlotSymbolPtr itsSymbol_, itsMaskedSymbol_;

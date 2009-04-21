@@ -142,12 +142,20 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     QtUtilities::putInFrame(canvasXLabelFrame, itsXLabelWidget_);
     QtUtilities::putInFrame(canvasYLabelFrame, itsYLabelWidget_);
     
+    itsGridMajorLineWidget_ = new PlotLineWidget(factory);
+    itsGridMinorLineWidget_ = new PlotLineWidget(factory);
+    QtUtilities::putInFrame(canvasGridMajorFrame, itsGridMajorLineWidget_);
+    QtUtilities::putInFrame(canvasGridMinorFrame, itsGridMinorLineWidget_);
+    canvasGridMajorFrame->setEnabled(false);
+    canvasGridMinorFrame->setEnabled(false);
+    
     itsLabelDefaults_.insert(canvasTitleLabel, canvasTitleLabel->text());
     itsLabelDefaults_.insert(canvasLegendLabel, canvasLegendLabel->text());
     itsLabelDefaults_.insert(canvasXAxisLabel, canvasXAxisLabel->text());
     itsLabelDefaults_.insert(canvasXLabelLabel, canvasXLabelLabel->text());
     itsLabelDefaults_.insert(canvasYAxisLabel, canvasYAxisLabel->text());
     itsLabelDefaults_.insert(canvasYLabelLabel, canvasYLabelLabel->text());
+    itsLabelDefaults_.insert(canvasGridLabel, canvasGridLabel->text());
     
     // Setup export tab
     itsExportFileWidget_ = new QtFileWidget(false, true);
@@ -211,13 +219,17 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // Connect canvas
     connect(canvasTitleSameAsPlot, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     connect(itsCanvasTitleWidget_, SIGNAL(changed()), SLOT(tabChanged()));
-    connect(canvasLegendNone, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(canvasLegend, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     connect(canvasLegendChooser, SIGNAL(currentIndexChanged(int)),
             SLOT(tabChanged()));
     connect(canvasXAxis, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     connect(itsXLabelWidget_, SIGNAL(changed()), SLOT(tabChanged()));
     connect(canvasYAxis, SIGNAL(toggled(bool)), SLOT(tabChanged()));
     connect(itsYLabelWidget_, SIGNAL(changed()), SLOT(tabChanged()));
+    connect(canvasGridMajor, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(itsGridMajorLineWidget_, SIGNAL(changed()), SLOT(tabChanged()));
+    connect(canvasGridMinor, SIGNAL(toggled(bool)), SLOT(tabChanged()));
+    connect(itsGridMinorLineWidget_, SIGNAL(changed()), SLOT(tabChanged()));
     connect(canvasPlotButton, SIGNAL(clicked()), SLOT(plot()));
     
     // Connect export
@@ -227,8 +239,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
 PlotMSPlotTab::~PlotMSPlotTab() { }
 
 QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
-    return QList<QToolButton*>();
-}
+    return QList<QToolButton*>(); }
 
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {
@@ -300,11 +311,18 @@ PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
         params.setCanvasTitleFormat(itsPlotTitleWidget_->getValue());
     else
         params.setCanvasTitleFormat(itsCanvasTitleWidget_->getValue());
-    params.setLegend(!canvasLegendNone->isChecked(),PlotCanvas::legendPosition(
+    params.setLegend(canvasLegend->isChecked(), PlotCanvas::legendPosition(
                      canvasLegendChooser->currentText().toStdString()));
     params.setShowAxes(canvasXAxis->isChecked(), canvasYAxis->isChecked());
     params.setCanvasXAxisLabelFormat(itsXLabelWidget_->getValue());
     params.setCanvasYAxisLabelFormat(itsYLabelWidget_->getValue());
+    params.setShowGrid(canvasGridMajor->isChecked(),
+            canvasGridMinor->isChecked());
+    PlotLinePtr major = params.showGridMajor() ?
+            itsGridMajorLineWidget_->getLine() : params.gridMajorLine();
+    PlotLinePtr minor = params.showGridMinor() ?
+            itsGridMinorLineWidget_->getLine() : params.gridMinorLine();
+    params.setGridLines(major, minor);
     
     return params;
 }
@@ -362,7 +380,7 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     else
         itsCanvasTitleWidget_->setValue(params.canvasTitleFormat().format);
     
-    canvasLegendNone->setChecked(!params.showLegend());
+    canvasLegend->setChecked(params.showLegend());
     setChooser(canvasLegendChooser,
                PlotCanvas::legendPosition(params.legendPosition()));
     
@@ -370,6 +388,11 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     itsXLabelWidget_->setValue(params.canvasXAxisLabelFormat().format);
     canvasYAxis->setChecked(params.showYAxis());
     itsYLabelWidget_->setValue(params.canvasYAxisLabelFormat().format);
+
+    canvasGridMajor->setChecked(params.showGridMajor());
+    itsGridMajorLineWidget_->setLine(params.gridMajorLine());
+    canvasGridMinor->setChecked(params.showGridMinor());
+    itsGridMinorLineWidget_->setLine(params.gridMinorLine());
     
     itsUpdateFlag_ = oldupdate;
     
@@ -595,6 +618,12 @@ void PlotMSPlotTab::tabChanged() {
                     params.showYAxis() != newParams.showYAxis());
         changedText(canvasYLabelLabel, params.canvasYAxisLabelFormat() !=
                     newParams.canvasYAxisLabelFormat());
+        
+        changedText(canvasGridLabel, params.showGridMajor() !=
+                    newParams.showGridMajor() || params.showGridMinor() !=
+                    newParams.showGridMinor() || *params.gridMajorLine() !=
+                    *newParams.gridMajorLine() || *params.gridMinorLine() !=
+                    *newParams.gridMinorLine());
         
         itsUpdateFlag_ = true;
     }

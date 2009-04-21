@@ -205,8 +205,6 @@ void TBViewArray::contextMenuEvent(QContextMenuEvent* event) {
             return;
         }
         
-        // TODO
-        
         // Show menu.
         QMenu* menu = new QMenu();
         QAction* copy = menu->addAction("Copy");
@@ -686,7 +684,21 @@ void TBViewRecord::fill(QTableWidget& t, Record& r, String f, String s) {
             } else if(type == TBConstants::TYPE_RECORD) {
                 QTableWidget* tw = new QTableWidget();
                 fill(*tw, *data->asRecord(), f, s);
+                
+                // Make sure some record rows are visible.
+                unsigned int row = data->asRecord()->nfields();
+                if(row > TBConstants::DEFAULT_RECORD_VISIBLE_ROWS)
+                    row = TBConstants::DEFAULT_RECORD_VISIBLE_ROWS;
+                int height = tw->rowViewportPosition(row);
+                if(height < 0) {
+                    height = tw->rowViewportPosition(row - 1);
+                    height += tw->rowHeight(row - 1);
+                }
+                height += tw->horizontalHeader()->height() + 5;
+                
                 t.setCellWidget(i, 2, tw);
+                t.setRowHeight(i, height);
+                
             } else {
                 item = new QTableWidgetItem(data->asString().c_str());
                 item->setFlags(item->flags() & (~Qt::ItemIsEditable));

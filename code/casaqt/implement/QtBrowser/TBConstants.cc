@@ -161,6 +161,8 @@ BooleanFormat TBConstants::stringToBForm(String str) {
 const int TBConstants::SLICER_ROW_AXIS = -1;
 const int TBConstants::SLICER_COL_AXIS = -2;
 
+const unsigned int TBConstants::DEFAULT_RECORD_VISIBLE_ROWS = 4;
+
 String TBConstants::AIPS_PATH = "";
 String TBConstants::aipspath() {
     if(AIPS_PATH.empty()) {

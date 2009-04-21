@@ -100,6 +100,9 @@ private:
     QtLabelWidget* itsPlotTitleWidget_, *itsCanvasTitleWidget_,
                   *itsXLabelWidget_, *itsYLabelWidget_;
     
+    // Widgets for lines for grid major and minor.
+    PlotLineWidget* itsGridMajorLineWidget_, *itsGridMinorLineWidget_;
+    
     // Widgets for symbols for unflagged and flagged points, respectively.
     PlotSymbolWidget* itsSymbolWidget_, *itsMaskedSymbolWidget_;
     

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading ui file 'QtProgressWidget.ui'
 **
-** Created: Fri Apr 3 11:05:10 2009
+** Created: Mon Apr 20 17:15:14 2009
 **      by: Qt User Interface Compiler version 4.4.0-beta1
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!

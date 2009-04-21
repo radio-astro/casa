@@ -161,7 +161,21 @@ bool PlotMSSinglePlot::updateCanvas() {
                                itsParameters_.legendPosition());
         
         // Canvas title
-        itsCanvas_->setTitle(set ? itsParameters_.canvasTitle() : "");    
+        itsCanvas_->setTitle(set ? itsParameters_.canvasTitle() : "");
+        
+        // Grids
+        itsCanvas_->showGrid(itsParameters_.showGridMajor(),
+                itsParameters_.showGridMinor(), itsParameters_.showGridMajor(),
+                itsParameters_.showGridMinor());
+        
+        PlotLinePtr line = itsFactory_->line(itsParameters_.gridMajorLine());
+        if(!itsParameters_.showGridMajor()) line->setStyle(PlotLine::NOLINE);
+        itsCanvas_->setGridMajorLine(line);
+        
+        line = itsFactory_->line(itsParameters_.gridMinorLine());
+        if(!itsParameters_.showGridMinor()) line->setStyle(PlotLine::NOLINE);
+        itsCanvas_->setGridMinorLine(line);
+        
         return true;
         
     } catch(AipsError& err) {

@@ -6,8 +6,14 @@
     <x>0</x>
     <y>0</y>
     <width>222</width>
-    <height>130</height>
+    <height>118</height>
    </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle" >
    <string>Averaging Widget</string>
@@ -26,6 +32,9 @@
     <number>3</number>
    </property>
    <property name="horizontalSpacing" >
+    <number>3</number>
+   </property>
+   <property name="verticalSpacing" >
     <number>3</number>
    </property>
    <item row="0" column="0" >

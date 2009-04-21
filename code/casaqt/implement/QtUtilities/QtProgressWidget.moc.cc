@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'QtProgressWidget.qo.h'
 **
-** Created: Fri Apr 3 11:05:10 2009
+** Created: Mon Apr 20 17:15:15 2009
 **      by: The Qt Meta Object Compiler version 59 (Qt 4.4.0-beta1)
 **
 ** WARNING! All changes made in this file will be lost!

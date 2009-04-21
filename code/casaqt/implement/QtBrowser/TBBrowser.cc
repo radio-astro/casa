@@ -746,23 +746,33 @@ int TBBrowser::addTable(String f, bool taql, DriverParams* dp, int start,
     if(start < 0) start = 0;
     if(num < 1) num = TBConstants::DEFAULT_SELECT_NUM;
     
-    TBTableTabs* t = new TBTableTabs(this, f, dp, taql);
-    t->loadRows(start, num);
-    if(t->isAvailable()) {
-        tables.push_back(t);
-        currentFindRules.push_back(NULL);
-        currentFilters.push_back(NULL);
-        available = true;
-        tabWidget->addTab(t, t->getName().c_str());
-        updateEnabled();
-        tabWidget->setCurrentIndex(tables.size() - 1);
-        tabWidget->setTabToolTip(tables.size() - 1,
-                                 t->getTable()->tableToolTip().c_str());
-        QCoreApplication::processEvents();
-        emit tableOpened(t->getName());
-        return tables.size() - 1;
-    } else {
-        delete t;
+    // If it's not a valid table, an exception will be thrown in the
+    // TBTableTabs constructor (annoyingly), so try to catch that here.
+    TBTableTabs* t = NULL;
+    try {
+        t = new TBTableTabs(this, f, dp, taql);
+        t->loadRows(start, num);
+        if(t->isAvailable()) {
+            tables.push_back(t);
+            currentFindRules.push_back(NULL);
+            currentFilters.push_back(NULL);
+            available = true;
+            tabWidget->addTab(t, t->getName().c_str());
+            updateEnabled();
+            tabWidget->setCurrentIndex(tables.size() - 1);
+            tabWidget->setTabToolTip(tables.size() - 1,
+                                     t->getTable()->tableToolTip().c_str());
+            QCoreApplication::processEvents();
+            emit tableOpened(t->getName());
+            return tables.size() - 1;
+        } else {
+            delete t;
+            displayError("Could not open table " + f + "!");
+            return -1;
+        }
+    } catch(...) {
+        if(t != NULL) delete t;
+        displayError("Could not open table " + f + "!");
         return -1;
     }
 }

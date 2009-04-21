@@ -91,7 +91,19 @@ bool PlotMSSinglePlotParameters::equals(const PlotMSWatchedParameters& other,
                  itsCanvasYAxisLabelFormat_!= o->itsCanvasYAxisLabelFormat_) ||
            itsShowLegend_ != o->itsShowLegend_ ||
            (itsShowLegend_ && itsLegendPos_ != o->itsLegendPos_) ||
-           itsCanvasTitleFormat_ != o->itsCanvasTitleFormat_) return false;
+           itsCanvasTitleFormat_ != o->itsCanvasTitleFormat_ ||
+           itsCanvasGridMajor_ != o->itsCanvasGridMajor_ ||
+           itsCanvasGridMinor_ != o->itsCanvasGridMinor_ ||
+           (itsCanvasGridMajor_ &&
+           ((itsCanvasGridMajorLine_.null()
+           != o->itsCanvasGridMajorLine_.null()) ||
+           (!itsCanvasGridMajorLine_.null() && *itsCanvasGridMajorLine_
+           != *o->itsCanvasGridMajorLine_))) ||
+           (itsCanvasGridMinor_ &&
+           ((itsCanvasGridMinorLine_.null()
+           != o->itsCanvasGridMinorLine_.null()) ||
+           (!itsCanvasGridMinorLine_.null() && *itsCanvasGridMinorLine_
+           != *o->itsCanvasGridMinorLine_)))) return false;
     }
     
     // Check plot
@@ -253,6 +265,44 @@ void PlotMSSinglePlotParameters::setCanvasTitleFormat(
 String PlotMSSinglePlotParameters::canvasTitle() const {
     return itsCanvasTitleFormat_.getLabel(itsXAxis_, itsYAxis_); }
 
+bool PlotMSSinglePlotParameters::showGridMajor() const {
+    return itsCanvasGridMajor_; }
+bool PlotMSSinglePlotParameters::showGridMinor() const {
+    return itsCanvasGridMinor_; }
+
+void PlotMSSinglePlotParameters::setShowGrid(bool major, bool minor) {
+    if(itsCanvasGridMajor_ != major || itsCanvasGridMinor_ != minor) {
+        itsCanvasGridMajor_ = major;
+        itsCanvasGridMinor_ = minor;
+        if(updateFlag_) updateFlag(CANVAS, true, true);
+    }
+}
+
+PlotLinePtr PlotMSSinglePlotParameters::gridMajorLine() const {
+    return itsCanvasGridMajorLine_; }
+PlotLinePtr PlotMSSinglePlotParameters::gridMinorLine() const {
+    return itsCanvasGridMinorLine_; }
+
+void PlotMSSinglePlotParameters::setGridLines(PlotLinePtr major,
+        PlotLinePtr minor) {
+    // first check for different nulls
+    bool update = itsCanvasGridMajorLine_.null() != major.null() ||
+                  itsCanvasGridMinorLine_.null() != minor.null();
+    
+    // if they're all the same, check equality if not null
+    if(!update && !itsCanvasGridMajorLine_.null())
+        update = *itsCanvasGridMajorLine_ != *major;
+    if(!update && !itsCanvasGridMinorLine_.null())
+        update = *itsCanvasGridMinorLine_!= *minor;
+    
+    if(update) {
+        itsCanvasGridMajorLine_ = major;
+        itsCanvasGridMinorLine_ = minor;
+        
+        if(updateFlag_) updateFlag(CANVAS, true, true);
+    }
+}
+
 
 PlotSymbolPtr PlotMSSinglePlotParameters::symbol() const { return itsSymbol_; }
 PlotSymbolPtr PlotMSSinglePlotParameters::maskedSymbol() const {
@@ -309,6 +359,8 @@ PlotMSSinglePlotParameters& PlotMSSinglePlotParameters::operator=(
     setShowAxes(copy.showXAxis(), copy.showYAxis());
     setLegend(copy.showLegend(), copy.legendPosition());
     setCanvasTitleFormat(copy.canvasTitleFormat());
+    setShowGrid(copy.showGridMajor(), copy.showGridMinor());
+    setGridLines(copy.gridMajorLine(), copy.gridMinorLine());
 
     setSymbols(copy.symbol(), copy.maskedSymbol());
     setPlotTitleFormat(copy.plotTitleFormat());
@@ -335,6 +387,9 @@ void PlotMSSinglePlotParameters::setDefaults(PlotFactoryPtr factory) {
     itsShowLegend_ = PMS::DEFAULT_SHOWLEGEND;
     itsLegendPos_ = PMS::DEFAULT_LEGENDPOSITION;
     itsCanvasTitleFormat_ = itsPlotTitleFormat_ = PMS::DEFAULT_TITLE_FORMAT;
+    itsCanvasGridMajor_ = itsCanvasGridMinor_ = PMS::DEFAULT_SHOW_GRID;
+    itsCanvasGridMajorLine_ = PMS::DEFAULT_GRID_LINE(factory);
+    itsCanvasGridMinorLine_ = PMS::DEFAULT_GRID_LINE(factory);
     itsSymbol_ = PMS::DEFAULT_SYMBOL(factory);
     itsMaskedSymbol_ = PMS::DEFAULT_MASKED_SYMBOL(factory);
     
