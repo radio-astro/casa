@@ -1045,7 +1045,9 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 
     // make sure shape of visweights_p is correct - same as vb.imagingWeight()
     if( taylor == 0 ) 
-    {
+    {       
+       if(visweights_p.shape() != vb.imagingWeight().shape())
+	       visweights_p.resize(vb.imagingWeight().shape());
        visweights_p = vb.imagingWeight();
     }
     else
