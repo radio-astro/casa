@@ -555,15 +555,28 @@ class asapplotter:
             end = 0
             inc = -1
         # find min index
-        while start > 0 and data[start] < mn:
-            start+= inc
+        #while start > 0 and data[start] < mn:
+        #    start+= inc
+        minind=start
+        for ind in xrange(start,end+inc,inc):
+            if data[ind] > mn: break
+            minind=ind
         # find max index
-        while end > 0 and data[end] > mx:
-            end-=inc
-        if end > 0: end +=1
+        #while end > 0 and data[end] > mx:
+        #    end-=inc
+        #if end > 0: end +=1
+        maxind=end
+        for ind in xrange(end,start-inc,-inc):
+            if data[ind] < mx: break
+            maxind=ind
+        start=minind
+        end=maxind
         if start > end:
-            return end,start
-        return start,end
+            return end,start+1
+        elif start < end:
+            return start,end+1
+        else:
+            return start,end
 
     def _reset(self):
         self._usermask = []
@@ -604,10 +617,8 @@ class asapplotter:
             nstack = min(nstack,maxstack)
         if n > 1:
             ganged = rcParams['plotter.ganged']
-            ###Start Mod: 2008.09.22 kana ###
             if self._panelling == 'i':
                 ganged = False
-            ###End Mod#######################
             if self._rows and self._cols:
                 n = min(n,self._rows*self._cols)
                 self._plotter.set_panels(rows=self._rows,cols=self._cols,
@@ -687,14 +698,16 @@ class asapplotter:
                     allxlim += xlim
                     ylim= self._minmaxy or [ma.minimum(y),ma.maximum(y)]
                     allylim += ylim
+                else:
+                    xlim = self._minmaxx or []
+                    allxlim += xlim
+                    ylim= self._minmaxy or []
+                    allylim += ylim
                 stackcount += 1
                 # last in colour stack -> autoscale x
-                if stackcount == nstack:
+                if stackcount == nstack and len(allxlim) > 0:
                     allxlim.sort()
-                    ###Start Mod: 2008.09.22 kana ###
-                    #self._plotter.axes.set_xlim([allxlim[0],allxlim[-1]])
                     self._plotter.subplots[panelcount-1]['axes'].set_xlim([allxlim[0],allxlim[-1]])
-                    ###End Mod#######################
                     # clear
                     allxlim =[]
 
@@ -704,7 +717,7 @@ class asapplotter:
             # ignore following rows
             if (panelcount == n) and (stackcount == nstack):
                 # last panel -> autoscale y if ganged
-                if rcParams['plotter.ganged']:
+                if rcParams['plotter.ganged'] and len(allylim) > 0:
                     allylim.sort()
                     self._plotter.set_limits(ylim=[allylim[0],allylim[-1]])
                 break
