@@ -727,19 +727,21 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 	}
 	actualOffset(2)=uvOffset(2);
-	IPosition s(flags.shape());
+	//	IPosition s(flags.shape());
+	const IPosition& fs=flags.shape();
+	std::vector<Int> s(fs.begin(), fs.end());
 	// Now pass all the information down to a 
 	// FORTRAN routine to do the work
 	gwproj(uvw.getStorage(del),
 	       dphase.getStorage(del),
 	       datStorage,
-	       &s(0),
-	       &s(1),
+	       &s[0],
+	       &s[1],
 	       &idopsf,
 	       flags.getStorage(del),
 	       rowFlags.getStorage(del),
 	       wgtStorage,
-	       &s(2),
+	       &s[2],
 	       &rownr,
 	       uvScale.getStorage(del),
 	       actualOffset.getStorage(del),
@@ -769,17 +771,19 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     Complex *gridstor=griddedData.getStorage(gridcopy);
     Bool convcopy;
     const Complex *convstor=convFunc.getStorage(convcopy);
-    IPosition s(flags.shape());
+    //    IPosition s(flags.shape());
+    const IPosition& fs=flags.shape();
+    std::vector<Int> s(fs.begin(), fs.end());
     gwproj(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
-	   &s(0),
-	   &s(1),
+	   &s[0],
+	   &s[1],
 	   &idopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
 	   wgtStorage,
-	   &s(2),
+	   &s[2],
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
@@ -913,15 +917,18 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 	  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 	}
 	actualOffset(2)=uvOffset(2);
-	IPosition s(data.shape());
+	//	IPosition s(data.shape());
+	const IPosition& fs=data.shape();
+	std::vector<Int> s(fs.begin(), fs.end());
+
 	dwproj(uvw.getStorage(del),
 	       dphase.getStorage(del),
 	       datStorage,
-	       &s(0),
-	       &s(1),
+	       &s[0],
+	       &s[1],
 	       flags.getStorage(del),
 	       rowFlags.getStorage(del),
-	       &s(2),
+	       &s[2],
 	       &rownr,
 	       uvScale.getStorage(del),
 	       actualOffset.getStorage(del),
@@ -951,15 +958,17 @@ void WProjectFT::get(VisBuffer& vb, Int row)
     const Complex *gridstor=griddedData.getStorage(gridcopy);
     Bool convcopy;
     const Complex *convstor=convFunc.getStorage(convcopy);
-    IPosition s(vb.modelVisCube().shape());
+    //    IPosition s(vb.modelVisCube().shape());
+    const IPosition& fs=vb.modelVisCube().shape();
+    std::vector<Int> s(fs.begin(), fs.end());
     dwproj(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
-	   &s(0),
-	   &s(1),
+	   &s[0],
+	   &s[1],
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
-	   &s(2),
+	   &s[2],
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),

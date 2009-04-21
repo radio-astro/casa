@@ -1986,7 +1986,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void nPBWProjectFT::runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 				   Cube<Complex>& visdata,
-				   IPosition& s,
+				   IPosition& fs,
 				   //				Cube<Complex>& gradVisAzData,
 				   //				Cube<Complex>& gradVisElData,
 				   //				IPosition& gradS,
@@ -2061,13 +2061,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualConvSize = convFunc.shape()(0);
     
     IPosition shp=convSupport.shape();
+
+    std::vector<Int> s(fs.begin(), fs.end());
     
     dpbwproj(uvw_p,
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s[0],
+	     &s[1],
 	     //	   gradVisAzData_p,
 	     //	   gradVisElData_p,
 	     //	    &gradS(0),
@@ -2075,7 +2077,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     //	   &Conj,
 	     flags_p,
 	     rowFlags_p,
-	     &s(2),
+	     &s[2],
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -2137,7 +2139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void nPBWProjectFT::runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
 				       Cube<Complex>& visdata,
-				       IPosition& s,
+				       IPosition& fs,
 				       Cube<Complex>& gradVisAzData,
 				       Cube<Complex>& gradVisElData,
 				       //				     IPosition& gradS,
@@ -2201,13 +2203,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualConvSize = convFunc.shape()(0);
     
     IPosition shp=convSupport.shape();
-
+    std::vector<Int> s(fs.begin(), fs.end());
     dpbwgrad(uvw_p,
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s[0],
+	     &s[1],
 	     gradVisAzData_p,
 	     gradVisElData_p,
 	     //	    &gradS(0),
@@ -2215,7 +2217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     &Conj,
 	     flags_p,
 	     rowFlags_p,
-	     &s(2),
+	     &s[2],
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -2279,7 +2281,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void nPBWProjectFT::runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
 				   const Complex& visdata,
-				   IPosition& s,
+				   IPosition& fs,
 				   //				Cube<Complex>& gradVisAzData,
 				   //				Cube<Complex>& gradVisElData,
 				   //				IPosition& gradS,
@@ -2356,13 +2358,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualConvSize = convFunc.shape()(0);
     
     IPosition shp=convSupport.shape();
-    
+    std::vector<Int> s(fs.begin(), fs.end());
+
     gpbwproj(uvw_p,
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s[0],
+	     &s[1],
 	     //	   gradVisAzData_p,
 	     //	   gradVisElData_p,
 	     //	    &gradS(0),
@@ -2372,7 +2375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     flags_p,
 	     rowFlags_p,
 	     weight_p,
-	     &s(2),
+	     &s[2],
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,

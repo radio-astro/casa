@@ -104,7 +104,7 @@ LatConvEquation::evaluate(const IPosition & position,
       IPosition newblc(itsPsf->ndim(), 0);
       for(uInt i = 0; i < itsPsf->ndim(); i++){
 	newblc(i) = - min(blc(i), 0);
-	newSize(i) = max(trc(i)+1, psfSize(i)) + newblc(i);
+	newSize(i) = std::max(trc(i)+1, psfSize(i)) + newblc(i);
 	newtrc(i) = newblc(i) + psfSize(i) - 1;
       }
       {

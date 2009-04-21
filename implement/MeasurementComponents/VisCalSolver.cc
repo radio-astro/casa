@@ -795,10 +795,10 @@ void VisCalSolver::accGradHess() {
 
   IPosition dRip(dR().shape());
 
-  Int& nRow(dRip(3));
-  Int& nChan(dRip(2));
-  Int& nPar(dRip(1));   // pars per antenna
-  Int& nCorr(dRip(0));
+  Int nRow(dRip(3));
+  Int nChan(dRip(2));
+  Int nPar(dRip(1));   // pars per antenna
+  Int nCorr(dRip(0));
 
   ArrayIterator<Bool>  flag(svb().flag(),1);        // fl(chan) by (row)
   ArrayIterator<Float> wtMat(svb().weightMat(),1);  // wt(corr) by (row)
@@ -990,10 +990,10 @@ void VisCalSolver::accGradHess2() {
     
     IPosition dRip(dR().shape());
     
-    Int& nRow(dRip(3));
-    Int& nChan(dRip(2));
-    Int& nPar(dRip(1));   // pars per antenna
-    Int& nCorr(dRip(0));
+    Int nRow(dRip(3));
+    Int nChan(dRip(2));
+    Int nPar(dRip(1));   // pars per antenna
+    Int nCorr(dRip(0));
     
     ArrayIterator<Bool>  flag(cvb.residFlag(),1);        // fl(chan) by (row)
     ArrayIterator<Float> wtMat(cvb.weightMat(),1);  // wt(corr) by (row)

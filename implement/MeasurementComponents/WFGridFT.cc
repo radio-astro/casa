@@ -728,19 +728,21 @@ void WFGridFT::multiPut(const VisBuffer& vb, Int row, Bool dopsf, Int nmaps)
         for (Int i=0;i<2;i++) {
           actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 	}
-	IPosition s(vb.visCube().shape());
+	//	IPosition s(vb.visCube().shape());
+	const IPosition& fs=vb.visCube().shape();
+	std::vector<Int> s(fs.begin(), fs.end());
         // Now pass all the information down to a 
 	// FORTRAN routine to do the work
 	ggridft(uvw.getStorage(del),
 		dphase.getStorage(del),
 		vb.visCube().getStorage(del),
-                &s(0),
-		&s(1),
+                &s[0],
+		&s[1],
 		&idopsf,
 		flags.getStorage(del),
 		rowFlags.getStorage(del),
 		vb.imagingWeight().getStorage(del),
-		&s(2),
+		&s[2],
 		&rownr,
 		uvScale.getStorage(del),
 		actualOffset.getStorage(del),
@@ -765,35 +767,38 @@ void WFGridFT::multiPut(const VisBuffer& vb, Int row, Bool dopsf, Int nmaps)
     //   Matrix<Float> counter(npol, nchan);
    newSumWeight=*(sumWeightPtr[nth]);
    convertArray(sumWeight,newSumWeight);
-    IPosition s(vb.visCube().shape());
-    ggridft(uvw.getStorage(del),
-	    dphase.getStorage(del),
-	    vb.visCube().getStorage(del),
-	    &s(0),
-	    &s(1),
-	    &idopsf,
-	    flags.getStorage(del),
-	    rowFlags.getStorage(del),
-	    vb.imagingWeight().getStorage(del),
-	    &s(2),
-	    &row,
-	    uvScale.getStorage(del),
-	    uvOffset.getStorage(del),
-	    (*griddedDataNumber[nth]).getStorage(del),
-	    &nx,
-	    &ny,
-	    &npol,
-	    &nchan,
-	    vb.frequency().getStorage(del),
-	    &C::c,
-	    &((gridderNumber[nth])->cSupport()(0)),
-      	    &((gridderNumber[nth])->cSampling()),
-	    (gridderNumber[nth])->cFunction().getStorage(del),
-	    chanMap.getStorage(del),
-	    polMap.getStorage(del),
-	    sumWeight.getStorage(del));
-    convertArray(newSumWeight, sumWeight);
-    (*(sumWeightPtr[nth]))=newSumWeight;
+   //   IPosition s(vb.visCube().shape());
+   const IPosition& fs=vb.visCube().shape();
+   std::vector<Int> s(fs.begin(), fs.end());
+
+   ggridft(uvw.getStorage(del),
+	   dphase.getStorage(del),
+	   vb.visCube().getStorage(del),
+	   &s[0],
+	   &s[1],
+	   &idopsf,
+	   flags.getStorage(del),
+	   rowFlags.getStorage(del),
+	   vb.imagingWeight().getStorage(del),
+	   &s[2],
+	   &row,
+	   uvScale.getStorage(del),
+	   uvOffset.getStorage(del),
+	   (*griddedDataNumber[nth]).getStorage(del),
+	   &nx,
+	   &ny,
+	   &npol,
+	   &nchan,
+	   vb.frequency().getStorage(del),
+	   &C::c,
+	   &((gridderNumber[nth])->cSupport()(0)),
+	   &((gridderNumber[nth])->cSampling()),
+	   (gridderNumber[nth])->cFunction().getStorage(del),
+	   chanMap.getStorage(del),
+	   polMap.getStorage(del),
+	   sumWeight.getStorage(del));
+   convertArray(newSumWeight, sumWeight);
+   (*(sumWeightPtr[nth]))=newSumWeight;
     
 
   }
@@ -1003,15 +1008,18 @@ void WFGridFT::multiGet(VisBuffer& vb, Int row, Int nmaps)
         for (Int i=0;i<2;i++) {
           actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 	}
-	IPosition s(vb.modelVisCube().shape());
+	//	IPosition s(vb.modelVisCube().shape());
+	const IPosition& fs=vb.modelVisCube().shape();
+	std::vector<Int> s(fs.begin(), fs.end());
+
 	dgridft(uvw.getStorage(del),
 		dphase.getStorage(del),
 		adder.getStorage(del),
-                &s(0),
-		&s(1),
+                &s[0],
+		&s[1],
 		flags.getStorage(del),
 		rowFlags.getStorage(del),
-		&s(2),
+		&s[2],
 		&rownr,
 		uvScale.getStorage(del),
 		actualOffset.getStorage(del),
@@ -1032,15 +1040,17 @@ void WFGridFT::multiGet(VisBuffer& vb, Int row, Int nmaps)
   }
   else {
     Bool del;
-    IPosition s(vb.modelVisCube().shape());
+    //    IPosition s(vb.modelVisCube().shape());
+    const IPosition& fs=vb.modelVisCube().shape();
+    std::vector<Int> s(fs.begin(), fs.end());
     dgridft(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    adder.getStorage(del),
-	    &s(0),
-	    &s(1),
+	    &s[0],
+	    &s[1],
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
-	    &s(2),
+	    &s[2],
 	    &row,
 	    uvScale.getStorage(del),
 	    uvOffset.getStorage(del),

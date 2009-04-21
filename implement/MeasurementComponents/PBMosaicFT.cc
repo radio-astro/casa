@@ -669,7 +669,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void PBMosaicFT::runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 				 Cube<Complex>& visdata,
-				 IPosition& s,
+				 IPosition& fs,
 				 Int& Conj,
 				 Cube<Int>& flags,Vector<Int>& rowFlags,
 				 Int& rownr,Vector<Double>& actualOffset,
@@ -740,14 +740,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
+    std::vector<Int> s(fs.begin(), fs.end());
     dpbmos(uvw_p,
 	   dphase_p,
 	   visdata_p,
-	   &s(0),
-	   &s(1),
+	   &s[0],
+	   &s[1],
 	   flags_p,
 	   rowFlags_p,
-	   &s(2),
+	   &s[2],
 	   &rownr,
 	   uvScale_p,
 	   actualOffset_p,
@@ -809,7 +810,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void PBMosaicFT::runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
 				     Cube<Complex>& visdata,
-				     IPosition& s,
+				     IPosition& fs,
 				     Cube<Complex>& gradVisAzData,
 				     Cube<Complex>& gradVisElData,
 				     Int& Conj,
@@ -873,17 +874,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
+    std::vector<Int> s(fs.begin(), fs.end());
+
     dpbwgrad(uvw_p,
 	     dphase_p,
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s[0],
+	     &s[1],
 	     gradVisAzData_p,
 	     gradVisElData_p,
 	     &Conj,
 	     flags_p,
 	     rowFlags_p,
-	     &s(2),
+	     &s[2],
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -924,7 +927,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void PBMosaicFT::runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
 				 const Complex& visdata,
-				 IPosition& s,
+				 IPosition& fs,
 				 Int& Conj,
 				 Cube<Int>& flags,Vector<Int>& rowFlags,
 				 const Matrix<Float>& weight,
@@ -1000,16 +1003,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
+    std::vector<Int> s(fs.begin(), fs.end());
+
     gpbmos(uvw_p,
 	   dphase_p,
 	   visdata_p,
-	   &s(0),
-	   &s(1),
+	   &s[0],
+	   &s[1],
 	   &doPSF,
 	   flags_p,
 	   rowFlags_p,
 	   weight_p,
-	   &s(2),
+	   &s[2],
 	   &rownr,
 	   uvScale_p,
 	   actualOffset_p,
