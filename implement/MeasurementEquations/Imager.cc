@@ -1559,6 +1559,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
+  os << "Defining image properties:";
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
      << "' celly='" << celly.getValue() << celly.getUnit()
@@ -1568,17 +1569,18 @@ Bool Imager::defineImage(const Int nx, const Int ny,
      << " spwids=" << spectralwindowids
      << " fieldid=" <<   fieldid << " facets=" << facets
      << " distance='" << distance.getValue() << distance.getUnit() <<"'";
+  os << LogIO::POST;
   ostringstream clicom;
   clicom << " phaseCenter='" << phaseCenter;
-  clicom << "' mStart='" << mStart << "' mStep='" << qStep << "'";
+  clicom << "' mStart='" << mStart << "' qStep='" << qStep << "'";
+  clicom << "' mFreqStart='" << mFreqStart;
   os << String(clicom);
+  os << LogIO::POST;
   
   try {
     
     this->lock();
     this->writeCommand(os);
-
-    os << "Defining image properties" << LogIO::POST;
   
     doTrackSource_p=dotrackDir;
     trackDir_p=trackDir;
@@ -1603,10 +1605,10 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 	Int nxc = (Int)cn.nextLargerEven(nx);
 	Int nnxc = (Int)cn.nearestEven(nx);
 	if (nxc == nnxc) {
-	  os << LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	  os << LogIO::POST << "nx = " << nx << " is not composite; nx = " 
 	     << nxc << " will be more efficient" << LogIO::POST;
 	} else {
-	  os <<  LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	  os <<  LogIO::POST << "nx = " << nx << " is not composite; nx = " 
 	     << nxc <<  " or " << nnxc << " will be more efficient" << LogIO::POST;
 	}
       }
@@ -1614,13 +1616,13 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 	Int nyc = (Int)cn.nextLargerEven(ny);
 	Int nnyc = (Int)cn.nearestEven(ny);
 	if (nyc == nnyc) {
-	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " 
+	  os <<  LogIO::POST << "ny = " << ny << " is not composite; ny = " 
 	     << nyc << " will be more efficient" << LogIO::POST;
 	} else {
-	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " << nyc << 
+	  os <<  LogIO::POST << "ny = " << ny << " is not composite; ny = " << nyc << 
 	      " or " << nnyc << " will be more efficient" << LogIO::POST;
 	}
-	os << LogIO::WARN 
+	os << LogIO::POST
 	   << "You may safely ignore this message for single dish imaging" 
 	   << LogIO::POST;
 
