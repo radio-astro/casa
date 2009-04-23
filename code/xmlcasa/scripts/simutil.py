@@ -11,11 +11,6 @@ qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = qatool.create()
 
 class simutil:
-    #def __init__(self, direction="", totaltime=qa.quantity("0h"), verbose=False):
-    #    self.direction=direction
-    #    self.verbose=verbose
-    #    self.totaltime=totaltime
-
     def __init__(self, direction="",
                  startfreq=qa.quantity("245GHz"),
                  bandwidth=qa.quantity("1GHz"),
@@ -508,7 +503,7 @@ class simutil:
                     self.msg("You must specify hemisphere=N|S in your antenna file",origin="readant",color="31")
                     return -1
                 
-                if self.verbose: foo=self.getdatum(datum,verbose=True)
+                # if self.verbose: foo=self.getdatum(datum,verbose=True)
                 for i in range(len(inx)):
                     x,y,z = self.utm2xyz(inx[i],iny[i],inz[i],int(zone),datum,nors)
                     stnx.append(x)
@@ -517,10 +512,6 @@ class simutil:
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
-#                    if params["observatory"]=="ACA":
-#                        ## cludge because ACA isn't in the data repo yet
-#                        obs=me.measure(me.observatory("ALMA"),'WGS84')
-#                    else:
                     obs=me.measure(me.observatory(params["observatory"]),'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
                     obslon=qa.convert(obs['m0'],'deg')['value']
@@ -776,7 +767,7 @@ class simutil:
             self.msg("I can't figure out what ellipsoid %s is" % ellipsoid,color="31")
             return -1
         
-        if self.verbose:
+        if verbose:
             self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]))
         return datum[0],datum[1],datum[2],ellipsoids[ellipsoid][0],ellipsoids[ellipsoid][1]
     
@@ -866,7 +857,7 @@ class simutil:
         
         rad=180./pl.pi
         
-        offx,offy,offz,er,rf = self.getdatum(datum)
+        offx,offy,offz,er,rf = self.getdatum(datum,verbose=self.verbose)
 
         f=1./rf
         esq=(2*f-f*f)
@@ -936,7 +927,7 @@ class simutil:
     
     def long2xyz(self,long,lat,elevation,datum):
         
-        dx,dy,dz,er,rf = self.getdatum(datum)
+        dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
         
         f=1./rf
         esq=2*f-f**2

@@ -83,6 +83,13 @@ vpmanager::done()
   return true;
 }
 
+//TODO!
+// list
+// vpmanager::list_known_telescopes()
+// {
+//   return me.   // Use pbmath instead.
+// }
+
 ::casac::record*
 vpmanager::setcannedpb(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& commonpb, const bool dosquint, const ::casac::variant& paincrement, const bool usesymmetricbeam)
 {

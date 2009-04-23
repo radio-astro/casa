@@ -6,7 +6,7 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="feather">
-	<shortdescription>Feathering: Combine two images using the Fourier Addition</shortdescription>
+	<shortdescription>Combine two images using their Fourier transforms</shortdescription>
 	<description>
 The algorithm converts each image to the gridded visibility
 plane, combines them, and reconverts them into an combined
@@ -32,28 +32,31 @@ flux density normalization scale.
 	</input>
 
 <example>
+	This algorithm transforms each image to the gridded visibility plane,
+	combines them, and retransforms them into an combined image.
+	"Feathering" is usually used as a way to combine different data sets
+	that each cover different spatial frequency ranges, i.e. single dish
+	and interferometer data.  It gets its name from smoothly switching from
+	one data set to the other using weights assigned according to the
+	sensitivity of each at any given spatial frequency.  Note that it does
+	not fill in gaps, if any, between the spatial frequency ranges.
 
-	Feathering: Combine two images using the Fourier Addition:
-	
-	The algorithm converts each image to the gridded visibility
-	plane, combines them, and reconverts them into an combined
-	image.  The images must have a well-defined beam shape (clean beam),
-	given in the image, in order for feathering to work well.
-	The two images must be on the same grid and have the same
-	flux density normalization scale.
+	Each image must include a well-defined beam shape (clean beam)
+	for feathering to work well.  The two images must be on the same grid and
+	have the same flux density normalization scale.
 
 	Keyword arguments:
         imagename -- Name of output feathered image
-                default: none; example: imagename='orion_combined'
+                default: none; example: imagename='orion_combined.im'
         highres -- Name of high resolution (interferometer) image
-                default: none; example: imagename='orion_vla.im'
+                default: none; example: highres='orion_vla.im'
 	     This image is often a clean image obtained from synthesis
 		observations.
         lowres -- Name of low resolution (single dish) image
-                default: none; example: imagename='orion_gbt.im'
-	     This image is often a image from a single-dish oobservations
-	        or a clean image obtained from a lower resolution synthesis
+                default: none; example: lowres='orion_gbt.im'
+	     This image is often a image from a single-dish observations
+	        or a clean image obtained from lower resolution synthesis
 		observations.
- </example>
- </task>
- </casaxml>
+</example>
+</task>
+</casaxml>

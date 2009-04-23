@@ -400,6 +400,9 @@ void VLAFiller::fill(Int verbose){
     obsCols.releaseDateMeas().put(newRow, obsTimeRange(1));
     ostringstream oos;
 
+    // Tidy up FIELD name duplicates
+    fixFieldDuplicates(itsMS.field());
+
   } else {
     if (nrow() == 0) {
       itsLog << "No data in the measurement set\n";
@@ -624,6 +627,10 @@ Bool VLAFiller::fillOne() {
     const MVPosition vlaCentrePos = 
       dynamic_cast<const MPosition*>(itsFrame.position())->getValue();
 
+
+    Vector<Int> antOrder(29);
+    antOrder=-1;
+    Vector<MPosition> thisPos(nAnt);
     for (uInt a = 0; a < nAnt; a++) {
       const VLAADA& ada = itsRecord.ADA(a);
       // Need to do the conversion from bx, by, bz (which is the HADEC frame)
@@ -634,8 +641,12 @@ Bool VLAFiller::fillOne() {
       const MVBaseline thisBl(ada.bx(), -ada.by(), ada.bz());
       MVPosition thisAnt = itsBlCtr(thisBl).getValue();
       thisAnt += vlaCentrePos;
-      const MPosition thisPos(thisAnt, MPosition::ITRF);
+      //      const MPosition thisPos(thisAnt, MPosition::ITRF);
+      thisPos(a) = MPosition(thisAnt, MPosition::ITRF);
       String leAntName;
+
+      antOrder(ada.antId()-1)=a;
+
       if(!itsEVLAisOn){
 	// ignore the frontend temperature naming
 	leAntName=ada.antName(False);
@@ -646,14 +657,39 @@ Bool VLAFiller::fillOne() {
       else{
 	leAntName=ada.antName(itsNewAntName);
       }
-      itsAntId[a] = antenna().matchAntenna(leAntName, thisPos, posTol,
+      itsAntId[a] = antenna().matchAntenna(leAntName, thisPos(a), posTol,
 					   itsAntId[a]);
-      if (itsAntId[a] < 0) {
-	itsAntId[a] = addAntenna(thisPos, a);
-	addFeed(itsAntId[a]);
-	itsNewScan = True;
+
+      //      if (itsAntId[a]<0)
+      //	cout << a << " " << ada.antId() << " " << leAntName << endl;
+
+    }
+
+  /*
+    cout << nAnt << " " << antOrder.nelements() << " " << ntrue(antOrder>-1) << " "
+	 << itsAntId.nelements() << " " << max(antOrder) << " "
+	 << min(Vector<Int>(itsAntId,nAnt))
+	 << endl;
+    cout << "antOrder = " << antOrder << endl;
+  */
+    // If there are antennas to add
+    if (min(Vector<Int>(itsAntId,nAnt))<0) {
+      //      cout << "itsAntId 0 = " << Vector<Int>(itsAntId,nAnt) << endl;
+
+      for (uInt ai=0; ai < antOrder.nelements(); ++ai) {
+      	if (antOrder(ai)>-1) {
+	  Int ao(antOrder(ai));
+	  if (itsAntId[ao] < 0) {
+	    itsAntId[ao] = addAntenna(thisPos(ao), ao);
+	    addFeed(itsAntId[ao]);
+	    itsNewScan = True;
+	  }
+	}
       }
     }
+    //    cout << "itsAntId 1 = " << Vector<Int>(itsAntId,nAnt) << endl;
+
+
   }
 
   
@@ -1758,7 +1794,7 @@ void VLAFiller::logChanges(IterationStatus& counts) {
       for (uInt i = 0; i < nAnt; i++) {
 	const uInt a = static_cast<uInt>(itsAntId[i]);
 	itsLog << "Station: " << ant.station()(a)
-	       << " \tAntenna: " << ant.name()(a);
+	       << "  Antenna: " << ant.name()(a);
 // 	if (counts.lastAnt[subArray][i] != a) {
 // 	  itsLog << " \tNEW";
 // 	}
@@ -1884,6 +1920,7 @@ void VLAFiller::summarise() {
 }
 
 uInt VLAFiller::addAntenna(const MPosition& antPos, uInt whichAnt) {
+
   MSAntennaColumns& ant = antenna();
   const uInt newRow = ant.nrow();
   itsMS.antenna().addRow(1);
@@ -1899,7 +1936,6 @@ uInt VLAFiller::addAntenna(const MPosition& antPos, uInt whichAnt) {
   else{
     leAntName=itsRecord.ADA(whichAnt).antName(itsNewAntName);
   }
-
 
   ant.name().put(newRow, leAntName);
   
@@ -1921,6 +1957,8 @@ uInt VLAFiller::addPointing(const MDirection& antDir,
   const uInt newRow = pointingCol.nrow();
   itsMS.pointing().addRow(1);
 
+  // Should the antennaId just be whichAnt?  
+  //    (I.e., the MS ANT Id and not the VLA ant name integer?)
   pointingCol.antennaId().put(newRow, itsRecord.ADA(whichAnt).antId());
   const MEpoch* mepPtr = dynamic_cast<const MEpoch*>(itsFrame.epoch());
   pointingCol.timeMeas().put(newRow, *mepPtr);
@@ -2343,6 +2381,39 @@ Int VLAFiller::polIndexer(Stokes::StokesTypes& stokes){
   else 
     return -1;
 } 
+
+void VLAFiller::fixFieldDuplicates(MSField& msFld) {
+
+  MSFieldIndex MSFldIdx(msFld);
+  MSFieldColumns fldcol(msFld);
+  Vector<String> name(fldcol.name().getColumn());
+  Int nFld=fldcol.nrow();
+
+  for (Int ifld=0;ifld<nFld;++ifld) {
+    String thisname=name(ifld);
+    Vector<Int> nameMatches = MSFldIdx.matchFieldName(name(ifld));
+    Int nMatch=nameMatches.nelements();
+    if (nMatch>1) {
+      Int suffix(0);
+      {
+	ostringstream newname;
+	newname << thisname << "_" << suffix;
+	name(nameMatches(0))=String(newname);
+	fldcol.name().put(nameMatches(0),name(nameMatches(0)));
+      }
+      for (Int imatch=1;imatch<nMatch;++imatch) {
+	suffix++;
+	ostringstream newname;
+	newname << thisname << "_" << suffix;
+	name(nameMatches(imatch))=String(newname);
+	fldcol.name().put(nameMatches(imatch),name(nameMatches(imatch)));
+      }
+    }
+  } 
+
+}
+
+
 // Local Variables:
 // compile-command: "gmake VLAFiller; cd ../../apps/vlafiller; gmake OPTLIB=1"
 // End: 

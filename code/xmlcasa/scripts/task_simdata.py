@@ -3,7 +3,7 @@
 #       observing time to it, and warn or abort (printing the valid
 #       timerange) depending on how badly the user missed it.
 # look for antenna list in default repository also
-# allow user to report statistics in J/ybm instead of Jy/arcsec
+# allow user to report statistics in Jy/bm instead of Jy/arcsec
 # Pad input image to a composite number of pixels on a side.  I don't
 #       know if it would speed things up much, but it would suppress a warning.
 #       Large primes are surprisingly common.
@@ -173,14 +173,16 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         if type(incell) == 'list':
             incell=incell[0]
         # optionally use image header for cell size
-        if incell=='header':                
-            incellx,incelly=modelia.coordsys().increment()['numeric']
+        if incell=='header':
+            increments=modelia.coordsys().increment()['numeric']
+            incellx=increments[0]
+            incelly=increments[1]
+            # warn if incells are not square
+            if (abs(incellx)-abs(incelly))/abs(incellx) > 0.001:
+                msg("input pixels are not square!",color="31")
+                msg("using incell = incellx = %s (incelly=%s)" % (incellx,incelly),color="31")
             incellx=qa.quantity(incellx,'rad')
             incelly=qa.quantity(incelly,'rad')
-            # warn if incells are not square 
-            if not incellx == incelly:
-                msg("input pixels are not square!",color="31")
-                msg("using incell=incellx=%s" % incellx,color="31")
             incell=qa.convert(incellx,'arcsec')
         else:
             incellx=incell
@@ -300,11 +302,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # pointing exactly in the middle of the mosaic.
         if type(direction) == list:
             imcenter , discard = util.average_direction(direction)
-            msg("using phasecenter " + imcenter)
-            if verbose:
-                print direction
+            if verbose: 
+                msg("using pointings: ")
                 for dir in direction:
                     msg("   "+dir)
+            else:
+                msg("using phasecenter " + imcenter)
         else:
             imcenter = direction
 
@@ -320,149 +323,128 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # fit modelimage into a 4 coordinate image defined by the parameters
 
         if (modelimage != ''):
-            # modelia is already open with the original input model from above
-            insize=modelia.shape()
 
-            # first make a blank 4-dimensional image w/the right cell size
-            modelimage4d=project+"."+modelimage+'.coord'
+            # modelia is already open with the original input model from above
+            # so find out what size that model image is
+            insize=modelia.shape()
+            incsys=modelia.coordsys()
+
+            # deal with brightness scaling since we may close modelia below.
+            if (inbright=="unchanged") or (inbright=="default"):
+                scalefactor=1.
+            else:
+                stats=modelia.statistics()
+                highvalue=stats['max']
+                scalefactor=float(inbright)/highvalue.max()
+
+            
+            # truncate model image name to craete new images in current dir:
+            (modelimage_path,modelimage_local)=os.path.split(os.path.normpath(modelimage))
+            scaledmodelfile=project+"."+modelimage_local+'.rescale'
+
+            # does input model have spectral data?
+            inspectral=incsys.findcoordinate("spectral")['return']
+            if (not inspectral) and nchan>1: 
+                msg("WARNING: you're creating a cube from a flat image")
+
+            # make it look like our model came from the desired telescope - for regrid()
+            incsys.settelescope(telescopename)
+            
+            # create a local copy of the model image to modify the pixel size etc:
+            # if the input doesn't have spectral and/or stokes, add those
+            if not inspectral:
+                incsys.addcoordinate(spectral=True)
+                incsys.setreferencevalue(value=startfreq,type="spectral")
+                incsys.setincrement(value=bandwidth,type="spectral")
+            # this is a trivial regrid
+            modelia.regrid(outfile=scaledmodelfile,csys=incsys.torecord(),overwrite=True)
+            modelia.close()
+            modelia=ia.newimagefromfile(scaledmodelfile)
+            
+
+            # make a blank 4-dimensional image in the imager tool, with the desired out shape:
+            # this sets up the image for processing inside of the simulated ms,
+            # and also gives us a template coordinate system
+            modelimage4d=project+"."+modelimage_local+'.coord'        
             im.open(msfile)    
             im.selectvis(field=range(nfld), spw=0)
+
             # imcenter is the average of the desired pointings
             # we put the phase center there, rather than at the
             # reference direction for the input model (refdirection)
-            im.defineimage(nx=insize[0], ny=insize[1], cellx=incellx, celly=incelly, phasecenter=imcenter)
+
+            if nchan > 1:
+                specmode="FREQ-LSRK"
+                im.defineimage(nx=insize[0],ny=insize[1], cellx=incellx,celly=incelly,
+                               phasecenter=imcenter,
+                               mode="FREQ-LSRK",start=startfreq,step=chanwidth)                
+            else:
+                if inspectral:
+                    msg("WARNING: your model image is a cube but you're creating a flat image")
+                im.defineimage(nx=insize[0],ny=insize[1], cellx=incellx,celly=incelly,
+                               phasecenter=imcenter)
+
             im.make(modelimage4d)
             im.close()
-            im.done()
+            ia.open(modelimage4d)
+            modelcsys=ia.coordsys()
 
+            # now modify the input model image (modelia) and the projected modelimage4d (ia)
             if refdirection!=None:
-                if verbose: msg("setting model image direction to "+refdirection)
-                if refdirection!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
+                if refdirection=="header":
+                    incoord=incsys.referencevalue(type="direction")['numeric']
+                    ra=incoord[0]
+                    dec=incoord[1]
+                else:
                     if refdirection=="direction":
                         epoch, ra, dec = util.direction_splitter(imcenter)
                     else:
                         epoch, ra, dec = util.direction_splitter(refdirection)
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=qa.convert(ra,modelcs.units()[raax])['value']
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=qa.convert(dec,modelcs.units()[deax])['value']
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=qa.convert(startfreq,modelcs.units()[spax])['value']
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=1
-                    modelcs.setreferencevalue(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
-                    if verbose: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
+                if verbose: msg(" setting model image direction to ra="+qa.angle(ra)+" dec="+qa.angle(dec))
+                modelcsys.setreferencevalue(type="direction",value=[qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']])
+                incsys.setreferencevalue(type="direction",value=[qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']])
 
+            # this assumes you want to do a frequency conversion
+            #modelcs.setreferencevalue(
+            #    qa.convert(startfreq,modelcs.units(type="spectral"))['value'],
+            #    type="spectral")
 
             if refpixel!=None:
-                if refpixel!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
+                if refpixel=="header":
+                    crpix=incsys.referencepixel(type="direction")['numeric']
+                else:
                     if refpixel=="center":
-                        crpix=pl.array([insize[0]/2,insize[1]/2])
+                        crpix=[insize[0]/2,insize[1]/2]
                     else:
                         # XXX this is pretty fragile code right now
                         refpixel=refpixel.replace('[','')
                         refpixel=refpixel.replace(']','')
-                        crpix=pl.array(refpixel.split(','))
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=float(crpix[0])
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=float(crpix[1])
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=0
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=0
-                    if verbose: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
-                    modelcs.setreferencepixel(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
-                
+                        crpix=pl.refpixel.split(',')
+                if verbose: msg("setting model image ref pixel to %f,%f" % (crpix[0],crpix[1]))
+                # this may may not have the desired result, so just leave at center:
+                # modelcsys.setreferencepixel(type="direction",value=crpix)
+                incsys.setreferencepixel(type="direction",value=crpix)
 
-            if (inbright=="unchanged") or (inbright=="default"):
-                scalefactor=1.
-            else:
-                # scale to Jy/arcsec
-                #if type(incell)==str:
-                #    incell=qa.quantity(incell)
-                #inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
-                stats=modelia.statistics()
-                highvalue=stats['max']
-                #scalefactor=inbrightpix/highvalue                
-                scalefactor=float(inbright)/highvalue.max()
+            modelia.setcoordsys(incsys.torecord())
+            ia.setcoordsys(modelcsys.torecord())
+            ia.close()
 
-
-            # arr is the chunk of the input image
-            arr=modelia.getchunk()*scalefactor;
-            blc=[0,0,0,0]
-            trc=[0,0,1,1]
-            naxis=len(arr.shape);
-            modelia.done();
-
+            modelia.regrid(outfile=modelimage4d,csys=modelcsys.torecord(),overwrite=True)
+            modelia.done()
 
             # now open spatially rescaled output image
             modelia.open(modelimage4d)            
-            # and overwrite the input shapes with the 4d shapes
-            insize=modelia.shape()
-            incoordsys=modelia.coordsys()
-
-            # arr2 is the chunk of the resized input image
-            arr2=modelia.getchunk()
-
-            if(arr2.shape[0] >= arr.shape[0] and arr2.shape[1] >= arr.shape[1]):
-                arrin=arr
-                arrout=arr2
-                reversi=False
-            elif(arr2.shape[0] < arr.shape[0] and arr2.shape[1] < arr.shape[1]):
-                arrin=arr2
-                arrout=arr
-                reversi=True
-            blc[0]=(arrout.shape[0]-arrin.shape[0])/2;
-            blc[1]=(arrout.shape[1]-arrin.shape[1])/2;
-            trc[0]=blc[0]+arrin.shape[0];
-            trc[1]=blc[1]+arrin.shape[1];
-            if(naxis==2):
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], 0, 0]=arrin
-                else:
-                    arrin[:,:,0,0]=arrout[blc[0]:trc[0], blc[1]:trc[1]]
-            if(naxis==3):
-                if(arrout.shape[2]==arrin.shape[2]):
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], 0]=arrin
-                else:
-                    arrin[:,:,:,0]=arrout[blc[0]:trc[0], blc[1]:trc[1], :]
-            if(naxis==4):
-                # XXX input images with more than 1 channel need more testing!
-                if((arrout.shape[3]==arrin.shape[3]) and
-                   (arrout.shape[2]==arrin.shape[2])):
-                    blc[3]=0
-                    trc[3]=arrin.shape[3]
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], blc[3]:trc[3]]=arrin
-                else:
-                    arrin=arrout[blc[0]:trc[0], blc[1]:trc[1], : :]
-
-
-            modelia.putchunk(arr2)
-            modelia.done()
+            modelia.putchunk(modelia.getchunk()*scalefactor)
+            modelia.close()
 
             # image should now have 4 axes and same size as output
-            # XXX at least in xy (check channels later)        
+
 
 
 
             
-            ##################################################################
-            # do actual calculation of visibilities from the model image:
+        ##################################################################
+        # do actual calculation of visibilities from the model image:
 
         if not components_only:
             # right now this is ok - if we only had components,
@@ -614,7 +596,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
         # need this filename whether or not we create the image
-        modelregrid=project+"."+modelimage+".regrid"
+        modelregrid=project+"."+modelimage_local+".regrid"
 
 
 
@@ -630,7 +612,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             innchan=insize[inspectax]
             # modelimage4d is the .coord version w/spectral axis.
             # modelflat should be the moment zero of that
-            modelflat=project+"."+modelimage+".mom0" 
+            modelflat=project+"."+modelimage_local+".mom0" 
             if innchan>1:
                 if verbose: msg("creating moment zero input image")
                 # actually run ia.moments

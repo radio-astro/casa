@@ -2683,7 +2683,7 @@ measures::casaQuantityFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!qh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting quantity "<< LogIO::POST;
+                << " in converting quantity from string "<< LogIO::POST;
       }
       retval=qh.asQuantity();
     }
@@ -2693,7 +2693,7 @@ measures::casaQuantityFromVar(const ::casac::variant& theVar){
       Record * ptrRec = toRecord(localvar.asRecord());
       if(!qh.fromRecord(error, *ptrRec)){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting quantity "<< LogIO::POST;
+                << " in converting quantity from record "<< LogIO::POST;
       }
       delete ptrRec;
       retval=qh.asQuantity();
@@ -2766,7 +2766,7 @@ measures::casaMDirectionFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMDirection();
     }
@@ -2798,7 +2798,7 @@ measures::casaMDopplerFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMDoppler();
     }
@@ -2830,7 +2830,7 @@ measures::casaMEpochFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMEpoch();
     }
@@ -2862,7 +2862,7 @@ measures::casaMFrequencyFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMFrequency();
     }
@@ -2894,7 +2894,7 @@ measures::casaMPositionFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMPosition();
     }
@@ -2926,7 +2926,7 @@ measures::casaMRadialVelocityFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMRadialVelocity();
     }
@@ -2958,7 +2958,7 @@ measures::casaMBaselineFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMBaseline();
     }
@@ -2990,7 +2990,7 @@ measures::casaMuvwFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMuvw();
     }
@@ -3022,7 +3022,7 @@ measures::casaMEarthMagneticFromVar(const ::casac::variant& theVar){
        theVar.type()== ::casac::variant::STRINGVEC){
       if(!mh.fromString(error, theVar.toString())){
         *itsLog << LogIO::SEVERE << "Error " << error
-                << " in converting record to measure "<< LogIO::POST;
+                << " in converting string to measure "<< LogIO::POST;
       }
       retval = mh.asMEarthMagnetic();
     }

@@ -10,17 +10,17 @@ Available tasks:
    bandpass      fluxscale      listobs      sdsave    
    browsetable   ft             listvis      sdscale   
    clean         gaincal        makemask     sdsmooth  
-   clearcal      hanningsmooth  peel         sdstat    
-   clearplot     imcontsub      plotants     setjy     
-   clearstat     imhead         plotcal      smoothcal 
-   concat        immoments      plotxy       specfit   
-   deconvolve    importfits     sdaverage    split     
-   exportfits    importuvfits   sdbaseline   tget      
-   exportuvfits  importvla      sdcal        uvcontsub 
-   feather       imregrid       sdciadd      uvmodelfit
-   filecatalog   imstat         sdfit        viewer    
-   find          imval          sdflag       vishead   
-   fixvis        invert         
+   clearcal      hanningsmooth  mosaic       sdstat    
+   clearplot     imcontsub      peel         setjy     
+   clearstat     imhead         plotants     smoothcal 
+   concat        immoments      plotcal      specfit   
+   deconvolve    importfits     plotxy       split     
+   exportfits    importuvfits   sdaverage    tget      
+   exportuvfits  importvla      sdbaseline   uvcontsub 
+   feather       imregrid       sdcal        uvmodelfit
+   filecatalog   imstat         sdciadd      viewer    
+   find          imval          sdfit        vishead   
+   fixvis        invert         sdflag     
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta 0 release):
@@ -113,8 +113,8 @@ def tasklist():
       print '(blcal)          ft                         tasklist'
       print 'gaincal          invert                     browsetable'
       print 'fluxscale        makemask                   clearplot'
-      print '(fringecal)      peel                       clearstat'
-      print 'clearcal                                    concat'
+      print '(fringecal)      mosaic                     clearstat'
+      print 'clearcal         peel                       concat'
       print 'listcal                                     filecatalog'
       print 'smoothcal                                   startup'
       print 'polcal                                      split'

@@ -199,6 +199,9 @@ private:
   void extendHypercubes(const Block<uInt>& nPol, const Block<uInt>& nChan, 
 			uInt rows);
   
+  //# Reconcile duplicate field names
+  void fixFieldDuplicates(MSField& msFld);
+
   //# Determine whether to stop the fill for on-line filling
   String projectCode;
   MVEpoch stopTime;

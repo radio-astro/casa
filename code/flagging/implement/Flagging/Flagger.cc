@@ -110,7 +110,7 @@ namespace casa {
   // -----------------------------------------------------------------------
   Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0)
   {
-    dbg=True;
+    dbg=False;
     
     msselection_p = new MSSelection();
     agents_p = NULL;
@@ -305,8 +305,11 @@ namespace casa {
   }
   
   /************************************ DATA SELECTION **************************************/
+  /* return: True iff succesful 
+   */
   Bool Flagger::selectdata(Bool useoriginalms,
-			   String field, String spw, String array, String feed,  String scan,
+			   String field, String spw, String array,
+			   String feed, String scan,
 			   String baseline, String uvrange, String time,
 			   String correlation)
   {
@@ -345,14 +348,15 @@ namespace casa {
     
     /* Row-Selection */
     
-    if(!spw.length() && uvrange.length()) spw = String("*");
+    if(!spw.length() && uvrange.length()) {
+	spw = String("*");
+    }
     
     const String dummyExpr = String("");
-    if(msselection_p) 
-      {
+    if(msselection_p) {
 	delete msselection_p;
 	msselection_p = NULL;
-      }
+    }
     msselection_p = new MSSelection(*tms,
 				    MSSelection::PARSE_NOW, 
 				    (const String)time,
@@ -413,9 +417,11 @@ namespace casa {
     return True;
   }
   
-  Bool Flagger::setdata(String field, String spw,  String array, String feed,  String scan,
-			String baseline,  String uvrange,  String time,
-			String correlation) 
+  Bool Flagger::setdata(
+      String field, String spw, String array, 
+      String feed, String scan,
+      String baseline,  String uvrange,  String time,
+      String correlation) 
   {
     if (dbg) cout << "setdata: " 
         << " field=" << field << " spw=" << spw
@@ -425,7 +431,6 @@ namespace casa {
         << " correlation=" << correlation << endl;
 
     setdata_p = True;
-    Bool rstat=True;
     LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
     
     /* check the MS */
@@ -438,49 +443,45 @@ namespace casa {
     nullSelect_p=False;
     
     /* Parse selection parameters */
-    if(!spw.length()) spw = String("*");
-    rstat = selectdata(True,field,spw,array,feed,scan,baseline,uvrange,time,correlation);
-    if( !rstat )
-      {
-	os << LogIO::SEVERE << "Selection failed !!"
-	   << LogIO::POST;
-	return False;
-      }
+    if (!spw.length()) spw = String("*");
+
+    if (!selectdata(True,field,spw,array,feed,scan,baseline,uvrange,time,correlation))
+	{
+	    os << LogIO::SEVERE << "Selection failed !!"
+	       << LogIO::POST;
+	    return False;
+	}
     
     /* Create selected reference MS */
     MeasurementSet mssel_p2(*originalms_p);
-    msselection_p->getSelectedMS(mssel_p2,String(""));
+    msselection_p->getSelectedMS(mssel_p2, String(""));
     
     //os << "Original ms has nrows : " << originalms.nrow() << LogIO::POST;
     //os << "Selected ms has " << mssel_p2.nrow() << " rows." << LogIO::POST;
     
-    if( mssel_p2.nrow() ) 
-      {
-	if (mssel_p) 
-	  {
+    if ( mssel_p2.nrow() ) {
+	if (mssel_p) {
 	    delete mssel_p; 
 	    mssel_p=NULL;
-	  }
-	mssel_p= new MeasurementSet(mssel_p2);
+	}
+	mssel_p = new MeasurementSet(mssel_p2);
 	if(dbg)cout << "assigned new MS to mssel_p" << endl;
 	ROScalarColumn<String> fname( mssel_p->field(),"NAME" );
 	if(dbg)cout << "fields : " << fname.getColumn() << endl;
 	
 	//mssel_p->rename("selectedms",Table::New);
 	//mssel_p->flush();
-      }
-    else 
-      {
+    }
+    else {
 	os << LogIO::WARN << "Selected MS has zero rows" << LogIO::POST;
 	mssel_p = &originalms;
-      }
+    }
     
     /* Print out selection info - before selecting ! */
-    if(mssel_p->nrow()!=ms.nrow()) 
-      {
+    if(mssel_p->nrow()!=ms.nrow()) {
 	os << "By selection " << originalms.nrow() << " rows are reduced to "
 	   << mssel_p->nrow() << LogIO::POST;
-      }
+    }
     else {
 	os << "Selection did not drop any rows" << LogIO::NORMAL3;
     }
@@ -505,9 +506,10 @@ namespace casa {
     sort2[3] = MS::TIME;
     Double timeInterval = 7.0e9; //a few thousand years
     
-    if(vs_p) {delete vs_p; vs_p=NULL;}
-    if(!vs_p) 
-      {
+    if(vs_p) {
+	delete vs_p; vs_p = NULL;
+    }
+    if(!vs_p) {
 	if(!mssel_p)
 	  throw AipsError ("No measurement set selection available");
 	//vs_p = new VisSet(*mssel_p,sort,noselection,0.0);
@@ -523,6 +525,7 @@ namespace casa {
     
     return True;
   }
+
   Bool Flagger::selectDataChannel(){
     if(!vs_p || !msselection_p) return False;
     /* Set channel selection in visiter */
@@ -554,6 +557,8 @@ namespace casa {
     
     return True;
   }
+
+
   // Help function for setdata use
 #if 0
   Bool Flagger::selectDataChannel(Vector<Int> &spwidnchans, Vector<Int>& spectralwindowids, 
@@ -730,7 +735,13 @@ namespace casa {
     return True;
   }
   
-  Bool Flagger::setmanualflags(Bool autocorr, Bool rowflag,
+
+
+    /*
+      Sets up agents for mode = 'manualflag' and mode = 'summary' 
+    */
+
+  Bool Flagger::setmanualflags(Bool autocorr,
 			       Bool unflag, 
 			       String clipexpr, 
 			       Vector<Double> cliprange, 
@@ -740,7 +751,7 @@ namespace casa {
 			       String opmode)
   {
      if (dbg)   cout << "setmanualflags: " 
-             << "autocorr=" << autocorr << " rowflag=" << rowflag
+             << "autocorr=" << autocorr
              << " unflag=" << unflag
              << " clipexpr=" << clipexpr << " cliprange=" << cliprange
              << " clipcolumn=" << clipcolumn << " outside=" << outside
@@ -774,10 +785,15 @@ namespace casa {
        then no need to make separate records for each spw. */
     bool separatespw = False;
     Int nrec;
-    if(spwlist.nelements()){ separatespw = True; nrec = spwlist.nelements();}
-    else { separatespw = False; nrec = 1; }
+    if (spwlist.nelements()) {
+	separatespw = True; 
+	nrec = spwlist.nelements();
+    }
+    else { 
+	separatespw = False; nrec = 1; 
+    }
     
-    for( Int i=0; i < nrec; i++ ) {
+    for ( Int i=0; i < nrec; i++ ) {
 	Record selrec;
 	if(upcase(opmode).matches("FLAG")) 
 	    selrec.define("id",String("select"));
@@ -855,8 +871,7 @@ namespace casa {
 	  }
 	
 	// Operation related parameters.
-	if( 0 && upcase(opmode).matches("SUMMARY") )
-	  {
+	if( 0 && upcase(opmode).matches("SUMMARY") ) {
 	    /*
 	      RecordDesc flagDesc;       
 	      flagDesc.addField(RF_OPMODE, TpString);
@@ -865,12 +880,10 @@ namespace casa {
 	      selrec.mergeField(flagRec, RF_OPMODE, RecordInterface::OverwriteDuplicates);
 	    */
 	  }
-	else
-	  {
+	else {
 	    
 	    /* Flag Autocorrelations too ? */
-	    if(autocorr)
-	      {
+	    if(autocorr) {
 		RecordDesc flagDesc;       
 		flagDesc.addField(RF_AUTOCORR, TpBool);
 		Record flagRec(flagDesc);  
@@ -879,8 +892,7 @@ namespace casa {
 	      }
 	    
 	    /* Unflag ! */
-	    if(unflag)
-	      {
+	    if(unflag) {
 		RecordDesc flagDesc;       
 		flagDesc.addField(RF_UNFLAG, TpBool);
 		Record flagRec(flagDesc);  
@@ -969,7 +981,7 @@ namespace casa {
 		flagRec.define(RF_QUACK, quackparams);
 		selrec.mergeField(flagRec, RF_QUACK, RecordInterface::OverwriteDuplicates);
 	      }
-	  }
+	} /* end if opmode = ... */
 	
 	/* Add this agent to the list */
 	addAgent(selrec);

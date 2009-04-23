@@ -109,8 +109,8 @@ String VLAADA::antName(Bool newStyle) const {
 
     if (fiber)
       if (antId()==29)
-	// pie town
-	antid=String("PT")+antid;
+	// pie town is just an old VLA antenna in this context
+	antid=String("VA")+antid;
       else
 	// evla
 	antid=String("EA")+antid;
@@ -212,7 +212,7 @@ Vector<Double> VLAADA::pos() const {
 String VLAADA::padName() const {
   DebugAssert(ok(), AipsError);
   const Double x = bx();
-  const uInt nPad = 73;
+  const uInt nPad = 74;
   static Block<Double> padX(nPad);
   static Block<String> padName(nPad);
   static Bool init = False;
@@ -290,7 +290,8 @@ String VLAADA::padName() const {
     padName[69] = "N56"; padX[69] = -22919.;
     padName[70] = "N64"; padX[70] = -28827.;
     padName[71] = "N72"; padX[71] = -35283.;
-    padName[72] = "PT";  padX[72] = -46201.; // Pie Town
+    padName[72] = "MPD"; padX[72] = 1148.;
+    padName[73] = "VPT"; padX[73] = -46201.; // Pie Town
     for (uInt i = 0; i < nPad; i++) {
       padX[i] *= ns2m;
     }
@@ -298,14 +299,12 @@ String VLAADA::padName() const {
   }
   String name;
   uInt i = 0;
+  String arrname=arrayName();
   while (name.length() == 0 && i < nPad) {
     if (nearAbs(x, padX[i], 0.5)) { // This is nearly the largest slop
       // allowable as W1 is at 77*(0.3m/ns) and E3 is at 73.*(0.3m/ns)
-      if (i < 72) {
-	name = "VLA:";
-      } else {
-	name = "VLBA:";
-      }
+
+      name = arrayName();
       name += padName[i];
     }
     i++;
@@ -398,6 +397,35 @@ Bool VLAADA::nomSensApplied(VLAEnum::IF which,const uInt rev) const {
   return (bits & 0x2000);  
 
 }
+
+String VLAADA::arrayName() const {
+  
+  // For prepending to padName
+
+  Int64 where = itsOffset + 2*(1);
+  itsRecord.seek(where);
+  
+  Short bits;
+  itsRecord >> bits;
+  // Bit 9 == fiber (0x0040 = 0100.0000.0100.0000)
+  Bool fiber = (bits & 0x0040);
+
+  // VLBA and EVLA are connected by fiber
+  if (fiber)
+    // It is a VLBA antenna (e.g. PT)
+    if (antId()>28)
+      //      return String("VLBA:");
+      return String("VLA:_");
+    else
+      // evla
+      return String("EVLA:");
+
+  // Otherwise this is just the old VLA
+  //  (the underscore is so string length same as above, for AIPS)
+  return String("VLA:_");
+  
+}
+
 
 Bool VLAADA::ok() const {
   // The LogIO class is only constructed if an Error is detected for

@@ -1238,11 +1238,17 @@ Set the level of polarization leakage between feeds.
 
  
    <method type="function" name="setnoise">
-   <shortdescription>Set the noise level</shortdescription>
+   <shortdescription>Set the noise level fixed sigma (mode=simplenoise) or
+   Brown's equation (mode=calculate)</shortdescription>
    
 <description>
 Set various system parameters from which the thermal (ie, random additive) noise level 
-will be calculated.  The noise will vary with dish diameter, antenna efficiency,
+will be calculated.  
+
+For mode=simplenoise, one specifies the standard deviation for the noise to be
+added to real and imaginary parts of the visibility.
+
+For mode=calculate, the noise will vary with dish diameter, antenna efficiency,
 system temperature, opacity, sky temperature, etc.  The noise will increase with
 the airmass if {\tt tau} is greater than zero.  The noise is calculated according to
 the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct95):

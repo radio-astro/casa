@@ -211,14 +211,14 @@ Bool ExtendFlagger::selectdata(Bool useoriginalms) {
 }
 
 // 
-Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr, Bool rowflag) {
+Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr) {
    //cout << "autocorr=" << autocorr << " rowflag=" << rowflag
    //     << " unflag=" << unflag 
    //     << " clipexpr=" << clipexpr << " cliprange=" << cliprange
    //     << " clipcolumn=" << clipcolumn << " outside=" << outside
    //     << " quackinterval=" << quackinterval << " opmode=" << opmode
    //     << endl;
-   return flagger.setmanualflags(autocorr, rowflag, unflag, clipexpr, 
+   return flagger.setmanualflags(autocorr, unflag, clipexpr, 
         cliprange, clipcolumn, outside, quackinterval, opmode);
 }
 

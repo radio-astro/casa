@@ -78,7 +78,7 @@ fg.open('3C273XC1.MS')
 
  
    <method type="function" name="setdata">
-   <shortdescription>Set the data selection paramters to define a
+   <shortdescription>Set the data selection parameters to define a
    subset of the data on which to perform any further selections/operations.
  For unspecified parameters, the full data range is assumed.
 All data selection parameters follow the ms-selection syntax.
@@ -209,12 +209,6 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
  
      <param type="bool" name="autocorrelation">
      <description>Flag autocorrelations too ? [ True / False ]
-     </description>
-     <value>false</value>
-     </param>
-    
-     <param type="bool" name="rowflag">
-     <description>Flag the entire row ? (row = all chans,corrs for a particular baseline/timestamp.) [ True / False ]
      </description>
      <value>false</value>
      </param>
@@ -366,6 +360,76 @@ Setup an autoflag algorithm.
      </param>
 </input>
 <returns type="bool"/> 
+<example>
+\begin{verbatim}
+\end{verbatim}
+</example>
+</method>
+
+<!-- ********************************************************************** -->
+<!-- ********************************************************************** -->
+
+   <method type="function" name="setshadowflags">
+   <shortdescription>Setup data selection parameters for flagging of
+   shadowed antennas
+   </shortdescription>
+   
+<description>
+Defines data selection parameters.
+</description>
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>Field indices or source names : example : '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>Array Indices or names : example : 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>Feed index or name : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>Scan number : example : '1,2,3' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="baseline">
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     <value>""</value>
+     </description>
+     </param>
+    
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+<!-- Selection parameters : end -->
+ 
+</input>
+<returns type="bool"/>
 <example>
 \begin{verbatim}
 \end{verbatim}

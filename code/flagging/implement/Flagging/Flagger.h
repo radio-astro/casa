@@ -190,7 +190,7 @@ public:
 	       String correlation);
   
   // Make a selection for manual flagging
-  Bool setmanualflags(Bool autocorr, Bool rowflag, Bool unflag, String clipexpr, Vector<Double> cliprange, String clipcolumn, Bool outside, Double quackinterval=0.0, String opmode=String("flag"));
+  Bool setmanualflags(Bool autocorr, Bool unflag, String clipexpr, Vector<Double> cliprange, String clipcolumn, Bool outside, Double quackinterval=0.0, String opmode=String("flag"));
 
   Bool applyFlags(const std::vector<FlagIndex> &fi);
 

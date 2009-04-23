@@ -45,7 +45,7 @@ int main (int,char *)
       flagger.applyFlags(flagIndices);
   }
   else {
-      flagger.setmanualflags(False, False,
+      flagger.setmanualflags(False,
 			     False, "",
 			     Vector<Double>(2,0.0),
 			     "DATA",
