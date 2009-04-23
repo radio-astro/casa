@@ -113,6 +113,9 @@ private:
   static void getStartHA (Double& startTime, Double& startHA,
 			  const MeasurementSet& ms, uInt rownr);
 
+  // Discern the antenna numbers that go into UVFITS
+  static void handleAntNumbers(const MeasurementSet& ms,Vector<Int>& antnumbers);
+
   // Handle the SYSCAL table.
   // It skips the entries not needed and sorts it in the correct order.
   static Table handleSysCal (const MeasurementSet& ms,
@@ -129,6 +132,8 @@ private:
   // simply filled with values 0-nrid.
   static Int makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			const Vector<Int>& allids, Bool isSubset);
+
+
 };
 
 
