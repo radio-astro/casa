@@ -440,7 +440,9 @@ if scriptmode:
     print "You can see some bad data here"
     print "Mark Region and Locate, look in logger"
     print "This is a correlator glitch in baseline 3-9 at 06:19:30"
-    print "You could Mark Region and Flag but we will use flagdata instead"
+    print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
+    print "In a normal session you could Mark Region and Flag."
+    print "Here we will use flagdata instead."
     # Pause script if you are running in scriptmode
     user_check=raw_input('Return to continue script\n')
 
