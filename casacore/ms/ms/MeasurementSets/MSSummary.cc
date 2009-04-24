@@ -937,21 +937,29 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
       if (spwid<0) os<< "any";
       else os<<spwid;
       if (restFreqOK) {
-	Vector<Double> restfreq=msSC.restFrequency()(row);
 	os.output().width(widthRF);
-	if (restfreq.nelements()>0)
-	  os<< restfreq(0)/1.0e6;
-	else 
-	  os<< "-";
+	if (msSC.restFrequency().isDefined(row)) {
+	  Vector<Double> restfreq=msSC.restFrequency()(row);
+	  if (restfreq.nelements()>0)
+	    os<< restfreq(0)/1.0e6;
+	  else 
+	    os<< "-";
+	}
+	else
+	  os<<"-";
       }
 
       if (sysVelOK) {
-	Vector<Double> sysvel=msSC.sysvel()(row);
 	os.output().width(widthVel);
-	if (sysvel.nelements()>0)
-	  os<< sysvel(0)/1.0e3;
+	if (msSC.sysvel().isDefined(row)) {
+	  Vector<Double> sysvel=msSC.sysvel()(row);
+	  if (sysvel.nelements()>0)
+	    os<< sysvel(0)/1.0e3;
+	  else
+	    os<< "-";
+	}
 	else
-	  os<< "-";
+	  os<<"-";
       }
       os << endl;
     }
