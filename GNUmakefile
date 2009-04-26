@@ -859,10 +859,11 @@ $(LASTVERSION): VERSION
 		version=$(shell head -1 VERSION | perl -pe "s|^(\S+).*|\$$1|"); \
 		echo "removing libraries... for relink."; \
 	fi; \
-	for i in `ls -1 $(LIBDIR)/lib*$$version*` \
-		 `ls -1 $(LIBDIR)/lib*$$version* | sed "s|\.$$version||"`; do \
+	for i in `ls -1 $(LIBDIR)/lib*$$version* 2> /dev/null || exit 0` \
+		 `(ls -1 $(LIBDIR)/lib*$$version* 2> /dev/null | sed "s|\.$$version||") || exit 0`; do \
 		rm $$i; \
 	done
+	@mkdir -p $(dir $(LASTVERSION))
 	@cp VERSION $(LASTVERSION)
 
 ###
