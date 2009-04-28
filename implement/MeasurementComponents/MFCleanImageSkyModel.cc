@@ -118,12 +118,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   Vector<Float> psfmin(numberOfModels()); psfmin=1.0;
   Vector<Float> resmax(numberOfModels());
   Vector<Float> resmin(numberOfModels());
-
+  Int psfpatch=51;
   Float maxSidelobe=0.0;
   Int model;
   for (model=0;model<numberOfModels();model++) {
     if(isSolveable(model)) {
-      Int psfpatch=51;
+      
       IPosition blc(PSF(model).shape().nelements(), 0);
       IPosition trc(PSF(model).shape()-1);
       blc(2) = 0;  trc(2) = 0;
