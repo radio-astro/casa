@@ -472,10 +472,11 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     if(minchan==maxchan)
       minchan=-1;
 
+
     for(Int k = 0; k < minchan; ++k)
       flags.xzPlane(k).set(1);
 
-    for(uInt k = maxchan + 1; k < chanMap.nelements(); ++k)
+    for(uInt k = maxchan + 1; k < imageFreq_p.nelements(); ++k)
       flags.xzPlane(k).set(1);
 
     interpVisFreq_p.resize(imageFreq_p.nelements());
