@@ -66,9 +66,11 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
 
-#include <casa/OS/Memory.h>
+
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol)
   : SkyEquation(sm, vs, ft, cft, noModelCol), internalChangesPut_p(False), 
@@ -92,7 +94,6 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
   {
      nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
   }
-  //cout << "Setting nmod in CubeSkyEqn to : " << nmod << endl;
 
   //case of component ft only
   if(nmod==0)
@@ -567,6 +568,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
     
   
   for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
+
     //      vi.originChunks();
     //      vi.origin();      
     //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
@@ -610,6 +612,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
     finalizeGetSlice();
     if(!incremental&&!initialized) initialized=True;
     finalizePutSlice(vb, cubeSlice, nCubeSlice);
+
+
   }
   
   for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -650,10 +654,9 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     Long pixInMem=(memtot/8)*1024;
     nslice=1;
 
-    // cout << "npix " << npix << "  " << pixInMem << endl;
-    if(npix > (pixInMem/4)){
+    if(npix > (pixInMem/8)){
       //Lets slice it so grid is at most 1/6th of memory
-      pixInMem=pixInMem/6;
+      pixInMem=pixInMem/8;
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
@@ -699,11 +702,15 @@ void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type
   firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
   if((ftm_p[0]->name() != "MosaicFT") && 
      (ftm_p[0]->name() != "PBWProjectFT")) {
+
     changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
   }
   //First ft machine change should be indicative
   //anyways right now we are allowing only 1 ftmachine for GridBoth
   Bool IFTChanged=iftm_p[0]->changed(vb);
+  
+
+
 
   // we might need to recompute the "sky" for every single row, but we
   // avoid this if possible.
@@ -733,7 +740,6 @@ void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type
     }
   }
   else if (IFTChanged || firstOneChangesPut_p || firstOneChangesGet_p) {
-
 
     if(firstOneChangesGet_p)
       firstOneChangesGet_p=False;
@@ -859,20 +865,9 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   trc(3)=endChannel;
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
   SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
-  //if(slice) delete slice;
-  //slice=0;
-
-  if(typeOfSlice==0){
+  if(typeOfSlice==0){    
     
-    /////////////
-    /*if(!slice.null())
-      cout << "NUMBER of links " << slice.nrefs() << endl;
-    */
-   //////////
-
-
-    //Double memoryMB=HostInfo::memoryFree()/1024.0/(4.0*(sm_->numberOfModels()));
-    Double memoryMB=HostInfo::memoryTotal()/1024.0/(4.0*(sm_->numberOfModels()));
+    Double memoryMB=HostInfo::memoryTotal()/1024.0/(8.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
@@ -963,7 +958,6 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     // check for the FTMachine changing.
 
     finalizeGetSlice();
-    
     initializeGetSlice(result, 0, False, cubeSlice, nCubeSlice);
     if(incremental || (nmodels > 1)){
       for (Int model=0; model < nmodels; ++model){
