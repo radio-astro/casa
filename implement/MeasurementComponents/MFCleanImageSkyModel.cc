@@ -1,4 +1,3 @@
-
 //# MFCleanImageSkyModel.cc: Implementation of MFCleanImageSkyModel class
 //# Copyrighogt (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -124,7 +123,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   Int model;
   for (model=0;model<numberOfModels();model++) {
     if(isSolveable(model)) {
-
+      Int psfpatch=51;
       IPosition blc(PSF(model).shape().nelements(), 0);
       IPosition trc(PSF(model).shape()-1);
       blc(2) = 0;  trc(2) = 0;
@@ -152,7 +151,23 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       }
       // 4 pixels:  pretty arbitrary, but only look for sidelobes
       // outside the inner (2n+1) * (2n+1) square
-      psfmaxouter(model) = maxOuter(subPSF, 4);  
+      Int ncent=4;
+      {//locate peak size
+	CoordinateSystem cs=PSF(model).coordinates();
+	Vector<String> unitas=cs.worldAxisUnits();
+	unitas(0)="arcsec";
+	unitas(2)="arcsec";
+	cs.setWorldAxisUnits(unitas);
+	//Get the minimum increment in arcsec
+	Double incr=abs(min(cs.increment()(0), cs.increment()(1)));
+	if(incr > 0.0){
+	  ncent=max(ncent, Int(ceil(beam(model)[0]/incr)));
+	  ncent=max(ncent, Int(ceil(beam(model)[1]/incr)));
+	}
+      }
+      psfpatch=3*ncent+1;
+   
+      psfmaxouter(model) = maxOuter(subPSF, ncent);  
       os << "Model " << model << ": max, min, maxOuter PSF = "
 	 << psfmax(model) << ", " << psfmin(model) << ", " <<
 	psfmaxouter(model) << endl;
@@ -460,8 +475,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		}
 
 		// Renormalize by the weights 
-		Matrix<Float> wmask(IPosition(2, nx, ny));
-		wmask=0.0;
+		Matrix<Float> wmask(nx, ny, 0.0);
 		//Trouble..
 		Array<Float>  residu(imageStepli.cursor());
 		Cube<Float> resid(residu.nonDegenerate(3));
@@ -555,7 +569,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setNumberIterations(numberIterations());
 		  cleaner.setInitialNumberIterations(iterations[model](chan*npolcube+ipol));
 		  cleaner.setThreshold(cycleThreshold);
-		  cleaner.setPsfPatchSize(IPosition(2,51)); 
+		  cleaner.setPsfPatchSize(IPosition(2,psfpatch)); 
 		  cleaner.setMaxNumberMajorCycles(10);
 		  cleaner.setHistLength(1024);
 		  cleaner.setMaxNumPix(32*1024);
@@ -604,9 +618,6 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		   << LogIO::POST; 
 	      }
 	    }
-	    os << LatticeExprNode(sum(image(model))).getFloat() 
-	       << " Jy is the sum of clean components of model " 
-	       << model << LogIO::POST;
 	  }
 	  else {
 	    os<<"No need to clean model "<<model<<" :peak residual below threshold"
