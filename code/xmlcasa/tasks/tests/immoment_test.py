@@ -415,20 +415,20 @@ def input_test():
 
     _momentTest_debug_msg( 27 )
     results = None
-    results = immoments( 'n1333_both.image', box='-1,0,798,798', outfile='input_test_bad_box' )
+    results = immoments( 'n1333_both.image', box='-2,0,798,798', outfile='input_test_bad_box' )
     if ( results!=None or results!=False ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=-1', was not reported."\
+             +"\nError: Bad box value, 'x=-2', was not reported."\
              +"\n\tRESULTS: "+str(results)
 
     _momentTest_debug_msg( 28 )
     results = None
-    results = immoments( 'n1333_both.image', box='0,-1,799,799', outfile='input_test_bad_box' )
+    results = immoments( 'n1333_both.image', box='0,-2,799,799', outfile='input_test_bad_box' )
     if ( results != None and results!=True ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'y=-1', was not reported as missing."
+             +"\nError: Bad box value, 'y=-2', was not reported as missing."
 
     _momentTest_debug_msg( 29 )
     results = None
@@ -498,11 +498,11 @@ def input_test():
 
     _momentTest_debug_msg( 35 )
     results = None
-    results = immoments( 'n1333_both.image', chans='-1', outfile='input_test_bad_chans' )
+    results = immoments( 'n1333_both.image', chans='-2', outfile='input_test_bad_chans' )
     if ( results!=None and results!=True ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value, '-1', was not reported."\
+             +"\nError: Bad channel value, '-2', was not reported."\
              +"\n\tRESULTS: "+str(results)
 
     _momentTest_debug_msg( 36 )

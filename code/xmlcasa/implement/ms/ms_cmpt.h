@@ -80,6 +80,8 @@ class ms
 
     bool concatenate(const std::string& msfile = "", const ::casac::variant& freqtol = ::casac::initialize_variant("1Hz"), const ::casac::variant& dirtol = ::casac::initialize_variant("1mas"));
 
+    bool timesort(const std::string& newmsname = "");
+
     bool split(const std::string& outputms = "", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const std::vector<int>& nchan = std::vector<int> (1, -1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& timebin = ::casac::initialize_variant("-1s"), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const std::string& whichcol = "DATA");
 
     bool iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns = true);

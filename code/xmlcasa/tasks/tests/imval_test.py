@@ -99,6 +99,8 @@ def cleanup( cwd, test_dir ):
             raise RuntimeError, "Cleanup of " + test_dir + "failed "
         shutil.rmtree(test_dir, 0, errfunc )
         
+    for file_name in glob.glob( '/*.last*' ):
+        os.remove( file_name )
     return True
 
 ###########################################################################
@@ -153,23 +155,26 @@ def bad_input( image_file ):
 
     # Image name tests
     try:
-        imval( imagename='' )
-        failure_msgs['bad_input1']='Empty imagename parameter not detected.'
-        passed=False
+        results = imval( imagename='' )
+        if ( results ):
+            failure_msgs['bad_input1']='Empty imagename parameter not detected.'
+            passed=False
     except:
         noop='noop'
 
     try:
-        imval( imagename='garbage.im' )
-        failure_msgs['bad_input2']='Invalid image file name not detected.'
-        passed=False
+        results = imval( imagename='garbage.im' )
+        if ( results ):
+            failure_msgs['bad_input2']='Invalid image file name not detected.'
+            passed=False
     except:
         noop='noop'
         
     try:
-        imval( imagename=2.3 )
-        failure_msgs['bad_input3']='Invalid image file name not detected.'
-        passed=False
+        results = imval( imagename=2.3 )
+        if ( results ):
+            failure_msgs['bad_input3']='Invalid image file name not detected.'
+            passed=False
     except:
         noop='noop'
         
@@ -177,72 +182,82 @@ def bad_input( image_file ):
     # BLC=0,0,0,0  and TRC= 255,255,0,29   for n4826_bima.im
 
     try:
-        imval( imagename=image_file, box='-3,0,-3,3' )
-        failure_msgs['bad_input4']='Invalid box parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, box='-3,0,-3,3' )
+        if ( results ):
+            failure_msgs['bad_input4']='Invalid box parameter values not detected.'
+            passed=False
     except:
         noop='noop'
         
     try:
-        imval( imagename=image_file, box='200,0,262,3' )
-        failure_msgs['bad_input5']='Invalid box parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, box='200,0,262,3' )
+        if ( results ):
+            failure_msgs['bad_input5']='Invalid box parameter values not detected.'
+            passed=False
     except:
         noop='noop'
 
     try:
-        imval( imagename=image_file, box='0,-3,0,3' )
-        failure_msgs['bad_input6']='Invalid box parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, box='0,-3,0,3' )
+        if ( results ):
+            failure_msgs['bad_input6']='Invalid box parameter values not detected.'
+            passed=False
     except:
         noop='noop'
         
     try:
-        imval( imagename=image_file, box='0,270,0,3' )
-        failure_msgs['bad_input7']='Invalid box parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, box='0,270,0,3' )
+        if ( results ):
+            failure_msgs['bad_input7']='Invalid box parameter values not detected.'
+            passed=False
     except:
         noop='noop'                        
 
     try:
-        imval( imagename=image_file, box=[1,2,3,4] )
-        failure_msgs['bad_input8']='Invalid box parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, box=[1,2,3,4] )
+        if ( results ):
+            failure_msgs['bad_input8']='Invalid box parameter values not detected.'
+            passed=False
     except:
         noop='noop'                        
 
     try:
-        imval( imagename=image_file, chans='-3' )
-        failure_msgs['bad_input9']='Invalid chans parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, chans='-3' )
+        if ( results ):
+            failure_msgs['bad_input9']='Invalid chans parameter values not detected.'
+            passed=False
     except:
         noop='noop'                        
 
     try:
-        imval( imagename=image_file, chans='50' )
-        failure_msgs['bad_input10']='Invalid chans parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, chans='50' )
+        if ( results ):
+            failure_msgs['bad_input10']='Invalid chans parameter values not detected.'
+            passed=False
     except:
         noop='noop'
 
     try:
-        imval( imagename=image_file, chans=10 )
-        failure_msgs['bad_input11']='Invalid chans parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, chans=10 )
+        if ( results ):
+            failure_msgs['bad_input11']='Invalid chans parameter values not detected.'
+            passed=False
     except:
         noop='noop'        
 
     try:
-        imval( imagename=image_file, stokes='Q' )
-        failure_msgs['bad_input12']='Invalid stokes parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, stokes='Q' )
+        if ( results ):
+            failure_msgs['bad_input12']='Invalid stokes parameter values not detected.'
+            passed=False
     except:
         noop='noop'                                
         
     try:
-        imval( imagename=image_file, stokes=0 )
-        failure_msgs['bad_input13']='Invalid stokes parameter values not detected.'
-        passed=False
+        results = imval( imagename=image_file, stokes=0 )
+        if ( results ):
+            failure_msgs['bad_input13']='Invalid stokes parameter values not detected.'
+            passed=False
     except:
         noop='noop'
 
@@ -276,7 +291,7 @@ def single_point( image_file ):
         ia.done()
     except:
         failure_msgs['single_point1']='Unable to find size of image '+image_name
-        passed= False
+        passed = False
 
     try:
         if ( len(bbox) > 0 and bbox.has_key('blc') and bbox.has_key('trc') ):
@@ -440,12 +455,17 @@ def arrays( image_file ):
             failure_msgs['array3']='Found False values in mask, expected all True values.'
             passed=False
 
-        # Expect shape of 129x129
+        # Expect shape of 
         msg='Found inner image data -- blc='+str(results['blc'])
         msg=msg+' to trc='+str(results['trc'])
         msg=msg+'-- to have shape of '+ str(numpy.shape(data_array))
         note( msg, 'NORMAL2' )
-        if ( numpy.shape(data_array)[0] != 129 or numpy.shape(data_array)[1] != 129 or numpy.shape(mask_array)[0] != 129 or numpy.shape(mask_array)[1] != 129 ):
+        size0 = int( dir_trc[0]*1/4 )
+        size1 = int( dir_trc[1]*1/4 )
+        if ( numpy.shape(data_array)[0] != 129 \
+             or numpy.shape(data_array)[1] != 129 \
+             or numpy.shape(mask_array)[0] != 129 \
+             or numpy.shape(mask_array)[1] != 129 ):
             failure_msgs['array4']='Incorrec data or mask array size, expected 129x129.'
             passed=False
         else:
@@ -454,7 +474,7 @@ def arrays( image_file ):
         dmin=data_array.min()
         dmax=data_array.max()
         dmean=data_array.mean()
-        msg='Found for 129x129 image max/min/mean values to be: '
+        msg='Found for '+str(size0)+'x'+str(size1)+' image max/min/mean values to be: '
         msg=msg+str(dmin)+'/'+str(dmax)+'/'+str(dmean)
         note( msg, 'NORMAL2' )
         if ( dmin+0.417753 > 0.00001 or dmax-1.169093 > 0.00001 or dmean-0.003042 > 0.00001):
@@ -510,7 +530,6 @@ def arrays( image_file ):
     try:
         # Get the inner quarter of the image for channel 15 to 17.
         tbox=str(int(dir_trc[0]*1/3))+','+str(int(dir_trc[1]*1/3))+','+str(int(dir_trc[0]*5/6))+','+str(int(dir_trc[1]*5/6))
-        print "imval( imagename=image_file, box=tbox, chans='15~17', stokes='0' )"
         results=imval( imagename=image_file, box=tbox, chans='15~17', stokes='0' )
         data_array=results['data']
         mask_array=results['mask']

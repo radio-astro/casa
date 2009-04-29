@@ -275,11 +275,10 @@ flagger::setshadowflags(const std::string& field,
 		String(uvrange), String(time), String(correlation));
 
 	    if(ret) {
-		std::cout << "Hello, " << __func__ << "!" << std::endl;
-		/* ret = flagger_p->setmanualflags(False,False,
-		   False,String(""),Vector<Double>(),String(""),
-		   False, 0.0,String("SUMMARY"));
-		*/
+		ret = flagger_p->setmanualflags(
+		    False, False,
+		    String(""), Vector<Double>(), String(""),
+		    False, 0.0, String("SHADOW"));
 	    }
 	    
 	    return true;

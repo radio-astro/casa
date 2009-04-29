@@ -331,7 +331,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
 		    pl.title(sdfile+' Ant:'+ antnameused)
 		    pl.subplot(111)
 		    (l,m,n)=datcol.shape
-		    datcol2=datcol.reshape(n)
+                    #To avoid error reported as CAS-1312
+                    #--2009/4/24 Takeshi Nakazato
+                    #datcol2=datcol.reshape(n)
+                    datcol2=datcol[0].reshape(n)
                     if plotlevel>0:
                        pl.ion()
 		    pl.plot(range(len(datcol2)),datcol2, 'g.')

@@ -362,7 +362,6 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Unable to create bad region file.\n\t"
-        print "PWD: ", os.getcwd()
         raise Exception, err
 
     

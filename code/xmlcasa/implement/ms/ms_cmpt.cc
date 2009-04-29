@@ -687,58 +687,119 @@ ms::putdata(const ::casac::record& items)
 bool
 ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
 {
-  Bool rstat(False);
-  try {
-     if(!detached()){
-       *itsLog << LogOrigin("ms", "concatenate");
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "concatenate");
+	    
+	    if (!Table::isReadable(msfile)) {
+		*itsLog << "Cannot read the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+	    if (DOos::totalSize(msfile, True) >
+		DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+		*itsLog << "There does not appear to be enough free disk space "
+			<< "(on the filesystem containing " << itsMS->tableName()
+			<< ") for the concatantion to succeed." << LogIO::EXCEPTION;
+	    }
+	    const MeasurementSet appendedMS(msfile);
+	    
+	    MSConcat mscat(*itsMS);
+	    Quantum<Double> dirtolerance;
+	    Quantum<Double> freqtolerance;
+	    if(freqtol.toString().empty()){
+		freqtolerance=casa::Quantity(1.0,"Hz");
+	    }
+	    else{
+		freqtolerance=casaQuantity(freqtol);
+	    }
+	    if(dirtol.toString().empty()){
+		dirtolerance=casa::Quantity(1.0, "mas");
+	    }
+	    else{
+		dirtolerance=casaQuantity(dirtol);
+	    }
+	    
+	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.concatenate(appendedMS);
 
-       if (!Table::isReadable(msfile)) {
-         *itsLog << "Cannot read the measurement set called " << msfile
-                << LogIO::EXCEPTION;
-       }                   
-       if (DOos::totalSize(msfile, True) >
-           DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
-         *itsLog << "There does not appear to be enough free disk space "
-                << "(on the filesystem containing " << itsMS->tableName()
-                << ") for the concatantion to succeed." << LogIO::EXCEPTION;
-       }
-       const MeasurementSet appendedMS(msfile);
-
-       MSConcat mscat(*itsMS);
-       Quantum<Double> dirtolerance;
-       Quantum<Double> freqtolerance;
-       if(freqtol.toString().empty()){
-	 freqtolerance=casa::Quantity(1.0,"Hz");
-       }
-       else{
-	 freqtolerance=casaQuantity(freqtol);
-       }
-       if(dirtol.toString().empty()){
-	 dirtolerance=casa::Quantity(1.0, "mas");
-       }
-       else{
-	 dirtolerance=casaQuantity(dirtol);
-       }
-
-       mscat.setTolerance(freqtolerance, dirtolerance);
-       mscat.concatenate(appendedMS);
+	    String message = String(msfile) + " appended to " + itsMS->tableName();
+	    ostringstream param;
+	    param << "msfile= " << msfile
+		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='" << casaQuantity(dirtol) << "'";
+	    String paramstr=param.str();
+	    writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), msfile, "ms");
+	}
+	rstat = True;
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	Table::relinquishAutoLocks();
+	RETHROW(x);
     }
-     {
-       String message = String(msfile) + " appended to " + itsMS->tableName();
-       ostringstream param;
-       param << "msfile= " << msfile
-             << " freqTol='" << casaQuantity(freqtol) << "' dirTol='" << casaQuantity(dirtol) << "'";
-       String paramstr=param.str();
-       writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), msfile, "ms");
-     }
-     rstat = True;
-   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks();
-       RETHROW(x);
-   }
-  Table::relinquishAutoLocks();
-  return rstat;
+    Table::relinquishAutoLocks();
+    return rstat;
+}
+
+bool
+ms::timesort(const std::string& msname)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "timesort");
+
+	    if (DOos::totalSize(itsMS->tableName(), True) >
+		DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+		*itsLog << "There does not appear to be enough free disk space "
+			<< "(on the filesystem containing " << itsMS->tableName()
+			<< ") for the sorting to succeed." << LogIO::EXCEPTION;
+	    }
+		
+	    {
+		String originalName = itsMS->tableName();
+		itsMS->flush();
+		MeasurementSet sortedMS = itsMS->sort("TIME");
+
+		if (msname.length() == 0) { // no name given, sort and don't keep copy
+		    // make deep copy
+		    sortedMS.deepCopy(originalName+".sorted", Table::New);
+		    // close reference table
+		    sortedMS = MeasurementSet();
+		    // close original MS 
+		    close();
+		    // rename copy to original name
+		    Table newMSmain(originalName+".sorted", Table::Update);
+		    newMSmain.rename(originalName, Table::New);    // will also delete original table
+		    newMSmain = Table();
+		    // reopen 
+		    open(originalName,  Table::Update, False); 
+		    String message = "Sorted by TIME in ascending order.";
+		    writehistory(std::string(message.data()), "", std::string("ms::timesort()"), originalName, "ms");
+
+		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by TIME." 
+			    << LogIO::POST;
+		}
+		else { // sort into a new MS
+		    sortedMS.deepCopy(msname, Table::New);		   
+		    String message = "Generated from " + originalName + " by sorting by TIME in ascending order.";
+		    writehistory(std::string(message.data()), "", std::string("ms::timesort()"), msname, "ms");
+
+		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by TIME and stored it in " 
+			    << msname << " ."<< LogIO::POST;
+		
+		}
+	    }
+
+	    rstat = True;
+	}
+	
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	Table::relinquishAutoLocks();
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks();
+    return rstat;
 }
 
 bool

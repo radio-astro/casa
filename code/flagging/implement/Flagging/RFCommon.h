@@ -60,6 +60,7 @@ const char
     RF_RESET[]   = "reset",
     RF_FIGNORE[] = "fignore",
     RF_UNFLAG[]  = "unflag",
+    RF_SHADOW[]  = "shadow",
     
     RF_THR[]     = "thr",
     RF_ROW_THR[] = "rowthr",

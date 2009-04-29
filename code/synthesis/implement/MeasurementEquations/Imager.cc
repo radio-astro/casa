@@ -951,10 +951,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}
       }
 
-      // when setting in velocity its in LSRK
-      mySpectral = new SpectralCoordinate(MFrequency::LSRK, freqs(0),
-					  freqs(1)-freqs(0), refChan,
-					  restFreq);
+      // when setting in velocity its in LSRK or REST ?
+      {
+	MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::LSRK;
+	mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
+					    freqs(1)-freqs(0), refChan,
+					    restFreq);
+      }
+     
       {
 	ostringstream oos;
 	oos << "Reference Frequency = "
@@ -1004,7 +1008,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       }
       // Use this next line when non-linear is working
       // when selecting in velocity its LSRK
-      mySpectral = new SpectralCoordinate(MFrequency::LSRK, freqs,
+      MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : MFrequency::LSRK;
+      mySpectral = new SpectralCoordinate(imfreqref, freqs,
 					  restFreq);
       // mySpectral = new SpectralCoordinate(MFrequency::DEFAULT, freqs(0),
       //				       freqs(1)-freqs(0), refChan,
@@ -1031,7 +1036,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     //In FTMachine lsrk is used for channel matching with data channel 
     //hence we make sure that
     // we convert to lsrk when dealing with the channels
-    
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
   if(freqFrameValid_p){
       mySpectral->setReferenceConversion(MFrequency::LSRK, obsEpoch, 
 					 obsPosition,
@@ -2115,7 +2120,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
     
     if (datafieldids_p.nelements() > 1) {
-      os << "Multiple fields specified" << LogIO::POST;
+      os << LogIO::NORMAL4<< "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
 

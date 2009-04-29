@@ -1,4 +1,4 @@
-#!/usr/bin/perl -Ws
++#!/usr/bin/perl -Ws
 
 # This script
 #   - searches for new releases
@@ -96,6 +96,7 @@ if (! -e "$prefix/cksum" or
 }
 else {
     print "$prefix/$latest_release: same checksum as previous install\n";
+    sys_exe("rm -f $prefix/$latest_release");
     exit 0;
 }
 
@@ -159,7 +160,7 @@ if (`uname` eq "Linux\n") {
     sys_exe("chmod +x ./casapy");
     sys_exe("cat ./casapy");
 
-    sys_exe("./casapy < /dev/null");
+    system("./casapy < /dev/null"); # don't stop on error
 
     sys_exe("rm -rf /opt/casa/data");
     sys_exe("ln -s $data_dir /opt/casa/data");

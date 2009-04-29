@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Image Region.  Use viewer</description>
+        <description>Image Region or name.  Use viewer</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
@@ -96,11 +96,16 @@ component size.
 		Default: none (whole 2-D plane--dangerous); 
                 Example: box='10,10,50,50' or two regions
                   box = '10,10,30,30,40,45,55,54'
-        region -- The region file name.
-                An region file can be created with the CASA
-                viewer's region manager.  This must be used to select
+        region -- region file or name.
+                Use the viewer, then region manager to select regions of
+                   the image to process.  Similar to box, but graphical
+                Or the name of a region stored with the image, 
+                      use rg.namesintable()
+                to retrieve the list of names. This must be used to select
                 one spectral line lane or one Stokes plane.
-                Default: none; Example: region='myimage.im.rgn'
+                Default: none
+                Example: region='myimage.im.rgn'
+                         region='region1'
         mask -- Mask expression or file to be applied to image before fitting.
                 Can be used in place of region
                 Default: none;  Example: mask='ngc5921_mask'.  

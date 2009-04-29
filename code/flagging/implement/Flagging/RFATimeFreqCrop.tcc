@@ -102,9 +102,9 @@ Bool RFATimeFreqCrop :: newChunk (Int &i)
 {
  corrmask = RFDataMapper::corrMask(chunk.visIter());
  
-	cout << "Working with " << chunk.msName() << endl;
-	cout << "Times = " << num(TIME) << " Ifr = " << num(IFR) << " Chans = " << num(CHAN) << " Polns = " << num(POLZN) << " Ants " << num(ANT) << endl;
-	cout << " Parameters : " << ANT_TOL << " " << BASELN_TOL << " " << T_TOL << " " << F_TOL << " " << FlagLevel << " " << CorrChoice << endl;
+	cout << "Working with data chunk : " << chunk.msName() << endl;
+	cout << "TimeSteps = " << num(TIME) << ", Baselines = " << num(IFR) << ", Chans = " << num(CHAN) << ", Polns = " << num(POLZN) << ", Ants = " << num(ANT) << endl;
+	cout << "Parameters : " << " Antenna_tol=" << ANT_TOL << ", Baseline_tol=" << BASELN_TOL << ", Time_tol=" << T_TOL << "sigma, Freq_tol=" << F_TOL << "sigma, FlagLevel=" << FlagLevel << ", Flag_corr=" << String(CorrChoice?"Cross":"Auto") << endl;
 
 	nPol = 1;
 	
@@ -200,7 +200,7 @@ void RFATimeFreqCrop :: startData ()
 	tempBP=0;tempTS=0;flagBP=False;flagTS=False;fitBP=0;fitTS=0;
 
 
-	cout << "Start Data " <<endl;
+//	cout << "Start Data " <<endl;
 }
 
 
@@ -220,7 +220,12 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	vv = &vb.visCube(); // extract a viscube - one timestamp - one VisBuf
 	vi.flag(ff); // extract the corresponding flags
 	
+	if(ant1.shape() != (vb.antenna1()).shape())
+		ant1.resize((vb.antenna1()).shape());
 	ant1 = vb.antenna1();
+	
+	if(ant2.shape() != (vb.antenna2()).shape())
+		ant2.resize((vb.antenna2()).shape());
 	ant2 = vb.antenna2();
         const Vector<Int> &ifrs( chunk.ifrNums() );
 
@@ -313,7 +318,7 @@ if(iterTimecnt > 0 && (timecnt==NumT || itime==(num(TIME)-1) ))
 	flagcnt = 0;
 	antcnt = 0;
 	
-cout << " Average over time to create the mean bandpasses " << endl;
+cout << endl << " Flag across " << timecnt << " timesteps and create a time-averaged bandpass " << endl;
 	
 Float rmean=0;
 	for(int pl=0;pl<matpos[0];pl++)
@@ -391,7 +396,7 @@ Float rmean=0;
 /* Fit a smooth bandpass to the mean bandpass and store it 
  *  one for each baseline */
 
-cout << " Clean up the bandpasses ... " << endl;
+//cout << " Clean up the bandpasses ... " << endl;
 
 for(int pl=0;pl<matpos[0];pl++)
 {
@@ -450,7 +455,7 @@ for(int pl=0;pl<matpos[0];pl++)
 
 /* FLAGGING IN FREQUENCY */
 
-cout << " Flagging in Frequency " << endl;
+cout << " Fit the bandpass shape and flag across " << matpos[2] << " frequency channels" << endl;
 
 for(int pl=0;pl<matpos[0];pl++)
 {
@@ -503,7 +508,7 @@ for(int pl=0;pl<matpos[0];pl++)
 
 /* APPLY FLAG HEURISTICS ON THE FLAGS FOR ALL AUTOCORRELATIONS */
 
-cout << " Apply Flag Heuristics " << endl;
+cout << " Apply Flag Heuristics for flaglevel " << FlagLevel << endl;
 
 
 if(FlagLevel > 0)
@@ -627,7 +632,7 @@ for(int pl=0;pl<matpos[0];pl++)
 
 if(CorrChoice ==0)
 {	
-cout << " Flagging Cross correlations from selfs " << endl;
+cout << " Flagging Cross correlations from self correlation flags " << endl;
 for(int pl=0;pl<matpos[0];pl++)
 {
 	for(uInt bs=0;bs<NumB;bs++)
@@ -647,7 +652,7 @@ for(int pl=0;pl<matpos[0];pl++)
 
 #endif
 
-cout << " Diagnostics on flag cube " << endl;
+//cout << " Diagnostics on flag cube " << endl;
 
 float ccnt=0,fcnt=0,pcnt=0;
 
@@ -672,13 +677,14 @@ for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
 
 //cout << " Percentage Flagged = " << ccnt / (matpos[0]*matpos[2]*cubepos[2]) *100 << endl;
 //cout << " Percentage Clear = " << fcnt / (matpos[0]*matpos[2]*cubepos[2]) *100 << endl;
-cout << " Percentage of measured points = " << pcnt / (matpos[0]*matpos[2]*cubepos[2]) *100 << endl;
-cout << " Percentage Flagged = " << ccnt / pcnt *100 << endl;
-cout << " Percentage Clear = " << fcnt / pcnt *100 << endl;
+
+//cout << " Percentage of measured points = " << pcnt / (matpos[0]*matpos[2]*cubepos[2]) *100 << endl;
+cout << " Flagged = " << ccnt / pcnt *100 << " %" << endl;
+cout << " Clear = " << fcnt / pcnt *100 << " %" << endl;
 
 /* WRITE FLAGS INTO 'flag' for RedFlagger */
 
-cout << " Writing flags to ChunkFlags " << endl;
+//cout << " Writing flags to ChunkFlags " << endl;
 
 /* Use 'corrmask' to indicate which polarizations the flagging applies to */
 /* Right now - Flags for only the first polarization, get written */
@@ -709,7 +715,7 @@ timecnt=0;
 
 //flagc = True;
 
-cout << " Done with this block ! " << endl;
+//cout << " Done with this block ! " << endl;
 }
 
 
@@ -732,8 +738,8 @@ RFA::IterMode RFATimeFreqCrop :: iterRow  (uInt irow)
  * Calls endData once at the end of each PASS */
 RFA::IterMode RFATimeFreqCrop :: endData  () 
 {
-	cout << " Into End Data " << endl;
-	cout << " End Time Count = " << timecnt << endl;
+	//cout << " Into End Data " << endl;
+	//cout << " End Time Count = " << timecnt << endl;
 
 	pclose(gnu);
 
@@ -750,7 +756,12 @@ void RFATimeFreqCrop :: iterFlag(uInt itime)
  corrmask = RFDataMapper::corrMask(chunk.visIter());
 
  const Vector<Int> &ifrs( chunk.ifrNums() );
+  if(ant1.shape() != (vb.antenna1()).shape())
+	  ant1.resize((vb.antenna1()).shape());
   ant1 = vb.antenna1();
+  
+  if(ant2.shape() != (vb.antenna2()).shape())
+	  ant2.resize((vb.antenna2()).shape());
   ant2 = vb.antenna2();
   uInt npols = (chunkflags.shape())[0];
   uInt nbs = ant1.nelements();
@@ -806,7 +817,7 @@ void RFATimeFreqCrop :: endChunk ()
 {
 	RFAFlagCubeBase::endChunk();
 	(chunk.visIter()).setRowBlocking(0); //reset to default
-	cout << " Calling endChunk !!" << endl;
+//	cout << " Calling endChunk !!" << endl;
 }
 
 
@@ -814,7 +825,7 @@ void RFATimeFreqCrop :: endChunk ()
 
 RFATimeFreqCrop :: ~RFATimeFreqCrop () 
 {
-    cout << "destructor for RFATimeFreqCrop" << endl;
+//    cout << "destructor for RFATimeFreqCrop" << endl;
 }
 
 
@@ -1014,7 +1025,7 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
      if(j==1) {deg = 1;npieces=5;}
      if(j==2) {deg = 2;npieces=6;}
      if(j==3) {deg = 3;npieces=7;}
-     if(j==4) {deg = 6;npieces=3;}
+     if(j==4) {deg = 3;npieces=8;}
      
      psize = (int)(tdata.nelements()/npieces);
      leftover = (int)(tdata.nelements() % npieces);
@@ -1031,7 +1042,7 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 	       right = left + psize; 
 
 	       if(p==0) {left = 0; right = leftover_front + psize;}
-	       if(p==npieces-1) {right = tdata.nelements()-1; left = right-psize-leftover_back; }
+	       if(p==npieces-1) {right = tdata.nelements()-1;} 
 	     }
 	     if(deg==1) 
 		     LineFit(tdata,tfband,fit,left,right);

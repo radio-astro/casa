@@ -3,7 +3,7 @@ import shutil
 import stat
 from taskinit import *
 
-def concat(vislist,concatvis,freqtol,dirtol):
+def concat(vislist,concatvis,freqtol,dirtol,timesort):
 	"""Concatenate two visibility data sets.
 	A second data set is appended to the input data set with
 	checking of the frequency and position.
@@ -21,6 +21,8 @@ def concat(vislist,concatvis,freqtol,dirtol):
 		default: ;; means always combine
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		their phase center is less than 1 arcsec.
+	timesort -- if true, sort the main table of the resulting MS by time
+	        default: false; example: timesort=true
 
 	"""
 
@@ -64,13 +66,20 @@ def concat(vislist,concatvis,freqtol,dirtol):
 			if(not os.path.exists(elvis)):
 				raise Exception, 'Visibility data set '+elvis+' not found - please verify the name'
 			casalog.post('concatenating '+elvis+' into '+concatvis , 'INFO')
+			
 			ms.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+
 			ms.writehistory(message='taskname=concat',origin='concat')
 			ms.writehistory(message='vis         = "'+str(concatvis)+'"',origin='concat')
 			ms.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='concat')
 			ms.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='concat')
 			ms.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='concat')
+
+		if(timesort):
+			ms.timesort()
+
 		ms.close()
+			
 
 	except Exception, instance:
 		print '*** Error ***',instance

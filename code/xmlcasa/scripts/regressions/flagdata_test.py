@@ -7,7 +7,8 @@ import shutil
 
 theMS = 'pointingtest.ms'
 
-shutil.copytree(os.environ.get('CASAPATH').split()[0]+"/data/regression/pointing/"+theMS,
+shutil.copytree(os.environ.get('CASAPATH').split()[0] +
+                "/data/regression/pointing/" + theMS,
                 theMS)
 
 vis=theMS
@@ -54,6 +55,18 @@ if do_vector:
     
     inp(flagdata)
     flagdata()
+flagdata(vis=vis, unflag=true)
+
+
+flagdata(vis=vis, mode='shadow')
+flagdata(vis=vis, mode='summary')
+flagdata(vis=vis, unflag=true)
+
+flagdata(vis=vis, mode='shadow', correlation='LL')
+flagdata(vis=vis, mode='summary')
+flagdata(vis=vis, unflag=true)
+
+exit
 
 flagdata(vis=vis, antenna='2')
 flagdata(vis=vis, mode='summary', antenna='2')
@@ -62,26 +75,33 @@ flagdata(vis=vis, unflag=true)
 flagdata(vis=vis, spw='0')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, correlation='LL')
 flagdata(vis=vis, correlation='LL,RR')
 flagdata(vis=vis, correlation='LL RR')
 flagdata(vis=vis, correlation='LL ,, ,  ,RR')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, field='0')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, uvrange='200~400m')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, timerange='20:21:00~23:00:00')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, scan='3')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)
+
 # feed not implemented flagdata(vis=vis, feed='27')
 # flagdata(vis=vis, unflag=true)
+
 flagdata(vis=vis, array='0')
 flagdata(vis=vis, mode='summary', antenna='2')
 flagdata(vis=vis, unflag=true)

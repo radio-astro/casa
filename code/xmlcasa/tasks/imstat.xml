@@ -20,7 +20,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="region">
-        <description>Image Region file path. Not yet implemented</description>       <value></value>
+        <description>Image Region or name. Use Viewer</description>
+        <value></value>
     </param>
 
     <param type="string" name="box">
@@ -68,9 +69,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	Keyword arguments:
 	imagename -- Name of input image
 		Default: none; Example: imagename='ngc5921_task.im'
-        region -- File path to an ImageRegion file.
-                Default: none; Example: region='myimage.im.rgn'
-                  Not yet implemented
+        region -- File path to an ImageRegion file or name.
+                Use the viewer, then region manager to select regions of
+                   the image to process.  Similar to box, but graphical
+                Or the name of a region stored with the image, 
+                      use rg.namesintable()
+                to retrieve the list of names.
+                Default: none
+                Example: region='myimage.im.rgn'
+                         region='region1'
 	box --  A box region on the directional plane
 	        Only pixel values acceptable at this time.
 		Default: none (whole 2-D plane); 

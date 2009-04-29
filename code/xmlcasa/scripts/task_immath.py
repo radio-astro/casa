@@ -173,7 +173,7 @@ def immath(outfile=None,mode=None,expr=None,imagename=None,sigma=None,mask=None,
 		tmpFile=tmpFilePrefix+str(i)
 		ia.subimage( region=reg, mask=mask, outfile=tmpFile )
 		subImages.append( tmpFile )
-		ia.close()
+		ia.done()
 
 	    # Make sure no problems happened
 	    if ( len(filenames) != len(subImages) ) :
@@ -189,7 +189,7 @@ def immath(outfile=None,mode=None,expr=None,imagename=None,sigma=None,mask=None,
 	    retValue=ia.imagecalc(pixels=expr, outfile=outfile, overwrite=True)
 
 	    #cleanup, including removeal of all tempfiles
-	    ia.close()
+	    ia.done()
 
             # modify stokes type for polarization intensity image
             if mode=="poli":

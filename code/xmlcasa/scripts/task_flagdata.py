@@ -65,7 +65,7 @@ def flagdata(vis = None, mode = None,
         feed -- Selection based on the feed - NOT IMPLEMENTED YET
         array -- Selection based on the antenna array
         mode -- Mode of operation.
-                options: 'manualflag','autoflag','summary','quack'
+                options: 'manualflag','quack','shadow','autoflag','summary'
 
         --- MANUALFLAG option does data-selected flagging, autocorrelation
 	      flagging and/or clipping.
@@ -128,15 +128,16 @@ def flagdata(vis = None, mode = None,
 
 	fg.clearflagselection(0)
 	
-        if( antenna == [-1] ):antenna='';
+        if( antenna == [-1] ): antenna=''
 
 	try: 
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        fg.open(vis);
+                        fg.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
                 
-                torun=True;
+                torun=True
+		#tosave=True
                 if( mode == 'manualflag' or mode == 'quack' ):
                         # for a default of expr = 'ABS RR LL'
 			if type(autocorr) == list:
@@ -272,11 +273,46 @@ def flagdata(vis = None, mode = None,
 									  outside=clipoutside, \
 									  quackinterval=quackinterval[i])
 			else:
+				# parameters are not lists
 				fg.setdata();
-				fg.setmanualflags(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation,autocorrelation=autocorr,unflag=unflag,clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval);
-                if( mode == 'autoflag' ):
-                        fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,
-				   baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
+				fg.setmanualflags(field = field, \
+						  spw = spw, \
+						  array = array, \
+						  feed = feed, \
+						  scan = scan, \
+						  baseline = antenna, \
+						  uvrange = uvrange, \
+						  time = timerange, \
+						  correlation = correlation, \
+						  autocorrelation = autocorr, \
+						  unflag = unflag, \
+						  clipexpr = clipexpr, \
+						  cliprange = clipminmax, \
+						  clipcolumn = clipcolumn, \
+						  outside = clipoutside, \
+						  quackinterval = quackinterval);
+		if ( mode == 'shadow' ):
+			fg.setdata()
+			fg.setshadowflags( \
+				field = field, \
+				spw = spw, \
+				array = array, \
+				feed = feed, \
+				scan = scan, \
+				baseline = antenna, \
+				uvrange = uvrange, \
+				time = timerange, \
+				correlation = correlation)
+                if ( mode == 'autoflag' ):
+                        fg.setdata(field = field, \
+				   spw = spw, \
+				   array = array, \
+				   feed = feed, \
+				   scan = scan, \
+				   baseline = antenna, \
+				   uvrange = uvrange, \
+				   time = timerange, \
+				   correlation = correlation);
                         rec = fg.getautoflagparams(algorithm=algorithm);
                         rec['expr'] = expr;
                         rec['thr'] = thr;
@@ -287,20 +323,33 @@ def flagdata(vis = None, mode = None,
                         #     rec['nbins'] = nbins;
                         #     rec['minpop'] = minpop;
                         fg.setautoflag(algorithm=algorithm,parameters=rec);
-                if( mode == 'summary' ):
+                if ( mode == 'summary' ):
                         fg.setdata();
-			fg.setflagsummary(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
-                if( mode == 'query' ):
+			fg.setflagsummary(field=field, \
+					  spw=spw, \
+					  array=array, \
+					  feed=feed, \
+					  scan=scan, \
+					  baseline=antenna, \
+					  uvrange=uvrange, \
+					  time=timerange, \
+					  correlation=correlation);
+			#tosave = False
+                if ( mode == 'query' ):
                         print "Sorry - not yet implemented !"
-			torun = False;
-                if( mode == 'extend' ):
+			torun = False
+			#tosave = False
+                if ( mode == 'extend' ):
                         print "Sorry - not yet implemented !"
-			torun = False;
-                if( torun == True ) :
-                        fg.run();
-                else :
-			fg.done();
-                        return False;
+			torun = False
+			#tosave = False
+                if torun:
+			fg.run()
+			#if tosave:
+				#fg.saveflagversion(versionname=versionname,comment='flagdata autosave',merge='replace')
+                else:
+			fg.done()
+                        return False
 
         	#write history
         	ms.open(vis,nomodify=False)
@@ -331,5 +380,6 @@ def flagdata(vis = None, mode = None,
         	ms.close()
 	
 	except Exception, instance:
+		fg.done()
 		print '*** Error ***',instance
 	fg.done()

@@ -9,8 +9,8 @@
 	<shortdescription> All purpose flagging task based on selections</shortdescription>
 	<description>
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, and autocorrelation flagging. Unflagging is
-        also available.
+        quacking, clipping, and autocorrelation flagging, or flagging
+	of shadowed antennas. Unflagging is also available.
 
 	In a dual polarization data set, each polarization can be flagged
 	separately.  However, at present the calibration and imaging will
@@ -23,13 +23,14 @@
 		</param>
 
 		<param type="string" name="mode">
-			<description>Mode (manualflag,autoflag,summary,quack)</description>
+			<description>Mode (manualflag,quack,shadow,autoflag,summary)</description>
 			<value>manualflag</value>
 			<allowed kind="enum">
 			<value>manualflag</value>
 			<value>autoflag</value>
 			<value>summary</value>
 			<value>quack</value>
+			<value>shadow</value>
 		        </allowed>
 		</param>
 
@@ -195,6 +196,7 @@
 					<default param="quackinterval"><value type="double">0.0</value></default>
 				</equals>
 				<equals value="summary"/>
+				<equals value="shadow"/>
 			</when>
 			<when param="selectdata">
 				<equals type="bool" value="True">
@@ -215,8 +217,8 @@
 <example>
 
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, and autocorrelation flagging. Unflagging is
-        also available.
+        quacking, clipping, and autocorrelation flagging, or flagging
+	of shadowed antennas. Unflagging is also available.
 
 	In a dual polarization data set, each polarization can be flagged
 	separately.  However, at present the calibration and imaging will
@@ -263,7 +265,7 @@
         feed -- Selection based on the feed - NOT IMPLEMENTED YET
         array -- Selection based on the antenna array
         mode -- Mode of operation.
-                options: 'manualflag','autoflag','summary','quack'
+                options: 'manualflag','autoflag','summary','quack','shadow'
 
         --- MANUALFLAG option does data-selected flagging, autocorrelation
 	      flagging and/or clipping.
@@ -299,6 +301,12 @@
                            True (unquack)
         autocorr -- Flag autocorrelations (independent option)
                 default =&gt; False
+
+        -- SHADOW option flags data (including autocorrelations)
+        coming from baselines where one or both antennas were 
+        shadowed by another antenna
+
+        No subparameters
 
         -- SUMMARY option lists number of rows and data points flagged
 

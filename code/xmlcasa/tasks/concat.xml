@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="concat">
-<shortdescription>Concatenate two visibility data sets.</shortdescription>
+<shortdescription>Concatenate visibility data sets.</shortdescription>
 
 <input>
 	<param type="stringArray" name="vis" mustexist="true">
@@ -32,15 +32,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value type="string"></value>
 	</param>
 
+	<param type="bool" name="timesort" >
+
+		<description>If true, sort the main table of the resulting MS by TIME in ascending order</description>
+		<value>False</value>
+	</param>
+
 </input>
 <example>
 
-	Two data sets are concatenated with the
+	The data sets given in the vis argument as a list are concatenated with the
 	checking of the frequency and position.
 
-	The safest way to run the program is to specify the two
-        data sets in vis, and the output data name set in concatvis.  If the
-        output data set name already exists (egs. it is the same as the first
+	The output data name set in concatvis.  If the
+        output data set name already exists (e.g., it is the same as the first
         input data set), then the input data sets will be appended to the
         concatvis data set.
 
@@ -76,7 +81,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		default: '' means always combine
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		their phase center is less than 1 arcsec.
-
+	timesort -- If true, the output MS main table will be sorted in time.
+	        default: false
+		example: timesort=true
 
 </example> 
 
