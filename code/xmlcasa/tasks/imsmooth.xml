@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the image smoothing task                         -->
+<!-- step 1: construct region with the region manger tool, rg               -->
+<!-- step 2: do the subtraction, with ia.continuumsub (image analysis tool) -->
+<!--                                                                        -->
+<!-- TODO: Add support for boxcar and tophat kernels                        -->
+<!--       Add support for user defined kernels                             -->
+<!--       Add support for altering the position angle for the kernel       -->
+
+<task type="function" name="imsmooth">
+<shortdescription>Smooth an image or portion of an image</shortdescription>
+
+<description>
+</description>
+
+<input>
+    <param type="string" name="imagename" kind="image" mustexist="true" >
+    	<description>Name of the input image</description>
+    	<value></value>
+        <example>imagename=ngc5921_task.image</example>
+    </param>
+
+    <param type="string" name="kernel">
+        <description>Type of kernel to use: gaussian, boxcar, tophat, or user-defined. Only gaussian kernels are currently supported.</description>
+        <value>gaussian</value>
+    </param>
+
+    <param type="any" name="major" subparam="yes">
+	<description>Major axis in gaussian and boxcar kernels.</description>
+ 	<any type='variant' limmittype='string int float dict'/>
+    	<value type="string">2.0arcsec</value>
+    </param>
+
+    <param type="any" name="minor" subparam="yes">
+	<description>Minor axis in gaussian and boxcar kernels</description>
+ 	<any type='variant' limmittype='string int float dict'/>
+    	<value type="string">2.0arcsec</value>
+    </param>
+
+    <param type="any" name="region">
+        <description>Image Region or name.  Use viewer</description>
+	<any type='variant' limittype='string stringArray'/>
+        <value type='string'/>
+    </param>
+
+    <param type="string" name="box">
+        <description>Select one or more box regions</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="chans" >
+	<description>Select the channel(spectral) range</description>
+    	<value></value>
+	<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
+	<example>1.4km/s             # above the given velocity</example>
+        <example>!1~5                # Select all but the ange of channel numbers</example>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <value></value>
+	    <example>stokes='IQ'</example>
+	    <example>stokes='RR,LL'</example>
+    </param>
+
+    <param type="string" name="mask">
+	    <description>mask used for selecting the area of the image to calculate the moments on</description>
+	    <any type="variant"/>
+	    <value type="stringArray"></value>
+            <example>mask='my_file.image:no_noise'</example>
+            <example>mask='some.image&gt;0.15'</example>
+    </param>
+
+
+    <param type="string" name="outfile">
+	    <description>Output, smoothed, image file name </description>
+	<value></value>
+    </param>
+
+    <constraints>
+        <when param="kernel">
+            <equals value="boxcar"/>
+            <equals value="tophat"/>
+            <equals value="user"/>
+            <equals value="gaussian">
+		<default param="major"><value type="float">'2.0arcsec'</value></default>
+		<default param="minor"><value type="float">'2.0arcsec'</value></default>
+	    </equals>
+	</when>
+    </constraints>
+</input>
+<returns type="any"/>
+
+<example>
+This task performs a Fourier-based convolution to 'smooth' the
+image. Smoothing is typically performed in order to reduce the noice in
+an image.
+
+	Keyword arguments:
+	imagename -- Input spectral line image
+		Default: none; Example: imagename='ngc5921_task.im'
+	outfile -- Output image file name (or root for multiple moments)
+		default: ''; example: outfile='image.smooth';
+        kernel -- Type of kernel to use when smoothing.  Currently,
+                only gassian is supported.
+                default: 'gauss'; example: kernel='gauss'
+                options: gaussian, boxcar (comming), tophat (coming), user
+        major -- Depends on the kernel type, see explanation below.
+        minor -- Depends on the kernel type, see explanation below.       
+        mask -- Mask applied to the image before calculating the moments.
+                Default '' means no mask;  
+                Example: mask='orion.mask'.  
+
+                Full description of the syntax can be found at
+                http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
+        region -- region file or name.
+                Use the viewer, then region manager to select regions of
+                   the image to process.  Similar to box, but graphical
+                Or the name of a region stored with the image, 
+                      use rg.namesintable()
+                to retrieve the list of names.
+                Default: none
+                Example: region='myimage.im.rgn'
+                         region='region1'
+	box --  A box region on the directional plane
+	        ONLY pixel values acceptable at this time.
+		Default: none (whole 2-D plane); Example: box='10,10,50,50'
+	chans -- channel numbers go select for the continuum,
+	        ONLY channel numbers accepted at this time.
+		Default: none (all); 
+                  Example: chans='3~6;>40'
+	stokes -- Stokes parameters to image, may or may not be separated
+                by commas but best if you use commas.
+                Default: none (all); Example: stokes='IQUV';
+                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+
+Kernel Paramters
+-----------------
+Finally, and most importantly the kernel is specified via the kernel,
+major, and minor parameters. At this point in time only Gaussian kernels
+are supported and in this case major and minor are the full width at
+half maximum (FWHM) of the Gaussian.
+
+The convolution kernel paramters can be specified in one of three ways
+   Quantity -- for example major=qa.quantity(1, 'arcsec')
+               Note that you can use pixel units, such as 
+               major=qa.quantity(1, 'pix')
+   String -- for example minor='1km'
+             (i.e. one that the Quanta quantity function accepts).
+   Numeric -- for example major=10.
+              In this case, the units of major and minor are assumed to 
+              be in pixels. Using pixel units allows you to convolve 
+              axes with different units.
+
+
+
+# EXAMPLE 1
+# smoothing with a gaussian kernel 20arseconds by 10 arseconds
+imsmooth( imagename='my.image', kernel='gauss', major='10arcsec', minor='10arcsec')
+
+
+# EXAMPLE 2
+# Smoothing using pixel coordinates.
+imsmooth( imagename='new.image', major='20pix', minor='10pix')
+
+</example>
+
+</task>
+
+</casaxml>
