@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.h 20557 2009-04-02 14:11:08Z gervandiepen $
+//# $Id: ArrayMath.h 20489 2009-01-16 08:21:55Z gervandiepen $
 
 #ifndef CASA_ARRAYMATH_H
 #define CASA_ARRAYMATH_H
@@ -139,17 +139,9 @@ template<class T> class Matrix;
 // <group name="Array mathematical operations">
 
 
-// Function to check the shapes. It throws an exception if not equal.
-// <group>
-void throwArrayShapes (const char* name);
-inline void checkArrayShapes (const ArrayBase& left, const ArrayBase& right,
-                              const char* name)
-{
-  if (! left.shape().isEqual (right.shape())) {
-    throwArrayShapes (name);
-  }
-}
-// </group>
+// 
+// Function to print "deprecated" message once per program.
+void ArrayMinMaxPrintOnceDeprecated ();
 
 
 // Functions to apply a binary or unary operator to arrays.
@@ -159,9 +151,9 @@ inline void checkArrayShapes (const ArrayBase& left, const ArrayBase& right,
 // <group>
 // Transform left and right to a result using the binary operator.
 // Result MUST be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-inline void arrayContTransform (const Array<L>& left, const Array<R>& right,
-                                Array<RES>& result, BinaryOperator op)
+template<typename T, typename BinaryOperator>
+inline void arrayContTransform (const Array<T>& left, const Array<T>& right,
+                                Array<T>& result, BinaryOperator op)
 {
   DebugAssert (result.contiguousStorage(), AipsError);
   if (left.contiguousStorage()  &&  right.contiguousStorage()) {
@@ -175,9 +167,9 @@ inline void arrayContTransform (const Array<L>& left, const Array<R>& right,
 
 // Transform left and right to a result using the binary operator.
 // Result MUST be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-inline void arrayContTransform (const Array<L>& left, R right,
-                                Array<RES>& result, BinaryOperator op)
+template<typename T, typename BinaryOperator>
+inline void arrayContTransform (const Array<T>& left, T right,
+                                Array<T>& result, BinaryOperator op)
 {
   DebugAssert (result.contiguousStorage(), AipsError);
   if (left.contiguousStorage()) {
@@ -191,9 +183,9 @@ inline void arrayContTransform (const Array<L>& left, R right,
 
 // Transform left and right to a result using the binary operator.
 // Result MUST be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-inline void arrayContTransform (L left, const Array<R>& right,
-                                Array<RES>& result, BinaryOperator op)
+template<typename T, typename BinaryOperator>
+inline void arrayContTransform (T left, const Array<T>& right,
+                                Array<T>& result, BinaryOperator op)
 {
   DebugAssert (result.contiguousStorage(), AipsError);
   if (right.contiguousStorage()) {
@@ -207,9 +199,9 @@ inline void arrayContTransform (L left, const Array<R>& right,
 
 // Transform array to a result using the unary operator.
 // Result MUST be a contiguous array.
-template<typename T, typename RES, typename UnaryOperator>
+template<typename T, typename UnaryOperator>
 inline void arrayContTransform (const Array<T>& arr,
-                                Array<RES>& result, UnaryOperator op)
+                                Array<T>& result, UnaryOperator op)
 {
   DebugAssert (result.contiguousStorage(), AipsError);
   if (arr.contiguousStorage()) {
@@ -221,27 +213,27 @@ inline void arrayContTransform (const Array<T>& arr,
 
 // Transform left and right to a result using the binary operator.
 // Result need not be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-void arrayTransform (const Array<L>& left, const Array<R>& right,
-                     Array<RES>& result, BinaryOperator op);
+template<typename T, typename BinaryOperator>
+void arrayTransform (const Array<T>& left, const Array<T>& right,
+                     Array<T>& result, BinaryOperator op);
 
 // Transform left and right to a result using the binary operator.
 // Result need not be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-void arrayTransform (const Array<L>& left, R right,
-                     Array<RES>& result, BinaryOperator op);
+template<typename T, typename BinaryOperator>
+void arrayTransform (const Array<T>& left, T right,
+                     Array<T>& result, BinaryOperator op);
 
 // Transform left and right to a result using the binary operator.
 // Result need not be a contiguous array.
-template<typename L, typename R, typename RES, typename BinaryOperator>
-void arrayTransform (L left, const Array<R>& right,
-                     Array<RES>& result, BinaryOperator op);
+template<typename T, typename BinaryOperator>
+void arrayTransform (T left, const Array<T>& right,
+                     Array<T>& result, BinaryOperator op);
 
 // Transform array to a result using the unary operator.
 // Result need not be a contiguous array.
-template<typename T, typename RES, typename UnaryOperator>
+template<typename T, typename UnaryOperator>
 void arrayTransform (const Array<T>& arr,
-                     Array<RES>& result, UnaryOperator op);
+                     Array<T>& result, UnaryOperator op);
 
 // Transform left and right to a result using the binary operator.
 // The created and returned result array is contiguous.
@@ -266,8 +258,8 @@ Array<T> arrayTransformResult (const Array<T>& arr, UnaryOperator op);
 
 // Transform left and right in place using the binary operator.
 // The result is stored in the left array (useful for e.g. the += operation).
-template<typename L, typename R, typename BinaryOperator>
-inline void arrayTransformInPlace (Array<L>& left, const Array<R>& right,
+template<typename T, typename BinaryOperator>
+inline void arrayTransformInPlace (Array<T>& left, const Array<T>& right,
                                    BinaryOperator op)
 {
   if (left.contiguousStorage()  &&  right.contiguousStorage()) {
@@ -279,8 +271,8 @@ inline void arrayTransformInPlace (Array<L>& left, const Array<R>& right,
 
 // Transform left and right in place using the binary operator.
 // The result is stored in the left array (useful for e.g. the += operation).
-template<typename L, typename R, typename BinaryOperator>
-inline void arrayTransformInPlace (Array<L>& left, R right, BinaryOperator op)
+template<typename T, typename BinaryOperator>
+inline void arrayTransformInPlace (Array<T>& left, T right, BinaryOperator op)
 {
   if (left.contiguousStorage()) {
     transformInPlace (left.cbegin(), left.cend(), bind2nd(op, right));
@@ -311,10 +303,6 @@ template<class T> void operator+= (Array<T> &left, const Array<T> &other);
 template<class T> void operator-= (Array<T> &left, const Array<T> &other);
 template<class T> void operator*= (Array<T> &left, const Array<T> &other);
 template<class T> void operator/= (Array<T> &left, const Array<T> &other);
-template<class T> void operator%= (Array<T> &left, const Array<T> &other);
-template<class T> void operator&= (Array<T> &left, const Array<T> &other);
-template<class T> void operator|= (Array<T> &left, const Array<T> &other);
-template<class T> void operator^= (Array<T> &left, const Array<T> &other);
 // </group>
 
 // 
@@ -325,10 +313,6 @@ template<class T> void operator+= (Array<T> &left, const T &other);
 template<class T> void operator-= (Array<T> &left, const T &other);
 template<class T> void operator*= (Array<T> &left, const T &other);
 template<class T> void operator/= (Array<T> &left, const T &other);
-template<class T> void operator%= (Array<T> &left, const T &other);
-template<class T> void operator&= (Array<T> &left, const T &other);
-template<class T> void operator|= (Array<T> &left, const T &other);
-template<class T> void operator^= (Array<T> &left, const T &other);
 // </group>
 
 // Unary arithmetic operation.
@@ -336,7 +320,6 @@ template<class T> void operator^= (Array<T> &left, const T &other);
 // <group>
 template<class T> Array<T> operator+(const Array<T> &a);
 template<class T> Array<T> operator-(const Array<T> &a);
-template<class T> Array<T> operator~(const Array<T> &a);
 // </group>
 
 // 
@@ -350,14 +333,6 @@ template<class T>
   Array<T> operator* (const Array<T> &left, const Array<T> &right);
 template<class T> 
   Array<T> operator/ (const Array<T> &left, const Array<T> &right);
-template<class T> 
-  Array<T> operator% (const Array<T> &left, const Array<T> &right);
-template<class T> 
-  Array<T> operator| (const Array<T> &left, const Array<T> &right);
-template<class T> 
-  Array<T> operator& (const Array<T> &left, const Array<T> &right);
-template<class T> 
-  Array<T> operator^ (const Array<T> &left, const Array<T> &right);
 // </group>
 
 // 
@@ -372,14 +347,6 @@ template<class T>
     Array<T> operator* (const Array<T> &left, const T &right);
 template<class T> 
     Array<T> operator/ (const Array<T> &left, const T &right);
-template<class T> 
-    Array<T> operator% (const Array<T> &left, const T &right);
-template<class T> 
-    Array<T> operator| (const Array<T> &left, const T &right);
-template<class T> 
-    Array<T> operator& (const Array<T> &left, const T &right);
-template<class T> 
-    Array<T> operator^ (const Array<T> &left, const T &right);
 // </group>
 
 // 
@@ -394,14 +361,6 @@ template<class T>
     Array<T> operator* (const T &left, const Array<T> &right);
 template<class T>  
     Array<T> operator/ (const T &left, const Array<T> &right);
-template<class T>  
-    Array<T> operator% (const T &left, const Array<T> &right);
-template<class T>  
-    Array<T> operator| (const T &left, const Array<T> &right);
-template<class T>  
-    Array<T> operator& (const T &left, const Array<T> &right);
-template<class T>  
-    Array<T> operator^ (const T &left, const Array<T> &right);
 // </group>
 
 // 
@@ -429,8 +388,6 @@ template<class T> Array<T> acos(const Array<T> &a);
 template<class T> Array<T> asin(const Array<T> &a);
 template<class T> Array<T> atan(const Array<T> &a);
 template<class T> Array<T> atan2(const Array<T> &y, const Array<T> &x);
-template<class T> Array<T> atan2(const T &y, const Array<T> &x);
-template<class T> Array<T> atan2(const Array<T> &y, const T &x);
 template<class T> Array<T> ceil(const Array<T> &a);
 template<class T> Array<T> fabs(const Array<T> &a);
 template<class T> Array<T> abs(const Array<T> &a);
@@ -451,18 +408,22 @@ template<class T> Array<T> fabs(const Array<T> &a);
 template<class ScalarType>
 void minMax(ScalarType &minVal, ScalarType &maxVal, IPosition &minPos, 
 	    IPosition &maxPos, const Array<ScalarType> &array);
-// The array is searched at locations where the mask equals <src>valid</src>.
-// (at least one such position must exist or an exception will be thrown).
-// MaskType should be an Array of Bool.
+// The array is only searched at locations where the mask is True. (at least
+// one such position must exist or an exception will be thrown). MaskType
+// should be an Array of Bool.
+//# See the comments at the beginning of ArrayMath.cc for workarounds for a
+//# CFront "core dump or something nasty like that" bug.
 template<class ScalarType>
 void minMax(ScalarType &minVal, ScalarType &maxVal, IPosition &minPos,
 	    IPosition &maxPos, const Array<ScalarType> &array, 
-	    const Array<Bool> &mask, Bool valid=True);
-// The array * weight is searched 
+	    const Array<Bool> &mask);
+// The array * mask is searched 
+//# See the comments at the beginning of ArrayMath.cc for workarounds for a
+//# CFront "core dump or something nasty like that" bug.
 template<class ScalarType>
 void minMaxMasked(ScalarType &minVal, ScalarType &maxVal, IPosition &minPos,
 		  IPosition &maxPos, const Array<ScalarType> &array, 
-		  const Array<ScalarType> &weight);
+		  const Array<ScalarType> &mask);
 // </group>
 
 // 
@@ -473,6 +434,13 @@ void minMaxMasked(ScalarType &minVal, ScalarType &maxVal, IPosition &minPos,
 // This sets min and max to the minimum and maximum of the array to 
 // avoid having to do two passes with max() and min() separately.
 template<class T> void minMax(T &min, T &max, const Array<T> &a);
+//
+// This version is deprecated, due to its nonstandard argument order.
+template<class T> inline void minMax(const Array<T> &a, T &min, T &max)
+{
+    ArrayMinMaxPrintOnceDeprecated ();
+    minMax (min, max, a);
+}
 //
 // The minimum element of the array.
 // Requires that the type "T" has comparison operators.
@@ -492,7 +460,6 @@ template<class T> void min(Array<T> &result, const Array<T> &a,
 // Return an array that contains the maximum of "a" and "b" at each position.
 // "a" and "b" must be conformant.
 template<class T> Array<T> max(const Array<T> &a, const Array<T> &b);
-template<class T> Array<T> max(const T &a, const Array<T> &b);
 // Return an array that contains the minimum of "a" and "b" at each position.
 // "a" and "b" must be conformant.
 template<class T> Array<T> min(const Array<T> &a, const Array<T> &b);
@@ -501,24 +468,14 @@ template<class T> Array<T> min(const Array<T> &a, const Array<T> &b);
 // and "a" must be conformant.
 template<class T> void max(Array<T> &result, const Array<T> &a, 
 			   const T &b);
-template<class T> inline void max(Array<T> &result, const T &a, 
-                                  const Array<T> &b)
-  { max (result, b, a); }
 // "result" contains the minimum of "a" and "b" at each position. "result",
 // and "a" must be conformant.
 template<class T> void min(Array<T> &result, const Array<T> &a, 
 			   const T &b);
-template<class T> inline void min(Array<T> &result, const T &a, 
-                                  const Array<T> &b)
-  { min (result, b, a); }
 // Return an array that contains the maximum of "a" and "b" at each position.
 template<class T> Array<T> max(const Array<T> &a, const T &b);
-template<class T> inline Array<T> max(const T &a, const Array<T> &b)
-  { return max(b, a); }
 // Return an array that contains the minimum of "a" and "b" at each position.
 template<class T> Array<T> min(const Array<T> &a, const T &b);
-template<class T> inline Array<T> min(const T &a, const Array<T> &b)
-  { return min(b, a); }
 // </group>
 
 // 
@@ -633,19 +590,14 @@ void operator/= (Array<Complex> &left, const Array<Float> &other);
 void operator/= (Array<Complex> &left, const Float &other);
 Array<Complex> operator* (const Array<Complex> &left, const Array<Float> &right);
 Array<Complex> operator* (const Array<Complex> &left, const Float &right);
-Array<Complex> operator* (const Complex &left, const Array<Float> &right);
 Array<Complex> operator/ (const Array<Complex> &left, const Array<Float> &right);
 Array<Complex> operator/ (const Array<Complex> &left, const Float &right);
-Array<Complex> operator/ (const Complex &left, const Array<Float> &right);
 // </group>
 
 // Returns the complex conjugate of a complex array.
 //<group>
 Array<Complex> conj(const Array<Complex> &carray);
 Array<DComplex> conj(const Array<DComplex> &carray);
-// Modifies rarray in place. rarray must be conformant.
-void         conj(Array<Complex> &rarray, const Array<Complex> &carray);
-void         conj(Array<DComplex> &rarray, const Array<DComplex> &carray);
 //# The following are implemented to make the compiler find the right conversion
 //# more often.
 Matrix<Complex> conj(const Matrix<Complex> &carray);
@@ -729,11 +681,21 @@ template<class T, class U> void convertArray(Array<T> &to,
 
 
 // Returns an array where every element is squared.
-template<class T> inline Array<T> square(const Array<T> &val);
+template<class T> inline Array<T> square(const Array<T> &val)
+{
+    Array<T> retval(val.copy());
+    retval *= retval;
+    return retval;
+}
 
 // Returns an array where every element is cubed.
-template<class T> inline Array<T> cube(const Array<T> &val);
-
+template<class T> inline Array<T> cube(const Array<T> &val)
+{
+    Array<T> retval(val.copy());
+    retval *= val;
+    retval *= val;
+    return retval;
+}
 
 // </group>
 
