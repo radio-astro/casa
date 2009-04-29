@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprConeNode.cc 18582 2005-04-19 08:12:16Z gvandiep $
+//# $Id: ExprConeNode.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/ExprConeNode.h>
 #include <tables/Tables/TableError.h>
@@ -574,7 +574,7 @@ TableExprNodeRep::NodeDataType TableExprConeNode::checkOperands
 	if (nvalPos != 2) {
 	  resVT = VTArray;
 	}
-	return checkDT (dtypeOper, NTDouble, NTDouble, nodes);
+	return checkDT (dtypeOper, NTReal, NTDouble, nodes);
       }    
       // cones returns an array if there is more than one cone or radius.
       if (fType == conesFUNC) {
@@ -586,7 +586,7 @@ TableExprNodeRep::NodeDataType TableExprConeNode::checkOperands
 	  resVT = VTArray;
 	}
       }
-      return checkDT (dtypeOper, NTDouble, NTBool, nodes);
+      return checkDT (dtypeOper, NTReal, NTBool, nodes);
     }
   default:
     throw (TableInvExpr ("TableExprConeNode::checkOperands, "

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 20557 2009-04-02 14:11:08Z gervandiepen $
+//# $Id: ArrayMath.tcc 20564 2009-04-07 16:22:23Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -853,6 +853,16 @@ template<class T> Array<T> abs(const Array<T> &a)
 template<class T> Array<T> floor(const Array<T> &a)
 {
     return arrayTransformResult (a, casa::Floor<T>());
+}
+
+template<class T> Array<T> round(const Array<T> &a)
+{
+    return arrayTransformResult (a, casa::Round<T>());
+}
+
+template<class T> Array<T> sign(const Array<T> &a)
+{
+    return arrayTransformResult (a, casa::Sign<T>());
 }
 
 template<class T> Array<T> tan(const Array<T> &a)

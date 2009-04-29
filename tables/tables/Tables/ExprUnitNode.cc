@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUnitNode.cc 19796 2006-12-19 05:12:59Z gvandiep $
+//# $Id: ExprUnitNode.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/ExprUnitNode.h>
 #include <tables/Tables/TableError.h>
@@ -37,6 +37,10 @@ TableExprNodeUnit::TableExprNodeUnit (TableExprNodeRep& child,
 				      const Unit& unit)
 : TableExprNodeBinary (child.dataType(), child, OtUndef)
 {
+    // Units imply conversion, thus result cannot be integer.
+    if (dtype_p == NTInt) {
+        dtype_p = NTDouble;
+    }
     lnode_p  = child.link();
     factor_p = set (*this, child, unit);
 }
@@ -144,6 +148,10 @@ TableExprNodeArrayUnit::TableExprNodeArrayUnit (TableExprNodeRep& child,
 						const Unit& unit)
 : TableExprNodeArray (child, child.dataType(), OtUndef)
 {
+  // Units imply conversion, thus result cannot be integer.
+  if (dtype_p == NTInt) {
+    dtype_p = NTDouble;
+  }
   lnode_p  = child.link();
   factor_p = TableExprNodeUnit::set (*this, child, unit);
 }

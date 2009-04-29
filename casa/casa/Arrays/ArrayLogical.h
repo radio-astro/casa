@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.h 20557 2009-04-02 14:11:08Z gervandiepen $
+//# $Id: ArrayLogical.h 20564 2009-04-07 16:22:23Z gervandiepen $
 
 #ifndef CASA_ARRAYLOGICAL_H
 #define CASA_ARRAYLOGICAL_H
@@ -261,10 +261,8 @@ template<class T> Bool allOR (const T &val, const Array<T> &array);
 
 // Element by element test for NaN or Infinity.
 // <group>
-LogicalArray isNaN (const Array<Float> &array);
-LogicalArray isNaN (const Array<Double> &array);
-LogicalArray isInf (const Array<Float> &array);
-LogicalArray isInf (const Array<Double> &array);
+template<class T> LogicalArray isNaN (const Array<T> &array);
+template<class T> LogicalArray isInf (const Array<T> &array);
 // </group>
 
 // 

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: Math.h 20561 2009-04-07 16:18:42Z gervandiepen $
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
 
 #include <casa/aips.h>
-//# The following is to get abs(int)
+//# The following is to get abs(int) and (is)finite.
 #include <casa/math.h>
 #include <casa/stdlib.h>
 
-// the following is needed to get the finite function
+// On some systems the following is needed to get the finite function
 #if defined (AIPS_SOLARIS) || defined(AIPS_IRIX)
 #include <ieeefp.h>
 #endif
@@ -181,16 +181,23 @@ inline uInt abs(uInt Val) {return Val;}
 
 // Return the square of a value.
 // <group>
-inline Int square(Int val) {return val*val;}
-inline Float square(Float val) {return val*val;}
+inline Int    square(Int val)    {return val*val;}
+inline Float  square(Float val)  {return val*val;}
 inline Double square(Double val) {return val*val;}
 // </group>
 
 // Return the cube of a value.
 // <group>
-inline Int cube(Int val) {return val*val*val;}
-inline Float cube(Float val) {return val*val*val;}
+inline Int    cube(Int val)    {return val*val*val;}
+inline Float  cube(Float val)  {return val*val*val;}
 inline Double cube(Double val) {return val*val*val;}
+// </group>
+
+// Return the sign of a value.
+// <group>
+inline Int    sign(Int val)    {return val<0 ? -1 : (val>0 ? 1:0);}
+inline Float  sign(Float val)  {return val<0 ? -1 : (val>0 ? 1:0);}
+inline Double sign(Double val) {return val<0 ? -1 : (val>0 ? 1:0);}
 // </group>
 
 // Functions to return whether a value is "relatively" near another. Returns
@@ -259,16 +266,16 @@ inline Bool allNearAbs(Double val1, Double val2, Double tol = 1.0e-13)
 // <group>
 inline Bool isFinite (const Float& val)
 {
-#if defined(__APPLE__) || defined(AIPS_DARWIN)
-	return isfinite(val);
+#if defined(AIPS_DARWIN)
+  return std::isfinite(val);
 #else
   return finite(val);
 #endif
 }
 inline Bool isFinite (const Double& val)
 {
-#if defined(__APPLE__) || defined(AIPS_DARWIN)
-	return isfinite(val);
+#if defined(AIPS_DARWIN)
+  return std::isfinite(val);
 #else
   return finite(val);
 #endif
