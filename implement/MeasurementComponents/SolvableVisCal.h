@@ -48,6 +48,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -274,7 +275,11 @@ public:
   inline void setChanMask(PtrBlock<Vector<Bool>*>& chanmask) { chanmask_=&chanmask; };
   inline void clearChanMask() { chanmask_=NULL; };
   void applyChanMask(VisBuffer& vb);
-
+  // Log periodic solver activity
+  virtual void printActivity(const Int nSlots, const Int slotNo, 
+			     const Int fieldId, const Int spw, 
+			     const Int nSolutions);
+  virtual void markTimer() {timer_p.mark();};
 protected:
 
   // Set to-be-solved-for flag
@@ -335,6 +340,11 @@ protected:
   CalSet<Float> *rcs_;
   CalInterp *cint_;
   CalSetMetaInfo csmi;
+
+  Double maxTimePerSolution_p, minTimePerSolution_p, avgTimePerSolution_p;
+  Float userPrintActivityInterval_p, userPrintActivityFraction_p;
+  uInt caiRC_p, cafRC_p;
+  Timer timer_p;
 private:
 
   // Default ctor is private
@@ -658,7 +668,6 @@ protected:
   virtual void initTrivDJ();
 
   virtual void stateSVJ(const Bool& doVC);
-
 private:
 
   // Default ctor is private

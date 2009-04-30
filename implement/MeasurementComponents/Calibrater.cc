@@ -1313,6 +1313,7 @@ Bool Calibrater::standardSolve3() {
       for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
 
 	// If pars chan-dep, SVC mechanisms for only one channel at a time
+	svc_p->markTimer();
 	svc_p->focusChan()=ich;
 	
 	// Pass VE, SVC, VB to solver
@@ -1327,6 +1328,8 @@ Bool Calibrater::standardSolve3() {
 
 	  // ..and file this solution in the correct slot
 	  svc_p->keep(slotidx(thisSpw));
+	  Int n=svc_p->nSlots(thisSpw);
+	  svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
 
 	}
 	else 
