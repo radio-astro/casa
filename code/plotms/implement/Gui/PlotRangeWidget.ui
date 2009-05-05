@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>294</width>
-    <height>48</height>
+    <width>330</width>
+    <height>49</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -82,11 +82,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QDoubleSpinBox" name="doubleFrom" >
-           <property name="decimals" >
-            <number>99</number>
-           </property>
-          </widget>
+          <widget class="QLineEdit" name="doubleFrom" />
          </item>
          <item>
           <widget class="QLabel" name="doubleLabel" >
@@ -96,11 +92,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="doubleTo" >
-           <property name="decimals" >
-            <number>99</number>
-           </property>
-          </widget>
+          <widget class="QLineEdit" name="doubleTo" />
          </item>
          <item>
           <widget class="QLabel" name="doubleUnitLabel" >
@@ -142,7 +134,17 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QDateTimeEdit" name="timeFrom" />
+          <widget class="QDateTimeEdit" name="timeFrom" >
+           <property name="buttonSymbols" >
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="currentSection" >
+            <enum>QDateTimeEdit::YearSection</enum>
+           </property>
+           <property name="displayFormat" >
+            <string>yyyy/MM/dd/hh:mm:ss.zzz</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="timeLabel" >
@@ -152,7 +154,17 @@
           </widget>
          </item>
          <item>
-          <widget class="QDateTimeEdit" name="timeTo" />
+          <widget class="QDateTimeEdit" name="timeTo" >
+           <property name="buttonSymbols" >
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="currentSection" >
+            <enum>QDateTimeEdit::YearSection</enum>
+           </property>
+           <property name="displayFormat" >
+            <string>yyyy/MM/dd/hh:mm:ss.zzz</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer>
@@ -183,8 +195,8 @@
      </property>
      <property name="sizeHint" >
       <size>
-       <width>20</width>
-       <height>0</height>
+       <width>330</width>
+       <height>16</height>
       </size>
      </property>
     </spacer>

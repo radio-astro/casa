@@ -70,19 +70,21 @@ bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
     vector<PlotCanvasPtr> canvases;
     if(plotter != NULL && !plotter->canvasLayout().null())
         canvases = plotter->canvasLayout()->allCanvases();
-    return exportHelper(plotter->canvasWidget(), canvases, fmt);
+    return exportHelper(canvases, fmt, NULL, plotter);
 }
 
 bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
     vector<PlotCanvasPtr> canvases(1, PlotCanvasPtr(canvas, false));
-    return exportHelper(canvas, canvases, format);
+    return exportHelper(canvases, format, canvas, NULL);
 }
 
 
-bool QPCanvas::exportHelper(QWidget* grabWidget,
-        vector<PlotCanvasPtr>& canvases, const PlotExportFormat& format) {
+bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
+		const PlotExportFormat& format, QPCanvas* grabCanvas,
+		QPPlotter* grabPlotter) {
     if(format.location.empty() || ((format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) && grabWidget == false))
+       format.type == PlotExportFormat::PNG) && (grabCanvas == NULL &&
+       grabPlotter == NULL)))
         return false;
     
     // Compile vector of unique, non-null QPCanvases.
@@ -124,16 +126,36 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {        
+       format.type == PlotExportFormat::PNG) {
         QImage image;
         
+        int width = grabCanvas != NULL ? grabCanvas->width() :
+                    grabPlotter->width(),
+           height = grabCanvas != NULL ? grabCanvas->height() :
+                    grabPlotter->height();
+        
         // Just grab the widget if: 1) screen resolution, or 2) high resolution
-        // but size is <= widget size or not set.        
-        if(format.resolution == PlotExportFormat::SCREEN ||
-           (format.width <= grabWidget->width() &&
-            format.height <= grabWidget->height())) {            
-            image = QPixmap::grabWidget(grabWidget).toImage();
-            
+        // but size is <= widget size or not set.
+        if(format.resolution == PlotExportFormat::SCREEN/* ||
+           (format.width <= width && format.height <= height)*/) {
+            //image = QImage(width, height, QImage::Format_ARGB32);
+   	
+        	// TODO
+            image = QPixmap::grabWidget(grabCanvas != NULL ?
+                    &grabCanvas->asQwtPlot() :
+                    grabPlotter->canvasWidget()).toImage();
+        	//if(grabCanvas != NULL) grabCanvas->asQwtPlot().render(&image);
+        	//else                   grabPlotter->render(&image);
+        	
+            //QPainter::setRedirected(grabCanvas != NULL ?
+            //        (QWidget*)&grabCanvas->asQwtPlot() :
+            //        (QWidget*)grabPlotter->canvasWidget(), &image);
+            //if(grabCanvas != NULL) grabCanvas->asQwtPlot().repaint();
+            //else grabPlotter->canvasWidget()->repaint();
+            //QPainter::restoreRedirected(grabCanvas != NULL ?
+            //        (QWidget*)&grabCanvas->asQwtPlot() :
+            //        (QWidget*)grabPlotter->canvasWidget());
+			
             // Scale to set width and height, if applicable.
             if(format.width > 0 && format.height > 0) {
                 // size is specified
@@ -152,11 +174,11 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             }
         } else {
             // High resolution, or format size larger than widget.
-            
+
             // make sure both width and height are set
-            int width = format.width, height = format.height;
-            if(width <= 0)  width  = grabWidget->width();
-            if(height <= 0) height = grabWidget->height();            
+            int widgetWidth = width, widgetHeight = height;
+            if(format.width > 0)  width  = format.width;
+            if(format.height > 0) height = format.height;
             image = QImage(width, height, QImage::Format_ARGB32);
             
             // Fill with background color.
@@ -165,8 +187,8 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             
             // Print each canvas.
             QPainter painter(&image);
-            double widthRatio  = ((double)width)  / grabWidget->width(),
-                   heightRatio = ((double)height) / grabWidget->height();
+            double widthRatio  = ((double)width)  / widgetWidth,
+                   heightRatio = ((double)height) / widgetHeight;
             QRect geom, printGeom, imageRect(0, 0, width, height);
             QwtText title; QColor titleColor;
             PlotOperationPtr op;
@@ -197,7 +219,7 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
                 if(wasCanceled) break;
             }
         }
-        
+
         // Set DPI.
         if(!wasCanceled && format.dpi > 0) {
             // convert dpi to dpm
@@ -216,7 +238,7 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {        
+              format.type == PlotExportFormat::PDF) {
         // Set resolution.
         QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
         if(format.resolution == PlotExportFormat::HIGH)
@@ -553,7 +575,11 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
 
 pair<double, double> QPCanvas::axisRange(PlotAxis axis) const {
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
+#if QWT_VERSION < 0x050200
     return pair<double, double>(div->lBound(), div->hBound());
+#else
+    return pair<double, double>(div->lowerBound(), div->upperBound());
+#endif
 }
 
 void QPCanvas::setAxisRange(PlotAxis axis, double from, double to) {
@@ -607,7 +633,11 @@ void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
             if(axisIndex(xAxis) != i) {
                 newSize = size * m_axesRatios[i];
                 div = m_canvas.axisScaleDiv(QPOptions::axis(axisIndex(i)));
+#if QWT_VERSION < 0x050200
                 midPoint = (div->range() / 2) + div->lBound();
+#else
+                midPoint = (div->range() / 2) + div->lowerBound();
+#endif
                 newLow = midPoint - (newSize / 2);
                 newHigh = midPoint + (newSize / 2);
                 m_canvas.setAxisScale(QPOptions::axis(axisIndex(i)),
@@ -645,25 +675,17 @@ void QPCanvas::setAxesAutoRescale(bool autoRescale) {
         bool replot = m_canvas.autoReplot();
         m_canvas.setAutoReplot(false);
         
-        PlotAxis a = X_BOTTOM;
-        const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = X_TOP;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = Y_LEFT;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = Y_RIGHT;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
+        const QwtScaleDiv* div;
+        for(int a = 0; a < QwtPlot::axisCnt; a++) {
+            div = m_canvas.axisScaleDiv(a);
+#if QWT_VERSION < 0x050200
+            m_canvas.setAxisScale(a, div->lBound(), div->hBound(),
+                    m_canvas.axisStepSize(a));
+#else
+            m_canvas.setAxisScale(a, div->lowerBound(), div->upperBound(),
+                    m_canvas.axisStepSize(a));
+#endif
+        }
 
         m_canvas.setAutoReplot(replot);
     }

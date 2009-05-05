@@ -531,7 +531,7 @@ Bool ScrollingRasterDD::setOptions(Record &rec, Record &recOut)
 #endif
       
       setanimrec.define("zindex",0);
-      setanimrec.define("zlength", dataShape()[displayAxes()[2]]);
+      setanimrec.define("zlength", (Int)dataShape()[displayAxes()[2]]);
 
 #ifdef CDEBUG
       cerr << "setting zlength = dataShape()[" << displayAxes()[2] << "]" 

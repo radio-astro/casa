@@ -158,7 +158,7 @@ bool QPDateScaleDraw::formatIsValid(String d) {
     return false;
 }
 
-const String QPDateScaleDraw::DEFAULT_FORMAT = "%y-%m-%d\n%h:%n:%s";
+const String QPDateScaleDraw::DEFAULT_FORMAT = "%y/%m/%d\n%h:%n:%s";
 
 
 //////////////////////////
@@ -223,7 +223,7 @@ void QPLegend::drawOutlineAndBackground(QPainter* painter, const QRect& rect,
 }
 
 
-void QPLegend::paintEvent(QPaintEvent* event) {    
+void QPLegend::paintEvent(QPaintEvent* event) {
     // Draw outline and background if needed.
     QRect geom(QPoint(0, 0), size());
     geom.setRight(geom.right() - 1);   // Compensate for +1 in sizeHint().
@@ -244,7 +244,7 @@ void QPLegend::paintEvent(QPaintEvent* event) {
         rect.setLeft(rect.left() + width);
         rect.setRight(rect.right() - width);
         rect.setBottom(rect.bottom() - width);
-    }    
+    }
 
     // Have rest of the legend draw itself normally.
     QPaintEvent innerEvent(rect);
@@ -277,7 +277,7 @@ QPLegendHolder::QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition ps,
     // Set up layout.
     QGridLayout* l = new QGridLayout(this);
     int ml, mt, mr, mb;
-    canvas->asQwtPlot().getContentsMargins(&ml, &mt, &mr, &mb);    
+    canvas->asQwtPlot().getContentsMargins(&ml, &mt, &mr, &mb);
     l->setContentsMargins(ml, mt, mr, mb);
     l->setSpacing(0);
     if(m_padding < 0) m_padding = DEFAULT_INTERNAL_PADDING;

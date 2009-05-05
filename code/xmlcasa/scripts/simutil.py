@@ -36,7 +36,7 @@ class simutil:
         if color==None:
             clr="\x1b[32m"
         else:
-            clr="\x1b["+color+"m"
+            clr="\x1b["+color.__str__()+"m"
         bw="\x1b[0m"
         if origin==None:
             origin="simutil"

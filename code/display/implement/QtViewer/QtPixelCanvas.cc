@@ -760,7 +760,7 @@ void QtPixelCanvas::drawEllipse(const Float &cx, const Float &cy,
 //*/
 
 #define DRAW_POLY(X,Y,POLYGON,FILLED) {                                \
-    Int np = min(X.nelements(), Y.nelements());                             \
+    Int np = std::min(X.nelements(), Y.nelements());			\
     if(np<2) return;                                                        \
     QPointF pts[np];                                                        \
     for(Int i=0; i<np; i++) { pts[i].setX(x[i]); pts[i].setY(q_(y[i]));  }  \

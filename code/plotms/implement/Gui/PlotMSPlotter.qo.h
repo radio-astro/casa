@@ -53,7 +53,7 @@ class PlotMS;
 // High(ish)-level plotter class that manages the GUI (semi-) transparently to
 // the rest of PlotMS.
 class PlotMSPlotter : public QMainWindow, Ui::PlotterWindow,
-                      public PlotMSActionParameters, public PlotDrawWatcher {
+                      public PlotDrawWatcher {
     Q_OBJECT
     
 public:
@@ -91,6 +91,9 @@ public:
     
     // Shows/hides the GUI.
     void showGUI(bool show = true);
+    
+    // Returns true if the GUI is currently visible, false otherwise.
+    bool guiShown() const;
     
     // Enters the plotter's execution loop, and returns its return value.
     // Only during this execution loops will GUI windows be shown and
@@ -130,6 +133,9 @@ public:
     void holdDrawing();
     void releaseDrawing();
     // </group>
+
+    // Returns all currently shown canvases in the plotter.
+    vector<PlotCanvasPtr> currentCanvases();
     
     
     // Plotter Customization Methods //
@@ -147,7 +153,7 @@ public:
     void setToolButtonStyle(Qt::ToolButtonStyle style);
     
     
-    // Action Methods //    
+    // Action Methods //
     
     // Returns a map between PlotMS actions and the QActions associated with
     // them in the GUI.  Triggering the QActions will trigger the proper PlotMS
@@ -169,17 +175,6 @@ public:
             bool alsoTriggerAction = false);
     // </group>
     
-    // Implements PlotMSActionParameters::actionPlot().  Returns the plot tab's
-    // currently selected plot.
-    PlotMSPlot* actionPlot(PlotMSAction::Type type) const;
-    
-    // Implements PlotMSActionParameters::actionBool().  See actionIsChecked().
-    bool actionBool(PlotMSAction::Type type) const;
-    
-    // Implements PlotMSActionParameters::actionAxes().  Returns the plot tab's
-    // selected axes for the appropriate action type.
-    vector<PMS::Axis> actionAxes(PlotMSAction::Type type) const;
-
     
 public slots:
     // Shows the given error/warning message in a GUI window.
@@ -274,10 +269,11 @@ private slots:
     void actionStackForward_() { action(actionStackForward); }
     void actionCacheLoad_() { action(actionCacheLoad); }
     void actionCacheRelease_() { action(actionCacheRelease); }
+    void actionPlotExport_() { action(actionPlotExport); }
     void actionHoldRelease_() { action(actionHoldRelease); }
     void actionClearPlots_() { action(actionClearPlots); }
     void actionQuit_() { action(actionQuit); }
-    // </group>    
+    // </group>
     
     // Slot for when the currently running thread is finished.  Performs
     // cleanup and starts next waiting thread if applicable.

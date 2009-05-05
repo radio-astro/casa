@@ -37,386 +37,240 @@ using namespace std;
 namespace casa {
 
 //# Forward declarations
-class PlotMSActionParameters;
 class PlotMS;
 class PlotMSPlot;
 
 
 // ABSTRACT CLASSES //
 
-// Abstract superclass for any action that operates on PlotMS.  Actions can
-// get their parameters (if needed) from any source that implements
-// PlotMSActionParameters.  PlotMSAction also holds an enum of all available
-// actions and knows how to convert the enum into the proper subclass.
+// Class that implements actions that operate on PlotMS.  Actions get their
+// type from the Type enum and their parameters (if needed) from mappings from
+// Strings to values.  Current parameter value types are: PlotMSPlot*, bool,
+// String, int, and vector<PMS::Axis>.
 class PlotMSAction {
 public:
     // Static //
-    
+
     // Enum for implemented actions.
     enum Type {
         // Selection actions //
-        
-        // Flag the selected regions.  Operates on a single PlotMSPlot.
+
+        // Flag the selected regions.   Operates on all visible canvases AT THE
+    	// TIME of the call to doAction().
+    	// No required parameters.
         // NOT IMPLEMENTED.
-        FLAG,
-        
-        // Unflag the selected regions.  Operates on a single PlotMSPlot.
+        SEL_FLAG,
+
+        // Unflag the selected regions.   Operates on all visible canvases AT
+        // THE TIME of the call to doAction().
+    	// No required parameters.
         // NOT IMPLEMENTED.
-        UNFLAG,
-        
-        // Locate on the selected regions.  Operates on a single PlotMSPlot.
-        LOCATE,
-        
-        // Clear the selected regions.  Operates on a single PlotMSPlot.
-        CLEAR_REGIONS,
-        
-        
+        SEL_UNFLAG,
+
+        // Locate on the selected regions.   Operates on all visible canvases
+        // AT THE TIME of the call to doAction().
+    	// No required parameters.
+        SEL_LOCATE,
+
+        // Clear the selected regions.   Operates on all visible canvases AT
+        // THE TIME of the call to doAction().
+    	// No required parameters.
+        SEL_CLEAR_REGIONS,
+
+
         // Iteration actions //
-        
-        // First iteration.  Operates on a single PlotMSPlot.
+
+        // Go to the first page of iteration.
+        // No required parameters.
         // NOT IMPLEMENTED.
         ITER_FIRST,
-        
-        // Previous iteration.  Operates on a single PlotMSPlot.
+
+        // Go to the previous page of iteration.
+        // No required parameters.
         // NOT IMPLEMENTED.
         ITER_PREV,
-        
-        // Next iteration.  Operates on a single PlotMSPlot.
+
+        // Go to the next page of iteration.
+        // No required parameters.
         // NOT IMPLEMENTED.
         ITER_NEXT,
-        
-        // Last iteration.  Operates on a single PlotMSPlot.
+
+        // Go to the last page of iteration.
+        // No required parameters.
         // NOT IMPLEMENTED.
         ITER_LAST,
-        
-        
+
+
         // Tool actions //
-        
-        // Turns on the mark regions tool.  Operates on a single PlotMSPlot and
-        // is mutually exclusive with the zoom and pan tools.
+
+        // Turns on/off the mark regions tool.  Operates on all canvases of all
+        // plots AT THE TIME of the call to doAction().  Only one of the mark
+        // regions, zoom, and pan tools can be turned on at one time.
+        // Required parameters: P_ON_OFF.
         TOOL_MARK_REGIONS,
-        
-        // Turns on the zoom tool.  Operates on a single PlotMSPlot and is
-        // mutually exclusive with the mark regions and pan tools.
+
+        // Turns on/off the zoom tool.  Operates on all canvases of all plots
+        // AT THE TIME of the call to doAction().  Only one of the mark
+        // regions, zoom, and pan tools can be turned on at one time.
+        // Required parameters: P_ON_OFF.
         TOOL_ZOOM,
-        
-        // Turns on the pan tool.  Operates on a single PlotMSPlot and is
-        // mutually exclusive with the mark regions and zoom tools.
+
+        // Turns on/off the pan tool.  Operates on all canvases of all plots AT
+        // THE TIME of the call to doAction().  Only one of the mark regions,
+        // zoom, and pan tools can be turned on at one time.
+        // Required parameters: P_ON_OFF.
         TOOL_PAN,
-        
-        // Turns on the tracker tool hover function.  Operates on a single
-        // PlotMSPlot.
+
+        // Turns on/off the tracker tool hover function.  Operates on all
+        // canvases of all plots AT THE TIME of the call to doAction().
+        // Required parameters: P_ON_OFF.
         TRACKER_HOVER,
-        
-        // Turns on the tracker tool display function.  Operates on a single
-        // PlotMSPlot.
+
+        // Turns on/off the tracker tool display function.  Operates on all
+        // canvases of all plots AT THE TIME of the call to doAction().
+        // Required parameters: P_ON_OFF.
         TRACKER_DISPLAY,
-        
-        
+
+
         // Stack actions //
-        
-        // Goes back in the zoom/pan stack.  Operates on a single PlotMSPlot.
+
+        // Goes back in the zoom/pan stack.  Operates on all visible canvases
+        // AT THE TIME of the call to doAction().
+        // No required parameters.
         STACK_BACK,
-        
-        // Goes to the base of the zoom/pan stack.  Operates on a single
-        // PlotMSPlot.
+
+        // Goes to the base of the zoom/pan stack.  Operates on all visible
+        // canvases AT THE TIME of the call to doAction().
+        // No required parameters.
         STACK_BASE,
-        
-        // Goes forward in the zoom/pan stack.  Operates on a single
-        // PlotMSPlot.
+
+        // Goes forward in the zoom/pan stack.  Operates on all visible
+        // canvases AT THE TIME of the call to doAction().
+        // No required parameters.
         STACK_FORWARD,
-        
-        
+
+
         // Cache actions //
-        
+
         // Loads axes into the cache.  Operates on a single PlotMSPlot.
+        // Required parameters: P_PLOT, P_AXES.
         CACHE_LOAD,
-        
+
         // Releases axes from the cache.  Operates on a single PlotMSPlot.
+        // Required parameters: P_PLOT, P_AXES.
         // NOT IMPLEMENTED.
         CACHE_RELEASE,
-        
-        
+
+
+        // Plot actions //
+
+        // Exports a single PlotMSPlot to a file.  If format isn't given, it is
+        // set using the file name.  If DPI, width, or height aren't set or are
+        // < 0, the default is used.
+        // Required parameters: P_PLOT, P_FILE.
+        // Optional parameters: P_FORMAT, P_HIGHRES, P_DPI, P_WIDTH, P_HEIGHT.
+        PLOT_EXPORT,
+
+
         // Plotter actions //
-        
+
         // Holds/releases drawing for all canvases in the PlotMSPlotter.
-        HOLD_RELEASE_DRAWING,   
-        
+        // Required parameters: P_ON_OFF.
+        HOLD_RELEASE_DRAWING,
+
         // Clears all plots and canvases from the PlotMSPlotter.
+        // No required parameters.
         CLEAR_PLOTTER,
-        
+
         // Quits PlotMS.
-        QUIT,
-        
-        
-        // User actions //
-        
-        // Custom action that must be able to operate basically independently
-        // since the rest of PlotMS will know nothing about it.  Shouldn't be
-        // used by any standard PlotMS code.
-        CUSTOM
+        // No required parameters.
+        QUIT
     };
-    
-    // Returns an executable PlotMSAction subclass instantiation for the given
-    // action type and parameters source.
-    static PlotMSAction* action(Type type, PlotMSActionParameters* params);
-    
-    
+
+    // Parameter names.
+    // <group>
+    static const String P_PLOT;    // Type: PlotMSPlot*
+    static const String P_ON_OFF;  // Type: bool
+    static const String P_AXES;    // Type: vector<PMS::Axis>
+    static const String P_FILE;    // Type: String
+    static const String P_FORMAT;  // Type: String
+    static const String P_HIGHRES; // Type: bool
+    static const String P_DPI;     // Type: int
+    static const String P_WIDTH;   // Type: int
+    static const String P_HEIGHT;  // Type: int
+    // </group>
+
+
     // Non-Static //
-    
+
     // Constructor.
-    PlotMSAction() { }
-    
+    PlotMSAction(Type type);
+
     // Destructor.
-    virtual ~PlotMSAction() { }
-    
-    
+    ~PlotMSAction();
+
+
     // Returns the action type.
-    virtual Type type() const = 0;
-    
+    Type type() const;
+
     // Returns true if the action is valid or not.  Invalid actions should not
     // be executed.
-    virtual bool isValid() const = 0;
-    
-    // Sets the parameters for this action using the given source.
-    virtual void setParameters(PlotMSActionParameters* params) = 0;
-    
-    // Performs the action, using the given PlotMS.
-    virtual void doAction(PlotMS* plotms) = 0;
-};
-
-
-// Abstract class for any object that can provide parameters for an action.
-// The methods to get the parameters have a default definition just so that
-// subclasses may only implement the relevant methods.
-class PlotMSActionParameters {
-public:
-    // Constructor.
-    PlotMSActionParameters() { }
-    
-    // Destructor.
-    virtual ~PlotMSActionParameters() { }
-    
-    
-    // Returns the PlotMSPlot value needed for the given action type.
-    virtual PlotMSPlot* actionPlot(PlotMSAction::Type type) const {
-        return NULL; }
-    
-    // Returns the bool value needed for the given action type.
-    virtual bool actionBool(PlotMSAction::Type type) const {
-        return false; }
-    
-    // Returns the axes value needed for the given action type.
-    virtual vector<PMS::Axis> actionAxes(PlotMSAction::Type type) const {
-        return vector<PMS::Axis>(); }
-};
-
-
-// CONCRETE CLASSES //
-
-// Action class that acts on selected regions for the canvases of a single
-// PlotMS.
-class PlotMSActionOnSelection : public PlotMSAction {
-public:
-    // Constructor which takes the action type (must be one of the selection
-    // actions) and the action parameters source.
-    PlotMSActionOnSelection(Type type, PlotMSActionParameters* params);
-    
-    // Destructor.
-    ~PlotMSActionOnSelection();
-    
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
     bool isValid() const;
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params);    
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
+
+    // Sets the given parameter to the given value.
+    // <group>
+    void setParameter(const String& parameter, PlotMSPlot* value);
+    void setParameter(const String& parameter, bool value);
+    void setParameter(const String& parameter, const String& value);
+    void setParameter(const String& parameter, int value);
+    void setParameter(const String& parameter, const vector<PMS::Axis>& value);
+    // </group>
+
+    // Performs the action, using the given PlotMS, and returns true for
+    // success or false or failure.
+    bool doAction(PlotMS* plotms);
+
+    // Returns the result of doAction(), if applicable.  Usually this is used
+    // to return the error/reason why the action failed.
+	const String& doActionResult() const;
+
 private:
-    // Type.
-    Type itsType_;
-    
-    // Plot.
-    PlotMSPlot* itsPlot_;
-    
-    // Selected regions.
-    map<PlotCanvas*, vector<PlotRegion> > itsRegions_;
-};
+	// Action type.
+	Type itsType_;
+
+	// Action parameters.
+	// <group>
+	map<String, PlotMSPlot*> itsPlotValues_;
+	map<String, bool> itsBoolValues_;
+	map<String, String> itsStringValues_;
+	map<String, int> itsIntValues_;
+	map<String, vector<PMS::Axis> > itsAxesValues_;
+	// </group>
+
+	// Result of doAction, if applicable.
+	String itsDoActionResult_;
 
 
-// Action class that iterates through a single PlotMS.
-class PlotMSActionOnIteration : public PlotMSAction {
-public:
-    // Constructor which takes the action type (must be one of the iteration
-    // actions) and the action parameters source.
-    PlotMSActionOnIteration(Type type, PlotMSActionParameters* params);
-    
-    // Destructor.
-    ~PlotMSActionOnIteration();
-    
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
-    bool isValid() const;
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params);    
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
-private:
-    // Type.
-    Type itsType_;
-    
-    // Plot.
-    PlotMSPlot* itsPlot_;
-};
+	// Returns true if the given parameter is defined for the given type, false
+	// otherwise.
+	// <group>
+	bool isDefinedPlot(const String& parameter) const;
+	bool isDefinedBool(const String& parameter) const;
+	bool isDefinedString(const String& parameter) const;
+	bool isDefinedInt(const String& parameter) const;
+	bool isDefinedAxes(const String& parameter) const;
+	// </group>
 
-
-// Action class that sets tools on all canvases for a single PlotMSPlot.
-class PlotMSActionOnTools : public PlotMSAction {
-public:
-    // Constructor which takes the action type and the action parameters
-    // source.
-    PlotMSActionOnTools(Type type, PlotMSActionParameters* params);
-    
-    // Destructor.
-    ~PlotMSActionOnTools();
-
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
-    bool isValid() const;
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params);    
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
-private:
-    // Type.
-    Type itsType_;
-    
-    // Plot.
-    PlotMSPlot* itsPlot_;
-    
-    // Tool flags.
-    bool mark_, zoom_, pan_, trackerHover_, trackerDisplay_;
-};
-
-
-// Action class that acts on the zoom/pan stacks on all canvases for a single
-// PlotMSPlot.
-class PlotMSActionOnStack : public PlotMSAction {
-public:
-    // Constructor which takes the action type (must be one of the stack
-    // actions) and the action parameters source.
-    PlotMSActionOnStack(Type type, PlotMSActionParameters* params);
-    
-    // Destructor.
-    ~PlotMSActionOnStack();
-    
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
-    bool isValid() const;
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params);    
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
-private:
-    // Type.
-    Type itsType_;
-    
-    // Plot.
-    PlotMSPlot* itsPlot_;
-};
-
-
-// Action class that acts on the cache of a single PlotMSPlot.
-class PlotMSActionOnCacheAxes : public PlotMSAction {
-public:
-    // Constructor which takes the action type (must be one of the cache
-    // actions) and the action parameters source.
-    PlotMSActionOnCacheAxes(Type type, PlotMSActionParameters* params);
-    
-    // Destructor.
-    ~PlotMSActionOnCacheAxes();
-    
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
-    bool isValid() const;
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params);    
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
-private:
-    // Type.
-    Type itsType_;
-    
-    // Plot.
-    PlotMSPlot* itsPlot_;
-    
-    // Axes to load or release.
-    vector<PMS::Axis> itsAxes_;
-};
-
-
-// Action class that acts on the whole plotter.
-class PlotMSActionOnPlotter : public PlotMSAction {
-public:
-    // Constructor which takes the action type (must be one of the plotter
-    // actions).  No parameters are needed.
-    PlotMSActionOnPlotter(Type type);
-    
-    // Destructor.
-    ~PlotMSActionOnPlotter();
-    
-    
-    // Implements PlotMSAction::type().
-    Type type() const { return itsType_; }
-    
-    // Implements PlotMSAction::isValid().
-    bool isValid() const { return true; }
-    
-    // Implements PlotMSAction::setParameters().
-    void setParameters(PlotMSActionParameters* params) { }
-    
-    // Implements PlotMSAction::doAction().  See documentation for
-    // PlotMSAction::Type enum.
-    void doAction(PlotMS* plotms);
-    
-private:
-    // Type.
-    Type itsType_;
+	// Returns the value for the given parameter.  Not valid if the proper
+	// isDefined method returns false.
+	// <group>
+	PlotMSPlot* valuePlot(const String& parameter);
+	const PlotMSPlot* valuePlot(const String& parameter) const;
+	bool valueBool(const String& parameter) const;
+	const String& valueString(const String& parameter) const;
+	int valueInt(const String& parameter) const;
+	const vector<PMS::Axis>& valueAxes(const String& parameter) const;
+	// </group>
 };
 
 }

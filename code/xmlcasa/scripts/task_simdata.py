@@ -143,7 +143,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # should we be using incell since there is not an image?
             if verbose: msg("creating an image from your clean components")
             components_only=True
-            modelimage=project+'.ccmodel.im'
+            modelimage=project+'.ccmodel'
             ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
             cs=ia.coordsys()
             epoch,ra,dec=util.direction_splitter(direction)
@@ -166,16 +166,24 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             
 
 
-        # open model image as ia tool "model"; leave open
+
+        # open original model image
         modelia=ia.newimagefromfile(modelimage)
+        
+        # grab model image size and coordsys:
+        insize=modelia.shape()
+        incsys=modelia.coordsys()
+
+
+
 
         # for people who have put in an array, we should print an error.
         if type(incell) == 'list':
             incell=incell[0]
         # optionally use image header for cell size
         if incell=='header':
-            increments=modelia.coordsys().increment()['numeric']
-            incellx=increments[0]
+            increments=incsys.increment(type="direction")['numeric']
+            incellx=abs(increments[0])
             incelly=increments[1]
             # warn if incells are not square
             if (abs(incellx)-abs(incelly))/abs(incellx) > 0.001:
@@ -324,11 +332,6 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
         if (modelimage != ''):
 
-            # modelia is already open with the original input model from above
-            # so find out what size that model image is
-            insize=modelia.shape()
-            incsys=modelia.coordsys()
-
             # deal with brightness scaling since we may close modelia below.
             if (inbright=="unchanged") or (inbright=="default"):
                 scalefactor=1.
@@ -336,31 +339,48 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 stats=modelia.statistics()
                 highvalue=stats['max']
                 scalefactor=float(inbright)/highvalue.max()
-
-            
+                
+                
             # truncate model image name to craete new images in current dir:
             (modelimage_path,modelimage_local)=os.path.split(os.path.normpath(modelimage))
+            modelimage_local=modelimage_local.strip()
+            if modelimage_local.endswith(".fits"): modelimage_local=modelimage_local.replace(".fits","")
+            if modelimage_local.endswith(".FITS"): modelimage_local=modelimage_local.replace(".FITS","")
+            if modelimage_local.endswith(".fit"): modelimage_local=modelimage_local.replace(".fit","")
+                
+            # create a local copy of the model image to modify.
             scaledmodelfile=project+"."+modelimage_local+'.rescale'
+                
+            # make it look like our model came from the desired telescope
+            # (else regrid complains)
+            incsys.settelescope(telescopename)
+
+            # does input model have stokes data?
+            instokes=incsys.findcoordinate("stokes")['return']
+            if not instokes:
+                # assume that we haven't created scaledmodelfile yet
+                modelia.adddegaxes(stokes="I",outfile=scaledmodelfile,overwrite=True)
+                modelia.close()
+                modelia.open(scaledmodelfile)
+                incsys.addcoordinate(stokes="I")
 
             # does input model have spectral data?
             inspectral=incsys.findcoordinate("spectral")['return']
-            if (not inspectral) and nchan>1: 
-                msg("WARNING: you're creating a cube from a flat image")
-
-            # make it look like our model came from the desired telescope - for regrid()
-            incsys.settelescope(telescopename)
-            
-            # create a local copy of the model image to modify the pixel size etc:
-            # if the input doesn't have spectral and/or stokes, add those
             if not inspectral:
+                if nchan>1:
+                    msg("WARNING: you're creating a cube from a flat image")
+                if modelia.name(strippath=True)==scaledmodelfile:
+                    # already added an axis and created the file so
+                    scaledmodelfile=scaledmodelfile+"2"
+                modelia.adddegaxes(spectral=True,outfile=scaledmodelfile,overwrite=True)
+                modelia.close()
+                modelia.open(scaledmodelfile)
                 incsys.addcoordinate(spectral=True)
                 incsys.setreferencevalue(value=startfreq,type="spectral")
                 incsys.setincrement(value=bandwidth,type="spectral")
-            # this is a trivial regrid
-            modelia.regrid(outfile=scaledmodelfile,csys=incsys.torecord(),overwrite=True)
-            modelia.close()
-            modelia=ia.newimagefromfile(scaledmodelfile)
-            
+
+            inspax=incsys.findcoordinate("spectral")['pixel']
+            modelia.setcoordsys(csys=incsys.torecord())
 
             # make a blank 4-dimensional image in the imager tool, with the desired out shape:
             # this sets up the image for processing inside of the simulated ms,
@@ -373,14 +393,18 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # we put the phase center there, rather than at the
             # reference direction for the input model (refdirection)
 
-            if nchan > 1:
-                specmode="FREQ-LSRK"
+            # assumes first two axes are spatial.
+            # that assumption is made in CoordinateUtil and ImagerInterface also.            
+            if inspectral:
+                if insize[inspax] > 1:
+                    if nchan<=1:
+                        msg("WARNING: your model image is a cube but you're creating a flat image")
+                # we should actually set the spectral start/step to the input, and then
+                # regrid the spectral axis after we putchunk below.
                 im.defineimage(nx=insize[0],ny=insize[1], cellx=incellx,celly=incelly,
-                               phasecenter=imcenter,
-                               mode="FREQ-LSRK",start=startfreq,step=chanwidth)                
+                               phasecenter=imcenter, nchan=insize[inspax], 
+                               mode="FREQ-LSRK",start=startfreq,step=chanwidth)
             else:
-                if inspectral:
-                    msg("WARNING: your model image is a cube but you're creating a flat image")
                 im.defineimage(nx=insize[0],ny=insize[1], cellx=incellx,celly=incelly,
                                phasecenter=imcenter)
 
@@ -388,6 +412,15 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             im.close()
             ia.open(modelimage4d)
             modelcsys=ia.coordsys()
+            modelsize=ia.shape()
+
+            # we now have modelia 4d and ia 4d, but the axis order may be different and
+            # the pointing center and cell size for the modelia may be wrong.
+            # the cell size should be right for ia, but the crval may be wrong.
+            # actually, if we're just going to pullchunk from modelia below, and not
+            # use regrid, since regrid doesn't reorder axes, we don't need to be
+            # setting the crval and pixel sizes in incsys and modelia, but it doesn't
+            # hurt, and helps with debugging and diagnostics.
 
             # now modify the input model image (modelia) and the projected modelimage4d (ia)
             if refdirection!=None:
@@ -400,11 +433,11 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                         epoch, ra, dec = util.direction_splitter(imcenter)
                     else:
                         epoch, ra, dec = util.direction_splitter(refdirection)
-                if verbose: msg(" setting model image direction to ra="+qa.angle(ra)+" dec="+qa.angle(dec))
+                if verbose: msg("   setting model image direction to ra="+qa.angle(ra)+" dec="+qa.angle(dec))
                 modelcsys.setreferencevalue(type="direction",value=[qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']])
                 incsys.setreferencevalue(type="direction",value=[qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']])
 
-            # this assumes you want to do a frequency conversion
+            # this line assumes you want to do a frequency conversion - not in general
             #modelcs.setreferencevalue(
             #    qa.convert(startfreq,modelcs.units(type="spectral"))['value'],
             #    type="spectral")
@@ -420,26 +453,75 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                         refpixel=refpixel.replace('[','')
                         refpixel=refpixel.replace(']','')
                         crpix=pl.refpixel.split(',')
-                if verbose: msg("setting model image ref pixel to %f,%f" % (crpix[0],crpix[1]))
+                if verbose: msg("   setting model image ref pixel to %f,%f" % (crpix[0],crpix[1]))
                 # this may may not have the desired result, so just leave at center:
                 # modelcsys.setreferencepixel(type="direction",value=crpix)
                 incsys.setreferencepixel(type="direction",value=crpix)
-
+            
             modelia.setcoordsys(incsys.torecord())
             ia.setcoordsys(modelcsys.torecord())
+
+            # now the centers, pixel sizes, etc are correct in the modelia and ia,
+            # and both are 4d, but the axis orders may still be different.
+
+            # first assure that the ia image created by Imager has the expected
+            # order - Kumar has enough hardcoded that it is unlikely to be otherwise.
+            expected=['Direction', 'Direction', 'Stokes', 'Spectral']
+            if modelcsys.axiscoordinatetypes() != expected:
+                msg("internal error with coordinate axis order created by Imager",color=31)
+                msg(modelcsys.axiscoordinatetypes().__str__(),color=31)
+                return -1
+
+            actual=incsys.axiscoordinatetypes()
+            axmap=[0,1,2,3]
+            if (actual[0] != 'Direction') or (actual[1] != 'Direction'):
+                msg("WARNING: trying to transpose your input data, may not have desired effects regarding longitude and latitude order in the image",color=31)
+            axmap[0]=actual.index('Direction')
+            axmap[1]=actual.index('Direction',axmap[0]+1)
+            axmap[2]=actual.index('Stokes')
+            axmap[3]=actual.index('Spectral')
+
+            # more checks:
+            foo=pl.array(modelsize)
+            if modelia.shape() != foo.take(axmap).tolist():
+                msg("internal error: I'm confused about the shape if your model data cube",color=31)
+                msg("have "+foo.take(axmap).__str__()+", want "+modelia.shape().__str__(),color=31)
+                return -1
+
+            if verbose: msg("rearranging input data (may take some time for large cubes)")
+            arr=modelia.getchunk()
+            for ax in range(4):
+                if axmap[ax] != ax:
+                    if arr.shape[ax] > 1 and arr.shape[axmap[ax]] > 1:
+                        arr.swapaxes(ax,axmap[ax])                        
+                        tmp=axmap[ax]
+                        axmap[ax]=ax
+                        axmap[tmp]=tmp
+                    else:
+                        arr=arr.reshape(ia.shape())
+                        axmap=range(4) # assumes that (checked above) ia has canonical order
+
+            # there's got to be a better way: :)
+            for i0 in range(arr.shape[0]):
+                for i1 in range(arr.shape[1]):
+                    for i2 in range(arr.shape[2]):
+                        for i3 in range(arr.shape[3]):
+                            foo=arr[i0,i1,i2,i3]
+                            if foo!=foo: arr[i0,i1,i2,i3]=0.0
+
+            if verbose: msg("model array minmax= %f %f" % (arr.min(),arr.max()))
+            ia.putchunk(arr*scalefactor)                    
             ia.close()
 
-            modelia.regrid(outfile=modelimage4d,csys=modelcsys.torecord(),overwrite=True)
-            modelia.done()
-
+            # modelia.regrid(outfile=modelimage4d,csys=rec,overwrite=True)
+            # modelia.close()
             # now open spatially rescaled output image
-            modelia.open(modelimage4d)            
-            modelia.putchunk(modelia.getchunk()*scalefactor)
+            # modelia.open(modelimage4d)            
+            # modelia.putchunk(modelia.getchunk()*scalefactor)
+
             modelia.close()
 
-            # image should now have 4 axes and same size as output
-
-
+            # coord image should now have correct Coordsys and shape
 
 
             
@@ -450,9 +532,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # right now this is ok - if we only had components,
             # we have created modelimage4d from them but if
             # we had components and model image they are not yet combined
-            if verbose: msg("predicting from "+modelimage4d)
-            sm.predict(imagename=[modelimage4d], complist=complist)
-            
+            if verbose:
+                msg("predicting from "+modelimage4d)
+                if arr.nbytes > 5e7:
+                    msg(" your model is large - this may take a while")
+            sm.predict(imagename=[modelimage4d],complist=complist)
+            #sm.predict(imagename=modelimage4d)
         else:   # if we're doing only components
             if verbose: msg("predicting from "+complist)
             sm.predict(complist=complist)
@@ -538,10 +623,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # do we want to invert the noiseless one anyway for comparison?
 
         if noise_any:
-            imgroot = project 
             mstoimage = noisymsfile
         else:
-            imgroot = project
             mstoimage = msfile
 
         if fidelity == True and psfmode == "none":
@@ -554,13 +637,13 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
         if psfmode != "none": 
             if niter == 0:
-                image=imgroot+'.dirty'
+                image=project+'.dirty'
                 msg("inverting to "+image)
             else:
-                image=imgroot+'.clean'
+                image=project+'.clean'
                 msg("cleaning to "+image)            
         else:
-            image=imgroot+'.clean'
+            image=project+'.clean'
 
         if uvtaper == False:
             outertaper=[]
@@ -590,16 +673,13 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                       noise=noise, npixels=npixels, npercycle=100,
                       cyclefactor=1.5, cyclespeedup=-1)
         else:
-            image=imgroot
+            image=project
 
 
 
 
-        # need this filename whether or not we create the image
-        modelregrid=project+"."+modelimage_local+".regrid"
-
-
-
+        # need this filename whether or not we create the output image
+        modelregrid=project+"."+modelimage_local+".flat2"
 
 
 
@@ -608,11 +688,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
         if fidelity == True or display == True:
 
-            inspectax=incoordsys.findcoordinate('spectral')['pixel']
-            innchan=insize[inspectax]
+            inspectax=modelcsys.findcoordinate('spectral')['pixel']
+            innchan=modelsize[inspectax]
             # modelimage4d is the .coord version w/spectral axis.
+            
             # modelflat should be the moment zero of that
-            modelflat=project+"."+modelimage_local+".mom0" 
+            modelflat=project+"."+modelimage_local+".flat" 
             if innchan>1:
                 if verbose: msg("creating moment zero input image")
                 # actually run ia.moments
@@ -631,8 +712,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
             # flat output
-            outflat=image+".mom0"
-            # should we really be calling this mom0, if we use the mean, or mom-1?
+            outflat=image+".flat"
             if nchan>1:
                 # image is either .clean or .dirty
                 if verbose: msg("creating moment zero output image")
@@ -705,7 +785,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                           pa=beam['positionangle'],overwrite=True)
 
             # Make difference image.
-            difference = imgroot + '.diff.im'
+            difference = project + '.diff.im'
             modelia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
             modelia.done()
             # Get rms of difference image.
@@ -715,10 +795,10 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             maxdiff=diffstats['medabsdevmed']
             if maxdiff!=maxdiff: maxdiff=0.
             # Make fidelity image.
-            absdiff = imgroot + '.absdiff.im'
+            absdiff = project + '.absdiff.im'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
-            fidelityim = imgroot + '.fidelity.im'
+            fidelityim = project + '.fidelity.im'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
             ia.done()
 
@@ -773,9 +853,9 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)
-                statim(imgroot+".diff.im",plot=display)
+                statim(project+".diff.im",plot=display)
                 if display: pl.subplot(234)
-                fidel_min, fidel_max, fidel_rms = statim(imgroot+".fidelity.im",plot=display)
+                fidel_min, fidel_max, fidel_rms = statim(project+".fidelity.im",plot=display)
 
         if display:
             tb.open(mstoimage)

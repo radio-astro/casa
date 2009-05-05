@@ -32,13 +32,14 @@ startfreq="668.0GHz"
 chanwidth="8.0GHz"
 nchan=1
 cell="0.004arcsec" 
-incell="8.63888953e-7deg" 
-inbright="0.067459"
+incell="0.00311arcsec" 
+inbright="6.5e-7"
 imsize=[192, 192]
 stokes="I"
 weighting="briggs"
 robust=0.0
 #display=True
+#verbose=True
 display=False
 fidelity=False
 inp()
@@ -73,6 +74,13 @@ ia.close()
 refstats = { 'flux': 0.00039567,
              'max': 3.53066844e-06,
              'min': -2.47349277e-07,
+             'rms': 6.33383706e-07,
+             'sigma': 4.53577279e-07 }
+
+# changed brightness convention scaling 20090501
+refstats = { 'flux': 0.000417,
+             'max': 3.622e-06,
+             'min': -4.736e-07,
              'rms': 6.33383706e-07,
              'sigma': 4.53577279e-07 }
 

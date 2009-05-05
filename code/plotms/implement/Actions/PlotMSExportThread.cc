@@ -49,6 +49,21 @@ PlotMSExportThread::PlotMSExportThread(PlotMSPlot* plot,
         }
     }
     
+    // TODO
+    // Quick hack for screen resolution images.  Taking a screenshot without
+    // drawing the items is basically impossible in the non-main (GUI) thread,
+    // so for now just turn on high resolution so that it has to draw each
+    // items.  This isn't ideal because it is slow, but for now it's better to
+    // have something that works and is slow than something that doesn't work.
+    if((itsFormat_.type == PlotExportFormat::JPG ||
+       itsFormat_.type == PlotExportFormat::PNG) &&
+       itsFormat_.resolution == PlotExportFormat::SCREEN) {
+    	cout << "NOTICE: Exporting to images in screen resolution is currently"
+    	     << " not working.  Switching to high resolution (which is slower,"
+    	     << " but works)." << endl;
+    	itsFormat_.resolution = PlotExportFormat::HIGH;
+    }
+    
     // Connect QThread signals.
     connect(itsHelper_, SIGNAL(finished()), SLOT(threadFinished()));
     connect(itsHelper_, SIGNAL(terminated()), SLOT(threadFinished()));

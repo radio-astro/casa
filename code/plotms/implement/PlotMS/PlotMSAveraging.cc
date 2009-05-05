@@ -76,7 +76,17 @@ Record PlotMSAveraging::toRecord() const {
 
 bool PlotMSAveraging::getFlag(Field f) const {
     return const_cast<map<Field, bool>&>(itsFlags_)[f]; }
-void PlotMSAveraging::setFlag(Field f, bool on) { itsFlags_[f] = on; }
+void PlotMSAveraging::setFlag(Field f, bool on) {
+	itsFlags_[f] = on;
+	
+	// Check special case of baseline and antenna being mutually exclusive.
+	// The mutual exclusivity is already enforced in the GUI, but this check is
+	// needed for non-GUI averaging setting.
+	if(on && (f == BASELINE || f == ANTENNA)) {
+		if(f == BASELINE) itsFlags_[ANTENNA] = false;
+		else              itsFlags_[BASELINE] = false;
+	}
+}
 
 double PlotMSAveraging::getValue(Field f) const {
     if(!fieldHasValue(f)) return 0;

@@ -81,6 +81,13 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
+PlotMSSinglePlotParameters*
+PlotMSPlotManager::singlePlotParameters(unsigned int index) {
+    if(index >= itsPlotParameters_.size()) return NULL;
+    else return dynamic_cast<PlotMSSinglePlotParameters*>(
+                itsPlotParameters_[index]);
+}
+
 PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
         const PlotMSSinglePlotParameters* params) {
     PlotMSSinglePlot* plot = new PlotMSSinglePlot(parent);

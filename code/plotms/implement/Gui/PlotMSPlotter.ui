@@ -369,6 +369,11 @@
     <string>Release Axes</string>
    </property>
   </action>
+  <action name="actionPlotExport" >
+   <property name="text" >
+    <string>Export</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="PlotMSPlotter.qrc" />

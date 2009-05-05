@@ -41,6 +41,7 @@
 #include <ostream>
 #include <casa/System/Aipsrc.h>
 
+
 //
 //  helper function to create ~/.casa/ipython/security
 //
@@ -75,7 +76,10 @@ static int make_it_a_dir( const char *path ) {
 }
 */
 
+#include <display/QtViewer/QtApp.h>
+
 int main( int argc, char **argv ) {
+    casa::QtApp::init(argc, argv);
 
     static const char file_separator = '/';
 

@@ -77,6 +77,9 @@ public:
     // necessarily set on the underlying plot parameters).
     PlotMSSinglePlotParameters currentlySetParameters() const;
     
+    // Returns the PlotExportFormat currently set by the user on the GUI.
+    PlotExportFormat currentlySetExportFormat() const;
+    
     // Returns the axes that the user has selected to load into the cache.
     vector<PMS::Axis> selectedLoadAxes() const {
         return selectedLoadOrReleaseAxes(true); }
@@ -149,9 +152,6 @@ private slots:
     
     // Slot for plotting after setting parameters.
     void plot();
-    
-    // Slot for exporting the current plot.
-    void exportClicked();
 };
 
 }

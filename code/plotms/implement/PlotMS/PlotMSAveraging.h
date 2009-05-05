@@ -45,11 +45,13 @@ public:
     // All fields have a bool flag for on/off, and some of them also have a
     // double value (see fieldHasValue()).  Fields are off by default, with a
     // default double value of 0 if applicable.
+    // There is a special case where baseline and antenna cannot both be turned
+    // on at the same time.
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
-              CHANNEL, TIME, SCAN, FIELD, BASELINE)
+              CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW)
     PMS_ENUM2(Field, fields, fieldStrings, field,
-              "channel", "time", "scan", "field", "baseline")
+              "channel", "time", "scan", "field", "baseline", "antenna", "spw")
     // </group>
               
     // Returns true if the given field has a double value associated with it or
@@ -98,6 +100,8 @@ public:
     bool scan() const { return getFlag(SCAN); }
     bool field() const { return getFlag(FIELD); }
     bool baseline() const { return getFlag(BASELINE); }
+    bool antenna() const { return getFlag(ANTENNA); }
+    bool spw() const { return getFlag(SPW); }
     // </group>
     
     // Convenience methods for setting the standard field values.
@@ -109,6 +113,8 @@ public:
     void setScan(bool scan) { setFlag(SCAN, scan); }
     void setField(bool field) { setFlag(FIELD, field); }
     void setBaseline(bool baseline) { setFlag(BASELINE, baseline); }
+    void setAntenna(bool antenna) { setFlag(ANTENNA, antenna); }
+    void setSpw(bool spw) { setFlag(SPW, spw); }
     // </group>
     
     

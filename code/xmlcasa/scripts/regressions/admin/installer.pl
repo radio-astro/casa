@@ -1,4 +1,4 @@
-+#!/usr/bin/perl -Ws
+#!/usr/bin/perl -Ws
 
 # This script
 #   - searches for new releases

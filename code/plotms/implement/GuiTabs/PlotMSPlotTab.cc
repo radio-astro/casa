@@ -91,8 +91,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         axesYDataChooser->setCurrentIndex(ydef);
     }
     
-    itsXRangeWidget_ = new PlotRangeWidget();
-    itsYRangeWidget_ = new PlotRangeWidget();
+    itsXRangeWidget_ = new PlotRangeWidget(true);
+    itsYRangeWidget_ = new PlotRangeWidget(true);
     QtUtilities::putInFrame(axesXRangeFrame, itsXRangeWidget_);
     QtUtilities::putInFrame(axesYRangeFrame, itsYRangeWidget_);
     
@@ -116,7 +116,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     PlotFactoryPtr factory = itsPlotter_->getFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
             PMS::DEFAULT_SYMBOL(factory), false, false);
-    itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory, 
+    itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory,
             PMS::DEFAULT_MASKED_SYMBOL(factory), false, false);
     QtUtilities::putInFrame(plotTitleFrame, itsPlotTitleWidget_);
     QtUtilities::putInFrame(plotUFFrame, itsSymbolWidget_);
@@ -168,7 +168,7 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
         
     
     // Initialize to no plot (empty).
-    setupForPlot(NULL);    
+    setupForPlot(NULL);
     
     
     // GUI Connect //
@@ -233,7 +233,8 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     connect(canvasPlotButton, SIGNAL(clicked()), SLOT(plot()));
     
     // Connect export
-    connect(exportButton, SIGNAL(clicked()), SLOT(exportClicked()));
+    connect(exportButton, SIGNAL(clicked()),
+    		actionMap[PlotMSAction::PLOT_EXPORT], SLOT(trigger()));
 }
 
 PlotMSPlotTab::~PlotMSPlotTab() { }
@@ -327,18 +328,41 @@ PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
     return params;
 }
 
+PlotExportFormat PlotMSPlotTab::currentlySetExportFormat() const {
+    String file = itsExportFileWidget_->getFile();
+    PlotExportFormat::Type t = (exportFormat->currentIndex() == 0) ?
+    		PlotExportFormat::typeForExtension(file) :
+    	    PlotExportFormat::exportFormat(
+    	        exportFormat->currentText().toStdString());
+
+    PlotExportFormat format(t, file);
+    format.resolution = exportHighRes->isChecked()? PlotExportFormat::HIGH :
+                                                    PlotExportFormat::SCREEN;
+    format.dpi = (exportDPI->isVisible() && exportDPI->isChecked()) ?
+                 exportDPIspinner->value() : -1;
+    if(exportSize->isVisible() && exportSize->isChecked()) {
+        format.width  = exportSizeSpinner1->value();
+        format.height = exportSizeSpinner2->value();
+    } else {
+        format.width  = -1;
+        format.height = -1;
+    }
+    
+    return format;
+}
+
 
 // Private //
 
 void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     // for now, only deal with single plots
-    PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(p);    
+    PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(p);
     itsCurrentPlot_ = plot;
     tabWidget->setEnabled(plot != NULL);
     
     if(itsCurrentParameters_ != NULL)
         itsCurrentParameters_->removeWatcher(this);
-    itsCurrentParameters_ = NULL;    
+    itsCurrentParameters_ = NULL;
     
     if(plot == NULL) return;
     
@@ -362,7 +386,7 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     else                                 axesXAttachTop->setChecked(true);
     
     setChooser(axesYChooser, PMS::axis(yAxis));
-    setChooser(axesYDataChooser, PMS::dataColumn(params.yDataColumn()));    
+    setChooser(axesYDataChooser, PMS::dataColumn(params.yDataColumn()));
     if(params.canvasYAxis() == Y_LEFT) axesYAttachLeft->setChecked(true);
     else                               axesYAttachRight->setChecked(true);
     
@@ -421,7 +445,7 @@ void PlotMSPlotTab::updateCacheTables() {
     cacheLoadedTable->setRowCount(0);
     
     static const vector<PMS::Axis>& axes = PMS::axes();
-    cacheAvailableTable->setRowCount(axes.size());    
+    cacheAvailableTable->setRowCount(axes.size());
     for(unsigned int i = 0; i < axes.size(); i++) {
         cacheAvailableTable->setItem(i, 0, new QTableWidgetItem(PMS::axis(
                                      axes[i]).c_str()));
@@ -540,13 +564,13 @@ void PlotMSPlotTab::tabChanged() {
         
         // for now, only deal with single plots
         PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(
-                                 itsCurrentPlot_);        
+                                 itsCurrentPlot_);
         PlotMSSinglePlotParameters& params = plot->singleParameters();
         PlotMSSinglePlotParameters newParams = currentlySetParameters();
         
         // MS tab, labels
         changedText(msLocationLabel,
-                    newParams.filename() != params.filename());        
+                    newParams.filename() != params.filename());
         changedText(msSelectionLabel,
                     newParams.selection() != params.selection());
         changedText(msAveragingLabel,
@@ -556,7 +580,7 @@ void PlotMSPlotTab::tabChanged() {
         vector<pair<PMS::Axis,unsigned int> > laxes= plot->data().loadedAxes();
         bool found = false;
         for(unsigned int i = 0; !found && i < laxes.size(); i++)
-            if(laxes[i].first == newParams.xAxis()) found = true;            
+            if(laxes[i].first == newParams.xAxis()) found = true;
         axesXInCache->setChecked(found);
         axesXDataFrame->setVisible(PMS::axisIsData(newParams.xAxis()));
         itsXRangeWidget_->setIsDate(
@@ -564,7 +588,7 @@ void PlotMSPlotTab::tabChanged() {
         
         found = false;
         for(unsigned int i = 0; !found && i < laxes.size(); i++)
-            if(laxes[i].first == newParams.yAxis()) found = true;            
+            if(laxes[i].first == newParams.yAxis()) found = true;
         axesYInCache->setChecked(found);
         axesYDataFrame->setVisible(PMS::axisIsData(newParams.yAxis()));
         itsYRangeWidget_->setIsDate(
@@ -664,42 +688,6 @@ void PlotMSPlotTab::plot() {
             plotsChanged(itsPlotManager_);
         }
     }
-}
-
-void PlotMSPlotTab::exportClicked() {
-    String file = itsExportFileWidget_->getFile();
-    bool ok;
-    PlotExportFormat::Type t = PlotExportFormat::exportFormat(
-                               exportFormat->currentText().toStdString(), &ok);
-    if(exportFormat->currentIndex() != 0 && !ok) {
-        itsPlotter_->showError("Could not parse export format!  (Shouldn't "
-                               "happen.)", "Export Error", false);
-        return;
-    }
-    if(exportFormat->currentIndex() == 0) {
-        t = PlotExportFormat::typeForExtension(file, &ok);
-        if(!ok) {
-            itsPlotter_->showError("Invalid format extension for filename '" +
-                                   file + "'!", "Export Error", false);
-            return;
-        }
-    }
-
-    PlotExportFormat format(t, file);
-    format.resolution = exportHighRes->isChecked()? PlotExportFormat::HIGH :
-                                                    PlotExportFormat::SCREEN;
-    format.dpi = (exportDPI->isVisible() && exportDPI->isChecked()) ?
-                 exportDPIspinner->value() : -1;
-    if(exportSize->isVisible() && exportSize->isChecked()) {
-        format.width  = exportSizeSpinner1->value();
-        format.height = exportSizeSpinner2->value();
-    } else {
-        format.width  = -1;
-        format.height = -1;
-    }
-    
-    itsPlotter_->doThreadedOperation(
-            new PlotMSExportThread(itsCurrentPlot_, format));
 }
 
 }

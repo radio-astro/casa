@@ -130,6 +130,9 @@ class QtDisplayData : public QObject {
                                           WorldCanvasHolder* wch,
 					  Bool allChannels=False,
 					  Bool allAxes=False);
+  virtual ImageRegion* mouseToImageRegion(
+        Record mouseRegion, WorldCanvasHolder* wch,
+        String& extChan, String& extPol);
  
   // Print statistics on image for given region.
   // Returns False if unable to do so. 

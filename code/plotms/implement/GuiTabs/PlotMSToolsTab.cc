@@ -56,13 +56,13 @@ PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     
     // Set up selected regions
     connect(regionsClear, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::CLEAR_REGIONS), SLOT(trigger()));
+            actionMap.value(PlotMSAction::SEL_CLEAR_REGIONS), SLOT(trigger()));
     connect(regionsFlag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::FLAG), SLOT(trigger()));
+            actionMap.value(PlotMSAction::SEL_FLAG), SLOT(trigger()));
     connect(regionsUnflag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::UNFLAG), SLOT(trigger()));
+            actionMap.value(PlotMSAction::SEL_UNFLAG), SLOT(trigger()));
     connect(regionsLocate, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::LOCATE), SLOT(trigger()));
+            actionMap.value(PlotMSAction::SEL_LOCATE), SLOT(trigger()));
     
     // Set up stack
     connect(stackBack, SIGNAL(clicked()),

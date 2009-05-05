@@ -8635,7 +8635,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
      clone(image, mask);
    }
    INITIALIZE_PGPLOT
-   QtApp::init();
+   //QtApp::init();
    QtClean vwrCln(image, mask); 
    //  if(!vwrCln.loadImage(image, mask)){
    if(!vwrCln.imageLoaded()){

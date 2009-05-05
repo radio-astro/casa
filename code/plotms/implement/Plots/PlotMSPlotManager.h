@@ -72,6 +72,7 @@ public:
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
     PlotMSPlotParameters* plotParameters(unsigned int index);
+    PlotMSSinglePlotParameters* singlePlotParameters(unsigned int index);
     // </group>
     
     

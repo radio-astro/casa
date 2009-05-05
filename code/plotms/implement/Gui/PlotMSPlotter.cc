@@ -64,6 +64,8 @@ void PlotMSPlotter::showGUI(bool show) {
     itsPlotter_->showGUI(show);
 }
 
+bool PlotMSPlotter::guiShown() const { return isVisible(); }
+
 int PlotMSPlotter::execLoop() {
     QCoreApplication::processEvents();
     
@@ -83,7 +85,7 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
         // no currently running thread, so start this one
         itsCurrentThread_ = t;
         connect(itsCurrentThread_, SIGNAL(finishedOperation(PlotMSThread*)),
-                SLOT(currentThreadFinished()));        
+                SLOT(currentThreadFinished()));
         
         // disable and show progress GUI
         foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(false);
@@ -102,7 +104,7 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
 }
 
 bool PlotMSPlotter::canvasDrawBeginning(PlotOperationPtr drawOperation,
-        bool drawingIsThreaded, int drawnLayersFlag) {    
+        bool drawingIsThreaded, int drawnLayersFlag) {
     if(!drawingIsThreaded) {
         cout << "PlotMSPlotter does not currently support threading for "
              << "plotter implementations that do not do threaded drawing "
@@ -130,7 +132,7 @@ bool PlotMSPlotter::canvasDrawBeginning(PlotOperationPtr drawOperation,
     }
 
     dt = new PlotMSDrawThread(this);
-    doThreadedOperation(dt);    
+    doThreadedOperation(dt);
     return true;
 }
 
@@ -149,16 +151,19 @@ bool PlotMSPlotter::showQuestion(const String& message, const String& title) {
 }
 
 void PlotMSPlotter::holdDrawing() {
-    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
+    vector<PlotCanvasPtr> canvases = currentCanvases();
     for(unsigned int i = 0; i < canvases.size(); i++)
         canvases[i]->holdDrawing();
 }
 
 void PlotMSPlotter::releaseDrawing() {
-    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
+    vector<PlotCanvasPtr> canvases = currentCanvases();
     for(unsigned int i = 0; i < canvases.size(); i++)
         canvases[i]->releaseDrawing();
 }
+
+vector<PlotCanvasPtr> PlotMSPlotter::currentCanvases() {
+	return itsPlotter_->canvasLayout()->allCanvases(); }
 
 
 void PlotMSPlotter::setWindowTitle(const String& windowTitle) {
@@ -208,21 +213,6 @@ void PlotMSPlotter::setActionIsChecked(PlotMSAction::Type type, bool checked,
     }
 }
 
-PlotMSPlot* PlotMSPlotter::actionPlot(PlotMSAction::Type type) const {
-    return itsPlotTab_->currentPlot();
-}
-
-bool PlotMSPlotter::actionBool(PlotMSAction::Type type) const {
-    return actionIsChecked(type); }
-
-vector<PMS::Axis> PlotMSPlotter::actionAxes(PlotMSAction::Type type) const {
-    if(type == PlotMSAction::CACHE_LOAD)
-        return itsPlotTab_->selectedLoadAxes();
-    else if(type == PlotMSAction::CACHE_RELEASE)
-        return itsPlotTab_->selectedReleaseAxes();
-    else return vector<PMS::Axis>();
-}
-
 
 // Public Slots //
 
@@ -262,7 +252,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
 
 // Private Methods //
 
-void PlotMSPlotter::initialize(Plotter::Implementation imp) {    
+void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     setupUi(this);
     
     // Try to initialize plotter, and throw error on failure.
@@ -298,11 +288,11 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     tabWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     splitter->addWidget(tabWidget);
     
-    // Action map //    
-    itsActionMap_.insert(PlotMSAction::FLAG, actionFlag);
-    itsActionMap_.insert(PlotMSAction::UNFLAG, actionUnflag);
-    itsActionMap_.insert(PlotMSAction::LOCATE, actionLocate);
-    itsActionMap_.insert(PlotMSAction::CLEAR_REGIONS, actionClearRegions);
+    // Action map //
+    itsActionMap_.insert(PlotMSAction::SEL_FLAG, actionFlag);
+    itsActionMap_.insert(PlotMSAction::SEL_UNFLAG, actionUnflag);
+    itsActionMap_.insert(PlotMSAction::SEL_LOCATE, actionLocate);
+    itsActionMap_.insert(PlotMSAction::SEL_CLEAR_REGIONS, actionClearRegions);
     
     itsActionMap_.insert(PlotMSAction::ITER_FIRST, actionIterFirst);
     itsActionMap_.insert(PlotMSAction::ITER_PREV, actionIterPrev);
@@ -323,11 +313,13 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::CACHE_LOAD, actionCacheLoad);
     itsActionMap_.insert(PlotMSAction::CACHE_RELEASE, actionCacheRelease);
     
-    itsActionMap_.insert(PlotMSAction::HOLD_RELEASE_DRAWING, actionHoldRelease);    
+    itsActionMap_.insert(PlotMSAction::PLOT_EXPORT, actionPlotExport);
+    
+    itsActionMap_.insert(PlotMSAction::HOLD_RELEASE_DRAWING, actionHoldRelease);
     itsActionMap_.insert(PlotMSAction::CLEAR_PLOTTER, actionClearPlots);
     itsActionMap_.insert(PlotMSAction::QUIT, actionQuit);
     
-    // Set up tabs //    
+    // Set up tabs //
     itsPlotTab_ = new PlotMSPlotTab(this);
     itsToolsTab_ = new PlotMSToolsTab(this);
     itsOptionsTab_ = new PlotMSOptionsTab(this);
@@ -342,12 +334,11 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         maxWidth = itsOptionsTab_->maximumWidth();
     tabWidget->setMaximumWidth(maxWidth);
     
-    //tabWidget->removeTab(0);
     tabWidget->addTab(itsPlotTab_, "Plots");
     tabWidget->addTab(itsToolsTab_, "Tools");
     tabWidget->addTab(itsOptionsTab_, "Options");
     
-    // Set up threads //    
+    // Set up threads //
     itsCurrentThread_ = NULL;
     itsThreadProgress_ = new QtProgressWidget(false, false, false, true, false,
                                               this);
@@ -379,8 +370,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     connect(actionCacheLoad, SIGNAL(triggered()), SLOT(actionCacheLoad_()));
     connect(actionCacheRelease, SIGNAL(triggered()),
             SLOT(actionCacheRelease_()));
+    connect(actionPlotExport, SIGNAL(triggered()), SLOT(actionPlotExport_()));
     connect(actionHoldRelease, SIGNAL(toggled(bool)),
-            SLOT(actionHoldRelease_()));    
+            SLOT(actionHoldRelease_()));
     connect(actionClearPlots, SIGNAL(triggered()), SLOT(actionClearPlots_()));
     connect(actionQuit, SIGNAL(triggered()), SLOT(actionQuit_()));
 
@@ -419,7 +411,7 @@ void PlotMSPlotter::action(QAction* act) {
 
     if(act == actionMarkRegions || act == actionZoom || act == actionPan) {
         bool mark = actionMarkRegions->isChecked(),
-             zoom = actionZoom->isChecked(), pan = actionPan->isChecked();        
+             zoom = actionZoom->isChecked(), pan = actionPan->isChecked();
         if(mark || zoom || pan) {
             // only perform action on an "on"
             if(!act->isChecked()) return;
@@ -435,7 +427,50 @@ void PlotMSPlotter::action(QAction* act) {
         }
     }
     
-    itsParent_->triggerAction(itsActionMap_.key(act));
+    PlotMSAction::Type type = itsActionMap_.key(act);
+    PlotMSAction action(type);
+    
+    // Set parameters from GUI settings, for actions that need them.
+    if(type == PlotMSAction::TOOL_MARK_REGIONS)
+    	action.setParameter(PlotMSAction::P_ON_OFF,
+    			            actionMarkRegions->isChecked());
+    else if(type == PlotMSAction::TOOL_ZOOM)
+    	action.setParameter(PlotMSAction::P_ON_OFF, actionZoom->isChecked());
+    else if(type == PlotMSAction::TOOL_PAN)
+    	action.setParameter(PlotMSAction::P_ON_OFF, actionPan->isChecked());
+    else if(type == PlotMSAction::TRACKER_HOVER)
+    	action.setParameter(PlotMSAction::P_ON_OFF,
+    			            actionTrackerHover->isChecked());
+    else if(type == PlotMSAction::TRACKER_DISPLAY)
+    	action.setParameter(PlotMSAction::P_ON_OFF,
+    			            actionTrackerDisplay->isChecked());
+    else if(type == PlotMSAction::HOLD_RELEASE_DRAWING)
+    	action.setParameter(PlotMSAction::P_ON_OFF,
+    			            actionHoldRelease->isChecked());
+    else if(type == PlotMSAction::CACHE_LOAD) {
+    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
+    	action.setParameter(PlotMSAction::P_AXES,
+    			            itsPlotTab_->selectedLoadAxes());
+    } else if(type == PlotMSAction::CACHE_RELEASE) {
+    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
+    	action.setParameter(PlotMSAction::P_AXES,
+    			            itsPlotTab_->selectedReleaseAxes());
+    } else if(type == PlotMSAction::PLOT_EXPORT) {
+    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
+    	PlotExportFormat format = itsPlotTab_->currentlySetExportFormat();
+    	action.setParameter(PlotMSAction::P_FILE, format.location);
+    	action.setParameter(PlotMSAction::P_FORMAT,
+    			PlotExportFormat::exportFormat(format.type));
+    	action.setParameter(PlotMSAction::P_HIGHRES,
+    			format.resolution == PlotExportFormat::HIGH);
+    	action.setParameter(PlotMSAction::P_DPI, format.dpi);
+    	action.setParameter(PlotMSAction::P_WIDTH, format.width);
+    	action.setParameter(PlotMSAction::P_HEIGHT, format.height);
+    }
+    
+    bool result = action.doAction(itsParent_);
+    if(!result)
+    	showError(action.doActionResult(), "Action Failed!", false);
 }
 
 
@@ -468,7 +503,7 @@ void PlotMSPlotter::currentThreadFinished() {
 
 // Static //
 
-String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {    
+String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     stringstream ss;
     
     // Intro

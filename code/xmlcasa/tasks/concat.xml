@@ -49,6 +49,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         input data set), then the input data sets will be appended to the
         concatvis data set.
 
+	If none of the input MSs have any scratch columns, none are created.
+	Otherwise scratch columns are created and initialized in those MSs which don't have a
+	complete set.
+
 	Keyword arguments:
 	vis -- Name of input visibility files to be combined
 		default: none; example: vis=['src2.ms','ngc5921.ms']

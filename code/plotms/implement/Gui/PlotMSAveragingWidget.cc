@@ -45,9 +45,19 @@ PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
     itsFlags_[PlotMSAveraging::SCAN] = scan;
     itsFlags_[PlotMSAveraging::FIELD] = field;
     itsFlags_[PlotMSAveraging::BASELINE] = baseline;
+    itsFlags_[PlotMSAveraging::ANTENNA] = antenna;
+    itsFlags_[PlotMSAveraging::SPW] = spw;
     
     itsValues_[PlotMSAveraging::CHANNEL] = channelValue;
     itsValues_[PlotMSAveraging::TIME] = timeValue;
+    
+    // Put baseline and antenna in button group to watch for toggles.
+    QButtonGroup* group = new QButtonGroup(this);
+    group->setExclusive(false);
+    group->addButton(baseline);
+    group->addButton(antenna);
+    connect(group, SIGNAL(buttonClicked(QAbstractButton*)),
+    		SLOT(baselineOrAntennaClicked(QAbstractButton*)));
     
     foreach(QCheckBox* w, itsFlags_)
         connect(w, SIGNAL(toggled(bool)), SLOT(averagingChanged()));
@@ -105,6 +115,13 @@ void PlotMSAveragingWidget::averagingChanged() {
     emit changed();
     PlotMSAveraging val = getValue();
     if(val != itsValue_) emit differentFromSet();
+}
+
+void PlotMSAveragingWidget::baselineOrAntennaClicked(QAbstractButton* button) {
+	if(button == NULL || button->isChecked() == false) return;
+	
+	if(button == baseline) antenna->setChecked(false);
+	else if(button == antenna) baseline->setChecked(false);
 }
 
 }

@@ -495,9 +495,9 @@ private:
     // Static //
     
     // Helper method for static exportPlotter() and exportCanvas() methods.
-    static bool exportHelper(QWidget* grabWidget,
-            vector<PlotCanvasPtr>& canvases,
-            const PlotExportFormat& format);
+    static bool exportHelper(vector<PlotCanvasPtr>& canvases,
+            const PlotExportFormat& format, QPCanvas* grabCanvas,
+            QPPlotter* grabPlotter);
     
     // Converts between axes and vector indices.
     // <group>

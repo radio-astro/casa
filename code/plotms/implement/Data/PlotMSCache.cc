@@ -29,7 +29,9 @@
 #include <casa/OS/Timer.h>
 #include <casa/Quanta/MVTime.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <tables/Tables/Table.h>
 
 namespace casa {
 
@@ -51,6 +53,7 @@ const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
 PlotMSCache::PlotMSCache():
   nChunk_(0),
   nPoints_(),
+  refTime_p(0.0),
   minX_(0),
   maxX_(0),
   minY_(0),
@@ -63,6 +66,7 @@ PlotMSCache::PlotMSCache():
   dataLoaded_(false),
   currentSet_(false)
 {
+
     // Set up loaded axes to be initially empty, and set up data columns for
     // data-based axes.
     const vector<PMS::Axis>& axes = PMS::axes();
@@ -124,6 +128,7 @@ void PlotMSCache::increaseChunks(Int nc) {
   el_.resize(nChunk_,False,True);
   parang_.resize(nChunk_,False,True);
 
+
   plmask_.resize(nChunk_,False,True);
   
   // Construct (empty) pointed-to Vectors/Arrays
@@ -162,6 +167,7 @@ void PlotMSCache::increaseChunks(Int nc) {
 
 void PlotMSCache::clear() {
     deleteCache();
+    refTime_p=0.0;
 }
 
 void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
@@ -180,24 +186,44 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
       // 1) we already have the metadata loaded
       // 2) the underlying MS has changed, requiring a reloading of metadata
 
-  cout << endl << "Caching for the new plot: " 
-       << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " << PMS::axis(axes[0]) << "(" << axes[0] << ")..." << endl;
 
-  cout << "Channel averaging is " << (averaging.channel() ? "on" : "off");
+  // Check if scr cols present
+  Bool scrcolOk(False);
+  {
+    const ColumnDescSet& cds=Table(visSet.msName()).tableDesc().columnDescSet();
+    scrcolOk=cds.isDefined("CORRECTED_DATA");
+  }
+
+  cout << endl << "Caching for the new plot: " 
+       << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " 
+       << PMS::axis(axes[0]) << "(" << axes[0] << ")..." << endl;
+
+  if (!scrcolOk) 
+    cout << "NB: Scratch columns not present; will use DATA exclusively." << endl;
+
+  cout << "Spectral window averaging is " << (averaging.spw() ? "ON." : "off.") << endl;
+
+  cout << "Channel averaging is " << (averaging.channel() ? "ON" : "off");
   if (averaging.channel())
-    cout << ", with a value of " << averaging.channelValue();
+    if (averaging.channelValue()<=0.0) 
+      cout << ", but with an ambiguous value of " << averaging.channelValue()
+	   << ", so no channel averaging will occur.";
+    else
+      cout << ", with a value of " << averaging.channelValue() 
+	   << ( (averaging.channelValue()>1) ? " channels" : " (i.e. full spw)" );
   cout << "." << endl;
   
-  /*
-  cout << "Time averaging is " << (averaging.time() ? "on" : "off");
+  cout << "Time averaging is " << (averaging.time() ? "ON" : "off");
   if (averaging.time()) {
-    cout << ", with a value of " << averaging.timeValue() << "." << endl;
-    cout << "Scan averaging is " << (averaging.scan() ? "on" : "off") << "; ";
-    cout << "field averaging is "<< (averaging.field()? "on" : "off") << "; ";
-    cout << "baseline averaging is " << (averaging.baseline() ? "on" : "off");
+    cout << ", with a value of " << averaging.timeValue() << " seconds." << endl;
+    cout << "  Scan averaging is " << (averaging.scan() ? "ON" : "off") << "; ";
+    cout << "  Field averaging is "<< (averaging.field()? "ON" : "off");
   }
   cout << "." << endl;
-  */
+
+  cout << "Baseline averaging is " << (averaging.baseline() ? "ON." : "off.") << endl;
+  cout << "Antenna averaging is " << (averaging.antenna() ? "ON." : "off.") << endl;
+
   
   // Calculate which axes need to be loaded; those that have already been
     // loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
@@ -221,12 +247,10 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         found = false;
         axis = axes[i];
         
-	//	cout << "Axis = " << PMS::axis(axis) << " (" << axis << ")" << endl;
-
         // if data vector is not the same length as axes vector, assume
         // default data column
         dc = PMS::DEFAULT_DATACOLUMN;
-        if(i < data.size()) dc = data[i];
+        if(i < data.size() && scrcolOk) dc = data[i];
         
         // 1)
         for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
@@ -250,99 +274,25 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
     
     // Load data.
 
-    VisIter& vi(visSet.iter());
-    VisBuffer vb(vi);
-    
-    // Count number of chunks.
-    int chunk = 0;
-    for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
-        for (vi.origin(); vi.more(); vi++) chunk++;
-    if(chunk != nChunk_) increaseChunks(chunk);
+    Vector<Int> nIterPerAve;
+    if ( (averaging.time() && averaging.timeValue()>0.0) ||
+	 averaging.baseline() ||
+	 averaging.antenna() ||
+	 averaging.spw() ) {
 
-    chunk = 0;
-    chshapes_.resize(4,nChunk_);
-    double progress;
-    for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-      for(vi.origin(); vi.more(); vi++) {
-	// If a thread is given, check if the user canceled.
-	if(thread != NULL && thread->wasCanceled()) {
-	  dataLoaded_ = false;
-	  return;
-	}
-        
-	// If a thread is given, update it.
-	if(thread != NULL && chunk % THREAD_SEGMENT == 0)
-	  thread->setStatus("Loading chunk " + String::toString(chunk) +
-			    " / " + String::toString(nChunk_) + ".");
+      countChunks(visSet,nIterPerAve,averaging);
+      loadChunks(visSet,averaging,nIterPerAve,
+		 loadAxes,loadData,thread);
 
-
-	// Do channel averaging, if required
-	if (averaging.channel()) {
-
-	  //	  cout << endl << "Averaging in channel: " << averaging.channelValue()*100<<"%." << endl;
-
-	  // pre-load requisite pieces of VisBuffer for averaging
-	  for(unsigned int i = 0; i < loadAxes.size(); i++) {
-	    switch (loadAxes[i]) {
-	    case PMS::AMP: 
-	    case PMS::PHASE: 
-	    case PMS::REAL: 
-	    case PMS::IMAG: {
-	      switch(loadData[i]) {
-	      case PMS::DATA: {
-		vb.visCube();
-		break;
-	      }
-	      case PMS::MODEL: {
-		vb.modelVisCube();
-		break;
-	      }
-	      case PMS::CORRECTED: {
-		vb.correctedVisCube();
-		break;
-	      }
-	      case PMS::RESIDUAL: {
-		vb.correctedVisCube();
-		vb.modelVisCube();
-		break;
-	      }
-	      default:
-		break;
-	      }
-	      break;
-	    }
-	    default:
-	      break;
-	    }
-	  }
-	  
-	  // Always need flags
-	  vb.flagRow();
-	  vb.flagCube();
-
-	  // Delegate actual averaging to the VisBuffer:
-	  vb.channelAve(averaging.channelValue());
-	}
-
-	// Cache the data shapes
-	chshapes_(0,chunk)=vb.nCorr();
-	chshapes_(1,chunk)=vb.nChannel();
-	chshapes_(2,chunk)=vb.nRow();
-	chshapes_(3,chunk)=visSet.numberAnt();
-
-	for(unsigned int i = 0; i < loadAxes.size(); i++) {
-	  loadAxis(vb, chunk, loadAxes[i], loadData[i]);
-	}
-	chunk++;
-        
-	// If a thread is given, update it.
-	if(thread != NULL && chunk % THREAD_SEGMENT == 0) {
-	  progress = ((double)chunk) / nChunk_;
-	  thread->setProgress((unsigned int)((progress * 100) + 0.5));
-	}
-      }
     }
-        
+    else {
+
+      countChunks(visSet);
+      loadChunks(visSet,loadAxes,loadData,averaging,thread);
+
+    }
+
+
     // Update loaded axes.
     for(unsigned int i = 0; i < loadAxes.size(); i++) {
         axis = loadAxes[i];
@@ -352,12 +302,435 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         
     dataLoaded_ = true;
 
+    cout << "Finished loading." << endl;
+
 }
 
-#define PMSC_DELETE(VAR)                                                      \
-    for(unsigned int i = 0; i < VAR.size(); i++)                              \
-        if(VAR[i]) delete VAR[i];                                             \
-    VAR.resize(0);
+void PlotMSCache::loadChunks(VisSet& vs,
+			     const vector<PMS::Axis> loadAxes,
+			     const vector<PMS::DataColumn> loadData,
+			     const PlotMSAveraging& averaging,
+			     PlotMSCacheThread* thread) {
+
+  cout << "Loading chunks..." << endl;
+
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  Int chunk = 0;
+  chshapes_.resize(4,nChunk_);
+  double progress;
+  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+    for(vi.origin(); vi.more(); vi++) {
+      // If a thread is given, check if the user canceled.
+      if(thread != NULL && thread->wasCanceled()) {
+	dataLoaded_ = false;
+	return;
+      }
+      
+      // If a thread is given, update it.
+      if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+			    chunk % THREAD_SEGMENT == 0))
+	thread->setStatus("Loading chunk " + String::toString(chunk) +
+			  " / " + String::toString(nChunk_) + ".");
+      
+      
+      // Do channel averaging, if required
+      if (averaging.channel() && averaging.channelValue()>0.0) {
+	  // Force read on required stuff
+	  forceVBread(vb,loadAxes,loadData);
+	  // Delegate actual averaging to the VisBuffer:
+	  vb.channelAve(averaging.channelValue());
+      }
+      
+      // Cache the data shapes
+      chshapes_(0,chunk)=vb.nCorr();
+      chshapes_(1,chunk)=vb.nChannel();
+      chshapes_(2,chunk)=vb.nRow();
+      chshapes_(3,chunk)=vs.numberAnt();
+      
+      for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	loadAxis(vb, chunk, loadAxes[i], loadData[i]);
+      }
+      chunk++;
+      
+      // If a thread is given, update it.
+      if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+			    chunk % THREAD_SEGMENT == 0)) {
+	progress = ((double)chunk+1) / nChunk_;
+	thread->setProgress((unsigned int)((progress * 100) + 0.5));
+      }
+    }
+  }
+  
+}
+
+void PlotMSCache::loadChunks(VisSet& vs,
+			     const PlotMSAveraging& averaging,
+			     const Vector<Int>& nIterPerAve,
+			     const vector<PMS::Axis> loadAxes,
+			     const vector<PMS::DataColumn> loadData,
+			     PlotMSCacheThread* thread) {
+  
+  cout << "Loading chunks with averaging..." << endl;
+
+  Bool verby(False);
+
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  chshapes_.resize(4,nChunk_);
+  double progress;
+  vi.originChunks();
+  vi.origin();
+  Double time0=86400.0*floor(vb.time()(0)/86400.0);
+  for (Int chunk=0;chunk<nChunk_;++chunk) {
+
+    // If a thread is given, check if the user canceled.
+    if(thread != NULL && thread->wasCanceled()) {
+      dataLoaded_ = false;
+      return;
+    }
+    
+    // If a thread is given, update it.
+    if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+			  chunk % THREAD_SEGMENT == 0))
+      thread->setStatus("Loading chunk " + String::toString(chunk) +
+			" / " + String::toString(nChunk_) + ".");
+      
+    // Arrange to accumulate many VBs into one
+    PlotMSVBAverager pmsvba(vs.numberAnt(),vi.existsWeightSpectrum());
+
+    // Tell averager if we are averaging baselines together
+    pmsvba.setBlnAveraging(averaging.baseline());
+    pmsvba.setAntAveraging(averaging.antenna());
+
+    // Sort out which data to read
+    discernData(loadAxes,loadData,pmsvba);
+
+    if (verby) cout << chunk << "----------------------------------" << endl;
+
+    for (Int iter=0;iter<nIterPerAve(chunk);++iter) {
+
+      // Force read on required stuff
+      forceVBread(vb,loadAxes,loadData);
+      
+      if (verby) {
+	cout << "ck=" << chunk << " vb=" << iter << " (" << nIterPerAve(chunk) << ");  " 
+	     << "sc=" << vb.scan()(0) << " "
+	     << "time=" << vb.time()(0)-time0 << " "
+	     << "fl=" << vb.fieldId() << " "
+	     << "sp=" << vb.spectralWindow() << " ";
+      }
+
+      // Do channel averaging, if required
+      if (averaging.channel() && averaging.channelValue()>0.0) {
+	// Delegate actual averaging to the VisBuffer:
+	vb.channelAve(averaging.channelValue());
+      }
+      
+      // Accumulate into the averager
+      pmsvba.accumulate(vb);
+      
+      // Advance to next VB
+      vi++;
+
+      if (verby) cout << " next VB ";
+      
+      
+      if (!vi.more() && vi.moreChunks()) {
+	// go to first vb in next chunk
+	if (verby) cout << "  stepping VI";
+	vi.nextChunk();
+	vi.origin();
+      }
+      if (verby) cout << endl;
+    }
+
+
+    // Finalize the averaging
+    pmsvba.finalizeAverage();
+
+    // The averaged VisBuffer
+    VisBuffer& avb(pmsvba.aveVisBuff());
+
+    // Cache the data shapes
+    chshapes_(0,chunk)=avb.nCorr();
+    chshapes_(1,chunk)=avb.nChannel();
+    chshapes_(2,chunk)=avb.nRow();
+    chshapes_(3,chunk)=vs.numberAnt();
+
+    for(unsigned int i = 0; i < loadAxes.size(); i++) {
+      loadAxis(avb, chunk, loadAxes[i], loadData[i]);
+    }
+      
+    // If a thread is given, update it.
+    if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+			  chunk % THREAD_SEGMENT == 0)) {
+      progress = ((double)chunk+1) / nChunk_;
+      thread->setProgress((unsigned int)((progress * 100) + 0.5));
+    }
+  }
+}
+
+void PlotMSCache::forceVBread(VisBuffer& vb,
+			      vector<PMS::Axis> loadAxes,
+			      vector<PMS::DataColumn> loadData) {
+
+  // pre-load requisite pieces of VisBuffer for averaging
+  for(unsigned int i = 0; i < loadAxes.size(); i++) {
+    switch (loadAxes[i]) {
+    case PMS::AMP: 
+    case PMS::PHASE: 
+    case PMS::REAL: 
+    case PMS::IMAG: {
+      switch(loadData[i]) {
+      case PMS::DATA: {
+	vb.visCube();
+	break;
+      }
+      case PMS::MODEL: {
+	vb.modelVisCube();
+	break;
+      }
+      case PMS::CORRECTED: {
+	vb.correctedVisCube();
+	break;
+      }
+      case PMS::RESIDUAL: {
+	vb.correctedVisCube();
+	vb.modelVisCube();
+	break;
+      }
+      default:
+	break;
+      }
+      break;
+    }
+    default:
+      break;
+    }
+  }
+  
+  // Always need flags
+  vb.flagRow();
+  vb.flagCube();
+
+}
+
+void PlotMSCache::discernData(vector<PMS::Axis> loadAxes,
+			      vector<PMS::DataColumn> loadData,
+			      PlotMSVBAverager& vba) {
+
+  // Turn off 
+  vba.setNoData();
+
+  // Tell the averager which data column to read
+  for(unsigned int i = 0; i < loadAxes.size(); i++) {
+    switch (loadAxes[i]) {
+    case PMS::AMP: 
+    case PMS::PHASE: 
+    case PMS::REAL: 
+    case PMS::IMAG: {
+      switch(loadData[i]) {
+      case PMS::DATA: {
+	//	cout << "Arranging to load VC." << endl;
+	vba.setDoVC();
+	break;
+      }
+      case PMS::MODEL: {
+	//	cout << "Arranging to load MVC." << endl;
+	vba.setDoMVC();
+	break;
+      }
+      case PMS::CORRECTED: {
+	//	cout << "Arranging to load CVC." << endl;
+	vba.setDoCVC();
+	break;
+      }
+      case PMS::RESIDUAL: {
+	//	cout << "Arranging to load CVC & MVC." << endl;
+	vba.setDoCVC();
+	vba.setDoMVC();
+	break;
+      }
+      default:
+	break;
+      }
+      break;
+    }
+    case PMS::UVDIST:
+    case PMS::UVDIST_L:
+    case PMS::U:
+    case PMS::V:
+    case PMS::W: {
+      //  cout << "Arranging to load UVW
+      vba.setDoUVW();
+    }
+    default:
+      break;
+    }
+  }
+
+}
+
+      
+void PlotMSCache::countChunks(VisSet& vs) {
+
+  // This is the old way, with no averaging over chunks.
+
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+  
+  vi.originChunks();
+  vi.origin();
+  refTime_p=86400.0*floor(vb.time()(0)/86400.0);
+
+  // Count number of chunks.
+  int chunk = 0;
+  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+    for (vi.origin(); vi.more(); vi++) chunk++;
+  if(chunk != nChunk_) increaseChunks(chunk);
+  
+  //  cout << "Found " << nChunk_ << " " << chunk << " chunks." << endl;
+
+}
+
+
+void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
+			      const PlotMSAveraging& averaging) {
+
+  Bool verby(False);
+
+  Bool combscan(averaging.scan());
+  Bool combfld(averaging.field());
+  Bool combspw(averaging.spw());
+  
+  Int nsortcol(4+Int(!combscan));  // include room for scan
+  Block<Int> columns(nsortcol);
+  Int i(0);
+  Double iterInterval(0.0);
+  if (averaging.time())
+    iterInterval= averaging.timeValue();
+
+  columns[i++]=MS::ARRAY_ID;
+  if (!combscan) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
+  if (!combfld) columns[i++]=MS::FIELD_ID;      // force field boundaries
+  if (!combspw) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
+  columns[i++]=MS::TIME;
+  if (combspw || combfld) iterInterval=DBL_MIN;  // force per-timestamp chunks
+  if (combfld) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
+  if (combspw) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
+  
+  vs.resetVisIter(columns,iterInterval);
+  
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+  
+  vi.originChunks();
+  vi.origin();
+  
+  nIterPerAve.resize(100);
+  nIterPerAve=0;
+  
+  Double time0(86400.0*floor(vb.time()(0)/86400.0));
+  refTime_p=time0;
+  Double time1(0.0),time(0.0);
+  
+  Int thisscan(-1),lastscan(-1);
+  Int thisfld(-1),lastfld(-1);
+  Int thisspw(-1),lastspw(-1);
+  Int chunk(0);
+  Int ave(-1);
+  Double interval(0.0);
+  if (averaging.time())
+    interval= averaging.timeValue();
+  Double avetime1(-1.0);
+
+  vi.originChunks();
+  vi.origin();
+
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
+    Int iter(0);
+    for (vi.origin(); vi.more();vi++,iter++) {
+
+      time1=vb.time()(0);  // first time in this vb
+      thisscan=vb.scan()(0);
+      thisfld=vb.fieldId();
+      thisspw=vb.spectralWindow();
+
+      // New chunk means new ave interval, IF....
+      if ( // (!combfld && !combspw) ||                // not combing fld nor spw, OR
+	  ((time1-avetime1)>interval) ||         // (combing fld and/or spw) and solint exceeded, OR
+	  ((time1-avetime1)<0.0) ||                // a negative time step occurs, OR
+	  (!combscan && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
+	  (!combspw && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
+	  (!combfld && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR
+	  (ave==-1))  {                            // this is the first interval
+
+	if (verby) {
+	  cout << "--------------------------------" << endl;
+	  cout << boolalpha << interval << " " 
+	       << ((time1-avetime1)>interval)  << " "
+	       << ((time1-avetime1)<0.0) << " "
+	       << (!combscan && (thisscan!=lastscan)) << " "
+	       << (!combspw && (thisspw!=lastspw)) << " "
+	       << (!combfld && (thisfld!=lastfld)) << " "
+	       << (ave==-1) << " "
+	       << endl;
+	}
+
+	avetime1=time1;  // for next go
+	ave++;
+	
+	if (verby) cout << "ave = " << ave << endl;
+
+
+	// increase size of nIterPerAve array, if needed
+	if (nIterPerAve.nelements()<uInt(ave+1))
+	  nIterPerAve.resize(nIterPerAve.nelements()+100,True);
+	nIterPerAve(ave)=0;
+      }
+      
+      // Increment chunk-per-sol count for current solution
+      nIterPerAve(ave)++;
+      
+      if (verby) {
+	cout << "          ck=" << chunk << " " << avetime1-time0 << endl;
+	time=vb.time()(0);
+	cout  << "                 " << "vb=" << iter << " ";
+	cout << "ar=" << vb.arrayId() << " ";
+	cout << "sc=" << vb.scan()(0) << " ";
+	if (!combfld) cout << "fl=" << vb.fieldId() << " ";
+	if (!combspw) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << "t=" << floor(time-time0)  << " (" << floor(time-avetime1) << ") ";
+	if (combfld) cout << "fl=" << vb.fieldId() << " ";
+	if (combspw) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << endl;
+	
+      }
+      
+      lastscan=thisscan;
+      lastfld=thisfld;
+      lastspw=thisspw;
+    }
+  }
+  
+  Int nAve(ave+1);
+  nIterPerAve.resize(nAve,True);
+  
+  if (verby)  cout << "nIterPerAve = " << nIterPerAve << endl;
+
+
+  if (nChunk_ != nAve) increaseChunks(nAve);
+  
+}
+
+
+#define PMSC_DELETE(VAR)                                                \
+  for(unsigned int j = 0; j < VAR.size(); j++)  			\
+    if(VAR[j]) delete VAR[j];                                           \
+  VAR.resize(0,True);
 
 void PlotMSCache::release(const vector<PMS::Axis>& axes) {
     for(unsigned int i = 0; i < axes.size(); i++) {
@@ -389,8 +762,9 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         case PMS::ELEVATION: PMSC_DELETE(el_) break;
         case PMS::PARANG: PMSC_DELETE(parang_) break;
         case PMS::ROW: PMSC_DELETE(row_) break;
-        }
-        
+	default: break;
+        }        
+
         loadedAxes_[axes[i]] = false;
         
         if(dataLoaded_ && axisIsMetaData(axes[i])) dataLoaded_ = false;
@@ -483,6 +857,7 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
 
       plmask_[ichk]->resize(nsh);
       (*plmask_[ichk]) = operator>(partialNFalse(*flag_[ichk],csh).reform(nsh),uInt(0));
+
 
       //    }
   }
@@ -818,11 +1193,32 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {
 
 void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
+
+
   ss << "Scan=" << getScan() << " ";
   ss << "Field=" << getField() << " ";
   ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
-  ss << "BL=" << getAnt1() << "-" << getAnt2() << " ";
-  ss << "Spw=" << getSpw() << " ";
+  ss << "BL=";
+
+  Int ant1=Int(getAnt1());
+  if (ant1<0)
+    ss << "*-";
+  else
+    ss << ant1 << "-";
+
+  Int ant2=Int(getAnt2());
+  if (ant2<0)
+    ss << "* ";
+  else
+    ss << ant2 << " ";
+
+  Int spw=Int(getSpw());
+  ss << "Spw=";
+  if (spw<0)
+    ss << "* ";
+  else
+    ss << spw << " ";
+
   ss << "Chan=" << getChan() << " ";
   ss << "Freq=" << getFreq() << " ";
   ss << "Corr=" << getCorr() << " ";
@@ -900,9 +1296,9 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
       baseline_[vbnum]->resize(vb.nRow());
       Vector<Int> bl(*baseline_[vbnum]);
       for (Int irow=0;irow<vb.nRow();++irow)
-	bl(irow)=40 * a1(irow) - (a1(irow) * (a1(irow) - 1)) / 2 + a2(irow) - a1(irow);
+	bl(irow)=chshapes_(3,0) * a1(irow) - (a1(irow) * (a1(irow) - 1)) / 2 + a2(irow) - a1(irow);
+	//	bl(irow)=40 * a1(irow) - (a1(irow) * (a1(irow) - 1)) / 2 + a2(irow) - a1(irow);
       //	bl(irow)=40 * a2(irow) - (a2(irow) * (a2(irow) - 1)) / 2 + a1(irow) - a2(irow);
-      //	bl(irow)=chshapes_(3,0) * a1(irow) - (a1(irow) * (a1(irow) - 1)) / 2 + a2(irow) - a1(irow);
       break;
     }
     case PMS::UVDIST: {
@@ -1119,6 +1515,8 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
 
 void PlotMSCache::computeRanges() {
 
+  cout << "Computing ranges..." << flush;
+
     Vector<Int> plaxes(2);
     plaxes(0)=currentX_;
     plaxes(1)=currentY_;
@@ -1128,9 +1526,12 @@ void PlotMSCache::computeRanges() {
     limits(0)=limits(2)=DBL_MAX;
     limits(1)=limits(3)=-DBL_MAX;
 
+    Int totalN(0);
     for (Int ic=0;ic<nChunk_;++ic) {
 
-      if (ntrue(*plmask_[ic])>0) {
+      Int thisN=ntrue(*plmask_[ic]);
+      if (thisN >0) {
+	totalN+=thisN;
 	for (Int ix=0;ix<2;++ix) {
 
 	  // Arrange collapsed-on-axis mask
@@ -1180,7 +1581,6 @@ void PlotMSCache::computeRanges() {
 	  default:
 	    break;
 	  }
-
 
 	  // Now calculate masked limits
 
@@ -1499,7 +1899,8 @@ void PlotMSCache::computeRanges() {
     minY_=limits(2);
     maxY_=limits(3);
 
-    cout << "Ranges: dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << endl;
+    cout << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << endl;
+    cout << "Npoints = " << totalN << endl;
 
 }
 

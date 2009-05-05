@@ -47,7 +47,7 @@ class PlotRangeWidget : public QtEditingWidget, Ui::RangeWidget {
     
 public:
     // Constructor which takes an optional parent widget.
-    PlotRangeWidget(QWidget* parent = NULL);
+    PlotRangeWidget(bool customOnTwoLines = false, QWidget* parent = NULL);
     
     // Destructor.
     ~PlotRangeWidget();
@@ -56,7 +56,7 @@ public:
     // Gets/Sets whether or not the displayed range widgets are for dates or
     // not.
     // <group>
-    bool isDate() const;    
+    bool isDate() const;
     void setIsDate(bool isDate = true);
     // </group>
     
@@ -64,12 +64,12 @@ public:
     bool isCustom() const;
     
     // Gets/Sets the currently set range.
-    pair<double, double> getRange() const;    
+    pair<double, double> getRange() const;
     void getRange(double& from, double& to) {
         pair<double, double> r = getRange();
         from = r.first;
         to = r.second;
-    }    
+    }
     void setRange(bool isDate, bool isCustom, double from, double to);
     // </group>
     

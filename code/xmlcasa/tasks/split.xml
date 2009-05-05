@@ -37,6 +37,10 @@ not yet possible to both time average and frequency average a data set.
 			<value>data</value>
 			<value>corrected</value>
 			<value>model</value>
+                        <value>data,corrected</value>
+                        <value>data,model</value>
+                        <value>corrected,model</value>
+                        <value>data,corrected,model</value>
                         <value>all</value>
 		</allowed>
 	</param>
@@ -109,7 +113,8 @@ not yet possible to both time average and frequency average a data set.
 
         datacolumn -- Which data column to split out
                 default='corrected'; example: datacolumn='data'
-                Options: 'data', 'corrected', 'model'
+                Options: 'data', 'corrected',
+                'model','data,corrected','data,model','corrected,model','data,model,corrected','all'
         --- Data Selection (see help par.selectdata for more detailed information)
 
         field -- Select field using field id(s) or field name(s).

@@ -18,18 +18,20 @@ TEMPLATEEPJ='template2.epj'; # The template EP-Jones table to check the results 
 
 REPOSNAME  = os.environ.get('CASAPATH').split()[0]+"/data/regression/"+REGNAME+'/';
 #REPOSNAME  = 'DataRepos/';
+REUSELOCALREPOS = False;
 #
 #--------------------------------------------------------------
 #
 def pointing_reg():
-    os.system("rm -rf "+THISHOME);
-    os.mkdir(THISHOME);
-
     MYMS      = THISHOME + MS;
     MYIMAGE   = THISHOME + MODELIMAGE;
-    os.system("cp -r " + REPOSNAME+MS         + " " + MYMS);
-    os.system("cp -r " + REPOSNAME+MODELIMAGE + " " + MYIMAGE);
-#    os.system("cp -r ./DataRepos/" + EPJCACHE   + " " + THISHOME);
+    if (REUSELOCALREPOS):
+        os.system("rm -rf " + THISHOME+EPJTABLE);
+    else:
+        os.system("rm -rf "+THISHOME);
+        os.mkdir(THISHOME);
+        os.system("cp -r " + REPOSNAME+MS         + " " + MYMS);
+        os.system("cp -r " + REPOSNAME+MODELIMAGE + " " + MYIMAGE);
 
     cb.open(MYMS);
     

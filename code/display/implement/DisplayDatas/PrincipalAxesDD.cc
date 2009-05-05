@@ -1820,9 +1820,9 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
       haxis.define("listname", pixelAxisNames(axis));
       haxis.define("ptype", "intrange");
       haxis.define("pmin", uiBase());
-      haxis.define("pmax", dataShape()(axis) - 1 + uiBase());
+      haxis.define("pmax", (Int)dataShape()(axis) - 1 + uiBase());
       haxis.define("default", uiBase());
-      haxis.define("value", itsFixedPosition(axis) + uiBase());
+      haxis.define("value", (Int)itsFixedPosition(axis) + uiBase());
 	// see uiBase() for information about slider position
 	// numbering from either 0 or 1.
       haxis.define("allowunset", False);
@@ -1905,9 +1905,9 @@ Record PrincipalAxesDD::getOptions()
     haxis.define("listname", pixelAxisNames(loc));
     haxis.define("ptype", "intrange");
     haxis.define("pmin", uiBase());
-    haxis.define("pmax", dataShape()(axis) - 1 + uiBase());
+    haxis.define("pmax", (Int)dataShape()(axis) - 1 + uiBase());
     haxis.define("default", uiBase());
-    haxis.define("value", itsFixedPosition(axis) + uiBase());
+    haxis.define("value", (Int)itsFixedPosition(axis) + uiBase());
 	// see uiBase() for information about slider position
 	// numbering from either 0 or 1.
     haxis.define("allowunset", False);

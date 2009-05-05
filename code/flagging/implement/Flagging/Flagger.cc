@@ -383,8 +383,8 @@ namespace casa {
 	    IPosition transposed = shp;
 	    transposed[0]=shp[1]; transposed[1]=shp[0];
 	    Matrix<Int> blist(transposed);
-	    for(Int i=0;i<shp[0];i++)
-	      for(Int j=0;j<shp[1];j++)
+	    for (Int i=0;i<shp[0];i++)
+	      for (Int j=0;j<shp[1];j++)
 		blist(j,i) = baselinelist(i,j);
 	    cout << "Baselines : " << blist << endl;
 	  }
@@ -872,74 +872,60 @@ namespace casa {
 		selrec.mergeField(flagRec, RF_UVRANGE, RecordInterface::OverwriteDuplicates);
 		if (dbg) cout << "uv list (m) : " << templist << endl;
 	      }
-	    
-	  }
+	}
 	
 	// Operation related parameters.
-#if 0
-	if (upcase(opmode).matches("SUMMARY") ) {
-	    /*
-	      RecordDesc flagDesc;       
-	      flagDesc.addField(RF_OPMODE, TpString);
-	      Record flagRec(flagDesc);  
-	      flagRec.define(RF_OPMODE, opmode);
-	      selrec.mergeField(flagRec, RF_OPMODE, RecordInterface::OverwriteDuplicates);
-	    */
+	if (upcase(opmode).matches("SHADOW") ) {
+	    RecordDesc flagDesc;       
+	    flagDesc.addField(RF_SHADOW, TpBool);
+	    Record flagRec(flagDesc);
+	    flagRec.define(RF_SHADOW, True);
+	    selrec.mergeField(flagRec, RF_SHADOW, RecordInterface::OverwriteDuplicates);
+	}
+	
+	/* Flag Autocorrelations too? */
+	if (autocorr) {
+	    RecordDesc flagDesc;       
+	    flagDesc.addField(RF_AUTOCORR, TpBool);
+	    Record flagRec(flagDesc);  
+	    flagRec.define(RF_AUTOCORR, autocorr);
+	    selrec.mergeField(flagRec, RF_AUTOCORR, RecordInterface::OverwriteDuplicates);
+	}
+	
+	/* Unflag! */
+	if (unflag) {
+	    RecordDesc flagDesc;       
+	    flagDesc.addField(RF_UNFLAG, TpBool);
+	    Record flagRec(flagDesc);  
+	    flagRec.define(RF_UNFLAG, unflag);
+	    selrec.mergeField(flagRec, RF_UNFLAG, RecordInterface::OverwriteDuplicates);
+	}
+	
+	/* Reset flags before applying new ones */
+	// ( I think... )
+	/*
+	  {
+	  RecordDesc flagDesc;       
+	  flagDesc.addField(RF_RESET, TpBool);
+	  Record flagRec(flagDesc);  
+	  flagRec.define(RF_RESET, True);
+	  selrec.mergeField(flagRec, RF_RESET, RecordInterface::OverwriteDuplicates);
 	  }
-#endif
-	else {
-
-	    if (upcase(opmode).matches("SHADOW") ) {
-		RecordDesc flagDesc;       
-		flagDesc.addField(RF_SHADOW, TpBool);
-		Record flagRec(flagDesc);
-		flagRec.define(RF_SHADOW, True);
-		selrec.mergeField(flagRec, RF_SHADOW, RecordInterface::OverwriteDuplicates);
-	    }
-	    
-	    /* Flag Autocorrelations too? */
-	    if (autocorr) {
-		RecordDesc flagDesc;       
-		flagDesc.addField(RF_AUTOCORR, TpBool);
-		Record flagRec(flagDesc);  
-		flagRec.define(RF_AUTOCORR, autocorr);
-		selrec.mergeField(flagRec, RF_AUTOCORR, RecordInterface::OverwriteDuplicates);
-	      }
-	    
-	    /* Unflag! */
-	    if (unflag) {
-		RecordDesc flagDesc;       
-		flagDesc.addField(RF_UNFLAG, TpBool);
-		Record flagRec(flagDesc);  
-		flagRec.define(RF_UNFLAG, unflag);
-		selrec.mergeField(flagRec, RF_UNFLAG, RecordInterface::OverwriteDuplicates);
-	      }
-	    
-	    /* Reset flags before applying new ones */
-	    // ( I think... )
-	    /*
-	      {
-	      RecordDesc flagDesc;       
-	      flagDesc.addField(RF_RESET, TpBool);
-	      Record flagRec(flagDesc);  
-	      flagRec.define(RF_RESET, True);
-	      selrec.mergeField(flagRec, RF_RESET, RecordInterface::OverwriteDuplicates);
-	      }
-	    */
-	    
-	    /* Clip/FlagRange */
-	    /*Jira Casa 212 : Check if "clipexpr" has multiple 
-	      comma-separated expressions
-	      and loop here, creating multiple clipRecs. 
-	      The RFASelector will handle it. */
-	    if (clipexpr.length() && cliprange.nelements()==2 &&
-		cliprange[0]<cliprange[1])
-	      {
+	*/
+	
+	/* Clip/FlagRange */
+	/*Jira Casa 212 : Check if "clipexpr" has multiple 
+	  comma-separated expressions
+	  and loop here, creating multiple clipRecs. 
+	  The RFASelector will handle it. */
+	if (clipexpr.length() && cliprange.nelements()==2 &&
+	    cliprange[0]<cliprange[1])
+	    {
 		RecordDesc flagDesc;       
 		if ( outside )
-		  flagDesc.addField(RF_CLIP, TpRecord);
+		    flagDesc.addField(RF_CLIP, TpRecord);
 		else
-		  flagDesc.addField(RF_FLAGRANGE, TpRecord);
+		    flagDesc.addField(RF_FLAGRANGE, TpRecord);
 		
 		Record flagRec(flagDesc);  
 		
@@ -971,12 +957,11 @@ namespace casa {
 		flagRec2.define(RF_COLUMN, clipcolumn);
 		selrec.mergeField(flagRec2, RF_COLUMN, RecordInterface::OverwriteDuplicates);
 		
-	      }
+	    }
 	    
-	    /* Quack ! */
-	    if (quackinterval>0.0)
-	      {
-		
+	/* Quack ! */
+	if (quackinterval>0.0)
+	    {
 		//Reset the Visiter to have SCAN on top of sort
 		Block<int> sort2(5);
 		sort2[0] = MS::SCAN_NUMBER;
@@ -998,12 +983,12 @@ namespace casa {
 		quackparams[1] = 0.0;
 		flagRec.define(RF_QUACK, quackparams);
 		selrec.mergeField(flagRec, RF_QUACK, RecordInterface::OverwriteDuplicates);
-	      }
-	} /* end if opmode = ... */
+	    }
+	/* end if opmode = ... */
 	
 	/* Add this agent to the list */
 	addAgent(selrec);
-      }
+    }
     
     return True;
   }

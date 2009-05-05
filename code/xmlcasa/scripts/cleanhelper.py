@@ -298,9 +298,11 @@ class cleanhelper:
                 ia.removefile('__temp_mask2')
             #make image a mask image i.e 1 and 0 only
             ia.open(outputmask)
-            arr=ia.getchunk()
-            arr[arr>0.01]=1
-            ia.putchunk(arr)
+            ###getchunk is a mem hog
+            #arr=ia.getchunk()
+            #arr[arr>0.01]=1
+            #ia.putchunk(arr)
+            ia.calc(pixels='iif('+outputmask+'>0.01, 1, 0)')
             ia.close()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
@@ -650,19 +652,22 @@ class cleanhelper:
             tmpshp[0]=shp[0]
             tmpshp[1]=shp[1]
             ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True)
-            dat=ib.getchunk()
+            #dat=ib.getchunk()
             ib.done()
             ia.fromshape(outfile=outfile, shape=shp, csys=self.csys, overwrite=True)
-            arr=ia.getchunk()
-            for k in range(shp[2]):
-                for j in range(shp[3]):
-                    if(len(dat.shape)==2):
-                        arr[:,:,k,j]=dat
-                    elif(len(dat.shape)==3):
-                        arr[:,:,k,j]=dat[:,:,0]
-                    else:
-                        arr[:,:,k,j]=dat[:,:,0,0]
-            ia.putchunk(arr)
+            ##getchunk is a massive memory hog
+            ###so going round in a funny fashion
+            #arr=ia.getchunk()
+            #for k in range(shp[2]):
+            #    for j in range(shp[3]):
+            #        if(len(dat.shape)==2):
+            #            arr[:,:,k,j]=dat
+            #        elif(len(dat.shape)==3):
+            #            arr[:,:,k,j]=dat[:,:,0]
+            #        else:
+            #            arr[:,:,k,j]=dat[:,:,0,0]
+            #ia.putchunk(arr)
+            ia.calc('__temp_mask[index3 in [0]]+__looloo') 
             ia.done()
             ia.removefile('__looloo')
         else:

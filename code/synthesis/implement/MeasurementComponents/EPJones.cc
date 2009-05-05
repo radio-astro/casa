@@ -61,8 +61,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SolvableVisJones(vs),
     pointPar_(),
     ms_p(0), vs_p(&vs),
-    maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500)
+    polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500),
+    maxTimePerSolution(0), 
+    minTimePerSolution(10000000), 
+    avgTimePerSolution(0),
+    timer()
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -76,8 +79,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SolvableVisJones(vs),
     pointPar_(),
     ms_p(&ms), vs_p(&vs),
-    maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
-    timer(), polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500)
+    polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500),
+    maxTimePerSolution(0), 
+    minTimePerSolution(10000000), 
+    avgTimePerSolution(0),
+    timer()
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -361,12 +367,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // (ultimately change the data structures to not need these copies)
     //
     IPosition ndx(1);
-    Cube<Float> pointingOffsets(2,1,nAnt());
+    Cube<Float> pointingOffsets(nPar(),1,nAnt());
     for(ndx(0)=0;ndx(0)<nAnt();ndx(0)++)
-      {
-	pointingOffsets(0,0,ndx(0)) = solveRPar()(0,0,ndx(0));//pointPar_(0,0,ndx(0));
-	pointingOffsets(1,0,ndx(0)) = solveRPar()(1,0,ndx(0));//pointPar_(1,0,ndx(0));
-      }
+      for(Int j=0;j<nPar();j++)
+	{
+	  // Use solveRPar()(nPar,0,Ant)
+	  pointingOffsets(j,0,ndx(0)) = solveRPar()(j,0,ndx(0));//pointPar_(0,0,ndx(0));
+	}
     //
     // Size differentiated model
     //
@@ -439,12 +446,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // (ultimately change the data structures to not need these copies)
     //
     IPosition ndx(1);
-    Cube<Float> pointingOffsets(2,1,nAnt());
+    Cube<Float> pointingOffsets(nPar(),1,nAnt());
     for(ndx(0)=0;ndx(0)<nAnt();ndx(0)++)
-      {
-	pointingOffsets(0,0,ndx(0)) = solveRPar()(0,0,ndx(0));//pointPar_(0,0,ndx(0));
-	pointingOffsets(1,0,ndx(0)) = solveRPar()(1,0,ndx(0));//pointPar_(1,0,ndx(0));
-      }
+      for(Int j=0;j<nPar();j++)
+	{
+	  pointingOffsets(j,0,ndx(0)) = solveRPar()(0,0,ndx(0));//pointPar_(0,0,ndx(0));
+	}
     //
     // Model vis shape must match visibility
     //
@@ -742,17 +749,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void EPJones::printActivity(const Int slotNo, const Int fieldId, 
+  void EPJones::printActivity(const Int nSlots, const Int slotNo, const Int fieldId, 
 			      const Int spw, const Int nSolutions)
   {
-    Int nSlots, nMesg;
+    Int nMesg;
 
-    nSlots = rcs().nTime(spw);
+    //    nSlots = rcs().nTime(spw);
     
+    uInt caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "600.0");
+    uInt cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.1");
+    Float userPrintActivityInterval_p, userPrintActivityFraction_p;
+    String ca_str = Aipsrc::get(caiRC_p);
+    std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
+    userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
+    ca_str = Aipsrc::get(cafRC_p);
+    std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
+    userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
+
     Double timeTaken = timer.all();
     if (maxTimePerSolution < timeTaken) maxTimePerSolution = timeTaken;
     if (minTimePerSolution > timeTaken) minTimePerSolution = timeTaken;
     avgTimePerSolution += timeTaken;
+
     Double avgT =  avgTimePerSolution/(nSolutions>0?nSolutions:1);
     //
     // Boost the no. of messages printed if the next message, based on
@@ -760,14 +778,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // longer than my (SB) patience would permit!  The limit of
     // patience is set to 10 min.
     //
-    Float boost = avgT*printFraction(nSlots)*nSlots/(10*60.0);
-    boost = (boost < 1.0)? 1.0:boost;
-    nMesg = (Int)(nSlots*printFraction(nSlots)/boost);
-    nMesg = (nMesg<1?1:nMesg);
-    
+    Float boost = userPrintActivityInterval_p/avgT;
+    boost = (boost < 1.0)? 1.0 : nSlots*userPrintActivityFraction_p;
+    nMesg = (Int)boost;
+
     Int tmp=abs(nSlots-slotNo); Bool print;
     print = False;
-    if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
+    if (nMesg <= 0) print=False;
+    else if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
     else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=True;
     else print=False;
 
@@ -775,8 +793,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Int f = (Int)(100*(slotNo+1)/(nSlots>0?nSlots:1));
 	logSink()<< LogIO::NORMAL 
-		 << "Spw=" << spw << " slot=" << slotNo << " field=" 
-		 << fieldId << ". Done " << f << "%"
+		 << "Spw=" << spw << " slot=" << slotNo << "/" << nSlots
+		 << " field=" << fieldId << ". Done " << f << "%"
 		 << " Time taken per solution (max/min/avg): "
 		 << maxTimePerSolution << "/" 
 		 << (minTimePerSolution<0?1:minTimePerSolution) << "/"
@@ -847,7 +865,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		focusChan()=ich;
 		Bool goodSoln;
 		timer.mark();
-		//	      goodSoln = (sds.solve(ve, *this, svb,nAnt(),islot(spw))<0)?False:True;
+// 		goodSoln = (sds.solve(ve, *this, svb,nAnt(),islot(spw))<0)?False:True;
 		goodSoln = (sds.solve2(ve,vi,*this, nAnt(),islot(spw))<0)?False:True;
 //   		{
 //   		  cout << "Solutions = " << MVTime(vb.time()(0)/86400.0) 
@@ -859,10 +877,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    //
 		    // Apply transform (if any) to the solutions.
 		    //
-// 		    postSolveMassage(vb);
+//  		    postSolveMassage(vb);
 		    totalGoodSol=True;
 		    keep(islot(spw));
-		    printActivity(islot(spw),vi.fieldId(),spw,nGood);	      
+		    Int n=rcs().nTime(spw);
+		    printActivity(n,islot(spw),vi.fieldId(),spw,nGood);	      
 		  }
 	      } // parameter channels
 	    if (totalGoodSol)	nGood++;
@@ -893,11 +912,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // (ultimately change the data structures to not need these copies)
     //
     IPosition ndx(1);
-    Cube<Float> pointingOffsets(2,1,nAnt());
+    //    Cube<Float> pointingOffsets(2,1,nAnt());
+    Cube<Float> pointingOffsets(nPar(),1,nAnt());
     for(ndx(0)=0;ndx(0)<nAnt();ndx(0)++)
       {
-	pointingOffsets(0,0,ndx(0)) = solveRPar()(0,0,ndx(0));//pointPar_(0,0,ndx(0));
-	pointingOffsets(1,0,ndx(0)) = solveRPar()(1,0,ndx(0));//pointPar_(1,0,ndx(0));
+	// Use solveRPar()(nPar,0,Ant)
+	for(Int j=0;j<nPar();j++)
+	  {
+	    pointingOffsets(j,0,ndx(0)) = solveRPar()(j,0,ndx(0));//pointPar_(0,0,ndx(0));
+	  }
       }
     //    cout << "EPJ: " << pointingOffsets << endl;
     //

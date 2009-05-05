@@ -214,7 +214,7 @@ bool PlotMSPlot::updateMS() {
         columns[4]=MS::TIME;
         
         // Open VisSet.
-        itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),
+        itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),False,
                                 interval);
         itsVisSet_->selectChannel(chansel);
         return true;

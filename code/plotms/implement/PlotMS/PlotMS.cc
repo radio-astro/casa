@@ -123,13 +123,6 @@ PlotMSLogger* PlotMS::loggerFor(PlotMSLogger::Event event) {
     else                               return NULL;
 }
 
-void PlotMS::triggerAction(PlotMSAction::Type type) {
-    PlotMSAction* act = PlotMSAction::action(type, itsPlotter_);
-    if(act == NULL) return;
-    act->doAction(this);
-    delete act;
-}
-
 
 // Private Methods //
 

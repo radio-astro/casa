@@ -31,11 +31,11 @@
         <x>11</x>
         <y>49</y>
         <width>241</width>
-        <height>22</height>
+        <height>31</height>
        </rect>
       </property>
       <property name="toolTip" >
-       <string>Names of all regions stored in image</string>
+       <string>Names of all regions stored in image or loaded from files</string>
       </property>
      </widget>
      <widget class="QPushButton" name="showOrHide" >
@@ -102,6 +102,9 @@
         <height>23</height>
        </rect>
       </property>
+      <property name="toolTip" >
+       <string>blank for all polarizations or list of polarizations</string>
+      </property>
      </widget>
      <widget class="QCheckBox" name="planeOnlyCB" >
       <property name="geometry" >
@@ -135,7 +138,7 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>If checked region apply to all channels or list of channel given on the right</string>
+       <string>If checked region apply to all channels listed on the right</string>
       </property>
       <property name="text" >
        <string>Channels:</string>
@@ -151,7 +154,7 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>when checked region apply to all polarizations or the list given on the right</string>
+       <string>if checked region apply to all polarizations listed on the right</string>
       </property>
       <property name="text" >
        <string>Polarizations:</string>
@@ -189,6 +192,9 @@
         <height>26</height>
        </rect>
       </property>
+      <property name="toolTip" >
+       <string>reset current drawing list</string>
+      </property>
       <property name="text" >
        <string>Reset</string>
       </property>
@@ -205,15 +211,15 @@
        <rect>
         <x>290</x>
         <y>10</y>
-        <width>56</width>
+        <width>104</width>
         <height>26</height>
        </rect>
       </property>
       <property name="toolTip" >
-       <string>load an AipsBox or ds9 region format file </string>
+       <string>load a region from a file </string>
       </property>
       <property name="text" >
-       <string>Load...</string>
+       <string>Load from File</string>
       </property>
      </widget>
      <widget class="QToolButton" name="saveRGNFile" >
@@ -221,15 +227,15 @@
        <rect>
         <x>160</x>
         <y>10</y>
-        <width>76</width>
+        <width>89</width>
         <height>26</height>
        </rect>
       </property>
       <property name="toolTip" >
-       <string>save in an external file '.rgn'. Will be deprecated</string>
+       <string>save the region in to a file</string>
       </property>
       <property name="text" >
-       <string>Save As...</string>
+       <string>Save to File</string>
       </property>
      </widget>
      <widget class="QToolButton" name="saveInImage" >
@@ -240,6 +246,9 @@
         <width>103</width>
         <height>26</height>
        </rect>
+      </property>
+      <property name="toolTip" >
+       <string>save the region in to the image</string>
       </property>
       <property name="text" >
        <string>Save in Image</string>
@@ -253,6 +262,9 @@
         <width>361</width>
         <height>23</height>
        </rect>
+      </property>
+      <property name="toolTip" >
+       <string>the name of the image region (to be saved or loaded)</string>
       </property>
      </widget>
     </widget>
