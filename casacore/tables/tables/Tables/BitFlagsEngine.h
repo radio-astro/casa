@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitFlagsEngine.h 20539 2009-03-20 08:54:16Z gervandiepen $
+//# $Id: BitFlagsEngine.h 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #ifndef TABLES_BITFLAGSENGINE_H
 #define TABLES_BITFLAGSENGINE_H
@@ -32,6 +32,42 @@
 #include <tables/Tables/BaseMappedArrayEngine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+
+  // <summary> Non-templated Helper class to handle the mask. </summary>
+  // <visibility=local>
+  class BFEngineMask
+  {
+  public:
+    // Form the mask as given.
+    explicit BFEngineMask (uInt mask=0xffffffff);
+
+    // Form the mask from the given keywords defining the bits.
+    BFEngineMask (const Array<String>& keys, uInt defaultMask);
+
+    // Make the mask from the given keywords defining the bits.
+    void makeMask (const ROTableColumn& column);
+
+    // Form the read mask from the specification.
+    // If keywords are given, the mask is formed from them.
+    void fromRecord (const RecordInterface& spec, const ROTableColumn& column,
+                     const String& prefix);
+
+    // Store the info in a Record.
+    void toRecord (RecordInterface& spec, const String& prefix) const;
+
+    // Get the mask.
+    uInt getMask() const
+      { return itsMask; }
+
+    // Get the mask keywords.
+    const Array<String>& getKeys() const
+      { return itsMaskKeys; }
+
+  private:
+    Array<String> itsMaskKeys;
+    uInt          itsMask;
+  };
 
 
   // <summary>
@@ -50,89 +86,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // </prerequisite>
 
   // <synopsis> 
-  // BitFlagsEngine is a virtual column engine which scales an array
-  // of one type to another type to save disk storage.
-  // This resembles the classic AIPS compress method which scales the
-  // data from float to short.
-  // The scale factor and offset value can be given in two ways:
+  // BitFlagsEngine is a virtual column engine which maps an integer column
+  // containing flag bits to a Bool column. It can be used in a MeasurementSet
+  // to have multiple flag categories, yet use all existing software that
+  // deals with the Bool FLAG column.
+  //
+  // The engine support read as well as write access.
+  // For both cases a mask can be defined telling which bits have to be taken
+  // into account. For example, when writing to the Bool FLAG column, the data
+  // in the bitflags column twill be or-ed with the bits as defined in the
+  // writemask. Similary when reading FLAG, only the bits of the readmask are
+  // taken into account.
+  //
+  // The masks can be defined in two ways:
   // <ul>
-  //  <li> As a fixed value which is used for all arrays in the column.
-  //  <li> As the name of a column. In this way each array in a
-  //         column can have its own scale and offset value.
-  //         The scale and offset value in a row must be put before
-  //         the array is put and should not be changed anymore.
+  //  <li> The mask can be given directly as an integer value.
+  //       The default write mask is 1 (thus only bit 0), while the default
+  //       read mask is all bits.
+  //  <li> Symbolic names for mask bits can be defined as keywords in the
+  //       flagbits column. They define the bit value, not the bit number.
+  //       It makes it possible to combine bits in a keyword.
+  //       The keywords are stored in a subrecord of keyword FLAGSETS.
+  //       Example of keyword and their values could be:
+  //       <br>RFI=1, CAL=2, CLIP=4, OTHER=8, RFICAL=3
+  //       <br>Note that in this example RFICAL is defined such that it
+  //       contains RFI and CAL.
   // </ul>
-  // It is also possible to have a variable scale factor with a fixed offset
-  // value.
-  // As in FITS the scale and offset values are used as:
-  // <br><src> True_value = Stored_value * scale + offset; </src>
+  // A mask can be set at construction time, but it can be changed at runtime
+  // using the <src>setProperties</src> function.
+  // The masks are kept in special keywords (which are different from the
+  // keywords defining the flag bits), so it is possible to change a mask
+  // by changing those keywords before opening a table. However, that is
+  // not recommended.
   //
-  // An engine object should be used for one column only, because the stored
-  // column name is part of the engine. If it would be used for more than
-  // one column, they would all share the same stored column.
-  // When the engine is bound to a column, it is checked if the name
-  // of that column matches the given virtual column name.
-  //
-  // The engine can be used for a column containing any kind of array
-  // (thus direct or indirect, fixed or variable shaped)) as long as the
-  // virtual array can be stored in the stored array. Thus a fixed shaped
-  // virtual can use a variable shaped stored, but not vice versa.
-  // A fixed shape indirect virtual can use a stored with direct arrays.
-  //
-  // This class can also serve as an example of how to implement
-  // a virtual column engine.
+  // BitFlagsEngine is known to the table system for data types uChar, Short,
+  // and Int.
   // </synopsis> 
 
   // <motivation>
-  // This class allows to store data in a smaller representation.
-  // It is needed to resemble the classic AIPS compress option.
-  // It adds the scale and offset value on a per row basis.
-  //
-  // Because the engine can serve only one column, it was possible to
-  // combine the engine and the column functionality in one class.
-  // This has been achieved using multiple inheritance.
-  // The advantage of this is that only one templated class is used,
-  // so less template instantiations are needed.
+  // The FLAG_CATEGORY defined the Measurement does not work because adding
+  // an extra flag means resizing the entire array which is slow.
+  // This class makes it possible to use an integer column to store flags
+  // and map it directly to a Bool column.
   // </motivation>
 
   // <example>
   // <srcblock>
   // // Create the table description and 2 columns with indirect arrays in it.
-  // // The Int column will be stored, while the double will be
-  // // used as virtual.
+  // // The Int column will be stored, while the Bool will be used as virtual.
   // TableDesc tableDesc ("", TableDesc::Scratch);
-  // tableDesc.addColumn (ArrayColumnDesc<Int> ("storedArray"));
-  // tableDesc.addColumn (ArrayColumnDesc<double> ("virtualArray"));
+  // tableDesc.addColumn (ArrayColumnDesc<Int> ("BitBlags"));
+  // tableDesc.addColumn (ArrayColumnDesc<Bool> ("FLAG"));
   //
   // // Create a new table using the table description.
   // SetupNewTable newtab (tableDesc, "tab.data", Table::New);
   //
-  // // Create the array scaling engine to scale from double to Int
-  // // and bind it to the double column.
+  // // Create the engine and bind the FLAG column to it.
+  // BitFlagsEngine<Int> flagsEngine("FLAG", "BitFlags");
+  // newtab.bindColumn ("FLAG", flagsEngine);
   // // Create the table.
-  // BitFlagsEngine<Int> scalingEngine("virtualArray",
-  //                                             "storedArray", 10);
-  // newtab.bindColumn ("virtualArray", scalingEngine);
   // Table table (newtab);
   //
   // // Store a 3-D array (with dim. 2,3,4) into each row of the column.
   // // The shape of each array in the column is implicitly set by the put
   // // function. This will also set the shape of the underlying Int array.
   // ArrayColumn data (table, "virtualArray");
-  // Array<double> someArray(IPosition(4,2,3,4));
-  // someArray = 0;
+  // Array<Bool> someArray(IPosition(4,2,3,4));
+  // someArray = True;
   // for (uInt i=0, i<10; i++) {          // table will have 10 rows
   //     table.addRow();
   //     data.put (i, someArray)
   // }
   // </srcblock>
+  // The underlying integer array will be stored according to the writemask
+  // which defaults to 1.
   // </example>
 
-  // <templating arg=VirtualType>
-  //  <li> only suited for built-in numerics data types
-  // </templating>
   // <templating arg=StoredType>
-  //  <li> only suited for built-in numerics data types
+  //  <li> only suited for built-in integer data types
   // </templating>
 
   template<typename StoredType> class BitFlagsEngine : public BaseMappedArrayEngine<Bool, StoredType>
@@ -148,17 +179,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     using BaseMappedArrayEngine<Bool,StoredType>::setNames;
 
   public:
-    // Construct an engine to scale all arrays in a column with
-    // the given offset and scale factor.
-    // StoredColumnName is the name of the column where the scaled
+    // Construct an engine to map integer arrays in a column to Bool arrays.
+    // StoredColumnName is the name of the column where the integer
     // data will be put and must have data type StoredType.
     // The virtual column using this engine must have data type Bool.
+    // <br>A mask can be given that specifies which bits to use in the mapping
+    // from StoredType to Bool. Similarly a mask can be given defining which
+    // bits to set when mapping from Bool to StoredType.
     BitFlagsEngine (const String& virtualColumnName,
                     const String& storedColumnName,
                     StoredType readMask=StoredType(0xffffffff),
                     StoredType writeMask=1);
 
-    // Construct from a record specification as created by getmanagerSpec().
+    // Construct an engine to map integer arrays in a column to Bool arrays.
+    // StoredColumnName is the name of the column where the scaled
+    // data will be put and must have data type StoredType.
+    // The virtual column using this engine must have data type Bool.
+    // <br>A mask can be given that specifies which bits to use in the mapping
+    // from StoredType to Bool. Similarly a mask can be given defining which
+    // bits to set when mapping from Bool to StoredType.
+    // The masks are given using the values of keywords in the stored column.
+    // Each keyword should be an integer defining one or more bits and can be
+    // seen as a symbolic name. The keyword values are or-ed to form the mask.
+    // The keywords are stored in a subrecord of keyword FLAGSETS.
+    BitFlagsEngine (const String& virtualColumnName,
+                    const String& storedColumnName,
+                    const Array<String>& readMaskKeys,
+                    const Array<String>& writeMaskKeys);
+
+    // Construct from a record specification as created by dataManagerSpec().
     BitFlagsEngine (const Record& spec);
 
     // Destructor is mandatory.
@@ -174,12 +223,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Record dataManagerSpec() const;
 
     // Get data manager properties that can be modified.
-    // These are READMASK and WRITEMASK.
+    // These are ReadMask, WriteMask, ReadMaskKeys, and WriteMaskKeys.
     // It is a subset of the data manager specification.
     virtual Record getProperties() const;
 
     // Modify data manager properties.
-    // Thety can be READMASK and WRITEMASK.
+    // These are ReadMask, WriteMask, ReadMaskKeys, and/or WriteMaskKeys.
+    // Mask keys should be given as an array of strings giving the keyword
+    // names defining mask bits (similar to the constructor). Mask keys are
+    // only used if not empty.
     virtual void setProperties (const Record& spec);
 
     // Return the name of the class.
@@ -312,10 +364,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Record& spec);
 
   private:
-    StoredType itsReadMask;
-    StoredType itsWriteMask;
+    BFEngineMask itsBFEReadMask;
+    BFEngineMask itsBFEWriteMask;
+    StoredType   itsReadMask;
+    StoredType   itsWriteMask;
+    Bool         itsIsNew;         //# True = new table
   };
-
 
 
 } //# NAMESPACE CASA - END

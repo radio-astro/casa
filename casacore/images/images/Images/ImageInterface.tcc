@@ -147,8 +147,9 @@ Bool ImageInterface<T>::setCoordinateInfo(const CoordinateSystem &coords)
 		Int axislength = shape()(axis);
 		if (axislength > nstokes) {
 		    ok = False;
-		    errmsg << "Stokes axis is length " << axislength <<
-			" but we only have " << nstokes << " stokes values"
+		    errmsg << "Stokes axis " << axis << " is length " << axislength <<
+			" but we only have " << nstokes << 
+			" stokes values in Stokes Coordinate " << stkcrd
 			   << endl;
 		}
 	    }

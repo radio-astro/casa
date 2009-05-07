@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TableExprData.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: TableExprData.h 20574 2009-04-21 15:41:47Z gervandiepen $
 
 
 #ifndef TABLES_TABLEEXPRDATA_H
@@ -223,9 +223,11 @@ public:
   // Get a scalar in the given type.
   // This might involve converting for Double and DComplex.
   // Most default implementations throws an "not possible" exception.
+  // The default <src>getDouble</src> invokes <src>getInt</src>.
   // The default <src>getDComplex</src> invokes <src>getDouble</src>.
   // <group>
   virtual Bool     getBool     (const Block<Int>& fieldNrs) const;
+  virtual Int64    getInt      (const Block<Int>& fieldNrs) const;
   virtual Double   getDouble   (const Block<Int>& fieldNrs) const;
   virtual DComplex getDComplex (const Block<Int>& fieldNrs) const;
   virtual String   getString   (const Block<Int>& fieldNrs) const;
@@ -238,13 +240,12 @@ public:
   // <src>getArrayDouble</src>.
   // <group>
   virtual Array<Bool>     getArrayBool     (const Block<Int>& fieldNrs) const;
+  virtual Array<Int64>    getArrayInt      (const Block<Int>& fieldNrs) const;
   virtual Array<Double>   getArrayDouble   (const Block<Int>& fieldNrs) const;
   virtual Array<DComplex> getArrayDComplex (const Block<Int>& fieldNrs) const;
   virtual Array<String>   getArrayString   (const Block<Int>& fieldNrs) const;
   // </group>
 };
-
-
 
 
 } //# NAMESPACE CASA - END

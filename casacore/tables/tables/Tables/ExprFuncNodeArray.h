@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNodeArray.h 19733 2006-11-10 01:16:01Z gvandiep $
+//# $Id: ExprFuncNodeArray.h 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #ifndef TABLES_EXPRFUNCNODEARRAY_H
 #define TABLES_EXPRFUNCNODEARRAY_H
@@ -81,6 +81,7 @@ public:
     // 'get' Functions to get the desired result of a function
     // <group>
     virtual Array<Bool> getArrayBool (const TableExprId& id);
+    virtual Array<Int64> getArrayInt (const TableExprId& id);
     virtual Array<Double> getArrayDouble (const TableExprId& id);
     virtual Array<DComplex> getArrayDComplex (const TableExprId& id);
     virtual Array<String> getArrayString (const TableExprId& id);
@@ -112,6 +113,10 @@ private:
     NodeDataType argDataType() const
         { return node_p.argDataType(); }
     // </group>
+
+    // Set unit scale factor (needed for sqrt).
+    void setScale (Double scale)
+        { node_p.setScale (scale); }
 
     // Get the collapseAxes for the partial functions.
     // It compares the values with the #dim and removes them if too high.

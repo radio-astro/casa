@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRecord.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ExprNodeRecord.h 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #ifndef TABLES_EXPRNODERECORD_H
 #define TABLES_EXPRNODERECORD_H
@@ -84,6 +84,7 @@ public:
     virtual Bool isDefined (const TableExprId& id);
 
     virtual Bool     getBool     (const TableExprId& id);
+    virtual Int64    getInt      (const TableExprId& id);
     virtual Double   getDouble   (const TableExprId& id);
     virtual DComplex getDComplex (const TableExprId& id);
     virtual String   getString   (const TableExprId& id);
@@ -130,10 +131,11 @@ public:
     virtual Bool isDefined (const TableExprId& id);
     virtual const IPosition& getShape (const TableExprId& id);
 
-    virtual Array<Bool> getArrayBool         (const TableExprId& id);
-    virtual Array<Double> getArrayDouble     (const TableExprId& id);
+    virtual Array<Bool>     getArrayBool     (const TableExprId& id);
+    virtual Array<Int64>    getArrayInt      (const TableExprId& id);
+    virtual Array<Double>   getArrayDouble   (const TableExprId& id);
     virtual Array<DComplex> getArrayDComplex (const TableExprId& id);
-    virtual Array<String> getArrayString     (const TableExprId& id);
+    virtual Array<String>   getArrayString   (const TableExprId& id);
 
 protected:
     Block<Int> fieldNrs_p;

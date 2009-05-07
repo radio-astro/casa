@@ -1290,7 +1290,7 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
     IPosition imshape = subim->shape();
     if (imshape[spectralPixelAxis[0]] == 1) {
       delete subim;
-      *itsLog << LogIO::SEVERE
+      *itsLog << LogIO::WARN
 	      << "There is only one channel in the selected region."
 	      << LogIO::POST;
       return 0;
@@ -2335,7 +2335,7 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
     PtrHolder<ImageInterface<Float> > residImage;
     ImageInterface<Float>* pResid=0;
     if (makeExternalImage (residImage, residFile, cSys, imageShape,
-			   subImage, *itsLog, True, True, False))
+			   subImage, *itsLog, overwrite, True, False))
       pResid = residImage.ptr()->cloneII();
 
     // Create optional disk image holding fit
@@ -2343,7 +2343,7 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
     PtrHolder<ImageInterface<Float> > fitImage;
     ImageInterface<Float>* pFit=0;
     if (makeExternalImage (fitImage, fitFile, cSys, imageShape,
-			   subImage, *itsLog, True, False, False))
+			   subImage, *itsLog, overwrite, False, False))
       pFit = fitImage.ptr();
 
     // Make fitter

@@ -19,20 +19,32 @@
 
 -include makedefs
 
+###
+### defaults setup below:
+###
+###   CC:       C compiler
+###   C++:      C++ compiler
+###   FC:       fortran compiler
+###   OPT:      optimization level
+###   DESTDIR:  root dir for where build will be stored
+###   INSTDIR:  root dir for final installation
+###
+
+ifeq "$(OPT)" ""
 OPT := -O2
+endif
 
+ifeq "$(C++)" ""
 C++ := c++
-CXXFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW
+endif
 
+ifeq "$(CC)" ""
 CC  := gcc
+endif
+
 CFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW
-
-FC  := 
+CXXFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW
 FFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW
-
-DESTDIR := 
-INSTDIR :=
-ARCH := 
 
 DEP := 1
 ONELIB := 0
@@ -47,7 +59,6 @@ assay := $(shell which assay 2> /dev/null)
 ifeq "$(OS)" "darwin"
 SO := dylib
 SOV := $(VERSION).dylib
-#INC :=
 endif
 ifeq "$(OS)" "linux"
 SO := so
@@ -90,13 +101,12 @@ INCDIR := $(DESTDIR)/include
 ##
 ifeq "$(FC)" ""
 FC  := $(shell type gfortran 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
-ifneq "$(FC)" ""
-FC_LIB := -lgfortran
 endif
-endif
-
 ifeq "$(FC)" ""
 FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+endif
+ifneq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
+FC_LIB := -lgfortran
 endif
 
 ifeq "$(FC)" ""

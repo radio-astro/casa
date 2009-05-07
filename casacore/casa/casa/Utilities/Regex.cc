@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.cc 20438 2008-11-21 07:44:08Z gervandiepen $
+//# $Id: Regex.cc 20571 2009-04-17 10:11:34Z gervandiepen $
 
 // Regex class implementation
 
@@ -303,6 +303,7 @@ String Regex::fromSQLPattern(const String &pattern)
 	Char c = pattern[i];
 	switch (c) {
 	case '%':
+	    result[len++] = '.';
 	    result[len++] = '*';
 	    break;
 	case '_':
