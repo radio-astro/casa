@@ -49,11 +49,14 @@ class cleanhelper:
             cell=[cell, cell]
         elif (type(cell) != list):
             raise TypeError, "parameter cell is not understood"
-        cellx=cell[0]
-        celly=cell[1]
-        if((type(cell[0])==int) or (type(cell[0])==float)):
-            cellx=qa.quantity(cell[0], 'arcsec')
-            celly=qa.quantity(cell[1], 'arcsec')
+        cellx=qa.quantity(cell[0], 'arcsec')
+        celly=qa.quantity(cell[1], 'arcsec')
+        if(cellx['unit']==''):
+            #string with no units given
+            cellx['unit']='arcsec'
+        if(celly['unit']==''):
+            #string with no units given
+            celly['unit']='arcsec'
         if((type(imsize)==list) and (len(imsize)==1)):
             imsize.append(imsize[0])
         elif(type(imsize)==int):

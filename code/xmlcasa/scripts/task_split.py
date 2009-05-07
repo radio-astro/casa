@@ -35,7 +35,7 @@ def split(vis,outputvis,datacolumn, field,spw,width,antenna,timebin,timerange,sc
 		timerange='> ddd/HH:MM:SS.sss'
 	datacolumn -- Which data column to split out
 		default='corrected'; example: datacolumn='data'
-		Options: 'data', 'corrected', 'model', 'data,corrected', 'data,model','corrected,model','data,model,corrected','all'
+		Options: 'data', 'corrected', 'model', 'data,corrected', 'data,model','model,corrected','data,model,corrected','all'
 
 	"""
 

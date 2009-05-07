@@ -40,6 +40,7 @@
         
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	/*
 template<class T> Array<T> operator & ( const Array<T> &arr,const T &val)
 {
   Array<T> res( arr.shape() );
@@ -58,6 +59,7 @@ template<class T> Array<T> operator & ( const Array<T> &arr,const T &val)
   }
   return res;
 }
+*/
 
 template<class T> LogicalArray  maskBits  ( const Array<T> &arr,const T &val)
 {

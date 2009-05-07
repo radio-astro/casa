@@ -426,10 +426,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        </equals>
             </when>
 	    <when param="imagermode">
-		<equals value="">
-			<default param="cyclefactor"><value>1.5</value></default>
-			<default param="cyclespeedup"><value>-1</value></default>
-		</equals>
+		<equals value=""/>
 		<equals value="csclean">
 			<default param="cyclefactor"><value>1.5</value></default>
 			<default param="cyclespeedup"><value>-1</value></default>

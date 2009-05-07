@@ -106,15 +106,18 @@ def selected_revisions(data):
         all_list.append(c)
     all_list.sort(reverse=True)
 
-    # The following block selects which versions to use,
+    # The following code selects which versions to use,
     # with lower density as we go back in time.
     # For example with b(base) = 5 and d(density) = 4
-    # the following versions selected
+    # the following versions are selected
     #
     # 0,1,2,3,4,       (density=1    in range < 5)
     # 8,12,16,20,24,   (density=1/4  in range < 25)
     # 32,48,64,80,96   (density=1/16 in range < 125)
     # etc.
+    #
+    # and also 5,6,7,8,9
+    #
     b = 5
     d = 4
     selected = sets.Set()
@@ -124,7 +127,9 @@ def selected_revisions(data):
         use_it = False
         for j in range(20):
             # loops until b^20 (i.e. long enough)
-            if c < interval and (c % density) == 0:
+            if (c < interval and (c % density) == 0) or \
+                   (c < 2*b) :
+
                 use_it = True
                 break
             interval *= b;
@@ -132,7 +137,7 @@ def selected_revisions(data):
 
         # Use also
         #   - the oldest log of all times
-        #   - the 2.3.0 release
+        #   - known releases
         if all_list[c] == "CASA Version 2.0 Rev 5654" or \
            all_list[c] in known_releases:
             use_it = True
@@ -668,7 +673,7 @@ class report:
 
                 print "Creating %s..." % (summary_filename)
                 
-                self.generate_host_vs_revision(test+' execution',
+                self.generate_host_vs_revision(test+' all subtests',
                                                reg_dir, report_dir,
                                                [test],
                                                False, False,

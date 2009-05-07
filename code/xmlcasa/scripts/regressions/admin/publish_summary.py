@@ -228,11 +228,17 @@ class runTest:
                 if short_description != None:
                     self.result_common['description'] = "'" + short_description + "'", "test short description"
 
+                # Figure out data repository version
                 (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svnversion')
-                if errorcode != 0:
-                    datasvnr = "Unknown version"
-
-                self.result_common['data_version'] = "'"+datasvnr+"'", "Data repository svnversion"
+                if errorcode != 0 or datasvnr == "exported":
+                    # If that didn't work, look at ./version in the toplevel dir
+                    (errorcode, datasvnr) = commands.getstatusoutput( \
+                        'cd '+DATA_REPOS[0]+" && grep -E 'Rev:' version | awk '{print $2}'" \
+                        )
+                    if errorcode != 0:
+                        datasvnr = "Unknown version"
+                        
+                self.result_common['data_version'] = "'"+datasvnr+"'", "Data repository version"
 
                 # execution test
                 exec_result = self.result_common.copy()
@@ -607,7 +613,7 @@ class runTest:
                 WORDSIZE = "??"
 
             if OS == "Darwin":
-                WORDSIZE = "64"      # !!!fix that
+                WORDSIZE = "32"      # !!hardcoded... fix that
                 
             return "%s %s %s-bit" % (OS, MACH, WORDSIZE), DIST
             #return "%s %s %s (%s %s %s)" % (OS, DIST, REV, PSUEDONAME, KERNEL, MACH)

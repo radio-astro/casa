@@ -76,10 +76,10 @@ static int make_it_a_dir( const char *path ) {
 }
 */
 
-#include <display/QtViewer/QtApp.h>
+//#include <display/QtViewer/QtApp.h>
 
 int main( int argc, char **argv ) {
-    casa::QtApp::init(argc, argv);
+    // casa::QtApp::init(argc, argv);
 
     static const char file_separator = '/';
 

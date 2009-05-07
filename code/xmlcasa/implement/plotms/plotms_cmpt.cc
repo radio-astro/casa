@@ -28,6 +28,7 @@
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
+#include <display/QtViewer/QtApp.h>
 
 namespace casac {
 
@@ -274,6 +275,7 @@ void plotms::update() {
 
 int plotms::execLoop() {
     if(itsCurrentPlotMS_ == NULL) {
+	casa::QtApp::init();
         itsCurrentPlotMS_ = new PlotMS(itsParameters_);
         PlotMSPlotManager& m = itsCurrentPlotMS_->getPlotManager();
         m.addWatcher(&itsWatcher_);
