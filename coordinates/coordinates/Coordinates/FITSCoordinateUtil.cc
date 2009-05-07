@@ -951,17 +951,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    errMsg = String("wcslib wcssub error: ") + wcssub_errmsg[ierr];
 	    os << LogIO::WARN << errMsg << LogIO::POST;
 	    ok = False;
-	} else if (nsub == 0) {
-	    errMsg = String("wcslib wcssub error: none of the requested subimage axes were found.\n");
-	    os << LogIO::WARN << errMsg << LogIO::POST;
-	    ok = False;
-	} else {
-	    // throws exception if wcsset() fails
-	    setWCS (wcsDest);
 	}
 
 	// See if we found the axis
 	if (ok && nsub==1) {
+
+	    // throws exception if wcsset() fails
+	    setWCS (wcsDest);
 
 	    // Convert the struct to a frequency base...
 	    // ...really convert to FREQ... casa (non-core) above depends
