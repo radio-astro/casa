@@ -475,11 +475,12 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
       UnitMap::addFITS();
     }
     if (!UnitVal::check(unitName)) {
-      // I give up!
       LogIO os;
-      os << LogOrigin("HDF5Image<T>", "units()", WHERE) <<
-	LogIO::SEVERE << "Unit '" << unitName << "' is unknown."
-	" Not restoring units" << LogIO::POST;
+      UnitMap::putUser(unitName, UnitVal::UnitVal(1.0, UnitDim::Dnon), unitName);
+      os << LogIO::WARN << "FITS unit \"" << unitName << "\" unknown to CASA - will treat it as non-dimensional."
+	 << LogIO::POST;
+      retval.setName(unitName);
+      retval.setValue(UnitVal::UnitVal(1.0, UnitDim::Dnon));
     } else {
       retval = Unit(unitName);
     }
