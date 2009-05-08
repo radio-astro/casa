@@ -23,6 +23,9 @@
 CFLAGS :=
 CXXFLAGS :=
 FFLAGS :=
+FC :=
+CC :=
+C++ :=
 
 -include makedefs
 
