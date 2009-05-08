@@ -132,7 +132,7 @@ endif
 ifeq "$(FC)" ""
 FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
-ifneq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
+ifeq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
 FC_LIB := -lgfortran
 endif
 
