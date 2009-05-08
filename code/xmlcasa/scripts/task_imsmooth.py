@@ -83,7 +83,7 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
 
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
-    if ( not kernel.startswith( 'gaus' ) ):
+    if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'boxc' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'WARN' ) 
         raise Exception, 'Unsupported smoothing kernel type.'
@@ -131,15 +131,45 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
     
     casalog.post( 'Smoothing to be done in region: '+str(reg), 'DEBUG2' )
 
-    # Now do the convolution / smoothing
-    try:
-        ia.open( imagename )
-        casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
-                      +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
-        retValue = ia.convolve2d( axes=[0,1], major=major, minor=minor, outfile=outfile )
+    try:        
+        if ( kernel.startswith( "gaus" ) ):
+            # GAUSSIAN KERNEL
+            casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL4' )
+            ia.open( imagename )
+            casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
+                          +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
+            retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
+                                      minor=minor, outfile=outfile )
+
+        elif (kernel.startswith( "boxc" ) ):
+            # BOXCAR KERNEL
+            #
+            # Until convolve2d supports boxcar we will need to
+            # use sepconvolve to do this.
+            #
+            # BIG NOTE!!!!!
+            # According to Gaussian2D documentation the default position
+            # angle aligns the major axis along the y-axis, which typically
+            # be lat.  So this means that we need to use the major quantity
+            # on the y axis (or 1) for sepconvolve.
+
+            ia.open( imagename )
+            casalog.post( "ia.sepconvolve( axes=[0,1],"+\
+                          "types=['boxcar','boxcar' ],"+\
+                          "widths=[ "+str(minor)+", "+str(major)+" ],"+ \
+                          "region="+str(reg)+",outfile="+outfile+" )",\
+                          'DEBUG2' )
+            retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
+                                       widths=[ minor, major ], \
+                                       region=reg,outfile=outfile )
+        else:
+            raise Exception, 'Unrecognized kernel type: ' + kernel
+        
+        # Close our image so others can use it.
+        ia.done()
+        
     except Exception, instance:        
 	print '*** Error *** \n\tUnable to get perform smoothing\n',instance
 	raise Exception, instance
-    ia.done()
     
     return retValue

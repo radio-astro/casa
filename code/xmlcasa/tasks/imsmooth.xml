@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- step 1: construct region with the region manger tool, rg               -->
 <!-- step 2: do the subtraction, with ia.continuumsub (image analysis tool) -->
 <!--                                                                        -->
-<!-- TODO: Add support for boxcar and tophat kernels                        -->
+<!-- TODO: Add support for tophat kernels                                   -->
 <!--       Add support for user defined kernels                             -->
 <!--       Add support for altering the position angle for the kernel       -->
 
@@ -29,12 +29,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="kernel">
-        <description>Type of kernel to use: gaussian, boxcar, tophat, or user-defined. Only gaussian kernels are currently supported.</description>
+        <description>Type of kernel to use: gaussian or boxcar.</description>
         <value>gaussian</value>
     </param>
 
     <param type="any" name="major" subparam="yes">
-	<description>Major axis in gaussian and boxcar kernels.</description>
+	<description>Major axis for the kernels, default direction is along y-axis.</description>
  	<any type='variant' limmittype='string int float dict'/>
     	<value type="string">2.0arcsec</value>
     </param>
@@ -88,10 +88,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <constraints>
         <when param="kernel">
             <equals value="boxcar"/>
-            <equals value="tophat"/>
-            <equals value="user"/>
-            <equals value="gaussian">
 		<default param="major"><value type="float">'2.0arcsec'</value></default>
+		<default param="minor"><value type="float">'2.0arcsec'</value></default>
+            <equals value="gaussian">
+		<default param="major"><value type="float">'2.5arcsec'</value></default>
 		<default param="minor"><value type="float">'2.0arcsec'</value></default>
 	    </equals>
 	</when>
@@ -112,7 +112,7 @@ an image.
         kernel -- Type of kernel to use when smoothing.  Currently,
                 only gassian is supported.
                 default: 'gauss'; example: kernel='gauss'
-                options: gaussian, boxcar (comming), tophat (coming), user
+                options: gaussian and boxcar 
         major -- Depends on the kernel type, see explanation below.
         minor -- Depends on the kernel type, see explanation below.       
         mask -- Mask applied to the image before calculating the moments.
