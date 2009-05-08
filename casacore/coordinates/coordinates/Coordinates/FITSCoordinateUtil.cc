@@ -935,17 +935,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						    LogIO& os) const
     {
 
-// Extract wcs structure pertaining to Spectral Coordinate
-
+        // Extract wcs structure pertaining to Spectral Coordinate
 	int nsub = 1;
 	Block<int> axes(nsub);
 	axes[0] = WCSSUB_SPECTRAL;
-//
+
 	::wcsprm wcsDest;
 	wcsDest.flag = -1;
 	int alloc = 1;
 	int ierr = wcssub (alloc, &wcs, &nsub, axes.storage(), &wcsDest);
-//
+
 	Bool ok = True;
 	String errMsg;
 	if (ierr!=0) {
@@ -954,37 +953,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    ok = False;
 	}
 
-// See if we found the axis
-
+	// See if we found the axis
 	if (ok && nsub==1) {
 
-// Call wcssset on new struct
-
+	    // throws exception if wcsset() fails
 	    setWCS (wcsDest);
 
-// Convert the struct to a frequency base
-
+	    // Convert the struct to a frequency base...
+	    // ...really convert to FREQ... casa (non-core) above depends
+	    // on receiving FREQ coordinates (not VELO)... if other uses
+	    // of addSpectralCoordinate( ) depend on retrieving VELO, then
+	    // FREQ conversion should be added as an option, taking advantage
+	    // of wcslib's conversion abilities.
 	    int index=0;
 	    char ctype[9];  // Patched by rrusk 25-Oct-2007
 	    String cType = wcs.ctype[axes[0]-1];
 	    if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
-	    else if (cType.contains("VELO")) strcpy(ctype, "VELO-???");
+	    else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
 	    else if (cType.contains("FELO")) strcpy(ctype, "FELO-???");
 	    else {
 		os << LogIO::WARN << "Unrecognized frequency type" << LogIO::POST;
 		ok = False;
 	    }
+
 	    if (ok) {
-		int iret = wcssptr (&wcsDest, &index, ctype);
-		if (iret !=0) {
+	        int status = 0;
+		if ((status=wcssptr (&wcsDest, &index, ctype))) {
 		    os << LogIO::WARN << "Failed to convert Spectral coordinate to Frequency, error status = "
-		       << iret << LogIO::POST;
+		       << status << LogIO::POST;
 		    ok = False;	     
+		} else {
+		  // throws exception if wcsset() fails
+		  setWCS (wcsDest);
 		}
 	    }
 
-// Find frequency system
-
+	    // Find frequency system
 	    MFrequency::Types freqSystem;
 	    if (ok) {
 		specAxis = axes[0] - 1;                  // 1 -> 0 rel
@@ -994,14 +998,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	    }
 
-// Try to create SpectralCoordinate and fix up zero 
-// increments etc and add to CoordinateSystem
-
+	    // Try to create SpectralCoordinate and fix up zero 
+	    // increments etc and add to CoordinateSystem
 	    if (ok) {
 		try {
 		    Bool oneRel = True;           // wcs structure from FITS has 1-rel pixel coordinate
 		    SpectralCoordinate c(freqSystem, wcsDest, oneRel);
-//
+
 		    fixCoordinate (c, os);
 		    cSys.addCoordinate(c);
 		} catch (AipsError x) {
@@ -1011,8 +1014,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	}
 
-// Clean up
-
+	// Clean up
 	wcsfree (&wcsDest);
 	return ok;
     }
