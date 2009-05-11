@@ -254,6 +254,17 @@ public:
     virtual void setAxesScales(PlotAxis xAxis, PlotAxisScale xScale,
             PlotAxis yAxis, PlotAxisScale yScale);
     
+    // Gets/Sets the reference values for the given axis.  If a reference value
+    // is set for an axis, its tick labels use an offset from that value
+    // instead of the actual tick value.  For example, if a reference value is
+    // set to 15, instead of ticks reading "14 15 16" they would read "-1 0 1".
+    // <group>
+    virtual bool axisReferenceValueSet(PlotAxis axis) const = 0;
+    virtual double axisReferenceValue(PlotAxis axis) const = 0;
+    virtual void setAxisReferenceValue(PlotAxis axis, bool on,
+    		double value = 0) = 0;
+    // </group>
+    
     // Returns whether the given Cartesian axis is shown or not.  (See
     // showCartesianAxis().)
     virtual bool cartesianAxisShown(PlotAxis axis) const = 0;
@@ -762,6 +773,19 @@ public:
     // user cancels the dialog, an empty String should be returned.
     virtual String fileChooserDialog(const String& title = "File Chooser",
                                      const String& directory = "") = 0;
+    
+    // Gets/Sets the date format for this canvas.  See Plotter::dateFormat().
+    // <group>
+    virtual const String& dateFormat() const = 0;
+    virtual void setDateFormat(const String& dateFormat) = 0;
+    // </group>
+    
+    // Gets/Sets the date format for values relative to a reference value for
+    // this canvas.  See Plotter::relativeDateFormat().
+    // <group>
+    virtual const String& relativeDateFormat() const = 0;
+    virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+    // </group>
 
     // Converts the given coordinate into a coordinate with the given system.
     virtual PlotCoordinate convertCoordinate(const PlotCoordinate& coord,

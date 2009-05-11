@@ -134,6 +134,18 @@ bool PlotMSSinglePlot::updateCanvas() {
         itsCanvas_->setAxisScale(x, PMS::axisScale(itsParameters_.xAxis()));
         itsCanvas_->setAxisScale(y, PMS::axisScale(itsParameters_.yAxis()));
         
+        // Check for special case: reference date for TIME.
+        itsParameters_.holdNotification(this);
+        bool timeref = itsParameters_.xAxis() == PMS::TIME;
+        double timeval = timeref ? itsData_.cacheReferenceTime() : 0;
+        itsParameters_.setXReferenceValue(timeref, timeval);
+        itsCanvas_->setAxisReferenceValue(x, timeref, timeval);
+        timeref = itsParameters_.yAxis() == PMS::TIME;
+        timeval = timeref ? itsData_.cacheReferenceTime() : 0;
+        itsParameters_.setYReferenceValue(timeref, timeval);
+        itsCanvas_->setAxisReferenceValue(y, timeref, timeval);
+        itsParameters_.releaseNotification();
+        
         // Custom ranges
         itsCanvas_->setAxesAutoRescale(true);
         if(set && itsParameters_.xRangeSet() && itsParameters_.yRangeSet())

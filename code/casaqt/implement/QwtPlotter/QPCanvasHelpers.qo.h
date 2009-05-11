@@ -83,47 +83,70 @@ private:
 };
 
 
-// Subclass of QwtScaleDraw that converts a double in either modified julian
-// seconds or modified julian days into a String representation of the date.
-// The format and number of decimals for the second can be set.
-class QPDateScaleDraw : public QwtScaleDraw {
-public:    
-    // Constructor that takes the scale type and, optionally, the number of
-    // decimals and the format.
-    QPDateScaleDraw(PlotAxisScale scale, unsigned int numDecimals = 3,
-                    const String& format = DEFAULT_FORMAT);
+// Subclass of QwtScaleDraw to implement additional functionality.  Keeps track
+// of which PlotAxisScale is set, and can use reference values instead of
+// absolute values (see PlotCanvas::setAxisReferenceValue()).  Additionally,
+// for date values it can convert a double in either modified julian seconds or
+// modified julian days into a String representation of the date, using a
+// format that can be set.
+class QPScaleDraw : public QwtScaleDraw {
+public:	
+	// Constructor that takes the parent and axis to attach to.
+    QPScaleDraw(QwtPlot* parent, QwtPlot::Axis axis);
     
-    ~QPDateScaleDraw();
+    // Destructor.
+    ~QPScaleDraw();
     
-    // Returns the scale used.
+    // Gets/Sets the scale used.
+    // <group>
     PlotAxisScale scale() const;
+    void setScale(PlotAxisScale scale);
+    // </group>
     
-    // Returns the label for the given date value.
+    // Gets/Sets the format used for date values.  See Plotter::dateFormat().
+    // <group>
+    const String& dateFormat() const;
+    void setDateFormat(const String& newFormat);
+    // </group>
+    
+    // Gets/Sets the format used for relative date values.  See
+    // Plotter::relativeDateFormat().
+    // <group>
+    const String& relativeDateFormat() const;
+    void setRelativeDateFormat(const String& newFormat);
+    // </group>
+    
+    // Gets/Sets the reference value.  See PlotCanvas::setAxisReferenceValue().
+    // <group>
+    bool referenceValueSet() const;    
+    double referenceValue() const;    
+    void setReferenceValue(bool on, double value = 0);
+    // </group>
+    
+    // Overrides QwtScaleDraw::label().
     QwtText label(double value) const;
     
 private:
-    // Scale.
-    PlotAxisScale m_scale;
-    
-    // Number of decimals for the seconds.
-    unsigned int m_decimals;
-    
-    // Format to use.
-    String m_format;
-    
-    // Returns true if the given format is a valid date format.  A format is
-    // valid if all of the format tags appear exactly once.  The tags are:
-    // * %y : year
-    // * %m : month
-    // * %d : day of month
-    // * %h : hours
-    // * %n : minutes
-    // * %s : seconds
-    static bool formatIsValid(String format);
-    
-    // The default format if none or given or an invalid format is given.
-    // "%y-%m-%d\n%h:%n:%s"
-    static const String DEFAULT_FORMAT;
+	// Parent.
+	QwtPlot* m_parent;
+	
+	// Axis.
+	QwtPlot::Axis m_axis;
+	
+	// Scale.
+	PlotAxisScale m_scale;
+	
+	// Date formats.
+	// <group>
+	String m_dateFormat;
+	String m_relativeDateFormat;
+	// </group>
+	
+	// Reference value.
+	// <group>
+	bool m_referenceSet;
+	double m_referenceValue;
+	// </group>
 };
 
 

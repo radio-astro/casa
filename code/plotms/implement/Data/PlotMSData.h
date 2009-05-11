@@ -87,6 +87,9 @@ public:
     // </group>
     
     
+    // See PlotMSCache::refTime().
+    double cacheReferenceTime() const;
+    
     // See PlotMSCache::readyForPlotting().
     bool cacheReady() const;
     

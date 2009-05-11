@@ -164,6 +164,15 @@ public:
     // Implements PlotCanvas::setAxisScale().
     void setAxisScale(PlotAxis axis, PlotAxisScale scale);
 
+    // Implements PlotCanvas::axisReferenceValueSet().
+    bool axisReferenceValueSet(PlotAxis axis) const;
+    
+    // Implements PlotCanvas::axisReferenceValueValue().
+    double axisReferenceValue(PlotAxis axis) const;
+    
+    // Implements PlotCanvas::setAxisReferenceValue().
+    void setAxisReferenceValue(PlotAxis axis, bool on, double value = 0);
+    
     // Implements PlotCanvas::cartesianAxisShown().
     bool cartesianAxisShown(PlotAxis axis) const;
 
@@ -343,6 +352,18 @@ public:
     // Implements PlotCanvas::fileChooserDialog().
     String fileChooserDialog(const String& title = "File Chooser",
             const String& directory = "");
+    
+    // Implements PlotCanvas::dateFormat().
+    const String& dateFormat() const;
+    
+    // Implements PlotCanvas::setDateFormat().
+    void setDateFormat(const String& dateFormat);
+    
+    // Implements PlotCanvas::relativeDateFormat().
+    const String& relativeDateFormat() const;
+    
+    // Implements PlotCanvas::setRelativeDateFormat().
+    void setRelativeDateFormat(const String& dateFormat);
 
     // Implements PlotCanvas::convertCoordinate().
     PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
@@ -442,6 +463,9 @@ private:
     // Annotation-layer plot items.
     vector<pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
     
+    // Scale draws.
+    QPScaleDraw* m_scaleDraws[QwtPlot::axisCnt];
+    
     // Whether the axes ratio is locked or not.
     bool m_axesRatioLocked;
     
@@ -479,6 +503,12 @@ private:
     bool m_ignoreNextRelease;
     QTimer m_timer;
     QMouseEvent* m_clickEvent;
+    // </group>
+    
+    // Date formats.
+    // <group>
+    String m_dateFormat;
+    String m_relativeDateFormat;
     // </group>
     
        

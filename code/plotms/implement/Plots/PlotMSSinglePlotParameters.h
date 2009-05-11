@@ -109,6 +109,19 @@ public:
     void setCanvasAxes(PlotAxis xAxis, PlotAxis yAxis);
     // </group>
     
+    // Gets/Sets axes reference values.
+    // <group>
+    bool xReferenceValueSet() const;
+    bool yReferenceValueSet() const;
+    double xReferenceValue() const;
+    double yReferenceValue() const;
+    void setXReferenceValue(bool set, double value = 0) {
+    	setReferenceValues(set,value,yReferenceValueSet(),yReferenceValue()); }
+    void setYReferenceValue(bool set, double value = 0) {
+    	setReferenceValues(xReferenceValueSet(),xReferenceValue(),set,value); }
+    void setReferenceValues(bool xSet, double xValue, bool ySet,double yValue);
+    // </group>
+    
     // Gets/Sets axes ranges.
     // <group>
     bool xRangeSet() const;
@@ -234,6 +247,12 @@ private:
     
     // Canvas axes.
     PlotAxis itsXCanvasAxis_, itsYCanvasAxis_;
+    
+    // Axes reference values.
+    // <group>
+    bool itsXReferenceValueSet_, itsYReferenceValueSet_;
+    double itsXReferenceValue_, itsYReferenceValue_;
+    // </group>
     
     // Axes ranges.
     // <group>

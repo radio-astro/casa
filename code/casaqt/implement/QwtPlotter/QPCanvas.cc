@@ -35,7 +35,6 @@
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
-#include <qwt_scale_engine.h>
 #include <qwt_scale_widget.h>
 
 namespace casa {
@@ -353,6 +352,14 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     connect(&m_mouseFilter, SIGNAL(mouseMoveEvent(QMouseEvent*)),
             SLOT(trackerMouseEvent(QMouseEvent*)));
     
+    m_dateFormat = Plotter::DEFAULT_DATE_FORMAT;
+    m_relativeDateFormat = Plotter::DEFAULT_RELATIVE_DATE_FORMAT;
+    for(int i = 0; i < QwtPlot::axisCnt; i++) {
+    	m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
+    	m_scaleDraws[i]->setDateFormat(m_dateFormat);
+    	m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+    }
+    
     m_canvas.enableAxis(QwtPlot::xBottom, false);
     m_canvas.enableAxis(QwtPlot::yLeft, false);
     m_canvas.setAutoReplot(true);
@@ -455,49 +462,18 @@ void QPCanvas::showAxes(int axesFlag) {
 }
 
 PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const {
-    const QwtScaleEngine* e = m_canvas.axisScaleEngine(QPOptions::axis(axis));
-    
-    if(dynamic_cast<const QwtLinearScaleEngine*>(e) != NULL) {
-        const QwtScaleDraw* d = m_canvas.axisScaleDraw(QPOptions::axis(axis));
-        const QPDateScaleDraw* dd = dynamic_cast<const QPDateScaleDraw*>(d);
-        if(dd != NULL) return dd->scale();
-        else           return NORMAL;
-    }
-    if(dynamic_cast<const QwtLog10ScaleEngine*>(e) != NULL) return LOG10;
-    
-    return NORMAL;
-}
-
+	return m_scaleDraws[QPOptions::axis(axis)]->scale(); }
 void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
-    if(scale != axisScale(axis)) {
-        switch(scale) {
-        case NORMAL:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLinearScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QwtScaleDraw());
-            break;
-            
-        case LOG10:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLog10ScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QwtScaleDraw());
-            break;
-            
-        case DATE_MJ_DAY: case DATE_MJ_SEC:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLinearScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QPDateScaleDraw(scale));
-            break;
-            
-        default: return;
-        }
+	m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); }
 
-        if(m_canvas.autoReplot()) m_canvas.replot();
-    }
-}
+bool QPCanvas::axisReferenceValueSet(PlotAxis axis) const {
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); }
+
+double QPCanvas::axisReferenceValue(PlotAxis axis) const {
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); }
+
+void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
+	m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); }
 
 bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
     return m_canvas.cartesianAxisShown(axis); }
@@ -1100,6 +1076,24 @@ String QPCanvas::fileChooserDialog(const String& title,
     QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
             directory.c_str());
     return filename.toStdString();
+}
+
+const String& QPCanvas::dateFormat() const { return m_dateFormat; }
+void QPCanvas::setDateFormat(const String& dateFormat) {
+    if(m_dateFormat == dateFormat) return;
+    m_dateFormat = dateFormat;
+    for(int i = 0; i < QwtPlot::axisCnt; i++)
+        m_scaleDraws[i]->setDateFormat(m_dateFormat);
+    // TODO
+}
+
+const String& QPCanvas::relativeDateFormat() const {
+    return m_relativeDateFormat; }
+void QPCanvas::setRelativeDateFormat(const String& dateFormat) {
+    if(m_relativeDateFormat == dateFormat) return;
+    m_relativeDateFormat = dateFormat;
+    for(int i = 0; i < QwtPlot::axisCnt; i++)
+        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
 }
 
 PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,

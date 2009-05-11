@@ -42,6 +42,8 @@ class PlotFactory;
 // some top-level and main-window functionality.
 class Plotter {
 public:
+    // Static //
+    
     // This enum should contain all known implementations.
     enum Implementation {
         QWT,
@@ -58,6 +60,23 @@ public:
         EXPORT_TOOLS // buttons/tools to export the canvases to a file
     };
     
+    // The default date format to use for the plotter.  See dateFormat().
+    static const String DEFAULT_DATE_FORMAT;
+    
+    // The default relative date format to use for the plotter.  See
+    // relativeDateFormat().
+    static const String DEFAULT_RELATIVE_DATE_FORMAT;
+    
+    // Returns a String for the given date value using the given format (see
+    // dateFormat()) and scale.  If isRelative is true, the value is treated as
+    // a relative value (i.e., +X seconds past a reference date); otherwise it
+    // is treated as an absolute value.  For relative values years, months, and
+    // days are ignored.
+    static String formattedDateString(const String& format, double value,
+            PlotAxisScale scale, bool isRelative = false);
+    
+    
+    // Non-Static //
     
     // Constructor.
     Plotter();
@@ -128,7 +147,36 @@ public:
     // This should only be used by the layout currently being used by the
     // plotter.
     virtual void canvasLayoutChanged(PlotCanvasLayout& layout) = 0;
-   
+    
+    // Gets/Sets the date format for the plotter and all current and future
+    // canvases.  This format should be used anywhere date values are displayed
+    // to the user, such as for axis ticks and tracker tools.  A format can
+    // consist of the following tags:
+    // * %y : year
+    // * %m : month
+    // * %d : day of month
+    // * %h : hours
+    // * %n : minutes
+    // * %s : seconds
+    // The format can optionally have the following tags:
+    // * %pX : precision to display for seconds, with X being an integer; if X
+    //         is less than zero, the default is used.  Applies to any seconds
+    //         tags that are AFTER the precision tag.
+    // <group>
+    virtual const String& dateFormat() const = 0;
+    virtual void setDateFormat(const String& dateFormat) = 0;
+    // </group>
+    
+    // Gets/Sets the date format for relative values (i.e., for reference
+    // values on axes) for the plotter and all current and future canvases.
+    // This format should be used anywhere relative date values are displayed
+    // to the user, such as for axis ticks when a reference value is set.  See
+    // dateFormat() for information on the format.
+    // <group>
+    virtual const String& relativeDateFormat() const = 0;
+    virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+    // </group>
+    
     
     // Panel methods //
     

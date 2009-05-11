@@ -34,6 +34,10 @@
 
 namespace casa {
 
+//# Forward Declarations.
+class PlotMSSinglePlotParameters;
+
+
 // Class for generating labels based upon axes, units, etc.  A format is a
 // String that consists of tags and non-tags.  Tags are special substrings
 // differentiated by being surrounded by a separator; tags are replaced with
@@ -81,6 +85,30 @@ public:
     static const String& TAG_ENDIF_YUNIT();
     // </group>
     
+    // Tags for axis reference values, both the single case and the double
+    // case.  This tag is replaced with the reference value for the given axis,
+    // if there is one, during generation.  Note: if the associated axis is a
+    // date, the value will be in date format.
+    // <group>
+    static const String& TAG_REFVALUE();
+    static const String& TAG_XREFVALUE();
+    static const String& TAG_YREFVALUE();
+    // </group>
+    
+    // Tags for if/endif for axis reference values.  Parts of the format that
+    // are surrounded with an IF at the beginning and ENDIF at the end are only
+    // copied to the label if the given axis has a reference value set.  For
+    // example, "TAG_IF_REFVALUE(sample text)TAG_ENDIF_REFVALUE" would copy
+    // over "(sample text)" only if the given axis had a set reference value.
+    // <group>
+    static const String& TAG_IF_REFVALUE();
+    static const String& TAG_IF_XREFVALUE();
+    static const String& TAG_IF_YREFVALUE();
+    static const String& TAG_ENDIF_REFVALUE();
+    static const String& TAG_ENDIF_XREFVALUE();
+    static const String& TAG_ENDIF_YREFVALUE();
+    // </group>
+    
     // Convenience method to surround the given tag with the separator.
     static String TAG(const String& tag);
     
@@ -101,13 +129,24 @@ public:
     String format;
     
     
-    // Generates a label, using the given single axis.  If any double axes tags
-    // are in the format, the given axis will be used for them.
-    String getLabel(PMS::Axis axis) const;
+    // Generates a label, using the given single axis and reference value.  If
+    // any double axes tags are in the format, the given axis will be used for
+    // them.
+    String getLabel(PMS::Axis axis, bool refValueSet = false,
+            double refValue = 0) const;
     
-    // Generates a label, using the given double axes.  If any single axes tags
-    // are in the format, the x axis will be used for it.
-    String getLabel(PMS::Axis xAxis, PMS::Axis yAxis) const;
+    // Generates a label, using the given double axes and reference values.  If
+    // any single axes tags are in the format, the x axis will be used for it.
+    String getLabel(PMS::Axis xAxis, PMS::Axis yAxis,
+            bool xRefValueSet = false, double xRefValue = 0,
+            bool yRefValueSet = false, double yRefValue = 0) const;
+    
+    // Generates a label, using the double axes and references values in the
+    // given plot parameters.  If any single axes tags are in the format, the x
+    // axis will be used for it if useX is true; otherwise the y axis will be
+    // used.
+    String getLabel(const PlotMSSinglePlotParameters& parameters,
+            bool useX = true) const;
     
     // Equality operators.
     // <group>
@@ -122,7 +161,9 @@ public:
 private:
     // Generates a label using the given format, single axis, and double axes.
     static String getLabel(const String& format, PMS::Axis axis,
-            PMS::Axis xAxis, PMS::Axis yAxis);
+            PMS::Axis xAxis, PMS::Axis yAxis, bool refValueSet,
+            double refValue, bool xRefValueSet, double xRefValue,
+            bool yRefValueSet, double yRefValue);
     
     // Helper method for getLabel() which gets the next token in the format.
     // Returns true if a token was returned; false if the end of the format was
@@ -131,6 +172,9 @@ private:
     // tokenWasTag parameter is set to true if the token was a tag, false
     // otherwise.
     static bool nextToken(String& format, String& token, bool& tokenWasTag);
+    
+    // Format for when reference values are dates.
+    static const String REFERENCE_DATE_FORMAT;
 };
 
 }

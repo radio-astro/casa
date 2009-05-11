@@ -69,6 +69,8 @@ bool PlotMSData::minsMaxes(double& xMin, double& xMax, double& yMin,
 }
 
 
+double PlotMSData::cacheReferenceTime() const { return itsCache_->refTime(); }
+
 bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
 
 void PlotMSData::clearCache() { itsCache_->clear(); }

@@ -130,6 +130,18 @@ public:
     // Implements Plotter::canvasLayoutChanged().
     void canvasLayoutChanged(PlotCanvasLayout& layout);
     
+    // Implements Plotter::dateFormat().
+    const String& dateFormat() const;
+    
+    // Implements Plotter::setDateFormat().
+    void setDateFormat(const String& dateFormat);
+    
+    // Implements Plotter::relativeDateFormat().
+    const String& relativeDateFormat() const;
+    
+    // Implements Plotter::setRelativeDateFormat().
+    void setRelativeDateFormat(const String& dateFormat);
+    
     
     // Implements Plotter::defaultPanelShown().
     bool defaultPanelShown(DefaultPanel panel);
@@ -241,6 +253,12 @@ private:
     
     // Log event flags.
     int m_logEvents;
+    
+    // Date formats.
+    // <group>
+    String m_dateFormat;
+    String m_relativeDateFormat;
+    // </group>
     
     
     // Sets up the canvas QFrame for the current layout.
