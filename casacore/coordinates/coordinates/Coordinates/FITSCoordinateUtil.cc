@@ -970,7 +970,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    String cType = wcs.ctype[axes[0]-1];
 	    if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
 	    else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
-	    else if (cType.contains("FELO")) strcpy(ctype, "FELO-???");
+	    else if (cType.contains("VRAD")) strcpy(ctype, "FREQ-???");
+	    else if (cType.contains("FELO")) strcpy(ctype, "FELO-???"); // FELO should never occur here
+	                                                                // because wcsfix should have replaced it, DP
+	                                                                // Will correct this for the 3.0 release
+	    else if (cType.contains("VOPT")) strcpy(ctype, "FREQ-???");
 	    else {
 		os << LogIO::WARN << "Unrecognized frequency type" << LogIO::POST;
 		ok = False;
