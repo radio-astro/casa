@@ -273,7 +273,9 @@ void SkyEquation::predict(Bool incremental) {
       unScaleImage(model, incremental);
       if(!incremental&&!initialized) initialized=True;
     
-  }
+    } else {
+      cout << "WARN: model is empty." << endl;
+    }
   }
 }
 

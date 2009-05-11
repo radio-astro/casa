@@ -1203,7 +1203,7 @@ Bool Simulator::corrupt() {
 
     // Apply 
     if (vc_p.nelements()>0) {
-      os << LogIO::NORMAL << "Doing visbility corruption." 
+      os << LogIO::NORMAL << "Doing visibility corruption." 
 	 << LogIO::POST;
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	// Only if 
