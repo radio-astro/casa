@@ -51,7 +51,8 @@ SimACohCalc::SimACohCalc(const Int seed,
 			 const Quantity& tatmos,
 			 const Quantity& tcmb) : 
   rndGen_p(seed),
-  noiseDist_p(&rndGen_p, 0.0, 0.5),
+  // noiseDist_p(&rndGen_p, 0.0, 0.5),
+  noiseDist_p(&rndGen_p, 0.0, 1.0),
   antefficiency_p(antefficiency),
   correfficiency_p(correfficiency),
   spillefficiency_p(spillefficiency),
@@ -151,9 +152,10 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
               Float re = 1.41421356*noiseDist_p();
 	      c[i]= Float(sigma) * Complex(re, 0.0);
 	    } else {
-              Float re = noiseDist_p()*noiseDist_p();
-	      //	      c[i]= Float(sigma) * Complex(re);
-	      c[i]= Float(sigma) * Complex(re,re);
+	      // huh.  why would one use a Bessel function (product of normals) here?
+              // Float re = noiseDist_p()*noiseDist_p();	      
+	      // c[i]= Float(sigma) * Complex(re);
+	      c[i]= Float(sigma) * Complex(noiseDist_p(),noiseDist_p());
 	    }
 	    //	    nAverage++;  averageNoise += sigma;
 	  }
