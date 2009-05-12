@@ -968,6 +968,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    int index=0;
 	    char ctype[9];  // Patched by rrusk 25-Oct-2007
 	    String cType = wcs.ctype[axes[0]-1];
+
+	    if (cType.contains("VELO") || cType.contains("VRAD")) {
+	      os << "Converting velocity axis to frequency axis" << LogIO::POST;
+	    }
+
+
 	    if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
 	    else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
 	    else if (cType.contains("VRAD")) strcpy(ctype, "FREQ-???");
@@ -1016,6 +1022,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    ok = False;
 		}     
 	    }
+	} else {
+	  //os << LogIO::DEBUG1 << "passing empty or nonexistant spectral Coordinate axis" << LogIO::POST;
+	  os << "passing empty or nonexistant spectral Coordinate axis" << LogIO::POST;
 	}
 
 	// Clean up
@@ -1173,7 +1182,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return True;
 		    }
 		} else {                                      // No RaDecSys or equinox
-		    os << LogIO::WARN << "No Direction system is defined - J2000 assumed" << LogIO::POST;
+		    os << "No Direction system is defined - J2000 assumed" << LogIO::POST;
 		    type = MDirection::J2000;                  // Defaults to ICRS
 		    return True;
 		}
