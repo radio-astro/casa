@@ -23,15 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5DataSet.cc 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/HDF5/HDF5Error.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/BlockIO.h>
 #include <casa/Utilities/Assert.h>
-
-#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -129,6 +127,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     close();
   }
+
+#ifdef HAVE_LIBHDF5
 
   void HDF5DataSet::create (hid_t parentHid, const String& name,
 			    const IPosition& shape, const IPosition& tileShape)
@@ -290,6 +290,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return shape;
   }
 
-}
+#else
+
+  void HDF5DataSet::create (hid_t, const String&,
+			    const IPosition&, const IPosition&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5DataSet::open (hid_t, const String&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5DataSet::close()
+  {}
+
+  DataType HDF5DataSet::getDataType (hid_t, const String&)
+  {}
+
+  void HDF5DataSet::get (const Slicer&, void*)
+  {}
+
+  void HDF5DataSet::put (const Slicer&, const void*)
+  {}
+
+  Block<hsize_t> HDF5DataSet::fromShape (const IPosition&)
+  {}
+  IPosition HDF5DataSet::toShape (const Block<hsize_t>&)
+  {}
 
 #endif
+
+}

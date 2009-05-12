@@ -23,23 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5File.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: tHDF5File.cc 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #include <casa/HDF5/HDF5File.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
-#ifndef HAVE_LIBHDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
-
 using namespace casa;
 
 int main()
 {
+  // Exit with untested if no HDF5 support.
+  if (! HDF5Object::hasHDF5Support()) {
+    return 3;
+  }
   try {
     {
       // Create the file.
@@ -121,5 +118,3 @@ int main()
   cout << "OK" << endl;
   return 0;
 }
-
-#endif

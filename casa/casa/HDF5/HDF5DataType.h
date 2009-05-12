@@ -23,20 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.h 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5DataType.h 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #ifndef CASA_HDF5DATATYPE_H
 #define CASA_HDF5DATATYPE_H
 
-#include <casa/HDF5Config.h>
-#ifdef HAVE_LIBHDF5
-
 //# Includes
-#include <casa/aips.h>
+#include <casa/HDF5/HDF5Object.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/DataType.h>
-#include <hdf5.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -95,8 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HDF5DataType (Int, Int);
 
     // The destructor closes the HDF5 data type object.
-    ~HDF5DataType()
-      { H5Tclose (itsHidMem); H5Tclose(itsHidFile); }
+    ~HDF5DataType();
 
     // Get the AIPS++ data type for the given HDF5 data type.
     static DataType getDataType (hid_t);
@@ -123,5 +118,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 }
 
-#endif
 #endif
