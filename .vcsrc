@@ -1,0 +1,8 @@
+@ignorables = (qr!/config.log$!,
+	       #qr/\.vcsrc/,
+	       qr!/options\.cfg$!,
+	       qr!/build_linux_i686$!,
+	       qr!/\.sconf_temp$!,
+	       qr!/linux_gnu$!,
+	       qr!\.[ly]cc$!,
+	       qr!.*/\.sconsign\.dblite$!);

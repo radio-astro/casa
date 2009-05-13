@@ -1004,6 +1004,38 @@ template<class T> T variance(const Array<T> &a)
     return variance(a, mean(a));
 }
 
+template<class T> Bool allSame(const Array<T>& a)
+{
+  Bool ss = True;
+
+  if(a.nelements() > 1){
+    if(a.contiguousStorage()){  				// Faster
+      typename Array<T>::const_contiter oldpos  = a.cbegin();
+      typename Array<T>::const_contiter iter    = a.cbegin();
+      typename Array<T>::const_contiter iterEnd = a.cend();
+      
+      ++iter;
+      for(typename Array<T>::const_contiter newpos = iter; ss && iter != iterEnd;
+	  ++iter){
+	ss = (*newpos == *oldpos);
+	oldpos = newpos;
+      }
+    }
+    else {
+      typename Array<T>::const_iterator oldpos  = a.begin();      
+      typename Array<T>::const_iterator iter    = a.begin();
+      typename Array<T>::const_iterator iterEnd = a.end();
+
+      for(typename Array<T>::const_iterator newpos = iter;
+	  ss && iter != iterEnd; ++iter){
+	ss = (*newpos == *oldpos);
+	oldpos = newpos;
+      }
+    }
+  }
+  return ss;
+}
+
 // <thrown>
 //    </item> ArrayError
 // </thrown>
