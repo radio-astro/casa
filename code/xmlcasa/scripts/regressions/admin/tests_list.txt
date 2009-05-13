@@ -19,6 +19,7 @@ g192redux                       rreid@nrao.edu
 ggtau                           gmoellen@aoc.nrao.edu
 h121                            gmoellen@aoc.nrao.edu
 ic2233                          kgolap@aoc.nrao.edu
+ic2233_regression		sbhatnag@aoc.nrao.edu
 imagepoltest_regression         rreid@nrao.edu
 imagetest_regression            dpetry@eso.org
 imregrid_test                   jmlarsen@eso.org

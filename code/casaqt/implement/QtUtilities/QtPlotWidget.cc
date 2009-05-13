@@ -249,7 +249,8 @@ void PlotLineWidget::lineChanged() {
 
 PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         PlotSymbolPtr defaultSymbol, bool showAlphaFill, bool showCustom,
-        bool showAlphaLine, QWidget* parent) : QtPlotWidget(factory, parent) {
+        bool showAlphaLine, bool showCharacter, QWidget* parent) :
+        QtPlotWidget(factory, parent) {
     setupUi(this);
     itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill);
     itsLineWidget_ = new PlotLineWidget(factory, false, showAlphaLine);
@@ -265,6 +266,11 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         itsDefault_ = itsFactory_->symbol(*defaultSymbol);
     
     setSymbol(itsDefault_);
+    
+    if(!showCharacter && itsDefault_->symbol() != PlotSymbol::CHARACTER) {
+        SymbolWidget::style->removeItem(4);
+        charEdit->hide();
+    }
     
     // only emit change for radio buttons turned on
     connect(noneButton, SIGNAL(toggled(bool)), SLOT(symbolChanged(bool)));
@@ -317,7 +323,7 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
     return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
 }
 
-void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
+void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {    
     if(symbol.null()) itsSymbol_ = itsFactory_->symbol(PlotSymbol::NOSYMBOL);
     else              itsSymbol_ = itsFactory_->symbol(*symbol);
 

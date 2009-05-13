@@ -51,7 +51,8 @@ SimACohCalc::SimACohCalc(const Int seed,
 			 const Quantity& tatmos,
 			 const Quantity& tcmb) : 
   rndGen_p(seed),
-  noiseDist_p(&rndGen_p, 0.0, 0.5),
+  // noiseDist_p(&rndGen_p, 0.0, 0.5),
+  noiseDist_p(&rndGen_p, 0.0, 1.0),
   antefficiency_p(antefficiency),
   correfficiency_p(correfficiency),
   spillefficiency_p(spillefficiency),
@@ -72,6 +73,8 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
     Complex c[4];
 
     //    Double averageNoise = 0.0;
+    //    Int nAverage = 0;
+    //    Double averageT = 0.0;
     //    Int nAverage = 0;
 
     // In case you are confused, the 1e-4 converts the Diam from cm to m
@@ -149,8 +152,10 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
               Float re = 1.41421356*noiseDist_p();
 	      c[i]= Float(sigma) * Complex(re, 0.0);
 	    } else {
-              Float re = noiseDist_p()*noiseDist_p();
-	      c[i]= Float(sigma) * Complex(re);
+	      // huh.  why would one use a Bessel function (product of normals) here?
+              // Float re = noiseDist_p()*noiseDist_p();	      
+	      // c[i]= Float(sigma) * Complex(re);
+	      c[i]= Float(sigma) * Complex(noiseDist_p(),noiseDist_p());
 	    }
 	    //	    nAverage++;  averageNoise += sigma;
 	  }
@@ -158,12 +163,17 @@ VisBuffer& SimACohCalc::apply(VisBuffer& vb)
 	  CStokesVector noiseCoh(c);
 	  vb.visibility()(chn,row)+=noiseCoh;
 	}
+	//	nAverage++;  averageT += tsys;
       }
     }
 //     if (nAverage > 0) {
 //       averageNoise /= Float(nAverage);
 //       os << "Average noise added to visibilities: " << averageNoise << "  Jy" << LogIO::POST;
 //     }
+//    if (nAverage > 0) {
+//      averageT /= Float(nAverage);
+//      os << "Noise added to visibilities with average Tsys=" << averageT << " K" << LogIO::POST;
+//    }
     return vb;
 };
 

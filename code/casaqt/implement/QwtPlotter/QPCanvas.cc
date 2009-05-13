@@ -1084,7 +1084,6 @@ void QPCanvas::setDateFormat(const String& dateFormat) {
     m_dateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
         m_scaleDraws[i]->setDateFormat(m_dateFormat);
-    // TODO
 }
 
 const String& QPCanvas::relativeDateFormat() const {

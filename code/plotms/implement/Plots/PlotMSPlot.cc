@@ -50,9 +50,6 @@ PlotMSPlot::~PlotMSPlot() {
 
 // Public Methods //
 
-unsigned int PlotMSPlot::layoutNumCanvases() const {
-    return layoutNumRows() * layoutNumCols(); }
-
 vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
 
 bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
@@ -170,6 +167,13 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
         
         return success;        
     }
+}
+
+void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {
+    if(canvas.null()) return;
+
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        canvas->removePlotItem(itsPlots_[i]);
 }
 
 

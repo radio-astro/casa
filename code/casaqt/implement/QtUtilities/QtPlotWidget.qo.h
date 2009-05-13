@@ -182,7 +182,8 @@ public:
     // an optional parent widget.
     PlotSymbolWidget(PlotFactoryPtr factory, PlotSymbolPtr defaultSymbol,
             bool showAlphaFill = false, bool showCustom = true,
-            bool showAlphaLine = false, QWidget* parent = NULL);
+            bool showAlphaLine = false, bool showCharacter = true,
+            QWidget* parent = NULL);
     
     // Destructor.
     ~PlotSymbolWidget();

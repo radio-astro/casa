@@ -29,22 +29,18 @@
 namespace casa {
 
 // TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots, move actions into one class.
+//      for new plots.
 // TODO PlotMSCache: multi-region locate
-// TODO PlotMSData: have stack list of caches so that common MS/Selections can
-//      be shared across different plots
 // TODO PlotMSLogger: log source (std out, text widget, casapy logger), better
-//      locate message, log message for parameters updated, log message for #
-//      of plotted points
+//      locate message, log message for parameters updated
 // TODO PlotMSParameters: canvas background, fonts, grids, spacing, cartesian
 //      axes, limit zoom/pan cache size
-// TODO PlotMSPlot: different colors within one plot, different types
-// TODO PlotMSPlotManager: unused canvases
-// TODO PlotMSPlotter: range padding, customize toolbars, override close event
-//      to call PlotMS::close() in case there's cleanup needed
+// TODO PlotMSPlot: different colors within one plot, different types, shared
+//      caches
+// TODO PlotMSPlotter: range padding, customize toolbars/tabs
 // TODO PlotMSThread: background, pause/resume
 // TODO PlotMSWidgets: label creator
-// TODO PlotTool: display tracker value as time when needed, set tracker font
+// TODO PlotTool: set tracker font
 
 ////////////////////////
 // PLOTMS DEFINITIONS //
@@ -90,10 +86,7 @@ PlotMS::PlotMS(const PlotMSParameters& params) : itsPlotter_(NULL),
     }
 }
 
-PlotMS::~PlotMS() {
-    itsPlotManager_.clearPlotsAndCanvases();
-    delete itsPlotter_;
-}
+PlotMS::~PlotMS() { }
 
 
 // Public Methods //

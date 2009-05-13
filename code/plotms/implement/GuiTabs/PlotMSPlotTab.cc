@@ -115,9 +115,9 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     itsPlotTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     PlotFactoryPtr factory = itsPlotter_->getFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
-            PMS::DEFAULT_SYMBOL(factory), false, false);
+            PMS::DEFAULT_SYMBOL(factory), false, false, false, false);
     itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory,
-            PMS::DEFAULT_MASKED_SYMBOL(factory), false, false);
+            PMS::DEFAULT_MASKED_SYMBOL(factory), false, false, false, false);
     QtUtilities::putInFrame(plotTitleFrame, itsPlotTitleWidget_);
     QtUtilities::putInFrame(plotUFFrame, itsSymbolWidget_);
     QtUtilities::putInFrame(plotFFrame, itsMaskedSymbolWidget_);

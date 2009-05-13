@@ -52,8 +52,53 @@ String PlotMSSinglePlot::name() const {
     else                                         return title;
 }
 
-unsigned int PlotMSSinglePlot::layoutNumRows() const { return 1; }
-unsigned int PlotMSSinglePlot::layoutNumCols() const { return 1; }
+unsigned int PlotMSSinglePlot::layoutNumCanvases() const { return 1; }
+unsigned int PlotMSSinglePlot::layoutNumPages() const { return 1; }
+
+vector<PlotCanvasPtr> PlotMSSinglePlot::generateCanvases(PlotMSPages& pages) {
+    // Use the current page.
+    if(pages.totalPages() == 0) pages.insertPage();
+    PlotMSPage page = pages.currentPage();
+    
+    // First try to find a canvas that's already there, but unowned.
+    bool found = false;
+    unsigned int nrows = page.canvasRows(), ncols = page.canvasCols(),
+                 row = 0, col = 0;
+    for(unsigned int r = 0; !found && r < nrows; r++) {
+        for(unsigned int c = 0; !found && c < ncols; c++) {
+            if(!page.isOwned(r, c)) {
+                row = r;
+                col = c;
+                found = true;
+            }
+        }
+    }
+    
+    // If no free canvases were found, add another row or column (whichever is
+    // most "square") and use one of those.
+    if(!found) {
+        if(nrows == 0 && ncols == 0) {
+            nrows = ncols = 1;
+            row = col = 0;
+        } else if(nrows <= ncols) {
+            nrows++;
+            row = nrows - 1;
+            col = 0;
+        } else {
+            ncols++;
+            row = 0;
+            col = ncols - 1;
+        }
+        page.resize(nrows, ncols);
+    }
+    
+    // Set the owner, and replace the page.
+    page.setOwner(row, col, this);
+    pages.itsPages_[pages.itsCurrentPageNum_] = page;
+    
+    // Return the canvas.
+    return vector<PlotCanvasPtr>(1, page.canvas(row, col));
+}
 
 const PlotMSPlotParameters& PlotMSSinglePlot::parameters() const {
     return itsParameters_; }

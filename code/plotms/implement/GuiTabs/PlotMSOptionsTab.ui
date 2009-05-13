@@ -172,7 +172,7 @@
      <item>
       <widget class="QLabel" name="clearSelectionLabel" >
        <property name="text" >
-        <string>When changing plot axes, clear any existing selections.</string>
+        <string>When changing plot axes, clear any existing regions.</string>
        </property>
        <property name="alignment" >
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

@@ -53,11 +53,14 @@ public:
     // Implements PlotMSPlot::name().
     String name() const;
     
-    // Implements PlotMSPlot::layoutNumRows().
-    unsigned int layoutNumRows() const;
+    // Implements PlotMSPlot::layoutNumCanvases().
+    unsigned int layoutNumCanvases() const;
     
-    // Implements PlotMSPlot::layoutNumCols().
-    unsigned int layoutNumCols() const;
+    // Implements PlotMSPlot::layoutNumPages().
+    unsigned int layoutNumPages() const;
+    
+    // Implements PlotMSPlot::generateCanvases().
+    vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages);
     
     // Implements PlotMSPlot::parameters().
     // <group>
