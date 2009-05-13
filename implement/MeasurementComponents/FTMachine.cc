@@ -388,10 +388,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	flag.reference(flipflag);
       }
       else{
-
 	InterpolateArray1D<Float,Complex>::
-	  //interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
-	  interpolate(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
+	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
       }
     }
     else{

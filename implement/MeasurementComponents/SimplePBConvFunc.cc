@@ -158,11 +158,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSize_p=4*(sj_p->support(vb, coords))*convSampling;
     }
     
-
     MDirection fieldDir=vb.direction1()(0);
 
     addPBToFlux(vb);
-
 
     DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
 
@@ -170,18 +168,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> pixFieldDir(2);
     dc.toPixel(pixFieldDir, fieldDir);
 
-    
-
     //shift from center
-    pixFieldDir(0)=pixFieldDir(0)- Double(nx / 2);
-    pixFieldDir(1)=pixFieldDir(1)- Double(ny / 2);
+    pixFieldDir(0) = pixFieldDir(0) - Double(nx / 2);
+    pixFieldDir(1) = pixFieldDir(1) - Double(ny / 2);
 
     //phase gradient per pixel to apply
-    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
-    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
+    pixFieldDir(0) = -pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
+    pixFieldDir(1) = -pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
     
-
-
     if(!doneMainConv_p){
       Vector<Double> sampling;
       sampling = dc.increment();
@@ -206,8 +200,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       ///
       
-      
-      
       //make sure we are using the same units
       fieldDir.set(dc.worldAxisUnits()(0));
       
@@ -218,15 +210,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       dc.setReferenceValue(fieldDir.getAngle().getValue());
       
-      
-      
       coords.replaceCoordinate(dc, directionIndex);
       //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
       
       IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
       TempImage<Complex> twoDPB(pbShape, coords);
-      
-      
       
       convFunc_p.resize(convSize_p, convSize_p);
       convFunc_p=0.0;
