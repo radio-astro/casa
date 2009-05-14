@@ -18,7 +18,7 @@ Available tasks:
    exportfits    importuvfits   sdaverage    tget      
    exportuvfits  importvla      sdbaseline   uvcontsub 
    feather       imregrid       sdcal        uvmodelfit
-   filecatalog   imstat         sdciadd      viewer    
+   filecatalog   imstat         sdcoadd      viewer    
    find          imval          sdfit        vishead   
    fixvis        invert         sdflag     
                 
