@@ -6990,7 +6990,8 @@ ImageAnalysis::echo(Record& v, const bool godeep)
 
  }
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,  
-			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+				   Vector<Float>& zxaxisval, 
+				   Vector<Float>& zyaxisval,
 				   const String& xytype, 
 				   const String& specaxis,
 				   const Int& whichStokes,
@@ -7030,11 +7031,19 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
  
 
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+  Vector<Bool> zyaxismask;
   trc[cSys.pixelAxes(specAx)[0]]=pImage_p->shape()(cSys.pixelAxes(specAx)[0])-1;  zyaxisval.resize();
   zyaxisval=pImage_p->getSlice(blc, trc-blc+1, True);
+  zyaxismask=pImage_p->getMaskSlice(blc, trc-blc+1, True);
+
   if(!(pImage_p->units().getName().contains("mJy"))){
     for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
-      zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
+      if(zyaxismask[kk]){
+	zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
+      }
+      else {   // apply mask
+	zyaxisval[kk] = 0.;
+      }
     }
 
   }
@@ -7043,9 +7052,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 }
 
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,  
-                        const Vector<Double>& y,  
-			Vector<Float>& zxaxisval, 
-                        Vector<Float>& zyaxisval,
+				   const Vector<Double>& y,  
+				   Vector<Float>& zxaxisval, 
+				   Vector<Float>& zyaxisval,
 				   const String& xytype, 
 				   const String& specaxis,
 				   const Int& whichStokes,
