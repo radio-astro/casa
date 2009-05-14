@@ -513,6 +513,18 @@ class ImageAnalysis
 			const Int& whichLinear=0,
 			const String& xunits="");
 
+    Bool getFreqProfile(String& bunit,
+                        const Vector<Double>& x,  
+			const Vector<Double>& y,  
+			Vector<Float>& zxaxisval, 
+                        Vector<Float>& zyaxisval,
+			const String& xytype="world", 
+			const String& specaxis="freq",
+			const Int& whichStokes=0,
+			const Int& whichTabular=0,
+			const Int& whichLinear=0,
+			const String& xunits="");
+
     static  Record * tweakedRegionRecord(Record *Region);
 
 
