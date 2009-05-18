@@ -9,6 +9,8 @@
 #    If $DISPLAY is undefined, a virtual Xvfb server is
 #    started and stopped
 
+# Distribution: END_USER_BINARY
+
 use FindBin;
 use Sys::Hostname;
 

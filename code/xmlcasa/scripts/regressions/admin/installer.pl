@@ -7,6 +7,8 @@
 #      - removes install and working directories
 #      - restarts test executor
 
+# Distribution: END_USER_BINARY
+
 $safe = 0;
 
 system("date -u");
