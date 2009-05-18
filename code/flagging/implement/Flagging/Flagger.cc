@@ -85,23 +85,20 @@ namespace casa {
   // -----------------------------------------------------------------------
   Flagger::Flagger ():mssel_p(0), vs_p(0)
   {
-    dbg=False;
+    dbg = false;
     
     msselection_p = new MSSelection();
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
     
-    // For HISTORY table logging
-    logSink_p=LogSink(LogMessage::NORMAL, False);
-    hist_p=0;
-    histLockCounter_p = 0;
+    logSink_p = LogSink(LogMessage::NORMAL, False);
     
-    nant=0;
+    nant = 0;
     setdata_p = False;
     selectdata_p = False;
     // setupAgentDefaults();
-    pgprep_nx=pgprep_ny=1;
+    pgprep_nx = pgprep_ny = 1;
   }
   
   // -----------------------------------------------------------------------
@@ -110,46 +107,59 @@ namespace casa {
   // -----------------------------------------------------------------------
   Flagger::Flagger ( MeasurementSet &mset ) : mssel_p(0), vs_p(0)
   {
-    dbg=False;
+    dbg = false;
     
     msselection_p = new MSSelection();
     agents_p = NULL;
     agentCount_p=0;
     opts_p = NULL;
     
-    // For HISTORY table logging
-    logSink_p=LogSink(LogMessage::NORMAL, False);
-    hist_p=0;
-    histLockCounter_p = 0;
+    logSink_p = LogSink(LogMessage::NORMAL, False);
     
-    nant=0;
+    nant = 0;
     setdata_p = False;
     selectdata_p = False;
     attach(mset);
-    pgprep_nx=pgprep_ny=1;
+    pgprep_nx = pgprep_ny = 1;
   }
   
-  Flagger::~Flagger ()
-  {
-    if ( !ms.tableName().length() ){
-      os << "Flagger closing out "<<ms.tableName()<<LogIO::POST;
-      ms.flush();
-      ms.relinquishAutoLocks(True);
-      ms.unlock();
+    Flagger::~Flagger ()
+    {
+	/*
+	  jmlarsen: Eh? The following code is probably a bug
+	  (it closes the MS when the length() is 0)
+	  What about calling detach()?
+	*/
+	
+	if ( !ms.tableName().length()) {
+	    os << "Flagger closing out " << ms.tableName() << LogIO::POST;
+	    ms.flush();
+	    ms.relinquishAutoLocks(True);
+	    ms.unlock();
+	    
+	    //originalms = NULL;
+	    originalms_p = NULL;
+	}
+
+	if (vs_p)  delete vs_p;
+	vs_p = 0;
+	
+	if (dbg) cout << "Flagger destructor :: about to clean mssel_p" << endl;
+	
+	if (mssel_p) delete mssel_p;
+	mssel_p = 0;
+	
+	if (dbg) cout << "Flagger destructor :: cleaned mssel_p" << endl;
+	
+	if (msselection_p) delete msselection_p;
+	msselection_p = 0;
+	
+	if (agents_p) delete agents_p;
+	agents_p = NULL;
+	
+	if (opts_p) delete opts_p;
+	opts_p = NULL;
     }
-    if (vs_p)  delete vs_p;
-    vs_p = 0;
-    if (dbg)cout << "Flagger destructor :: about to clean mssel_p" << endl;
-    if (mssel_p) delete mssel_p;
-    mssel_p = 0;
-    if (dbg)cout << "Flagger destructor :: cleaned mssel_p" << endl;
-    if (msselection_p) delete msselection_p;
-    msselection_p=0;
-    if (agents_p) delete agents_p;
-    agents_p=NULL;
-    if (opts_p) delete opts_p;
-    opts_p = NULL;
-  }
   
   // -----------------------------------------------------------------------
   // queryOptions
@@ -186,7 +196,7 @@ namespace casa {
   bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
   {
     
-    nant=0;
+    nant = 0;
     setdata_p = False;
     selectdata_p = False;
     if (vs_p) 
@@ -264,18 +274,6 @@ namespace casa {
     //os << "--------------------------------------------------" << LogIO::POST;
     os<<str<<LogIO::POST;
     
-    //// Write LogIO to HISTORY Table in MS
-    if (!(Table::isReadable(ms.historyTableName()))){
-      // create a new HISTORY table if its not there
-      TableRecord &kws = ms.rwKeywordSet();
-      SetupNewTable historySetup(ms.historyTableName(),
-				 MSHistory::requiredTableDesc(),Table::New);
-      kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-    }
-    historytab_p=Table(ms.historyTableName(),
-		       TableLock(TableLock::UserNoReadLocking), Table::Update);
-    hist_p= new MSHistoryHandler( ms, "Flagger");
-    ////
     return True;
   }    
   
@@ -285,23 +283,20 @@ namespace casa {
   // -----------------------------------------------------------------------
   void Flagger::detach()
   {
-    if ( !ms.tableName().length() ){
-      os<<"no measurement set was attached"<<LogIO::POST;
-    }else{
-      os<<"detaching from MS "<<ms.tableName()<<LogIO::POST;
-      //cout <<"detaching from MS "<<ms.tableName()<<endl;
-      hist_p=0;
-      histLockCounter_p = 0;
-      
-      nant=0;
-      setdata_p = False;
-      selectdata_p = False;
-      pgprep_nx=pgprep_ny=1;
-      ms.flush();
-      ms.relinquishAutoLocks(True);
-      ms.unlock();
-      ms = MeasurementSet();
-    }
+      if ( ms.tableName().length() == 0) {
+	  os << "no measurement set was attached" << LogIO::POST;
+      } 
+      else {
+	  os << "detaching from MS " << ms.tableName() << LogIO::POST;	  
+	  nant = 0;
+	  setdata_p = False;
+	  selectdata_p = False;
+	  pgprep_nx = pgprep_ny = 1;
+	  ms.flush();
+	  ms.relinquishAutoLocks(True);
+	  ms.unlock();
+	  ms = MeasurementSet();
+      }
   }
   
   /************************************ DATA SELECTION **************************************/
@@ -1947,7 +1942,6 @@ namespace casa {
 		  acc[i]->endFlag();
 	      
 	      {
-		//os << "Writing the following to MS HISTORY Table:" << LogIO::POST;
 		logSink_p.clearLocally();
 		LogIO oss(LogOrigin("Flagger", "run()"), logSink_p);
 		os=oss;
@@ -2207,40 +2201,7 @@ namespace casa {
       acc[i]->printFlaggingReport();
   }
   
-  
-  // -----------------------------------------------------------------------
-  // dprintf
-  // Function for printfing stuff to a debug stream
-  // -----------------------------------------------------------------------
-  void Flagger::writeHistory(LogIO& os, Bool cliCommand){
-    /*
-      if (!historytab_p.isNull()) {
-      if (histLockCounter_p == 0) {
-      historytab_p.lock(True);
-      }
-      ++histLockCounter_p;
-      
-      os.postLocally();
-      if (cliCommand) {
-      hist_p->cliCommand(os);
-      } else {
-      hist_p->addMessage(os);
-      }
-      
-      if (histLockCounter_p == 1) {
-      historytab_p.unlock();
-      }
-      if (histLockCounter_p > 0) {
-      --histLockCounter_p;
-      }
-      } else {
-      os << LogIO::SEVERE << "must attach to MeasurementSet" << LogIO::POST;
-      }
-    */
-  }
-  
-  /* FLAG VERSION SUPPORT*/
-  
+  /* FLAG VERSION SUPPORT */ 
   Bool Flagger::saveFlagVersion(String versionname, String comment, String merge )
   {
     try

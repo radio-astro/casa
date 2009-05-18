@@ -498,12 +498,14 @@ private:
     // Flag for whether we're in mouse dragging mode or not.
     bool m_inDraggingMode;
     
+    /*
     // For catching single vs. double clicks.
     // <group>
     bool m_ignoreNextRelease;
     QTimer m_timer;
     QMouseEvent* m_clickEvent;
     // </group>
+     */
     
     // Date formats.
     // <group>
@@ -540,7 +542,7 @@ private slots:
     void regionSelected(const QwtDoubleRect&);
     
     // For catching single vs. double clicks.
-    void timeout();
+    // void timeout();
     
     // For catching mouse move events from the filter.
     void trackerMouseEvent(QMouseEvent* event);

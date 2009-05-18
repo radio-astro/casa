@@ -12,21 +12,21 @@ that is a subset of an existing data set.   Only one of the
 datacolumns can be split, and it is usually, but not necessarily,
 the corrected column.
 
-Split is often used after the initial calibration of the data
-to remove those sources which need additional flagging,
-imaging and selfcalibration.
-The data can be averaged over specified frequency channels of the
-input data set.  Time averaging is also available.  However, it is
-not yet possible to both time average and frequency average a data set.
+Split is often used after the initial calibration of the data to remove those
+sources which need additional flagging, imaging and selfcalibration.  The data
+can be averaged over specified frequency channels of the input data set.  Time
+averaging is also available.  It is not yet possible to simultaneously average
+a data set in time and frequency, but you can time (or frequency) average, and
+then frequency (or time) average on the result of the first split run.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input measurement set</description>
 		<value></value>
 	</param>
 
 	<param type="string" name="outputvis" mustexist="false">
-		<description>Name of output visibility file</description>
+		<description>Name of output measurement set</description>
 		<value></value>
 	</param>
 

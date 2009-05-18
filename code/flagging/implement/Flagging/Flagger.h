@@ -42,8 +42,6 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
-#include <ms/MeasurementSets/MSHistory.h>
-#include <ms/MeasurementSets/MSHistoryHandler.h>
 
 #include <tableplot/TablePlot/FlagVersion.h>
 
@@ -294,13 +292,6 @@ public:
 			 Vector<Int>& dataStart, 
 			 Vector<Int>& dataEnd, Vector<Int>& dataStep);
 */			 
-  // Methods to write to the history table of Measurement Set.
-  // Write an entry to the history table
-  void writeHistory(LogIO& os);
-
-  // write command line command
-  void writeCommand(LogIO& os);
-
   
 private:
     
@@ -312,14 +303,6 @@ private:
 
   // Sink used to store history
   LogSink logSink_p;
-
-  // Used to update the MS HISTORY Table
-  Table historytab_p;
-  MSHistoryHandler *hist_p;
-  Int histLockCounter_p;
-
-  // Method to update MS History Table
-  void writeHistory(LogIO& os, Bool cliCommand);
 
   // Hold the original ms 
   MeasurementSet *originalms_p;

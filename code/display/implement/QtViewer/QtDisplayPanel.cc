@@ -2416,3 +2416,4 @@ void QtDisplayPanel::extendRegion(
 
 
 } //# NAMESPACE CASA - END
+

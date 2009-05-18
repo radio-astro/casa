@@ -32,8 +32,10 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayOpsDiffShapes.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayUtil.h>
+#include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
@@ -66,6 +68,7 @@
 
 #include <casa/sstream.h>
 
+#include <functional>
 #include <set>
 
 namespace casa {
@@ -2091,31 +2094,45 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 	  // Accumulate the averaging values from *toikit.
 	  // doChanAver_p...wrong name but it means that channel 
 	  // selection is a sub selection
-	  // its a bit faster if no slicing is done...so avoid it if possible 
-	  if(doChanAver_p){
-	    Array<Float> unflaggedwt(inRowWeight(*toikit)(blc, trc).shape());
+	  // its a bit faster if no slicing is done...so avoid it if possible
+	  Array<Float> unflaggedwt(doChanAver_p ?
+				   inRowWeight(*toikit)(blc, trc).shape() :
+				   inRowWeight(*toikit).shape());
+	  Array<Complex> data_toikit(doChanAver_p ? data(*toikit)(blc, trc) :
+				     data(*toikit));
+	  
+	  if(doChanAver_p)	    
 	    unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit)(blc, trc),
-					     (flag(*toikit) == false).reform(unflaggedwt.shape()));
-	    
-	    outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
-	    totweight = sum(unflaggedwt);
-
-	    outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
-	    outData.xyPlane(orn) = outData.xyPlane(orn) + data(*toikit)(blc, trc) *
-	      unflaggedwt.reform(data(*toikit)(blc, trc).shape());
-	  }
-	  else{
-	    Array<Float> unflaggedwt(inRowWeight(*toikit).shape());
+					     reformedMask(flag(*toikit)(blc, trc),
+							  false,
+							  unflaggedwt.shape()));
+	  else
 	    unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit),
-					     (flag(*toikit) == false).reform(unflaggedwt.shape()));
-	   
-	    outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
+					     reformedMask(flag(*toikit), false,
+							  unflaggedwt.shape()));
 	    
-	    totweight = sum(unflaggedwt);
+//  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
+//  	       << inRowWeight(*toikit).shape() << LogIO::POST;
+//  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
+//  	       << unflaggedwt.shape() << LogIO::POST;
+//  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
+//  	       << flag(*toikit).shape() << LogIO::POST;
+//  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
+//  	       << data(*toikit).shape() << LogIO::POST;
+
+	  outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
+	  totweight = sum(unflaggedwt);
+
+	  if(doChanAver_p)
+	    outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
+	  else
 	    outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
-	    outData.xyPlane(orn) = outData.xyPlane(orn) + data(*toikit) *
-	      unflaggedwt.reform(data(*toikit).shape());
-	  }
+
+	  binOpExpandInPlace(data_toikit, unflaggedwt,
+			     Multiplies<Complex, Float>());
+	    
+	  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
+
 	  outTC[orn] += totweight * inTC(*toikit);
 	  outExposure[orn] += totweight * inExposure(*toikit);
 	} // End of iterating through the slot's rows.
@@ -2128,17 +2145,21 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 	}
 	slotv.clear();  // Free some memory.
 	if(product(outRowWeight.column(orn)) > 0.0){
-	  outData.xyPlane(orn) = outData.xyPlane(orn) /
-	    outRowWeight.column(orn).reform(outData.xyPlane(orn).shape());
+	  Array<Complex> grumble(outData.xyPlane(orn));   // Referenceable
+	  Vector<Float>  groan(outRowWeight.column(orn)); // copies
+	  
+	  binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
+	  outData.xyPlane(orn) = grumble;
 	
-	  for(uInt polind = 0; polind < outRowWeight.column(orn).nelements(); ++polind)
+	  for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
+	      ++polind)
 	    outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
 	}
 
 	// Fill in the nonaveraging values from besttoik.
 	// In general, _IDs which are row numbers in a subtable must be
 	// remapped, and those which are not probably shouldn't be.
-	// UVW can't really be averaged (we don't want the average of an ellipse).
+	// UVW shouldn't be averaged (we don't want the average of an ellipse).
 	outTime[orn]       = newTimeVal_p[tbn];
 	outUVW.column(orn) = inUVW(besttoik);
 	outScanNum[orn]    = scanNum(besttoik);	// Don't remap!
@@ -2155,9 +2176,12 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 	  outFeed2[orn] = inFeed2(besttoik);
 	}		
 	outField[orn]   = fieldRelabel_p[fieldID(besttoik)];
-	outState[orn]   = remapped(state(besttoik), stateRemapper_p, abs(state(besttoik)));
-	outProc[orn]    = remapped(inProc(besttoik), procMapper, abs(inProc(besttoik)));
-	outObs[orn]     = remapped(inObs(besttoik), obsMapper, abs(inObs(besttoik)));
+	outState[orn]   = remapped(state(besttoik), stateRemapper_p,
+				   abs(state(besttoik)));
+	outProc[orn]    = remapped(inProc(besttoik), procMapper,
+				   abs(inProc(besttoik)));
+	outObs[orn]     = remapped(inObs(besttoik), obsMapper,
+				   abs(inObs(besttoik)));
 	outArr[orn]     = inArr(besttoik);	        // Don't remap!
 	dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
 	outRowFlag[orn] = false;
@@ -2202,20 +2226,9 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   return True;
 }
 
-  Bool SubMS::checkSpwShape()
-  {
-    Bool ss = True;
-    
-    if(inNumChan_p.nelements() > 1){
-      for(uInt k = 1;ss && k < inNumChan_p.nelements();++k)
-	ss = (inNumChan_p[k] == inNumChan_p[k - 1]);
-    }
-    
-    if(ss && nchan_p.nelements() > 1){
-      for(uInt k = 1;ss && k < nchan_p.nelements();++k)
-	ss = (nchan_p[k] == nchan_p[k - 1]);      
-    }
-    return ss;
-  }
+inline Bool SubMS::checkSpwShape()
+{
+  return allSame(inNumChan_p) && allSame(nchan_p);
+}
 
 } //#End casa namespace

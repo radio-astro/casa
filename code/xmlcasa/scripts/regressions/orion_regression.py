@@ -113,7 +113,6 @@ print '--Single Dish as Model (MEM)--'
 ### Starting from:
 ###    VLA calibrated visibilities: orion.ms
 ###    GBT OTF cube: orion.gbt.im
-datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST3/Orion/'
 default('mosaic')
 mosaic('orion.ms','orion_tsdmem','mfs','entropy',niter=3,sigma='4mJy',targetflux='240Jy',mask=datapath+'orion.mask6',field=[2,3,4,5,6,7,8,9,10],spw=[0,1],stokes='I',cell=[2,2],imsize=[300,300],weighting='briggs',mosweight=True,rmode='norm',robust=-1,cyclefactor=4,cyclespeedup=500,phasecenter=6,modelimage='orion_tsdmem',sdimage=datapath+'orion.gbt.im',ftmachine='ft',prior='orion_tsdmem',minpb=0.1, scaletype='PBCOR')
 sdmodelmemtime=time.time()
@@ -156,7 +155,8 @@ def joint_deconvolve(datapath):
 	im.selectvis(field=[2,3,4,5,6,7,8,9,10],spw=[0,1])
 	im.defineimage(nx=300,cellx='2arcsec',phasecenter=6,spw=[0,1])
 	im.setvp(dovp=True)
-	im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
+	#im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
+	im.setscales(scalemethod='uservector',uservector=[0,3,10,30, 70])
 	###if clean component for large scale goes negative continue to use
 	##that scale
 	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=4, cyclespeedup=500)

@@ -607,7 +607,8 @@ void QtProfile::wcChanged(const String c,
     //xpos, ypos and position only used for display
     xpos = QString::number(xv[0]);
     ypos = QString::number(yv[0]);
-    //qDebug() << c.chars() << "xpos:" << xpos << "ypos:" << ypos;
+    //qDebug() << c.chars() << "xpos:" 
+    //           << xpos << "ypos:" << ypos;
 
     if (coordinate == "world") {
        position = getRaDec(xv[0], yv[0]);
@@ -622,9 +623,30 @@ void QtProfile::wcChanged(const String c,
     Vector<Float> z_yval;
     //Get Profile Flux density v/s velocity
     Bool ok = False;
-    ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-                coordinate, coordinateType);
+    String bunit;
+    ok=analysis->getFreqProfile(bunit, 
+                          xv, yv, z_xval, z_yval, 
+                          coordinate, coordinateType);
+
+    //cout << "ok=" << ok << endl;
+    if (!ok)
+       return;
+
+    //cout << "------bunit=" << bunit << endl;
+    if (bunit.contains("K (Tb)"))
+       pc->setYLabel("Brightness K (Tb)", 10, 0.5, 
+                     "Helvetica [Cronyx]");
+
     pc->plotPolyLine(z_xval, z_yval);
+    //cout << "xv=" << xv << " yv=" << yv << endl;
+    //cout << "coordinate=" << coordinate 
+    //     << " coordinateType=" << coordinateType << endl;
+    
+    //cout << "z_xval=" << z_xval 
+    //     << " z_yval=" << z_yval << endl;
+    //QMessageBox::warning(this, "QtProfile",
+    //                "pauss to check the values\n");
+
 
 }
 
@@ -635,6 +657,10 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
    if (xa.contains("Decl") && ya.contains("Right"))
        cb = -1;
    if (xa.contains("Right") && ya.contains("Decl"))
+       cb = 1;
+   if (xa.contains("atitu") && ya.contains("ongitu"))
+       cb = -1;
+   if (xa.contains("ongitu") && ya.contains("atitu"))
        cb = 1;
    if (!za.contains("Freq"))
        cb = 0;
@@ -661,3 +687,4 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
 }
 
 }
+

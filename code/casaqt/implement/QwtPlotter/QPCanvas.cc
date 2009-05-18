@@ -323,8 +323,8 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_axesRatioLocked(false), m_axesRatios(4, 1), m_stackCache(*this),
         m_autoIncColors(false), m_picker(m_canvas.canvas()),
         m_mouseFilter(m_canvas.canvas()), m_legendFontSet(false),
-        m_inDraggingMode(false), m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL) {
+        m_inDraggingMode(false)/*, m_ignoreNextRelease(false), m_timer(this),
+        m_clickEvent(NULL)*/ {
     logObject(CLASS_NAME, this, true);
     
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
@@ -366,7 +366,7 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     
     connect(&m_picker, SIGNAL(selected(const QwtDoubleRect&)),
             this, SLOT(regionSelected(const QwtDoubleRect&)));
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
+    //connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
 }
 
 QPCanvas::~QPCanvas() {
@@ -1244,7 +1244,9 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
     
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     bool accept = notifyReleaseHandlers(t, pcoord);
+    accept |= notifyClickHandlers(t, pcoord);
     
+    /*
     if(event->button() == Qt::LeftButton) {
         if(!m_ignoreNextRelease) {
             m_timer.start(QApplication::doubleClickInterval());
@@ -1257,14 +1259,17 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
         // Also send a click event
         accept |= notifyClickHandlers(t, pcoord);
     }
+    */
     
     if(accept) event->accept();
     else       event->ignore();
 }
 
 void QPCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
+    /*
     m_ignoreNextRelease = true;
     m_timer.stop();
+    */
     
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
@@ -1394,18 +1399,22 @@ void QPCanvas::regionSelected(const QwtDoubleRect& region) {
            t = (region.top() > region.bottom())? region.top(): region.bottom(),
            b = (region.bottom() < region.top())? region.bottom(): region.top();
            
+           /*
     if(!region.isValid()) {
         // It was really a click.
         PlotCoordinate wcoord(l, t, PlotCoordinate::WORLD);
         notifyClickHandlers(PlotMouseEvent::SINGLE, wcoord);
 
     } else {
+    */
+    if(region.isValid()) {
         PlotRegion wreg(PlotCoordinate(l, t, PlotCoordinate::WORLD),
                         PlotCoordinate(r, b, PlotCoordinate::WORLD));
         notifySelectHandlers(wreg);
     }
 }
 
+/*
 void QPCanvas::timeout() {    
     // single click has occurred    
     m_timer.stop();
@@ -1414,6 +1423,7 @@ void QPCanvas::timeout() {
     if(notifyClickHandlers(PlotMouseEvent::SINGLE, pcoord))
         m_clickEvent->accept();
 }
+*/
 
 }
 

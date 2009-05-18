@@ -836,20 +836,7 @@ quanta::done(const bool kill)
 ::casac::record*
 quanta::unit(const ::casac::variant& v, const std::string& unitname)
 {
-  if(v.type()==::casac::variant::DOUBLE) {
-    return recordFromQuantity(casa::Quantity(v.toDouble(),String(unitname)));
-  }
-  if(v.type()==::casac::variant::DOUBLEVEC) {
-    return recordFromQuantity(Quantum<Vector<Double> >(v.toDoubleVec(),
-						       String(unitname)));
-  }
-  QuantumHolder qh = quantumHolderFromVar(v);
-  if (qh.isQuantumVectorDouble() ) {
-    Quantum<Vector<Double> > qv = qh.asQuantumVectorDouble();    
-    return recordFromQuantity(qv);
-  } else {
-    return recordFromQuantity(casaQuantity(v));
-  }
+  return quantity(v, unitname);
 }
 
 bool

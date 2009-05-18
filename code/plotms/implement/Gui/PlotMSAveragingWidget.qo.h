@@ -36,12 +36,6 @@
 
 namespace casa {
 
-/*
-    void changed();
-
-    void differentFromSet();
- */
-
 // GUI widget for editing a PlotMSAveraging object.
 class PlotMSAveragingWidget : public QtEditingWidget, Ui::AveragingWidget {
     Q_OBJECT
@@ -76,9 +70,6 @@ private:
 private slots:
     // Slot for when a GUI widget value changes.
     void averagingChanged();
-    
-    // Slot for enforcing mutual exclusivity for baseline and antenna.
-    void baselineOrAntennaClicked(QAbstractButton* button);
 };
 
 }
