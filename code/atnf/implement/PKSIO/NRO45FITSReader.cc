@@ -43,13 +43,16 @@ NRO45FITSReader::NRO45FITSReader( string name )
   : NRO45Reader( name )
 {
   // DEBUG
-  cout << "NRO45FITSReader::NRO45FITSReader()" << endl ;
+  //cout << "NRO45FITSReader::NRO45FITSReader()" << endl ;
   //
 }
 
 // Destructor.
 NRO45FITSReader::~NRO45FITSReader() 
 {
+  // DEBUG
+  //cout << "NRO45FITSReader::~NRO45FITSReader()" << endl ;
+  //
 }
   
 // Read data header

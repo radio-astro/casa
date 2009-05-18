@@ -64,11 +64,11 @@ NRODataset::NRODataset( string name )
   endian_ = -1 ;
   if ( *reinterpret_cast<char *>(&i) == 1 ) {
     endian_ = LITTLE_ENDIAN ;
-    cout << "NROReader::NROReader()  LITTLE_ENDIAN " << endl ;
+    cout << "NRODataset::NRODataset()  LITTLE_ENDIAN " << endl ;
   }
   else {
     endian_ = BIG_ENDIAN ;
-    cout << "NROReader::NROReader()  BIG_ENDIAN " << endl ;
+    cout << "NRODataset::NRODataset()  BIG_ENDIAN " << endl ;
   }
   same_ = -1 ;
 }
@@ -547,11 +547,11 @@ int NRODataset::getPolarizationNum()
   int npol = 0 ;
 
   vector<string> type( 2 ) ;
-  type[0] = "CIRL" ;
+  type[0] = "CIRC" ;
   type[1] = "LINR" ;
   vector<double> crot ;
   vector<double> lagl ;
-  vector<int> ntype( 2, 0 ) ;
+  //vector<int> ntype( 2, 0 ) ;
 
   unsigned int imax = rowNum_ ;
   for ( unsigned int i = 0 ; i < imax ; i++ ) { 
@@ -561,17 +561,17 @@ int NRODataset::getPolarizationNum()
     //
     if ( POLTP[index] == type[0] ) {
       if( count( crot.begin(), crot.end(), POLDR[index] ) != 0 ) {
-        crot.push_back( POLDR[i] ) ;
+        crot.push_back( POLDR[index] ) ;
         npol++ ;
       }
-      ntype[0] = 1 ;
+      //ntype[0] = 1 ;
     }
     else if ( POLTP[index] == type[1] ) {
       if ( count( lagl.begin(), lagl.end(), POLAN[index] ) != 0 ) {
-        lagl.push_back( POLAN[i] ) ;
+        lagl.push_back( POLAN[index] ) ;
         npol++ ;
       }
-      ntype[1] = 1 ;
+      //ntype[1] = 1 ;
     }
   }
 
@@ -662,7 +662,7 @@ vector<bool> NRODataset::getIFs()
   }
 
   // DEBUG
-  cout << "NRODataset::getIFs()   number of IF is " << v.size() << endl ;
+  //cout << "NRODataset::getIFs()   number of IF is " << v.size() << endl ;
   //
 
   return v ;

@@ -18,7 +18,7 @@ default("simdata")
 project="psim"
 modelimage="diskmodel.im"
 #complist=repodir+"star672GHz.cl"
-modifymodel=True
+ignorecoord=True
 checkinputs="no"
 antennalist=repodir+"alma.out20.cfg"
 direction="J2000 18h00m00.03s -45d59m59.6s"
@@ -32,8 +32,9 @@ startfreq="668.0GHz"
 chanwidth="8.0GHz"
 nchan=1
 cell="0.004arcsec" 
-incell="0.00311arcsec" 
-inbright="6.5e-7"
+#incell="0.00311arcsec" 
+#inbright="6.5e-7"
+inbright="7.2e-7"
 imsize=[192, 192]
 stokes="I"
 weighting="briggs"
@@ -78,11 +79,11 @@ refstats = { 'flux': 0.00039567,
              'sigma': 4.53577279e-07 }
 
 # changed brightness convention scaling 20090501
-refstats = { 'flux': 0.000417,
-             'max': 3.622e-06,
-             'min': -4.736e-07,
-             'rms': 6.33383706e-07,
-             'sigma': 4.53577279e-07 }
+refstats = { 'flux': 0.000422,
+             'max': 3.6e-06,
+             'min': -1.7e-07,
+             'rms': 6.1e-07,
+             'sigma': 3.86e-07 }
 
 ### allowing  changes of upto 10% of sigma
 reftol   = {'flux':  .1,

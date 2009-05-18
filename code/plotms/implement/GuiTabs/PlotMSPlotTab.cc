@@ -240,7 +240,10 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
 PlotMSPlotTab::~PlotMSPlotTab() { }
 
 QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
-    return QList<QToolButton*>(); }
+    QList<QToolButton*> list;
+    foreach(PlotMSTab* tab, itsTabs_) list << tab->toolButtons();
+    return list;
+}
 
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {
@@ -349,6 +352,16 @@ PlotExportFormat PlotMSPlotTab::currentlySetExportFormat() const {
     }
     
     return format;
+}
+
+
+// Protected //
+
+void PlotMSPlotTab::addTab(PlotMSTab* tab) {
+    if(tab != NULL && !itsTabs_.contains(tab)) {
+        itsTabs_.append(tab);
+        tabWidget->addTab(tab, tab->tabName());
+    }
 }
 
 

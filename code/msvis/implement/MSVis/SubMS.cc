@@ -324,7 +324,9 @@ namespace casa {
 	
       }
       
-      verifyColumns(ms_p,parseColumnNames(colname));
+      // Watch out!  This throws an AipsError if ms_p doesn't have the
+      // requested columns.
+      verifyColumns(ms_p, parseColumnNames(colname));
 
       if(!makeSelection()){
 	os << LogIO::SEVERE 
@@ -335,6 +337,8 @@ namespace casa {
 	return False;
       }
       mscIn_p=new MSColumns(mssel_p);
+      // Note again the verifyColumns() a few lines back that stops setupMS()
+      // from being called if the MS doesn't have the requested columns.
       MeasurementSet* outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
 					 mscIn_p->observation().telescopeName()(0),
 					 String(colname));
@@ -565,7 +569,8 @@ namespace casa {
     // Even though we know the data is going to be the same shape throughout I'll
     // still create a column that has a variable shape as this will permit MS's
     // with other shapes to be appended.
-    if (colNamesTok.nelements() == 1)
+    uInt ncols = colNamesTok.nelements();
+    if (ncols < 2)
       {
 	MS::addColumnToDesc(td, MS::DATA, 2);
 	String hcolName=String("Tiled")+String("DATA");
@@ -573,7 +578,7 @@ namespace casa {
 			     stringToVector("DATA"));
       }
     else
-      for(uInt i=0;i<colNamesTok.nelements();i++)
+      for(uInt i=0; i < ncols;i++)
 	{
 	  if (colNamesTok[i]==MS::columnName(MS::DATA))
 	    MS::addColumnToDesc(td, MS::DATA, 2);
@@ -918,7 +923,7 @@ namespace casa {
   //
   // The method is called only in makeSubMS().  Should really be
   // called in setupMS.  But the latter has been made into a static
-  // meathod and verifyColumns() cannot be called there.
+  // method and verifyColumns() cannot be called there.
   //
   void SubMS::verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames)
   {
@@ -939,7 +944,7 @@ namespace casa {
     // isn't unnecessarily repeated.
     static String my_colNameStr = "";
     static Vector<String> my_colNameVect;
-    if(col == my_colNameStr){
+    if(col == my_colNameStr && col != ""){
       return my_colNameVect;
     }    
     else if(col == "None"){
@@ -1009,15 +1014,14 @@ namespace casa {
 	  else
 	    {
 	      my_colNameVect[0] = MS::columnName(MS::DATA);
-	      os << LogIO::SEVERE << "Unrecognized column "<<tokens[i]
+	      os << LogIO::SEVERE << "Unrecognized column " << tokens[i]
 		 << " ...using DATA."
 		 << LogIO::POST;
 	    }
 	} 
-    
-//     for(uInt i=0;i<my_colNameVect.nelements();i++)
-//       if (!ms.isColumn(columnName[i]))
-// 	throw(AipsError("Column name not in the give MS"));
+
+    // Whether or not the MS has the columns is checked by verifyColumns().
+    // Unfortunately it cannot be done here because this is a static method.
 
     os << LogIO::NORMAL << "Splitting ";
     for(uInt i=0;i<my_colNameVect.nelements();i++)
@@ -1113,7 +1117,9 @@ namespace casa {
 
     //Deal with data
 
-    const Vector<String> columnName = parseColumnNames(whichCol);    
+    // RR 5/15/2009: whichCol has already been vetted higher up in the calling
+    // chain by verifyColumns().
+    const Vector<String> columnName = parseColumnNames(whichCol);
     
     if(!doChanAver_p){
       ROArrayColumn<Complex> data;
@@ -1394,6 +1400,8 @@ void SubMS::relabelIDs()
       spwindex[spw_p[k]]=k;
     }
     
+    // RR 5/15/2009: columnName has already been vetted higher up in the
+    // calling chain by verifyColumns().
     const Vector<String> colNameTok=parseColumnNames(columnName);
     const uInt ntok=colNameTok.nelements();
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
@@ -1522,6 +1530,8 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
   Cube<Bool> outflag(npol_p[0], nchan_p[0], nrow);
   Cube<Float> outspweight;
     
+  // RR 5/15/2009: columnName has already been vetted higher up in the
+  // calling chain by verifyColumns().
   const Vector<String> colNameTok=parseColumnNames(columnName);
   const uInt ntok=colNameTok.nelements();
   ROArrayColumn<Complex> data;
@@ -1604,9 +1614,11 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
 const ROArrayColumn<Complex>& SubMS::right_column(const MSColumns *ms_p,
 						  const String& colName)
 {
-  if(colName == MS::columnName(MS::DATA))
+  const String myColName(upcase(colName));
+  
+  if(myColName == MS::columnName(MS::DATA))
     return ms_p->data();
-  else if(colName == "MODEL_DATA")
+  else if(myColName == "MODEL_DATA")
     return ms_p->modelData();
   else
     return ms_p->correctedData();

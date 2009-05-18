@@ -854,7 +854,6 @@ unsigned int QPCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
 
 void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
     logMethod(CLASS_NAME, "removePlotItems", true);
-    int changedLayers = 0;
     bool replot = m_canvas.autoReplot();
     m_canvas.setAutoReplot(false);
     for(unsigned int i = 0; i < items.size(); i++) {
@@ -863,7 +862,7 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_plotItems[j].first) {
                 m_plotItems[j].second->detach();
                 m_plotItems.erase(m_plotItems.begin() + j);
-                changedLayers |= MAIN;
+                m_canvas.setLayerChanged(MAIN);
                 break;
             }
         }
@@ -871,14 +870,13 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_layeredItems[j].first) {
                 m_layeredItems[j].second->detach();
                 m_layeredItems.erase(m_layeredItems.begin() + j);
-                changedLayers |= ANNOTATION;
+                m_canvas.setLayerChanged(ANNOTATION);
                 break;
             }
         }
     }
-    if(changedLayers != 0 && replot) {
+    if(replot) {
         PRE_REPLOT
-        m_canvas.setLayersChanged(changedLayers);
         m_canvas.replot();
         POST_REPLOT
     }

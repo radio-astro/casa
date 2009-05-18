@@ -64,6 +64,9 @@ public:
     // Default constructor.
     PlotMSSelection();
     
+    // Copy constructor.  See operator=().
+    PlotMSSelection(const PlotMSSelection& copy);
+    
     // Destructor.
     ~PlotMSSelection();
     
@@ -79,6 +82,7 @@ public:
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
                Matrix<Int>& chansel) const;
+    
     
     // Gets/Sets the value for the given selection field.
     // <group>
@@ -113,6 +117,7 @@ public:
     void setMsselect(const String& v)  { setValue(MSSELECT, v);  }
     // </group>
     
+    
     // Equality operators.
     // <group>
     bool operator==(const PlotMSSelection& other) const;
@@ -120,9 +125,13 @@ public:
         return !(operator==(other)); }
     // </group>
     
+    // Copy operator.
+    PlotMSSelection& operator=(const PlotMSSelection& copy);
+    
 private:    
     // Selection field values.
     map<Field, String> itsValues_;
+    
     
     // Initializes the values to their defaults.
     void initDefaults();

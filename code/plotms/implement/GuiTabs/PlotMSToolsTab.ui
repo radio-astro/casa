@@ -67,7 +67,7 @@
          <string>Mark Regions</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/mark.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/mark.png</iconset>
         </property>
        </widget>
       </item>
@@ -77,7 +77,7 @@
          <string>Zoom</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/zoom.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/zoom.png</iconset>
         </property>
        </widget>
       </item>
@@ -87,7 +87,33 @@
          <string>Pan</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/pan.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/pan.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="handAnnotateText" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="text" >
+         <string>Annotate Text</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/annotate_text.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="handAnnotateRectangle" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="text" >
+         <string>Annotate Rectangle</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/annotate_rectangle.png</iconset>
         </property>
        </widget>
       </item>
@@ -134,7 +160,7 @@
          <string>Clear Regions</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/clear.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/clear.png</iconset>
         </property>
        </widget>
       </item>
@@ -147,7 +173,7 @@
          <string>Flag Regions</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/flag.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/flag.png</iconset>
         </property>
        </widget>
       </item>
@@ -160,7 +186,7 @@
          <string>Unflag Regions</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/unflag.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/unflag.png</iconset>
         </property>
        </widget>
       </item>
@@ -173,7 +199,7 @@
          <string>Locate</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/locate.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/locate.png</iconset>
         </property>
        </widget>
       </item>
@@ -223,7 +249,7 @@
          <string>Back</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_back.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_back.png</iconset>
         </property>
        </widget>
       </item>
@@ -236,7 +262,7 @@
          <string>Base</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_base.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_base.png</iconset>
         </property>
        </widget>
       </item>
@@ -249,7 +275,7 @@
          <string>Forward</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_forward.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/stack_forward.png</iconset>
         </property>
        </widget>
       </item>
@@ -336,6 +362,9 @@
    </item>
    <item>
     <widget class="QGroupBox" name="iterationBox" >
+     <property name="enabled" >
+      <bool>false</bool>
+     </property>
      <property name="title" >
       <string>Iteration</string>
      </property>
@@ -364,7 +393,7 @@
          <string>First</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/first.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/first.png</iconset>
         </property>
        </widget>
       </item>
@@ -377,7 +406,7 @@
          <string>Previous</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/prev.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/prev.png</iconset>
         </property>
        </widget>
       </item>
@@ -390,7 +419,7 @@
          <string>Next</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/next.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/next.png</iconset>
         </property>
        </widget>
       </item>
@@ -403,7 +432,7 @@
          <string>Last</string>
         </property>
         <property name="icon" >
-         <iconset resource="PlotMSPlotter.qrc" >:/actions/images/last.png</iconset>
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/last.png</iconset>
         </property>
        </widget>
       </item>
@@ -482,7 +511,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="PlotMSPlotter.qrc" />
+  <include location="../Gui/PlotMSPlotter.qrc" />
  </resources>
  <connections/>
 </ui>

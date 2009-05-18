@@ -102,6 +102,11 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
                 tools->trackerTool()->addNotifier(toolsTab);
                 tools->selectTool()->setDrawRects(true);
                 
+                // register annotator tool
+                canvas->registerMouseTool(
+                        PlotMouseToolPtr(&plotter->getAnnotator(), false),
+                        false, true);
+                
                 // add plotmsplotter as draw watcher
                 canvas->registerDrawWatcher(PlotDrawWatcherPtr(plotter,false));
                 

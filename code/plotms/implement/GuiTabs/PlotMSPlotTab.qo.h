@@ -48,15 +48,22 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
                       public PlotMSPlotManagerWatcher {
     Q_OBJECT
     
+    //# Friend class declarations.
+    friend class PlotMSPlotter;
+    
 public:
-    // Constructor which takes the parent and plotter.
+    // Constructor which takes the parent plotter.
     PlotMSPlotTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSPlotTab();
     
     
-    // Implements PlotMSTab::toolButtons().
+    // Implements PlotMSTab::tabName().
+    QString tabName() const { return "Plots"; }
+    
+    // Implements PlotMSTab::toolButtons().  Should be called AFTER any tabs
+    // are added using addTab().
     QList<QToolButton*> toolButtons() const;
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
@@ -88,7 +95,14 @@ public:
     vector<PMS::Axis> selectedReleaseAxes() const {
         return selectedLoadOrReleaseAxes(false); }
     
+protected:
+    // Adds the given tab to the end of the tab widget.
+    void addTab(PlotMSTab* tab);
+    
 private:
+    // PlotMSTab objects in tab widget.
+    QList<PlotMSTab*> itsTabs_;
+    
     // Widgets for file selection for the MS and export, respectively.
     QtFileWidget* itsMSFileWidget_, *itsExportFileWidget_;
     

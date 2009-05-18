@@ -57,6 +57,9 @@ public:
     virtual ~PlotMSTab();
     
     
+    // Returns a string to use as the tab name for this widget.
+    virtual QString tabName() const = 0;
+    
     // Returns all tool buttons on this tab.
     virtual QList<QToolButton*> toolButtons() const = 0;
     

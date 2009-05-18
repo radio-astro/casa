@@ -104,6 +104,14 @@ public:
     virtual const PlotMSData& data() const;
     // </group>
     
+    // Gets the plot's MS and selected MS sources.
+    // <group>
+    virtual MeasurementSet& ms();
+    virtual const MeasurementSet& ms() const;
+    virtual MeasurementSet& selectedMS();
+    virtual const MeasurementSet& selectedMS() const;
+    // </group>
+    
     // Gets the plot's VisSet source.  WARNING: could be null if MS hasn't been
     // set/opened yet.
     // <group>
@@ -118,6 +126,10 @@ public:
     // protected updated methods as needed.
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag, bool redrawRequired);
+    
+    // Calls the dataChanged() method on the MaskedScatterPlots.  This WILL
+    // cause a redraw of the affected canvases.
+    virtual void plotDataChanged();
     
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
@@ -173,9 +185,9 @@ protected:
     // the MS, selected MS, and VisSet with the current parameters.
     virtual bool updateMS();    
     
-    // Returns true if drawing is currently being held on at least one plot
-    // canvas, false otherwise.
-    virtual bool drawingHeld();
+    // Returns true if drawing is currently being held on all plot canvases,
+    // false otherwise.
+    virtual bool allDrawingHeld();
     
     // Holds drawing on all plot canvases.
     virtual void holdDrawing();

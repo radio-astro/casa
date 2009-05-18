@@ -181,6 +181,9 @@
    </property>
   </action>
   <action name="actionIterNext" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/next.png</iconset>
    </property>
@@ -189,6 +192,9 @@
    </property>
   </action>
   <action name="actionIterPrev" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/prev.png</iconset>
    </property>
@@ -306,6 +312,9 @@
    </property>
   </action>
   <action name="actionIterFirst" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/first.png</iconset>
    </property>
@@ -314,6 +323,9 @@
    </property>
   </action>
   <action name="actionIterLast" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/last.png</iconset>
    </property>
@@ -365,6 +377,9 @@
    </property>
   </action>
   <action name="actionCacheRelease" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="text" >
     <string>Release Axes</string>
    </property>
@@ -372,6 +387,45 @@
   <action name="actionPlotExport" >
    <property name="text" >
     <string>Export</string>
+   </property>
+  </action>
+  <action name="actionAnnotate" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>Annotate</string>
+   </property>
+  </action>
+  <action name="actionAnnotateText" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_text.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Annotate Text</string>
+   </property>
+  </action>
+  <action name="actionAnnotateRectangle" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_rectangle.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Annotate Rectangle</string>
    </property>
   </action>
  </widget>

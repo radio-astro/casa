@@ -140,7 +140,7 @@ protected:
     void drawCurves(QPainter *painter);
     void drawRects(QPainter *painter);
        
-    enum { Margin = 60 };
+    enum { Margin = 80 };
 
     GraphLabel title;
     GraphLabel xLabel;

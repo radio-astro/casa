@@ -55,6 +55,8 @@ public:
     static const String LOG_INITIALIZE_GUI;
     static const String LOG_LOAD_CACHE;
     static const String LOG_LOCATE;
+    static const String LOG_FLAG;
+    static const String LOG_UNFLAG;
     // </group>
     
     

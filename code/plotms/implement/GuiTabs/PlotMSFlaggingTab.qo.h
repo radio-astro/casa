@@ -1,4 +1,4 @@
-//# PlotMSToolsTab.qo.h: Subclass of PlotMSTab for tools management.
+//# PlotMSFlaggingTab.qo.h: Subclass of PlotMSTab for flagging.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,59 +24,50 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTMSTOOLSTAB_QO_H_
-#define PLOTMSTOOLSTAB_QO_H_
+#ifndef PLOTMSFLAGGINGTAB_QO_H_
+#define PLOTMSFLAGGINGTAB_QO_H_
 
-#include <plotms/GuiTabs/PlotMSToolsTab.ui.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.ui.h>
 
-#include <graphics/GenericPlotter/PlotTool.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-// Subclass of PlotMSTab that handles the tools for the current plot.  Watches
-// no parameters.
-class PlotMSToolsTab : public PlotMSTab, Ui::ToolsTab,
-                       public PlotTrackerToolNotifier {
+//# Forward Declarations.
+class PlotMSPlot;
+
+
+// Subclass of PlotMSTab that handles flagging.  WARNING: currently can only a
+// single PlotMSPlot.
+class PlotMSFlaggingTab : public PlotMSTab, Ui::FlaggingTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent plotter, and the QtActionGroup to
-    // use to synchronize tool actions with the radio buttons on the tab.
-    PlotMSToolsTab(PlotMSPlotter* parent);
+    // Constructor which takes the parent plotter.
+    PlotMSFlaggingTab(PlotMSPlotter* parent);
     
     // Destructor.
-    ~PlotMSToolsTab();
+    ~PlotMSFlaggingTab();
     
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Tools"; }
+    QString tabName() const { return "Flagging"; }
     
     // Implements PlotMSTab::toolButtons().
     QList<QToolButton*> toolButtons() const;
     
-    // Implements PlotMSParametersWatcher::parametersHaveChanged.  Currently
+    // Implements PlotMSParametersWatcher::parametersHaveChanged().  Currently
     // does nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag, bool redrawRequired) { }
     
     
-    // Show/hide the iteration buttons on this tab.
-    void showIterationButtons(bool show);
-    
-public slots:
-    // Slot for when all tools are turned off, and the "None" radio button
-    // should be checked.
-    void toolsUnchecked();
-    
-protected:
-    // Implements PlotTrackerToolNotifier::notifyTrackerChanged().  Updates the
-    // tracker information in the line edit, if the proper checkbox is toggled.
-    void notifyTrackerChanged(PlotTrackerTool& tool);
+    // See PlotMSFlaggingWidget::getValue().
+    PlotMSFlagging getValue(PlotMSPlot* plot = NULL) const;
 };
 
 }
 
-#endif /* PLOTMSTOOLSTAB_QO_H_ */
+#endif /* PLOTMSFLAGGINGTAB_QO_H_ */

@@ -720,6 +720,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 		dirtolerance=casaQuantity(dirtol);
 	    }
 	    
+	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
 	    mscat.concatenate(appendedMS);
 

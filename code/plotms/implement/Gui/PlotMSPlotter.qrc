@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/actions" >
+        <file>images/annotate_rectangle.png</file>
+        <file>images/annotate_text.png</file>
         <file>images/clear.png</file>
         <file>images/clear_plot.png</file>
         <file>images/first.png</file>

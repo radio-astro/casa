@@ -29,6 +29,7 @@
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
+#include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
 #include <plotms/Data/PlotMSVBAverager.h>
@@ -153,6 +154,8 @@ public:
   // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
   PlotLogMessage* locateNearest(Double x, Double y);
   PlotLogMessage* locateRange(Double xmin,Double xmax,Double ymin,Double ymax);
+  PlotLogMessage* flagRange(const PlotMSFlagging& flagging, Double xmin, Double xmax,
+			    Double ymin,Double ymax,Bool flag=True) { return NULL; };
   
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will

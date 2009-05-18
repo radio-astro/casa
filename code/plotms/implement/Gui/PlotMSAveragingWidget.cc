@@ -29,6 +29,7 @@
 #include <casaqt/QtUtilities/QtButtonGroup.qo.h>
 
 #include <QDoubleValidator>
+#include <QSet>
 
 namespace casa {
 
@@ -38,10 +39,10 @@ namespace casa {
 
 PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
         QtEditingWidget(parent), itsFlag_(true) {
+    // Set up GUI.
     setupUi(this);
     
-    setValue(PlotMSAveraging());
-    
+    // Set up maps.
     itsFlags_[PlotMSAveraging::CHANNEL] = channel;
     itsFlags_[PlotMSAveraging::TIME] = time;
     itsFlags_[PlotMSAveraging::SCAN] = scan;
@@ -53,11 +54,30 @@ PlotMSAveragingWidget::PlotMSAveragingWidget(QWidget* parent) :
     itsValues_[PlotMSAveraging::CHANNEL] = channelValue;
     itsValues_[PlotMSAveraging::TIME] = timeValue;
     
-    // Baseline and antenna are mutually exclusive, but can both be turned off.
-    QtButtonGroup* group = new QtButtonGroup(this);
-    group->addButton(baseline);
-    group->addButton(antenna);
+    // Set up mutually exclusive groups.
+    QtButtonGroup* buttonGroup;
+    QSet<PlotMSAveraging::Field> seenFields;
+    foreach(PlotMSAveraging::Field f, itsFlags_.keys()) {
+        if(seenFields.contains(f)) continue;
+        const vector<PlotMSAveraging::Field>& group =
+            PlotMSAveraging::fieldMutuallyExclusiveGroup(f);
+        if(group.size() > 0) {
+            buttonGroup = new QtButtonGroup(this);
+            buttonGroup->addButton(itsFlags_[f]);
+            seenFields.insert(f);
+            
+            for(unsigned int i = 0; i < group.size(); i++) {
+                if(seenFields.contains(group[i])) continue;
+                buttonGroup->addButton(itsFlags_[group[i]]);
+                seenFields.insert(group[i]);
+            }
+        }
+    }
     
+    // Set value.
+    setValue(itsValue_);
+    
+    // Connect widgets.
     foreach(QCheckBox* w, itsFlags_)
         connect(w, SIGNAL(toggled(bool)), SLOT(averagingChanged()));
     

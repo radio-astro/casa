@@ -32,6 +32,8 @@
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/Data/PlotMSData.h>
+#include <plotms/Gui/PlotMSAnnotator.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
@@ -84,6 +86,8 @@ public:
     PlotMSPlotTab* getPlotTab() { return itsPlotTab_; }
     PlotMSToolsTab* getToolsTab() { return itsToolsTab_; }
     PlotMSOptionsTab* getOptionsTab() { return itsOptionsTab_; }
+    PlotMSFlaggingTab* getFlaggingTab() { return itsFlaggingTab_; }
+    PlotMSAnnotator& getAnnotator() { return itsAnnotator_; }
     // </group>
     
     
@@ -128,11 +132,15 @@ public:
     // otherwise rejecting the dialog.
     bool showQuestion(const String& message, const String& title);
     
-    // Holds/Releases drawing on all plot canvases.
+    // Holds/Releases drawing on all visible plot canvases.
     // <group>
     void holdDrawing();
     void releaseDrawing();
     // </group>
+    
+    // Returns true if drawing is being held on ALL visible plot canvases,
+    // false otherwise.
+    bool allDrawingHeld() const;
 
     // Returns all currently shown canvases in the plotter.
     vector<PlotCanvasPtr> currentCanvases();
@@ -211,6 +219,9 @@ private:
     // Plot tab.
     PlotMSPlotTab* itsPlotTab_;
     
+    // Flagging tab (on the plot tab).
+    PlotMSFlaggingTab* itsFlaggingTab_;
+    
     // Tools tab.
     PlotMSToolsTab* itsToolsTab_;
     
@@ -229,13 +240,11 @@ private:
     // Waiting threads.
     vector<PlotMSThread*> itsWaitingThreads_;
     
-    // Flag for whether triggered QActions should trigger the associated PlotMS
-    // action or not.  Should be false when the QAction's checked state is
-    // being updated.
-    bool itsActionFlag_;
-    
     // Map between PlotMS actions and QActions.
     QMap<PlotMSAction::Type, QAction*> itsActionMap_;
+    
+    // Annotator tool.
+    PlotMSAnnotator itsAnnotator_;
     
     // "About" string.
     QString itsAboutString_;
@@ -245,35 +254,12 @@ private:
     // from constructors.
     void initialize(Plotter::Implementation impl);
     
+private slots:    
+    // Method for when an action has been triggered.
+    void action_() { action(dynamic_cast<QAction*>(sender())); }
+    
     // Method for when the given action has been triggered.
     void action(QAction* which);
-    
-private slots:
-    // Action-specific slots to map to general action() method.
-    // <group>
-    void actionFlag_() { action(actionFlag); }
-    void actionUnflag_() { action(actionUnflag); }
-    void actionLocate_() { action(actionLocate); }
-    void actionClearRegions_() { action(actionClearRegions); }
-    void actionIterFirst_() { action(actionIterFirst); }
-    void actionIterPrev_() { action(actionIterPrev); }
-    void actionIterNext_() { action(actionIterNext); }
-    void actionIterLast_() { action(actionIterLast); }
-    void actionMarkRegions_() { action(actionMarkRegions); }
-    void actionZoom_() { action(actionZoom); }
-    void actionPan_() { action(actionPan); }
-    void actionTrackerHover_() { action(actionTrackerHover); }
-    void actionTrackerDisplay_() { action(actionTrackerDisplay); }
-    void actionStackBack_() { action(actionStackBack); }
-    void actionStackBase_() { action(actionStackBase); }
-    void actionStackForward_() { action(actionStackForward); }
-    void actionCacheLoad_() { action(actionCacheLoad); }
-    void actionCacheRelease_() { action(actionCacheRelease); }
-    void actionPlotExport_() { action(actionPlotExport); }
-    void actionHoldRelease_() { action(actionHoldRelease); }
-    void actionClearPlots_() { action(actionClearPlots); }
-    void actionQuit_() { action(actionQuit); }
-    // </group>
     
     // Slot for when the currently running thread is finished.  Performs
     // cleanup and starts next waiting thread if applicable.

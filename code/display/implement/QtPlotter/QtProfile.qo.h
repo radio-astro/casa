@@ -131,6 +131,7 @@ private:
     String coordinateType;
     QString fileName;
     QString position;
+    QString yUnit;
 
     QString xpos;
     QString ypos;

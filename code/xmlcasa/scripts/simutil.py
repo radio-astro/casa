@@ -485,22 +485,22 @@ class simutil:
             stnz=[]
             if (params["coordsys"].upper()=="UTM"):
         ### expect easting, northing, elevation in m
-                self.msg("Antenna locations in UTM, expecting easting, northing, elevation in m",origin="readant") 
+                self.msg("Antenna locations in UTM; will read from file easting, northing, elevation in m",origin="readantenna") 
                 if params.has_key("zone"):
                     zone=params["zone"]
                 else:
-                    self.msg("You must specify zone=NN in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
                     return -1
                 if params.has_key("datum"):
                     datum=params["datum"]
                 else:
-                    self.msg("You must specify datum in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify datum in your antenna file",origin="readantenna",color="31")
                     return -1
                 if params.has_key("hemisphere"):
                     nors=params["hemisphere"]
                     nors=nors[0].upper()
                 else:
-                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",color="31")
                     return -1
                 
                 # if self.verbose: foo=self.getdatum(datum,verbose=True)
@@ -529,10 +529,10 @@ class simutil:
                         if params.has_key("datum"):
                             datum=params["datum"]
                         else:
-                            self.msg("You must specify zone=NN in your antenna file",origin="readant",color="31")
+                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
                             return -1
                         if (datum.upper() != "WGS84"):
-                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readant",color="31")
+                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",color="31")
                             return -1
                         self.msg("geodetic coordinates not implemented yet :(",color="31")
                     
@@ -768,7 +768,7 @@ class simutil:
             return -1
         
         if verbose:
-            self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]))
+            self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]),origin="getdatum")
         return datum[0],datum[1],datum[2],ellipsoids[ellipsoid][0],ellipsoids[ellipsoid][1]
     
     

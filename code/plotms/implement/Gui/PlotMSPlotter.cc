@@ -27,6 +27,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
+#include <casaqt/QtUtilities/QtActionGroup.qo.h>
 #include <casaqt/QtUtilities/QtLayeredLayout.h>
 #include <plotms/Actions/PlotMSDrawThread.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -162,6 +163,13 @@ void PlotMSPlotter::releaseDrawing() {
         canvases[i]->releaseDrawing();
 }
 
+bool PlotMSPlotter::allDrawingHeld() const {
+    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
+    for(unsigned int i = 0; i < canvases.size(); i++)
+        if(!canvases[i]->drawingIsHeld()) return false;
+    return true;
+}
+
 vector<PlotCanvasPtr> PlotMSPlotter::currentCanvases() {
 	return itsPlotter_->canvasLayout()->allCanvases(); }
 
@@ -205,12 +213,9 @@ bool PlotMSPlotter::actionIsChecked(PlotMSAction::Type type) const {
 void PlotMSPlotter::setActionIsChecked(PlotMSAction::Type type, bool checked,
         bool alsoTriggerAction) {
     QAction* action = itsActionMap_.value(type);
-    if(action != NULL && action->isCheckable()) {
-        bool oldaction = itsActionFlag_;
-        if(!alsoTriggerAction) itsActionFlag_ = false;
-        action->setChecked(checked);
-        if(!alsoTriggerAction) itsActionFlag_ = oldaction;
-    }
+    if(action == NULL) return;
+    if(action->isCheckable()) action->setChecked(checked);
+    if(alsoTriggerAction) action->trigger();
 }
 
 
@@ -253,6 +258,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
 // Private Methods //
 
 void PlotMSPlotter::initialize(Plotter::Implementation imp) {
+    // GUI initialize.
     setupUi(this);
     
     // Try to initialize plotter, and throw error on failure.
@@ -265,30 +271,28 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         throw AipsError(error);
     }
     
-    itsAboutString_ = aboutText(itsFactory_->implementation(), true).c_str();
-    itsActionFlag_ = true;
-    
-    // Qt //
-    
+    // Set various properties/members.
     setAnimated(false);
+    itsAboutString_ = aboutText(itsFactory_->implementation(), true).c_str();
     
-    // Set up GUI //
-    if(menuWidget() != NULL) itsEnableWidgets_ << menuWidget();
-    QList<QToolBar*> toolbars = findChildren<QToolBar*>();
-    for(int i = 0; i < toolbars.size(); i++) itsEnableWidgets_ << toolbars[i];
-    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
-    for(int i = 0; i < docks.size(); i++) itsEnableWidgets_ << docks[i];
-    
+    // Set up main splitter for tabs/plotter.
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
     splitter->setOpaqueResize(false);
-    itsEnableWidgets_ << splitter;
     setCentralWidget(splitter);
     
     QTabWidget* tabWidget = new QTabWidget();
     tabWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     splitter->addWidget(tabWidget);
     
-    // Action map //
+    // Get list of widgets to enable/disable.
+    if(menuWidget() != NULL) itsEnableWidgets_ << menuWidget();
+    QList<QToolBar*> toolbars = findChildren<QToolBar*>();
+    for(int i = 0; i < toolbars.size(); i++) itsEnableWidgets_ << toolbars[i];
+    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
+    for(int i = 0; i < docks.size(); i++) itsEnableWidgets_ << docks[i];
+    itsEnableWidgets_ << splitter;
+    
+    // Set up action map.
     itsActionMap_.insert(PlotMSAction::SEL_FLAG, actionFlag);
     itsActionMap_.insert(PlotMSAction::SEL_UNFLAG, actionUnflag);
     itsActionMap_.insert(PlotMSAction::SEL_LOCATE, actionLocate);
@@ -302,6 +306,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::TOOL_MARK_REGIONS, actionMarkRegions);
     itsActionMap_.insert(PlotMSAction::TOOL_ZOOM, actionZoom);
     itsActionMap_.insert(PlotMSAction::TOOL_PAN, actionPan);
+    itsActionMap_.insert(PlotMSAction::TOOL_ANNOTATE_TEXT, actionAnnotateText);
+    itsActionMap_.insert(PlotMSAction::TOOL_ANNOTATE_RECTANGLE,
+                         actionAnnotateRectangle);
     
     itsActionMap_.insert(PlotMSAction::TRACKER_HOVER, actionTrackerHover);
     itsActionMap_.insert(PlotMSAction::TRACKER_DISPLAY, actionTrackerDisplay);
@@ -319,8 +326,10 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::CLEAR_PLOTTER, actionClearPlots);
     itsActionMap_.insert(PlotMSAction::QUIT, actionQuit);
     
-    // Set up tabs //
+    // Set up tabs.
     itsPlotTab_ = new PlotMSPlotTab(this);
+    itsFlaggingTab_ = new PlotMSFlaggingTab(this);
+    itsPlotTab_->addTab(itsFlaggingTab_);
     itsToolsTab_ = new PlotMSToolsTab(this);
     itsOptionsTab_ = new PlotMSOptionsTab(this);
     itsToolButtons_ << itsPlotTab_->toolButtons();
@@ -334,55 +343,63 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         maxWidth = itsOptionsTab_->maximumWidth();
     tabWidget->setMaximumWidth(maxWidth);
     
-    tabWidget->addTab(itsPlotTab_, "Plots");
-    tabWidget->addTab(itsToolsTab_, "Tools");
-    tabWidget->addTab(itsOptionsTab_, "Options");
+    tabWidget->addTab(itsPlotTab_, itsPlotTab_->tabName());
+    tabWidget->addTab(itsToolsTab_, itsToolsTab_->tabName());
+    tabWidget->addTab(itsOptionsTab_, itsOptionsTab_->tabName());
     
-    // Set up threads //
+    // Set up threads.
     itsCurrentThread_ = NULL;
     itsThreadProgress_ = new QtProgressWidget(false, false, false, true, false,
                                               this);
     itsThreadProgress_->setVisible(false);
     itsThreadProgress_->setWindowIcon(windowIcon());
     
-    // Connect actions //
-    connect(actionFlag, SIGNAL(triggered()), SLOT(actionFlag_()));
-    connect(actionUnflag, SIGNAL(triggered()), SLOT(actionUnflag_()));
-    connect(actionLocate, SIGNAL(triggered()), SLOT(actionLocate_()));
-    connect(actionClearRegions, SIGNAL(triggered()),
-            SLOT(actionClearRegions_()));
-    connect(actionIterFirst, SIGNAL(triggered()), SLOT(actionIterFirst_()));
-    connect(actionIterPrev, SIGNAL(triggered()), SLOT(actionIterPrev_()));
-    connect(actionIterNext, SIGNAL(triggered()), SLOT(actionIterNext_()));
-    connect(actionIterLast, SIGNAL(triggered()), SLOT(actionIterLast_()));
-    connect(actionMarkRegions, SIGNAL(toggled(bool)),
-            SLOT(actionMarkRegions_()));
-    connect(actionZoom, SIGNAL(toggled(bool)), SLOT(actionZoom_()));
-    connect(actionPan, SIGNAL(toggled(bool)), SLOT(actionPan_()));
-    connect(actionTrackerHover, SIGNAL(toggled(bool)),
-            SLOT(actionTrackerHover_()));
-    connect(actionTrackerDisplay, SIGNAL(toggled(bool)),
-            SLOT(actionTrackerDisplay_()));
-    connect(actionStackBack, SIGNAL(triggered()), SLOT(actionStackBack_()));
-    connect(actionStackBase, SIGNAL(triggered()), SLOT(actionStackBase_()));
-    connect(actionStackForward, SIGNAL(triggered()),
-            SLOT(actionStackForward_()));
-    connect(actionCacheLoad, SIGNAL(triggered()), SLOT(actionCacheLoad_()));
-    connect(actionCacheRelease, SIGNAL(triggered()),
-            SLOT(actionCacheRelease_()));
-    connect(actionPlotExport, SIGNAL(triggered()), SLOT(actionPlotExport_()));
-    connect(actionHoldRelease, SIGNAL(toggled(bool)),
-            SLOT(actionHoldRelease_()));
-    connect(actionClearPlots, SIGNAL(triggered()), SLOT(actionClearPlots_()));
-    connect(actionQuit, SIGNAL(triggered()), SLOT(actionQuit_()));
-
+    // Set up annotator.
+    QMenu* annotatorMenu = new QMenu();
+    annotatorMenu->addAction(actionAnnotateText);
+    annotatorMenu->addAction(actionAnnotateRectangle);
+    actionAnnotate->setMenu(annotatorMenu);
+    itsAnnotator_.setActions(actionAnnotate, itsActionMap_);
+    
+    // Insert annotator tool button after pan.
+    QList<QAction*> tools = toolsToolBar->actions();
+    for(int i = 0; i < tools.size(); i++) {
+        if(tools[i] == actionPan) {
+            if(i < tools.size() - 1)
+                toolsToolBar->insertAction(tools[i + 1], actionAnnotate);
+            else toolsToolBar->addAction(actionAnnotate);
+            break;
+        }
+    }
+    
+    // Set up exclusive tool actions.
+    QtActionGroup* toolGroup = new QtActionGroup(this);
+    toolGroup->addAction(actionMarkRegions);
+    toolGroup->addAction(actionZoom);
+    toolGroup->addAction(actionPan);
+    toolGroup->addAction(actionAnnotateText);
+    toolGroup->addAction(actionAnnotateRectangle);
+    connect(toolGroup, SIGNAL(triggered(QAction*)), SLOT(action(QAction*)));
+    connect(toolGroup, SIGNAL(unchecked()),
+            itsToolsTab_, SLOT(toolsUnchecked()));
+    
+    // Set up non-exclusive actions.
+    QSet<QAction*> actions;
+    actions << actionFlag << actionUnflag << actionLocate << actionClearRegions
+            << actionIterFirst << actionIterPrev << actionIterNext
+            << actionIterLast << actionAnnotate << actionTrackerHover
+            << actionTrackerDisplay << actionStackBack << actionStackBase
+            << actionStackForward << actionCacheLoad << actionCacheRelease
+            << actionPlotExport << actionHoldRelease << actionClearPlots
+            << actionQuit;
+    foreach(QAction* a, actions)
+        connect(a, SIGNAL(triggered()), SLOT(action_()));
+    
+    // Connect remaining actions.
     connect(actionAbout, SIGNAL(triggered()), SLOT(showAbout()));
     connect(actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     
-    
-    // Non-Qt //
-    
-    // Set up plotter
+    // Set up plotter.
     itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
             PlotMSLogger::levelToEventFlag(
             itsParent_->getParameters().logLevel(),
@@ -406,75 +423,63 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     setVisible(false);
 }
 
-void PlotMSPlotter::action(QAction* act) {
-    if(!itsActionFlag_) return;
 
-    if(act == actionMarkRegions || act == actionZoom || act == actionPan) {
-        bool mark = actionMarkRegions->isChecked(),
-             zoom = actionZoom->isChecked(), pan = actionPan->isChecked();
-        if(mark || zoom || pan) {
-            // only perform action on an "on"
-            if(!act->isChecked()) return;
-            
-            itsActionFlag_ = false;
-            
-            // enforce mutual exclusivity
-            actionMarkRegions->setChecked(mark && act == actionMarkRegions);
-            actionZoom->setChecked(zoom && act == actionZoom);
-            actionPan->setChecked(pan && act == actionPan);
-            
-            itsActionFlag_ = true;
-        }
+// Private Slots //
+
+void PlotMSPlotter::action(QAction* act) {
+    if(act == NULL) return;
+    
+    // If it's the annotate button, turn on/off the action corresponding to the
+    // current mode.
+    if(act == actionAnnotate) {
+        PlotMSAnnotator::Mode m = itsAnnotator_.drawingMode();
+        if(m == PlotMSAnnotator::TEXT)
+            actionAnnotateText->setChecked(act->isChecked());
+        else if(m == PlotMSAnnotator::RECTANGLE)
+            actionAnnotateRectangle->setChecked(act->isChecked());
+        return;
+        
+    // If it's one of the specific annotate mode actions, update the general
+    // annotate button.
+    } else if(act == actionAnnotateText || act == actionAnnotateRectangle) {
+        actionAnnotate->setChecked(actionAnnotateText->isChecked() ||
+                actionAnnotateRectangle->isChecked());
     }
     
+    
+    // Set up the generic PlotMS action mapped to the QAction.
     PlotMSAction::Type type = itsActionMap_.key(act);
     PlotMSAction action(type);
     
-    // Set parameters from GUI settings, for actions that need them.
-    if(type == PlotMSAction::TOOL_MARK_REGIONS)
-    	action.setParameter(PlotMSAction::P_ON_OFF,
-    			            actionMarkRegions->isChecked());
-    else if(type == PlotMSAction::TOOL_ZOOM)
-    	action.setParameter(PlotMSAction::P_ON_OFF, actionZoom->isChecked());
-    else if(type == PlotMSAction::TOOL_PAN)
-    	action.setParameter(PlotMSAction::P_ON_OFF, actionPan->isChecked());
-    else if(type == PlotMSAction::TRACKER_HOVER)
-    	action.setParameter(PlotMSAction::P_ON_OFF,
-    			            actionTrackerHover->isChecked());
-    else if(type == PlotMSAction::TRACKER_DISPLAY)
-    	action.setParameter(PlotMSAction::P_ON_OFF,
-    			            actionTrackerDisplay->isChecked());
-    else if(type == PlotMSAction::HOLD_RELEASE_DRAWING)
-    	action.setParameter(PlotMSAction::P_ON_OFF,
-    			            actionHoldRelease->isChecked());
-    else if(type == PlotMSAction::CACHE_LOAD) {
-    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
-    	action.setParameter(PlotMSAction::P_AXES,
-    			            itsPlotTab_->selectedLoadAxes());
-    } else if(type == PlotMSAction::CACHE_RELEASE) {
-    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
-    	action.setParameter(PlotMSAction::P_AXES,
-    			            itsPlotTab_->selectedReleaseAxes());
-    } else if(type == PlotMSAction::PLOT_EXPORT) {
-    	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
-    	PlotExportFormat format = itsPlotTab_->currentlySetExportFormat();
-    	action.setParameter(PlotMSAction::P_FILE, format.location);
-    	action.setParameter(PlotMSAction::P_FORMAT,
-    			PlotExportFormat::exportFormat(format.type));
-    	action.setParameter(PlotMSAction::P_HIGHRES,
-    			format.resolution == PlotExportFormat::HIGH);
-    	action.setParameter(PlotMSAction::P_DPI, format.dpi);
-    	action.setParameter(PlotMSAction::P_WIDTH, format.width);
-    	action.setParameter(PlotMSAction::P_HEIGHT, format.height);
+    // Set required parameters for actions that need them.
+    if(PlotMSAction::requires(type, PlotMSAction::P_ON_OFF))
+        action.setParameter(PlotMSAction::P_ON_OFF, act->isChecked());
+    if(PlotMSAction::requires(type, PlotMSAction::P_PLOT))
+        action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
+    
+    // Set parameters for specific actions.
+    if(type == PlotMSAction::CACHE_LOAD)
+        action.setParameter(PlotMSAction::P_AXES,
+                itsPlotTab_->selectedLoadAxes());
+    else if(type == PlotMSAction::CACHE_RELEASE)
+        action.setParameter(PlotMSAction::P_AXES,
+                itsPlotTab_->selectedReleaseAxes());
+    else if(type == PlotMSAction::PLOT_EXPORT) {
+        PlotExportFormat format = itsPlotTab_->currentlySetExportFormat();
+        action.setParameter(PlotMSAction::P_FILE, format.location);
+        action.setParameter(PlotMSAction::P_FORMAT,
+                PlotExportFormat::exportFormat(format.type));
+        action.setParameter(PlotMSAction::P_HIGHRES,
+                format.resolution == PlotExportFormat::HIGH);
+        action.setParameter(PlotMSAction::P_DPI, format.dpi);
+        action.setParameter(PlotMSAction::P_WIDTH, format.width);
+        action.setParameter(PlotMSAction::P_HEIGHT, format.height);
     }
     
+    // Trigger the action.
     bool result = action.doAction(itsParent_);
-    if(!result)
-    	showError(action.doActionResult(), "Action Failed!", false);
+    if(!result)	showError(action.doActionResult(), "Action Failed!", false);
 }
-
-
-// Private Slots //
 
 void PlotMSPlotter::currentThreadFinished() {
     // Run post-thread method as needed.

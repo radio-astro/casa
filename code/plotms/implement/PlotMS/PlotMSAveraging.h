@@ -44,9 +44,8 @@ public:
     // Enum and methods to define the different fields for an MS averaging.
     // All fields have a bool flag for on/off, and some of them also have a
     // double value (see fieldHasValue()).  Fields are off by default, with a
-    // default double value of 0 if applicable.
-    // There is a special case where baseline and antenna cannot both be turned
-    // on at the same time.
+    // default double value of 0 if applicable.  Some fields are in mutually
+    // exclusive groups (see fieldMutuallyExclusiveGroup()).
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW)
@@ -54,9 +53,20 @@ public:
               "channel", "time", "scan", "field", "baseline", "antenna", "spw")
     // </group>
               
-    // Returns true if the given field has a double value associated with it or
+    // Returns whether the given field has a double value associated with it or
     // not.
     static bool fieldHasValue(Field f);
+    
+    // Returns the list of fields, NOT including the given, with which the
+    // given field is mutually exclusive.  In a mutually exclusive group, only
+    // one field can be turned on at a given time (although they can all be
+    // off at the same time).
+    static const vector<Field>& fieldMutuallyExclusiveGroup(Field f);
+    
+    // Returns true if the given field is in a mutually exclusive group, false
+    // otherwise.  See fieldMutuallyExclusiveGroup().
+    static bool fieldIsInMutuallyExclusiveGroup(Field f) {
+        return fieldMutuallyExclusiveGroup(f).size() > 0; }
     
     
     // Non-Static //
@@ -77,7 +87,7 @@ public:
     Record toRecord() const;
     // </group>
     
-    // Gets/Sets the on/off value for the given field.
+    // Gets/Sets the on/off flag for the given field.
     // <group>
     bool getFlag(Field f) const;
     void getFlag(Field f, bool& flag) const { flag = getFlag(f); }
@@ -90,6 +100,7 @@ public:
     void getValue(Field f, double& value) const { value = getValue(f); }
     void setValue(Field f, double value);
     // </group>
+    
     
     // Convenience methods for returning the standard field values.
     // <group>
@@ -106,15 +117,15 @@ public:
     
     // Convenience methods for setting the standard field values.
     // <group>
-    void setChannel(bool channel) { setFlag(CHANNEL, channel); }
+    void setChannel(bool flag) { setFlag(CHANNEL, flag); }
     void setChannelValue(double value) { setValue(CHANNEL, value); }
-    void setTime(bool time) { setFlag(TIME, time); }
+    void setTime(bool flag) { setFlag(TIME, flag); }
     void setTimeValue(double value) { setValue(TIME, value); }
-    void setScan(bool scan) { setFlag(SCAN, scan); }
-    void setField(bool field) { setFlag(FIELD, field); }
-    void setBaseline(bool baseline) { setFlag(BASELINE, baseline); }
-    void setAntenna(bool antenna) { setFlag(ANTENNA, antenna); }
-    void setSpw(bool spw) { setFlag(SPW, spw); }
+    void setScan(bool flag) { setFlag(SCAN, flag); }
+    void setField(bool flag) { setFlag(FIELD, flag); }
+    void setBaseline(bool flag) { setFlag(BASELINE, flag); }
+    void setAntenna(bool flag) { setFlag(ANTENNA, flag); }
+    void setSpw(bool flag) { setFlag(SPW, flag); }
     // </group>
     
     
@@ -126,7 +137,7 @@ public:
     // </group>
     
 private:
-    // Averaging field values.
+    // Averaging field flags.
     map<Field, bool> itsFlags_;
     
     // Averaging field double values.

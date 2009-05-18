@@ -74,7 +74,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
          pc(0), te(0), analysis(0), 
          coordinate("world"), coordinateType("velocity"),
          fileName(name), position(""), xpos(""), ypos(""),
-         cube(0)
+	 yUnit(""), cube(0)
 {
 
     initPlotterResource();
@@ -226,7 +226,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
                    "'crosshair' or 'rectangle' or 'polygon'\n"
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
-    pc->setYLabel("Flux Density (mJy)", 10, 0.5, "Helvetica [Cronyx]");
+    
+    yUnit = QString(img->units().getName().chars());
+
+    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
     pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
     pc->setAutoScale(autoScale->checkState());
        
@@ -392,7 +395,7 @@ void QtProfile::writeText()
     ts << "#title: Image profile - " << fileName << " " << position << "\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
-    ts << "#yLabel: " << "Flux Density (mJy)\n";
+    ts << "#yLabel: " << "(" << yUnit << ")\n";
     
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
@@ -547,7 +550,9 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     analysis = new ImageAnalysis(img);
     setWindowTitle(QString("Image Profile - ").append(name));
 
-    pc->setYLabel("Flux Density (mJy)", 10, 0.5, "Helvetica [Cronyx]");
+    yUnit = QString(img->units().getName().chars());
+
+    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
     pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
        
     xpos = "";
@@ -623,21 +628,10 @@ void QtProfile::wcChanged(const String c,
     Vector<Float> z_yval;
     //Get Profile Flux density v/s velocity
     Bool ok = False;
-    String bunit;
-    ok=analysis->getFreqProfile(bunit, 
-                          xv, yv, z_xval, z_yval, 
-                          coordinate, coordinateType);
-
-    //cout << "ok=" << ok << endl;
-    if (!ok)
-       return;
-
-    //cout << "------bunit=" << bunit << endl;
-    if (bunit.contains("K (Tb)"))
-       pc->setYLabel("Brightness K (Tb)", 10, 0.5, 
-                     "Helvetica [Cronyx]");
-
+    ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
+                coordinate, coordinateType);
     pc->plotPolyLine(z_xval, z_yval);
+    //cout << "ok=" << ok << endl;
     //cout << "xv=" << xv << " yv=" << yv << endl;
     //cout << "coordinate=" << coordinate 
     //     << " coordinateType=" << coordinateType << endl;

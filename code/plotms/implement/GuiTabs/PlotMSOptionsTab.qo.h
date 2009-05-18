@@ -44,12 +44,15 @@ class PlotMSOptionsTab : public PlotMSTab, Ui::OptionsTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent and plotter.
+    // Constructor which takes the parent plotter.
     PlotMSOptionsTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSOptionsTab();
     
+    
+    // Implements PlotMSTab::tabName().
+    QString tabName() const { return "Options"; }
     
     // Implements PlotMSTab::toolButtons().
     QList<QToolButton*> toolButtons() const;

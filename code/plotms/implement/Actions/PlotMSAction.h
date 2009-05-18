@@ -56,25 +56,23 @@ public:
         // Selection actions //
 
         // Flag the selected regions.   Operates on all visible canvases AT THE
-    	// TIME of the call to doAction().
-    	// No required parameters.
-        // NOT IMPLEMENTED.
+        // TIME of the call to doAction().
+        // No required parameters.
         SEL_FLAG,
 
         // Unflag the selected regions.   Operates on all visible canvases AT
         // THE TIME of the call to doAction().
-    	// No required parameters.
-        // NOT IMPLEMENTED.
+        // No required parameters.
         SEL_UNFLAG,
 
         // Locate on the selected regions.   Operates on all visible canvases
         // AT THE TIME of the call to doAction().
-    	// No required parameters.
+        // No required parameters.
         SEL_LOCATE,
 
         // Clear the selected regions.   Operates on all visible canvases AT
         // THE TIME of the call to doAction().
-    	// No required parameters.
+        // No required parameters.
         SEL_CLEAR_REGIONS,
 
 
@@ -105,22 +103,32 @@ public:
 
         // Turns on/off the mark regions tool.  Operates on all canvases of all
         // plots AT THE TIME of the call to doAction().  Only one of the mark
-        // regions, zoom, and pan tools can be turned on at one time.
+        // regions, zoom, pan, and annotate tools can be turned on at one time.
         // Required parameters: P_ON_OFF.
         TOOL_MARK_REGIONS,
 
         // Turns on/off the zoom tool.  Operates on all canvases of all plots
         // AT THE TIME of the call to doAction().  Only one of the mark
-        // regions, zoom, and pan tools can be turned on at one time.
+        // regions, zoom, pan, and annotate tools can be turned on at one time.
         // Required parameters: P_ON_OFF.
         TOOL_ZOOM,
 
         // Turns on/off the pan tool.  Operates on all canvases of all plots AT
         // THE TIME of the call to doAction().  Only one of the mark regions,
-        // zoom, and pan tools can be turned on at one time.
+        // zoom, pan, and annotate tools can be turned on at one time.
         // Required parameters: P_ON_OFF.
         TOOL_PAN,
-
+        
+        // Turns on/off the annotator tool's different modes.  Operates on all
+        // canvases of all plots AT THE TIME of the call to doAction().  Only
+        // one of the mark regions, zoom, pan, and annotate tools can be turned
+        // on at one time.
+        // Required parameters: P_ON_OFF.
+        // <group>
+        TOOL_ANNOTATE_TEXT,
+        TOOL_ANNOTATE_RECTANGLE,
+        // </group>
+        
         // Turns on/off the tracker tool hover function.  Operates on all
         // canvases of all plots AT THE TIME of the call to doAction().
         // Required parameters: P_ON_OFF.
@@ -199,6 +207,11 @@ public:
     static const String P_WIDTH;   // Type: int
     static const String P_HEIGHT;  // Type: int
     // </group>
+    
+    
+    // Returns true if the given type requires the given parameter, false
+    // otherwise.
+    static bool requires(Type type, const String& parameter);
 
 
     // Non-Static //

@@ -42,8 +42,10 @@ String PlotMSSelection::defaultValue(Field f) { return ""; }
 // Non-Static //
 
 PlotMSSelection::PlotMSSelection() {
-    initDefaults();
-}
+    initDefaults(); }
+
+PlotMSSelection::PlotMSSelection(const PlotMSSelection& copy) {
+    operator=(copy); }
 
 PlotMSSelection::~PlotMSSelection() { }
 
@@ -78,10 +80,12 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     chansel=mss.getChanList(&selMS);
 }
 
+
 const String& PlotMSSelection::getValue(Field f) const {
     return const_cast<map<Field,String>&>(itsValues_)[f]; }
 void PlotMSSelection::setValue(Field f, const String& value) {
     itsValues_[f] = value; }
+
 
 bool PlotMSSelection::operator==(const PlotMSSelection& other) const {    
     vector<Field> f = fields();
@@ -90,6 +94,12 @@ bool PlotMSSelection::operator==(const PlotMSSelection& other) const {
     
     return true;
 }
+
+PlotMSSelection& PlotMSSelection::operator=(const PlotMSSelection& copy) {
+    itsValues_ = copy.itsValues_;    
+    return *this;
+}
+
 
 void PlotMSSelection::initDefaults() {
     vector<Field> f = fields();

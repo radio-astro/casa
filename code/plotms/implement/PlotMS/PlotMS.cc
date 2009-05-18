@@ -28,11 +28,12 @@
 
 namespace casa {
 
-// TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots.
+// TODO PlotMSAction: iteration, release cache.  action for new plots.  update
+//      hold/release action/button text.
 // TODO PlotMSCache: multi-region locate
 // TODO PlotMSLogger: log source (std out, text widget, casapy logger), better
-//      locate message, log message for parameters updated
+//      locate message, log message for parameters updated and action
+//      execution, log event flag for flag/unflag
 // TODO PlotMSParameters: canvas background, fonts, grids, spacing, cartesian
 //      axes, limit zoom/pan cache size
 // TODO PlotMSPlot: different colors within one plot, different types, shared
@@ -53,6 +54,8 @@ const String PlotMS::CLASS_NAME = "PlotMS";
 const String PlotMS::LOG_INITIALIZE_GUI = "initialize_gui";
 const String PlotMS::LOG_LOAD_CACHE = "load_cache";
 const String PlotMS::LOG_LOCATE = "locate";
+const String PlotMS::LOG_FLAG = "flag";
+const String PlotMS::LOG_UNFLAG = "unflag";
 
 
 // Constructors/Destructors //

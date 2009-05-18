@@ -128,9 +128,10 @@ void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
     itsPages_.setupCurrentPage();
     
     // Initialize plots.
-    itsParent_->getPlotter()->holdDrawing();
+    bool hold = itsParent_->getPlotter()->allDrawingHeld();
+    if(!hold) itsParent_->getPlotter()->holdDrawing();
     plot->initializePlot(canvases);
-    itsParent_->getPlotter()->releaseDrawing();
+    if(!hold) itsParent_->getPlotter()->releaseDrawing();
     
     // Notify watchers.
     notifyWatchers();

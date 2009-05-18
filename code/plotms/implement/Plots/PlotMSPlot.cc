@@ -56,7 +56,7 @@ bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
     if(canvases.size() != layoutNumCanvases()) return false;
     itsCanvases_ = canvases;
     
-    bool hold = drawingHeld();
+    bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
     // Initialize plot objects and assign canvases.
@@ -93,6 +93,10 @@ const PlotMSData& PlotMSPlot::data() const { return itsData_; }
 
 VisSet* PlotMSPlot::visSet() { return itsVisSet_; }
 const VisSet* PlotMSPlot::visSet() const { return itsVisSet_; }
+MeasurementSet& PlotMSPlot::ms() { return itsMS_; }
+const MeasurementSet& PlotMSPlot::ms() const { return itsMS_; }
+MeasurementSet& PlotMSPlot::selectedMS() { return itsSelectedMS_; }
+const MeasurementSet& PlotMSPlot::selectedMS() const { return itsSelectedMS_; }
 
 PlotMS* PlotMSPlot::parent() { return itsParent_; }
 
@@ -115,7 +119,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     
     if(!msUpdated && !cacheUpdated && !canvasUpdated && !plotUpdated) return;
     
-    bool hold = drawingHeld();
+    bool hold = allDrawingHeld();
     if(!hold && redrawRequired) holdDrawing();
     
     itsTCLendLog_ = itsTCLlogNumPoints_ = false;
@@ -150,6 +154,16 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Do the rest immediately if 1) cache not updated, or 2) cache not
     // threaded.  Otherwise wait for the thread to call cacheLoaded_().
     if(callCacheLoaded) cacheLoaded_(false);
+}
+
+void PlotMSPlot::plotDataChanged() {
+    bool hold = allDrawingHeld();
+    if(!hold) holdDrawing();
+    
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        itsPlots_[i]->dataChanged();
+    
+    if(!hold) releaseDrawing();
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
@@ -232,10 +246,10 @@ bool PlotMSPlot::updateMS() {
     }
 }
 
-bool PlotMSPlot::drawingHeld() {
+bool PlotMSPlot::allDrawingHeld() {
     for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        if(itsCanvases_[i]->drawingIsHeld()) return true;
-    return false;
+        if(!itsCanvases_[i]->drawingIsHeld()) return false;
+    return true;
 }
 
 void PlotMSPlot::holdDrawing() {

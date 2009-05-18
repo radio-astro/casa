@@ -61,6 +61,21 @@ QScrollArea* QtUtilities::putInScrollArea(QWidget* widget, bool showFrame) {
     if(parent != NULL && parent->layout() != NULL) {
         QLayout* l = parent->layout();
         int index = l->indexOf(widget);
+        
+        // Find the child layout where the widget is.
+        if(index < 0) {
+            QList<QLayout*> layouts = parent->findChildren<QLayout*>();
+            int index2;
+            foreach(QLayout* layout, layouts) {
+                index2 = layout->indexOf(widget);
+                if(layout->indexOf(widget) >= 0) {
+                    l = layout;
+                    index = index2;
+                    break;
+                }
+            }
+        }
+        
         if(index >= 0) {
             // QLayout subclasses we know about, including our own.
             QBoxLayout* bl; QGridLayout* gl; QStackedLayout* sl;

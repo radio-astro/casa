@@ -48,6 +48,23 @@ const String PlotMSAction::P_DPI = "dpi";
 const String PlotMSAction::P_WIDTH = "width";
 const String PlotMSAction::P_HEIGHT = "height";
 
+bool PlotMSAction::requires(Type type, const String& parameter) {
+    switch(type) {
+    case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
+    case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: case TRACKER_HOVER:
+    case TRACKER_DISPLAY: case HOLD_RELEASE_DRAWING:
+        return parameter == P_ON_OFF;
+
+    case CACHE_LOAD: case CACHE_RELEASE:
+        return parameter == P_PLOT || parameter == P_AXES;
+
+    case PLOT_EXPORT:
+        return parameter == P_PLOT || parameter == P_FILE;
+    
+    default: return false;
+    }
+}
+
 
 // Constructors/Destructors //
 
@@ -62,7 +79,8 @@ PlotMSAction::Type PlotMSAction::type() const { return itsType_; }
 
 bool PlotMSAction::isValid() const {
 	switch(itsType_) {
-	case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN: case TRACKER_HOVER:
+	case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
+	case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: case TRACKER_HOVER:
 	case TRACKER_DISPLAY: case HOLD_RELEASE_DRAWING:
 		return isDefinedBool(P_ON_OFF);
 
@@ -95,6 +113,20 @@ void PlotMSAction::setParameter(const String& parameter, const String& value) {
 void PlotMSAction::setParameter(const String& parameter, int value) {
 	itsIntValues_[parameter] = value; }
 
+#define PMSA_PRINTPARAMS1(TYPE,MEMBER)                                        \
+    for(map<String, TYPE >::iterator iter = MEMBER .begin();                  \
+        iter != MEMBER .end(); iter++) {
+
+#define PMSA_PRINTPARAMS2 cout << ", " << iter->first << "=";
+#define PMSA_PRINTPARAMS3 cout << iter->second;
+#define PMSA_PRINTPARAMS4 }
+
+#define PMSA_PRINTPARAMS(TYPE,MEMBER)                                         \
+    PMSA_PRINTPARAMS1(TYPE,MEMBER)                                            \
+    PMSA_PRINTPARAMS2                                                         \
+    PMSA_PRINTPARAMS3                                                         \
+    PMSA_PRINTPARAMS4
+
 bool PlotMSAction::doAction(PlotMS* plotms) {
 	itsDoActionResult_ = "";
 
@@ -103,81 +135,164 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return false;
 	}
 
+	/*
+	cout << "Executing action: {type=" << itsType_;
+	
+	PMSA_PRINTPARAMS(PlotMSPlot*, itsPlotValues_)
+	PMSA_PRINTPARAMS(bool, itsBoolValues_)
+	PMSA_PRINTPARAMS(String, itsStringValues_)
+	PMSA_PRINTPARAMS(int, itsIntValues_)
+	
+	PMSA_PRINTPARAMS1(vector<PMS::Axis>, itsAxesValues_)
+        PMSA_PRINTPARAMS2
+        cout << "[";
+        for(unsigned int i = 0; i < iter->second.size(); i++) {
+            if(i > 0) cout << ", ";
+            cout << PMS::axis(iter->second[i]);
+        }
+        cout << "]";
+	PMSA_PRINTPARAMS4
+	
+	cout << "}" << endl;
+	*/
+	
 	switch(itsType_) {
+	
+	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: {
+	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
+	    vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
+                                            ->currentCanvases();
+	    PlotMSSinglePlot* plot;
 
-	case SEL_LOCATE: {
-		const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
-		vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
-		                                    ->currentCanvases();
-		PlotMSSinglePlot* plot;
+	    stringstream ss;
+	    stringstream tempx, tempy, temp;
+	    bool ssFlag = false;
+	    PlotLogMessage* m;
+	    LogMessage::Priority p = LogMessage::NORMAL;
+	    
+	    // TODO !distance from GUI
+	    PlotMSFlagging flagging = plotms->getPlotter()->getFlaggingTab()
+	                              ->getValue();
 
-		stringstream ss;
-		stringstream tempx, tempy, temp;
-		bool ssFlag = false;
-		PlotLogMessage* m;
-		LogMessage::Priority p = LogMessage::NORMAL;
+	    vector<PlotCanvasPtr> canv;
+	    vector<PlotRegion> regions;
+	    vector<PlotMSSinglePlot*> redrawPlots;
+	    bool found;
 
-		vector<PlotCanvasPtr> canv;
-		vector<PlotRegion> regions;
-		bool found;
+	    for(unsigned int i = 0; i < plots.size(); i++) {
+	        // NOTE: for now, only works with single plots
+	        plot = dynamic_cast<PlotMSSinglePlot*>(plots[i]);
+	        if(plot == NULL) continue;
 
-		for(unsigned int i = 0; i < plots.size(); i++) {
-			// NOTE: for now, only works with single plots
-			plot = dynamic_cast<PlotMSSinglePlot*>(plots[i]);
-			if(plot == NULL) continue;
+	        if(i > 0) ss.str("");
 
-			if(i > 0) ss.str("");
+	        PlotMSSinglePlotParameters& params = plot->singleParameters();
+	        PlotMSData& data = plot->data();
 
-			PlotMSSinglePlotParameters& params = plot->singleParameters();
-			PlotMSData& data = plot->data();
+            if(itsType_ == SEL_FLAG)
+                flagging.setMS(&plot->ms(),&plot->selectedMS(),plot->visSet());
 
-			canv = plot->canvases();
-			for(unsigned int j = 0; j < canv.size(); j++) {
-				if(canv[j].null()) continue;
+	        canv = plot->canvases();
+	        for(unsigned int j = 0; j < canv.size(); j++) {
+	            if(canv[j].null()) continue;
 
-				// Only apply to visible canvases.
-				found = false;
-				for(unsigned int k = 0; !found && k < visibleCanv.size(); k++)
-					if(canv[j] == visibleCanv[k]) found = true;
-				if(!found) continue;
+	            // Only apply to visible canvases.
+	            found = false;
+	            for(unsigned int k = 0; !found && k < visibleCanv.size(); k++)
+	                if(canv[j] == visibleCanv[k]) found = true;
+	            if(!found) continue;
 
-				regions = canv[j]->standardMouseTools()->selectTool()
-        	              ->getSelectedRects();
-				if(regions.size() == 0) continue;
+	            regions = canv[j]->standardMouseTools()->selectTool()
+	                      ->getSelectedRects();
+	            if(regions.size() == 0) continue;
 
-				if(j > 0) {
-					tempx.str(""); tempy.str(""); temp.str("");
-				}
+	            if(j > 0) {
+	                tempx.str(""); tempy.str(""); temp.str("");
+	            }
 
-				for(unsigned int k = 0; k < regions.size(); k++) {
-					if(k > 0) {
-						tempx << " or ";
-						tempy << " or ";
-						temp << '\n';
-					}
-					tempx << '[' << regions[k].left() << ' '
-					      << regions[k].right()	<< ']';
-					tempy << '[' << regions[k].bottom() << ' '
-					      << regions[k].top() << ']';
-					m = data.locate(regions[k].left(), regions[k].right(),
-							        regions[k].bottom(), regions[k].top());
-					m->message(temp);
-					p = m->priority();
-					delete m;
-				}
+	            for(unsigned int k = 0; k < regions.size(); k++) {
+	                if(k > 0) {
+	                    tempx << " or ";
+	                    tempy << " or ";
+	                    temp << '\n';
+	                }
+	                tempx << '[' << regions[k].left() << ' '
+	                      << regions[k].right()	<< ']';
+	                tempy << '[' << regions[k].bottom() << ' '
+	                      << regions[k].top() << ']';
+                    m = NULL;
+                    if(itsType_ == SEL_LOCATE) {
+                        m = data.locateRange(regions[k].left(),
+                                regions[k].right(), regions[k].bottom(),
+                                regions[k].top());
+                    } else {                        
+                        m = data.flagRange(flagging, regions[k].left(),
+                                regions[k].right(), regions[k].bottom(),
+                                regions[k].top(), itsType_ == SEL_FLAG);
+                    }
+                    if(m != NULL) {
+                        m->message(temp);
+                        p = m->priority();
+                        delete m;
+                    }
+	            }
 
-				if(ssFlag) ss << "\n\n";
-				else       ssFlag = true;
+	            if(!temp.str().empty()) {
+	                if(ssFlag) ss << "\n\n";
+	                else       ssFlag = true;
 
-				ss << "Locate " << PMS::axis(params.xAxis()) << " in "
-				   << tempx.str() << ", " << PMS::axis(params.yAxis())
-				   << " in " << tempy.str() << ":\n" << temp.str();
-			}
+	                if(itsType_ == SEL_LOCATE) ss << "Locate ";
+                    else if(itsType_ == SEL_FLAG) ss << "Flag ";
+                    else ss << "Unflag ";
+                    ss << PMS::axis(params.xAxis()) << " in " << tempx.str()
+                       << ", " << PMS::axis(params.yAxis()) << " in "
+                       << tempy.str() << ":\n" << temp.str();
+	            }
+	            
+	            // If this plot was flagged/unflagged, add it to the redraw
+	            // list.
+	            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
+	                redrawPlots.push_back(plot);
+	        }
 
-			plotms->getLogger().postMessage(PlotMS::CLASS_NAME,
-					PlotMS::LOG_LOCATE,	ss.str(), p);
-		}
-        return true;
+	        if(!ss.str().empty()) {
+                const String* method = NULL;
+                if(itsType_ == SEL_LOCATE) method = &PlotMS::LOG_LOCATE;
+                else if(itsType_ == SEL_FLAG) method = &PlotMS::LOG_FLAG;
+                else if(itsType_ == SEL_UNFLAG) method = &PlotMS::LOG_UNFLAG;
+                plotms->getLogger().postMessage(PlotMS::CLASS_NAME, *method,
+                        ss.str(), p);
+	        }
+	        
+	        // For a flag/unflag, need to tell the plots to redraw themselves,
+	        // and clear selected regions.
+	        if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG) {
+	            bool hold = plotms->getPlotter()->allDrawingHeld();
+	            if(!hold) plotms->getPlotter()->holdDrawing();
+	            
+	            for(unsigned int i = 0; i < redrawPlots.size(); i++) {
+	                redrawPlots[i]->plotDataChanged();
+	                
+	                canv = plot->canvases();
+	                for(unsigned int j = 0; j < canv.size(); j++) {
+	                    if(canv[j].null()) continue;
+	                    
+	                    // Only apply to visible canvases.
+	                     found = false;
+	                     for(unsigned int k = 0;
+	                         !found && k < visibleCanv.size(); k++)
+	                         if(canv[j] == visibleCanv[k]) found = true;
+	                     if(!found) continue;
+	                     
+	                     canv[j]->standardMouseTools()->selectTool()
+	                            ->clearSelectedRects();
+	                }
+	            }	            
+	            
+	            if(!hold) plotms->getPlotter()->releaseDrawing();
+	        }
+	    }
+	    return true;
 	}
 
 	case SEL_CLEAR_REGIONS: {
@@ -207,7 +322,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 	}
 
-	case TOOL_MARK_REGIONS:	case TOOL_ZOOM:	case TOOL_PAN: {
+	case TOOL_MARK_REGIONS:	case TOOL_ZOOM:	case TOOL_PAN:
+	case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: {
 		bool on = valueBool(P_ON_OFF);
 	    PlotStandardMouseToolGroup::Tool tool=PlotStandardMouseToolGroup::NONE;
 	    if(on && itsType_ == TOOL_MARK_REGIONS)
@@ -216,7 +332,13 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    	tool = PlotStandardMouseToolGroup::ZOOM;
 	    else if(on && itsType_ == TOOL_PAN)
 	    	tool = PlotStandardMouseToolGroup::PAN;
-
+	    
+	    bool useAnnotator = on && (itsType_ == TOOL_ANNOTATE_TEXT ||
+	                        itsType_ == TOOL_ANNOTATE_RECTANGLE);
+	    PlotMSAnnotator::Mode annotate = PlotMSAnnotator::TEXT;
+	    if(on && itsType_ == TOOL_ANNOTATE_RECTANGLE)
+	        annotate = PlotMSAnnotator::RECTANGLE;
+	    
 	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 	    vector<PlotCanvasPtr> canv;
 	    for(unsigned int i = 0; i < plots.size(); i++) {
@@ -224,16 +346,18 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    	canv = plots[i]->canvases();
 	    	for(unsigned int j = 0; j < canv.size(); j++) {
 	    		if(canv[j].null()) continue;
-	    		canv[j]->standardMouseTools()->setActiveTool(tool);
+	    		
+	    		// Update standard mouse tools.
+	    		canv[j]->standardMouseTools()->setActive(!useAnnotator);
+	    		if(!useAnnotator)
+	    		    canv[j]->standardMouseTools()->setActiveTool(tool);
 	    	}
 	    }
-
-	    // Update checkable actions in the plotter.
+	    
+	    // Update annotator.
 	    PlotMSPlotter* plotter = plotms->getPlotter();
-	    plotter->setActionIsChecked(TOOL_MARK_REGIONS,
-	    		                    on && itsType_ == TOOL_MARK_REGIONS);
-	    plotter->setActionIsChecked(TOOL_ZOOM, on && itsType_ == TOOL_ZOOM);
-	    plotter->setActionIsChecked(TOOL_PAN, on && itsType_ == TOOL_PAN);
+	    plotter->getAnnotator().setActive(useAnnotator);
+	    if(useAnnotator) plotter->getAnnotator().setDrawingMode(annotate);
 
 	    return true;
 	}
@@ -256,10 +380,6 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
    		    	canv[i]->standardMouseTools()->turnTrackerDrawText(hover);
    	    	}
    	    }
-
-	    // Update checkable actions in the plotter.
-	    plotter->setActionIsChecked(TRACKER_HOVER, hover);
-	    plotter->setActionIsChecked(TRACKER_DISPLAY, display);
 
 	    return true;
 	}
@@ -391,11 +511,6 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
         if(hold) plotter->holdDrawing();
         else     plotter->releaseDrawing();
 
-        // Update checkable actions in the plotter.
-        plotter->setActionText(HOLD_RELEASE_DRAWING,
-                               hold ? "Release Drawing" : "Hold Drawing");
-        plotter->setActionIsChecked(HOLD_RELEASE_DRAWING, hold);
-
         return true;
 	}
 
@@ -408,8 +523,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 
 	// Unimplemented actions.
-	case SEL_FLAG:case SEL_UNFLAG: case ITER_FIRST: case ITER_PREV:
-	case ITER_NEXT: case ITER_LAST:
+	case ITER_FIRST: case ITER_PREV: case ITER_NEXT: case ITER_LAST:
 		itsDoActionResult_ = "Action type is currently unimplemented!";
 		return false;
 	}

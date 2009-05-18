@@ -23,11 +23,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
 
-    <param type="bool" name="modifymodel">
-      <description>modify model image WCS or flux scale</description>
+
+    <param type="bool" name="ignorecoord">
+      <description>scale model coordinates to output parameters</description>
       <value>False</value>
     </param>
 
+    <param type="string" name="inbright">
+       <description>set peak surface brightness in Jy/pixel or "unchanged"</description>
+       <value>unchanged</value>
+    </param>
+
+
+<!--
     <param type="string" name="refdirection" subparam='true'>
        <description>reference direction (CRVAL): "J2000 19h00m00 -40d00m00" or "direction" or "header"</description>
        <value>direction</value>
@@ -42,11 +50,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <description>pixel size: "0.1arcsec" or "header"</description>
        <value>header</value>
     </param>
+-->
 
-    <param type="string" name="inbright" subparam='true'>
-       <description>peak surface brightness in Jy/pixel or "unchanged"</description>
-       <value>unchanged</value>
-    </param>
 
 
     <param type="string" name="complist">
@@ -95,16 +100,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>10s</value>
     </param>
 
-<!--    
-    <param type="string" name="mode">
-      <description>data type: channel, continuum</description>
-      <value>continuum</value>		  
-      <allowed kind="enum">
-	<value>channel</value>
-	<value>continuum</value>
-      </allowed>
-    </param>
--->
     
     <!-- having this an array implies a degree of complexity (multiple spws) that we don't 
 	 yet have :)  
@@ -297,15 +292,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <when param="modifymodel">
-	<equals type="bool" value="False"/>
-	<equals type="bool" value="True">
-	  <default param="refdirection"><value>"direction"</value></default>
-	  <default param="refpixel"><value>"center"</value></default>
-	  <default param="incell"><value>"header"</value></default>
-	  <default param="inbright"><value>"unchanged"</value></default>
-	</equals>
-      </when>
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
@@ -368,19 +354,13 @@ mosaic simulation task (prototype):
     -------------------------------
     -- Input Model:
     modelimage -- name of an image to simulate
-        [alpha alert] input images with more than 2 dimensions 
-        have not been tested for all possible permutations.
-    modifymodel -- if you want to modify the input image either 
-        its pointing direction or cell size, or its brightness, 
-        overriding the input image header
-      refdirection -- direction of input image (i.e. CRVAL); 
-        * can be set to "direction" to use the same as the 
-        desired simulation direction specified below.
-        * can be set to "header" to keep what's in the image header
-      refpixel -- pixel at which refdirection is specified (i.e. CRPIX); 
-        can be set to "center" to use the central pixel of the image
-      incell -- pixel size of input image 
-      inbright -- peak surface brightness to scale input image 
+        [alpha alert] input image cubes may not regrid the spectral dimension 
+        (# channels) properly if ignorecoord=False.  
+    ignorecoord -- ignore whatever is in the image header for coordinates, 
+        overriding them with the output cell size, output central direction, 
+        output channel width, and output starting channel frequency.
+        [alpha alert] see wiki for finer control of model CoordinateSystem
+    inbright -- peak surface brightness to scale input image 
         in Jy/pixel.  
         [alpha alert] If you specify "unchanged" it will take the 
         numerical values in your image and assume they are in Jy/pixel, 
