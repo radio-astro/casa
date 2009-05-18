@@ -855,11 +855,13 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 
       // renumber consecutively
       Bool rowsRenumbered(False);
+      Int nnrow = 0;
       for (Int j=0 ; j < newNumrows_this ; ++j){
-	if(newThisId(j) != j){ 
+	if(newThisId(j) > nnrow){ 
+	  nnrow++;
 	  sourceRecord = sourceRow.get(j);
-	  tempSourceIndex2.define(newThisId(j), j);
-	  sourceRecord.define(sourceIdId, j );
+	  tempSourceIndex2.define(newThisId(j), nnrow);
+	  sourceRecord.define(sourceIdId, nnrow );
 	  sourceRow.putMatchingFields(j, sourceRecord);
 	  rowsRenumbered = True;
 	}
@@ -874,8 +876,8 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	  if( sourceRowsEquivalent(sourceCol, j, k) && 
 	      !areEQ(sourceCol.sourceId(),j, k)){ // all columns are the same except source id (not testing spw id),
 	                                          // spw id must be different, otherwise row would have been deleted above
-//	    cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
-//		 << newThisId(k) << " mapped to " << newThisId(j) << endl;
+// 	    cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
+// 		 << newThisId(k) << " mapped to " << newThisId(j) << endl;
 	    // give same source id
 	    // make entry in map for (k, j) and rename k
 	    tempSourceIndex3.define(newThisId(k), newThisId(j));
@@ -900,6 +902,9 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	    sourceRecord.define(sourceIdId, nDistinctSources-counter-1 );
 	    sourceRow.putMatchingFields(j, sourceRecord);
 	    counter++;
+// 	    cout << "Found SOURCE row " << j << " to have a source id " << newThisId(j) 
+//               << " larger than the number of distinct sources: " << nDistinctSources << ". "
+// 		 << newThisId(j) << " mapped to " << nDistinctSources-counter-1 << endl;
 	  }
 	}
       }
