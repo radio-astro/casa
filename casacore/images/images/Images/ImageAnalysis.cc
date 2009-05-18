@@ -6949,7 +6949,8 @@ ImageAnalysis::echo(Record& v, const bool godeep)
  Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis, 
 					Vector<Float>& specVal, 
 					const CoordinateSystem& cSys, 
-					const String& xunits){
+					const String& xunits
+){
 
    Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
    Vector<Double> pix(specVal.nelements());
@@ -6990,7 +6991,8 @@ ImageAnalysis::echo(Record& v, const bool godeep)
 
  }
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,  
-			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+				   Vector<Float>& zxaxisval, 
+				   Vector<Float>& zyaxisval,
 				   const String& xytype, 
 				   const String& specaxis,
 				   const Int& whichStokes,
@@ -7030,11 +7032,19 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
  
 
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+  Vector<Bool> zyaxismask;
   trc[cSys.pixelAxes(specAx)[0]]=pImage_p->shape()(cSys.pixelAxes(specAx)[0])-1;  zyaxisval.resize();
   zyaxisval=pImage_p->getSlice(blc, trc-blc+1, True);
+  zyaxismask=pImage_p->getMaskSlice(blc, trc-blc+1, True);
+
   if(!(pImage_p->units().getName().contains("mJy"))){
     for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
-      zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
+      if(zyaxismask[kk]){
+	zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
+      }
+      else {   // apply mask
+	zyaxisval[kk] = 0.;
+      }
     }
 
   }
@@ -7042,10 +7052,27 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
   return getSpectralAxisVal(specaxis, zxaxisval,cSys, xunits);
 }
 
+Bool ImageAnalysis::getFreqProfile(String& bunit,
+                                   const Vector<Double>& x,  
+				   const Vector<Double>& y,  
+				   Vector<Float>& zxaxisval, 
+				   Vector<Float>& zyaxisval,
+				   const String& xytype, 
+				   const String& specaxis,
+				   const Int& whichStokes,
+				   const Int& whichTabular,
+				   const Int& whichLinear,
+				   const String& xunits){
+    bunit = pImage_p->units().getName();	
+    //cout << "bunit=" << bunit << endl;
+    return getFreqProfile(x, y, zxaxisval, zyaxisval, xytype,specaxis, whichStokes, whichTabular, whichLinear, xunits);
+
+}
+
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,  
-                        const Vector<Double>& y,  
-			Vector<Float>& zxaxisval, 
-                        Vector<Float>& zyaxisval,
+				   const Vector<Double>& y,  
+				   Vector<Float>& zxaxisval, 
+				   Vector<Float>& zyaxisval,
 				   const String& xytype, 
 				   const String& specaxis,
 				   const Int& whichStokes,
@@ -7062,9 +7089,11 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
     Array<Bool> mask;
     if (n < 1) return False;
 
+
     if (n == 1) {
        xy[0] = x[0]; xy[1] = y[0];
-       return getFreqProfile(xy, zxaxisval, zyaxisval, xytype,
+       return getFreqProfile(xy, zxaxisval, 
+                 zyaxisval, xytype,
                  specaxis, whichStokes, whichTabular, 
                  whichLinear, xunits);
     }
@@ -7133,7 +7162,6 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 	for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
 	  zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
 	}
-	
       }
       zxaxisval.resize(zyaxisval.nelements());
       return getSpectralAxisVal(specaxis, zxaxisval,cSys, xunits);

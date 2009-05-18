@@ -99,8 +99,8 @@ Bool MeasIERS::get(Double &returnValue,
 			   WHERE));
 	os << 
 	  String("Requested JD ") << date << String(" is outside "
-		 "the IERS table data range"
-		 "\nCalculations will proceed with less precision") << 
+		 "the IERS table data range."
+		 "\nCalculations will proceed with less precision.") << 
 	  LogIO::POST;
       };
       return False;
@@ -349,8 +349,8 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			      "const String &, const String &)"),
 		       WHERE));
     os << String("A ") + name + 
-      " table has been read that seems corrupted"
-      "\nNotify the AIPS++ system manager about it" << LogIO::EXCEPTION;
+      " table has been read that seems corrupted."
+      "\nNotify the CASA system manager about it." << LogIO::EXCEPTION;
     return False;
   };
   table = tab;
