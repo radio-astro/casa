@@ -65,17 +65,13 @@ MSConcat::MSConcat(MeasurementSet& ms):
   MSColumns(ms),
   itsMS(ms),
   itsFixedShape(isFixedShape(ms.tableDesc())), 
-  newSourceIndex_p(-1), newSourceIndex2_p(-1), newSPWIndex_p(-1)
+  newSourceIndex_p(-1), newSourceIndex2_p(-1), newSPWIndex_p(-1),
+  newObsIndexA_p(-1), newObsIndexB_p(-1)
 {
-
-
   itsDirTol=Quantum<Double>(1.0, "mas");
   itsFreqTol=Quantum<Double>(1.0, "Hz");
   doSource_p=False;
-  // if (ms.tableInfo().subType() != "UVFITS") {
-  // throw(AipsError("MSConcat::MSConcat(..) - Measurement set was not created"
-  //		    " from a UVFITS file."));
-  //}
+  doObsA_p = doObsB_p = False;
 }
 
 IPosition MSConcat::isFixedShape(const TableDesc& td) {
@@ -121,12 +117,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   return fixedShape;
 }
 
-void MSConcat::concatenate(const MeasurementSet& otherMS)
+  void MSConcat::concatenate(const MeasurementSet& otherMS)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate"));
 
   log << "Appending " << otherMS.tableName() 
-      << " to " << itsMS.tableName() << endl;
+      << " to " << itsMS.tableName() << LogIO::POST;
 
 
   // check if certain columns are present and set flags accordingly
@@ -323,7 +319,8 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
   Vector<Int> obsIds=otherObsId.getColumn();
 
   // OBSERVATION
-  copyObservation(otherMS.observation(), obsIds);
+  copyObservation(otherMS.observation());
+
   // POINTING
   copyPointing(otherMS.pointing(), newAntIndices);
 
@@ -334,6 +331,15 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
   copyWtSp = copyWtSp && thisWeightSp.isDefined(0) 
     && otherWeightSp.isDefined(0);
 
+  if(doObsA_p){ // the obs ids changed for the first table
+    Vector<Int> oldObsIds=thisObsId.getColumn();
+    for(uInt r = 0; r < curRow; r++) {
+      if(newObsIndexA_p.isDefined(oldObsIds[r])){ // apply change 
+	thisObsId.put(r, newObsIndexA_p(oldObsIds[r]));
+      }
+    }
+  }  
+      
   for (uInt r = 0; r < newRows; r++, curRow++) {
     thisTime.put(curRow, otherTime, r);
     thisAnt1.put(curRow, newAntIndices[otherAnt1(r)]);
@@ -347,7 +353,15 @@ void MSConcat::concatenate(const MeasurementSet& otherMS)
     thisTimeCen.put(curRow, otherTimeCen, r);
     thisScan.put(curRow, otherScan, r);
     thisArrayId.put(curRow, otherArrayId, r);
-    thisObsId.put(curRow, obsIds[r]);
+
+    if(doObsB_p && newObsIndexB_p.isDefined(obsIds[r])){ 
+      // the obs ids have been changed for the table to be appended
+      thisObsId.put(curRow, newObsIndexB_p(obsIds[r]));
+    }
+    else { // this OBS id didn't change
+      thisObsId.put(curRow, obsIds[r]);
+    }
+
     thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
     if(itsChanReversed[otherDDId(r)]){
@@ -569,26 +583,82 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
 
 Int MSConcat::copyObservation(const MSObservation& otherObs, 
-			      Vector<Int>& otherObsId){
+			      const Bool remRedunObsId){
+  LogIO os(LogOrigin("MSConcat", "copyObservation"));
 
-  Int obsId=-1;
   MSObservation& obs=itsMS.observation();
   TableRow obsRow(obs);
-  Int actualRow=obs.nrow()-1;
   const ROTableRow otherObsRow(otherObs);
-  for (uInt k=0; k < otherObsId.nelements() ; ++k){ 
-    if(obsId != otherObsId[k]){
-      obsId=otherObsId[k];
-      obs.addRow();
-      ++actualRow;
-      obsRow.put(actualRow, otherObsRow.get(obsId, True));
-      
-    }
+  newObsIndexA_p.clear();
+  newObsIndexB_p.clear();
+  SimpleOrderedMap <Int, Int> tempObsIndex(-1);
+  SimpleOrderedMap <Int, Int> tempObsIndex2(-1);
+  doObsA_p = False; 
+  doObsB_p = True;
 
-    otherObsId[k]=actualRow;
+  Int originalNrow = obs.nrow(); // remember the original number of rows
+
+  // copy the new obs rows over and note new ids in map
+  Int actualRow=obs.nrow()-1;
+  for (uInt k=0; k < otherObs.nrow() ; ++k){ 
+    obs.addRow();
+    ++actualRow;
+    obsRow.put(actualRow, otherObsRow.get(k, True));
+    tempObsIndex.define(k, actualRow);
   }
-  return itsMS.observation().nrow();
+  if(remRedunObsId){ // remove redundant rows
+    MSObservationColumns& obsCol = observation();
+    Vector<Bool> rowToBeRemoved(obs.nrow(), False);
+    vector<uint> rowsToBeRemoved;
+    for(uInt j=0; j<obs.nrow(); j++){ // loop over OBS table rows
+      for (uInt k=j+1; k<obs.nrow(); k++){ // loop over remaining OBS table rows
+	if(obsRowsEquivalent(obsCol, j, k)){ // rows equivalent?
+	  // make entry in map for (k,j) and mark k for deletion
+	  tempObsIndex2.define(k, j);
+	  rowToBeRemoved(k) = True;
+	  rowsToBeRemoved.push_back(k);
+	}
+      }	     
+    }// end for j
 
+    // create final maps
+    // map for first table
+    for(uInt i=0; i<originalNrow; i++){ // loop over rows of old first table
+      if(tempObsIndex2.isDefined(i)){ // ID changed because of removal
+	  newObsIndexA_p.define(i,tempObsIndex2(i));
+	  doObsA_p = True;
+      }
+    }
+    // map for second table
+    for(uInt i=0; i<otherObs.nrow(); i++){ // loop over rows of second table
+      if(tempObsIndex.isDefined(i)){ // ID changed because of addition to table
+	if(tempObsIndex2.isDefined(tempObsIndex(i))){ // ID also changed because of removal 
+	  newObsIndexB_p.define(i,tempObsIndex2(tempObsIndex(i)));
+	}
+	else { // ID only changed because of addition to the table
+	  newObsIndexB_p.define(i,tempObsIndex(i));
+	}
+      }
+    }
+    if(rowsToBeRemoved.size()>0){ // actually remove the rows
+      Vector<uInt> rowsTBR(rowsToBeRemoved);
+      obs.removeRow(rowsTBR);
+    }    
+    os << "Added " << obs.nrow()- originalNrow << " rows and matched "
+       << rowsToBeRemoved.size() << " rows in the observation subtable." << endl;
+
+  }
+  else {
+    // create map for second table only
+    for(uInt i=0; i<otherObs.nrow(); i++){ // loop over rows of second table
+      if(tempObsIndex.isDefined(i)){ // ID changed because of addition to table
+	  newObsIndexB_p.define(i,tempObsIndex(i));
+      }
+    }
+    os << "Added " << obs.nrow()- originalNrow << " rows in the observation subtable." << endl;
+  } // end if(remRedunObsId)
+
+  return obs.nrow();
 }
 
 
@@ -1023,6 +1093,23 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
       }
       //      if(!areEquivalent) cout << "not equal transition" << endl;
     }
+  }
+  return areEquivalent;
+}
+
+Bool MSConcat::obsRowsEquivalent(const MSObservationColumns& obsCol, const uInt& rowi, const uInt& rowj){
+  // check if the two OBSERVATION table rows are identical ignoring LOG and SCHEDULE
+
+  Bool areEquivalent(False);
+
+  if(areEQ(obsCol.flagRow(), rowi, rowj) &&
+     areEQ(obsCol.observer(), rowi, rowj) &&
+     areEQ(obsCol.project(), rowi, rowj) &&
+     areEQ(obsCol.releaseDate(), rowi, rowj) &&
+     areEQ(obsCol.telescopeName(), rowi, rowj) &&
+     areEQ(obsCol.timeRange(), rowi, rowj)
+     ){    
+    areEquivalent = True;
   }
   return areEquivalent;
 }
