@@ -36,6 +36,10 @@
 
 namespace casa {
 
+//# Forward Declarations.
+class PlotMS;
+
+
 // Subclass of PlotMouseTool for drawing/managing annotations on the plot
 // canvases of PlotMS.
 class PlotMSAnnotator : public PlotMouseTool {
@@ -55,8 +59,8 @@ public:
     
     // Non-Static //
     
-    // Constructor which optionally takes the starting mode.
-    PlotMSAnnotator(Mode startingMode = TEXT);
+    // Constructor which takes the PlotMS parent and optional starting mode.
+    PlotMSAnnotator(PlotMS* parent, Mode startingMode = TEXT);
     
     // Destructor.
     ~PlotMSAnnotator();
@@ -68,6 +72,9 @@ public:
     void setDrawingMode(Mode mode);
     // </group>
     
+    // Overrides PlotTool::setActive().
+    void setActive(bool isActive = true);
+    
     // Implements PlotMouseTool::handleMouseEvent().
     void handleMouseEvent(const PlotEvent& event);
     
@@ -77,7 +84,16 @@ protected:
     void setActions(QAction* annotateAction,
             const QMap<PlotMSAction::Type, QAction*>& actionMap);
     
+    // Overrides PlotTool::attach().
+    void attach(PlotCanvas* canvas);
+    
+    // Overrides PlotTool::detach().
+    void detach();
+    
 private:
+    // Parent.
+    PlotMS* itsParent_;
+    
     // Current drawing mode.
     Mode itsMode_;
     
@@ -90,8 +106,21 @@ private:
     // Text annotations.
     QMultiMap<PlotCanvas*, PlotAnnotationPtr> itsAText_;
     
+    // Current text properties.
+    // <group>
+    PlotFontPtr itsTextFont_;
+    PlotLinePtr itsTextOutline_;
+    PlotAreaFillPtr itsTextFill_;
+    // </group>
+    
     // Rectangle annotations.
     QMultiMap<PlotCanvas*, PlotShapeRectanglePtr> itsARect_;
+    
+    // Current rectangle properties.
+    // <group>
+    PlotLinePtr itsRectLine_;
+    PlotAreaFillPtr itsRectFill_;
+    // </group>
 };
 
 }

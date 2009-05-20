@@ -28,6 +28,7 @@
 
 #include <casa/OS/Timer.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/Utilities/Sort.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -51,6 +52,7 @@ const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
 
                                            
 PlotMSCache::PlotMSCache():
+  nAnt_(0),
   nChunk_(0),
   nPoints_(),
   refTime_p(0.0),
@@ -124,6 +126,7 @@ void PlotMSCache::increaseChunks(Int nc) {
   imag_.resize(nChunk_,False,True);
   flag_.resize(nChunk_,False,True);
   flagrow_.resize(nChunk_,False,True);
+  antenna_.resize(nChunk_,False,True);
   az_.resize(nChunk_,False,True);
   el_.resize(nChunk_,False,True);
   parang_.resize(nChunk_,False,True);
@@ -151,6 +154,7 @@ void PlotMSCache::increaseChunks(Int nc) {
     imag_[ic] = new Array<Float>();
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
+    antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
     parang_[ic] = new Vector<Float>();
@@ -185,6 +189,10 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
       // need a way to keep track of whether:
       // 1) we already have the metadata loaded
       // 2) the underlying MS has changed, requiring a reloading of metadata
+
+
+  // Remember how many antennas there are
+  nAnt_ = visSet.numberAnt();
 
 
   // Check if scr cols present
@@ -291,7 +299,15 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
       loadChunks(visSet,loadAxes,loadData,averaging,thread);
 
     }
-
+    
+    // Remember # of VBs per Average
+    nVBPerAve_.resize();
+    if (nIterPerAve.nelements()>0)
+      nVBPerAve_ = nIterPerAve;
+    else {
+      nVBPerAve_.resize(nChunk_);
+      nVBPerAve_.set(1);
+    }
 
     // Update loaded axes.
     for(unsigned int i = 0; i < loadAxes.size(); i++) {
@@ -758,6 +774,7 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         case PMS::IMAG: PMSC_DELETE(imag_) break;
         case PMS::FLAG: PMSC_DELETE(flag_) break;
         case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
+        case PMS::ANTENNA: PMSC_DELETE(antenna_) break;
         case PMS::AZIMUTH: PMSC_DELETE(az_) break;
         case PMS::ELEVATION: PMSC_DELETE(el_) break;
         case PMS::PARANG: PMSC_DELETE(parang_) break;
@@ -798,13 +815,17 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   Vector<Bool> ymask(xymask.column(1));
   getAxesMask(xAxis,xmask);
   getAxesMask(yAxis,ymask);
-  Vector<Bool> nmask=(xmask || ymask);
-  Vector<Bool> cmask=(xmask && ymask);
 
-  //  cout << boolalpha;
+  Vector<Bool> nmask=(xmask || ymask);
+  //  Vector<Bool> cmask=(xmask && ymask);
+
+  netAxesMask_.resize(4);
+  netAxesMask_=nmask;
+
+  // cout << boolalpha;
   //  cout << "xmask = " << xmask << endl;
   //  cout << "ymask = " << ymask << endl;
-  //  cout << "nmask = " << nmask << endl;
+  // cout << "nmask = " << nmask << endl;
   //  cout << "cmask = " << cmask << endl;
 
 
@@ -836,30 +857,14 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   if (nmask(0)) nperbsln_*=chshapes_.row(0);
   if (nmask(1)) nperbsln_*=chshapes_.row(1);
 
+  nperant_.reference(nperbsln_);
+
+
   for (Int ichk=0;ichk<nChunk_;++ichk) {
 
-    //    if (ntrue(nmask(IPosition(1,0),IPosition(1,2)))==3) 
-    //      // corr, chan, baseline all present; just reference flag_
-    //      plmask_[ichk]->reference(*flag_[ichk]);
-    //    else {
-      // create a collapsed version of the flags
-
-      IPosition nsh(3,1,1,1),csh;
-      
-      for (Int iax=0;iax<3;++iax) {
-	if (nmask(iax)) 
-	  // non-trivial size for this axis
-	  nsh(iax)=chshapes_(iax,ichk);
-	else 
-	  // add this axis to collapse list
-	  csh.append(IPosition(1,iax));
-      }
-
-      plmask_[ichk]->resize(nsh);
-      (*plmask_[ichk]) = operator>(partialNFalse(*flag_[ichk],csh).reform(nsh),uInt(0));
-
-
-      //    }
+    // create a collapsed version of the flags for this chunk
+    setPlotMask(ichk);
+    
   }
 
 
@@ -925,6 +930,7 @@ void PlotMSCache::getAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
     axismask(1)=True;
     axismask(2)=True;
     break;
+  case PMS::ANTENNA:
   case PMS::AZIMUTH:
   case PMS::ELEVATION:
   case PMS::PARANG:
@@ -1059,6 +1065,9 @@ Double PlotMSCache::get(PMS::Axis axis) {
     return getFlagRow();
     break;
 
+  case PMS::ANTENNA:
+    return getAntenna();
+    break;
   case PMS::AZIMUTH:
     return getAz();
     break;
@@ -1164,16 +1173,313 @@ PlotLogMessage* PlotMSCache::locateRange(Double xmin,Double xmax,Double ymin,Dou
   ss << "Found " << nFound << " points among " << nPoints() << " in "
      << locatetimer.all_usec()/1.0e6 << "s.";
 
-  /*
-  // get rid of last newline
-  long pos = ss.tellp();
-  if(pos > 0) {
-      ss.seekp(pos - 1);
-      ss.write(" ", 1);
-  }
-  */
-  
   return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+}
+
+ 
+PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
+				       Double xmin,Double xmax,
+				       Double ymin,Double ymax,
+				       Bool flag) {
+
+
+  Timer flagtimer;
+  flagtimer.mark();
+
+  // List of flags
+  Vector<Int> flagchunk(1000,-1),flagindex(1000,-1);
+
+  Double thisx;
+  Double thisy;
+  stringstream ss;
+
+  Int nFound(0);
+  for (Int i=0;i<nPoints();++i) {
+    
+    getXY(i,thisx,thisy);
+
+    if (thisx > xmin && thisx < xmax)
+      if (thisy > ymin && thisy < ymax) {
+	++nFound;
+
+	flagInCache(flagging,flag);
+
+	// Record this flags indices so we can apply to MS (VisSet) below
+	Int flsz=flagchunk.nelements();
+	if (flsz<nFound) {
+	  // Add 50% more space (w/ copy!)
+	  flagchunk.resize(Int(flsz*1.5),True);
+	  flagindex.resize(Int(flsz*1.5),True);
+	}
+	flagchunk(nFound-1)=currChunk_;
+	flagindex(nFound-1)=irel_;
+
+	//	reportMeta(thisx,thisy,ss);
+	//	ss << '\n';
+      }
+  }
+
+  // Refresh the plot mask to reflect newly flagged data
+  for (Int ichk=0;ichk<nChunk_;++ichk)
+    setPlotMask(ichk);
+
+
+  //  cout << "Finished in-memory flagging." << endl;
+
+
+  // shrink flag list to correct size
+  if (flagchunk.nelements()>uInt(nFound)) {
+    flagchunk.resize(nFound,True);
+    flagindex.resize(nFound,True);
+  }
+
+  //  cout << "&VisSet = " << flagging.getVisSet() << endl;
+
+
+  // Set the flags in the MS
+  flagInVisSet(flagging,flagchunk,flagindex,flag);
+
+  ss << (flag ? "FLAGGED " : "UNFLAGGED ") << nFound 
+     << " points among " << nPoints() << " in "
+     << flagtimer.all_usec()/1.0e6 << "s.";
+
+  return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+}
+
+void PlotMSCache::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
+
+  Slice corr,chan,bsln;
+
+  // Set flag range on correlation axis:
+  Int icorr(-1);
+  if (netAxesMask_(0) && !(flagging.corr() && flagging.corrAll())) {
+    // specific correlation
+    icorr=(irel_%icorrmax_(currChunk_));
+    corr=Slice(icorr,1,1);
+  } 
+  else 
+    // All correlations
+    corr=Slice(0,chshapes_(0,currChunk_),1);
+   
+  // Set Flag range on channel axis:
+  Int ichan(-1);
+  if (netAxesMask_(1) && !flagging.channel()) {
+    // specific correlation
+    ichan=Int(getChan());
+    chan=Slice(ichan,1,1);
+  } 
+  else 
+    // All channels
+    chan=Slice(0,chshapes_(1,currChunk_),1);
+  
+
+  // Set Flag range on baseline axis:
+  Int ibsln(-1);
+  if (netAxesMask_(2)) {
+    // specific correlation
+    ibsln=(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_);
+    bsln=Slice(ibsln,1,1);
+  } 
+  else 
+    // All baselines
+    bsln=Slice(0,chshapes_(2,currChunk_),1);
+  
+  // Set the sliced flag
+  Cube<Bool> flagcube(*flag_[currChunk_]);
+  flagcube(corr,chan,bsln)=flag;
+
+}
+
+void PlotMSCache::setPlotMask(Int chunk) {
+
+  IPosition nsh(3,1,1,1),csh;
+  
+  for (Int iax=0;iax<3;++iax) {
+    if (netAxesMask_(iax)) 
+      // non-trivial size for this axis
+      nsh(iax)=chshapes_(iax,chunk);
+    else 
+      // add this axis to collapse list
+      csh.append(IPosition(1,iax));
+  }
+  
+  
+  if (netAxesMask_(3) && !netAxesMask_(2)) {
+    nsh(2)=nAnt_;
+    plmask_[chunk]->resize(nsh);
+    plmask_[chunk]->set(True);
+  }
+  else {
+    plmask_[chunk]->resize(nsh);
+    (*plmask_[chunk]) = operator>(partialNFalse(*flag_[chunk],csh).reform(nsh),uInt(0));
+  }
+  
+}
+
+void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchunks, Vector<Int>& flrelids, Bool flag) {
+
+  // Sort the flags by chunk:
+  Sort sorter;
+  sorter.sortKey(flchunks.data(),TpInt);
+  sorter.sortKey(flrelids.data(),TpInt);
+  Vector<uInt> order;
+  uInt nflag;
+  nflag = sorter.sort(order,flchunks.nelements());
+
+  // Revise VisSet channel selection
+  flagging.getVisSet()->selectAllChans();
+
+  VisIter& vi(flagging.getVisSet()->iter());
+  VisBuffer vb(vi);
+
+  vi.originChunks();
+  vi.origin();
+
+  Int iflag(0);
+  for (Int ichk=0;ichk<nChunk_;++ichk) {
+
+    //    cout << "ichk = " << ichk << endl;
+    if (ichk!=flchunks(order[iflag])) {
+      // Step over current chunk
+      for (Int i=0;i<nVBPerAve_(ichk);++i) {
+	vi++;
+	if (!vi.more() && vi.moreChunks()) {
+	  vi.nextChunk();
+	  vi.origin();
+	}
+      }
+    }
+    else {
+
+      // This chunk requires flag-setting
+
+      // For each VB in this cache chunk
+      Int ifl(iflag);
+      for (Int i=0;i<nVBPerAve_(ichk);++i) {
+
+	// Refer to VB pieces we need
+	Cube<Bool> vbflag(vb.flagCube());
+	Vector<Int> corrType(vb.corrType());
+	Vector<Int> channel(vb.channel());
+	Vector<Int> a1(vb.antenna1());
+	Vector<Int> a2(vb.antenna2());
+	Int ncorr=corrType.nelements();
+	Int nchan=channel.nelements();
+	Int nrow=vb.nRow();
+	if (False) {
+	  currChunk_=flchunks(order[iflag]);
+	  irel_=flrelids(order[iflag]);
+	  cout << "Time diff: " << getTime()-vb.time()(0) << " " << getTime() << " " << vb.time()(0) << endl;
+	  cout << "Spw diff:  " << Int(getSpw())-vb.spectralWindow() << " " << getSpw() << " " << vb.spectralWindow() << endl;
+	  cout << "Field diff:  " << Int(getField())-vb.fieldId() << " " << getField() << " " << vb.fieldId() << endl;
+	}
+
+	// Apply all flags in this chunk to this VB
+	ifl=iflag;
+	while (ifl<Int(nflag) && flchunks(order[ifl])==ichk) {
+
+	  currChunk_=flchunks(order[ifl]);
+	  irel_=flrelids(order[ifl]);
+
+	  Slice corr,chan,bsln;
+	  // Set flag range on correlation axis:
+	  if (netAxesMask_(0) && !(flagging.corr() && flagging.corrAll())) {
+	    // specific correlation
+	    Int icorr(0);
+	    Int thiscorr=Int(getCorr());
+	    while (corrType(icorr)!=thiscorr && icorr<ncorr) 
+	      ++icorr;
+	    corr=Slice(icorr,1,1);
+	  } 
+	  else {
+	    // cout << "Flagging all correlations!" << endl;
+	    corr=Slice(0,ncorr,1);
+	  }
+
+	  // Set Flag range on channel axis:
+	  if (netAxesMask_(1) && !flagging.channel()) {
+	    // specific correlation
+	    Int ichan(0), thischan=Int(getChan());
+	    while (channel(ichan)!=thischan && ichan<nchan)
+	      ++ichan;
+	    chan=Slice(ichan,1,1);
+	  } 
+	  else 
+	    chan=Slice(0,nchan,1);
+	  
+	  // Set Flags on the baseline axis:
+	  Int thisA1=Int(getAnt1()), thisA2=Int(getAnt2());
+	  if (netAxesMask_(2) && 
+	      !(flagging.antenna() && flagging.antennaBaselinesBased()) &&
+	      thisA1>-1 ) {
+	    // i.e., if baseline is an explicit data axis, 
+	    //       full baseline extension is OFF
+	    //       and the first antenna in the selected point is > -1
+
+	    // Do some variety of detailed per-baseline flagging
+	    for (Int irow=0;irow<nrow;++irow) {
+	      
+	      if (thisA2>-1) {
+		// match a baseline exactly
+		if (a1(irow)==thisA1 &&
+		    a2(irow)==thisA2) {
+		  vbflag(corr,chan,Slice(irow,1,1))=flag;
+
+		  if (False) {
+		    cout << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
+			 << " corr: " << corr.start() << " " << corr.length()
+			 << " chan: " << chan.start() << " " << chan.length()
+			 << endl;
+		  }
+		  break;  // found the one baseline, escape from for loop
+		}
+	      }
+	      else {
+		// either antenna matches the one specified antenna
+		//  (don't break because there will be more than one)
+		if (a1(irow)==thisA1 ||
+		    a2(irow)==thisA1) 
+		  vbflag(corr,chan,Slice(irow,1,1))=flag;
+	      }
+	    }
+	  }
+	  else {
+	    // Set flags for all baselines, because the plot
+	    //  is ordinarily implicit in baseline, we've turned on baseline
+	    //  extension, or we've avaraged over all baselines
+	    bsln=Slice(0,nrow,1);
+	    vbflag(corr,chan,bsln)=flag;
+	  } 
+	  
+	  ++ifl;
+	}
+
+	//	cout << "Finished setting flags..." << flush;
+
+	// Put the flags back into the MS
+	vi.setFlag(vbflag);
+
+	//	cout << "finished putting them back." << endl;
+
+	// Advance to the next vb
+	vi++;
+	if (!vi.more() && vi.moreChunks()) {
+	  vi.nextChunk();
+	  vi.origin();
+	}
+      }  // VBs in this averaging chunk
+
+      // step over the flags we've just done
+      iflag=ifl;
+
+      // Escape if we are already finished
+      if (uInt(iflag)>=nflag) break;
+
+    } // flagable VB
+    
+  } // ichk
+
+
 }
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {    
@@ -1193,21 +1499,19 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {
 
 void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
 
-
-
   ss << "Scan=" << getScan() << " ";
   ss << "Field=" << getField() << " ";
   ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
   ss << "BL=";
 
   Int ant1=Int(getAnt1());
-  if (ant1<0)
+  if (!netAxesMask_(2) || ant1<0)
     ss << "*-";
   else
     ss << ant1 << "-";
 
   Int ant2=Int(getAnt2());
-  if (ant2<0)
+  if (!netAxesMask_(2) || ant2<0)
     ss << "* ";
   else
     ss << ant2 << " ";
@@ -1219,9 +1523,23 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
   else
     ss << spw << " ";
 
-  ss << "Chan=" << getChan() << " ";
-  ss << "Freq=" << getFreq() << " ";
-  ss << "Corr=" << getCorr() << " ";
+  ss << "Chan=";
+  if (netAxesMask_(1))
+    ss << getChan() << " ";
+  else
+    ss << "*  ";
+
+  ss << "Freq=";
+  if (netAxesMask_(1))
+    ss << getFreq() << " ";
+  else
+    ss << "*        ";
+
+  ss << "Corr=";
+  if (netAxesMask_(0))
+    ss << getCorr() << " ";
+  else
+    ss << "* ";
   ss << "X=" << x << " ";
   ss << "Y="  << y << " ";
   ss << "(" << (currChunk_ > 0 ? (nPoints_(currChunk_-1)+irel_) : irel_) << "/";
@@ -1423,6 +1741,11 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
       *flagrow_[vbnum] = vb.flagRow();
       break;
 
+    case PMS::ANTENNA: {
+      antenna_[vbnum]->resize(nAnt_);
+      indgen(*antenna_[vbnum]);
+      break;
+    }
     case PMS::AZIMUTH:
     case PMS::ELEVATION: {
       Matrix<Double> azel;
@@ -1472,6 +1795,7 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
     case PMS::V:
     case PMS::W:
     case PMS::FLAG:
+    case PMS::ANTENNA: 
     case PMS::AZIMUTH: 
     case PMS::ELEVATION: 
     case PMS::PARANG: 
@@ -1495,6 +1819,7 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::V)        n += v_[i]->size();
             else if(axis == PMS::W)        n += w_[i]->size();
             else if(axis == PMS::FLAG)     n += flag_[i]->size();
+            else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
             else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
             else if(axis == PMS::ELEVATION)n += el_[i]->size();
             else if(axis == PMS::PARANG)   n += parang_[i]->size();
@@ -1573,6 +1898,7 @@ void PlotMSCache::computeRanges() {
 	    collmask.reference(*plmask_[ic]);
 	    break;
 	  }
+	  case PMS::ANTENNA:
 	  case PMS::AZIMUTH:
 	  case PMS::ELEVATION:
 	  case PMS::PARANG:
@@ -1711,6 +2037,12 @@ void PlotMSCache::computeRanges() {
 	    if (flag_[ic]->nelements()>0) {
 	      limits(2*ix)=-0.5;
 	      limits(2*ix+1)=1.5;
+	    }
+	    break;
+	  case PMS::ANTENNA:
+	    if (antenna_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic])));
 	    }
 	    break;
 	  case PMS::AZIMUTH:
@@ -1864,6 +2196,12 @@ void PlotMSCache::computeRanges() {
 	    if (flag_[ic]->nelements()>0) {
 	      limits(2*ix)=-0.5;
 	      limits(2*ix+1)=1.5;
+	    }
+	    break;
+	  case PMS::ANTENNA:
+	    if (antenna_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic])));
 	    }
 	    break;
 	  case PMS::AZIMUTH:

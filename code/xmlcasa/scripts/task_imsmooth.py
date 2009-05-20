@@ -74,8 +74,10 @@
 # </todo>
 
 import os
+import numpy
 from taskinit import *
 from imregion import *
+
 
 def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask, outfile):
     retValue=None
@@ -94,8 +96,15 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
     # over-written, just a policy.
     if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
         raise Exception, 'Output file, '+outfile+\
-              ' exists. imsmooth can not proceed, please\n'\
+              ' exists. imsmooth can not proceed, please\n'+\
               'remove it or change the output file name.'
+    elif ( len( outfile ) < 1 ):
+        casalog.post( "The outfile paramter is empty, consequently the" \
+                      +" smoothed image will NOT be\nsaved on disk," \
+                      +" but an image tool (ia) will be returned and if the" \
+                      +" returned value\nis saved then you can used in" \
+                      +" the same way the image tool (ia). can", 'WARN' )
+                      
 
     
     # Get the region information, if the user has specified
@@ -103,12 +112,14 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
     reg={}
     try:
     	if ( len(region)>1 ):
-	    if ( len(box)<1 or len(chans)<1 or len(stokes)<1 ):
-		casalog.post( "Ignoring region selection\ninformation in"\
+	    if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
+		casalog.post( "Ignoring region selection\ninformation in" \
 			      " the box, chans, and stokes parameters."\
 			      " Using region information\nin file: " + region, 'WARN' );
+            # Prepend the current working directory if the first
+            # character of the region is not '/'
             if os.path.exists( region ):
-                # We have a region file on disk!
+                    # We have a region file on disk!
                 reg=rg.fromfiletorecord( region );
             else:
                 # The name given is the name of a region stored
@@ -130,6 +141,14 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
         raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
     
     casalog.post( 'Smoothing to be done in region: '+str(reg), 'DEBUG2' )
+
+    # If the values given are integers we assume they are given in
+    # arcsecs and alter appropriately
+    if type( major ) == int:
+        major=str(major)+'arcsec'
+    if type( minor ) == int:
+        minor=str(minor)+'arcsec'                
+
 
     try:        
         if ( kernel.startswith( "gaus" ) ):

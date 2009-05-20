@@ -138,6 +138,10 @@ protected:
     // Returns the canvas this tool is attached to, or NULL for none.
     virtual PlotCanvas* canvas() const;
     
+    // Returns a factory that can be used for generating
+    // implementation-specific classes, or NULL for none.
+    virtual PlotFactory* factory() const;
+    
     // Returns true if this tool is attached to a canvas, false otherwise.
     virtual bool isAttached() const;
     

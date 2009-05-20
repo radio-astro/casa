@@ -33,7 +33,7 @@ then frequency (or time) average on the result of the first split run.
 	<param type="string" name="datacolumn">
 		<description>Which data column to split out</description>
 		<value>corrected</value>
-		<allowed kind="enum">
+		<allowed kind="enum" ignorecase="True">
 			<value>data</value>
 			<value>corrected</value>
 			<value>model</value>

@@ -79,7 +79,7 @@ refstats = { 'flux': 0.00039567,
              'sigma': 4.53577279e-07 }
 
 # changed brightness convention scaling 20090501
-refstats = { 'flux': 0.000422,
+refstats = { 'flux': 0.00042205,
              'max': 3.6e-06,
              'min': -1.7e-07,
              'rms': 6.1e-07,

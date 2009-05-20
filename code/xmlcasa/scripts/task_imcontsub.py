@@ -14,12 +14,22 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
                           +' already exists, please delete before continuing.',\
                           'SEVERE' )
             filesExist=True
+    elif ( len( linefile ) < 1 ):
+        casalog.post( "The linefile paramter is empty, consequently the" \
+                      +" spectral line image will NOT be\nsaved on disk.", \
+                      'WARN')
+            
     if ( len( contfile ) > 0 ):
     	if ( os.path.exists( contfile ) ):
     	    casalog.post( 'Error: Unable to continue file '+contfile\
     			  +' already exists, please delete before continuing.',\
                           'SEVERE' )
     	    filesExist=True
+    elif ( len( contfile ) < 1 ):
+        casalog.post( "The contfile paramter is empty, consequently the" \
+                      +" continuum image will NOT be\nsaved on disk.", \
+                      'WARN')
+        
     if ( filesExist ):
     	raise Exception, 'Output file(s) already exist can not continue ...' 
     

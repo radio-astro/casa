@@ -474,14 +474,39 @@ void VisSet::selectChannel(const Matrix<Int>& chansel) {
     const Int& end=chansel(ispw,2);
     Int nchan=end-start+1;
     const Int& step=chansel(ispw,3);
-
+    
     ostringstream os;
     os << ".  Spw " << spw << ":" << start << "~" << end 
        << " (" << nchan << " channels, step by " << step << ")";
     message.message(os);
     logSink.post(message);
-
+    
     this->selectChannel(1,start,nchan,step,spw,False);
+  }
+
+}
+
+void VisSet::selectAllChans() {
+
+  LogSink logSink;
+  LogMessage message(LogOrigin("VisSet","selectAllChans"));
+  ostringstream os;
+  os << ".  Selecting all channels in selected spws.";
+  message.message(os);
+  logSink.post(message);
+
+  MSSpWindowColumns msSpW(ms_p.spectralWindow());
+  Int nSpw=msSpW.nrow();
+  if(nSpw==0)
+    throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
+  selection_p.resize(2,nSpw);
+  // fill in default selection
+  selection_p.row(0)=0; //start
+  selection_p.row(1)=msSpW.numChan().getColumn(); 
+
+  // Pass to the VisIter... 
+  for (uInt spw=0; spw<selection_p.ncolumn(); ++spw) {
+    iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
   }
 }
 

@@ -1,6 +1,7 @@
 #include <msvis/MSVis/MSFixVis.h>
 #include <msvis/MSVis/MSUVWGenerator.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Exceptions/Error.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 
@@ -103,9 +104,17 @@ Bool MSFixVis::calc_uvw(const String refcode)
     Muvw::Types uvwtype;
     MBaseline::Types bltype;
     
-    MBaseline::getType(bltype, refcode);
-    Muvw::getType(uvwtype, refcode);
-
+    try{
+      MBaseline::getType(bltype, refcode);
+      Muvw::getType(uvwtype, refcode);
+    }
+    catch(AipsError x){
+      logSink() << LogOrigin("MSFixVis", "calc_uvw")
+		<< LogIO::SEVERE
+		<< "refcode \"" << refcode << "\" is not valid for baselines."
+		<< LogIO::POST;
+    }
+    
     MSUVWGenerator uvwgen(*ms_p, bltype, uvwtype);
   
     return uvwgen.make_uvws(FieldIds_p);

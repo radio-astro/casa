@@ -98,6 +98,9 @@ protected slots:
     void cancel();
     
 private:
+    // Plot.
+    PlotMSPlot* itsPlot_;
+    
     // Data.
     PlotMSData* itsData_;
     

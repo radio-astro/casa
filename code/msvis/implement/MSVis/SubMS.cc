@@ -1199,7 +1199,6 @@ void SubMS::relabelIDs()
     Double timeBin=timeBin_p;
 
     //// fill time and timecentroid and antennas
-    //if(!fillAverAntTime())
     nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
     if(nant_p < 1)
       return False;
@@ -1216,25 +1215,18 @@ void SubMS::relabelIDs()
         
     //    relabelIDs();
 
-//     //Fill array id with first value of input ms for now.
-//     msc_p->arrayId().fillColumn(mscIn_p->arrayId()(0));
-//     msc_p->observationId().fillColumn(mscIn_p->observationId()(0));
-//     msc_p->processorId().fillColumn(mscIn_p->processorId()(0));
-//     msc_p->stateId().fillColumn(mscIn_p->stateId()(0));
-    
     msc_p->interval().fillColumn(timeBin);
     
-    //things to be taken care in averData... (1) flagRow, (2) ScanNumber 
-    //(3) uvw (4) weight (5) sigma (6) ant1 (7) ant2 (8) time (9) timeCentroid
-    //    (10) feed1 (11) feed2 (12) exposure (13) stateId (14) processorId
-    //         (15) observationId (16) arrayId
+    //things to be taken care in fillTimeAverData...
+    // flagRow		ScanNumber	uvw		weight		
+    // sigma		ant1		ant2		time
+    // timeCentroid	feed1 		feed2		exposure
+    // stateId		processorId	observationId	arrayId
     if(!fillTimeAverData(whichCol))
       return False;
     
-    return True;
-    
+    return True; 
   }
-  
   
   
   Bool SubMS::copyAntenna(){
@@ -1880,361 +1872,357 @@ uInt SubMS::fillAntIndexer(const MSColumns *msc, Vector<Int>& antIndexer)
     antIndexer[selAnt[j]] = static_cast<Int>(j);
   return nant;
 }
-
-//   Bool SubMS::fillAverAntTime()
-//   {
-//     //uInt nrows = msOut_p.nrow();
-//     //Vector<Int> antenna1(nrows);
-//     //Vector<Int> antenna2(nrows);
-//     //Vector<Double> rowTime(nrows);
-
-//     // Do stuff that can be done outside the time loop.
-//     nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
-
-//     Vector<Int> startAnt2Inds(nant1_p);
-//     for (uInt ant1Index = 0; ant1Index < nant1_p; ++ant1Index){
-//       const Int ant1indexed = ant1[ant1Index];
-
-//       // be careful as selection may have ant1 which is bigger than max(ant2)
-//       if(ant1indexed < maxant2_p){
-// 	Int somecounter;      // Would be uInt but too many antenna things are Int.
-// 	//startAnt2Ind=ant2Indexer[ant1indexed+somcounter];
-	  
-// 	for(somecounter = ant1indexed + 1;
-// 	    somecounter <= maxant2_p && ant2Indexer_p[somecounter] == -1;
-// 	    ++somecounter);
-	  
-// 	startAnt2Inds[ant1Index] = (somecounter <= maxant2_p) ?
-// 	                           ant2Indexer_p[somecounter] :
-// 	                           nant2_p;  
-//       }
-//     }
-
-//     //Will need to do the weighted averaging of time in the future.
-//     uInt k = 0;
-//     //Double timeStart=mscIn_p->time()(0)+0.5*timeBin;
-//     for(uInt t = 0; t < nTimeBins; ++t){
-//       for(uInt ant1Index = 0; ant1Index < nant1_p; ++ant1Index){
-// 	// be careful as selection may have ant1 which is bigger than max
-// 	// ant2
-// 	const Int ant1indexed = ant1[ant1Index];
-	
-// 	if(ant1indexed < maxant2_p){
-// 	  if(k == nrows)
-// 	    throw(AipsError("Something not expected by the programmer happened; Please file a bug report"));
-
-// 	  for(uInt ant2Index = startAnt2Inds[ant1Index]; ant2Index < nant2_p; 
-// 	      ++ant2Index){ 
-// 	    if(!antennaSel_p){
-// 	      antenna1[k] = ant1indexed;
-// 	      antenna2[k] = ant2[ant2Index];
-// 	    }
-// 	    else{
-// 	     antenna1[k] = antNewIndex_p[ant1indexed];
-// 	     antenna2[k] = antNewIndex_p[ant2[ant2_pIndex]]; 
-// 	    }
-// 	    rowTime[k] = newTimeVal_p[t];
-// 	    ++k;
-// 	  }
-// 	}
-//       }
-//     }
-    
-//     msc_p->antenna1().putColumn(antenna1);
-//     msc_p->antenna2().putColumn(antenna2);
-//     // Feed Ids are not being handled properly...
-//     // Will work for arrays with one feed setting for all antennas
-//     // but will need to be fixed for multi feed setting in one array/ms
-//     //Multi-feed antennas and/or multi-feed setting will be messed up
-//     msc_p->feed1().fillColumn(mscIn_p->feed1()(0));
-//     msc_p->feed2().fillColumn(mscIn_p->feed2()(0)); 
-//     msc_p->time().putColumn(rowTime);
-//     msc_p->timeCentroid().putColumn(rowTime);
-    
-//     return True;
-//   }
   
 Bool SubMS::fillTimeAverData(const String& columnName)
 {
   LogIO os(LogOrigin("SubMS", "fillTimeAverData()"));
 
-  //No channel averaging with time averaging
-  if(chanStep_p[0]==1){
-    //Need to deal with uvw too
-
-    Int outNrow=msOut_p.nrow();
-
-    ROArrayColumn<Complex> data;
-    const ROScalarColumn<Double> time(mscIn_p->time());
-    const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
-    const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
-
-    ROArrayColumn<Float> wgtSpec;
-    
-    const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
-    const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
-    const ROScalarColumn<Int> inFeed1(mscIn_p->feed1());
-    const ROScalarColumn<Int> inFeed2(mscIn_p->feed2());
-    const ROScalarColumn<Int> fieldID(mscIn_p->fieldId());
-    const ROScalarColumn<Int> state(mscIn_p->stateId());
-
-    const ROScalarColumn<Int> inProc(mscIn_p->processorId());
-    Vector<Int> procMapper;
-    make_map(inProc.getColumn(), procMapper);
-
-    const ROScalarColumn<Int> inObs(mscIn_p->observationId());
-    Vector<Int> obsMapper;
-    make_map(inObs.getColumn(), obsMapper);
-
-    const ROScalarColumn<Int> inArr(mscIn_p->arrayId());
-
-    ROArrayColumn<Bool> flag(mscIn_p->flag());
-    const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
-    const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
-    const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
-    const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
- 
-    data.reference(right_column(mscIn_p, columnName));
-    os << LogIO::NORMAL
-       << "Writing time averaged data of " << newTimeVal_p.nelements() << " time slots"
-       << LogIO::POST;
-
-    const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                            mscIn_p->weightSpectrum().isDefined(0);
-
-    Vector<Double> outTime;
-    outTime.resize(outNrow);
-
-    Vector<Double> outTC;
-    outTC.resize(outNrow);
-    outTC.set(0.0);
-
-    Vector<Double> outExposure;
-    outExposure.resize(outNrow);
-    outExposure.set(0.0);
-
-    Cube<Complex> outData(npol_p[0], nchan_p[0], outNrow);
-    outData.set(0.0);
-
-    Matrix<Float> outRowWeight(npol_p[0], outNrow);
-    outRowWeight.set(0.0);
-
-    Cube<Bool> outFlag(npol_p[0], nchan_p[0], outNrow);
-    outFlag.set(True);
-
-    Vector<Bool> outRowFlag(outNrow);
-    outRowFlag.set(True);
-
-    Vector<Int> outAnt1(outNrow);
-    outAnt1.set(-1);
-
-    Vector<Int> outAnt2(outNrow);
-    outAnt2.set(-1);
-
-    Vector<Int> outFeed1(outNrow);
-    outFeed1.set(-1);
-
-    Vector<Int> outFeed2(outNrow);
-    outFeed2.set(-1);
-
-    Vector<Int> outScanNum(outNrow);
-    outScanNum.set(0);
-
-    Vector<Int> outProc(outNrow);
-    outProc.set(0);
-
-    Vector<Int> outObs(outNrow);
-    outObs.set(0);
-
-    Vector<Int> outArr(outNrow);
-    outArr.set(0);
-
-    Vector<Int> outField(outNrow);
-    outField.set(0);
-
-    Vector<Int> outState(outNrow);
-    outState.set(0);
-
-    Vector<Int> dataDesc(outNrow);
-    dataDesc.set(-1);
-
-    Cube<Float> outSpWeight ;
-    if(doSpWeight){ 
-      outSpWeight.resize(npol_p[0], nchan_p[0], outNrow);
-      outSpWeight.set(0.0);
-      wgtSpec.reference(mscIn_p->weightSpectrum());
-    }
-
-    Double totweight;
-
-    Matrix<Double> outUVW(3,outNrow);
-    outUVW.set(0.0);
-
-    Matrix<Float> outSigma(npol_p[0], outNrow);
-    outSigma.set(0.0);
-
-    ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-    os << LogIO::NORMAL << "outNrow = " << outNrow << LogIO::POST;
-    os << LogIO::NORMAL << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
-    //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
-    //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
-
-    IPosition blc(2, 0, chanStart_p[0]);
-    IPosition trc(2, npol_p[0]-1, nchan_p[0]+chanStart_p[0]-1);
-    
-    // Iterate through timebins.
-    uInt orn = 0; 		      // row number in output.
-    for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
-      // Iterate through slots.
-      for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
-	  slotit != bin_slots_p[tbn].end(); ++slotit){
-	uivector& slotv = slotit->second;
-	uInt besttoik = slotv[0]; // Closest match to newTimeVal_p[tbn]
-	Double bestTimeDiff = fabs(time(besttoik) - newTimeVal_p[tbn]);
-
-	// Iterate through mscIn_p's rows that belong to the slot.
-	for(uivector::iterator toikit = slotv.begin();
-	    toikit != slotv.end(); ++toikit){
-	  // Find the slot's row which is closest to newTimeVal_p[tbn].
-	  Double timeDiff = fabs(time(*toikit) - newTimeVal_p[tbn]);
-
-	  if(timeDiff < bestTimeDiff){
-	    bestTimeDiff = timeDiff;
-	    besttoik = *toikit;
-	  }
-
-	  // Accumulate the averaging values from *toikit.
-	  // doChanAver_p...wrong name but it means that channel 
-	  // selection is a sub selection
-	  // its a bit faster if no slicing is done...so avoid it if possible
-	  Array<Float> unflaggedwt(doChanAver_p ?
-				   inRowWeight(*toikit)(blc, trc).shape() :
-				   inRowWeight(*toikit).shape());
-	  Array<Complex> data_toikit(doChanAver_p ? data(*toikit)(blc, trc) :
-				     data(*toikit));
-	  
-	  if(doChanAver_p)	    
-	    unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit)(blc, trc),
-					     reformedMask(flag(*toikit)(blc, trc),
-							  false,
-							  unflaggedwt.shape()));
-	  else
-	    unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit),
-					     reformedMask(flag(*toikit), false,
-							  unflaggedwt.shape()));
-	    
-//  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
-//  	       << inRowWeight(*toikit).shape() << LogIO::POST;
-//  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
-//  	       << unflaggedwt.shape() << LogIO::POST;
-//  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
-//  	       << flag(*toikit).shape() << LogIO::POST;
-//  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
-//  	       << data(*toikit).shape() << LogIO::POST;
-
-	  outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
-	  totweight = sum(unflaggedwt);
-
-	  if(doChanAver_p)
-	    outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
-	  else
-	    outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
-
-	  binOpExpandInPlace(data_toikit, unflaggedwt,
-			     Multiplies<Complex, Float>());
-	    
-	  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
-
-	  outTC[orn] += totweight * inTC(*toikit);
-	  outExposure[orn] += totweight * inExposure(*toikit);
-	} // End of iterating through the slot's rows.
-
-	// Average the accumulated values.
-	totweight = sum(outRowWeight.column(orn));
-	if(totweight > 0.0){
-	  outTC[orn] /= totweight;
-	  outExposure[orn] *= slotv.size() / totweight;
-	}
-	slotv.clear();  // Free some memory.
-	if(product(outRowWeight.column(orn)) > 0.0){
-	  Array<Complex> grumble(outData.xyPlane(orn));   // Referenceable
-	  Vector<Float>  groan(outRowWeight.column(orn)); // copies
-	  
-	  binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
-	  outData.xyPlane(orn) = grumble;
-	
-	  for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
-	      ++polind)
-	    outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
-	}
-
-	// Fill in the nonaveraging values from besttoik.
-	// In general, _IDs which are row numbers in a subtable must be
-	// remapped, and those which are not probably shouldn't be.
-	// UVW shouldn't be averaged (we don't want the average of an ellipse).
-	outTime[orn]       = newTimeVal_p[tbn];
-	outUVW.column(orn) = inUVW(besttoik);
-	outScanNum[orn]    = scanNum(besttoik);	// Don't remap!
-	if(antennaSel_p){
-	  outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
-	  outAnt2[orn]  = antIndexer_p[ant2(besttoik)];
-	  outFeed1[orn] = feedNewIndex_p[inFeed1(besttoik)];
-	  outFeed2[orn] = feedNewIndex_p[inFeed2(besttoik)];
-	}
-	else{
-	  outAnt1[orn]  = ant1(besttoik);
-	  outAnt2[orn]  = ant2(besttoik);
-	  outFeed1[orn] = inFeed1(besttoik);
-	  outFeed2[orn] = inFeed2(besttoik);
-	}		
-	outField[orn]   = fieldRelabel_p[fieldID(besttoik)];
-	outState[orn]   = remapped(state(besttoik), stateRemapper_p,
-				   abs(state(besttoik)));
-	outProc[orn]    = remapped(inProc(besttoik), procMapper,
-				   abs(inProc(besttoik)));
-	outObs[orn]     = remapped(inObs(besttoik), obsMapper,
-				   abs(inObs(besttoik)));
-	outArr[orn]     = inArr(besttoik);	        // Don't remap!
-	dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
-	outRowFlag[orn] = false;
-
-	++orn;  // Advance the output row #.
-      } // End of iterating through the bin's slots.
-    }
-    os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
-
-    bin_slots_p.resize(0);           // Free some memory
-
-    msc_p->uvw().putColumn(outUVW);
-    outUVW.resize();			// Free some memory
-    msc_p->flag().putColumn(outFlag);
-    outFlag.resize();
-    msc_p->weight().putColumn(outRowWeight);
-    outRowWeight.resize();
-    msc_p->sigma().putColumn(outSigma);
-    outSigma.resize();
-    msc_p->antenna1().putColumn(outAnt1);
-    msc_p->antenna2().putColumn(outAnt2);
-    msc_p->arrayId().putColumn(outArr);
-    msc_p->dataDescId().putColumn(dataDesc);
-    msc_p->exposure().putColumn(outExposure);
-    msc_p->feed1().putColumn(outFeed1);
-    msc_p->feed2().putColumn(outFeed2);
-    msc_p->fieldId().putColumn(outField);
-    msc_p->flagRow().putColumn(outRowFlag);
-    // interval is done in fillAverMainTable().
-    msc_p->observationId().putColumn(outObs);
-    msc_p->processorId().putColumn(outProc);
-    msc_p->scanNumber().putColumn(outScanNum);
-    msc_p->stateId().putColumn(outState);
-    msc_p->time().putColumn(outTime);
-    msc_p->timeCentroid().putColumn(outTC);
-    msc_p->data().putColumn(outData);
-  }
-  else{
-    throw(AipsError("Channel averaging with time averaging is not handled yet"));
+  //No channel averaging with time averaging ... it's better this way.
+  if(chanStep_p[0] > 1){
+    throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
+
+  Int outNrow = msOut_p.nrow();
+
+  // RR 5/15/2009: columnName has already been vetted higher up in the
+  // calling chain by verifyColumns().
+  const Vector<String> colNameTok = parseColumnNames(columnName);
+  const uInt ntok = colNameTok.nelements();
+
+  //Vector<ROArrayColumn<Complex> > data(ntok);
+  ROArrayColumn<Complex> data[ntok];
+  const ROScalarColumn<Double> time(mscIn_p->time());
+  const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
+  const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
+
+  ROArrayColumn<Float> wgtSpec;
+    
+  const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
+  const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
+  const ROScalarColumn<Int> inFeed1(mscIn_p->feed1());
+  const ROScalarColumn<Int> inFeed2(mscIn_p->feed2());
+  const ROScalarColumn<Int> fieldID(mscIn_p->fieldId());
+  const ROScalarColumn<Int> state(mscIn_p->stateId());
+
+  const ROScalarColumn<Int> inProc(mscIn_p->processorId());
+  Vector<Int> procMapper;
+  make_map(inProc.getColumn(), procMapper);
+
+  const ROScalarColumn<Int> inObs(mscIn_p->observationId());
+  Vector<Int> obsMapper;
+  make_map(inObs.getColumn(), obsMapper);
+
+  const ROScalarColumn<Int> inArr(mscIn_p->arrayId());
+
+  const ROArrayColumn<Bool> flag(mscIn_p->flag());
+  const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
+  const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
+  const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
+  const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
+ 
+  for(uInt datacol = 0; datacol < ntok; ++datacol)
+    data[datacol].reference(right_column(mscIn_p, colNameTok[datacol]));
+  os << LogIO::NORMAL << "Writing time averaged data of "
+     << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
+
+  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
+                           mscIn_p->weightSpectrum().isDefined(0);
+
+  Vector<Double> outTime;
+  outTime.resize(outNrow);
+
+  Vector<Double> outTC;
+  outTC.resize(outNrow);
+  outTC.set(0.0);
+
+  Vector<Double> outExposure;
+  outExposure.resize(outNrow);
+  outExposure.set(0.0);
+
+  //Vector<Cube<Complex> > outData(ntok);
+  Cube<Complex> outData[ntok];
+  for(uInt datacol = 0; datacol < ntok; ++datacol){
+    outData[datacol] = Cube<Complex>(npol_p[0], nchan_p[0], outNrow);
+    outData[datacol].set(0.0);
+  }
+  
+  Matrix<Float> outRowWeight(npol_p[0], outNrow);
+  outRowWeight.set(0.0);
+
+  Cube<Bool> outFlag(npol_p[0], nchan_p[0], outNrow);
+  outFlag.set(True);
+
+  Vector<Bool> outRowFlag(outNrow);
+  outRowFlag.set(True);
+
+  Vector<Int> outAnt1(outNrow);
+  outAnt1.set(-1);
+
+  Vector<Int> outAnt2(outNrow);
+  outAnt2.set(-1);
+
+  Vector<Int> outFeed1(outNrow);
+  outFeed1.set(-1);
+
+  Vector<Int> outFeed2(outNrow);
+  outFeed2.set(-1);
+
+  Vector<Int> outScanNum(outNrow);
+  outScanNum.set(0);
+
+  Vector<Int> outProc(outNrow);
+  outProc.set(0);
+
+  Vector<Int> outObs(outNrow);
+  outObs.set(0);
+
+  Vector<Int> outArr(outNrow);
+  outArr.set(0);
+
+  Vector<Int> outField(outNrow);
+  outField.set(0);
+
+  Vector<Int> outState(outNrow);
+  outState.set(0);
+
+  Vector<Int> dataDesc(outNrow);
+  dataDesc.set(-1);
+
+  Cube<Float> outSpWeight;
+  Vector<Float> outSpWtTmp(npol_p[0]);
+  if(doSpWeight){
+    outSpWeight.resize(npol_p[0], nchan_p[0], outNrow);
+    outSpWeight.set(0.0);
+    wgtSpec.reference(mscIn_p->weightSpectrum());
+  }
+
+  Double totweight;
+
+  Matrix<Double> outUVW(3, outNrow);
+  outUVW.set(0.0);
+
+  Matrix<Float> outSigma(npol_p[0], outNrow);
+  outSigma.set(0.0);
+
+  const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
+  os << LogIO::NORMAL << "outNrow = " << outNrow << LogIO::POST;
+  os << LogIO::NORMAL << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
+  //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
+  //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
+
+  IPosition blc(2, 0, chanStart_p[0]);
+  IPosition trc(2, npol_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
+  Array<Float> unflgWtSpec(trc - blc + 1);  
+  Array<Complex> data_toikit(trc - blc + 1);
+  os << LogIO::DEBUG1
+     << "unflgWtSpec.shape() = " << unflgWtSpec.shape()
+     << LogIO::POST;
+    
+  // Iterate through timebins.
+  uInt orn = 0; 		      // row number in output.
+  for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
+    // Iterate through slots.
+    for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
+	slotit != bin_slots_p[tbn].end(); ++slotit){
+      uivector& slotv = slotit->second;
+      uInt besttoik = slotv[0]; // Closest match to newTimeVal_p[tbn]
+      Double bestTimeDiff = fabs(time(besttoik) - newTimeVal_p[tbn]);
+
+      // Iterate through mscIn_p's rows that belong to the slot.
+      for(uivector::iterator toikit = slotv.begin();
+	  toikit != slotv.end(); ++toikit){
+	// Find the slot's row which is closest to newTimeVal_p[tbn].
+	Double timeDiff = fabs(time(*toikit) - newTimeVal_p[tbn]);
+
+	if(timeDiff < bestTimeDiff){
+	  bestTimeDiff = timeDiff;
+	  besttoik = *toikit;
+	}
+
+	// Accumulate the averaging values from *toikit.
+	// doChanAver_p...wrong name but it means that channel 
+	// selection is a sub selection
+	// its a bit faster if no slicing is done...so avoid it if possible
+	Array<Float> unflaggedwt(doChanAver_p ?
+				 inRowWeight(*toikit)(blc, trc).shape() :
+				 inRowWeight(*toikit).shape());
+	  
+	if(doChanAver_p)	    
+	  unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit)(blc, trc),
+					   reformedMask(flag(*toikit)(blc, trc),
+							false,
+							unflaggedwt.shape()));
+	else
+	  unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit),
+					   reformedMask(flag(*toikit), false,
+							unflaggedwt.shape()));
+	    
+	//  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
+	//  	       << inRowWeight(*toikit).shape() << LogIO::POST;
+	//  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
+	//  	       << unflaggedwt.shape() << LogIO::POST;
+	//  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
+	//  	       << flag(*toikit).shape() << LogIO::POST;
+	//  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
+	//  	       << data(*toikit).shape() << LogIO::POST;
+
+	outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
+	totweight = sum(unflaggedwt);
+
+	if(doChanAver_p)
+	  outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
+	else
+	  outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
+
+	if(doSpWeight){
+//  	  os << LogIO::DEBUG1
+// // 	     << "wgtSpec(*toikit).shape() = " << wgtSpec(*toikit).shape()
+// // 	     << "\nflag(*toikit).shape() = " << flag(*toikit).shape()
+// // 	     << "outSpWeight.xyPlane(orn).shape() = "
+// //	     << outSpWeight.xyPlane(orn).shape()
+// 	     << "\noutSpWeight.xyPlane(orn)(blc) (before) =\t"
+// 	     << outSpWeight.xyPlane(orn)(blc)
+// 	     << LogIO::POST;
+
+	  if(doChanAver_p)
+	    unflgWtSpec = MaskedArray<Float>(wgtSpec(*toikit)(blc, trc),
+					     !flag(*toikit)(blc, trc));
+	  else
+	    unflgWtSpec = MaskedArray<Float>(wgtSpec(*toikit), !flag(*toikit));
+	  
+	  outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) + unflgWtSpec;
+//  	  os << LogIO::DEBUG1
+// 	     << "outSpWeight.xyPlane(orn)(blc) (after) = "
+// 	     << outSpWeight.xyPlane(orn)(blc)
+// 	     << "\nunflgWtSpec(blc) = " << unflgWtSpec(blc)
+// 	     << "\nwgtSpec(*toikit)(blc) = " << wgtSpec(*toikit)(blc)
+// 	     << "\nflag(*toikit)(blc) = " << flag(*toikit)(blc)
+// 	     << LogIO::POST;
+	  for(uInt datacol = 0; datacol < ntok; ++datacol){
+	    data_toikit = doChanAver_p ? data[datacol](*toikit)(blc, trc) :
+	      data[datacol](*toikit);
+
+	    data_toikit *= unflgWtSpec;
+	    
+	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+	      + data_toikit;
+	  }
+	}
+	else{
+	  for(uInt datacol = 0; datacol < ntok; ++datacol){
+	    data_toikit = doChanAver_p ? data[datacol](*toikit)(blc, trc) :
+	      data[datacol](*toikit);
+	    binOpExpandInPlace(data_toikit, unflaggedwt,
+			       Multiplies<Complex, Float>());
+	    
+	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+	      + data_toikit;
+	  }
+	}
+       
+	outTC[orn] += totweight * inTC(*toikit);
+	outExposure[orn] += totweight * inExposure(*toikit);
+      } // End of iterating through the slot's rows.
+
+	// Average the accumulated values.
+      totweight = sum(outRowWeight.column(orn));
+      if(totweight > 0.0){
+	outTC[orn] /= totweight;
+	outExposure[orn] *= slotv.size() / totweight;
+      }
+      slotv.clear();  // Free some memory.
+      if(product(outRowWeight.column(orn)) > 0.0){
+	Array<Complex> grumble;   			// Referenceable copy
+
+	if(doSpWeight){
+	  for(uInt datacol = 0; datacol < ntok; ++datacol)
+	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+	      / outSpWeight.xyPlane(orn);
+	}
+	else{
+	  Vector<Float> groan(outRowWeight.column(orn)); // Referenceable copy
+
+	  for(uInt datacol = 0; datacol < ntok; ++datacol){
+	    grumble = outData[datacol].xyPlane(orn);
+	  
+	    binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
+	    outData[datacol].xyPlane(orn) = grumble;
+	  }
+	}
+	
+	for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
+	    ++polind)
+	  outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
+      }
+
+      // Fill in the nonaveraging values from besttoik.
+      // In general, _IDs which are row numbers in a subtable must be
+      // remapped, and those which are not probably shouldn't be.
+      // UVW shouldn't be averaged (we don't want the average of an ellipse).
+      outTime[orn]       = newTimeVal_p[tbn];
+      outUVW.column(orn) = inUVW(besttoik);
+      outScanNum[orn]    = scanNum(besttoik);	// Don't remap!
+      if(antennaSel_p){
+	outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
+	outAnt2[orn]  = antIndexer_p[ant2(besttoik)];
+	outFeed1[orn] = feedNewIndex_p[inFeed1(besttoik)];
+	outFeed2[orn] = feedNewIndex_p[inFeed2(besttoik)];
+      }
+      else{
+	outAnt1[orn]  = ant1(besttoik);
+	outAnt2[orn]  = ant2(besttoik);
+	outFeed1[orn] = inFeed1(besttoik);
+	outFeed2[orn] = inFeed2(besttoik);
+      }		
+      outField[orn]   = fieldRelabel_p[fieldID(besttoik)];
+      outState[orn]   = remapped(state(besttoik), stateRemapper_p,
+				 abs(state(besttoik)));
+      outProc[orn]    = remapped(inProc(besttoik), procMapper,
+				 abs(inProc(besttoik)));
+      outObs[orn]     = remapped(inObs(besttoik), obsMapper,
+				 abs(inObs(besttoik)));
+      outArr[orn]     = inArr(besttoik);	        // Don't remap!
+      dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
+      outRowFlag[orn] = false;
+
+      ++orn;  // Advance the output row #.
+    } // End of iterating through the bin's slots.
+  }
+  os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
+
+  bin_slots_p.resize(0);           // Free some memory
+
+  msc_p->uvw().putColumn(outUVW);
+  outUVW.resize();			// Free some memory
+  msc_p->flag().putColumn(outFlag);
+  outFlag.resize();
+  msc_p->weight().putColumn(outRowWeight);
+  outRowWeight.resize();
+  msc_p->sigma().putColumn(outSigma);
+  outSigma.resize();
+  msc_p->antenna1().putColumn(outAnt1);
+  msc_p->antenna2().putColumn(outAnt2);
+  msc_p->arrayId().putColumn(outArr);
+  msc_p->dataDescId().putColumn(dataDesc);
+  msc_p->exposure().putColumn(outExposure);
+  msc_p->feed1().putColumn(outFeed1);
+  msc_p->feed2().putColumn(outFeed2);
+  msc_p->fieldId().putColumn(outField);
+  msc_p->flagRow().putColumn(outRowFlag);
+  // interval is done in fillAverMainTable().
+  msc_p->observationId().putColumn(outObs);
+  msc_p->processorId().putColumn(outProc);
+  msc_p->scanNumber().putColumn(outScanNum);
+  msc_p->stateId().putColumn(outState);
+  msc_p->time().putColumn(outTime);
+  msc_p->timeCentroid().putColumn(outTC);
+
+  for(uInt datacol = 0; datacol < ntok; ++datacol)
+    putDataColumn(*msc_p, outData[datacol], colNameTok[datacol], (ntok == 1));
+
+  if(doSpWeight)
+    msc_p->weightSpectrum().putColumn(outSpWeight);
   return True;
 }
 

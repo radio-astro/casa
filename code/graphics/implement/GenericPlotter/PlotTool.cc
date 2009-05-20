@@ -59,6 +59,7 @@ bool PlotTool::lastEventWasHandled() const { return m_lastEventHandled; }
 
 
 PlotCanvas* PlotTool::canvas() const { return m_canvas; }
+PlotFactory* PlotTool::factory() const { return m_factory; }
 bool PlotTool::isAttached() const { return m_canvas != NULL; }
 
 void PlotTool::attach(PlotCanvas* canvas) {

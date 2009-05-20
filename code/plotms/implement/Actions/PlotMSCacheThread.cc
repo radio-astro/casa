@@ -39,10 +39,10 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
         const PlotMSAveraging& averaging, bool setupPlot,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
-        postThreadMethod, postThreadObject), itsData_(&plot->data()),
-        itsVisSet_(plot->visSet()), itsAxes_(axes), itsAxesData_(data),
-        itsAveraging_(averaging), itsSetupPlot_(setupPlot && axes.size() >= 2),
-        wasCanceled_(false) {
+        postThreadMethod, postThreadObject), itsPlot_(plot),
+        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsAxes_(axes),
+        itsAxesData_(data), itsAveraging_(averaging),
+        itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())
         itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
@@ -114,11 +114,20 @@ PlotMSCacheThreadHelper::PlotMSCacheThreadHelper(PlotMSCacheThread& parent) :
 PlotMSCacheThreadHelper::~PlotMSCacheThreadHelper() { }    
 
 void PlotMSCacheThreadHelper::run() {
-    itsParent_.itsData_->loadCache(*itsParent_.itsVisSet_, itsParent_.itsAxes_,
-            itsParent_.itsAxesData_, itsParent_.itsAveraging_, &itsParent_);
-    if(itsParent_.itsSetupPlot_)
-        itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
-                                        itsParent_.itsAxes_[1]);
+    try {
+        itsParent_.itsData_->loadCache(*itsParent_.itsVisSet_,
+                itsParent_.itsAxes_, itsParent_.itsAxesData_,
+                itsParent_.itsAveraging_, &itsParent_);
+        if(itsParent_.itsSetupPlot_)
+            itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
+                                            itsParent_.itsAxes_[1]);
+    } catch(AipsError& err) {
+        itsParent_.itsPlot_->parent()->showError("Error during cache loading: "
+                + err.getMesg(), "Load Error");
+    } catch(...) {
+        itsParent_.itsPlot_->parent()->showError(
+                "Unknown error during cache loading!", "Load Error");
+    }
 }
 
 }

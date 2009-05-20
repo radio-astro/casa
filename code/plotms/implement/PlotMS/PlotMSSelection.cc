@@ -72,8 +72,14 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     // Set the selected MeasurementSet to be the same initially as the input
     // MeasurementSet
     selMS = ms;
+
+    if (corr()!="") {
+      cout << "WARNING: Sorry, Correlation selection is not yet working." << endl;
+      cout << "         Proceding with no correlation selection." << endl;
+    }
+
     mssSetData(ms, selMS, "", timerange(), antenna(), field(), spw(),
-               uvrange(), msselect(), corr(), scan(), array());
+               uvrange(), msselect(), "", scan(), array());
 
     MSSelection mss;
     mss.setSpwExpr(spw());

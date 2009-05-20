@@ -24,6 +24,17 @@ def imregrid(imagename,template,output):
             raise TypeError, '***Image %s is inaccessible***'%imagename
         if os.access(template, os.F_OK) is False:
             raise TypeError, '***Template image %s is inaccessible***'%template
+        if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
+            raise Exception, 'Output file, '+outfile+\
+              ' exists. imregrid can not proceed, please\n'\
+              'remove it or change the output file name.'
+        elif ( len( outfile ) < 1 ):
+            casalog.post( "The outfile paramter is empty, consequently the" \
+                      +" regridded image will NOT be\nsaved on disk," \
+                      +" but an image tool (ia) will be returned and if the" \
+                      +" returned value\nis saved then you can used in" \
+                      +" the same way the image tool (ia). can", 'WARN' )
+
         ia.open(template)
         csys=ia.coordsys()
         shap=ia.shape()

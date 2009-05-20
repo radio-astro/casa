@@ -1798,12 +1798,14 @@ measures::doframe(const ::casac::record& v)
     }
     delete pV;
     if (!in.isMeasure()) {
-      *itsLog << LogIO::SEVERE << "Illegal or unnecesarry measure specified for frame" << LogIO::POST;
+      *itsLog << LogIO::SEVERE << "Illegal or unnecessary measure specified for frame" << LogIO::POST;
       return false;
     }
     if (in.isMPosition() || in.isMDirection() ||
 	in.isMEpoch() || in.isMRadialVelocity()) {
-      cout << endl << in.asMeasure() << endl;
+      ostringstream tmpos;
+      tmpos << in.asMeasure();
+      *itsLog << LogIO::NORMAL << tmpos.str() << endl;
       frame_p->set(in.asMeasure());
       return true;;
     };

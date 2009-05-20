@@ -189,7 +189,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        PlotMSSinglePlotParameters& params = plot->singleParameters();
 	        PlotMSData& data = plot->data();
 
-            if(itsType_ == SEL_FLAG)
+            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
                 flagging.setMS(&plot->ms(),&plot->selectedMS(),plot->visSet());
 
 	        canv = plot->canvases();
@@ -221,6 +221,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	                tempy << '[' << regions[k].bottom() << ' '
 	                      << regions[k].top() << ']';
                     m = NULL;
+                    
+                    try {
                     if(itsType_ == SEL_LOCATE) {
                         m = data.locateRange(regions[k].left(),
                                 regions[k].right(), regions[k].bottom(),
@@ -229,6 +231,25 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
                         m = data.flagRange(flagging, regions[k].left(),
                                 regions[k].right(), regions[k].bottom(),
                                 regions[k].top(), itsType_ == SEL_FLAG);
+                    }
+                    } catch(AipsError& err) {
+                        itsDoActionResult_ = "Error during ";
+                        if(itsType_ == SEL_LOCATE)
+                            itsDoActionResult_ += "locate";
+                        else if(itsType_ == SEL_FLAG)
+                            itsDoActionResult_ += "flagging";
+                        else itsDoActionResult_ += "unflagging";
+                        itsDoActionResult_ += ": " + err.getMesg();
+                        return false;
+                    } catch(...) {
+                        itsDoActionResult_ = "Unknown error during ";
+                        if(itsType_ == SEL_LOCATE)
+                            itsDoActionResult_ += "locate";
+                        else if(itsType_ == SEL_FLAG)
+                            itsDoActionResult_ += "flagging";
+                        else itsDoActionResult_ += "unflagging";
+                        itsDoActionResult_ += "!";
+                        return false;
                     }
                     if(m != NULL) {
                         m->message(temp);
@@ -356,8 +377,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    
 	    // Update annotator.
 	    PlotMSPlotter* plotter = plotms->getPlotter();
-	    plotter->getAnnotator().setActive(useAnnotator);
 	    if(useAnnotator) plotter->getAnnotator().setDrawingMode(annotate);
+	    plotter->getAnnotator().setActive(useAnnotator);
 
 	    return true;
 	}

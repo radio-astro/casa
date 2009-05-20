@@ -182,7 +182,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # image, then the simulated image will be blank.  user error.
             cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
             cs.setincrement([-cell_rad,cell_rad],'direction')
-            cs.setreferencevalue([qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']],type="direction")
+            cs.setreferencevalue([qa.convert(ra,'rad')['value']-2*pl.pi,qa.convert(dec,'rad')['value']],type="direction")
             cs.setreferencevalue(startfreq,'spectral')
             ia.setcoordsys(cs.torecord())
             cl.open(complist)
@@ -693,13 +693,12 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # right now this is ok - if we only had components,
             # we have created modelimage4d from them but if
             # we had components and model image they are not yet combined
-            if verbose:
-                msg("predicting from "+modelimage4d)
-                if arr.nbytes > 5e7:
-                    msg("WARN: your model is large - this may take a while")
+            msg("predicting from "+modelimage4d)
+            if arr.nbytes > 5e7:
+                msg("WARN: your model is large - this may take a while")
             sm.predict(imagename=[modelimage4d],complist=complist)
         else:   # if we're doing only components
-            if verbose: msg("predicting from "+complist)
+            msg("predicting from "+complist)
             sm.predict(complist=complist)
 
         sm.done()
@@ -846,72 +845,71 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         #####################################################################
         # prepare for diff and fidelity and display by making a moment 0 image
 
-        if fidelity == True or display == True:
 
-            inspectax=modelcsys.findcoordinate('spectral')['pixel']
-            innchan=modelsize[inspectax]
-            # modelimage4d is the .coord version w/spectral axis.
-            
-            # modelflat should be the moment zero of that
-            modelflat=project+"."+modelimage_local+".flat0" 
-            if innchan>1:
-                if verbose: msg("creating moment zero input image",origin="analysis")
-                # actually run ia.moments
-                ia.open(modelimage4d)
-                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                ia.done()
-            else:
-                # just remove degenerate axes from modelimage4d
-                ia.newimagefromimage(infile=modelimage4d,outfile=modelflat,dropdeg=True,overwrite=True)
-                # why can't I just remove spectral and leave stokes?
-                os.system("mv "+modelflat+" "+modelflat+".tmp")
-                ia.open(modelflat+".tmp")
-                ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                ia.done()
-                os.system("rm -rf "+modelflat+".tmp")
-
-
-            # flat output
-            outflat=image+".flat"
-            if nchan>1:
-                # image is either .clean or .dirty
-                if verbose: msg("creating moment zero output image",origin="analysis")
-                ia.open(image+".image")
-                ia.moments(moments=[-1],outfile=outflat,overwrite=True)
-                ia.done()
-            else:
-                if verbose: msg("flattening output image to "+outflat,origin="analysis")
-                # just remove degenerate axes from image
-                ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
-                # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
-                os.system("mv "+outflat+" "+outflat+".tmp")
-                ia.open(outflat+".tmp")
-                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
-                ia.done()
-                os.system("rm -rf "+outflat+".tmp")
-            
-            # be sure to get outflatcoordsys from outflat
-            ia.open(outflat)
-            outflatcoordsys=ia.coordsys()
-            outflatshape=ia.shape()
-            ia.done()            
-
-            # regrid flat input to flat output shape, for convolution, etc
-            ia.open(modelflat)
-            imrr = ia.regrid(outfile=modelregrid, overwrite=True,
-                             csys=outflatcoordsys.torecord(),shape=outflatshape)
-            imrr.done()
-
-            # XXX when we get to using both clean components and model image,
-            # we should add them together here if not before.
-
+        inspectax=modelcsys.findcoordinate('spectral')['pixel']
+        innchan=modelsize[inspectax]
+        # modelimage4d is the .coord version w/spectral axis.
+        
+        # modelflat should be the moment zero of that
+        modelflat=project+"."+modelimage_local+".flat0" 
+        if innchan>1:
+            if verbose: msg("creating moment zero input image",origin="analysis")
+            # actually run ia.moments
+            ia.open(modelimage4d)
+            ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
             ia.done()
-            outflatcoordsys.done()
-            del outflatcoordsys
-            del imrr
+        else:
+            # just remove degenerate axes from modelimage4d
+            ia.newimagefromimage(infile=modelimage4d,outfile=modelflat,dropdeg=True,overwrite=True)
+            # why can't I just remove spectral and leave stokes?
+            os.system("mv "+modelflat+" "+modelflat+".tmp")
+            ia.open(modelflat+".tmp")
+            ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+            ia.done()
+            os.system("rm -rf "+modelflat+".tmp")
 
+
+        # flat output -- needed even if fideilty is not calculated
+        outflat=image+".flat"
+        if nchan>1:
+            # image is either .clean or .dirty
+            if verbose: msg("creating moment zero output image",origin="analysis")
+            ia.open(image+".image")
+            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+            ia.done()
+        else:
+            if verbose: msg("flattening output image to "+outflat,origin="analysis")
+            # just remove degenerate axes from image
+            ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
+            # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
+            os.system("mv "+outflat+" "+outflat+".tmp")
+            ia.open(outflat+".tmp")
+            ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+            ia.done()
+            os.system("rm -rf "+outflat+".tmp")
             
-            os.system("rm -rf "+modelflat)  # no need to keep this
+        # be sure to get outflatcoordsys from outflat
+        ia.open(outflat)
+        outflatcoordsys=ia.coordsys()
+        outflatshape=ia.shape()
+        ia.done()            
+
+        # regrid flat input to flat output shape, for convolution, etc
+        ia.open(modelflat)
+        imrr = ia.regrid(outfile=modelregrid, overwrite=True,
+                         csys=outflatcoordsys.torecord(),shape=outflatshape)
+        imrr.done()
+
+        # XXX when we get to using both clean components and model image,
+        # we should add them together here if not before.
+
+        ia.done()
+        outflatcoordsys.done()
+        del outflatcoordsys
+        del imrr
+
+        
+        os.system("rm -rf "+modelflat)  # no need to keep this
 
 
         if psfmode != "none":

@@ -145,18 +145,29 @@ public:
   inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getAz() { return *(az_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
-  inline Double getEl() { return *(el_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
-  inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
+  // These are antenna-based
+  inline Double getAntenna() { return *(antenna_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getAz() { return *(az_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getEl() { return *(el_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
 
   // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
   PlotLogMessage* locateNearest(Double x, Double y);
   PlotLogMessage* locateRange(Double xmin,Double xmax,Double ymin,Double ymax);
   PlotLogMessage* flagRange(const PlotMSFlagging& flagging, Double xmin, Double xmax,
-			    Double ymin,Double ymax,Bool flag=True) { return NULL; };
-  
+			      Double ymin,Double ymax, Bool flag=True);
+
+  // Set flags in the cache
+  void flagInCache(const PlotMSFlagging& flagging,Bool flag);
+
+  // Sets the plot mask for a single chunk
+  void setPlotMask(Int chunk);
+
+  // Set flags in the MS
+  void flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
+
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
   // eventually be used for a cache manager to let the user know the
@@ -228,6 +239,9 @@ private:
 
   // Private data
 
+  // The number of antennas
+  Int nAnt_;
+
   // The number of chunks
   Int nChunk_;
 
@@ -239,6 +253,9 @@ private:
 
   // The reference time for this cache, in seconds
   Double refTime_p;
+
+  // Axes mask
+  Vector<Bool> netAxesMask_;
 
   Double minX_,maxX_,minY_,maxY_;
 
@@ -265,11 +282,12 @@ private:
   PtrBlock<Array<Bool>*> plmask_;
 
   PtrBlock<Vector<Float>*> parang_;
+  PtrBlock<Vector<Int>*> antenna_;
   PtrBlock<Vector<Double>*> az_,el_;
 
   // Indexing help
   Vector<Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
-  Vector<Int> nperchan_, nperbsln_;
+  Vector<Int> nperchan_, nperbsln_, nperant_;
   Vector<Int> ichanbslnmax_;
   Vector<Int> iantmax_;
 
@@ -279,8 +297,15 @@ private:
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
+
+
+  // Provisional flagging helpers
+  Vector<Int> nVBPerAve_;
+
+
 };
 typedef CountedPtr<PlotMSCache> PlotMSCachePtr;
+
 
 }
 

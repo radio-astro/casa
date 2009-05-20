@@ -393,9 +393,6 @@
    <property name="checkable" >
     <bool>true</bool>
    </property>
-   <property name="enabled" >
-    <bool>false</bool>
-   </property>
    <property name="text" >
     <string>Annotate</string>
    </property>
@@ -403,9 +400,6 @@
   <action name="actionAnnotateText" >
    <property name="checkable" >
     <bool>true</bool>
-   </property>
-   <property name="enabled" >
-    <bool>false</bool>
    </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_text.png</iconset>
@@ -417,9 +411,6 @@
   <action name="actionAnnotateRectangle" >
    <property name="checkable" >
     <bool>true</bool>
-   </property>
-   <property name="enabled" >
-    <bool>false</bool>
    </property>
    <property name="icon" >
     <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_rectangle.png</iconset>

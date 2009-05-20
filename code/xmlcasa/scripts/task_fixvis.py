@@ -34,6 +34,11 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
         if badcsys:
             return
 
+    if not refcode:   # measures must be told to use the one in vis.
+        tb.open(vis)
+        refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
+        tb.close()
+
     if outputvis != vis:
         try:
             #if os.path.isdir(outputvis):

@@ -105,7 +105,7 @@ public:
 	      ANTENNA1,ANTENNA2,BASELINE,
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
-	      AZIMUTH,ELEVATION,PARANG,
+	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      ROW,FLAG_ROW)
 
       // VEL_RADIO, VEL_OPTICAL, VEL_RELATIVISTIC
@@ -118,7 +118,7 @@ public:
 	      "Antenna1","Antenna2","Baseline",
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
-	      "Azimuth","Elevation","ParAng",
+	      "Antenna","Azimuth","Elevation","ParAng",
 	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",
