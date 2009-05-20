@@ -27,7 +27,7 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <casa/OS/Time.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <plotms/PlotMS/PlotMSLabelFormat.h>
 
 #include <ctype.h>
 
@@ -115,221 +115,6 @@ bool PMS::strEq(const String& str1, const String& str2, bool ignoreCase) {
 }
 
 
-/////////////////////////////////
-// PLOTMSSELECTION DEFINITIONS //
-/////////////////////////////////
-
-// Static //
-
-String PlotMSSelection::defaultValue(Field f) { return ""; }
-
-
-// Non-Static //
-
-PlotMSSelection::PlotMSSelection() {
-    initDefaults();
-}
-
-PlotMSSelection::~PlotMSSelection() { }
-
-void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
-        Matrix<Int>& chansel) const {    
-    // Set the selected MeasurementSet to be the same initially as the input
-    // MeasurementSet
-    selMS = ms;
-    mssSetData(ms, selMS, "", timerange(), antenna(), field(), spw(),
-               uvrange(), msselect(), corr(), scan(), array());
-
-    MSSelection mss;
-    mss.setSpwExpr(spw());
-    chansel=mss.getChanList(&selMS);
-}
-
-const String& PlotMSSelection::getValue(Field f) const {
-    return const_cast<map<Field,String>&>(itsValues_)[f]; }
-void PlotMSSelection::setValue(Field f, const String& value) {
-    itsValues_[f] = value; }
-
-bool PlotMSSelection::operator==(const PlotMSSelection& other) const {    
-    vector<Field> f = fields();
-    for(unsigned int i = 0; i < f.size(); i++)
-        if(getValue(f[i]) != other.getValue(f[i])) return false;
-    
-    return true;
-}
-
-void PlotMSSelection::initDefaults() {
-    vector<Field> f = fields();
-    for(unsigned int i = 0; i < f.size(); i++)
-        itsValues_[f[i]] = defaultValue(f[i]);
-}
-
-
-/////////////////////////////////
-// PLOTMSAVERAGING DEFINITIONS //
-/////////////////////////////////
-
-PlotMSAveraging::PlotMSAveraging() { setDefaults(); }
-PlotMSAveraging::~PlotMSAveraging() { }
-
-
-bool PlotMSAveraging::channel() const { return itsChannel_; }
-void PlotMSAveraging::setChannel(bool channel) { itsChannel_ = channel; }
-
-double PlotMSAveraging::channelValue() const { return itsChannelValue_; }
-void PlotMSAveraging::setChannelValue(double value) {
-    itsChannelValue_ = value;
-    if(itsChannelValue_ < 0) itsChannelValue_ = 0;
-    if(itsChannelValue_ > 1) itsChannelValue_ = 1;
-}
-
-
-bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
-    if(itsChannel_ != other.itsChannel_) return false;
-    if(itsChannel_ && itsChannelValue_ != other.itsChannelValue_) return false;
-    
-    return true;
-}
-
-
-void PlotMSAveraging::setDefaults() {
-    itsChannel_ = false;
-    itsChannelValue_ = 0;
-}
-
-
-///////////////////////////////////
-// PLOTMSLABELFORMAT DEFINITIONS //
-///////////////////////////////////
-
-// Static //
-
-const String PlotMSLabelFormat::TAGSEPARATOR = "%%";
-
-const String PlotMSLabelFormat::TAG_AXIS = "axis";
-const String PlotMSLabelFormat::TAG_XAXIS = "xaxis";
-const String PlotMSLabelFormat::TAG_YAXIS = "yaxis";
-
-const String PlotMSLabelFormat::TAG_UNIT = "unit";
-const String PlotMSLabelFormat::TAG_XUNIT = "xunit";
-const String PlotMSLabelFormat::TAG_YUNIT = "yunit";
-
-const String PlotMSLabelFormat::TAG_IF_UNIT = "ifunit";
-const String PlotMSLabelFormat::TAG_IF_XUNIT = "ifxunit";
-const String PlotMSLabelFormat::TAG_IF_YUNIT = "ifyunit";
-const String PlotMSLabelFormat::TAG_ENDIF_UNIT = "endifunit";
-const String PlotMSLabelFormat::TAG_ENDIF_XUNIT = "endifxunit";
-const String PlotMSLabelFormat::TAG_ENDIF_YUNIT = "endifyunit";
-
-String PlotMSLabelFormat::getLabel(const String& format, PMS::Axis axis,
-            PMS::Axis xAxis, PMS::Axis yAxis) {
-    stringstream ss;
-    
-    PMS::AxisUnit unit = PMS::axisUnit(axis), xUnit = PMS::axisUnit(xAxis),
-                  yUnit = PMS::axisUnit(yAxis);
-    
-    String tempFormat = format, token, tag;
-    bool tokenWasTag, ifUnit = false, ifXUnit = false, ifYUnit = false;
-    
-    while(nextToken(tempFormat, token, tokenWasTag)) {
-        if(tokenWasTag) {
-            tag = "";
-            
-            if(PMS::strEq(token, TAG_AXIS, true)) tag = PMS::axis(axis);
-            else if(PMS::strEq(token, TAG_XAXIS, true)) tag = PMS::axis(xAxis);
-            else if(PMS::strEq(token, TAG_YAXIS, true)) tag =  PMS::axis(yAxis);
-            else if(PMS::strEq(token, TAG_UNIT, true))
-                tag = PMS::axisUnit(unit);
-            else if(PMS::strEq(token, TAG_XUNIT, true))
-                tag = PMS::axisUnit(xUnit);
-            else if(PMS::strEq(token, TAG_YUNIT, true))
-                tag = PMS::axisUnit(yUnit);
-            else if(PMS::strEq(token, TAG_IF_UNIT, true))
-                ifUnit = true;
-            else if(PMS::strEq(token, TAG_IF_XUNIT, true))
-                ifXUnit = true;
-            else if(PMS::strEq(token, TAG_IF_YUNIT, true))
-                ifYUnit = true;
-            else if(PMS::strEq(token, TAG_ENDIF_UNIT, true))
-                ifUnit = false;
-            else if(PMS::strEq(token, TAG_ENDIF_XUNIT, true))
-                ifXUnit = false;
-            else if(PMS::strEq(token, TAG_ENDIF_YUNIT, true))
-                ifYUnit = false;
-            else tag = TAGSEPARATOR + token + TAGSEPARATOR;
-        } else tag = token;
-        
-        if((!ifUnit || unit != PMS::UNONE) && (!ifXUnit || xUnit != PMS::UNONE)
-           && (!ifYUnit || yUnit != PMS::UNONE)) ss << tag;
-    }
-    
-    return ss.str();
-}
-
-bool PlotMSLabelFormat::nextToken(String& format, String& token,
-        bool& tokenWasTag) {
-    if(format.size() == 0) {
-        token = "";
-        tokenWasTag = false;
-        return false;
-    }
-    
-    unsigned int i = format.find(TAGSEPARATOR), j;
-    if(i >= format.size() ||
-       (j = format.find(TAGSEPARATOR, i + 1)) >= format.size()) {
-        // no more tags left
-        token = format;
-        tokenWasTag = false;
-        format = "";
-        return true;
-    }
-
-    if(i == 0) {
-        // tag is next token
-        token = format.substr(TAGSEPARATOR.size(), j - TAGSEPARATOR.size());
-        tokenWasTag = true;
-        format = format.substr(j + TAGSEPARATOR.size());        
-    } else {
-        // text is next token
-        token = format.substr(0, i);
-        tokenWasTag = false;
-        format = format.substr(i);
-    }
-    
-    return true;
-}
-
-
-// Non-Static //
-
-PlotMSLabelFormat::PlotMSLabelFormat(const String& f) : format(f) { }
-
-PlotMSLabelFormat::PlotMSLabelFormat(const PlotMSLabelFormat& copy) {
-    operator=(copy); }
-
-PlotMSLabelFormat::~PlotMSLabelFormat() { }
-
-String PlotMSLabelFormat::getLabel(PMS::Axis axis) const {
-    return getLabel(format, axis, axis, axis); }
-
-String PlotMSLabelFormat::getLabel(PMS::Axis xAxis, PMS::Axis yAxis) const {
-    return getLabel(format, xAxis, xAxis, yAxis); }
-
-bool PlotMSLabelFormat::operator==(const PlotMSLabelFormat& other) const {
-    return format == other.format; }
-
-PlotMSLabelFormat& PlotMSLabelFormat::operator=(const PlotMSLabelFormat& copy){
-    format = copy.format;
-    return *this;
-}
-
-
-//////////////////
-// PMS DEFAULTS //
-//////////////////
-
-// Have to be defined after PlotMSLabelFormat definitions.
-
 const PMS::Axis PMS::DEFAULT_XAXIS = TIME;
 const PMS::Axis PMS::DEFAULT_YAXIS = AMP;
 const PMS::DataColumn PMS::DEFAULT_DATACOLUMN = DATA;
@@ -338,10 +123,10 @@ const PlotAxis PMS::DEFAULT_CANVAS_XAXIS = X_BOTTOM;
 const PlotAxis PMS::DEFAULT_CANVAS_YAXIS = Y_LEFT;
 
 const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS) +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT) + " (" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT);
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT()) + " (" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT()) + ")" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
 
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
@@ -365,7 +150,7 @@ PlotSymbolPtr PMS::DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory) {
 }
 
 const String PMS::DEFAULT_TITLE_FORMAT =
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS) + " vs. " +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS);
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
 
 }

@@ -1,7 +1,21 @@
 import os
 from taskinit import *
 
-def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=None,uvrange=None,timerange=None,scan=None,feed=None,array=None,clipexpr=None,clipminmax=None,clipcolumn=None,clipoutside=None,quackinterval=None,autocorr=None,unflag=None,algorithm=None,column=None,expr=None,thr=None,window=None):
+def flagdata(vis = None, mode = None,
+	     spw = None, field = None,
+	     selectdata = None,
+	     antenna = None,
+	     uvrange = None,
+	     timerange = None,
+	     correlation = None,
+	     scan = None,
+	     feed = None, array = None,
+	     clipexpr = None, clipminmax = None,
+	     clipcolumn = None, clipoutside = None,
+	     quackinterval = None, autocorr = None,
+	     unflag = None, algorithm = None,
+	     column = None, expr = None,
+	     thr = None, window = None):
         """ All purpose flagging task based on selections:
 
         The task will select a subset of data explicitly for flagging,
@@ -110,7 +124,7 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 
 	"""
 
-	#Python script
+	casalog.origin('flagdata')
 
 	fg.clearflagselection(0)
 	
@@ -125,38 +139,42 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
                 torun=True;
                 if( mode == 'manualflag' or mode == 'quack' ):
                         # for a default of expr = 'ABS RR LL'
-                        # need to call setmanualflags multiple times here.
 			if type(autocorr) == list:
+				# need to call setmanualflags multiple times here.
 				if mode == 'manualflag':
 					if type(unflag) != list or \
 					type(clipexpr) != list or \
 					type(clipminmax) != list or \
 					type(clipcolumn) != list or \
 					type(clipoutside) != list or \
-					type(antenna) != list or \
 					type(spw) != list or \
-					type(correlation) != list or \
 					type(field) != list or \
-					type(uvrange) != list or \
-					type(timerange) != list or \
-					type(scan) != list or \
-					type(feed) != list or \
-					type(array) != list:
-						raise Exception, 'Either none or all parameters must be arrays'
+					(selectdata and ( \
+					 type(antenna) != list or \
+					 type(correlation) != list or \
+					 type(uvrange) != list or \
+					 type(timerange) != list or \
+					 type(scan) != list or \
+					 type(feed) != list or \
+					 type(array) != list)) \
+					 :
+					 raise Exception, 'Either none or all parameters must be arrays'
 				else:
 					if type(unflag) != list or \
 					type(autocorr) != list or \
-					type(quackinterval) != list or \
-					type(antenna) != list or \
 					type(spw) != list or \
-					type(correlation) != list or \
 					type(field) != list or \
-					type(uvrange) != list or \
-					type(timerange) != list or \
-					type(scan) != list or \
-					type(feed) != list or \
-					type(array) != list:
-						raise Exception, 'Either none or all parameters must be arrays'
+					type(quackinterval) != list or \
+					(selectdata and ( \
+					 type(antenna) != list or \
+					 type(correlation) != list or \
+					 type(uvrange) != list or \
+					 type(timerange) != list or \
+					 type(scan) != list or \
+					 type(feed) != list or \
+					 type(array) != list)) \
+					:
+					 raise Exception, 'Either none or all parameters must be arrays'
 					
 				N = len(autocorr)
 
@@ -166,43 +184,99 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
 					len(clipminmax) != N or \
 					len(clipcolumn) != N or \
 					len(clipoutside) != N or \
-					len(antenna) != N or \
 					len(spw) != N or \
-					len(correlation) != N or \
 					len(field) != N or \
-					len(uvrange) != N or \
-					len(timerange) != N or \
-					len(scan) != N or \
-					len(feed) != N or \
-					len(array) != N:
+					(selectdata and ( \
+					 len(antenna) != N or \
+					 len(correlation) != N or \
+					 len(uvrange) != N or \
+					 len(timerange) != N or \
+					 len(scan) != N or \
+					 len(feed) != N or \
+					 len(array) != N)) \
+					 :
 						raise Exception, 'Specified parameter arrays have different lengths'
 					fg.setdata();
 					for i in range(N):
-						fg.setmanualflags(field=field[i],spw=spw[i],array=array[i],feed=feed[i],scan=scan[i],baseline=antenna[i],uvrange=uvrange[i],time=timerange[i],correlation=correlation[i],autocorrelation=autocorr[i],unflag=unflag[i],clipexpr=clipexpr[i],cliprange=clipminmax[i],clipcolumn=clipcolumn[i],outside=clipoutside[i],quackinterval=quackinterval);
+						if selectdata:
+							fg.setmanualflags(field=field[i], \
+									  spw=spw[i], \
+									  array=array[i], \
+									  feed=feed[i], \
+									  scan=scan[i], \
+									  baseline=antenna[i], \
+									  uvrange=uvrange[i], \
+									  time=timerange[i], \
+									  correlation=correlation[i], \
+									  autocorrelation=autocorr[i], \
+									  unflag=unflag[i], \
+									  clipexpr=clipexpr[i], \
+									  cliprange=clipminmax[i], \
+									  clipcolumn=clipcolumn[i], \
+									  outside=clipoutside[i], \
+									  quackinterval=quackinterval);
+						else:
+							fg.setmanualflags(field=field[i], \
+									  spw=spw[i], \
+									  autocorrelation=autocorr[i], \
+									  unflag=unflag[i], \
+									  clipexpr=clipexpr[i], \
+									  cliprange=clipminmax[i], \
+									  clipcolumn=clipcolumn[i], \
+									  outside=clipoutside[i], \
+									  quackinterval=quackinterval);
+							
 				else:
 					if len(unflag) != N or \
 					len(autocorr) != N or \
 					len(quackinterval) != N or \
-					len(antenna) != N or \
 					len(spw) != N or \
-					len(correlation) != N or \
 					len(field) != N or \
-					len(uvrange) != N or \
-					len(timerange) != N or \
-					len(scan) != N or \
-					len(feed) != N or \
-					len(array) != N:
+					(selectdata and ( \
+					 len(antenna) != N or \
+					 len(correlation) != N or \
+					 len(uvrange) != N or \
+					 len(timerange) != N or \
+					 len(scan) != N or \
+					 len(feed) != N or \
+					 len(array) != N)) \
+					 :
 						raise Exception, 'Specified parameter arrays have different lengths'
 					fg.setdata();
 					for i in range(N):
-						fg.setmanualflags(field=field[i],spw=spw[i],array=array[i],feed=feed[i],scan=scan[i],baseline=antenna[i],uvrange=uvrange[i],time=timerange[i],correlation=correlation[i],autocorrelation=autocorr[i],unflag=unflag[i],clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval[i]);
-						
+						if selectdata:
+							fg.setmanualflags(field=field[i], \
+									  spw=spw[i], \
+									  array=array[i], \
+									  feed=feed[i], \
+									  scan=scan[i], \
+									  baseline=antenna[i], \
+									  uvrange=uvrange[i], \
+									  time=timerange[i], \
+									  correlation=correlation[i], \
+									  autocorrelation=autocorr[i], \
+									  unflag=unflag[i], \
+									  clipexpr=clipexpr, \
+									  cliprange=clipminmax, \
+									  clipcolumn=clipcolumn, \
+									  outside=clipoutside, \
+									  quackinterval=quackinterval[i])
+						else:
+							fg.setmanualflags(field=field[i], \
+									  spw=spw[i], \
+									  autocorrelation=autocorr[i], \
+									  unflag=unflag[i], \
+									  clipexpr=clipexpr, \
+									  cliprange=clipminmax, \
+									  clipcolumn=clipcolumn, \
+									  outside=clipoutside, \
+									  quackinterval=quackinterval[i])
 			else:
 				fg.setdata();
 				fg.setmanualflags(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation,autocorrelation=autocorr,unflag=unflag,clipexpr=clipexpr,cliprange=clipminmax,clipcolumn=clipcolumn,outside=clipoutside,quackinterval=quackinterval);
-                        fg.setflagsummary();
                 if( mode == 'autoflag' ):
-                        fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
+                        fg.setdata(field=field,spw=spw,array=array,feed=feed,scan=scan,
+				   baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
                         rec = fg.getautoflagparams(algorithm=algorithm);
                         rec['expr'] = expr;
                         rec['thr'] = thr;
@@ -213,10 +287,9 @@ def flagdata(vis=None,mode=None,antenna=None,spw=None,correlation=None,field=Non
                         #     rec['nbins'] = nbins;
                         #     rec['minpop'] = minpop;
                         fg.setautoflag(algorithm=algorithm,parameters=rec);
-                        fg.setflagsummary();
                 if( mode == 'summary' ):
                         fg.setdata();
-                        fg.setflagsummary(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
+			fg.setflagsummary(field=field,spw=spw,array=array,feed=feed,scan=scan,baseline=antenna,uvrange=uvrange,time=timerange,correlation=correlation);
                 if( mode == 'query' ):
                         print "Sorry - not yet implemented !"
 			torun = False;

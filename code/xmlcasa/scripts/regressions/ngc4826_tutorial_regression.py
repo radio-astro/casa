@@ -480,7 +480,7 @@ print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
 print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='3&9', 
+flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='VA03&VA09', 
          timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
 
 #

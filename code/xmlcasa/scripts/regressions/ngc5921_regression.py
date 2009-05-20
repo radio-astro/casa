@@ -142,6 +142,7 @@ msfile = prefix + '.ms'
 # Use task importuvfits
 fitsfile = fitsdata
 vis = msfile
+antnamescheme = 'new'
 importuvfits()
 
 # Note that there will be a ngc5921.ms.flagversions
@@ -357,7 +358,7 @@ solint = 'inf'
 combine='scan'
 
 # reference antenna Name 15 (15=VLA:N2) (Id 14)
-refant = '15'
+refant = 'VA15'
 
 bandpass()
 
@@ -740,7 +741,7 @@ default('listvis')
 vis = msfile
 datacolumn = 'corrected'
 selectdata=True
-antenna='3&4'
+antenna='VA03&VA04'
 listfile = listvisOut
 print "Listing corrected data."
 print "Reducing output by selecting only baseline 3&4."

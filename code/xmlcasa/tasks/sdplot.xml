@@ -54,6 +54,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </allowed>
     </param>
 
+    <param type="any" name="restfreq">
+            <description>rest frequency (float value or string with unit)</description>
+            <any type='variant' limittype='string double'/>
+            <value type='string'/>
+    </param>
+
     <param type="string" name="frame">
 	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
 	    <value></value>
@@ -304,6 +310,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: '' (=current)
                 example: this will be the units for masklist
+        restfreq -- rest frequency used for specunit='km/s'
+                default: '' (use current setting)
+                example: 4.6e10 (float value), '46GHz' (string with unit)
+                         Allowed units are 'THz', 'GHz', 'MHz', 'kHz', and 'Hz'
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

@@ -27,7 +27,7 @@
 #ifndef PLOTMSPLOTMANAGER_H_
 #define PLOTMSPLOTMANAGER_H_
 
-#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
 
 #include <casa/namespace.h>
 

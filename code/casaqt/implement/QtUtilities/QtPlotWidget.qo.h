@@ -1,4 +1,4 @@
-//# PlotWidgets.qo.h: Common widgets for making plot objects.
+//# QtPlotWidget.qo.h: Classes for GUI editing of plot customization objects.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,50 +24,31 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTWIDGETS_QO_H_
-#define PLOTWIDGETS_QO_H_
+#ifndef QTPLOTWIDGET_QO_H_
+#define QTPLOTWIDGET_QO_H_
 
-#include <plotms/Gui/PlotColorWidget.ui.h>
-#include <plotms/Gui/PlotFileWidget.ui.h>
-#include <plotms/Gui/PlotFillWidget.ui.h>
-#include <plotms/Gui/PlotLabelWidget.ui.h>
-#include <plotms/Gui/PlotLineWidget.ui.h>
-#include <plotms/Gui/PlotRangeWidget.ui.h>
-#include <plotms/Gui/PlotSymbolWidget.ui.h>
+#include <casaqt/QtUtilities/PlotColorWidget.ui.h>
+#include <casaqt/QtUtilities/PlotFillWidget.ui.h>
+#include <casaqt/QtUtilities/PlotLineWidget.ui.h>
+#include <casaqt/QtUtilities/PlotSymbolWidget.ui.h>
 
+#include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
-
-#include <QMutex>
-#include <QScrollArea>
-#include <QWidget>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
 // Parent for plot widgets.
-class PlotMSWidget : public QWidget {
+class QtPlotWidget : public QtEditingWidget {
     Q_OBJECT
     
 public:
     // Constructor which takes a PlotFactory and an optional parent widget.
-    PlotMSWidget(PlotFactoryPtr factory, QWidget* parent = NULL);
+    QtPlotWidget(PlotFactoryPtr factory, QWidget* parent = NULL);
     
     // Destructor.
-    virtual ~PlotMSWidget();
-    
-    // Adds any radio buttons in the widget to the given button group.  This
-    // method should be overridden by children that have radio buttons.
-    virtual void addRadioButtonsToGroup(QButtonGroup* group) const { }
-    
-signals:
-    // This signal should be emitted whenever the user changes any value
-    // settings in the GUI.
-    void changed();
-    
-    // This signal should be emitted when the user changes any value settings
-    // in the GUI AND the new value is different from the last set value.
-    void differentFromSet();
+    virtual ~QtPlotWidget();
     
 protected:
     // Factory.
@@ -76,7 +57,7 @@ protected:
 
 
 // Widget for choosing a plot color.
-class PlotColorWidget : public PlotMSWidget, Ui::ColorWidget {
+class PlotColorWidget : public QtPlotWidget, Ui::ColorWidget {
     Q_OBJECT
     
 public:
@@ -114,7 +95,7 @@ private slots:
 
 
 // Widget for choosing a plot area fill.  Uses a PlotColorWidget for the color.
-class PlotFillWidget : public PlotMSWidget, Ui::FillWidget {
+class PlotFillWidget : public QtPlotWidget, Ui::FillWidget {
     Q_OBJECT
     
 public:
@@ -147,7 +128,7 @@ private slots:
 
 // Widget for choosing a plot line.  Uses a PlotColorWidget for the line
 // color.
-class PlotLineWidget : public PlotMSWidget, Ui::LineWidget {
+class PlotLineWidget : public QtPlotWidget, Ui::LineWidget {
     Q_OBJECT
     
 public:
@@ -190,7 +171,7 @@ private slots:
 // and a PlotLineWidget for the outline.  Lets the user choose between no
 // symbol, a default symbol given at construction, or a custom symbol they can
 // set.
-class PlotSymbolWidget : public PlotMSWidget, Ui::SymbolWidget {
+class PlotSymbolWidget : public QtPlotWidget, Ui::SymbolWidget {
     Q_OBJECT
     
 public:
@@ -235,133 +216,6 @@ private slots:
     void symbolChanged(bool check = true);
 };
 
-
-// Widget for choosing a label.  Lets the user choose between no label, a
-// default label given at construction, or a custom label they can set.
-class PlotLabelWidget : public PlotMSWidget, Ui::LabelWidget {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes the label associated with the "default" option,
-    // and an optional parent widget.
-    PlotLabelWidget(const String& defaultLabel, QWidget* parent = NULL);
-    
-    // Destructor.
-    ~PlotLabelWidget();
-    
-    // Gets/Sets the currently set label on the widget.
-    // <group>
-    String getValue() const;
-    void setValue(const String& value);
-    // </group>
-    
-    // Overrides PlotMSWidget::addRadioButtonsToGroup().
-    void addRadioButtonsToGroup(QButtonGroup* group) const;
-    
-private:
-    // Default label.
-    String itsDefault_;
-
-    // Last set label.
-    String itsValue_;
-    
-private slots:
-    // Slot for when the set label changes.  The "check" flag can be used to
-    // avoid emitting the changed signals twice (for example, when one radio
-    // button turns off when another turns on).
-    void labelChanged(bool check = true);
-};
-
-
-// Widget for choosing a file.
-class PlotFileWidget : public PlotMSWidget, Ui::FileWidget {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes a flag for whether the file is a directory or
-    // not (for the file chooser), a flag for whether the file is for saving
-    // (and thus doesn't need to exist, for the file chooser), and an optional
-    // parent widget.
-    PlotFileWidget(bool chooseDirectory, bool saveFile, QWidget* parent= NULL);
-    
-    // Destructor.
-    ~PlotFileWidget();
-    
-    // Gets/Sets the currently set file.
-    // <group>
-    String getFile() const;
-    void setFile(const String& file);
-    // </group>
-    
-private:
-    // File chooser directory flag.
-    bool isDirectory_;
-    
-    // File chooser save file flag.
-    bool isSave_;
-    
-    // Last set file.
-    String itsFile_;
-    
-private slots:
-    // Slot to show a file chooser and set the result in the line edit.
-    void browse();
-
-    // Slot for when the set file changes.
-    void fileChanged();
-};
-
-
-// Widget for selecting a plot axis range.  Lets the user choose between an
-// automatic range or a custom range they can set.  Ranges can either be normal
-// doubles, or two dates which are converted to/from doubles as needed using
-// PMS::dateDouble().
-class PlotRangeWidget : public PlotMSWidget, Ui::RangeWidget {
-    Q_OBJECT
-    
-public:
-    // Constructor which takes an optional parent widget.
-    PlotRangeWidget(QWidget* parent = NULL);
-    
-    // Destructor.
-    ~PlotRangeWidget();
-    
-    
-    // Gets/Sets whether or not the displayed range widgets are for dates or
-    // not.
-    // <group>
-    bool isDate() const;    
-    void setIsDate(bool isDate = true);
-    // </group>
-    
-    // Gets whether the currently set date is custom or not.
-    bool isCustom() const;
-    
-    // Gets/Sets the currently set range.
-    pair<double, double> getRange() const;    
-    void getRange(double& from, double& to) {
-        pair<double, double> r = getRange();
-        from = r.first;
-        to = r.second;
-    }    
-    void setRange(bool isDate, bool isCustom, double from, double to);
-    // </group>
-    
-    // Overrides PlotMSWidget::addRadioButtonsToGroup().
-    void addRadioButtonsToGroup(QButtonGroup* group) const;
-    
-private:
-    // Whether last set range was custom or not.
-    bool isCustom_;
-    
-    // Last set range.
-    double from_, to_;
-    
-private slots:
-    // Slot for when the set range changes.
-    void rangeChanged();
-};
-
 }
 
-#endif /* PLOTWIDGETS_QO_H_ */
+#endif /* QTPLOTWIDGET_QO_H_ */

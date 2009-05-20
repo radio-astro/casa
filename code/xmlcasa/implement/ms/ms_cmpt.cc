@@ -190,7 +190,7 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
 
 bool
 ms::fromfits(const std::string& msfile, const std::string &fitsfile, const bool nomodify, const bool lock, 
-             const int obstype, const std::string &host, bool forcenewserver)
+             const int obstype, const std::string &host, bool forcenewserver, const std::string& antnamescheme)
 {
 try {
    // bool rstat(False);
@@ -202,7 +202,9 @@ try {
       try {
       */
 	*itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
-       MSFitsInput msfitsin(msfile, fitsfile);
+       String namescheme(antnamescheme);
+       namescheme.downcase();
+       MSFitsInput msfitsin(msfile, fitsfile, (namescheme=="new"));
        msfitsin.readFitsFile(obstype);
       *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
        /*
@@ -689,14 +691,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "concatenate");
-//    if (itsMS.tableInfo().subType() != "UVFITS") {
-//     itsLog << "The measurement set this tool is attached to was not created"
-//           << " from a UVFITS file" << endl
-//           << "The concatenate function can only oncatenate measurement sets"
-//           << " that have been created from UVFITS files" << endl
-//           << "This will be fixed in a future release of aips++"
-//           << LogIO::EXCEPTION;
-//   }
+
        if (!Table::isReadable(msfile)) {
          *itsLog << "Cannot read the measurement set called " << msfile
                 << LogIO::EXCEPTION;
@@ -708,14 +703,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
                 << ") for the concatantion to succeed." << LogIO::EXCEPTION;
        }
        const MeasurementSet appendedMS(msfile);
-//    if (appendedMS.tableInfo().subType() != "UVFITS") {
-//      itsLog << "The measurement set you wish to concatenate was not created"
-//           << " from a UVFITS file" << endl
-//           << "The concatenate function can only oncatenate measurement sets"
-//           << " that have been created from UVFITS files" << endl
-//           << "This will be fixed in a future release of aips++"
-//           << LogIO::EXCEPTION;
-//    }
+
        MSConcat mscat(*itsMS);
        Quantum<Double> dirtolerance;
        Quantum<Double> freqtolerance;
@@ -1102,7 +1090,7 @@ bool ms::continuumsub(const ::casac::variant& field,
  return rstat;
 }
 
-bool ms::calcuvw(const std::vector<int>& fields)
+bool ms::calcuvw(const std::vector<int>& fields, const std::string& refcode)
 {
   Bool rstat(false);
   try {
@@ -1120,7 +1108,7 @@ bool ms::calcuvw(const std::vector<int>& fields)
     *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
     //visfixer.setField(m1toBlankCStr_(fields));
     visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw();
+    rstat = visfixer.calc_uvw(String(refcode));
     *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
   }
   catch (AipsError x) {
@@ -1134,7 +1122,7 @@ bool ms::calcuvw(const std::vector<int>& fields)
 }
 
 bool ms::fixvis(const std::vector<int>& fields,
-		const ::casac::variant& phaseDirs)
+		const ::casac::variant& phaseDirs, const std::string& refcode)
 {
   Bool rstat(False);
   try {

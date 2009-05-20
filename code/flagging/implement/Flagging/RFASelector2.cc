@@ -451,10 +451,24 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
   Matrix<Double> timerng;
   if( parseTimes(rng,parm,RF_TIMERANGE) )
   {
-    if( !reformRange(timerng,rng) )
-      os<<"Illegal \""<<RF_TIMERANGE<<"\" array\n"<<LogIO::EXCEPTION;
-    sel_timerng = timerng*(Double)(24*3600);
-    addString(desc_str,String(RF_TIMERANGE)+"("+String::toString(timerng.ncolumn())+")");
+      if( !reformRange(timerng,rng) )
+	  os << "Illegal \"" << RF_TIMERANGE << "\" array\n" << LogIO::EXCEPTION;
+      sel_timerng = timerng*(Double)(24*3600);
+
+      String s(String(RF_TIMERANGE) + "("); // + String::toString(timerng.ncolumn()));
+
+      Bool del;
+      Double *ptimes = rng.getStorage(del);
+      for (unsigned i = 0; i < rng.nelements(); i++) {
+	  s += String::toString(ptimes[i]);
+	  if (i < rng.nelements()-1) {
+	      s += ' ';
+	  }
+      }
+      rng.putStorage(ptimes, del);
+      s += ")";
+
+      addString(desc_str, s);
   }
 // parse input: specific UV ranges 
   Array<Double> uvrng;
@@ -631,6 +645,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
 // now, all selection-related arguments are accounted for.
 // set flag if some subset has been selected
   Bool have_subset = ( desc_str.length() );
+
   if( have_subset )
     desc_str+=";";
 // unflag specified?
@@ -883,22 +898,21 @@ Bool RFASelector::newChunk (Int &maxmem)
 void RFASelector::processRow(uInt ifr,uInt it)
 {
    if(dbg2)   cout << ifr << ",";
-           // does the selection include whole rows?
-           if( select_fullrow  )
-           {
-                   unflag ? flag.clearRowFlag(ifr,it) : flag.setRowFlag(ifr,it);
-                   // apply this to the entire row...
-                   for( uInt ich=0; ich<num(CHAN); ich++ )
-                           unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
-                   
-           }
-           else
-           {
-                   // else apply data flags to selection
-                   for( uInt ich=0; ich<num(CHAN); ich++ )
-                           if( !flagchan.nelements() || flagchan(ich) )
-                                   unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
-           }
+   // does the selection include whole rows?
+   if (select_fullrow) {
+       
+       unflag ? flag.clearRowFlag(ifr,it) : flag.setRowFlag(ifr,it);
+       // apply this to the entire row...
+       for( uInt ich=0; ich<num(CHAN); ich++ )
+	   unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
+       
+   }
+   else {
+       // else apply data flags to selection
+       for( uInt ich=0; ich<num(CHAN); ich++ )
+	   if( !flagchan.nelements() || flagchan(ich) )
+	       unflag ? flag.clearFlag(ich,ifr) : flag.setFlag(ich,ifr);
+   }
 }
 
 // -----------------------------------------------------------------------

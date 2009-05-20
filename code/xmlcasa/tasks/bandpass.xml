@@ -84,6 +84,11 @@ is recommended in most applications.
 		<value></value>
 	</param>
 
+	<param type="int" name="minblperant">
+		<description>Minimum baselines _per antenna_ required for solve</description>
+		<value>4</value>
+	</param>
+
 	<param type="bool" name="solnorm">
 		<description>Normalize average solution amplitudes to 1.0 (G, T only)</description>
 		<value>False</value>
@@ -283,6 +288,14 @@ is recommended in most applications.
                 example: refant='13' (antenna with index 13)
                        refant='VA04' (VLA antenna #4)
                Use 'go listobs' for antenna listing
+       minblperant -- Minimum number of baselines required per antenna for each solve
+                    Antennas with fewer baaselines are excluded from solutions. Amplitude
+                    solutions with fewer than 4 baselines, and phase solutions with fewer 
+                    than 3 baselines are only trivially constrained, and are no better
+                    than baseline-based solutions.
+                    default: 4
+                    example: minblperant=10  =&gt; Antennas participating on 10 or more 
+                             baselines are included in the solve
        solnorm -- Normalize bandpass amplitudes and phase for each
                spw, pol, ant, and timestamp
                default: False (no normalization)

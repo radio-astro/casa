@@ -4530,9 +4530,11 @@ Bool Imager::clean(const String& algorithm,
 
     if( redoSkyModel_p || !sm_p){
       if(sm_p) delete sm_p;
-      if(algorithm=="clark") {
+      if(algorithm.substr(0,5)=="clark") {
 	// Support serial and parallel specializations
 	setClarkCleanImageSkyModel();
+	if(algorithm.contains("stokes"))
+	   sm_p->setJointStokesClean(False);
       }
       else if (algorithm=="hogbom") {
 	sm_p = new HogbomCleanImageSkyModel();
@@ -4558,9 +4560,12 @@ Bool Imager::clean(const String& algorithm,
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
       }
-      else if (algorithm=="mfclark" || algorithm=="mf") {
+      else if (algorithm.substr(0,7)=="mfclark" || algorithm=="mf") {
 	sm_p = new MFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("clark");
+	if(algorithm.contains("stokes"))
+	   sm_p->setJointStokesClean(False);
+
 	doMultiFields_p = True;
 	os << "Using Clark Clean" << LogIO::POST;
       }
@@ -5924,17 +5929,20 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  
 	  CoordinateSystem csys(tmodimage->coordinates());
 
-	  // Check direction consistency:
-	  //	  Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
-	  //	  DirectionCoordinate spcsys=csys.directionCoordinate(icoord);
-	  // TBD, using MVDirection::separation....
-
 	  Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
 	  SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
 	  spcsys.setReferenceValue(Vector<Double>(1,medianFreq));
 	  spcsys.setWorldAxisUnits(Vector<String>(1,mfreq.getUnit().getName()));
 	  csys.replaceCoordinate(spcsys,icoord);
 	  tmodimage->setCoordinateInfo(csys);
+	  
+
+	  // Check direction consistency (reported in log message below)
+	  Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
+	  DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
+	  MVDirection mvd;
+	  dircsys.toWorld(mvd,dircsys.referencePixel());
+	  Double sep=position.getValue().separation(mvd,"\"").getValue();
 	  
 	  Float sumI=sum(modimage.get());
 	  
@@ -5944,13 +5952,17 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  // scale the image
 	  tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
 
-	  
 	  os << "Using model image " << modimage.name()
+	     << LogIO::POST;
+
+	  os << "The model image's reference pixel is " << sep << " arcsec from "
+	     << fieldName << "'s phase center."
 	     << LogIO::POST;
 	  
 	  os << "Scaling model image to I=" << fluxUsed(0)
 	     << " Jy for visibility prediction."
 	     << LogIO::POST;
+
 	}
 	else {
 	  // Make a component list for use in ft

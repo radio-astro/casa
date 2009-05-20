@@ -21,6 +21,7 @@ h121                            gmoellen@aoc.nrao.edu
 ic2233                          kgolap@aoc.nrao.edu
 imagepoltest_regression         rreid@nrao.edu
 imagetest_regression            dpetry@eso.org
+imregrid_test                   jmlarsen@eso.org
 irc_cs_regression               ttsutsum@aoc.nrao.edu
 irc_cs_task_regression          ttsutsum@aoc.nrao.edu 
 irc_hc3n_regression             ttsutsum@aoc.nrao.edu

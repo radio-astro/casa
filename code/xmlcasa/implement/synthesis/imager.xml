@@ -296,7 +296,11 @@ $I+\sqrt{Q^2+U^2+V^2}$, the rationale for the latter two forms being
 to be biased towards finding strongly polarized pixels first (these
 forms are also the maximum eigenvalue of the coherency matrix).  The
 PSF is constrained to be the same in all polarizations (a feature of
-this implementation, not of the Hamaker-Bregman-Sault formalism).
+this implementation, not of the Hamaker-Bregman-Sault formalism). But the option of 
+searching peaks in the stokes planes independently is available via 
+the {\tt clarkstokes} parameter
+
+
 
 The clean algorithms possible are:
 \begin{description}
@@ -394,9 +398,11 @@ first time (e.g a previously cleaned image)
      <param type="string" name="algorithm">
      <description>Algorithm to use</description>
      <value>clark</value>
+     <value>clarkstokes</value>
      <value>hogbom</value>
      <value>multiscale</value>
      <value>mfclark</value>
+     <value>mfclarkstokes</value>
      <value>csclean</value>
      <value>csfast</value>
      <value>mfhogbom</value>
@@ -3633,8 +3639,9 @@ especially in wide-field cleaning.
      <value>SF</value>
      </param>
 
-     <param type="MPosition" name="location">
+     <param type="any" name="location">
      <description>Location used in phase rotations</description>
+     <any type="variant" />
      <value></value>
      </param>
 

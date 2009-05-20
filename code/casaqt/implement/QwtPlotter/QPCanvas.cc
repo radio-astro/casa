@@ -714,6 +714,15 @@ int QPCanvas::cachedAxesStackSizeLimit() const {
 void QPCanvas::setCachedAxesStackSizeLimit(int sizeInKilobytes) {
     m_stackCache.setMemoryLimit(sizeInKilobytes); }
 
+pair<int, int> QPCanvas::cachedAxesStackImageSize() const {
+    QSize size = m_stackCache.fixedImageSize();
+    if(!size.isValid()) return pair<int, int>(-1, -1);
+    else return pair<int, int>(size.width(), size.height());
+}
+
+void QPCanvas::setCachedAxesStackImageSize(int width, int height) {
+    m_stackCache.setFixedSize(QSize(width, height)); }
+
 
 bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     logMethod(CLASS_NAME, "plotItem", true);

@@ -29,7 +29,7 @@
 namespace casa {
 
 // TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots
+//      for new plots, move actions into one class.
 // TODO PlotMSCache: multi-region locate
 // TODO PlotMSData: have stack list of caches so that common MS/Selections can
 //      be shared across different plots
@@ -63,7 +63,8 @@ const String PlotMS::LOG_LOCATE = "locate";
 
 PlotMS::PlotMS() { initialize(); }
 
-PlotMS::PlotMS(const PlotMSParameters& params) : itsParameters_(params) {
+PlotMS::PlotMS(const PlotMSParameters& params) : itsPlotter_(NULL),
+        itsParameters_(params) {
     // Update internal state to reflect parameters.
     parametersHaveChanged(itsParameters_, PlotMSWatchedParameters::ALL, false);
     
@@ -104,6 +105,16 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
         itsLogEventFlag_ = PlotMSLogger::levelToEventFlag(
                 itsParameters_.logLevel(), itsParameters_.logDebug());
         itsLogger_.setEventFlags_(itsLogEventFlag_);
+        
+        pair<int, int> cis = itsParameters_.cachedImageSize();
+        if(itsPlotter_ != NULL && !itsPlotter_->getPlotter().null() &&
+           !itsPlotter_->getPlotter()->canvasLayout().null()) {
+            vector<PlotCanvasPtr> canv = itsPlotter_->getPlotter()
+                                     ->canvasLayout()->allCanvases();
+            for(unsigned int i = 0; i < canv.size(); i++)
+                if(!canv[i].null())
+                    canv[i]->setCachedAxesStackImageSize(cis.first,cis.second);
+        }
     }
 }
 

@@ -99,27 +99,37 @@ flagger::setdata(const std::string& field, const std::string& spw, const std::st
 bool
 flagger::setmanualflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation,const bool autocorrelation, const bool rowflag, const bool unflag, const std::string& clipexpr, const std::vector<double>& cliprange, const std::string& clipcolumn, const bool outside, const double quackinterval)
 {
-    try
-    {
-        Vector<Double> l_cliprange(cliprange.size());
-        for(uInt i=0;i<cliprange.size();i++) l_cliprange[i]=cliprange[i];
+    try	{
+	Vector<Double> l_cliprange(cliprange.size());
+	for(uInt i=0;
+	    i < cliprange.size();
+	    i++)  {
+		l_cliprange[i]=cliprange[i];
+	}
+	
+	if(flagger_p) {
+		Bool ret;
+		ret = flagger_p->selectdata(
+		    False, 
+		    String(field), String(spw), String(array),
+		    String(feed), String(scan), String(baseline),
+		    String(uvrange), String(time), String(correlation));
 
-	if(flagger_p)
-        {
-                Bool ret;
-                ret = flagger_p->selectdata(False,String(field),String(spw),String(array),
-				      String(feed),String(scan),String(baseline),
-                                      String(uvrange),String(time),String(correlation));
-		if(ret) 
-                        ret = flagger_p->setmanualflags(Bool(autocorrelation),Bool(rowflag),Bool(unflag),
-                                          String(clipexpr),l_cliprange,String(clipcolumn),Bool(outside),
-                                          quackinterval,String("FLAG"));
-	        return ret;
-        }
-        return false;
+		if(ret) {
+		    ret = flagger_p->setmanualflags(
+			Bool(autocorrelation), Bool(rowflag), Bool(unflag),
+			String(clipexpr), l_cliprange, String(clipcolumn), Bool(outside),
+			quackinterval, String("FLAG"));
+		}
+
+		return ret;
+	}
+
+	return false;
+
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-            RETHROW(x);
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
     }
 }
 
@@ -194,24 +204,28 @@ flagger::setautoflag(const std::string& algorithm, const ::casac::record& parame
 bool
 flagger::setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation)
 {
-    try
-    {
-	if(flagger_p)
-        {
-                Bool ret;
-                ret = flagger_p->selectdata(False,String(field),String(spw),String(array),
-				      String(feed),String(scan),String(baseline),
-                                      String(uvrange),String(time),String(correlation));
-		if(ret) 
-                        ret = flagger_p->setmanualflags(False,False,
-                                        False,String(""),Vector<Double>(),String(""),
-                                        False, 0.0,String("SUMMARY"));
-	        return true;
+    try {
+	if(flagger_p) {
+	    Bool ret;
+	    ret = flagger_p->selectdata(
+		False,String(field), String(spw), String(array),
+		String(feed), String(scan), String(baseline),
+		String(uvrange), String(time), String(correlation));
+
+	    if(ret) {
+		ret = flagger_p->setmanualflags(False,False,
+						False,String(""),Vector<Double>(),String(""),
+						False, 0.0,String("SUMMARY"));
+	    }
+	    
+	    return true;
         }
+
         return false;
+
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-            RETHROW(x);
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
     }
 }
 
@@ -392,8 +406,8 @@ flagger::getflagversionlist()
         {
                 Vector<String> versionlist(0);
                 flagger_p->getFlagVersionList(versionlist);
-                for(uInt i=0;i<versionlist.nelements();i++)
-                        cout << versionlist[i] << endl;
+                for(uInt i = 0; i < versionlist.nelements(); i++)
+		    *logger_p << versionlist[i] << LogIO::POST;
         }
         return False;
     } catch (AipsError x) {

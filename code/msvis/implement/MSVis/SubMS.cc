@@ -627,7 +627,9 @@ namespace casa {
     //  array_p<<" with obstype="<< obsType<<LogIO::POST;
     
     //    TiledShapeStMan tiledStMan1("TiledData",tileShape);
-    TiledShapeStMan tiledStMan1("TiledDATA",tileShape);
+    TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
+    TiledShapeStMan tiledStMan1Corrected("TiledCORRECTED_DATA",tileShape);
+    TiledShapeStMan tiledStMan1Model("TiledMODEL_DATA",tileShape);
     TiledShapeStMan tiledStMan1f("TiledFlag",tileShape);
     TiledShapeStMan tiledStMan1fc("TiledFlagCategory",
 				  IPosition(4,tileShape(0),tileShape(1),1,
@@ -643,17 +645,20 @@ namespace casa {
     
     if (colNamesTok.nelements() == 1)
       {
-	newtab.bindColumn(MS::columnName(MS::DATA),tiledStMan1);
+	newtab.bindColumn(MS::columnName(MS::DATA),tiledStMan1Data);
       }
     else
     for(uInt i=0;i<colNamesTok.nelements();i++)
       {
 	if (colNamesTok[i] == MS::columnName(MS::DATA))
-	  newtab.bindColumn(MS::columnName(MS::DATA),tiledStMan1);
+	  newtab.bindColumn(MS::columnName(MS::DATA),
+			    tiledStMan1Data);
 	else if (colNamesTok[i]==MS::columnName(MS::MODEL_DATA))
-	  newtab.bindColumn(MS::columnName(MS::MODEL_DATA),tiledStMan1);
+	  newtab.bindColumn(MS::columnName(MS::MODEL_DATA),
+			    tiledStMan1Model);
 	else 
-	  newtab.bindColumn(MS::columnName(MS::CORRECTED_DATA),tiledStMan1);
+	  newtab.bindColumn(MS::columnName(MS::CORRECTED_DATA),
+			    tiledStMan1Corrected);
       }
     
     newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);

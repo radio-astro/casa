@@ -145,8 +145,8 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   // pixel
   {
     Vector<Double> pixelPhaseCenter(2);
-    pixelPhaseCenter(0)=Double(image->shape()(0))/2.0;
-    pixelPhaseCenter(1)=Double(image->shape()(1))/2.0;
+    pixelPhaseCenter(0) = Double( image->shape()(0) / 2 );
+    pixelPhaseCenter(1) = Double( image->shape()(1) / 2 );
     directionCoord.toWorld(mImage_p, pixelPhaseCenter);
   }
 
@@ -177,7 +177,8 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   // Set up the UVWMachine. 
   if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
   String observatory=vb.msColumns().observation().telescopeName()(0);
-  if(observatory.contains("ATCA") || observatory.contains("WSRT")){
+  if(observatory.contains("ATCA") || observatory.contains("DRAO")
+     || observatory.contains("WSRT")){
     uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
 				True, False);
   }

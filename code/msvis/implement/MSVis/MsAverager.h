@@ -50,7 +50,7 @@
 #include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/SelectAverageSpw.h>
 
-#include <tableplot/TablePlot/SLog.h>
+//#include <tableplot/TablePlot/SLog.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////

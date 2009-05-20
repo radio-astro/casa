@@ -169,6 +169,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<description>The value of the aipsrc/casarc variable</description>
      </returns>
 </method>
+<method type="function" name="removetable">
+     <input>
+        <param type="stringArray" name="tablenames">
+           <description>Removes tables safely</description>
+           <value/>
+        </param>
+     </input>
+     <returns type="bool"/>
+</method>
 
 </tool>
 

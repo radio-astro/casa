@@ -149,7 +149,7 @@ def selected_revisions(data):
         host = log['host']
         if host.find('tst') >= 0 or \
                host.find('ma014655') >= 0:
-            stable_versions.add(log['CASA'])
+            stable_versions.append(log['CASA'])
 
     if len(stable_versions) > 0:
         stable_versions.sort(reverse=True)
@@ -585,7 +585,7 @@ class report:
             fd.write('<dd>On execution error the last error message from the log file is shown.')
             fd.write('<dd>Follow the history links to get an overview over how a test outcome correlates with platform and CASA version.')
             
-            fd.write('<dd><small>meta-log: Messages from the testing framework, unrelated to the test itself. ')
+            fd.write('<dd><small>session log: Messages from the full casapy session, including messages from the framework, and excluding logfiles produced by the test itself. ')
             fd.write('Used to track problems with the casapy installation, X connection etc.</small>')
             fd.write('</dt></dl>')
             fd.write('<TABLE border=1 cellpadding=0 cellspacing=0 summary="Quick view over tests.">\n')
@@ -1064,7 +1064,7 @@ class report:
             if os.path.isfile(reg_dir + '/Log/' + framework_log):
                 shutil.copyfile(reg_dir + '/Log/' + framework_log, \
                                 report_dir + '/' + framework_log)
-                fd.write('<br><small><a href="'+framework_log+'">meta-log</a></small>')
+                fd.write('<br><small><a href="'+framework_log+'">session log</a></small>')
                 
         self.dump_td_end(fd)            
 
@@ -1387,6 +1387,8 @@ class report:
                 total_runs = 0  # for this test on any host
                 hostno = 0
                 for host in hosts:
+                  if host != 'ub8tst':  # has excessive exec.times which messes
+                                        # up the scale of the plots!
                     #sort by dates
                     plotdata[key][host].sort(cmp=lambda a,b:cmp(a[0], b[0]))
                     x = []

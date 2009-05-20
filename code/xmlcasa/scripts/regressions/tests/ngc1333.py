@@ -17,10 +17,10 @@ def description():
 
 def run():
     lepath=locatescript('ngc1333_regression.py')
-    regstate=True
+    gl['regstate']=True
     execfile(lepath, gl)
-    print 'regstate =', regstate
-    if not regstate:
+    print 'regstate =', gl['regstate']
+    if not gl['regstate']:
         raise Exception, 'regstate = False'
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs

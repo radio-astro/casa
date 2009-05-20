@@ -47,52 +47,6 @@
     <property name="verticalSpacing" >
      <number>3</number>
     </property>
-    <item row="0" column="0" >
-     <widget class="QSplitter" name="splitter" >
-      <property name="orientation" >
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="opaqueResize" >
-       <bool>false</bool>
-      </property>
-      <widget class="QTabWidget" name="tabWidget" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize" >
-        <size>
-         <width>280</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="currentIndex" >
-        <number>0</number>
-       </property>
-       <widget class="QWidget" name="tab" >
-        <attribute name="title" >
-         <string>Tab</string>
-        </attribute>
-       </widget>
-      </widget>
-      <widget class="QFrame" name="frame" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="frameShape" >
-        <enum>QFrame::NoFrame</enum>
-       </property>
-       <property name="frameShadow" >
-        <enum>QFrame::Raised</enum>
-       </property>
-      </widget>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar" >

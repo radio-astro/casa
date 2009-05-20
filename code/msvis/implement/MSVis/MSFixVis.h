@@ -116,11 +116,11 @@ public:
   void setPhaseDirs(const Vector<MDirection>& phaseDirs);
 
 // Calculate the (u, v, w)s and store them in ms_p.
-  Bool calc_uvw();
+  Bool calc_uvw(const String refcode);
 
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.
-  Bool fixvis();
+  Bool fixvis(const String refcode);
 
 private:
   // Interpret field indices (MSSelection)

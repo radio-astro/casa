@@ -87,7 +87,7 @@ class ClarkCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
   // constructor
-  ClarkCleanImageSkyModel() : itsProgress(0) {}
+  ClarkCleanImageSkyModel();
 
   // destructor
   ~ClarkCleanImageSkyModel();
@@ -103,6 +103,7 @@ public:
 				    RO_LatticeIterator<Float>& maskIter,
 				    Int& xbeg, Int& xend, 
 				    Int& ybeg, Int& yend);
+
 private:
 
   ClarkCleanProgress *itsProgress;

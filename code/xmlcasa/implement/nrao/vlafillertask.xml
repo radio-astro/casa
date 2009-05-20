@@ -151,6 +151,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </description>
 	    <value>1</value>
     </param>
+                            
+    <param type="bool" name="keepblanks" >
+       <description>Scans with blank (empty) source names (i.e. tipping scans) will be filled.
+       The default is to not fill.</description>
+       <value>false</value>
+    </param>     
+
 
   </input>
 

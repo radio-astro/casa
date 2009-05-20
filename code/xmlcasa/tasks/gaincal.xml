@@ -90,6 +90,11 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 		<value></value>
 	</param>
 
+	<param type="int" name="minblperant">
+		<description>Minimum baselines _per antenna_ required for solve</description>
+		<value>4</value>
+	</param>
+
 	<param type="double" name="minsnr">
 		<description>Reject solutions below this SNR</description>
 		<value>0.0</value>
@@ -287,7 +292,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               Options: 'inf' (~infinite), 
                        'int' (per integration)
                        any float or integer value with or without units
-              examples: solint='1m'; solint='60s', solint=60 --> 1 minute
+              examples: solint='1min'; solint='60s'; solint=60 --> 1 minute
                         solint='0s'; solint=0; solint='int' --> per integration
                         solint-'-1s'; solint='inf' --> ~infinite, up to boundaries
                         interacts with combine
@@ -302,6 +307,14 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               example: refant='4' (antenna with index 4)
                        refant='VA04' (VLA antenna #4)
               Use taskname=listobs for antenna listing,
+      minblperant -- Minimum number of baselines required per antenna for each solve
+                   Antennas with fewer baaselines are excluded from solutions. Amplitude
+                   solutions with fewer than 4 baselines, and phase solutions with fewer 
+                   than 3 baselines are only trivially constrained, and are no better
+                   than baseline-based solutions.
+                   default: 4
+                   example: minblperant=10  =&gt; Antennas participating on 10 or more 
+                            baselines are included in the solve
       minsnr -- Reject solutions below this SNR
               default: 0.0 (accept all attempted solutions)
       solnorm -- Normalize average solution amps to 1.0 after solution (G, T only)

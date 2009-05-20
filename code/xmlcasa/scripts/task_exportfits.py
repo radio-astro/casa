@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwrite,dropdeg,deglast):
+def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwrite,dropstokes,stokeslast):
 	"""Convert a CASA image to a FITS file:
 	CASA-produced images can be written to disk for transporting
 	to other software packages.  No subimaging of the fits image
@@ -25,10 +25,10 @@ def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwri
 		default: 0 = autoscale
 	overwrite -- Overwrite pre-existing imagename
 		default=False; example: overwrite=True
-	dropdeg -- Drop degenerate axes?
-		default: False; example: dropdeg=True
-	deglast -- Put degenerate axes last in header?
-		default: False; example: deglast=True
+	dropstokes -- Drop the Stokes axis?
+		default: False; example: dropstokes=True
+	stokeslast -- Put the stokes axis last in header?
+		default: True; example: stokeslast=False
 
 	"""
 
@@ -36,5 +36,5 @@ def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwri
 	casalog.origin('exportfits')
 
 	ia.open(imagename)
-	ia.tofits(outfile=fitsimage,velocity=velocity,optical=optical,bitpix=bitpix,minpix=minpix,maxpix=maxpix,overwrite=overwrite,dropdeg=dropdeg,deglast=deglast)
+	ia.tofits(outfile=fitsimage,velocity=velocity,optical=optical,bitpix=bitpix,minpix=minpix,maxpix=maxpix,overwrite=overwrite,dropstokes=dropstokes,stokeslast=stokeslast)
 	ia.close()

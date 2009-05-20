@@ -24,6 +24,7 @@ clearcal('ggtau_07feb97.ms')
 copytime=time.time()
 
 print '--Flag data--'
+default('flagdata')
 
 # Setup four flagging specifications:
 #

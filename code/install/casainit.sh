@@ -197,7 +197,15 @@
            a_arch=aix
            ;;
 	Darwin)
-	   a_arch=darwin
+	   if [ -d "$a_root/darwin" ]; then
+	       a_arch=darwin
+	   else
+	       if [ -d "$a_root/osx" ]; then
+		   a_arch=osx
+	       else
+		   a_arch=darwin
+	       fi
+	   fi
 	   ;;
         *)
            if [ `uname -m` = alpha ]

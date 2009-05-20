@@ -36,7 +36,7 @@ namespace casa {
 const PMS::Axis PlotMSCache::METADATA[] =
     { PMS::TIME, PMS::TIME_INTERVAL, PMS::FIELD, PMS::SPW, PMS::SCAN,
       PMS::ANTENNA1, PMS::ANTENNA2, PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
-      PMS::FLAG };
+      PMS::FLAG, PMS::FLAG_ROW };
 const unsigned int PlotMSCache::N_METADATA = 11;
 
 bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
@@ -123,6 +123,8 @@ void PlotMSCache::increaseChunks(Int nc) {
   az_.resize(nChunk_,False,True);
   el_.resize(nChunk_,False,True);
   parang_.resize(nChunk_,False,True);
+
+  plmask_.resize(nChunk_,False,True);
   
   // Construct (empty) pointed-to Vectors/Arrays
   for (Int ic=oldnChunk;ic<nChunk_;++ic) {
@@ -147,6 +149,8 @@ void PlotMSCache::increaseChunks(Int nc) {
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
     parang_[ic] = new Vector<Float>();
+
+    plmask_[ic] = new Array<Bool>();
   }
 
   // Zero the cumulative count
@@ -177,14 +181,23 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
       // 2) the underlying MS has changed, requiring a reloading of metadata
 
   cout << endl << "Caching for the new plot: " 
-       << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " << PMS::axis(axes[0]) << "(" << axes[0] << ")..." << flush;
+       << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " << PMS::axis(axes[0]) << "(" << axes[0] << ")..." << endl;
 
-  Timer loadtimer;
-
-  loadtimer.mark();
+  cout << "Channel averaging is " << (averaging.channel() ? "on" : "off");
+  if (averaging.channel())
+    cout << ", with a value of " << averaging.channelValue();
+  cout << "." << endl;
   
-  //cout << "Channel averaging is " << (averaging.channel() ? "on" : "off")
-  //     << ", with a value of " << averaging.channelValue() << "." endl;
+  /*
+  cout << "Time averaging is " << (averaging.time() ? "on" : "off");
+  if (averaging.time()) {
+    cout << ", with a value of " << averaging.timeValue() << "." << endl;
+    cout << "Scan averaging is " << (averaging.scan() ? "on" : "off") << "; ";
+    cout << "field averaging is "<< (averaging.field()? "on" : "off") << "; ";
+    cout << "baseline averaging is " << (averaging.baseline() ? "on" : "off");
+  }
+  cout << "." << endl;
+  */
   
   // Calculate which axes need to be loaded; those that have already been
     // loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
@@ -235,9 +248,6 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         
     if(loadAxes.size() == 0) return; // nothing to be loaded
     
-    //    Double loadsetuptime(loadtimer.all_usec()/1.0e6);
-    //    cout << "Load setup time = " << loadsetuptime << endl;
-
     // Load data.
 
     VisIter& vi(visSet.iter());
@@ -253,34 +263,84 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
     chshapes_.resize(4,nChunk_);
     double progress;
     for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-        for(vi.origin(); vi.more(); vi++) {
-            // If a thread is given, check if the user canceled.
-            if(thread != NULL && thread->wasCanceled()) {
-                dataLoaded_ = false;
-                return;
-            }
-            
-            // If a thread is given, update it.
-            if(thread != NULL && chunk % THREAD_SEGMENT == 0)
-                thread->setStatus("Loading chunk " + String::toString(chunk) +
-                                  " / " + String::toString(nChunk_) + ".");
-            
-            for(unsigned int i = 0; i < loadAxes.size(); i++) {
-                //vb.freqAveCubes();
-                chshapes_(0,chunk)=vb.nCorr();
-                chshapes_(1,chunk)=vb.nChannel();
-                chshapes_(2,chunk)=vb.nRow();
-                chshapes_(3,chunk)=visSet.numberAnt();
-                loadAxis(vb, chunk, loadAxes[i], loadData[i]);
-            }
-            chunk++;
-            
-            // If a thread is given, update it.
-            if(thread != NULL && chunk % THREAD_SEGMENT == 0) {
-                progress = ((double)chunk) / nChunk_;
-                thread->setProgress((unsigned int)((progress * 100) + 0.5));
-            }
-        }
+      for(vi.origin(); vi.more(); vi++) {
+	// If a thread is given, check if the user canceled.
+	if(thread != NULL && thread->wasCanceled()) {
+	  dataLoaded_ = false;
+	  return;
+	}
+        
+	// If a thread is given, update it.
+	if(thread != NULL && chunk % THREAD_SEGMENT == 0)
+	  thread->setStatus("Loading chunk " + String::toString(chunk) +
+			    " / " + String::toString(nChunk_) + ".");
+
+
+	// Do channel averaging, if required
+	if (averaging.channel()) {
+
+	  //	  cout << endl << "Averaging in channel: " << averaging.channelValue()*100<<"%." << endl;
+
+	  // pre-load requisite pieces of VisBuffer for averaging
+	  for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	    switch (loadAxes[i]) {
+	    case PMS::AMP: 
+	    case PMS::PHASE: 
+	    case PMS::REAL: 
+	    case PMS::IMAG: {
+	      switch(loadData[i]) {
+	      case PMS::DATA: {
+		vb.visCube();
+		break;
+	      }
+	      case PMS::MODEL: {
+		vb.modelVisCube();
+		break;
+	      }
+	      case PMS::CORRECTED: {
+		vb.correctedVisCube();
+		break;
+	      }
+	      case PMS::RESIDUAL: {
+		vb.correctedVisCube();
+		vb.modelVisCube();
+		break;
+	      }
+	      default:
+		break;
+	      }
+	      break;
+	    }
+	    default:
+	      break;
+	    }
+	  }
+	  
+	  // Always need flags
+	  vb.flagRow();
+	  vb.flagCube();
+
+	  // Delegate actual averaging to the VisBuffer:
+	  vb.channelAve(averaging.channelValue());
+	}
+
+	// Cache the data shapes
+	chshapes_(0,chunk)=vb.nCorr();
+	chshapes_(1,chunk)=vb.nChannel();
+	chshapes_(2,chunk)=vb.nRow();
+	chshapes_(3,chunk)=visSet.numberAnt();
+
+	for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	  loadAxis(vb, chunk, loadAxes[i], loadData[i]);
+	}
+	chunk++;
+        
+	// If a thread is given, update it.
+	if(thread != NULL && chunk % THREAD_SEGMENT == 0) {
+	  progress = ((double)chunk) / nChunk_;
+	  thread->setProgress((unsigned int)((progress * 100) + 0.5));
+	}
+      }
     }
         
     // Update loaded axes.
@@ -292,8 +352,6 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         
     dataLoaded_ = true;
 
-    cout << "PlotMSCache-ing time = " << loadtimer.all_usec()/1.0e6 << endl;
-    
 }
 
 #define PMSC_DELETE(VAR)                                                      \
@@ -325,10 +383,8 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         case PMS::PHASE: PMSC_DELETE(pha_) break;
         case PMS::REAL: PMSC_DELETE(real_) break;
         case PMS::IMAG: PMSC_DELETE(imag_) break;
-        case PMS::FLAG:
-            PMSC_DELETE(flag_)
-            PMSC_DELETE(flagrow_)
-            break;
+        case PMS::FLAG: PMSC_DELETE(flag_) break;
+        case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
         case PMS::AZIMUTH: PMSC_DELETE(az_) break;
         case PMS::ELEVATION: PMSC_DELETE(el_) break;
         case PMS::PARANG: PMSC_DELETE(parang_) break;
@@ -355,10 +411,6 @@ bool PlotMSCache::readyForPlotting() const {
 
 void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
 
-  Timer setuptimer;
-
-  setuptimer.mark();
-
   // Put axes on a Vector so we can loop over them below
   Vector<Int> plaxes(2);
   plaxes(0)=xAxis;
@@ -381,6 +433,11 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   //  cout << "nmask = " << nmask << endl;
   //  cout << "cmask = " << cmask << endl;
 
+
+  // Forbid antenna-based/baseline-based combination plots, for now
+  //  (e.g., data vs. _antenna-based_ elevation)
+  if (nmask(2)&&nmask(3))
+    throw(AipsError("Cannot yet support antenna-based and baseline-based data in same plot."));
 
   icorrmax_.reference(chshapes_.row(0));
   ichanmax_.reference(chshapes_.row(1));
@@ -405,82 +462,34 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   if (nmask(0)) nperbsln_*=chshapes_.row(0);
   if (nmask(1)) nperbsln_*=chshapes_.row(1);
 
+  for (Int ichk=0;ichk<nChunk_;++ichk) {
 
+    //    if (ntrue(nmask(IPosition(1,0),IPosition(1,2)))==3) 
+    //      // corr, chan, baseline all present; just reference flag_
+    //      plmask_[ichk]->reference(*flag_[ichk]);
+    //    else {
+      // create a collapsed version of the flags
 
- /*
-
-  for (Int iaxis=0;iaxis<2;++iaxis) {
-
-    switch(plaxes(iaxis)) {
-    case PMS::CHANNEL:
-    case PMS::FREQUENCY:
-      ichanmax_.reference(chshapes_.row(1));
-      if (nmask(0))
-	// plot has correlation-dependence, so 
-	nperchan_.reference(chshapes_.row(0));
-      else {
-	// no corr-dep
-	nperchan_.resize(nChunk_);
-	nperchan_.set(1);
+      IPosition nsh(3,1,1,1),csh;
+      
+      for (Int iax=0;iax<3;++iax) {
+	if (nmask(iax)) 
+	  // non-trivial size for this axis
+	  nsh(iax)=chshapes_(iax,ichk);
+	else 
+	  // add this axis to collapse list
+	  csh.append(IPosition(1,iax));
       }
-      //      cout << "ichanmax_ = " << ichanmax_ << endl;
-      //      cout << "nperchan_ = " << nperchan_ << endl;
 
-      break;
-    case PMS::CORR:
-      icorrmax_.reference(chshapes_.row(0));
-      break;
-    case PMS::ANTENNA1:
-    case PMS::ROW:
-    case PMS::ANTENNA2:
-    case PMS::BASELINE:
-    case PMS::UVDIST:
-    case PMS::U:
-    case PMS::V:
-    case PMS::W: {
-      ibslnmax_.reference(chshapes_.row(2));
-      nperbsln_.resize(nChunk_);
-      nperbsln_.set(1);
-      if (nmask(0)) nperbsln_*=chshapes_.row(0);
-      if (nmask(1)) nperbsln_*=chshapes_.row(1);
-      break;
-    }
-    case PMS::UVDIST_L: {
-      ichanbslnmax_.resize(nChunk_);
-      ichanbslnmax_=chshapes_.row(1);
-      ichanbslnmax_*=chshapes_.row(2);
-      nperchan_.resize(nChunk_);
-      nperchan_.set(1);
-      if (nmask(0)) nperchan_*=chshapes_.row(0);
-      break;
-    }
-    case PMS::AMP:
-    case PMS::PHASE:
-    case PMS::REAL:
-    case PMS::IMAG:
-    case PMS::FLAG:
-      idatamax_.resize(nChunk_);
-      idatamax_=chshapes_.row(0);
-      idatamax_*=chshapes_.row(1);
-      idatamax_*=chshapes_.row(2);
-      //      cout << "idatamax_ = " << idatamax_ << endl;
-      break;
-    case PMS::AZIMUTH:
-    case PMS::ELEVATION:
-    case PMS::PARANG:
-      iantmax_.reference(chshapes_.row(3));
-      break;
-    default:
-      break;
-    }
+      plmask_[ichk]->resize(nsh);
+      (*plmask_[ichk]) = operator>(partialNFalse(*flag_[ichk],csh).reform(nsh),uInt(0));
+
+      //    }
   }
- */
 
 
   // Count up the total number of points we will plot
   //   (keep a cumualtive running total)
-
-  //  cout << "chshapes_ = " << chshapes_ << endl;
 
   Int cumulativeN(0);
   for (Int ic=0;ic<nChunk_;++ic) {
@@ -501,13 +510,8 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   currentX_ = xAxis; currentY_ = yAxis;
   currentSet_ = true;
 
-  cout << "Plot setup time = " << setuptimer.all_usec()/1.0e6 << endl;
-  
-  setuptimer.mark();
-
   computeRanges();
 
-  cout << "Range compute time = " << setuptimer.all_usec()/1.0e6 << endl;
 }
 
 
@@ -539,6 +543,7 @@ void PlotMSCache::getAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::U:
   case PMS::V:
   case PMS::W:
+  case PMS::FLAG_ROW:
     axismask(2)=True;
     break;
   case PMS::UVDIST_L:
@@ -592,6 +597,14 @@ void PlotMSCache::getXY(Int i,Double& x,Double& y) {
 
 }
 
+
+Bool PlotMSCache::getFlagMask(Int i) {
+
+  // Find correct chunk and index offset
+  setChunk(i);
+  
+  return !(*(plmask_[currChunk_]->data()+irel_));
+};
 
 Double PlotMSCache::get(PMS::Axis axis) {
 
@@ -665,6 +678,10 @@ Double PlotMSCache::get(PMS::Axis axis) {
     break;
   case PMS::FLAG:
     return getFlag();
+    break;
+
+  case PMS::FLAG_ROW:
+    return getFlagRow();
     break;
 
   case PMS::AZIMUTH:
@@ -1006,6 +1023,9 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
     case PMS::FLAG:
       *flag_[vbnum] = vb.flagCube();
       break;
+    case PMS::FLAG_ROW:
+      *flagrow_[vbnum] = vb.flagRow();
+      break;
 
     case PMS::AZIMUTH:
     case PMS::ELEVATION: {
@@ -1024,7 +1044,6 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
       break;
 
       /*        
-    case PMS::FLAG_ROW:
     case PMS::WEIGHT:
     case PMS::VEL_RADIO:
     case PMS::VEL_OPTICAL:
@@ -1061,8 +1080,9 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
     case PMS::ELEVATION: 
     case PMS::PARANG: 
     case PMS::ROW:
+    case PMS::FLAG_ROW: 
       {
-      //    case PMS::FLAG_ROW: {
+
         unsigned int n = 0;
         for(unsigned int i = 0; i < freq_.size(); i++) {
             if(axis == PMS::FREQUENCY)     n += freq_[i]->size();
@@ -1082,7 +1102,7 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
             else if(axis == PMS::ELEVATION)n += el_[i]->size();
             else if(axis == PMS::PARANG)   n += parang_[i]->size();
-	    //            else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
+	    else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
         }
         return n;
     }     
@@ -1110,155 +1130,367 @@ void PlotMSCache::computeRanges() {
 
     for (Int ic=0;ic<nChunk_;++ic) {
 
-      for (Int ix=0;ix<2;++ix) {
+      if (ntrue(*plmask_[ic])>0) {
+	for (Int ix=0;ix<2;++ix) {
 
-	switch(plaxes(ix)) {
-	case PMS::SCAN:
-	  limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
-	  limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
-	  break;
-	case PMS::FIELD:
-	  limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
-	  limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
-	  break;
-	case PMS::TIME:
-	  limits(2*ix)=min(limits(2*ix),time_(ic));
-	  limits(2*ix+1)=max(limits(2*ix+1),time_(ic));
-	  break;
-	case PMS::TIME_INTERVAL:
-	  limits(2*ix)=min(limits(2*ix),timeIntr_(ic));
-	  limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
-	  break;
-	case PMS::SPW:
-	  limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
-	  limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
-	  break;
-	case PMS::FREQUENCY:
-	  if (freq_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*freq_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*freq_[ic]));
+	  // Arrange collapsed-on-axis mask
+	  Array<Bool> collmask;
+	  switch(plaxes(ix)) {
+	  case PMS::FREQUENCY: 
+	  case PMS::CHANNEL: {
+	    // collapse on corr, row
+	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,2)),uInt(0));
+	    break;
 	  }
-	  break;
-	case PMS::CHANNEL:
-	  if (chan_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*chan_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*chan_[ic])));
+	  case PMS::CORR: {
+	    // collapse on chan, row
+	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,1,2)),uInt(0));
+	    break;
 	  }
-	  break;
-	case PMS::CORR:
-	  if (corr_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*corr_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*corr_[ic])));
+	  case PMS::ROW:
+	  case PMS::ANTENNA1:
+	  case PMS::ANTENNA2:
+	  case PMS::BASELINE:
+	  case PMS::UVDIST:
+	  case PMS::U:
+	  case PMS::V:
+	  case PMS::W: {
+	    // collapse on corr,chan
+	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,1)),uInt(0));
+	    break;
 	  }
-	  break;
-	case PMS::ROW:
-	  if (row_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*row_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*row_[ic])));
+	  case PMS::UVDIST_L: {
+	    // collapse on corr
+	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,0)),uInt(0));
+	    break;
 	  }
-	  break;
-	case PMS::ANTENNA1:
-	  if (antenna1_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*antenna1_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna1_[ic])));
+	  case PMS::AMP: 
+	  case PMS::PHASE:
+	  case PMS::REAL:
+	  case PMS::IMAG:{
+	    // reference plmask_
+	    collmask.reference(*plmask_[ic]);
+	    break;
 	  }
-	  break;
-	case PMS::ANTENNA2:
-	  if (antenna2_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*antenna2_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna2_[ic])));
+	  case PMS::AZIMUTH:
+	  case PMS::ELEVATION:
+	  case PMS::PARANG:
+	    // TBD
+	    break;
+	  default:
+	    break;
 	  }
-	  break;
-	case PMS::BASELINE:
-	  if (baseline_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*baseline_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*baseline_[ic])));
-	  }
-	  break;
 
-	case PMS::UVDIST:
-	  if (uvdist_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*uvdist_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*uvdist_[ic])));
-	  }
-	  break;
-	case PMS::U:
-	  if (u_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*u_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*u_[ic])));
-	  }
-	  break;
-	case PMS::V:
-	  if (v_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*v_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*v_[ic])));
-	  }
-	  break;
-	case PMS::W:
-	  if (w_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*w_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*w_[ic])));
-	  }
-	  break;
-	case PMS::UVDIST_L:
-	  if (uvdistL_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),Double(min(*uvdistL_[ic])));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(max(*uvdistL_[ic])));
-	  }
-	  break;
 
-	case PMS::AMP:
-	  if (amp_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*amp_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*amp_[ic]));
+	  // Now calculate masked limits
+
+	  if (True) {
+
+	  switch(plaxes(ix)) {
+	  case PMS::SCAN:
+	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
+	    break;
+	  case PMS::FIELD:
+	    limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
+	    break;
+	  case PMS::TIME:
+	    limits(2*ix)=min(limits(2*ix),time_(ic));
+	    limits(2*ix+1)=max(limits(2*ix+1),time_(ic));
+	    break;
+	  case PMS::TIME_INTERVAL:
+	    limits(2*ix)=min(limits(2*ix),timeIntr_(ic));
+	    limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
+	    break;
+	  case PMS::SPW:
+	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
+	    break;
+	  case PMS::FREQUENCY:
+	    if (freq_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*freq_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*freq_[ic])(collmask)));
+	    }
+	    break;
+	  case PMS::CHANNEL:
+	    if (chan_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::CORR:
+	    if (corr_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::ROW:
+	    if (row_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::ANTENNA1:
+	    if (antenna1_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::ANTENNA2:
+	    if (antenna2_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::BASELINE:
+	    if (baseline_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic])(collmask))));
+	    }
+	    break;
+	    
+	  case PMS::UVDIST:
+	    if (uvdist_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdist_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdist_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::U:
+	    if (u_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*u_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*u_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::V:
+	    if (v_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*v_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*v_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::W:
+	    if (w_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*w_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*w_[ic])(collmask))));
+	    }
+	    break;
+	  case PMS::UVDIST_L:
+	    if (uvdistL_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdistL_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdistL_[ic])(collmask))));
+	    }
+	    break;
+	    
+	  case PMS::AMP: {
+	    if (amp_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*amp_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*amp_[ic])(collmask)));
+	    }
+	    break;
 	  }
-	  break;
-	case PMS::PHASE:
-	  if (pha_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*pha_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*pha_[ic]));
+	  case PMS::PHASE:
+	    if (pha_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*pha_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*pha_[ic])(collmask)));
+	    }
+	    break;
+	  case PMS::REAL:
+	    if (real_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*real_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*real_[ic])(collmask)));
+	    }
+	    break;
+	  case PMS::IMAG:
+	    if (imag_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*imag_[ic])(collmask)));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*imag_[ic])(collmask)));
+	    }
+	    break;
+	  case PMS::FLAG:
+	  case PMS::FLAG_ROW:
+	    if (flag_[ic]->nelements()>0) {
+	      limits(2*ix)=-0.5;
+	      limits(2*ix+1)=1.5;
+	    }
+	    break;
+	  case PMS::AZIMUTH:
+	    if (az_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*az_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*az_[ic]));
+	    }
+	    break;
+	  case PMS::ELEVATION:
+	    if (el_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*el_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*el_[ic]));
+	    }
+	    break;
+	  case PMS::PARANG:
+	    if (parang_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*parang_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*parang_[ic]));
+	    }
+	    break;
+	  default:
+	    throw(AipsError("Help PlotMSCache::computeRanges"));
 	  }
-	  break;
-	case PMS::REAL:
-	  if (real_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*real_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*real_[ic]));
+
 	  }
-	  break;
-	case PMS::IMAG:
-	  if (imag_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*imag_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*imag_[ic]));
+	  else {
+
+	  // Now calculate masked limits
+	  switch(plaxes(ix)) {
+	  case PMS::SCAN:
+	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
+	    break;
+	  case PMS::FIELD:
+	    limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
+	    break;
+	  case PMS::TIME:
+	    limits(2*ix)=min(limits(2*ix),time_(ic));
+	    limits(2*ix+1)=max(limits(2*ix+1),time_(ic));
+	    break;
+	  case PMS::TIME_INTERVAL:
+	    limits(2*ix)=min(limits(2*ix),timeIntr_(ic));
+	    limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
+	    break;
+	  case PMS::SPW:
+	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
+	    break;
+	  case PMS::FREQUENCY:
+	    if (freq_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*freq_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*freq_[ic])));
+	    }
+	    break;
+	  case PMS::CHANNEL:
+	    if (chan_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic]))));
+	    }
+	    break;
+	  case PMS::CORR:
+	    if (corr_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic]))));
+	    }
+	    break;
+	  case PMS::ROW:
+	    if (row_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic]))));
+	    }
+	    break;
+	  case PMS::ANTENNA1:
+	    if (antenna1_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic]))));
+	    }
+	    break;
+	  case PMS::ANTENNA2:
+	    if (antenna2_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic]))));
+	    }
+	    break;
+	  case PMS::BASELINE:
+	    if (baseline_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic]))));
+	    }
+	    break;
+	    
+	  case PMS::UVDIST:
+	    if (uvdist_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdist_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdist_[ic]))));
+	    }
+	    break;
+	  case PMS::U:
+	    if (u_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*u_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*u_[ic]))));
+	    }
+	    break;
+	  case PMS::V:
+	    if (v_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*v_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*v_[ic]))));
+	    }
+	    break;
+	  case PMS::W:
+	    if (w_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*w_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*w_[ic]))));
+	    }
+	    break;
+	  case PMS::UVDIST_L:
+	    if (uvdistL_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdistL_[ic]))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdistL_[ic]))));
+	    }
+	    break;
+	    
+	  case PMS::AMP: {
+	    if (amp_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*amp_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*amp_[ic])));
+	    }
+	    break;
 	  }
-	  break;
-	case PMS::FLAG:
-	  if (flag_[ic]->nelements()>0) {
-	    limits(2*ix)=-0.5;
-	    limits(2*ix+1)=1.5;
+	  case PMS::PHASE:
+	    if (pha_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*pha_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*pha_[ic])));
+	    }
+	    break;
+	  case PMS::REAL:
+	    if (real_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*real_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*real_[ic])));
+	    }
+	    break;
+	  case PMS::IMAG:
+	    if (imag_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min((*imag_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),max((*imag_[ic])));
+	    }
+	    break;
+	  case PMS::FLAG:
+	  case PMS::FLAG_ROW:
+	    if (flag_[ic]->nelements()>0) {
+	      limits(2*ix)=-0.5;
+	      limits(2*ix+1)=1.5;
+	    }
+	    break;
+	  case PMS::AZIMUTH:
+	    if (az_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*az_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*az_[ic]));
+	    }
+	    break;
+	  case PMS::ELEVATION:
+	    if (el_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*el_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*el_[ic]));
+	    }
+	    break;
+	  case PMS::PARANG:
+	    if (parang_[ic]->nelements()>0) {
+	      limits(2*ix)=min(limits(2*ix),min(*parang_[ic]));
+	      limits(2*ix+1)=max(limits(2*ix+1),max(*parang_[ic]));
+	    }
+	    break;
+	  default:
+	    throw(AipsError("Help PlotMSCache::computeRanges"));
 	  }
-	  break;
-	case PMS::AZIMUTH:
-	  if (az_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*az_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*az_[ic]));
+
 	  }
-	  break;
-	case PMS::ELEVATION:
-	  if (el_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*el_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*el_[ic]));
-	  }
-	  break;
-	case PMS::PARANG:
-	  if (parang_[ic]->nelements()>0) {
-	    limits(2*ix)=min(limits(2*ix),min(*parang_[ic]));
-	    limits(2*ix+1)=max(limits(2*ix+1),max(*parang_[ic]));
-	  }
-	  break;
-	default:
-	  throw(AipsError("Help PlotMSCache::computeRanges X"));
+
 	}
-	
       }
     }
 

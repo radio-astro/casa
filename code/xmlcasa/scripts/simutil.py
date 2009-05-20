@@ -137,7 +137,7 @@ class simutil:
         ####could not fit pointings then single pointing
         if(len(pointings)==0):
             pointings.append(direction)
-        self.msg("Using %i generated pointing(s)" % len(pointings))
+        self.msg("using %i generated pointing(s)" % len(pointings))
         self.pointings=pointings
         return len(pointings), pointings
 
@@ -308,7 +308,7 @@ class simutil:
             self.msg("observing freqency is higher than expected for "+telescope,color="31")
             self.msg("proceeding with extrapolated receiver temp="+str(t_rx),color="31")
 
-        return (eta_p, eta_s, eta_b, eta_t, t_rx)
+        return eta_p, eta_s, eta_b, eta_t, eta_q, t_rx
     
 #        # NewMSSimulator needs 2-temp formula not just t_atm
 #        sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,

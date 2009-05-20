@@ -19,10 +19,10 @@ def run():
     #####locate the regression script
     lepath=locatescript('g192_regression.py')
     print 'Script used is ',lepath
-    regstate=True
+    gl['regstate']=True
     execfile(lepath, gl)
-    print 'regstate =', regstate
-    if not regstate:
+    print 'regstate =', gl['regstate']
+    if not gl['regstate']:
         raise Exception, 'regstate = False'
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs

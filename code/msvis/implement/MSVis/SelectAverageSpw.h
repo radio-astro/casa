@@ -49,7 +49,7 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisSet.h>
 
-#include <tableplot/TablePlot/SLog.h>
+//#include <tableplot/TablePlot/SLog.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////

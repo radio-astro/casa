@@ -4,7 +4,7 @@ from taskinit import *
 def polcal(vis=None,caltable=None,
 	   field=None,spw=None,
 	   selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
-	   solint=None,combine=None,preavg=None,refant=None,minsnr=None,
+	   solint=None,combine=None,preavg=None,refant=None,minblperant=None,minsnr=None,
 	   poltype=None,append=None,
 	   gaintable=None,gainfield=None,interp=None,spwmap=None,
 	   gaincurve=None,opacity=None):
@@ -82,7 +82,7 @@ def polcal(vis=None,caltable=None,
 		# Set up for solving: 
 		phaseonly=False
 		cb.setsolve(type=poltype,t=solint,combine=combine,preavg=preavg,refant=refant,
-			    solnorm=False,minsnr=minsnr,table=caltable,
+			    minblperant=minblperant,solnorm=False,minsnr=minsnr,table=caltable,
 			    apmode='ap',phaseonly=phaseonly,append=append)
 
 		cb.solve()

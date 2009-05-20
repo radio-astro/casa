@@ -96,9 +96,9 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
         itsPlots_[i]->detachFromCanvases();
         delete itsPlots_[i];
     }
-    itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
     itsPlots_.clear();
     itsPlotParameters_.clear();
+    itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
     notifyWatchers();
 }
 
@@ -148,6 +148,7 @@ void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
     vector<PlotCanvasPtr> canvases(plot->layoutNumCanvases());
     PlotStandardMouseToolGroupPtr tools;
     PlotMSToolsTab* toolsTab = itsParent_->getPlotter()->getToolsTab();
+    pair<int, int> cimg = itsParent_->getParameters().cachedImageSize();
     unsigned int i = 0;
     for(unsigned int r = 0; r < newRows; r++) {
         for(unsigned int c = 0; c < newCols; c++) {
@@ -168,6 +169,9 @@ void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
             // add plotmsplotter as draw watcher
             canvas->registerDrawWatcher(PlotDrawWatcherPtr(
                     itsParent_->getPlotter(), false));
+            
+            // set cached image size
+            canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
         }
     }
     

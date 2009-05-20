@@ -56,6 +56,7 @@ class utils
 
     std::string toxml(const ::casac::record& input = ::casac::initialize_record(""), const bool asfile = false, const std::string& filename = "recordas.xml");
     std::string getrc(const std::string& rcvec = "");
+    bool removetable(const std::vector<std::string>& tablenames = std::vector<std::string> (1, ""));
 
     private:
 

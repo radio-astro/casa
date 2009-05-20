@@ -27,13 +27,10 @@
 #ifndef PLOTMSPLOT_H_
 #define PLOTMSPLOT_H_
 
-#include <plotms/Data/PlotMSData.h>
-#include <plotms/PlotMS/PlotMSConstants.h>
-#include <plotms/Plots/PlotMSPlotParameters.h>
-
-#include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <msvis/MSVis/VisSet.h>
+#include <plotms/Data/PlotMSData.h>
+#include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <casa/namespace.h>
 
@@ -188,6 +185,10 @@ protected:
     virtual void endLogCache();
     // </group>
     
+    // Convenience methods for logging the number of points drawn for all
+    // associated plots.
+    virtual void logNumPoints();
+    
 
     // MEMBERS //
     
@@ -217,7 +218,8 @@ protected:
     map<MaskedScatterPlot*, PlotCanvasPtr> itsCanvasMap_;
     
     // Flags for threaded cache loading.
-    bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_;
+    bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_,
+         itsTCLlogNumPoints_;
     
 private:
     // Disable copy constructor and operator for now.
@@ -228,82 +230,6 @@ private:
     
     // Use macro for define post-thread methods for loading the cache.
     PMS_POST_THREAD_METHOD(PlotMSPlot, cacheLoaded)
-};
-
-
-// Implementation of PlotMSPlot for a single plot on a single canvas.  Uses
-// PlotMSSinglePlotParameters in addition to PlotMSPlotParameters.
-class PlotMSSinglePlot : public PlotMSPlot {
-public:    
-    // Constructor which takes the PlotMS parent.  Starts out with default
-    // parameters.
-    PlotMSSinglePlot(PlotMS* parent);
-    
-    // Destructor.
-    ~PlotMSSinglePlot();
-    
-    
-    // Include overloaded methods.
-    using PlotMSPlot::initializePlot;
-    
-    
-    // Implements PlotMSPlot::name().
-    String name() const;
-    
-    // Implements PlotMSPlot::layoutNumRows().
-    unsigned int layoutNumRows() const;
-    
-    // Implements PlotMSPlot::layoutNumCols().
-    unsigned int layoutNumCols() const;
-    
-    // Implements PlotMSPlot::parameters().
-    // <group>
-    const PlotMSPlotParameters& parameters() const;
-    PlotMSPlotParameters& parameters();
-    // </group>
-    
-    
-    // Returns a reference to the plot's single parameters.
-    // <group>
-    const PlotMSSinglePlotParameters& singleParameters() const;
-    PlotMSSinglePlotParameters& singleParameters();
-    // </group>
-    
-protected:
-    // Implements PlotMSPlot::initializePlot().
-    bool initializePlot();
-    
-    // Implements PlotMSPlot::assignCanvases().
-    bool assignCanvases();
-    
-    // Implements PlotMSPlot::hasThreadedCaching().
-    bool hasThreadedCaching() const { return true; }
-    
-    // Implements PlotMSPlot::updateCache().
-    bool updateCache();
-    
-    // Implements PlotMSPlot::updateCanvas().
-    bool updateCanvas();
-    
-    // Implements PlotMSPlot::updatePlot().
-    bool updatePlot();
-    
-private:
-    // Convenient access to single plot.
-    MaskedScatterPlotPtr itsPlot_;
-    
-    // Convenient access to single canvas.
-    PlotCanvasPtr itsCanvas_;
-    
-    // Plot parameters.
-    PlotMSSinglePlotParameters itsParameters_;
-    
-    
-    // Disable copy constructor and operator for now.
-    // <group>
-    PlotMSSinglePlot(const PlotMSSinglePlot& copy);
-    PlotMSSinglePlot& operator=(const PlotMSSinglePlot& copy);
-    // </group>
 };
 
 }

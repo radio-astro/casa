@@ -27,6 +27,7 @@
 #ifndef QTPROGRESSWIDGET_QO_H_
 #define QTPROGRESSWIDGET_QO_H_
 
+#include <casaqt/QtUtilities/QtProgressCompactWidget.ui.h>
 #include <casaqt/QtUtilities/QtProgressWidget.ui.h>
 
 #include <QMutex>
@@ -36,14 +37,15 @@ namespace casa {
 // GUI for displaying progress information.  It also shows "background",
 // "cancel", and "pause/resume" buttons for the user.  The parent of this
 // widget is responsible for implementing these behaviors as needed.
-class QtProgressWidget : public QWidget, Ui::ProgressWidget {
+class QtProgressWidget : public QWidget {
     Q_OBJECT
     
 public:
     // Constructor which takes the PlotMS parent an optional parent widget.
     QtProgressWidget(bool allowBackground = true,
             bool allowPauseResume = true, bool allowCancel = true,
-            bool isDialog = true, QWidget* parent = NULL);
+            bool isDialog = true, bool useCompact = false,
+            QWidget* parent = NULL);
     
     // Destructor.
     ~QtProgressWidget();
@@ -93,6 +95,12 @@ protected:
 private:    
     // Mutex.
     QMutex itsMutex_;
+    
+    // Normal widget.
+    Ui::ProgressWidget* itsProgress_;
+    
+    // Compact widget.
+    Ui::ProgressCompactWidget* itsCompactProgress_;
     
 private slots:
     // For the "background" button.

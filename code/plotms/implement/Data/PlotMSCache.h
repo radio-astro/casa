@@ -27,9 +27,10 @@
 #ifndef PLOTMSCACHE_H_
 #define PLOTMSCACHE_H_
 
-#include <plotms/Actions/PlotMSThread.qo.h>
+#include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
+#include <plotms/Actions/PlotMSCacheThread.qo.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -111,6 +112,8 @@ public:
   void getXY(Int i, Double& x, Double& y);
   Double get(PMS::Axis axis);
 
+  Bool getFlagMask(Int i);
+
   // Axis-specific gets
   inline Double getScan()      { return scan_(currChunk_); };
   inline Double getField()     { return field_(currChunk_); };
@@ -136,6 +139,7 @@ public:
   inline Double getReal() { return *(real_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
+  inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getAz() { return *(az_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
   inline Double getEl() { return *(el_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
   inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
@@ -217,6 +221,8 @@ private:
   PtrBlock<Array<Float>*> amp_, pha_, real_, imag_;
   PtrBlock<Array<Bool>*> flag_;
   PtrBlock<Vector<Bool>*> flagrow_;
+
+  PtrBlock<Array<Bool>*> plmask_;
 
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Double>*> az_,el_;

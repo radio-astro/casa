@@ -6,7 +6,7 @@ def importvla(archivefiles,vis,
 	      project,
 	      starttime,stoptime,
 	      applytsys,
-	      autocorr,antnamescheme):
+	      autocorr,antnamescheme,keepblanks):
 
 	#Python script
 	i=0
@@ -25,7 +25,8 @@ def importvla(archivefiles,vis,
 					  project=project, start=starttime,
 					  stop=stoptime, applytsys=applytsys,
 					  keepautocorr=autocorr,
-					  antnamescheme=antnamescheme)
+					  antnamescheme=antnamescheme,
+					  keepblanks=keepblanks)
 				i=i+1
 			else:
 				raise Exception, 'Archive file not found - please verify the name'
@@ -39,6 +40,7 @@ def importvla(archivefiles,vis,
                 	ms.writehistory(message='bandname    = "'+str(bandname)+'"',origin='imporvla')
                 	ms.writehistory(message='frequencytol= '+str(frequencytol),origin='imporvla')
                 	ms.writehistory(message='applytsys= '+str(applytsys),origin='imporvla')
+                	ms.writehistory(message='keepblanks= '+str(keepblanks),origin='imporvla')
                 	ms.close()
 
                 else:

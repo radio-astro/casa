@@ -38,7 +38,6 @@
 #include <qwt_plot_grid.h>
 #include <qwt_scale_draw.h>
 
-#include <QCache>
 #include <QObject>
 #include <QMouseEvent>
 #include <QSpacerItem>
@@ -52,126 +51,6 @@ class QPCanvas;
 
 
 // Miscellaneous Classes //
-
-// Class to managed cached images associated with a canvas axes stack.
-class QPAxesCache {    
-public:
-    // Static //
-    
-    // Default cache size limit, in kilobytes.
-    static const int DEFAULT_MEMORY_LIMIT_KB;
-    
-    // Convenient access to class name for logging.
-    static const String CLASS_NAME;
-    
-    // Convenience class to use as a key.  Every axis that has at least one
-    // item attached to it will get an entry in the map, along with its range.
-    class Key : public QMap<PlotAxis, QPair<double, double> > {
-    public:
-        // Default constructor.  Empty key.
-        Key();
-        
-        // Constructor which uses the current axes state of the given canvas.
-        Key(const QPCanvas& canvas);
-        
-        // Destructor.
-        ~Key();
-        
-        
-        // Sets the key value using the current axes state of the given canvas.
-        void setValue(const QPCanvas& canvas);
-        
-        // Returns a hash for this key.
-        uint hash() const;
-    };
-    
-    
-    // Non-Static //
-    
-    // Constructor which takes a size limit for the cache.
-    QPAxesCache(QPCanvas& canvas, int sizeLimitKb = DEFAULT_MEMORY_LIMIT_KB);
-    
-    // Destructor.
-    ~QPAxesCache();
-    
-    
-    // Returns the current size of the cache.
-    unsigned int size() const;
-    
-    // Returns the (approximate) current memory size of the cache, in
-    // kilobytes.
-    int memorySize() const;
-    
-    // Gets/Sets the size limit for the cache, in kilobytes.
-    // <group>
-    int memoryLimit() const;
-    void setMemoryLimit(int memoryLimitKb);
-    // </group>
-    
-    // Returns the current size of the images that are cached.  This can be
-    // used to check for resizing, in which case the cache should probably be
-    // cleared.
-    QSize currImageSize() const;
-    
-    // Clears all cached images.
-    void clear();
-    
-    // Clears all cached images for the given layer(s).
-    // <group>
-    void clearLayer(PlotCanvasLayer layer);
-    void clearLayers(int layersFlag);
-    // </group>
-    
-    // Returns true if the cache has an entry for the current axes state of its
-    // canvas, false otherwise.
-    bool currHasImage() const;
-    
-    // Returns true if the cache has an image for the current axes state of its
-    // parent for the given layer, false otherwise.
-    bool currHasImage(PlotCanvasLayer layer) const;
-    
-    // Returns the image for the current axes state of its canvas for the given
-    // layer, or a null image if there is none.
-    QImage currImage(PlotCanvasLayer layer);
-    
-    // Adds the given image for the current axes state of its canvas for the
-    // given layer.  The current image size is set to the size of the given
-    // image (unless it is a null image).
-    void addCurrImage(PlotCanvasLayer layer, const QImage& image);
-    
-private:
-    // Convenience class to use as a value.
-    class Value : public QMap<PlotCanvasLayer, QImage> {
-    public:
-        // Default constructor.
-        Value();
-        
-        // Copy constructor.
-        Value(const QMap<PlotCanvasLayer, QImage>& copy);
-        
-        // Destructor.
-        ~Value();
-        
-        // Returns the approximate memory size, in kilobytes.
-        int memorySize() const;
-    };
-    
-    
-    // Parent canvas.
-    QPCanvas& m_canvas;
-    
-    // Image cache.
-    QCache<Key, Value> m_cache;
-};
-
-}
-
-
-// Provides a hashing function for QPAxesCache::Key, for use with Qt.
-uint qHash(const QPAxesCache::Key& key);
-
-
-namespace casa {
 
 // Filter to install on the QwtPlotCanvas to catch mouse move events (which
 // are otherwise stolen by other filters in QwtPicker classes).

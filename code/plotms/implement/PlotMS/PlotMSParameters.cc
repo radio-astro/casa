@@ -25,119 +25,10 @@
 //# $Id:  $
 #include <plotms/PlotMS/PlotMSParameters.h>
 
-#include <plotms/Plots/PlotMSPlot.h>
+#include <QApplication>
+#include <QDesktopWidget>
 
 namespace casa {
-
-/////////////////////////////////////////
-// PLOTMSWATCHEDPARAMETERS DEFINITIONS //
-/////////////////////////////////////////
-
-// Constructors/Destructors //
-
-PlotMSWatchedParameters::PlotMSWatchedParameters() : itsUpdateFlags_(NONE),
-        itsRedrawFlag_(false), itsUpdater_(NULL) { }
-
-PlotMSWatchedParameters::PlotMSWatchedParameters(
-        const PlotMSWatchedParameters& copy) : itsUpdateFlags_(NONE),
-        itsRedrawFlag_(false), itsUpdater_(NULL) {
-    operator=(copy);
-}
-
-PlotMSWatchedParameters::~PlotMSWatchedParameters() { }
-
-
-// Public Methods //
-
-void PlotMSWatchedParameters::addWatcher(PlotMSParametersWatcher* watcher) {
-    if(watcher == NULL) return;
-    for(unsigned int i = 0; i < itsWatchers_.size(); i++)
-        if(itsWatchers_[i] == watcher) return;
-    itsWatchers_.push_back(watcher);
-}
-
-void PlotMSWatchedParameters::removeWatcher(PlotMSParametersWatcher* watcher) {
-    if(watcher == NULL) return;
-    for(unsigned int i = 0; i < itsWatchers_.size(); i++) {
-        if(itsWatchers_[i] == watcher) {
-            itsWatchers_.erase(itsWatchers_.begin() + i);
-            return;
-        }
-    }
-}
-
-void PlotMSWatchedParameters::holdNotification(PlotMSParametersWatcher* updater) {
-    itsUpdater_ = updater;
-}
-
-void PlotMSWatchedParameters::releaseNotification() {
-    for(unsigned int i = 0; i < itsWatchers_.size(); i++)
-        if(itsUpdater_ == NULL || itsUpdater_ != itsWatchers_[i])
-            itsWatchers_[i]->parametersHaveChanged(*this, itsUpdateFlags_,
-                                                   itsRedrawFlag_);
-
-    itsUpdateFlags_ = NONE;
-    itsRedrawFlag_ = false;
-    itsUpdater_ = NULL;
-}
-
-void PlotMSWatchedParameters::notifyWatchers(int updateFlags,
-        bool redrawRequired, PlotMSParametersWatcher* updater) {
-    holdNotification(updater);
-    itsUpdateFlags_ = updateFlags;
-    itsRedrawFlag_ = redrawRequired;
-    releaseNotification();
-}
-
-PlotMSWatchedParameters& PlotMSWatchedParameters::operator=(
-            const PlotMSWatchedParameters& copy) {
-    //itsUpdateFlags_ = copy.itsUpdateFlags_;
-    //itsWatchers_ = copy.itsWatchers_;
-    //itsUpdater_ = NULL;
-    return *this;
-}
-
-
-// Protected Methods //
-
-int PlotMSWatchedParameters::currentUpdateFlag() const {
-    return itsUpdateFlags_; }
-bool PlotMSWatchedParameters::currentRedrawRequired() const {
-    return itsRedrawFlag_; }
-
-void PlotMSWatchedParameters::updateFlag(UpdateFlag update, bool on,
-        bool redrawRequired) {
-    bool changed = false;
-    
-    if(on) {
-        changed = !(itsUpdateFlags_ & update);
-        if(changed) itsUpdateFlags_ |= update;
-    } else {
-        changed = itsUpdateFlags_ & update;
-        if(changed) itsUpdateFlags_ &= ~update;
-    }
-
-    if(itsRedrawFlag_ != (itsRedrawFlag_ || redrawRequired)) {
-        itsRedrawFlag_ |= redrawRequired;
-        changed = true;
-    }
-    
-    // Only notify watchers if something changed and notifications aren't
-    // currently being held.
-    if(changed && itsUpdater_ == NULL) releaseNotification();
-}
-
-void PlotMSWatchedParameters::updateFlags(int updateFlags, bool redrawRequired) {
-    if(itsUpdateFlags_ != updateFlags ||
-       itsRedrawFlag_ != (itsRedrawFlag_ || redrawRequired)) {
-        itsUpdateFlags_ = updateFlags;
-        itsRedrawFlag_ |= redrawRequired;
-        
-        // Only notify watchers if notifications aren't currently being held.
-        if(itsUpdater_ == NULL) releaseNotification();
-    }
-}
-
 
 //////////////////////////////////
 // PLOTMSPARAMETERS DEFINITIONS //
@@ -145,8 +36,12 @@ void PlotMSWatchedParameters::updateFlags(int updateFlags, bool redrawRequired) 
 
 // Constructors/Destructors //
 
-PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel, bool debug) :
-        itsLogLevel_(logLevel), itsLogDebug_(debug) { }
+PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel, bool debug,
+        bool clearSelection, int cachedImageWidth, int cachedImageHeight) :
+        itsLogLevel_(logLevel), itsLogDebug_(debug),
+        itsClearSelectionsOnAxesChange_(clearSelection),
+        itsCachedImageWidth_(cachedImageWidth),
+        itsCachedImageHeight_(cachedImageHeight) { }
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) :
         PlotMSWatchedParameters(copy) {
@@ -169,19 +64,55 @@ void PlotMSParameters::setLogLevel(PlotMSLogger::Level level, bool debug) {
     }
 }
 
+bool PlotMSParameters::clearSelectionsOnAxesChange() const {
+    return itsClearSelectionsOnAxesChange_; }
+void PlotMSParameters::setClearSelectionsOnAxesChange(bool flag) {
+    if(flag != itsClearSelectionsOnAxesChange_) {
+        itsClearSelectionsOnAxesChange_ = flag;
+        // it's not actually a change to LOG, but use that for now..
+        updateFlag(LOG, true, false);
+    }
+}
+
+pair<int, int> PlotMSParameters::cachedImageSize() const {
+    return pair<int, int>(itsCachedImageWidth_, itsCachedImageHeight_); }
+void PlotMSParameters::setCachedImageSize(int width, int height) {
+    if(width != itsCachedImageWidth_ || height != itsCachedImageHeight_) {
+        itsCachedImageWidth_ = width;
+        itsCachedImageHeight_ = height;
+        // it's not actually a change to LOG, but use that for now..
+        updateFlag(LOG, true, false);
+    }
+}
+
+void PlotMSParameters::setCachedImageSizeToResolution() {
+    QRect res = QApplication::desktop()->screenGeometry();
+    setCachedImageSize(res.width(), res.height());
+}
+
+
 bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
         int updateFlags) const {
     const PlotMSParameters* o = dynamic_cast<const PlotMSParameters*>(&other);
     if(o == NULL) return false;
     
     if(updateFlags & LOG) return itsLogLevel_ == o->itsLogLevel_ &&
-                                 itsLogDebug_ == o->itsLogDebug_;
+                                 itsLogDebug_ == o->itsLogDebug_ &&
+                                 itsClearSelectionsOnAxesChange_ ==
+                                     o->itsClearSelectionsOnAxesChange_ &&
+                                 itsCachedImageWidth_ ==
+                                     o->itsCachedImageWidth_ &&
+                                 itsCachedImageHeight_ ==
+                                     o->itsCachedImageHeight_;
     else                  return false;
 }
 
 PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
     PlotMSWatchedParameters::operator=(copy);
     setLogLevel(copy.logLevel(), copy.logDebug());
+    setClearSelectionsOnAxesChange(copy.clearSelectionsOnAxesChange());
+    pair<int, int> size = copy.cachedImageSize();
+    setCachedImageSize(size.first, size.second);
     return *this;
 }
 

@@ -477,6 +477,15 @@ the ms definition itself. -->
      <description>start a new server tool (IGNORED!!!)</description>
      <value>false</value>
      </param>
+
+     <param type="string" name="antnamescheme">
+     <description>For VLA only, antenna name scheme, old style is just antenna number, new style prepends VA or EV</description>
+     <value>old</value>
+     <allowed type="enum">
+	     <value>old</value>
+	     <value>new</value>
+     </allowed>
+     </param>
   </input>
   <returns type="bool"/>
 
@@ -2947,6 +2956,13 @@ in spectral window 1.
        </description>
        <value>-1</value>
      </param>
+     <param type="string" name="uvtype">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
+     </param>
    </input>  
    <returns type="bool"/>
    <example>
@@ -2990,6 +3006,13 @@ in spectral window 1.
 	 Phase tracking centers for each field in fields, in the same order.
        </description>
        <value>-1</value>
+     </param>
+     <param type="string" direction="in" name="uvtype">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
      </param>
    </input>  
    <returns type="bool"/>

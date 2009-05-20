@@ -1,7 +1,5 @@
-//#---------------------------------------------------------------------------
-//# ASTEHeader.h: Class for ASTE data header.
-//#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# PlotMSTabs.cc: Tab GUI widgets.
+//# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,50 +23,44 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-//#---------------------------------------------------------------------------
-//# Original: 2008/10/30, Takeshi Nakazato, NAOJ
-//#---------------------------------------------------------------------------
+//# $Id: $
+#include <plotms/GuiTabs/PlotMSTab.qo.h>
 
-#ifndef ASTE_HEADER_H
-#define ASTE_HEADER_H
+#include <plotms/PlotMS/PlotMS.h>
 
-#define ASTE_ARYMAX 8
+namespace casa {
 
-#include <atnf/PKSIO/NROHeader.h>
+///////////////////////////
+// PLOTMSTAB DEFINITIONS //
+///////////////////////////
 
-#include <string>
+PlotMSTab::PlotMSTab(PlotMSPlotter* parent) : itsParent_(parent->getParent()),
+        itsPlotter_(parent) { }
 
-using namespace std ;
-
-// <summary>
-// Class specific for ASTE data header.
-// </summary>
-
-// 
-// ASTEHeader
-//
-// Class for ASTE data header.
-//
-class ASTEHeader : public NROHeader
-{
- public:
-  // constructor
-  ASTEHeader() ;
-
-  // destructor
-  ~ASTEHeader() ;
-
-  // data initialization 
-  void initialize() ;
-
-  // data finalization
-  void finalize() ;
-  
-  // fill header from file 
-  int fill( FILE *fp, bool sameEndian ) ;
-  int fill( string name ) ;
-} ;
+PlotMSTab::~PlotMSTab() { }
 
 
-#endif /* ASTE_HEADER_H */
+void PlotMSTab::changedText(QLabel* label, bool changed) {
+    if(itsLabelDefaults_.contains(label))
+        label->setText(changedText(itsLabelDefaults_.value(label),
+                       changed));
+}
+
+QString PlotMSTab::changedText(const QString& t, bool changed) {
+    QString str(t);
+    str.replace(' ', "&nbsp;");
+    if(changed) str = "<font color=\"#FF0000\">"+ t + "</font>";
+    return str;
+}
+
+bool PlotMSTab::setChooser(QComboBox* chooser, const QString& value) {
+    for(int i = 0; i < chooser->count(); i++) {
+        if(chooser->itemText(i) == value) {
+            chooser->setCurrentIndex(i);
+            return true;
+        }
+    }
+    return false;
+}
+
+}

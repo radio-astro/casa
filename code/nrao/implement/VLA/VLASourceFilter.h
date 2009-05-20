@@ -90,7 +90,7 @@ public:
   // that matches (case insensitive) the specified source name. If a qualifier
   // is specified (and is not the magic value of INT_MIN), then the qualifier
   // also has to match.
-  VLASourceFilter(const String& sourceName, const Int sourceQual=INT_MIN);
+  VLASourceFilter(const String& sourceName, const Int sourceQual=INT_MIN, const Bool keepblanks=False);
 
   // The copy constructor uses copy semantics.
   VLASourceFilter(const VLASourceFilter& other);
@@ -119,6 +119,7 @@ public:
 private:
   String itsSource;
   Int itsQual;
+  Bool itsKeepBlanks;
 };
 #endif
 

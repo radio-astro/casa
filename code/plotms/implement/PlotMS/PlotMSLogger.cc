@@ -46,7 +46,7 @@ int PlotMSLogger::levelToEventFlag(Level level, bool debug) {
     case MED:  events |= PlotLogger::EXPORT_TOTAL | PlotLogger::MSG_WARN;
     
     case LOW:  events |= PlotLogger::DRAW_TOTAL | PlotLogger::MSG_ERROR |
-                         LOAD_CACHE;
+                         LOAD_CACHE | NUM_POINTS;
 
     default: break;
     }

@@ -27,13 +27,17 @@
 #ifndef PLOTMSPLOTPARAMETERS_H_
 #define PLOTMSPLOTPARAMETERS_H_
 
-#include <plotms/PlotMS/PlotMSParameters.h>
-
-#include <graphics/GenericPlotter/PlotFactory.h>
+#include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/PlotMS/PlotMSSelection.h>
+#include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward Declarations.
+class PlotMS;
+
 
 // Parameters for a PlotMSPlot.  Includes the following parameters:
 // * MS filename, and
@@ -99,221 +103,6 @@ protected:
     
     // Flag for avoiding multiple calls to PlotMSWatchedParameters::updateFlag.
     bool updateFlag_;
-};
-
-
-// Specialized parameters for PlotMSSinglePlot.  Canvas parameters apply to all
-// canvases associated with the plot.  Contains the following parameters:
-// * which two plot axes (and data columns) are being used.
-// * which two canvas axes the plot is attached to,
-// * custom axes ranges if desired,
-// * the formats for the two canvas axes labels,
-// * if the two canvas axes are shown/hidden,
-// * legend hidden/shown and position,
-// * the format for the canvas title,
-// * the normal and masked plot symbols, and
-// * the format for the plot title.
-class PlotMSSinglePlotParameters : public PlotMSPlotParameters {    
-public:
-    // Constructor which uses the given factory to set the parameters to
-    // defaults.
-    PlotMSSinglePlotParameters(PlotFactoryPtr factory,
-            const String& msFilename = "");
-    
-    // Constructor which uses the given parent to get a PlotFactory to set the
-    // parameters to defaults.
-    PlotMSSinglePlotParameters(PlotMS* parent, const String& msFilename = "");
-    
-    // Copy constructor.  See operator=().
-    PlotMSSinglePlotParameters(const PlotMSSinglePlotParameters& copy);
-    
-    // Destructor.
-    ~PlotMSSinglePlotParameters();
-    
-    
-    // Include overloaded methods.
-    using PlotMSPlotParameters::operator=;
-    
-    
-    // Overrides PlotMSPlotParameters::equals().  Will return false if the
-    // other parameters are not of type PlotMSSinglePlotParameters.  Checks
-    // PlotMSPlotParameters::equals(), then all set parameters.
-    bool equals(const PlotMSWatchedParameters& other, int updateFlags) const;
-    
-    
-    // Gets/Sets plot axes.
-    // <group>
-    PMS::Axis xAxis() const;
-    PMS::Axis yAxis() const;
-    void setXAxis(PMS::Axis axis) { setAxes(axis, yAxis()); }
-    void setYAxis(PMS::Axis axis) { setAxes(xAxis(), axis); }
-    void setAxes(PMS::Axis x, PMS::Axis y) {
-        setAxesAndDataColumns(x, xDataColumn(), y, yDataColumn()); }
-    // </group>
-    
-    // Gets/Sets axes data columns.
-    // <group>
-    PMS::DataColumn xDataColumn() const;
-    PMS::DataColumn yDataColumn() const;
-    void setXDataColumn(PMS::DataColumn data) {
-        setDataColumns(data, yDataColumn()); }
-    void setYDataColumn(PMS::DataColumn data) {
-        setDataColumns(xDataColumn(), data); }
-    void setDataColumns(PMS::DataColumn x, PMS::DataColumn y) {
-        setAxesAndDataColumns(xAxis(), x, yAxis(), y); }
-    // </group>
-    
-    // Sets plot axes and data columns.
-    void setAxesAndDataColumns(PMS::Axis x, PMS::DataColumn xData, PMS::Axis y,
-            PMS::DataColumn yData);    
-    
-    // Gets/Sets which canvas axes the plot is attached to.
-    // <group>
-    PlotAxis canvasXAxis() const;
-    PlotAxis canvasYAxis() const;
-    void setCanvasXAxis(PlotAxis axis) { setCanvasAxes(axis, canvasYAxis()); }
-    void setCanvasYAxis(PlotAxis axis) { setCanvasAxes(canvasXAxis(), axis); }
-    void setCanvasAxes(PlotAxis xAxis, PlotAxis yAxis);
-    // </group>
-    
-    // Gets/Sets axes ranges.
-    // <group>
-    bool xRangeSet() const;
-    bool yRangeSet() const;
-    pair<double, double> xRange() const;
-    pair<double, double> yRange() const;
-    void setXRange(bool set, pair<double, double> range) {
-        setRanges(set, range, yRangeSet(), yRange()); }
-    void setYRange(bool set, pair<double, double> range) {
-        setRanges(xRangeSet(), xRange(), set, range); }
-    void setXRange(pair<double, double> range) { setXRange(true, range); }
-    void setYRange(pair<double, double> range) { setYRange(true, range); }
-    void setRanges(bool xSet, pair<double, double> xRange, bool ySet,
-            pair<double, double> yRange);
-    // </group>
-    
-    
-    // Gets/Sets the formats for generating the canvas axes labels.
-    // <group>
-    const PlotMSLabelFormat& canvasXAxisLabelFormat() const;
-    const PlotMSLabelFormat& canvasYAxisLabelFormat() const;
-    void setCanvasXAxisLabelFormat(const PlotMSLabelFormat& format) {
-        setCanvasAxesLabelFormats(format, canvasYAxisLabelFormat()); }
-    void setCanvasXAxisLabelFormat(const String& format) {
-        setCanvasXAxisLabelFormat(PlotMSLabelFormat(format)); }
-    void setCanvasYAxisLabelFormat(const PlotMSLabelFormat& format) {
-        setCanvasAxesLabelFormats(canvasXAxisLabelFormat(), format); }
-    void setCanvasYAxisLabelFormat(const String& format) {
-        setCanvasYAxisLabelFormat(PlotMSLabelFormat(format)); }
-    void setCanvasAxesLabelFormats(const PlotMSLabelFormat& xFormat,
-            const PlotMSLabelFormat& yFormat);
-    void setCanvasAxesLabelFormats(const String& xForm, const String& yForm) {
-        setCanvasAxesLabelFormats(PlotMSLabelFormat(xForm),
-                                  PlotMSLabelFormat(yForm));
-    }
-    // </group>
-    
-    // Gets the canvas axes labels using the set formats and axes.
-    // <group>
-    String canvasXAxisLabel() const;
-    String canvasYAxisLabel() const;
-    // </group>
-    
-    // Gets/Sets whether the canvas axes are shown or hidden.
-    // <group>
-    bool showXAxis() const;
-    bool showYAxis() const;
-    void setShowXAxis(bool show) { setShowAxes(show, showYAxis()); }
-    void setShowYAxis(bool show) { setShowAxes(showXAxis(), show); }
-    void setShowAxes(bool showX, bool showY);
-    // </group>
-    
-    // Gets/Sets whether the canvas legend is shown and its position.
-    // <group>
-    bool showLegend() const;
-    PlotCanvas::LegendPosition legendPosition() const;
-    void setShowLegend(bool show) { setLegend(show, legendPosition()); }
-    void setLegendPosition(PlotCanvas::LegendPosition pos) {
-        setLegend(showLegend(), pos); }
-    void setLegend(bool show, PlotCanvas::LegendPosition position);
-    // </group>
-    
-    // Gets/Sets the format for generating the canvas's title.
-    // <group>
-    const PlotMSLabelFormat& canvasTitleFormat() const;
-    void setCanvasTitleFormat(const PlotMSLabelFormat& format);
-    void setCanvasTitleFormat(const String& format) {
-        setCanvasTitleFormat(PlotMSLabelFormat(format)); }
-    // </group>
-    
-    // Gets the canvas's title using the set format and axes.
-    String canvasTitle() const;
-
-    
-    // Gets/Sets the symbol for normal and masked points.
-    // <group>
-    PlotSymbolPtr symbol() const;
-    PlotSymbolPtr maskedSymbol() const;
-    void setSymbol(PlotSymbolPtr sym) { setSymbols(sym, maskedSymbol()); }
-    void setMaskedSymbol(PlotSymbolPtr sym) { setSymbols(symbol(), sym); }
-    void setSymbols(PlotSymbolPtr normal, PlotSymbolPtr masked);
-    // </group>
-    
-    // Gets/Sets the format for generating the plot's title.
-    // <group>
-    const PlotMSLabelFormat& plotTitleFormat() const;
-    void setPlotTitleFormat(const PlotMSLabelFormat& format);
-    void setPlotTitleFormat(const String& format) {
-        setPlotTitleFormat(PlotMSLabelFormat(format)); }
-    // </group>
-    
-    // Gets the plot's title using the set format and axes.
-    String plotTitle() const;
-    
-    
-    // Copy operator.  See PlotMSPlotParameters::operator=().
-    PlotMSSinglePlotParameters& operator=(const PlotMSSinglePlotParameters& p);    
-    
-protected:
-    // Sets the parameters to their defaults.
-    void setDefaults(PlotFactoryPtr factory);    
-    
-private:
-    // Plot axes.
-    PMS::Axis itsXAxis_, itsYAxis_;
-    
-    // Plot axes data columns.
-    PMS::DataColumn itsXDataColumn_, itsYDataColumn_;
-    
-    // Canvas axes.
-    PlotAxis itsXCanvasAxis_, itsYCanvasAxis_;
-    
-    // Axes ranges.
-    // <group>
-    bool itsXRangeSet_, itsYRangeSet_;
-    pair<double, double> itsXRange_, itsYRange_;
-    // </group>
-    
-    // Axes label formats.
-    PlotMSLabelFormat itsCanvasXAxisLabelFormat_, itsCanvasYAxisLabelFormat_;
-    
-    // Show axes flags.
-    bool itsShowXAxis_, itsShowYAxis_;
-    
-    // Legend flag.
-    bool itsShowLegend_;
-    
-    // Legend position.
-    PlotCanvas::LegendPosition itsLegendPos_;
-    
-    // Canvas title format.
-    PlotMSLabelFormat itsCanvasTitleFormat_;
-    
-    // Normal and masked symbols.
-    PlotSymbolPtr itsSymbol_, itsMaskedSymbol_;
-    
-    // Plot title format.
-    PlotMSLabelFormat itsPlotTitleFormat_;
 };
 
 }

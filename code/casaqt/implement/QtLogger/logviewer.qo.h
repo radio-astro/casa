@@ -28,7 +28,7 @@
 #ifndef LOGVIEWER_H
 #define LOGVIEWER_H
 
-#ifndef __APPLE__
+#if ! defined(__APPLE__) || defined(__USE_WS_X11__)
 #include <graphics/X11/X_enter.h>
 #endif
 
@@ -54,7 +54,7 @@ class QSortFilterProxyModel;
 class QCheckBox;
 class QLabel;
 
-#ifndef __APPLE__
+#if ! defined(__APPLE__) || defined(__USE_WS_X11__)
 #include <graphics/X11/X_exit.h>
 #endif
 

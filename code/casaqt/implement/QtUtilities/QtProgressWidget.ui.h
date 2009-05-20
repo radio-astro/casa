@@ -1,8 +1,8 @@
 /********************************************************************************
 ** Form generated from reading ui file 'QtProgressWidget.ui'
 **
-** Created: Tue Mar 24 10:50:49 2009
-**      by: Qt User Interface Compiler version 4.4.0-beta1
+** Created: Thu Apr 16 14:51:49 2009
+**      by: Qt User Interface Compiler version 4.3.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
@@ -21,8 +21,6 @@
 #include <QtGui/QSpacerItem>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
-
-QT_BEGIN_NAMESPACE
 
 class Ui_ProgressWidget
 {
@@ -52,7 +50,6 @@ public:
     if (ProgressWidget->objectName().isEmpty())
         ProgressWidget->setObjectName(QString::fromUtf8("ProgressWidget"));
     ProgressWidget->resize(314, 107);
-    ProgressWidget->setAutoFillBackground(true);
     vboxLayout = new QVBoxLayout(ProgressWidget);
     vboxLayout->setSpacing(0);
     vboxLayout->setObjectName(QString::fromUtf8("vboxLayout"));
@@ -175,7 +172,5 @@ public:
 namespace Ui {
     class ProgressWidget: public Ui_ProgressWidget {};
 } // namespace Ui
-
-QT_END_NAMESPACE
 
 #endif // QTPROGRESSWIDGET_H

@@ -41,6 +41,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	       <value>ca</value>
 	    </allowed>
     </param>
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
 
     </input>
 

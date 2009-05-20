@@ -28,9 +28,7 @@
 #define PLOTMSCONSTANTS_H_
 
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <map>
 #include <vector>
 
 #include <casa/namespace.h>
@@ -108,7 +106,7 @@ public:
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
 	      AZIMUTH,ELEVATION,PARANG,
-	      ROW)
+	      ROW,FLAG_ROW)
 
       // VEL_RADIO, VEL_OPTICAL, VEL_RELATIVISTIC
       // HOURANGLE, 
@@ -121,7 +119,7 @@ public:
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
 	      "Azimuth","Elevation","ParAng",
-	      "Row")
+	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",
     //              "vel_optical", "vel_relativistic", "u", "v", "w", "azimuth",
@@ -230,237 +228,6 @@ public:
     
     // Default title (canvas, plot, etc.) format, in String form.
     static const String DEFAULT_TITLE_FORMAT;
-};
-
-
-// Specifies an MS selection.  See the mssSetData method in
-// ms/MeasurementSets/MSSelectionTools.h for details.
-class PlotMSSelection {
-public:
-    // Static //
-    
-    // Enum and methods to define the different fields for an MS selection.
-    // <group>
-    PMS_ENUM1(Field, fields, fieldStrings, field,
-              FIELD, SPW, TIMERANGE, UVRANGE, ANTENNA, SCAN,
-              CORR, ARRAY, MSSELECT)
-    PMS_ENUM2(Field, fields, fieldStrings, field,
-              "field", "spw", "timerange", "uvrange", "antenna", "scan",
-              "corr", "array", "msselect")
-    // </group>
-              
-    // Returns the default value for the given selection field.  Returns an
-    // empty String except for FIELD which returns "2".
-    static String defaultValue(Field f);
-    
-    
-    // Non-Static //
-    
-    // Default constructor.
-    PlotMSSelection();
-    
-    // Destructor.
-    ~PlotMSSelection();
-    
-    
-    // Applies this selection using the first MS into the second MS.  (See the
-    // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
-    void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
-               Matrix<Int>& chansel) const;
-    
-    // Gets/Sets the value for the given selection field.
-    // <group>
-    const String& getValue(Field f) const;
-    void getValue(Field f, String& value) const { value = getValue(f); }
-    void setValue(Field f, const String& value);
-    // </group>
-    
-    // Convenience methods for returning the standard selection fields.
-    // <group>
-    const String& field() const     { return getValue(FIELD);     }
-    const String& spw() const       { return getValue(SPW);       }
-    const String& timerange() const { return getValue(TIMERANGE); }
-    const String& uvrange() const   { return getValue(UVRANGE);   }
-    const String& antenna() const   { return getValue(ANTENNA);   }
-    const String& scan() const      { return getValue(SCAN);      }
-    const String& corr() const      { return getValue(CORR);      }
-    const String& array() const     { return getValue(ARRAY);     }
-    const String& msselect() const  { return getValue(MSSELECT);  }
-    // </group>
-    
-    // Convenience methods for setting the standard selection fields.
-    // <group>
-    void setField(const String& v)     { setValue(FIELD, v);     }
-    void setSpw(const String& v)       { setValue(SPW, v);       }
-    void setTimerange(const String& v) { setValue(TIMERANGE, v); }
-    void setUvrange(const String& v)   { setValue(UVRANGE, v);   }
-    void setAntenna(const String& v)   { setValue(ANTENNA, v);   }
-    void setScan(const String& v)      { setValue(SCAN, v);      }
-    void setCorr(const String& v)      { setValue(CORR, v);      }
-    void setArray(const String& v)     { setValue(ARRAY, v);     }
-    void setMsselect(const String& v)  { setValue(MSSELECT, v);  }
-    // </group>
-    
-    // Equality operators.
-    // <group>
-    bool operator==(const PlotMSSelection& other) const;
-    bool operator!=(const PlotMSSelection& other) const {
-        return !(operator==(other)); }
-    // </group>
-    
-private:    
-    // Selection field values.
-    map<Field, String> itsValues_;
-    
-    // Initializes the values to their defaults.
-    void initDefaults();
-};
-
-
-
-// Specifies averaging parameters for an MS.
-class PlotMSAveraging {
-public:
-    // Constructor, which uses default values.
-    PlotMSAveraging();
-    
-    // Destructor.
-    ~PlotMSAveraging();
-    
-    
-    // Gets/Sets whether channel averaging is turned on or not.
-    // <group>
-    bool channel() const;
-    void setChannel(bool channel);
-    // </group>
-    
-    // Gets/Sets the channel averaging value, which will be a value between
-    // 0 and 1, inclusive.  This value indicates the "level" of averaging
-    // desired: 0 means no averaging, and 1 means full averaging.
-    // <group>
-    double channelValue() const;
-    void setChannelValue(double value);
-    // </group>
-    
-    
-    // Equality operators.
-    // <group>
-    bool operator==(const PlotMSAveraging& other) const;
-    bool operator!=(const PlotMSAveraging& other) const {
-        return !(operator==(other)); }
-    // </group>
-    
-private:
-    // Channel averaging flag and value, respectively.
-    // <group>
-    bool itsChannel_;
-    double itsChannelValue_;
-    // </group>
-    
-    
-    // Sets the default values.
-    void setDefaults();
-};
-
-
-// Class for generating labels based upon axes, units, etc.  A format is a
-// String that consists of tags and non-tags.  Tags are special substrings
-// differentiated by being surrounded by a separator; tags are replaced with
-// given values when the label is built.  For example: the %%axis%% tag is
-// replaced with the name of the Axis that is passed in when generating the
-// String.  Non-tags are copied exactly into the label.  An example of a format
-// is: "%%xaxis%% vs. %%yaxis%%", when passed in the axes TIME and AMP, would
-// return the label "time vs. amp".  Currently, labels can either be single
-// axis (like for an axis label) or double axes (like for a plot title).
-class PlotMSLabelFormat {
-public:
-    // Static //
-    
-    // Separator that goes before and after tags.
-    static const String TAGSEPARATOR;
-    
-    // Tag for axes, both the single case and the double case.  This tag is
-    // replaced with the axis name (see PMS::axis()) during generation.
-    // <group>
-    static const String TAG_AXIS;
-    static const String TAG_XAXIS;
-    static const String TAG_YAXIS;
-    // </group>
-    
-    // Tag for axes units, both the single case and the double case.  This tag
-    // is replaced with the axis unit name (see PMS::axisUnit()) during
-    // generation.
-    // <group>
-    static const String TAG_UNIT;
-    static const String TAG_XUNIT;
-    static const String TAG_YUNIT;
-    // </group>
-    
-    // Tags for if/endif for axes units.  Parts of the format that are
-    // surrounded with an IF at the beginning and ENDIF at the end are only
-    // copied to the label if the given unit is NOT PMS::UNONE.  For example,
-    // "TAG_IF_UNIT(sample text)TAG_ENDIF_UNIT" would copy over "(sample text)"
-    // only if the given unit was NOT PMS::UNONE.
-    // <group>
-    static const String TAG_IF_UNIT;
-    static const String TAG_IF_XUNIT;
-    static const String TAG_IF_YUNIT;
-    static const String TAG_ENDIF_UNIT;
-    static const String TAG_ENDIF_XUNIT;
-    static const String TAG_ENDIF_YUNIT;
-    // </group>
-    
-    // Convenience method to surround the given tag with the separator.
-    static String TAG(const String& tag) {
-        return TAGSEPARATOR + tag + TAGSEPARATOR; }
-    
-    
-    // Non-Static //
-    
-    // Constructor which takes an optional starting format.
-    PlotMSLabelFormat(const String& format = "");
-    
-    // Copy constructor.  See operator=().
-    PlotMSLabelFormat(const PlotMSLabelFormat& copy);
-    
-    // Destructor.
-    ~PlotMSLabelFormat();
-    
-    
-    // Format.
-    String format;
-    
-    
-    // Generates a label, using the given single axis.  If any double axes tags
-    // are in the format, the given axis will be used for them.
-    String getLabel(PMS::Axis axis) const;
-    
-    // Generates a label, using the given double axes.  If any single axes tags
-    // are in the format, the x axis will be used for it.
-    String getLabel(PMS::Axis xAxis, PMS::Axis yAxis) const;
-    
-    // Equality operators.
-    // <group>
-    bool operator==(const PlotMSLabelFormat& other) const;
-    bool operator!=(const PlotMSLabelFormat& other) const {
-        return !(operator==(other)); }
-    // </group>
-    
-    // Copy operator.
-    PlotMSLabelFormat& operator=(const PlotMSLabelFormat& copy);
-    
-private:
-    // Generates a label using the given format, single axis, and double axes.
-    static String getLabel(const String& format, PMS::Axis axis,
-            PMS::Axis xAxis, PMS::Axis yAxis);
-    
-    // Helper method for getLabel() which gets the next token in the format.
-    // Returns true if a token was returned; false if the end of the format was
-    // reached.  The given format will be automatically shortened as tokens are
-    // taken out.  The next token is put in the token parameter, and the
-    // tokenWasTag parameter is set to true if the token was a tag, false
-    // otherwise.
-    static bool nextToken(String& format, String& token, bool& tokenWasTag);
 };
 
 }

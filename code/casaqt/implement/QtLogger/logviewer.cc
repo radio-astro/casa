@@ -29,7 +29,9 @@
 #include <casaqt/QtLogger/logmodel.qo.h>
 #include <casaqt/QtLogger/logwatcher.qo.h>
 
+#if ! defined(__APPLE__) || defined(__USE_WS_X11__)
 #include <graphics/X11/X_enter.h>
+#endif
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
@@ -66,7 +68,7 @@
 //#include <QHostInfo>
 #include <QDesktopWidget>
 #include <stdlib.h>
-#ifndef __APPLE__
+#if ! defined(__APPLE__) || defined(__USE_WS_X11__)
 #include <graphics/X11/X_exit.h>
 #endif
 

@@ -154,7 +154,7 @@
   fi
 
   PCKGLIBR=lib$PCKGLANG.$SFXSTAT
-  dARCH=`echo "$ARCH" | grep "^darwin"`
+  dARCH=`echo "$ARCH" | egrep "^(darwin|osx)"`
   if [ "$dARCH" ]; then
      XTRNPATH=""
   else
@@ -358,7 +358,7 @@
         LIBS="$LIBS $PCKGTMPD/$PCKGSHAR"
 
         case $ARCH in
-        linux* | sun4* | *_gnu | *_egcs | darwin* )
+        linux* | sun4* | *_gnu | *_egcs | darwin* | osx* )
 #          Sharable libraries in SunOS 4.x and 5.x.
            rm -rf BLDSHR.*
            mkdir BLDSHR.$ID
@@ -412,8 +412,13 @@
 	   done
 
            if [ "$dARCH" ]; then
-              echo $MKSO $LDSOPTS $XTRNPATH -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
-              $MKSO $LDSOPTS $XTRNPATH -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
+	      if [ "$dARCH" = "osx" ]; then
+                  echo $MKSO $LDSOPTS $XTRNPATH -install_name $ARCHLIBD/$PCKGSHAR -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
+                  $MKSO $LDSOPTS $XTRNPATH -install_name $ARCHLIBD/$PCKGSHAR -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
+	      else
+                  echo $MKSO $LDSOPTS $XTRNPATH -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
+                  $MKSO $LDSOPTS $XTRNPATH -o $PCKGSHAR *  -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
+	      fi
            else
               $MKSO $LDSOPTS -Wl,-h,$PCKGSHAR $XTRNPATH -o $PCKGSHAR * -L$ARCHLIBD $OTHERLIBS $OTHERLIBS_direct $XTRNLIBS_shared $FORTLIBS
 

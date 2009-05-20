@@ -117,6 +117,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>clark</value>
 	    <allowed kind="enum">
 	      <value>clark</value>
+              <value>clarkstokes</value>
 	      <value>hogbom</value>
 	    </allowed>
     </param>
@@ -233,6 +234,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <allowed kind="enum">
 	    <value>I</value>
 	    <value>IV</value>
+            <value>IQ</value>
 	    <value>QU</value>
 	    <value>IQUV</value>
 	    <value>RR</value>
@@ -590,8 +592,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   plane 2 contains channels (13,15)
                   plane 3 contains channels (21,23)
        psfmode -- method of PSF calculation to use during minor cycles:
-               default: 'clark': Options: 'clark','hogbom'
-               'clark'  use smaller beam (faster, usually good enough)
+               default: 'clark': Options: 'clark','clarkstokes', 'hogbom'
+               'clark'  use smaller beam (faster, usually good enough);
+                for stokes images clean components peaks are searched in the I^2+Q^2+U^2+V^2 domain 
+               'clarkstokes' locate clean components independently in each stokes image
                'hogbom' full-width of image (slower, better for poor 
  	       uv-coverage)
                Note:  psfmode will be used to clean is imagermode = ''

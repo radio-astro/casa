@@ -150,6 +150,7 @@ public:
 
 // static method for setting the indexing base for agent arguments
   static void setIndexingBase ( uInt base );
+
   virtual void finalize() {};
   virtual void initialize() {};
   virtual void initializeIter(uInt iter) {};

@@ -40,7 +40,7 @@ class ms
     ms();
     virtual ~ms();
 
-    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false);
+    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamesceme="old");
 
     int nrow(const bool selected = false);
 
@@ -108,10 +108,12 @@ class ms
 
     bool done();
 
-  bool calcuvw(const std::vector<int>& fields=std::vector<int>());
+  bool calcuvw(const std::vector<int>& fields=std::vector<int>(),
+	       const std::string& refcode="");
 
   bool fixvis(const std::vector<int>& fields=std::vector<int>(),
-	      const ::casac::variant& phaseDirs=::casac::initialize_variant(""));
+	      const ::casac::variant& phaseDirs=::casac::initialize_variant(""),
+	      const std::string& refcode="");
 
   ::casac::record* msseltoindex(const std::string& vis = "",
 				const ::casac::variant& spw = ::casac::initialize_variant(""),

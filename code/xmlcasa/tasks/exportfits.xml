@@ -59,13 +59,13 @@ can be made with this task.
 		<value>False</value>
 	</param>
 
-	<param type="bool" name="dropdeg" >
-		<description>Drop degenerate axes?</description>
+	<param type="bool" name="dropstokes" >
+		<description>Drop the Stokes axis?</description>
 		<value>False</value>
 	</param>
 
-	<param type="bool" name="deglast" >
-		<description>Put degenerate axes last in header?</description>
+	<param type="bool" name="stokeslast" >
+		<description>Put Stokes axis last in header?</description>
 		<value>True</value>
 	</param>
 
@@ -94,12 +94,12 @@ can be made with this task.
 		default: 0 = autoscale
 	overwrite -- Overwrite pre-existing imagename
 		default=False; example: overwrite=True
-	dropdeg -- Drop degenerate axes?
-		default: False; example: dropdeg=True
-	deglast -- Put degenerate axes last in header?
-		default: True; example: deglast=False
+	dropstokes -- Drop Stokes axis?
+		default: False; example: dropstokes=True
+	stokeslast -- Put Stokes axis last in header?
+		default: True; example: syokeslast=False
         async --  Run asynchronously
-                default = true; recommended.
+                default = True; recommended.
 </example> 
 
 </task>

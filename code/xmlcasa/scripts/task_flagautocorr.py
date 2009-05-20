@@ -22,13 +22,12 @@ def flagautocorr(vis=None):
                 if ((type(vis)==str) & (os.path.exists(vis))):
                         fg.open(vis)
                 else:
-                        raise Exception, 'Visibility data set not found - please verify the name'
+			raise Exception, 'Visibility data set not found - please verify the name'
 		fg.setdata()
 		fg.setmanualflags(autocorrelation=True)
 		fg.run()
 		fg.done()
         
-
 	        #write history
         	ms.open(vis,nomodify=False)
         	ms.writehistory(message='taskname = flagautocorr',origin='flagautocorr')
@@ -36,5 +35,6 @@ def flagautocorr(vis=None):
         	ms.close()
         
 	except Exception, instance:
+		fg.done()
 	        print '*** Error ***',instance
 

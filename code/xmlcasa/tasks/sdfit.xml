@@ -133,6 +133,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
+    <param type="bool" name="overwrite">
+            <description>overwrite the fitfile if already exists</description>
+            <value>False</value>
+    </param>
+
+
     <param type="int" name="plotlevel">
 	    <description>control for plotting of results</description>
 	    <value>0</value>
@@ -279,6 +285,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         fitfile -- name of output file for fit results
                 default: no output fit file
                 example: 'mysd.fit'
+        overwrite -- overwrite the fitfile if already exists
+                options: (bool) True, False
+                default: False
         plotlevel -- control for plotting of results
                 options: (int) 0=none, 1=some, 2=more
                 default: 0 (no plotting)

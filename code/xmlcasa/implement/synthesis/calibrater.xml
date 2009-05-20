@@ -523,6 +523,11 @@ called 'gcal' to data for a field matching 'N5921*'
      <value></value>
      </param>
 
+     <param type="int" direction="in" name="minblperant">
+     <description>Minimum number of baselines per ant for solving</description>
+     <value>4</value>
+     </param>
+
      <param type="bool" direction="in" name="solnorm">
      <description>Normalize solution after solve</description>
      <value>false</value>

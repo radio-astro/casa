@@ -32,6 +32,7 @@
 #include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
+#include <casaqt/QwtPlotter/QPImageCache.h>
 #include <casaqt/QwtPlotter/QPLayeredCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
 #include <casaqt/QwtPlotter/QPPlotItem.qo.h>
@@ -220,6 +221,12 @@ public:
 
     // Implements PlotCanvas::setCachedAxesStackSizeLimit().
     void setCachedAxesStackSizeLimit(int sizeInKilobytes);
+    
+    // Overrides PlotCanvas::cachedAxesStackImageSize().
+    pair<int, int> cachedAxesStackImageSize() const;
+    
+    // Overrides PlotCanvas::setCachedAxesStackImageSize().
+    void setCachedAxesStackImageSize(int width, int height);
 
 
     // Implements PlotCanvas::plotItem().  If the given items is NOT an

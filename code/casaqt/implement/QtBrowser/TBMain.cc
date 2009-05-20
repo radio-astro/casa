@@ -642,8 +642,10 @@ void TBMain::showAllColumns() {
     QList<QAction*> actions = columnsMenu->actions();
     for(int i = 0; i < actions.size() - 2; i++) {
         QAction* a = actions.at(i);
-        if(a->isCheckable() && !a->isChecked())
-            a->toggle();
+        if(a->isCheckable() && !a->isChecked()) {
+            a->setChecked(true);
+            viewColumn(a);
+        }
     }
 }
 
@@ -653,8 +655,10 @@ void TBMain::hideAllColumns() {
     QList<QAction*> actions = columnsMenu->actions();
     for(int i = 0; i < actions.size() - 2; i++) {
         QAction* a = actions.at(i);
-        if(a->isCheckable() && a->isChecked())
-            a->toggle();
+        if(a->isCheckable() && a->isChecked()) {
+            a->setChecked(false);
+            viewColumn(a);
+        }
     }
 }
 

@@ -58,7 +58,8 @@ class vlafillertask
 	      const bool applytsys = true, 
 	      const bool keepautocorr = false, 
 	      const std::string& antnamescheme = "new", 
-	      const int useday = 1);
+	      const int useday = 1,
+	      const bool keepblanks = false);
 
 };
 

@@ -33,56 +33,61 @@
 		        </allowed>
 		</param>
 
-		<param type="any" name="antenna">
-			<description>antenna/baseline</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
-
 		<param type="any" name="spw">
 			<description>spectral-window/frequency/channel</description>
 		        <any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
 
-		<param type="any" name="correlation">
+		<param type="any" name="field">
+			<description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+		        <any type="variant" limittypes="string stringArray"/>
+			<value type="string"></value>
+		</param>
+
+		<param type="bool" name="selectdata">
+			<description>More data selection parameters (antenna, timerange etc)</description>
+			<value>True</value>
+		</param>
+
+		<param type="any" name="antenna" subparam="true">
+			<description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
+		        <any type="variant" limittypes="string stringArray"/>
+			<value type="string"></value>
+		</param>
+
+		<param type="any" name="uvrange" subparam="true">
+			<description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
+		        <any type="variant" limittypes="string stringArray"/>
+			<value type="string"></value>
+		</param>
+
+		<param type="any" name="timerange" subparam="true">
+			<description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
+		        <any type="variant" limittypes="string stringArray"/>
+			<value type="string"></value>
+		</param>
+
+		<param type="any" name="correlation" subparam="true">
 			<description>Select data based on correlation</description>
 		        <any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
 
-		<param type="any" name="field">
-			<description>field names or indices</description>
+		<param type="any" name="scan" subparam="true">
+			<description>scan numbers: \'\'==>all</description>
 		        <any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
 
-		<param type="any" name="uvrange">
-			<description>uv range (def=meters)</description>
+		<param type="any" name="feed" subparam="true">
+			<description>multi-feed numbers: Not yet implemented</description>
 		        <any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
 
-		<param type="any" name="timerange">
-			<description>time range</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
-
-		<param type="any" name="scan">
-			<description>scan number</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
-
-		<param type="any" name="feed">
-			<description>feed number - NOT ENABLED</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
-
-		<param type="any" name="array">
-			<description>array</description>
+		<param type="any" name="array" subparam="true">
+			<description>(sub)array numbers: \'\'==>all</description>
 		        <any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
@@ -191,6 +196,18 @@
 				</equals>
 				<equals value="summary"/>
 			</when>
+			<when param="selectdata">
+				<equals type="bool" value="True">
+					<default param="antenna"><value type="string"></value></default>
+					<default param="timerange"><value type="string"></value></default>
+					<default param="correlation"><value type="string"></value></default>
+					<default param="scan"><value type="string"></value></default>
+					<default param="feed"><value type="string"></value></default>
+					<default param="array"><value type="string"></value></default>
+					<default param="uvrange"><value type="string"></value></default>
+				</equals>
+				<equals type="bool" value="False"/>
+			</when>
 		</constraints>
 	</input>
 <returns type="void"/>
@@ -208,6 +225,8 @@
         Keyword arguments:
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
+        selectdata -- Other data selection parameters
+                default: True
         antenna -- Select data based on baseline
                 default: '' (all); example: antenna='5&amp;6' baseline 5-6
                 antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8

@@ -2,66 +2,72 @@ from tasksinfo import *
 def startup():
 # startup guide
       """ Start up screen for CASA """
-      print '___________________________________________________________'
-      print 'Available tasks:\n'
-      print '   accum         flagmanager   listhistory   sdsave'
-      print '   applycal      fluxscale     listobs       sdscale'
-      print '   bandpass      ft            listvis       sdsmooth'
-      print '   browsetable   gaincal       makemask      sdstat'
-      print '   clean         hanningsmooth mosaic        setjy'
-      print '   clearcal      imcontsub     plotants      smoothcal'
-      print '   clearplot     imhead        plotcal       specfit'
-      print '   clearstat     immoments     plotxy        split'
-      print '   concat        importfits    sdaverage     tget'
-      print '   deconvolve    importuvfits  sdbaseline    uvcontsub'
-      print '   exportfits    importvla     sdcal         uvmodelfit'
-      print '   exportuvfits  imregrid      sdciadd       viewer'
-      print '   feather       imstat        sdfit         vishead'
-      print '   filecatalog   imval         sdflag'
-      print '   find          invert        sdlist'
-      print '   flagdata      listcal       sdplot'
-      print ''
-      print 'Additional tasks are available for ALMA commissioning use'
-      print '         (still alpha code as of Beta 0 release):'
-      print ''
-      print ' simdata        blcal       fringecal   importasdm'
-      print ''
-      print 'Available tools:\n'
-      print '   cb (calibrater)     cp (cal plot)     fg (flagger)'
-      print '   ia (image analysis) im (imager)       me (measures)'
-      print '   mp (MS plot)        ms (MS)           qa (quanta)'
-      print '   sm (simulation)     tb (table)        tp (table plot)'
-      print '   vp (voltage patterns)'
-      print ''
-      print '   pl (pylab functions)'
-      print '   sd (ASAP functions - run asap_init() to import into CASA)'
-      print ''
-      print '   casalogger             - Call up the casalogger (if it goes away)'
-      print ''
-      print '___________________________________________________________________'
-      print ''
-      print 'Help :   '
-      print '   help taskname          - Full help for task'
-      print '   help par.parametername - Full help for parameter name '
-      print '   find string            - Find occurances of string in doc'
-      print '   tasklist               - Task list organized by catagory'
-      print '   taskhelp               - One line summary of available tasks'
-      print '   toolhelp               - One line summary of available tools'
-      print '   startup                - The start up screen'
-      print ''
-      print '___________________________________________________________________'
+      print """___________________________________________________________
+Available tasks:
 
-def taskhelp():
-      """ List all tasks with one-line description: """
-      print 'Available tasks: \n'
-      print ' '
-      for mytask in tasksum.keys() :
-	      if len(mytask) < 7 :
-	         print mytask,'		:',tasksum[mytask]
-	      else :
-	         print mytask,'	:',tasksum[mytask]
-      print ' '
+   accum         flagdata       listcal      sdlist
+   applycal      flagmanager    listhistory  sdplot    
+   bandpass      fluxscale      listobs      sdsave    
+   browsetable   ft             listvis      sdscale   
+   clean         gaincal        makemask     sdsmooth  
+   clearcal      hanningsmooth  peel         sdstat    
+   clearplot     imcontsub      plotants     setjy     
+   clearstat     imhead         plotcal      smoothcal 
+   concat        immoments      plotxy       specfit   
+   deconvolve    importfits     sdaverage    split     
+   exportfits    importuvfits   sdbaseline   tget      
+   exportuvfits  importvla      sdcal        uvcontsub 
+   feather       imregrid       sdciadd      uvmodelfit
+   filecatalog   imstat         sdfit        viewer    
+   find          imval          sdflag       vishead   
+   fixvis        invert         
+                
+Additional tasks available for ALMA commissioning use
+         (still alpha code as of Beta 0 release):
 
+ simdata        blcal       fringecal   importasdm
+
+Available tools:
+
+   cb (calibrater)       cp (cal plot)    fg (flagger)
+   ia (image analysis)   im (imager)      me (measures)
+   mp (MS plot)          ms (MS)          qa (quanta)
+   sm (simulation)       tb (table)       tp (table plot)
+   vp (voltage patterns)                  at (atmosphere)
+
+   pl (pylab functions)
+   sd (ASAP functions - run asap_init() to import into CASA)
+
+   casalogger             - Call up the casalogger (if it goes away)
+   
+___________________________________________________________________
+Help:
+   help taskname          - Full help for task
+   help par.parametername - Full help for parameter name
+   apropos string         - List tasks with string in their brief help.
+   tasklist               - Task list organized by catagory
+   taskhelp               - One line summary of available tasks
+   toolhelp               - One line summary of available tools
+   startup                - The start up screen
+___________________________________________________________________"""
+
+def taskhelp(scrap=None):
+      """ Briefly describe all tasks with scrap in their name or one-line description. """
+      if scrap:
+            scrap = str(scrap)
+            foundtasks = [ft for ft in tasksum.keys() if ft.find(scrap) > -1 or tasksum[ft].find(scrap) > -1]
+            if not foundtasks:
+                  print "No tasks were found with '%s' in their name or description." % scrap
+                  return
+      else:
+            print 'Available tasks: \n'
+            foundtasks = tasksum.keys()
+
+      foundtasks.sort()   # Already sorted?!
+      widestftlen = max([len(ft) for ft in foundtasks])
+      fmt = "%%-%ds : %%s" % widestftlen
+      for ft in foundtasks:
+            print fmt % (ft, tasksum[ft])            
 
 def toolhelp():
       """ List all tools with one-line description: """
@@ -107,12 +113,12 @@ def tasklist():
       print '(blcal)          ft                         tasklist'
       print 'gaincal          invert                     browsetable'
       print 'fluxscale        makemask                   clearplot'
-      print '(fringecal)      mosaic                     clearstat'
+      print '(fringecal)      peel                       clearstat'
       print 'clearcal                                    concat'
       print 'listcal                                     filecatalog'
       print 'smoothcal                                   startup'
       print 'polcal                                      split'
-      print 'hanningsmooth                                  '
+      print 'hanningsmooth                               fixvis'
       print '                                                 '
       print ''
       print 'Image Analysis   Simulation   Single Dish'
@@ -135,5 +141,3 @@ def tasklist():
          print '------------------'
          for key in mytasks.keys() :
              print key
-
-

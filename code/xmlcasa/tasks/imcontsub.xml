@@ -74,15 +74,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 <example>
-
-        The input is a spectral line image image.  If more than one spectral
-        window, they must be analyzed identically.   The
+        The input is a spectral line image image.  If there is more than one 
+        spectral window, they must be analyzed identically.   The
         continuum channels are specified and two output images are made: a
         continuum image and a continuum-subtracted spectral line image.
 
 	The continuum subtraction can be applied to either the whole image 
 	(default) or a selected regions.  Regions are specified via 
-	the box or region file constructed by the viewer.
+	the box,chans, and stokes parameters or with a region file 
+        given by the region parameter.
 
 	Keyword arguments:
 	imagename -- Input spectral line image

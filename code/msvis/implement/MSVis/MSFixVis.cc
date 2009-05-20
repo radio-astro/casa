@@ -92,17 +92,26 @@ Int MSFixVis::check_fields()
 LogIO& MSFixVis::logSink() {return sink_p;};
 
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool MSFixVis::calc_uvw()
+Bool MSFixVis::calc_uvw(const String refcode)
 {
-  MSUVWGenerator uvwgen(*ms_p);
-  
   // Make sure FieldIds_p has a Field ID for each selected field, and -1 for
   // everything else!
   if(nsel_p > 0 // && static_cast<uInt>(nsel_p) == phaseDirs_p.nelements()
      ){
+    // This is just an enum!  Why can't Muvw just return it instead of
+    // filling out a reference?
+    Muvw::Types uvwtype;
+    MBaseline::Types bltype;
+    
+    MBaseline::getType(bltype, refcode);
+    Muvw::getType(uvwtype, refcode);
+
+    MSUVWGenerator uvwgen(*ms_p, bltype, uvwtype);
+  
     return uvwgen.make_uvws(FieldIds_p);
   }
   else{
+    logSink() << LogOrigin("MSFixVis", "calc_uvw") << LogIO::NORMAL3;
     logSink() << LogIO::SEVERE
 	      << "There is a problem with the selected field IDs and phase tracking centers."
 	      << LogIO::POST;
@@ -111,13 +120,13 @@ Bool MSFixVis::calc_uvw()
 }
 
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool MSFixVis::fixvis()
+Bool MSFixVis::fixvis(const String refcode)
 {
   if(nsel_p > 0){
     if(phaseDirs_p.nelements() == static_cast<uInt>(nsel_p)){
       //**** Adjust the phase tracking centers. ****
       // First calculate new UVWs for the selected fields.
-      calc_uvw();
+      calc_uvw(refcode);
     }
     else if(phaseDirs_p.nelements() > 0){
       logSink() << LogIO::WARN 

@@ -647,7 +647,7 @@ void QtEditRegionShape::init(QWidget* coordWidget, bool sPos, bool sUnit,
             str = cn[i].c_str() + QString(":");
             if(i % 2 == 1) str = "  " + str;
             lab = new QLabel(str);
-            lab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+            lab->setAlignment((Qt::Alignment)(Qt::AlignRight | Qt::AlignVCenter));
             layout->addWidget(lab, (i / 2), (i % 2) * 2);
             
             l = RSUtils::hlayout();

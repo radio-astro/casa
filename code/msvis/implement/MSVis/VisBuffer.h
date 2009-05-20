@@ -340,6 +340,11 @@ public:
   // Frequency average the buffer (visCube and [if present] modelVisCube)
   void freqAveCubes();
 
+  // Average channel axis by factor
+  void channelAve(Float factor);
+  void chanAveVisCube(Cube<Complex>& data,Int width,Int nChanOut);
+  void chanAveFlagCube(Cube<Bool>& flagcube,Int width,Int nChanOut);
+
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
   void sortCorr();

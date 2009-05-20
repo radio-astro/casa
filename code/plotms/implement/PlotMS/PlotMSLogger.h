@@ -52,15 +52,16 @@ public:
     // values and let the PlotLogger deal with the flags it knows about and
     // PlotMSLogger to deal with the flags it added.
     enum Event {
-        INITIALIZE_GUI = 1024,
-        LOAD_CACHE     = 2048
+        INITIALIZE_GUI = 1024, // Initialize the GUI.
+        LOAD_CACHE     = 2048, // Load the cache.
+        NUM_POINTS     = 4096  // Display number of plotted points.
     };
     
     // Enum for the log level, which controls the number and type of log
     // messages that PlotMS produces.  The levels correspond to the different
     // PlotLogger event flags as follows:
     // * OFF = NO_EVENTS,
-    // * LOW = DRAW_TOTAL | MSG_ERROR | LOAD_CACHE,
+    // * LOW = DRAW_TOTAL | MSG_ERROR | LOAD_CACHE | NUM_POINTS,
     // * MED = [LOW] | EXPORT_TOTAL | MSG_WARN,
     // * HIGH = [MED] | DRAW_INDIVIDUAL | INITIALIZE_GUI
     // If the additional debug flag is true, the following events are added:

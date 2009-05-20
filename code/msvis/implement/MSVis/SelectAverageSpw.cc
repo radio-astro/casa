@@ -373,9 +373,12 @@ void SelectAverageSpw::averageVelocity(Bool &sorryVel,
       if (MeasTable::Line(trans, itsRestFreq)) {
          qt = trans.get("GHz");
          msdv.setRestFrequency(qt);
-         SLog::slog()->out("setRestFrequency: " + String::toString(qt.getValue()) +
-                   " " + qt.getUnit(),
-                    "", "SAS", LogMessage::NORMAL5);
+	     // LogIO os(LogOrigin("SelectAverageSpw","averageVelocity"));
+	     // os << LogIO::NORMAL << "setRestFrequency: "+ String::toString(qt.getValue()) + " " + qt.getUnit()
+		     // << LogIO::POST;
+         // SLog::slog()->out("setRestFrequency: " + String::toString(qt.getValue()) +
+                   //" " + qt.getUnit(),
+                    //"", "SAS", LogMessage::NORMAL5);
       }
       else {
     
@@ -406,9 +409,9 @@ void SelectAverageSpw::averageVelocity(Bool &sorryVel,
           //cout << "itsRestFreq=" << fr << " " << unit << endl;
           qt =  Quantity(fr, unit);
           msdv.setRestFrequency(qt);
-          SLog::slog()->out("setRestFrequency: " + String::toString(qt.getValue()) +
-                     " " + qt.getUnit(),
-                    "", "SAS", LogMessage::NORMAL5);
+          //SLog::slog()->out("setRestFrequency: " + String::toString(qt.getValue()) +
+           //          " " + qt.getUnit(),
+            //        "", "SAS", LogMessage::NORMAL5);
        }
 
        msdv.setFieldCenter(field);
@@ -442,10 +445,13 @@ void SelectAverageSpw::averageVelocity(Bool &sorryVel,
           msdv.setFrequencyReference(MFrequency::LSRK );
           msdv.setRestFrequency(Quantity(1.420, "GHz"));
           if (sorryVel) { 
-             SLog::slog()->out(String("No rest frequency found in the MS,")
+	     LogIO os(LogOrigin("SelectAverageSpw","averageVelocity"));
+	     os << LogIO::NORMAL << "No rest frequency found in the MS, can't caluclate velocity properly."
+		     << LogIO::POST;
+             //SLog::slog()->out(String("No rest frequency found in the MS,")
                      //+ String(" use LSRK 1.420 Ghz for velocity calculation"),
-                     + String(" Can't calculate velocity properly."),
-                      "", "SAS", LogMessage::NORMAL, False);
+                     //+ String(" Can't calculate velocity properly."),
+                      //"", "SAS", LogMessage::NORMAL, False);
              sorryVel = False;
           }
        }

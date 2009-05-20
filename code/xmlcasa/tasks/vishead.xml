@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="vishead">
 
-<shortdescription> List, get, and put metadata in a measurement set </shortdescription>
+<shortdescription>List, get, and put metadata in a measurement set</shortdescription>
 <description>List, get, and put "header" information in a measurement set.</description>
 
 <input>

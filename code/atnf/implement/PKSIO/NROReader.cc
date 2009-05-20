@@ -301,6 +301,7 @@ vector<double> NROReader::getFrequencies( int i )
   double vel = dataset_->getURVEL() + record->VRAD ;
   double cvel = 2.99792458e8 ; // speed of light [m/s]
   double fq0 = record->FREQ0 ;
+  //double fq0 = record->FQTRK ;
 
   int ncal = dataset_->getNFCAL()[ib] ;
   double freqs[ncal] ;
@@ -519,7 +520,12 @@ int NROReader::getHeaderInfo( Int &nchan,
   epoch = "UTC" ;  
   char *poltp = dataset_->getPOLTP()[0] ;
   if ( strcmp( poltp, "" ) == 0 ) 
-    poltp = "None" ;
+    //poltp = "None" ;
+    poltp = "linear" ;   // if no polarization type specified, set to "linear"
+  else if ( strcmp( poltp, "LINR" ) == 0 )
+    poltp = "linear" ;
+  else if ( strcmp( poltp, "CIRL" ) == 0 )
+    poltp = "circular" ;
   poltype = poltp ;
   // DEBUG
   cout << "NROReader::getHeaderInfo()  poltype = " << poltype << endl ;

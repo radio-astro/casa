@@ -29,6 +29,7 @@
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/MVAngle.h>
 #include <measures/Measures/Stokes.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -1077,8 +1078,8 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
 
   if(!result) {
-    logIO_p << "Failed to find pixel location for " 
-	    << worldPosMeas.getAngle().getValue() << LogIO::EXCEPTION;
+    logIO_p << "Failed to find a pixel for pointing direction of " 
+	    << MVTime(worldPosMeas.getValue().getLong("rad")).string(MVTime::TIME) << ", " << MVAngle(worldPosMeas.getValue().getLat("rad")).string(MVAngle::ANGLE) << LogIO::WARN << LogIO::POST;
     return False;
   }
   if(fixMovingSource_p){

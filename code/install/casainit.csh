@@ -184,14 +184,22 @@
 	      endif
 	   endif
            breaksw
-        IRIX*:
+        case IRIX*:
            set a_arch = sgi
            breaksw
-        AIX:
+        case AIX:
            set a_arch = aix
            breaksw
-	Darwin:
-	   set a_arch = darwin
+	case Darwin:
+	   if (-d "$a_root/darwin") then
+	       set a_arch = darwin
+	   else
+	       if (-d "$a_root/osx") then
+		   set a_arch = osx
+	       else
+		   set a_arch = darwin
+	       endif
+	   endif
 	   breaksw
         default:
            if (`uname -m` == alpha) then

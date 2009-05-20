@@ -44,8 +44,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="inbright" subparam='true'>
-       <description>peak surface brightness in Jy/sq arcsec or "default"</description>
-       <value>default</value>
+       <description>peak surface brightness in Jy/pixel or "unchanged"</description>
+       <value>unchanged</value>
     </param>
 
 
@@ -64,7 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="checkinputs">
       <description>graphically verify parameters [yes|no|only]</description>
-      <value>yes</value>
+      <value>no</value>
 	<allowed kind="enum">
 	  <value>yes</value>
 	  <value>no</value>
@@ -286,6 +286,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Plot simulation result images,figures</description>
       <value>True</value>
     </param>
+
+    <param type="bool" name="verbose">
+      <description></description>
+      <value>False</value>
+    </param>
+
         
     
 <!--  CONSTRAINTS  -->    
@@ -297,7 +303,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <default param="refdirection"><value>"direction"</value></default>
 	  <default param="refpixel"><value>"center"</value></default>
 	  <default param="incell"><value>"header"</value></default>
-	  <default param="inbright"><value>"default"</value></default>
+	  <default param="inbright"><value>"unchanged"</value></default>
 	</equals>
       </when>
       <when param="noise_thermal">
@@ -375,8 +381,11 @@ mosaic simulation task (prototype):
         can be set to "center" to use the central pixel of the image
       incell -- pixel size of input image 
       inbright -- peak surface brightness to scale input image 
-        in Jy/arcsec^2.  [alpha alert] May not be robust to all image 
-        units.  e.g. Jy/pixel and Jy/beam should be ok, perhaps not K.
+        in Jy/pixel.  
+        [alpha alert] If you specify "unchanged" it will take the 
+        numerical values in your image and assume they are in Jy/pixel, 
+        even if it says some other unit in the header.  This will be made
+        more flexible in the future. 
     complist -- componentlist table to use to simulate the data.
         * may be used with or without modelimage
     antennalist -- ascii file containing antenna positions.
