@@ -119,11 +119,10 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   void MSConcat::concatenate(const MeasurementSet& otherMS)
 {
-  LogIO log(LogOrigin("MSConcat", "concatenate"));
+  LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
   log << "Appending " << otherMS.tableName() 
-      << " to " << itsMS.tableName() << LogIO::POST;
-
+      << " to " << itsMS.tableName() << endl << LogIO::POST;
 
   // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doImagingWeight=False, doModelData=False;
@@ -186,6 +185,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     checkCategories(otherMainCols);
   }
 
+  log << LogIO::DEBUG1 << "ms shapes verified " << endl << LogIO::POST;
+
 
   // merge ANTENNA and FEED
   uInt oldRows = itsMS.antenna().nrow();
@@ -241,7 +242,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
   uInt curRow = itsMS.nrow();
+  if (!itsMS.canAddRow()) {
+    log << LogIO::WARN << "Can't add rows to this ms!  Something is serious wrong with " << itsMS.tableName() << endl << LogIO::POST;
+  }
+
   itsMS.addRow(newRows);
+  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
   ROArrayColumn<Float> otherImagingWeight;
@@ -322,7 +328,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  copyPointing(otherMS.pointing(), newAntIndices);
+  if(copyPointing(otherMS.pointing(), newAntIndices)){
+    log << "Merged Pointing subtables " << LogIO::POST;
+  }
+  else{
+    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  }
 
   ScalarColumn<Int>& thisObsId = observationId();
   const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
@@ -364,6 +375,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
     thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
+
+    log << LogIO::DEBUG1 << "added basics for row " << curRow << endl;
+    
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;
       Matrix<Complex> reversedData;
@@ -520,6 +534,7 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
   if(itsMS.pointing().isNull()|| (itsMS.pointing().nrow() == 0)){
     //We do not have a valid pointing table so we don't care
+    os << "No valid pointing table in first ms.   Result won't have one either.";
     return False;
   }
   if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
