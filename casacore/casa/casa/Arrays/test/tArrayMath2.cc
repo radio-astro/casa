@@ -1,4 +1,4 @@
-//# tArrayMath2.cc: This program tests the ArrayMath class
+//# tArrayMath2.cc: This program tests the ArrayPartMath class
 //# Copyright (C) 1993,1994,1995,1996,1997,1999,2000,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMath2.cc 20446 2008-11-28 11:01:33Z gervandiepen $
+//# $Id: tArrayMath2.cc 20557 2009-04-02 14:11:08Z gervandiepen $
 
 //# Includes
 #include <casa/Arrays/Array.h>

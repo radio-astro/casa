@@ -90,6 +90,8 @@
 #include <casa/System/ProgressMeter.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
+#include <casa/iostream.h>
+#include <casa/iomanip.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -181,10 +183,10 @@ void MSPrimaryGroupHolder::detach()
   pf = 0;
 }
 
-MSFitsInput::MSFitsInput(const String& msFile, const String& fitsFile)
+MSFitsInput::MSFitsInput(const String& msFile, const String& fitsFile, const Bool useNewStyle)
   :infile_p(0),
    msc_p(0),addSourceTable_p(False),
-   itsLog(LogOrigin("MSFitsInput", "MSFitsInput"))
+   itsLog(LogOrigin("MSFitsInput", "MSFitsInput")), newNameStyle(useNewStyle)
 {
   // First, lets verify that fitsfile exists and that it appears to be a
   // FITS file.
@@ -1496,7 +1498,17 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
      if (doSMA) mount="ALT-AZ"; 
      ant.flagRow().put(row,False);
      ant.mount().put(row,mount);
-     ant.name().put(row,String::toString(id(i)));
+     if(doVLARot && newNameStyle){
+	ostringstream oss;
+	if(name(i).contains("EVLA"))
+	   oss << "EA" << setw(2) << setfill('0') << id(i);
+	else 
+	   oss << "VA" << setw(2) << setfill('0') << id(i);
+	//cerr << name(i) << endl;
+        ant.name().put(row,oss.str());
+     }else{
+        ant.name().put(row,String::toString(id(i)));
+     }
      Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      ant.offset().put(row,offsets);
      ant.station().put(row,name(i));

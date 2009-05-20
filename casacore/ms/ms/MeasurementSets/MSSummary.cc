@@ -120,7 +120,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 //
 // List information about an ms to the logger
 //
-void MSSummary::list (LogIO& os, Bool verbose) const
+void MSSummary::list (LogIO& os, Bool verbose)
 {
 
   // List a title for the Summary
@@ -137,9 +137,9 @@ void MSSummary::list (LogIO& os, Bool verbose) const
   //  listWeather (os,verbose);
 
   // List a summary of table sizes
-  os << dashlin1 << endl << endl;
-  listTables (os,verbose);
-  os << dashlin2 << endl;
+  //  os << dashlin1 << endl << endl;
+  //  listTables (os,verbose);
+  //  os << dashlin2 << endl;
 
   // Post it
   os.post();
@@ -174,7 +174,7 @@ void MSSummary::listWhere (LogIO& os, Bool verbose) const
 }
 
 
-void MSSummary::listWhat (LogIO& os, Bool verbose) const
+void MSSummary::listWhat (LogIO& os, Bool verbose)
 {
   listMain (os,verbose);
   listField (os,verbose);
@@ -186,7 +186,8 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
   // listSpectralWindow (os,verbose);
   // listPolarization (os,verbose);
   listSpectralAndPolInfo(os, verbose);
-  listFeed (os,verbose);
+  listSource (os,verbose);
+  //  listFeed (os,verbose);
   listAntenna (os,verbose);
 }
 
@@ -194,7 +195,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 //
 // SUBTABLES
 //
-void MSSummary::listMain (LogIO& os, Bool verbose) const
+void MSSummary::listMain (LogIO& os, Bool verbose)
 {
   if (nrow()<=0) {
     os << "The MAIN table is empty: there are no data!!!" << endl;
@@ -208,13 +209,16 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
     //    Double exposTime = sum(msc.exposure().getColumn());
     MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
 
+    ROMSMainColumns msmc(*pMS);
+    String timeref=msmc.time().keywordSet().subRecord("MEASINFO").asString("Ref");
+
     // Output info
     os << "Data records: " << nrow() << "       Total integration time = "
        << exposTime << " seconds" << endl
-       << "   Observed from   " << startMVT.string()
-       << "   to   " << stopMVT.string() << endl << endl;
-
-
+       << "   Observed from   " << MVTime(startTime/C::day).string(MVTime::DMY,7)  //startMVT.string()
+       << "   to   " << MVTime(stopTime/C::day).string(MVTime::DMY,7)  // stopMVT.string() 
+       << " (" << timeref << ")" 
+       << endl << endl;
     os << LogIO::POST;
 
     if (verbose) {   // do "scan" listing
@@ -245,6 +249,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
       // Field names:
       ROMSFieldColumns field(pMS->field());
       Vector<String> fieldnames(field.name().getColumn());
+      nVisPerField_.resize(fieldnames.nelements());
+      nVisPerField_=0;
 
       // Spw Ids
       ROMSDataDescColumns dd(pMS->dataDescription());
@@ -257,6 +263,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
       Int widthetime = 10;
       Int widthFieldId = 5;
       Int widthField = 13;
+      Int widthnrow = 7;
+      Int widthInttim = 7;
 
       // Set up iteration over OBSID and ARRID:
       Block<String> icols(2);
@@ -279,8 +287,12 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	// Report OBSID and ARRID, and header for listing:
 	os << endl << "   ObservationID = " << obsid;
 	os << "         ArrayID = " << arrid << endl;
-	os << "  Date        Timerange                ";
-	os << "Scan  FldId FieldName      SpwIds" << endl;
+	String datetime="  Date        Timerange                ";
+	datetime.replace(24,1,"(");
+	datetime.replace(25,timeref.length(),timeref);
+	datetime.replace(25+timeref.length(),1,")");
+	os << datetime;
+	os << "Scan  FldId FieldName    nVis   Int(s)   SpwIds" << endl;
 
 	// Setup iteration over timestamps within this iteration:
 	Block<String> jcols(2);
@@ -300,7 +312,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	Double btime(0.0), etime(0.0);
 	Double lastday(0.0), day(0.0);
 	Bool firsttime(True);
-      
+	Int thisnrow(0);
+	Double meanIntTim(0.0);
+
+	os.output().precision(3);
+
 	// Iterate over timestamps:
 	while (!stiter.pastEnd()) {
 
@@ -310,6 +326,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 
 	  // relevant columns
 	  ROTableVector<Double> timecol(t,"TIME");
+	  ROTableVector<Double> inttim(t,"EXPOSURE");
 	  ROTableVector<Int> scncol(t,"SCAN_NUMBER");
 	  ROTableVector<Int> fldcol(t,"FIELD_ID");
 	  ROTableVector<Int> ddicol(t,"DATA_DESC_ID");
@@ -327,6 +344,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	  ddids.resize(1,False);
 	  ddids(0)=ddicol(0);
 	  nddi=1;
+
+	  nVisPerField_(fldids(0))+=nrow;
 
 	  // fill field and ddi lists for this timestamp
 	  for (Int i=1; i < nrow; i++) {
@@ -361,6 +380,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
 
+	      if (thisnrow>0) 
+		meanIntTim/=thisnrow;
+	      else
+		meanIntTim=0.0;
+
 	      // this MJD
 	      day=floor(MVTime(btime/C::day).day());
 	    
@@ -388,8 +412,12 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	      os.output().setf(ios::right, ios::adjustfield);
 	      os.output().width(widthFieldId); os << lastfldids(0) << " ";
 	      os.output().setf(ios::left, ios::adjustfield);
-	      os.output().width(widthField); os << fieldnames(lastfldids(0));
-	      os.output().width(widthLead); os << "  ";
+	      String name=fieldnames(lastfldids(0));
+	      if (name.length()>12) name.replace(11,1,'*');
+	      os.output().width(widthField); os << name.at(0,12);
+	      os.output().width(widthnrow); os << thisnrow;
+	      os.output().width(widthInttim); os << meanIntTim;
+	      os.output().width(widthLead); os << " ";
 	      os << spwids;
 	      os << endl;
 
@@ -397,6 +425,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	      btime=thistime;
 	      // next last day is this day
 	      lastday=day;
+
+	      thisnrow=0;
 	    }
 
 	    // etime keeps pace with thistime
@@ -410,6 +440,10 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	    firsttime=False;
 	  }
 
+	  thisnrow+=nrow;
+
+	  meanIntTim+=sum(inttim.makeVector());
+
 	  // for comparison at next timestamp
 	  lastfldids.resize(); lastfldids=fldids;
 	  lastddids.resize(); lastddids=ddids;
@@ -418,6 +452,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	  // push iteration
 	  stiter.next();
 	} // end of time iteration
+
+	if (thisnrow>0) 
+	  meanIntTim/=thisnrow;
+	else
+	  meanIntTim=0.0;
 
 	// this MJD
 	day=floor(MVTime(btime/C::day).day());
@@ -446,7 +485,11 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	os.output().setf(ios::right, ios::adjustfield);
 	os.output().width(widthFieldId); os << lastfldids(0) << " ";
 	os.output().setf(ios::left, ios::adjustfield);
-	os.output().width(widthField); os << fieldnames(lastfldids(0));
+	String name=fieldnames(lastfldids(0));
+	if (name.length()>12) name.replace(11,1,'*');
+	os.output().width(widthField); os << name.at(0,12);
+	os.output().width(widthnrow); os << thisnrow;
+	os.output().width(widthInttim); os << meanIntTim;
 	os.output().width(widthLead);  os << "  ";
 	os << spwids;
 	os << endl;
@@ -457,10 +500,14 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	// push OBS/ARR iteration
 	obsarriter.next();
       } // end of OBS/ARR iteration
+      
+      os << "           (nVis = Total number of time/baseline visibilities per scan) " << endl;
+      os << LogIO::POST;
 
     } // end of verbose section
 
   } // end if any data in ms
+
 
   os << LogIO::POST;
 }
@@ -552,7 +599,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
     
   } else {
     // Horizontal list of the stations names:
-    os << "Antennas: " << nAnt << endl;
+    os << "Antennas: " << nAnt << " 'name'='station' " <<  endl;
     String line, leader;
     Int last=antIds(0)-1;
     for (Int i=0; i<nAnt; i++) {
@@ -632,6 +679,9 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
   // Make a MS-field-columns object
   ROMSFieldColumns msFC(pMS->field());
 
+  // Is source table present?
+  Bool srcok=!(pMS->source().isNull() || pMS->source().nrow()<1); 
+
   // Determine fields present in the main table
   MSRange msr(*pMS);
   Vector<Int> fieldId;
@@ -647,10 +697,12 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
     Int widthLead  =  2;	
     Int widthField =  5;	
     Int widthCode  =  5;	
-    Int widthName  = 14;
-    Int widthRA    = 17;
-    Int widthDec   = 14;
+    Int widthName  = 13;
+    Int widthRA    = 14;
+    Int widthDec   = 15;
     Int widthType  =  8;
+    Int widthSrc   =  6;
+    Int widthnVis  =  7;
 
     if (verbose) {}  // null, always same output
 
@@ -660,9 +712,12 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
     os.output().width(widthField);	os << "ID";
     os.output().width(widthCode);       os << "Code";
     os.output().width(widthName);	os << "Name";
-    os.output().width(widthRA);	os << "Right Ascension";
-    os.output().width(widthDec);	os << "Declination";
+    os.output().width(widthRA);	        os << "RA";
+    os.output().width(widthDec);	os << "Decl";
     os.output().width(widthType);	os << "Epoch";
+    if (srcok) {os.output().width(widthSrc);	os << "SrcId";}
+    if (nVisPerField_.nelements()>0) 
+      {os.output().width(widthnVis);	os << "nVis";}
     os << endl;
  
     // loop through fields
@@ -672,21 +727,29 @@ void MSSummary::listField (LogIO& os, Bool verbose) const
 	MDirection mRaDec=msFC.phaseDirMeas(fld);
 	MVAngle mvRa = mRaDec.getAngle().getValue()(0);
 	MVAngle mvDec= mRaDec.getAngle().getValue()(1);
+	String name=msFC.name()(fld);
+	if (name.length()>12) name.replace(11,1,"*");
 
 	os.output().setf(ios::left, ios::adjustfield);
 	os.output().width(widthLead);	os << "  ";
         os.output().width(widthField);	os << (fld);
 	os.output().width(widthCode);   os << msFC.code()(fld);
-	os.output().width(widthName);	os << msFC.name()(fld);
-	os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,8);
-	os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,8);
+	os.output().width(widthName);	os << name.at(0,12);
+	os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,10);
+	os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,10);
 	os.output().width(widthType);
 	os << MDirection::showType(mRaDec.getRefPtr()->getType());
+        if (srcok) {os.output().width(widthSrc);	os << msFC.sourceId()(fld);}
+        if (nVisPerField_.nelements()>fld) 
+	  {os.output().width(widthnVis);	os << nVisPerField_(fld);}
 	os << endl;
       } else {
 	os << "Field "<<fld<<" not found in FIELD table"<<endl;
       }
     } 
+
+    os << "   (nVis = Total number of time/baseline visibilities per field) " << endl;
+
   }
   os << endl << LogIO::POST;
 }
@@ -803,6 +866,7 @@ void MSSummary::listHistory (LogIO& os) const
 
 void MSSummary::listSource (LogIO& os, Bool verbose) const 
 {
+
   // Check if optional SOURCE table is present:
   if (pMS->source().isNull()) {
     os << "The SOURCE table is absent: see the FIELD table" << endl;
@@ -817,46 +881,68 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
   }
   else {
     os << "Sources: " << msSC.name().nrow() << endl;
-    if (verbose) {
-      //  Line is	Time Name RA Dec SysVel
-      Int widthLead =  2;
-      Int widthTime = 15;
-      Int widthName = 10;
-      Int widthRA   = 20;
-      Int widthDec  = 20;
-      Int widthVel  = 10;
-      os.output().setf(ios::left, ios::adjustfield);
-      os.output().width(widthLead);	os << "  ";
-      os.output().width(widthTime);	os << "Time MidPt";
-      os.output().width(widthName);	os << "Name";
-      os.output().width(widthRA);	os << "RA";
-      os.output().width(widthDec);	os << "Dec";
-      os.output().width(widthVel);	os << "SysVel";
-      os << endl;
 
-      // Loop through rows
-      for (uInt row=0; row<msSC.direction().nrow(); row++) {
+    if (verbose) {}  // null, always same output
+
+    //  Line is	Time Name RA Dec SysVel
+    Int widthLead =  2;
+    Int widthSrc  =  5;	
+    //      Int widthTime = 15;
+    Int widthName = 13;
+    //      Int widthRA   = 14;
+    //      Int widthDec  = 15;
+    Int widthSpw  =  6;
+    Int widthRF   = 15;
+    Int widthVel  = 13;
+    os.output().setf(ios::left, ios::adjustfield);
+    os.output().width(widthLead);	os << "  ";
+    //      os.output().width(widthTime);	os << "Time MidPt";
+    os.output().width(widthSrc);	os << "ID";
+    os.output().width(widthName);	os << "Name";
+    //      os.output().width(widthRA);	os << "RA";
+    //      os.output().width(widthDec);	os << "Decl";
+    os.output().width(widthSpw);      os << "SpwId";
+    os.output().width(widthRF);       os << "RestFreq(MHz)";
+    os.output().width(widthVel);	os << "SysVel(km/s)";
+    os << endl;
+    
+    os.output().precision(12);
+
+    // Loop through rows
+    for (uInt row=0; row<msSC.direction().nrow(); row++) {
       MDirection mRaDec=msSC.directionMeas()(row);
-	MVAngle mvRa=mRaDec.getAngle().getValue()(0);
-	MVAngle mvDec=mRaDec.getAngle().getValue()(1);
-	os.output().setf(ios::left, ios::adjustfield);
-	os.output().width(widthLead);	os<< "  ";
-	os.output().width(widthTime);
-				os<< MVTime(msSC.time()(row)/86400.0).string();
-	os.output().width(widthName);	os<< msSC.name()(row);
-	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,8);
-	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,8);
-	os.output().width(widthVel);	os<< msSC.sysvel()(row) << "m/s";
-	os << endl;
-      }
-    }
+      MVAngle mvRa=mRaDec.getAngle().getValue()(0);
+      MVAngle mvDec=mRaDec.getAngle().getValue()(1);
+      String name=msSC.name()(row);
+      if (name.length()>12) name.replace(11,1,"*");
+      
+      os.output().setf(ios::left, ios::adjustfield);
+      os.output().width(widthLead);	os<< "  ";
+      //	os.output().width(widthTime);
+      //				os<< MVTime(msSC.time()(row)/86400.0).string();
+      os.output().width(widthSrc);	os<< msSC.sourceId()(row);
+      os.output().width(widthName);	os<< name.at(0,12);
+      //	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,10);
+      //	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,10);
+      os.output().width(widthSpw);	
+      Int spwid=msSC.spectralWindowId()(row);
+      if (spwid<0) os<< "any";
+      else os<<spwid;
 
-    // Terse mode
-    else {
-      os << "  ";
-      for (uInt row=0; row<msSC.name().nrow(); row++) {
-	os << msSC.name()(row) << " ";
-      }
+      Vector<Double> restfreq=msSC.restFrequency()(row);
+      Vector<Double> sysvel=msSC.sysvel()(row);
+      os.output().width(widthRF);
+      if (restfreq.nelements()>0)
+	os<< restfreq(0)/1.0e6;
+      else 
+	os<< "-";
+      //	os<< "      ---      ";
+      os.output().width(widthVel);
+      if (sysvel.nelements()>0)
+	os<< sysvel(0)/1.0e3;
+      else
+	os<< "-";
+      //	os<< "     ---     ";
       os << endl;
     }
   }

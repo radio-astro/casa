@@ -167,6 +167,7 @@ public:
     // resized if not conforming.
     void get (uInt rownr, Array<T>& array, Bool resize = False) const;
     Array<T> operator() (uInt rownr) const;
+
     // </group>
 
     // Get a slice of an N-dimensional array in a particular cell
@@ -328,6 +329,8 @@ public:
     // E.g. it is used internally in virtual column engines.
     void baseGet (uInt rownr, Array<T>& array) const
       { baseColPtr_p->get (rownr, &array); }
+
+
 
 private:
     // Assignment makes no sense for a readonly class.

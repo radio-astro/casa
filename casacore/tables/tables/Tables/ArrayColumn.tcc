@@ -1,4 +1,4 @@
-//# ArrayColumn.cc: Access to an array table column with arbitrary data type
+//# Arraycolumn.cc: Access to an array table column with arbitrary data type
 //# Copyright (C) 1994,1995,1996,1997,1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -511,8 +511,6 @@ void ROArrayColumn<T>::getColumnCells (const RefRows& rownrs,
 }
 
 
-
-
 template<class T>
 ArrayColumn<T>::ArrayColumn()
 : ROTableColumn    (),
@@ -571,7 +569,7 @@ void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape)
 	}
     }
 }
-	
+
 template<class T>
 void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 			       const IPosition& tileShape)
@@ -588,7 +586,7 @@ void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 	}
     }
 }
-	
+
 template<class T>
 void ArrayColumn<T>::put (uInt rownr, const Array<T>& arr)
 {

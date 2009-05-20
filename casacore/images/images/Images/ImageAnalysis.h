@@ -419,8 +419,9 @@ class ImageAnalysis
     Bool tofits(const String& outfile, const Bool velocity, const Bool optical,
 		const Int bitpix, const Double minpix, const Double maxpix, 
 		Record& region, const String& mask, 
-		const Bool overwrite = False, const Bool dropdeg = False, 
-		const Bool deglast = False);
+		const Bool overwrite = False, 
+		const Bool dropdeg = False, const Bool deglast = False, 
+		const Bool dropstokes = False, const Bool stokeslast = False);
 
     Bool toASCII(const String& outfile, Record& region, const String& mask,
 		 const String& sep = " ", const String& format = "%e", 
