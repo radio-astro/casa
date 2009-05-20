@@ -144,7 +144,7 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
       LogIO os(LogOrigin("MeasIERS",
 			 String("initMeas(MeasIERS::Files)"),
 			 WHERE));
-      os << LogIO::WARN <<
+      os << 
 	String("Cannot read IERS table ") + tp[which] +
 	  "\nCalculations will proceed with lower precision" << 
 	LogIO::POST;
