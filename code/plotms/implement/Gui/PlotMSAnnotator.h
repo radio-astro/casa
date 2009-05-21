@@ -29,6 +29,7 @@
 
 #include <graphics/GenericPlotter/PlotTool.h>
 #include <plotms/Actions/PlotMSAction.h>
+#include <plotms/Plots/PlotMSPlotManager.h>
 
 #include <QAction>
 
@@ -42,7 +43,7 @@ class PlotMS;
 
 // Subclass of PlotMouseTool for drawing/managing annotations on the plot
 // canvases of PlotMS.
-class PlotMSAnnotator : public PlotMouseTool {
+class PlotMSAnnotator : public PlotMouseTool, public PlotMSPlotManagerWatcher {
     
     //# Friend class declarations.
     friend class PlotMSPlotter;
@@ -72,17 +73,52 @@ public:
     void setDrawingMode(Mode mode);
     // </group>
     
+    // Gets/Sets the current text properties (null means default for
+    // PlotAnnotation object).  Only applies to future text annotations.
+    // <group>
+    PlotFontPtr textFont() const;
+    void setTextFont(const PlotFontPtr font);
+    PlotLinePtr textOutline() const;
+    void setTextOutline(const PlotLinePtr outline);
+    PlotAreaFillPtr textBackground() const;
+    void setTextBackground(const PlotAreaFillPtr background);
+    // </group>
+    
+    // Gets/Sets the current rectangle properties (null means default for
+    // PlotShapeRectangle object).  Only applies to future rectangle
+    // annotations.
+    // <group>
+    PlotLinePtr rectangleLine() const;
+    void setRectangleLine(const PlotLinePtr line);
+    PlotAreaFillPtr rectangleAreaFill() const;
+    void setRectangleAreaFill(const PlotAreaFillPtr fill);
+    // </group>
+    
+    // Clears all text/rectangle annotations off the given canvas.  If the
+    // given canvas is NULL, then it clears them from all canvases.
+    // <group>
+    void clearText(PlotCanvas* canvas = NULL);
+    void clearRectangles(PlotCanvas* canvas = NULL);
+    void clearAll(PlotCanvas* canvas = NULL);
+    // </group>
+    
+    
     // Overrides PlotTool::setActive().
     void setActive(bool isActive = true);
     
     // Implements PlotMouseTool::handleMouseEvent().
     void handleMouseEvent(const PlotEvent& event);
     
+    // Implements PlotMSPlotManagerWatcher::plotChanged().  Removes annotations
+    // that are attached to canvases that no longer exist.
+    void plotsChanged(const PlotMSPlotManager& manager);
+    
 protected:
-    // Sets the annotate and mode actions to the given.  MUST be called before
-    // the annotator is used.
+    // Sets the annotate and mode actions and the factory to the given.  MUST
+    // be called before the annotator is used.
     void setActions(QAction* annotateAction,
-            const QMap<PlotMSAction::Type, QAction*>& actionMap);
+            const QMap<PlotMSAction::Type, QAction*>& actionMap,
+            PlotFactoryPtr factory);
     
     // Overrides PlotTool::attach().
     void attach(PlotCanvas* canvas);
@@ -93,6 +129,9 @@ protected:
 private:
     // Parent.
     PlotMS* itsParent_;
+    
+    // Factory for generating plot objects.
+    PlotFactoryPtr itsFactory_;
     
     // Current drawing mode.
     Mode itsMode_;
@@ -121,6 +160,10 @@ private:
     PlotLinePtr itsRectLine_;
     PlotAreaFillPtr itsRectFill_;
     // </group>
+    
+    
+    // Sets properties to their defaults.
+    void setDefaults();
 };
 
 }

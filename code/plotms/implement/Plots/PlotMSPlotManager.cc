@@ -107,12 +107,14 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
     for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsPlots_[i]->detachFromCanvases();
     
+    vector<PlotMSPlot*> plotsCopy = itsPlots_;
+    itsPlots_.clear();
+    
     itsPlotParameters_.clear();
     itsPages_.clearPages();
     
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        delete itsPlots_[i];
-    itsPlots_.clear();
+    for(unsigned int i = 0; i < plotsCopy.size(); i++)
+        delete plotsCopy[i];
     
     notifyWatchers();
 }

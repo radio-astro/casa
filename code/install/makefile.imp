@@ -224,7 +224,7 @@ $(PCKGOPTD)/%.o : $(PCKGOPTD)/%.lock ;
 
 $(PCKGOPTD)/%.lock : $(PCKGOPTD)/%.LOCK $(PCKGOPTD)/%.lcc $(PCKGOPTD)/%.ycc
 	-@ echo ""
-	-@ echo "$(basename $(@F)) (opt)"
+	-@ echo -e "\e[32;1m$(basename $(@F)) (opt)\e[0m"
 	 @ cd $(PCKGOPTD) && $(C++) $(CPPOPT) $(AIPSINCL) -I. $(C++OPT) -c $(@F:%.lock=$(CODEDIR)/%.cc)
 	-@ $(TIMER)
 	-@ $(RM) $@ $<

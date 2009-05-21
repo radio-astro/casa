@@ -298,6 +298,8 @@ private:
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
 
+  // A copy of the PlotMSAveraging object passed in by load
+  PlotMSAveraging averaging_;
 
   // Provisional flagging helpers
   Vector<Int> nVBPerAve_;

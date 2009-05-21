@@ -326,25 +326,37 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::CLEAR_PLOTTER, actionClearPlots);
     itsActionMap_.insert(PlotMSAction::QUIT, actionQuit);
     
+    // Set up annotator.
+    QMenu* annotatorMenu = new QMenu();
+    annotatorMenu->addAction(actionAnnotateText);
+    annotatorMenu->addAction(actionAnnotateRectangle);
+    actionAnnotate->setMenu(annotatorMenu);
+    itsAnnotator_.setActions(actionAnnotate, itsActionMap_, itsFactory_);
+    
     // Set up tabs.
     itsPlotTab_ = new PlotMSPlotTab(this);
     itsFlaggingTab_ = new PlotMSFlaggingTab(this);
     itsPlotTab_->addTab(itsFlaggingTab_);
     itsToolsTab_ = new PlotMSToolsTab(this);
+    itsAnnotatorTab_ = new PlotMSAnnotatorTab(this);
     itsOptionsTab_ = new PlotMSOptionsTab(this);
     itsToolButtons_ << itsPlotTab_->toolButtons();
     itsToolButtons_ << itsToolsTab_->toolButtons();
+    itsToolButtons_ << itsAnnotatorTab_->toolButtons();
     itsToolButtons_ << itsOptionsTab_->toolButtons();
     
     int maxWidth = itsPlotTab_->maximumWidth();
     if(itsToolsTab_->maximumWidth() < maxWidth)
         maxWidth = itsToolsTab_->maximumWidth();
+    if(itsAnnotatorTab_->maximumWidth() < maxWidth)
+        maxWidth = itsAnnotatorTab_->maximumWidth();
     if(itsOptionsTab_->maximumWidth() < maxWidth)
         maxWidth = itsOptionsTab_->maximumWidth();
     tabWidget->setMaximumWidth(maxWidth);
     
     tabWidget->addTab(itsPlotTab_, itsPlotTab_->tabName());
     tabWidget->addTab(itsToolsTab_, itsToolsTab_->tabName());
+    tabWidget->addTab(itsAnnotatorTab_, itsAnnotatorTab_->tabName());
     tabWidget->addTab(itsOptionsTab_, itsOptionsTab_->tabName());
     
     // Set up threads.
@@ -353,13 +365,6 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
                                               this);
     itsThreadProgress_->setVisible(false);
     itsThreadProgress_->setWindowIcon(windowIcon());
-    
-    // Set up annotator.
-    QMenu* annotatorMenu = new QMenu();
-    annotatorMenu->addAction(actionAnnotateText);
-    annotatorMenu->addAction(actionAnnotateRectangle);
-    actionAnnotate->setMenu(annotatorMenu);
-    itsAnnotator_.setActions(actionAnnotate, itsActionMap_);
     
     // Insert annotator tool button after pan.
     QList<QAction*> tools = toolsToolBar->actions();

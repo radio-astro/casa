@@ -31,6 +31,7 @@
 #include <casaqt/QtUtilities/PlotFillWidget.ui.h>
 #include <casaqt/QtUtilities/PlotLineWidget.ui.h>
 #include <casaqt/QtUtilities/PlotSymbolWidget.ui.h>
+#include <casaqt/QtUtilities/PlotFontWidget.ui.h>
 
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
@@ -176,7 +177,7 @@ class PlotSymbolWidget : public QtPlotWidget, Ui::SymbolWidget {
     
 public:
     // Constructor which takes a PlotFactory, the symbol associated with the
-    // "default" options a flag for whether to show an alpha spinner for the
+    // "default" options, a flag for whether to show an alpha spinner for the
     // area fill, a flag for whether to allow the user to set a custom outline,
     // a flag for whether to show an alpha spinner for the custom outline, and
     // an optional parent widget.
@@ -194,7 +195,7 @@ public:
     void setSymbol(PlotSymbolPtr symbol);
     // </group>
     
-    // Overrides PlotMSWidget::addRadioButtonsToGroup().
+    // Overrides QtEditingWidget::addRadioButtonsToGroup().
     void addRadioButtonsToGroup(QButtonGroup* group) const;
     
 private:
@@ -215,6 +216,38 @@ private slots:
     // avoid emitting the changed signals twice (for example, when one radio
     // button turns off when another turns on).
     void symbolChanged(bool check = true);
+};
+
+
+// Widget for choosing a plot font.  Uses a PlotColorWidget for the font color.
+class PlotFontWidget : public QtPlotWidget, Ui::FontWidget {
+    Q_OBJECT
+    
+public:
+    // Constructor which takes a PlotFactory, a flag for whether to show an
+    // alpha spinner for the color, and an optional parent widget.
+    PlotFontWidget(PlotFactoryPtr factory, bool showAlpha = false,
+            QWidget* parent = NULL);
+    
+    // Destructor.
+    ~PlotFontWidget();
+    
+    // Gets/Sets the currently set font on the widget.
+    // <group>
+    PlotFontPtr getFont() const;
+    void setFont(PlotFontPtr font);
+    // </group>
+    
+private:
+    // Color widget.
+    PlotColorWidget* itsColorWidget_;
+    
+    // Last set font.
+    PlotFontPtr itsFont_;
+    
+private slots:
+    // Slot for when the set font changes.
+    void fontChanged();
 };
 
 }

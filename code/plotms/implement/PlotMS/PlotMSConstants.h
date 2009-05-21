@@ -234,6 +234,20 @@ public:
     
     // Default grid lines.
     static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
+    
+    // Default text annotation properties.
+    // <group>
+    static PlotFontPtr DEFAULT_ANNOTATION_TEXT_FONT(PlotFactoryPtr factory);
+    static PlotLinePtr DEFAULT_ANNOTATION_TEXT_OUTLINE(PlotFactoryPtr factory);
+    static PlotAreaFillPtr DEFAULT_ANNOTATION_TEXT_BACKGROUND(
+            PlotFactoryPtr factory);
+    // </group>
+    
+    // Default rectangle annotation properties.
+    // <group>
+    static PlotLinePtr DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory);
+    static PlotAreaFillPtr DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f);
+    // </group>
 };
 
 }

@@ -190,6 +190,10 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
       // 1) we already have the metadata loaded
       // 2) the underlying MS has changed, requiring a reloading of metadata
 
+  // Maintain access to this averager, in case we need 
+  //  some info from it (e.g., in locating, flagging)
+  averaging_ = averaging;
+
 
   // Remember how many antennas there are
   nAnt_ = visSet.numberAnt();
@@ -833,7 +837,7 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
   //  (e.g., data vs. _antenna-based_ elevation)
   if (nmask(2)&&nmask(3))
     throw(AipsError("Cannot yet support antenna-based and baseline-based data in same plot."));
-
+ 
   icorrmax_.reference(chshapes_.row(0));
   ichanmax_.reference(chshapes_.row(1));
   ibslnmax_.reference(chshapes_.row(2));
@@ -1252,7 +1256,7 @@ void PlotMSCache::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
   // Set flag range on correlation axis:
   Int icorr(-1);
-  if (netAxesMask_(0) && !(flagging.corr() && flagging.corrAll())) {
+  if (netAxesMask_(0) && !flagging.corrAll()) {
     // specific correlation
     icorr=(irel_%icorrmax_(currChunk_));
     corr=Slice(icorr,1,1);
@@ -1264,8 +1268,20 @@ void PlotMSCache::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
   // Set Flag range on channel axis:
   Int ichan(-1);
   if (netAxesMask_(1) && !flagging.channel()) {
-    // specific correlation
+    // specific channel
     ichan=Int(getChan());
+    if (averaging_.channel()) {
+      // correct to the _in-cache_ channel _index_ 
+      Int dch=Int(averaging_.channelValue());
+      if (dch>1) {
+	ichan/=dch;
+	ichan-=((*chan_[currChunk_])(0)/dch);
+      }
+    }
+    else
+      // when not averaging, maybe first channel isn't 0th
+      ichan-=(*chan_[currChunk_])(0);  
+
     chan=Slice(ichan,1,1);
   } 
   else 
@@ -1326,8 +1342,10 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
   uInt nflag;
   nflag = sorter.sort(order,flchunks.nelements());
 
-  // Revise VisSet channel selection
-  flagging.getVisSet()->selectAllChans();
+  // Revise VisSet channel selection if flags
+  //  are to be implicitly or explicitly extended
+  if (!netAxesMask_(1) || flagging.channel())
+    flagging.getVisSet()->selectAllChans();
 
   VisIter& vi(flagging.getVisSet()->iter());
   VisBuffer vb(vi);
@@ -1383,7 +1401,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 
 	  Slice corr,chan,bsln;
 	  // Set flag range on correlation axis:
-	  if (netAxesMask_(0) && !(flagging.corr() && flagging.corrAll())) {
+	  if (netAxesMask_(0) && !flagging.corrAll()) {
 	    // specific correlation
 	    Int icorr(0);
 	    Int thiscorr=Int(getCorr());
@@ -1398,11 +1416,27 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 
 	  // Set Flag range on channel axis:
 	  if (netAxesMask_(1) && !flagging.channel()) {
-	    // specific correlation
-	    Int ichan(0), thischan=Int(getChan());
-	    while (channel(ichan)!=thischan && ichan<nchan)
-	      ++ichan;
-	    chan=Slice(ichan,1,1);
+	    if (averaging_.channel() && averaging_.channelValue()>1) {
+	      // A range of unaveraged channels should be flagged
+	      Int ichan(0), thischan=Int(getChan());
+
+	      // find "central" unaveraged channel
+	      while (channel(ichan)!=thischan && ichan<nchan)
+		++ichan;
+	      // find start, n for the range, protecting the edges
+	      Int n=Int(averaging_.channelValue());
+	      Int start=max(channel(0),ichan-floor((n-1)/2));
+	      Int end=min(channel(nchan-1),ichan+floor(n/2));
+	      n=end-start+1;  // in case we are near an edge
+	      chan=Slice(start,n,1);
+	    }
+	    else {
+	      // specific single channel
+	      Int ichan(0), thischan=Int(getChan());
+	      while (channel(ichan)!=thischan && ichan<nchan)
+		++ichan;
+	      chan=Slice(ichan,1,1);
+	    }
 	  } 
 	  else 
 	    chan=Slice(0,nchan,1);
@@ -1410,7 +1444,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 	  // Set Flags on the baseline axis:
 	  Int thisA1=Int(getAnt1()), thisA2=Int(getAnt2());
 	  if (netAxesMask_(2) && 
-	      !(flagging.antenna() && flagging.antennaBaselinesBased()) &&
+	      !flagging.antennaBaselinesBased() &&
 	      thisA1>-1 ) {
 	    // i.e., if baseline is an explicit data axis, 
 	    //       full baseline extension is OFF
@@ -1524,8 +1558,20 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
     ss << spw << " ";
 
   ss << "Chan=";
-  if (netAxesMask_(1))
-    ss << getChan() << " ";
+  if (netAxesMask_(1)) {
+    if (averaging_.channel() && averaging_.channelValue()>1) {
+      Int lochan=Int(getChan());
+      lochan-=((Int(averaging_.channelValue())-1)/2);
+      // the following can be higher than the unaveraged max channel; 
+      //  we'll fix it later (we don't remember what the max selected 
+      //  unaveraged channel is at the moment)
+      Int hichan=lochan+Int(averaging_.channelValue())-1;  
+      ss << "<" << lochan << "~" << hichan  << "> ";
+
+    }
+    else 
+      ss << getChan() << " ";
+  }
   else
     ss << "*  ";
 

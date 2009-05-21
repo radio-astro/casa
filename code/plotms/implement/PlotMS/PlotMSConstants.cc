@@ -160,4 +160,29 @@ PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
     return factory->line(*line);
 }
 
+PlotFontPtr PMS::DEFAULT_ANNOTATION_TEXT_FONT(PlotFactoryPtr factory) {
+    static PlotFontPtr font = factory->font();
+    return factory->font(*font);
+}
+
+PlotLinePtr PMS::DEFAULT_ANNOTATION_TEXT_OUTLINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("000000", PlotLine::NOLINE, 1.0);
+    return factory->line(*line);
+}
+
+PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_TEXT_BACKGROUND(PlotFactoryPtr f) {
+    static PlotAreaFillPtr fill = f->areaFill("0000FF", PlotAreaFill::NOFILL);
+    return f->areaFill(*fill);
+}
+
+PlotLinePtr PMS::DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("000000");
+    return factory->line(*line);
+}
+
+PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f) {
+    static PlotAreaFillPtr fill = f->areaFill("0000FF", PlotAreaFill::NOFILL);
+    return f->areaFill(*fill);
+}
+
 }

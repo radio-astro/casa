@@ -93,9 +93,6 @@
       </item>
       <item>
        <widget class="QRadioButton" name="handAnnotateText" >
-        <property name="enabled" >
-         <bool>false</bool>
-        </property>
         <property name="text" >
          <string>Annotate Text</string>
         </property>
@@ -106,9 +103,6 @@
       </item>
       <item>
        <widget class="QRadioButton" name="handAnnotateRectangle" >
-        <property name="enabled" >
-         <bool>false</bool>
-        </property>
         <property name="text" >
          <string>Annotate Rectangle</string>
         </property>

@@ -33,6 +33,7 @@
 #include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/Data/PlotMSData.h>
 #include <plotms/Gui/PlotMSAnnotator.h>
+#include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
@@ -224,6 +225,9 @@ private:
     
     // Tools tab.
     PlotMSToolsTab* itsToolsTab_;
+    
+    // Annotator tab.
+    PlotMSAnnotatorTab* itsAnnotatorTab_;
     
     // Options tab.
     PlotMSOptionsTab* itsOptionsTab_;

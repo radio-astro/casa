@@ -57,7 +57,7 @@ PlotColorWidget::PlotColorWidget(PlotFactoryPtr factory, bool showAlpha,
     connect(colorEdit, SIGNAL(editingFinished()), SLOT(colorChanged()));
     connect(choose, SIGNAL(clicked()), SLOT(colorChoose()));
     if(showAlpha)
-        connect(alpha, SIGNAL(valueChanged(int)), SLOT(colorChanged()));
+        connect(alpha, SIGNAL(valueChanged(double)), SLOT(colorChanged()));
 }
 
 PlotColorWidget::~PlotColorWidget() { }
@@ -319,8 +319,7 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
             sym->setLine(itsLineWidget_->getLine());
         
         return sym;
-    }
-    return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
+    } else return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
 }
 
 void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {    
@@ -377,6 +376,74 @@ void PlotSymbolWidget::symbolChanged(bool check) {
     charEdit->setEnabled(currSymbol->symbol() == PlotSymbol::CHARACTER);
     SymbolWidget::size->setEnabled(currSymbol->symbol() != PlotSymbol::PIXEL);
     if(*currSymbol != *itsSymbol_) emit differentFromSet();
+}
+
+
+////////////////////////////////
+// PLOTFONTWIDGET DEFINITIONS //
+////////////////////////////////
+
+PlotFontWidget::PlotFontWidget(PlotFactoryPtr factory, bool showAlpha,
+        QWidget* parent) : QtPlotWidget(factory, parent) {
+    setupUi(this);
+    itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
+    QtUtilities::putInFrame(colorFrame, itsColorWidget_);
+        
+    setFont(itsFactory_->font());
+    
+    // only emit change for radio buttons turned on
+    connect(family, SIGNAL(currentIndexChanged(int)), SLOT(fontChanged()));
+    connect(FontWidget::size, SIGNAL(valueChanged(int)), SLOT(fontChanged()));
+    connect(sizeUnit, SIGNAL(currentIndexChanged(int)), SLOT(fontChanged()));
+    connect(itsColorWidget_, SIGNAL(changed()), SLOT(fontChanged()));
+    connect(bold, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+    connect(italic, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+    connect(underline, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+}
+
+PlotFontWidget::~PlotFontWidget() { }
+
+PlotFontPtr PlotFontWidget::getFont() const {
+    PlotFontPtr font = itsFactory_->font(family->currentText().toStdString());
+    font->setPointSize(sizeUnit->currentIndex() == 0 ?
+                       FontWidget::size->value() : -1);
+    font->setPixelSize(sizeUnit->currentIndex() == 1 ?
+                       FontWidget::size->value() : -1);
+    font->setColor(itsColorWidget_->getColor());
+    font->setBold(bold->isChecked());
+    font->setItalics(italic->isChecked());
+    font->setUnderline(underline->isChecked());
+    return font;
+}
+
+void PlotFontWidget::setFont(PlotFontPtr font) {
+    if(!font.null()) {
+        blockSignals(true);
+        bool changed = itsFont_.null() || *itsFont_ != *font;
+        
+        itsFont_ = itsFactory_->font(*font);
+        family->setCurrentFont(QFont(itsFont_->fontFamily().c_str()));
+        if(itsFont_->pointSize() >= 0) {
+            FontWidget::size->setValue((int)(itsFont_->pointSize() + 0.5));
+            sizeUnit->setCurrentIndex(0);
+        } else {
+            FontWidget::size->setValue((int)(itsFont_->pixelSize() + 0.5));
+            sizeUnit->setCurrentIndex(1);
+        }
+        itsColorWidget_->setColor(itsFont_->color());
+        bold->setChecked(itsFont_->bold());
+        italic->setChecked(itsFont_->italics());
+        underline->setChecked(itsFont_->underline());
+        
+        blockSignals(false);
+        if(changed) emit this->changed();
+    }
+}
+
+void PlotFontWidget::fontChanged() {
+    emit changed();
+    PlotFontPtr currFont = getFont();
+    if(*currFont != *itsFont_) emit differentFromSet();
 }
 
 }

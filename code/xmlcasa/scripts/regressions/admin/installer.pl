@@ -145,7 +145,7 @@ chdir($unpacked_dir) or die $unpacked_dir;
 # Mac  : ./data is a link to /opt/casa/data
 if (`uname` eq "Linux\n") {
     sys_exe("echo PATH=$install_dir/$unpacked_dir:\\\$PATH > $prefix/test_env");
-    sys_exe("ln -s $data_dir ./data/regression");
+    sys_exe("ln -s $data_dir/regression ./data/regression");
 
 } else {
     $unpacked_dir =~ s/ /\\ /g;    # escape spaces

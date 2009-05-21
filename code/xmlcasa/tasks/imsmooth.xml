@@ -72,7 +72,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mask">
-	    <description>mask used for selecting the area of the image to calculate the moments on</description>
+	    <description>mask used for selecting the area of the image to do the smoothing on</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
             <example>mask='my_file.image:no_noise'</example>
@@ -107,15 +107,15 @@ an image.
 	Keyword arguments:
 	imagename -- Input spectral line image
 		Default: none; Example: imagename='ngc5921_task.im'
-	outfile -- Output image file name (or root for multiple moments)
-		default: ''; example: outfile='image.smooth';
+	outfile -- Output smoothed image file name
+		default: ''; example: outfile='my.image.smooth';
         kernel -- Type of kernel to use when smoothing.  Currently,
                 only gassian is supported.
                 default: 'gauss'; example: kernel='gauss'
                 options: gaussian and boxcar 
         major -- Depends on the kernel type, see explanation below.
         minor -- Depends on the kernel type, see explanation below.       
-        mask -- Mask applied to the image before calculating the moments.
+        mask -- Mask applied to the image before doing the smoothing
                 Default '' means no mask;  
                 Example: mask='orion.mask'.  
 
@@ -145,20 +145,25 @@ an image.
 Kernel Paramters
 -----------------
 Finally, and most importantly the kernel is specified via the kernel,
-major, and minor parameters. At this point in time only Gaussian kernels
-are supported and in this case major and minor are the full width at
-half maximum (FWHM) of the Gaussian.
+major, and minor parameters. 
 
-The convolution kernel paramters can be specified in one of three ways
+Gaussian kernel: major and minor are the full width at half maximum 
+                 (FWHM) of the Gaussian. Note that the major axis is
+                 along he y-axis (typically longitude)
+Boxcar kernel:   major, length of the box along the y-axis and
+                 minor, length of the box along the x-axis
+
+The major/minor paramters can be specified in one of three ways
    Quantity -- for example major=qa.quantity(1, 'arcsec')
                Note that you can use pixel units, such as 
                major=qa.quantity(1, 'pix')
-   String -- for example minor='1km'
-             (i.e. one that the Quanta quantity function accepts).
+   String -- for example minor='1pix' or major='0.5km'
+             (i.e. a string that the Quanta quantity function accepts).
    Numeric -- for example major=10.
               In this case, the units of major and minor are assumed to 
-              be in pixels. Using pixel units allows you to convolve 
-              axes with different units.
+              be in arcsec. 
+
+Note: Using pixel units allows you to convolve axes with different units.
 
 
 
@@ -168,8 +173,8 @@ imsmooth( imagename='my.image', kernel='gauss', major='10arcsec', minor='10arcse
 
 
 # EXAMPLE 2
-# Smoothing using pixel coordinates.
-imsmooth( imagename='new.image', major='20pix', minor='10pix')
+# Smoothing using pixel coordinates and a boxcar kernel.
+imsmooth( imagename='new.image', major='20pix', minor='10pix', kernel='boxcar')
 
 </example>
 

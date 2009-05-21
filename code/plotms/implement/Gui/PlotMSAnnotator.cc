@@ -38,8 +38,11 @@ namespace casa {
 
 // Public Methods //
 
+// itsFactory_ member cannot be initialized here yet.
 PlotMSAnnotator::PlotMSAnnotator(PlotMS* parent, Mode startMode) :
-        itsParent_(parent), itsMode_(startMode), itsAnnotateAction_(NULL) { }
+        itsParent_(parent), itsMode_(startMode), itsAnnotateAction_(NULL) {
+    parent->getPlotManager().addWatcher(this);
+}
 
 PlotMSAnnotator::~PlotMSAnnotator() { }
 
@@ -55,6 +58,130 @@ void PlotMSAnnotator::setDrawingMode(Mode mode) {
     itsAnnotateAction_->setToolTip(a->toolTip());
 }
 
+
+PlotFontPtr PlotMSAnnotator::textFont() const {
+    if(itsTextFont_.null()) return PlotFontPtr();
+    else                    return itsFactory_->font(*itsTextFont_);
+}
+
+void PlotMSAnnotator::setTextFont(const PlotFontPtr font) {
+    if(itsTextFont_.null() != font.null() ||
+       (!font.null() && *itsTextFont_ != *font)) {
+        if(font.null()) itsTextFont_ = font;
+        else            itsTextFont_ = itsFactory_->font(*font);
+    }
+}
+
+PlotLinePtr PlotMSAnnotator::textOutline() const {
+    if(itsTextOutline_.null()) return PlotLinePtr();
+    else                       return itsFactory_->line(*itsTextOutline_);
+}
+
+void PlotMSAnnotator::setTextOutline(const PlotLinePtr outline) {
+    if(itsTextOutline_.null() != outline.null() ||
+       (!outline.null() && *itsTextOutline_ != *outline)) {
+        if(outline.null()) itsTextOutline_ = outline;
+        else               itsTextOutline_ = itsFactory_->line(*outline);
+    }
+}
+
+PlotAreaFillPtr PlotMSAnnotator::textBackground() const {
+    if(itsTextFill_.null()) return PlotAreaFillPtr();
+    else                    return itsFactory_->areaFill(*itsTextFill_);
+}
+
+void PlotMSAnnotator::setTextBackground(const PlotAreaFillPtr background) {
+    if(itsTextFill_.null() != background.null() ||
+       (!background.null() && *itsTextFill_ != *background)) {
+        if(background.null()) itsTextFill_ = background;
+        else                  itsTextFill_= itsFactory_->areaFill(*background);
+    }
+}
+
+PlotLinePtr PlotMSAnnotator::rectangleLine() const {
+    if(itsRectLine_.null()) return PlotLinePtr();
+    else                    return itsFactory_->line(*itsRectLine_);
+}
+
+void PlotMSAnnotator::setRectangleLine(const PlotLinePtr line) {
+    if(itsRectLine_.null() != line.null() ||
+       (!line.null() && *itsRectLine_ != *line)) {
+        if(line.null()) itsRectLine_ = line;
+        else            itsRectLine_ = itsFactory_->line(*line);
+    }
+}
+
+PlotAreaFillPtr PlotMSAnnotator::rectangleAreaFill() const {
+    if(itsRectFill_.null()) return PlotAreaFillPtr();
+    else                    return itsFactory_->areaFill(*itsRectFill_);
+}
+
+void PlotMSAnnotator::setRectangleAreaFill(const PlotAreaFillPtr fill) {
+    if(itsRectFill_.null() != fill.null() ||
+       (!fill.null() && *itsRectFill_ != *fill)) {
+        if(fill.null()) itsRectFill_ = fill;
+        else            itsRectFill_ = itsFactory_->areaFill(*fill);
+    }
+}
+
+void PlotMSAnnotator::clearText(PlotCanvas* canvas) {
+    vector<PlotItemPtr> items;
+    if(canvas == NULL) {
+        foreach(PlotCanvas* canvas, itsAText_.keys()) {
+            items.clear();
+            foreach(PlotAnnotationPtr text, itsAText_.values(canvas))
+                items.push_back(text);
+            canvas->removePlotItems(items);
+        }
+        itsAText_.clear();
+    } else if(itsAText_.contains(canvas)) {
+        foreach(PlotAnnotationPtr text, itsAText_.values(canvas))
+            items.push_back(text);
+        canvas->removePlotItems(items);
+        itsAText_.remove(canvas);
+    }
+}
+
+void PlotMSAnnotator::clearRectangles(PlotCanvas* canvas) {
+    vector<PlotItemPtr> items;
+    if(canvas == NULL) {
+        foreach(PlotCanvas* canvas, itsARect_.keys()) {
+            items.clear();
+            foreach(PlotShapeRectanglePtr rect, itsARect_.values(canvas))
+                items.push_back(rect);
+            canvas->removePlotItems(items);
+        }
+        itsARect_.clear();
+    } else if(itsARect_.contains(canvas)) {
+        foreach(PlotShapeRectanglePtr rect, itsARect_.values(canvas))
+            items.push_back(rect);
+        canvas->removePlotItems(items);
+        itsARect_.remove(canvas);
+    }
+}
+
+void PlotMSAnnotator::clearAll(PlotCanvas* canvas) {
+    QMap<PlotCanvas*, vector<PlotItemPtr> > items;
+    
+    foreach(PlotCanvas* canvas, itsAText_.keys()) {
+        if(!items.contains(canvas)) items[canvas] = vector<PlotItemPtr>();
+        foreach(PlotAnnotationPtr text, itsAText_.values(canvas))
+            items[canvas].push_back(text);
+    }
+    itsAText_.clear();
+    
+    foreach(PlotCanvas* canvas, itsARect_.keys()) {
+        items[canvas] = vector<PlotItemPtr>();
+        foreach(PlotShapeRectanglePtr rect, itsARect_.values(canvas))
+            items[canvas].push_back(rect);
+    }
+    itsARect_.clear();
+    
+    foreach(PlotCanvas* canvas, items.keys())
+        canvas->removePlotItems(items[canvas]);
+}
+
+
 void PlotMSAnnotator::setActive(bool active) {
     if(active != isActive()) {
         PlotMouseTool::setActive(active);
@@ -69,22 +196,19 @@ void PlotMSAnnotator::setActive(bool active) {
     }
 }
 
-void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
+void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {    
     const PlotSelectEvent* se = dynamic_cast<const PlotSelectEvent*>(&event);
-    const PlotMouseEvent* me = dynamic_cast<const PlotMouseEvent*>(&event);
-    
+    const PlotMouseEvent* me = dynamic_cast<const PlotMouseEvent*>(&event);    
     PlotCanvas* canvas;
     
     // SELECT EVENT //
     if(se != NULL && (canvas = se->canvas()) != NULL) {
-        PlotFactory* f = factory();
-        if(f == NULL) return;
         PlotRegion region = se->region();
         
         // For rectangle mode, draw rectangle where selection is.
         if(itsMode_ == RECTANGLE) {
-            PlotShapeRectanglePtr rect= f->shapeRectangle(region.upperLeft(),
-                    region.lowerRight());
+            PlotShapeRectanglePtr rect = itsFactory_->shapeRectangle(
+                    region.upperLeft(), region.lowerRight());
             if(!itsRectLine_.null()) rect->setLine(itsRectLine_);
             if(!itsRectFill_.null()) rect->setAreaFill(itsRectFill_);
             itsARect_.insert(canvas, rect);
@@ -98,8 +222,6 @@ void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
         
         // LEFT-CLICK EVENT //
         if(type == PlotMouseEvent::CLICK && button == PlotMouseEvent::SINGLE) {
-            PlotFactory* f = factory();
-            if(f == NULL) return;
             PlotCoordinate coord = me->where();
 
             // For text mode, ask for a String and draw it where click is.
@@ -108,8 +230,8 @@ void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
                         "New Text Annotation",
                         "Enter the text for the new annotation:");
                 if(!str.isEmpty()) {
-                    PlotAnnotationPtr text = f->annotation(str.toStdString(),
-                            coord);
+                    PlotAnnotationPtr text = itsFactory_->annotation(
+                            str.toStdString(), coord);
                     if(!itsTextFont_.null()) text->setFont(itsTextFont_);
                     if(!itsTextOutline_.null())
                         text->setOutline(itsTextOutline_);
@@ -122,20 +244,8 @@ void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
         // RIGHT-CLICK EVENT //
         }else if(type==PlotMouseEvent::CLICK&&button==PlotMouseEvent::CONTEXT){
             // Remove all attached rectangles/text on the given canvas.
-            //canvas->holdDrawing();
-            vector<PlotItemPtr> items;
-            if(itsMode_ == RECTANGLE) {
-                foreach(PlotShapeRectanglePtr rect, itsARect_.values(canvas))
-                    items.push_back(rect);
-                itsARect_.remove(canvas);
-                
-            } else if(itsMode_ == TEXT) {
-                foreach(PlotAnnotationPtr text, itsAText_.values(canvas))
-                    items.push_back(text);
-                itsAText_.remove(canvas);
-            }
-            canvas->removePlotItems(items);
-            //canvas->releaseDrawing();
+            if(itsMode_ == TEXT) clearText(canvas);
+            else if(itsMode_ == RECTANGLE) clearRectangles(canvas);
             
         // PRESS/RELEASE EVENT //
         } else if(type==PlotMouseEvent::PRESS&&button==PlotMouseEvent::SINGLE&&
@@ -148,16 +258,55 @@ void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
     }
 }
 
+void PlotMSAnnotator::plotsChanged(const PlotMSPlotManager& manager) {
+    // Clear out any annotations that are on canvases that are no longer in the
+    // plotter.
+    
+    // Get all unique canvases from plots.
+    vector<PlotCanvasPtr> canv, temp;
+    bool found;
+    unsigned int n = manager.numPlots();
+    for(unsigned int i = 0; i < n; i++) {
+        temp = manager.plot(i)->canvases();
+        for(unsigned int j = 0; j < temp.size(); j++) {
+            if(temp[j].null()) continue;
+            found = false;
+            for(unsigned int k = 0; !found && k < canv.size(); k++)
+                if(canv[k] == temp[j]) found = true;
+            if(!found) canv.push_back(temp[j]);
+        }
+    }
+    
+    // Check that stored canvases are in the list.
+    n = canv.size();
+    foreach(PlotCanvas* c, itsAText_.keys()) {
+        found = false;
+        for(unsigned int i = 0; !found && i < n; i++)
+            if(c == &*canv[i]) found = true;
+        if(!found) itsAText_.remove(c);
+    }
+    
+    foreach(PlotCanvas* c, itsARect_.keys()) {
+        found = false;
+        for(unsigned int i = 0; !found && i < n; i++)
+            if(c == &*canv[i]) found = true;
+        if(!found) itsARect_.remove(c);
+    }
+}
+
 
 // Protected Methods //
 
 void PlotMSAnnotator::setActions(QAction* annotateAction,
-        const QMap<PlotMSAction::Type, QAction*>& actionMap) {
+        const QMap<PlotMSAction::Type, QAction*>& actionMap,
+        PlotFactoryPtr factory) {
     itsAnnotateAction_ = annotateAction;
     itsModeActions_[TEXT] = actionMap.value(PlotMSAction::TOOL_ANNOTATE_TEXT);
     itsModeActions_[RECTANGLE] = actionMap.value(
             PlotMSAction::TOOL_ANNOTATE_RECTANGLE);
+    itsFactory_ = factory;
     setDrawingMode(itsMode_);
+    setDefaults();
 }
 
 void PlotMSAnnotator::attach(PlotCanvas* canvas) {
@@ -173,6 +322,17 @@ void PlotMSAnnotator::detach() {
         c->setSelectLineShown(false);
     }
     PlotMouseTool::detach();
+}
+
+
+// Private Methods //
+
+void PlotMSAnnotator::setDefaults() {
+    itsTextFont_ = PMS::DEFAULT_ANNOTATION_TEXT_FONT(itsFactory_);
+    itsTextOutline_ = PMS::DEFAULT_ANNOTATION_TEXT_OUTLINE(itsFactory_);
+    itsTextFill_ = PMS::DEFAULT_ANNOTATION_TEXT_BACKGROUND(itsFactory_);
+    itsRectLine_ = PMS::DEFAULT_ANNOTATION_RECT_LINE(itsFactory_);
+    itsRectFill_ = PMS::DEFAULT_ANNOTATION_RECT_FILL(itsFactory_);
 }
 
 }

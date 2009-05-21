@@ -149,20 +149,20 @@ public:
     // Convenience methods for returning the standard field values.
     // <group>
     bool extend() const { return getFlag(EXTEND); }
-    bool corr() const { return getFlag(CORR); }
-    bool corrAll() const { return getFlag(CORR_ALL); }
-    bool corrPolnDep() const { return getFlag(CORR_POLN_DEP); }
-    bool channel() const { return getFlag(CHANNEL); }
-    bool spw() const { return getFlag(SPW); }
-    bool antenna() const { return getFlag(ANTENNA); }
-    bool antennaAntennaBased() const { return getFlag(ANTENNA_ANTENNA); }
+    bool corr() const { return (extend() && getFlag(CORR)); }
+    bool corrAll() const { return (corr() && getFlag(CORR_ALL)); }
+    bool corrPolnDep() const { return (corr() && getFlag(CORR_POLN_DEP)); }
+    bool channel() const { return (extend() && getFlag(CHANNEL)); }
+    bool spw() const { return (extend() && getFlag(SPW)); }
+    bool antenna() const { return (extend() && getFlag(ANTENNA)); }
+    bool antennaAntennaBased() const { return (antenna() && getFlag(ANTENNA_ANTENNA)); }
     double antennaAntennaBasedValue() const{ return getValue(ANTENNA_ANTENNA);}
-    bool antennaBaselinesBased() const { return getFlag(ANTENNA_BASELINES); }
-    bool time() const { return getFlag(TIME); }
-    bool scans() const { return getFlag(SCANS); }
-    bool field() const { return getFlag(FIELD); }
-    bool selectionSelected() const { return getFlag(SEL_SELECTED); }
-    bool selectionAlternate() const { return getFlag(SEL_ALTERNATE); }
+    bool antennaBaselinesBased() const { return (antenna() && getFlag(ANTENNA_BASELINES)); }
+    bool time() const { return (extend() && getFlag(TIME)); }
+    bool scans() const { return (time() && getFlag(SCANS)); }
+    bool field() const { return (time() && getFlag(FIELD)); }
+    bool selectionSelected() const { return (extend() && getFlag(SEL_SELECTED)); }
+    bool selectionAlternate() const { return (extend() && getFlag(SEL_ALTERNATE)); }
     PlotMSSelection selectionAlternateSelection() const {
         return getSelectionValue(SEL_ALTERNATE); }
     // </group>

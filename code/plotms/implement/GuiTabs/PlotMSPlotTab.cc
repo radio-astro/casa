@@ -264,6 +264,10 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
         if(itsCurrentPlot_ != NULL && itsCurrentPlot_ == plot)
             setIndex = (int)i;
     }
+    if(manager.numPlots() == 0) {
+        itsCurrentPlot_ = NULL;
+        itsCurrentParameters_ = NULL;
+    }
     
     // Add "new" action(s) to go chooser.
     goChooser->addItem("New Single Plot");
@@ -682,13 +686,15 @@ void PlotMSPlotTab::plot() {
              cload = !itsCurrentPlot_->data().cacheReady();
         if(pchanged || cload) {
             if(pchanged) {
-                if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
+                if((itsParent_->getParameters().clearSelectionsOnAxesChange() &&
                    (params.xAxis() != itsCurrentParameters_->xAxis() ||
-                    params.yAxis() != itsCurrentParameters_->yAxis())) {
+                    params.yAxis() != itsCurrentParameters_->yAxis())) ||
+                   params.filename() != itsCurrentParameters_->filename()) {
                     vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
                     for(unsigned int i = 0; i < canv.size(); i++)
                         canv[i]->standardMouseTools()->selectTool()
                                ->clearSelectedRects();
+                    itsPlotter_->getAnnotator().clearAll();
                 }
                 
                 itsCurrentParameters_->holdNotification(this);
