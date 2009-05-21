@@ -100,6 +100,14 @@ void PlotMSCacheThread::cancel() { wasCanceled_ = true; }
 
 void PlotMSCacheThread::threadFinished() {
     finalizeProgressWidget();
+    
+    // Show error message if one occurred, and say the thread was canceled so
+    // that the plot won't update the display.
+    if(!itsCacheError_.empty()) {
+        itsPlot_->parent()->showError(itsCacheError_, "Load Error");
+        wasCanceled_ = true;
+    }
+    
     emit finishedOperation(this);
 }
 
@@ -122,11 +130,9 @@ void PlotMSCacheThreadHelper::run() {
             itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
                                             itsParent_.itsAxes_[1]);
     } catch(AipsError& err) {
-        itsParent_.itsPlot_->parent()->showError("Error during cache loading: "
-                + err.getMesg(), "Load Error");
+        itsParent_.itsCacheError_ = "Error during cache loading: " + err.getMesg();
     } catch(...) {
-        itsParent_.itsPlot_->parent()->showError(
-                "Unknown error during cache loading!", "Load Error");
+        itsParent_.itsCacheError_ = "Unknown error during cache loading!";
     }
 }
 

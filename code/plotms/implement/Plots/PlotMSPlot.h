@@ -236,7 +236,7 @@ protected:
     
     // Flags for threaded cache loading.
     bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_,
-         itsTCLlogNumPoints_;
+         itsTCLlogNumPoints_, itsTCLplotDataChanged_;
     
 private:
     // Disable copy constructor and operator for now.

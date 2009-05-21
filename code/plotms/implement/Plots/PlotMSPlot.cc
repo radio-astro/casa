@@ -122,7 +122,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     bool hold = allDrawingHeld();
     if(!hold && redrawRequired) holdDrawing();
     
-    itsTCLendLog_ = itsTCLlogNumPoints_ = false;
+    itsTCLendLog_ = itsTCLlogNumPoints_ = itsTCLplotDataChanged_ = false;
     itsTCLupdateCanvas_ = msUpdated || canvasUpdated || !params.isSet();
     itsTCLupdatePlot_ = plotUpdated;
     itsTCLrelease_ = !hold && redrawRequired;
@@ -130,11 +130,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Update MS/cache as needed.
     bool msSuccess = true, callCacheLoaded = true;
     if(params.isSet()) {
-        if(msUpdated || cacheUpdated) {
-            // Let the plot(s) know that the data will be updated.
-            for(unsigned int i = 0; i < itsPlots_.size(); i++)
-                itsPlots_[i]->dataChanged();
-            
+        if(msUpdated || cacheUpdated) {            
             itsTCLlogNumPoints_ = true;
             
             startLogCache();
@@ -142,6 +138,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
             
             if(msUpdated) msSuccess = updateMS();
             itsTCLupdateCanvas_ |= !msSuccess;
+            itsTCLplotDataChanged_ |= msSuccess;
             
             // Only update cache if MS opening succeeded.
             if(msSuccess) {
@@ -294,20 +291,26 @@ void PlotMSPlot::logNumPoints() {
 }
 
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
+    // Let the plot(s) know that the data has been changed as needed, unless
+    // the thread was canceled.
+    if(itsTCLplotDataChanged_ && !wasCanceled)
+        for(unsigned int i = 0; i < itsPlots_.size(); i++)
+            itsPlots_[i]->dataChanged();
+    
     // End log as needed.
     if(itsTCLendLog_) endLogCache();
     
-    // Update canvas as needed.
-    if(itsTCLupdateCanvas_) updateCanvas();
+    // Update canvas as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLupdateCanvas_) updateCanvas();
     
-    // Update plot as needed.
-    if(itsTCLupdatePlot_) updatePlot();
+    // Update plot as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLupdatePlot_) updatePlot();
     
     // Release drawing if needed.
     if(itsTCLrelease_) releaseDrawing();
     
-    // Log number of points plotted, if needed.
-    if(itsTCLlogNumPoints_) logNumPoints();
+    // Log number of points plotted as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLlogNumPoints_) logNumPoints();
 }
 
 }
