@@ -198,6 +198,9 @@ public:
     // Overrides QtEditingWidget::addRadioButtonsToGroup().
     void addRadioButtonsToGroup(QButtonGroup* group) const;
     
+    // Sets the allowable minimum sizes for the given symbol types.
+    void setMinimumSizes(const map<PlotSymbol::Symbol, int>& minimumSizes);
+    
 private:
     // Area fill widget.
     PlotFillWidget* itsFillWidget_;
@@ -210,6 +213,9 @@ private:
     
     // Last set symbol.
     PlotSymbolPtr itsSymbol_;
+    
+    // Minimum allowable sizes.
+    map<PlotSymbol::Symbol, int> itsMinSizes_;
     
 private slots:
     // Slot for when the set symbol changes.  The "check" flag can be used to

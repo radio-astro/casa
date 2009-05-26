@@ -1,3 +1,6 @@
+import os
+import shutil
+
 IMAGE = 'image.im'
 
 total = 0
@@ -66,12 +69,20 @@ print rec1
 
 ia.fromrecord(rec1, "bigger_image")
 
+# First we need to remove the output file.
+if (  os.path.exists('regridded' ) ):
+      shutil.rmtree( 'regridded' )
 imregrid(imagename = IMAGE,
          template = 'bigger_image',
          output = 'regridded')
 
 s1 = imstat(IMAGE)
 s2 = imstat('regridded')
+
+print "S1: ", s1
+print " "
+print " "
+print "S2: ", s2
 
 if s1['maxpos'][0]*3 != s2['maxpos'][0]:
     raise Exception, str(s1['maxpos'][0]*3) + ' != ' + str(s2['maxpos'][0])
@@ -88,9 +99,13 @@ rec1['coordsys']['coordsys']['direction0']['crpix'] = [
     rec1['coordsys']['coordsys']['direction0']['crpix'][1]+1]
 
 ia.fromrecord(rec1, 'shifted_image')
+# First we need to remove the output file.
+if (  os.path.exists('regridded' ) ):
+      shutil.rmtree( 'regridded' )
 imregrid(imagename = IMAGE,
          template = 'shifted_image',
          output = 'regridded')
+
 
 s1 = imstat(IMAGE)
 s2 = imstat('regridded')
@@ -148,6 +163,9 @@ for ref in codes:
         rec1['coordsys']['coordsys']['direction0']['conversionSystem'] = ref
         
         ia.fromrecord(rec1, 'template')
+
+        if (  os.path.exists('regridded' ) ):
+            shutil.rmtree( 'regridded' )
         imregrid(imagename = IMAGE,
                  template = 'template',
                  output = 'regridded')

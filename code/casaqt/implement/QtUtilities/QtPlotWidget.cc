@@ -333,9 +333,17 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
         noneButton->setChecked(true);
     else if(*itsSymbol_ == *itsDefault_) defaultButton->setChecked(true);
     else customButton->setChecked(true);
+
+    if(itsSymbol_->symbol() == PlotSymbol::PIXEL)
+        itsSymbol_->setSize(1, 1);
+
+    if(itsMinSizes_.find(itsSymbol_->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[itsSymbol_->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
     
     SymbolWidget::size->setValue((int)(itsSymbol_->size().first + 0.5));
-
+    SymbolWidget::size->setEnabled(itsSymbol_->symbol() != PlotSymbol::PIXEL);
+    
     PlotSymbol::Symbol s = itsSymbol_->symbol();
     int index = 0;
     if(s == PlotSymbol::SQUARE)    index = 1;
@@ -368,13 +376,36 @@ void PlotSymbolWidget::addRadioButtonsToGroup(QButtonGroup* group) const {
     group->addButton(customButton);
 }
 
+void PlotSymbolWidget::setMinimumSizes(const map<PlotSymbol::Symbol, int>& m) {
+    for(map<PlotSymbol::Symbol, int>::const_iterator iter = m.begin();
+        iter != m.end(); iter++)
+        itsMinSizes_[iter->first] = iter->second;
+    
+    PlotSymbolPtr currSymbol = getSymbol();
+    
+    if(itsMinSizes_.find(currSymbol->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[currSymbol->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
+}
+
 void PlotSymbolWidget::symbolChanged(bool check) {
     if(!check) return;
     
-    emit changed();
     PlotSymbolPtr currSymbol = getSymbol();
+    
+    if(itsMinSizes_.find(currSymbol->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[currSymbol->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
+    
+    if(currSymbol->symbol() == PlotSymbol::PIXEL) {
+        currSymbol->setSize(1, 1);
+        SymbolWidget::size->setValue(1);
+    }
+    
     charEdit->setEnabled(currSymbol->symbol() == PlotSymbol::CHARACTER);
     SymbolWidget::size->setEnabled(currSymbol->symbol() != PlotSymbol::PIXEL);
+    
+    emit changed();
     if(*currSymbol != *itsSymbol_) emit differentFromSet();
 }
 

@@ -210,7 +210,8 @@ is recommended in most applications.
        accurate bandpass functions.  The two solution choices are: Individual
        antenna/based channel solutions 'B'; and a polynomial fit over the channels
        'BPOLY'.  The 'B' solutions can determined at any specified time interval, and
-       is recommended in most applications.
+       is recommended if each channel has good signal-to-noise.  Other, 'BPOLY' is
+       recommended.
 
       Keyword arguments:
       vis -- Name of input visibility file
@@ -308,6 +309,8 @@ is recommended in most applications.
                    as a function of frequency. Only one fit is made
                    for all specified spw, and edge channels should be
                    omitted.
+                Use taskname=plotcal in order to compare the results from
+                   B and BPOLY.
        fillgaps -- Fill flagged solution channels by interpolation
                default: 0 (don't interpolate)
                example: fillgaps=3 (interpolate gaps 3 channels wide and narrower)

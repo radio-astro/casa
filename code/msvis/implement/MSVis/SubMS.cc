@@ -1361,9 +1361,13 @@ void SubMS::relabelIDs()
     //Pointing is allowed to not exist
     Bool pointExists=Table::isReadable(mssel_p.pointingTableName());
     if(pointExists){
-      Table oldPoint(mssel_p.pointingTableName(), Table::Old);
+      const Table oldPoint(mssel_p.pointingTableName(), Table::Old);
       if(oldPoint.nrow() > 0){
 	Table& newPoint=msOut_p.pointing();
+	//TableCopy::copyInfo(newPoint, oldPoint);
+	TableColumn newTC(newPoint, "DIRECTION");
+	const TableColumn oldTC(oldPoint, "DIRECTION");
+	newTC.rwKeywordSet() = oldTC.keywordSet();
 	TableCopy::copyRows(newPoint, oldPoint);
       }
     }

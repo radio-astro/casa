@@ -105,7 +105,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </input>
 <example>
 
-	Fit a single component source model to the uv data:
+	Fit a single component source model to the uv data.  Three models
+        are available: P=point; G=Gaussian; D=Disk.  Fitting parameters can
+        be held fixed.   The results are given in the log and placed in a
+        components file.
 
 	Keyword arguments:
 	vis -- Name of input visibility file 
@@ -159,17 +162,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		Options: 'P' (point source), 'G' (elliptical gaussian),
 		         'D' (elliptical disk)
 	sourcepar -- Starting guess for component parameters
+		default: [1,0,0];  (for comptype='P')
 		IF comptype = 'P' then
 		  sourcepar = [flux,xoff,yoff] where
-		    flux = Jy, xoff = arcsec, yoff = arcsec.
+		    flux = Jy, xoff = arcsec-east, yoff = arcsec-north.
 		IF comptype = 'G' or 'D', then
 		  sourcepar = [flux,xoff,yoff,majax,axrat,pos] where
 		    majax = arcsec, axrat &lt; 1, pos=angle in deg
-		default: [1,0,0];  (for comptype='P')
 	varypar -- Control which parameters to let vary in the fit
 		default: [] (all vary);
-		example: vary=[False,True,True]
-         examples:
+		example: vary=[F,T,T]
+
+        examples:
 
 	     fit a point:
 	        comptype = 'P'
@@ -185,6 +189,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	outfile -- Optional output component list table
 		default: ''; example: outfile='componentlist.cl'
 
+
+        How to get the output values:
+
+            cl.open('componentlist.cl')
+            fit = cl.getcompoent()             stores component information
+            fit                                to see the whole mess
+            flux = fit['flux']['value']        to store the I,Q,U,V, flux
+            print flux
+
+            ra = fit['shape']['direction']['m0']['value']
+            dec =fit['shape']['direction']['m1']['value']
+            print ra, dec
+
+            bmaj = fit['shape']['majoraxis']['value']     to get major axis
+            bmin = fit['shape']['minoraxis']['value']     to get minor axis
+            
 
 </example> 
 

@@ -6,19 +6,27 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="split">
+     <shortdescription>Create a visibility subset from an existing visibility set</shortdescription>
+
 <description>
+
+
 Split is the general purpose program to make a new data set
-that is a subset of an existing data set.   Only one of the
-datacolumns can be split, and it is usually, but not necessarily,
-the corrected column.
+that is a subset of an existing data set.  General selection parameters
+are included, and any combination of the three data columns (data, model
+and/or corrected) can be selection.
 
 Split is often used after the initial calibration of the data to remove those
-sources which need additional flagging, imaging and selfcalibration.  The data
-can be averaged over specified frequency channels of the input data set.  Time
-averaging is also available.  It is not yet possible to simultaneously average
-a data set in time and frequency, but you can time (or frequency) average, and
-then frequency (or time) average on the result of the first split run.
+sources which need additional flagging, imaging and self-calibration.  The data
+can be averaged over specified frequency channels of the input data set and time
+averaging is also available.  
+
+Note: It is not yet possible to simultaneously average a data set in time and frequency
+in one execution:  they must be done separately
 </description>
+
+
+
 <input>
 	<param type="string" name="vis" mustexist="true">
 		<description>Name of input measurement set</description>
@@ -90,20 +98,20 @@ then frequency (or time) average on the result of the first split run.
 </input>
 <example>
 
-        Create a visibility subset from an existing visibility set:
 
-        Split is the general purpose program to make a new data set
-	that is a subset of an existing data set.   Only one of the
-	datacolumns can be split, and it is usually, but not necessarily,
-	the corrected column.
-	
-        Split is often used after the initial calibration of the data
-        to remove those sources which need additional flagging,
-        imaging and selfcalibration.
+     Split is the general purpose program to make a new data set
+     that is a subset of an existing data set.  General selection parameters
+     are included, and any combination of the three data columns (data, model
+     and/or corrected) can be selection.
 
-        The data can be averaged over specified frequency channels of the
-	input data set.  Time averaging is also available.  However, it is
-	not yet possible to both time average and frequency average a data set.
+     Split is often used after the initial calibration of the data to remove those
+     sources which need additional flagging, imaging and self-calibration.  The data
+     can be averaged over specified frequency channels of the input data set and time
+     averaging is also available.  
+
+    Note: It is not yet possible to simultaneously average a data set in time and frequency
+    in one execution:  they must be done separately.
+
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -114,7 +122,8 @@ then frequency (or time) average on the result of the first split run.
         datacolumn -- Which data column to split out
                 default='corrected'; example: datacolumn='data'
                 Options: 'data', 'model', 'corrected', 'all',
-                'data,model','data,corrected','model,corrected','data,model,corrected' 
+                'data,model','data,corrected','model,corrected',
+                note: 'all'='data,model,corrected' 
 
         --- Data Selection (see help par.selectdata for more detailed information)
 

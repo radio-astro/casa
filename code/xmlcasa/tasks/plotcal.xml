@@ -14,8 +14,6 @@ calibration solutions (G, T, GSPLINE, B, BPOLY, D) can be displayed
 for a variety of polarization combinations and calibrations.  The
 solutions may be iterated through antennas/spw/fields during one execution.
 
-The plotter permits zooming, listing and flagging of solutions, although
-the implications of flagged solutions are not yet made.
 	</description>
 	<input>
 		<param type="string" name="caltable" mustexist="true">
@@ -99,7 +97,7 @@ the implications of flagged solutions are not yet made.
 		</param>
 
 		<param type="string" name="clearpanel" >
-			<description>Specify if old plots are cleared or not</description>
+			<description>Specify if old plots are cleared or not (ignore)</description>
 			<value>Auto</value>
 			<allowed kind="enum">
 				<value>Current</value>
@@ -160,13 +158,19 @@ the implications of flagged solutions are not yet made.
 
 <example>
 	
-       	An all-purpose plotter for calibration results.  The values for all
-	calibration solutions (G, T, GSPLINE, B, BPOLY, D) can be displayed
-	for a variety of polarization combinations and calibrations.  The plot
-	solutions may be iterated through antennas/spw/fields during one execution.
+       	The values for all calibration solutions (G, T, GSPLINE, B, BPOLY, D, M) 
+        can be displayed for a variety of polarization combinations and calibrations.
+        The plot solutions may be iterated through antennas/spw/fields during one execution,
+        and many frames can be obtained in each plot.
 
 	The plotter permits zooming, listing and flagging of solutions, although
-	the implications of flagged solutions are not yet available.
+	the results of flagged solutions are not yet available.
+
+
+        The plotter permits zooming, listing and flagging of solutions, although
+        the implications of flagged solutions are not yet made.  See some hints at the end
+        of this description.
+
 
 	Keyword arguments:
 	caltable -- Name of input calibration table 
@@ -220,8 +224,9 @@ the implications of flagged solutions are not yet made.
                   antenna='3'; subplot=224; plotcal()
 	overplot -- Overplot these values on current plot (if possible)
                default: False;
-	          True (overplotting) can only be done if iteration=''
-	clearpanel -- Clear nothing on the plot window, automatically
+	          True (overplotting) can be done ONLY IF iteration=''
+	clearpanel -- Ignore this parameter.
+                  Clear nothing on the plot window, automatically
 	          clear plotting area, clear the current plot area, or
 	          clear the whole plot panel.
 	       options: None, Auto, Current, All (None and Auto not supported)
@@ -237,6 +242,7 @@ the implications of flagged solutions are not yet made.
                  values, e.g., [xmin,xmax,ymin,ymax]
 		 default=[] --&gt; plot will self-scale
 		 Note: time plotting ranges are cumbersome to use.
+                       Use the zoom option
 	showflags -- If true, only flagged solutions will be plotted
 	         default: false --&gt; only show unflagged solutions
 	plotsymbol -- pylab plot symbol.  See cookbook for details
@@ -254,7 +260,24 @@ the implications of flagged solutions are not yet made.
 	showgui -- Whether or not to display the plotting GUI
 	          default: True; example showgui=False
         figfile -- File name to save the plotted figure to.
-	          default: ''; example figfile=myPlot.png		  
+	          default: ''; example figfile=myPlot.png
+
+         Hints on using plotxy (see section 3.4 in cookbook)
+
+         Useful Buttons at bottom left:
+              5th--magnifying glass.  Click on this,
+                       left mouse button rectangle drag will zoom
+                       right mose button rectangle drag will unzoom a certain amount
+              1st--restore original magnification
+
+         Useful regions just above:
+              Quit will terminate plotter
+              Next will go to next plot as specified by iteration
+              To locate, you must click 'Mark Region' first
+                 then make appropriate region(s)
+                 then click locate to list points on logger
+                 DO NOT USE Flag, Unflag at the present time.
+            		  
  </example>
  </task>
  </casaxml>

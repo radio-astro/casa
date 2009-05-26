@@ -149,6 +149,15 @@ PlotSymbolPtr PMS::DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory) {
     return factory->symbol(*symbol);
 }
 
+map<PlotSymbol::Symbol, int> PMS::SYMBOL_MINIMUM_SIZES() {
+    map<PlotSymbol::Symbol, int> m;
+    
+    m[PlotSymbol::CIRCLE] = 2;
+    m[PlotSymbol::DIAMOND] = 3;
+    
+    return m;
+}
+
 const String PMS::DEFAULT_TITLE_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());

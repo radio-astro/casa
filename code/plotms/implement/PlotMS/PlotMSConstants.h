@@ -29,6 +29,7 @@
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 
+#include <map>
 #include <vector>
 
 #include <casa/namespace.h>
@@ -41,7 +42,8 @@ namespace casa {
 // Parameters:
 // * NAME: name of the enum,
 // * ALLMETHOD: name of the method that returns a vector of all defined members
-//              of the enum,
+//              of the enum (also nALLMETHOD which returns the number of
+//              defined members in the enum),
 // * ALLSTRMETHOD: name of the method that returns a vector of the string
 //                 representation of all defined members of the enum,
 // * CONVMETHOD: name of the method that converts between the enum and its
@@ -63,6 +65,11 @@ namespace casa {
         static const int count = sizeof(arr) / sizeof(arr[0]);                \
         static const vector< NAME > v(arr, &arr[count]);                      \
         return v;                                                             \
+    }                                                                         \
+                                                                              \
+    static unsigned int n##ALLMETHOD () {                                     \
+        static unsigned int n = ALLMETHOD ().size();                          \
+        return n;                                                             \
     }
 
 #define PMS_ENUM2(NAME,ALLMETHOD,ALLSTRMETHOD,CONVMETHOD,...)                 \
@@ -225,6 +232,9 @@ public:
     static PlotSymbolPtr DEFAULT_SYMBOL(PlotFactoryPtr factory);
     static PlotSymbolPtr DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory);
     // </group>
+    
+    // Returns the minimum visible sizes for plot symbol types.
+    static map<PlotSymbol::Symbol, int> SYMBOL_MINIMUM_SIZES();
     
     // Default title (canvas, plot, etc.) format, in String form.
     static const String DEFAULT_TITLE_FORMAT;

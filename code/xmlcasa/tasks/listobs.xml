@@ -29,7 +29,6 @@
 <returns type="void"/>
 
 <example>
-       List data set summary in the logger:
 
        Lists following properties of a measurement set:
        scan list, field list, spectral window list with

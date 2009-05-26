@@ -6,6 +6,7 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="setjy">
+	<shortdescription>Fills the model column with the visibility of a calibrator,</shortdescription>
 	<description>
        The task places the model visibility amp and phase associated
        with a specified clean components image into the model column
@@ -26,12 +27,12 @@
 	</description>
 	<input>
 		<param type="string" name="vis" mustexist="true">
-			<description>Name of input visibility file (MS)</description>
+			<description>Name of input visibility file</description>
 			<value></value>
 		</param>
 
 		<param type="string" name="field">
-			<description>Field name list or field ids list</description>
+			<description>One Field name</description>
 			<value></value>
 		</param>
 
@@ -66,20 +67,24 @@
 <returns type="void"/>
 
 <example>
-      Fills the model column for flux density calibrators: 
 
        The task places the model visibility amp and phase associated
-       with a specified clean components image into the model column
-       of the data set.  The simplest way to to enter the flux density
-       (I,Q,U,V) explicitly.
+       with a specified source (generally a calibrator).
+       The simplest way to to enter the flux density
+       (I,Q,U,V) explicitly, but this is valid only for a point source.
+
+       For an extended source, the clean model (image.model) can be
+       specified and the model visibilities associated with this clean
+       model is placed in the visibility model column.
 
        Models are available for 3C48, 3C138, 3C286 between
        1.4 and 43 GHz.  3C147 is available above 13 GHz.  These models
-       are scaled to the precise frequency of the data.  Only I models are
-       presently available.
+       are scaled to the precise frequency of the data.  Only I source 
+       model can be inserted at a time.
 
-       The location of the models are system dependent:  At the AOC, the
-       models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels
+       The location of the models are system dependent:  At the AOC and CV,
+       the models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels
+       or /usr/lib64/casapy/data/nrao/VLA/CalModel.
 
        Setjy need only be run on the calibrator sources with a know flux
        density and/or model.
@@ -88,11 +93,8 @@
        vis -- Name of input visibility file
                default: none.  example: vis='ngc5921.ms'
        field -- Select field using field id(s) or field name(s).
-                 [run listobs to obtain the list id's or names of calibrators]
               default: ''=all fields, but run setjy one field at a time.
-              The field to add the model (by a source model) or the specified
-                flux density
-
+                 [run listobs to obtain the list id's or names of calibrators]
               If field string is a non-negative integer, it is assumed a field index
                 otherwise, it is assumed a field name
               field='0~2'; field ids 0,1,2
@@ -109,19 +111,36 @@
               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
               spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
-       modimage -- Optional model image (I only) from which the model visibilities
-              are calculated and placed in the model column.  Each field must
-              be done separately.  The image flux density will be scaled from the
-              frequency in the model to that actually used.
-              In Charlottesville and at the AOC, the models are located in the
-              /usr/lib/casapy/data/nrao/VLA/CalModels.3C286_L.im (egs)
+
+       Use one of the two methods below:  modimage or fluxdensity
+
+       modimage -- Model image (I only) from which the model visibilities
+              default: '' means do not use model, but fluxdensity
+              Each field must be done separately.  The image clean model
+              will be scaled from the frequency in the model to that actually used.
+              Both the amplitude and phase are calculated.
+              At the AOC or CV, the models are located in the
+              /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
+                   lib64
+
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
-               default =&gt; -1, places [1,0,0,0] flux density for all sources.
-               This is unnecessary and only flux density calibrators need be
-               specified, one execution at a time.
+               default =&gt; -1, places [1,0,0,0] flux density for all sources,
+                  except for 3C286, 3C48 and 3C147 where the absolute flux
+                  density it added.  It is recommended to use the modimage for
+                  these sources if they are resolved with the observations.
+               Only one flux density can be executed at a time.  The phases are
+                  set to zero.
+               example   fluxdensity=-1  will insert 1.0 for all calibrators
+                         except 3C286, 3C147 and 3C48
+               example   field = '1'; fluxdensity=[3.2,0,0,0] wil put in 
+                         flux density of I=3.2 for field='1'
+
                At present, this is the only method to insert a polarized flux
-               density model (June 2008).
+               density model (June 2000).
                example:  fluxdensity=[2.63,0.21,-0.33,0.02]
+                         will put in I,Q,U,V flux densities of 2.63,0.21,-0.33,
+                         and 0.02, respectively, in the model column.
+
        standard -- Flux density standard, used if fluxdensity&lt;0
                default: 'Perley-Taylor 99'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',

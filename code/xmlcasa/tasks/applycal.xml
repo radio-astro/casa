@@ -85,7 +85,7 @@ another visibility file.
 	</param>
 
 	<param type="stringArray" name="interp">
-		<description>Interpolation mode (in time) to use for each gaintable</description>
+		<description>Temporal Interpolation type.  default=linear</description>
 		<value></value>
 		<allowed kind="enum">
 			<value>nearest</value>
@@ -134,25 +134,24 @@ another visibility file.
 </input>
 <example>
 
-Apply calibration solution(s) to data
 
        Applycal reads the specified gain calibration tables, applies
        them to the (raw) data column (with the specified selection),
        and writes the calibrated results into the corrected column.
-       This is done in one step, so all available calibration must
-       be specified.  Applycal will overwrite existing corrected data.
+       This is done in one step, so all available calibration tables must
+       be specified.  Include parang, gaincurve, opacity is used in
+       obtaining previous calibration tables.
 
-       Standard data selection is supported.  See help par.selectdata
-       for more information.
+       Applycal will overwrite existing corrected data.
 
-       One or more calibration tables (both temporal, frequency, polarization
-       calibrations) can be specified in the gaintable parameter.  The
+       All calibration tables (both temporal, frequency, polarization
+       calibrations) are specified in the gaintable parameter.  The
        calibration values associated with a restricted list of fields
-       can also be selected for each table.
+       can also be selected for each table in gainfield
 
        See task accum for instructions on forming calibration
-       incrementally.  See task split for saving corrected data in
-       another visibility file.
+       incrementally.  See task split for copying out any portion of the data
+       and selected columns to a new visibility file.
 
        Keyword arguments:
        vis -- Name of input visibility file

@@ -122,6 +122,10 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     QtUtilities::putInFrame(plotUFFrame, itsSymbolWidget_);
     QtUtilities::putInFrame(plotFFrame, itsMaskedSymbolWidget_);
     
+    map<PlotSymbol::Symbol, int> minSymbolSizes = PMS::SYMBOL_MINIMUM_SIZES();
+    itsSymbolWidget_->setMinimumSizes(minSymbolSizes);
+    itsMaskedSymbolWidget_->setMinimumSizes(minSymbolSizes);
+    
     itsLabelDefaults_.insert(plotTitleLabel, plotTitleLabel->text());
     itsLabelDefaults_.insert(plotUFlabel, plotUFlabel->text());
     itsLabelDefaults_.insert(plotFLabel, plotFLabel->text());

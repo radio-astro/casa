@@ -148,11 +148,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </input>
 <example>
 
+        This task determines a baseline by baseline gain (time) or bandpass (freq)
+        for all baseline pairs in the data set.   For the usual antenna-based calibration
+        of interferometric data, this task gaincal is recommended, even with only one
+        to three baselines.  For arrays with closure errors, use blcal
+
 	Keyword arguments:
-	vis -- Name of input visibility file (MS)
-		default: &lt;unset&gt;; example: vis='ngc5921.ms'
+	vis -- Name of input visibility file
+		default: none; example: vis='ngc5921.ms'
 	caltable -- Name of output Gain calibration table
-		default: &lt;unset&gt;; example: caltable='ngc5921.gcal'
+		default: none; example: caltable='ngc5921.gcal'
 
        --- Data Selection (see help par.selectdata for more detailed information)
 

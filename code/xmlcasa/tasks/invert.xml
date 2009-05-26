@@ -199,7 +199,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-        Calculate the dirty image and dirty beam from a visibility set.
+        A quick a dirty way to make an image and beam (point spread function)
+
+        The image and beam can also be made using taskname = 'clean'; niter=0.
+        The clean has more options (egs. uvrange, taper, etc).
+
+        
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -268,14 +273,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                field='3C286,3C295'; field named 3C286 adn 3C295
                field = '3,4C*'; field id 3, all names starting with 4C
         spw -- Select spectral window/channels
-              default: ''=all spectral windows and channels
-              spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-              spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
-              spw='0:5~61'; spw 0, channels 5 to 61
-              spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
-              spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-              spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-              spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
+               default: ''=all spectral windows and channels
+               spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+               spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+               spw='0:5~61'; spw 0, channels 5 to 61
+               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+               spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+               spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
         weighting -- Weighting to apply to visibilities:
                 default='natural'; example: weighting='uniform';
@@ -288,10 +293,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default=0.0; example: robust=0.5;
                 Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
         restfreq -- Specify rest frequency to use for image
-               default='' (i.e., try to use the restfreq specified in the visibility data)
+                default='' (i.e., try to use the restfreq specified in the visibility data)
         phasecenter -- direction measure  or fieldid for the image center
                 default: ''; =&gt;center is the direction of the first field specified in field;
-        example: phasecenter='6'
+                example: phasecenter='6'
                 or phasecenter='J2000 19h30m00.0 -40d00m00.0'
 
 

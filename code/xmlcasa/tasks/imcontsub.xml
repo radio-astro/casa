@@ -74,9 +74,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 <example>
-        The input is a spectral line image image.  If there is more than one 
-        spectral window, they must be analyzed identically.   The
-        continuum channels are specified and two output images are made: a
+
+        For a spectral line image, the regions to determine the continuum
+        regions are first defined.  A graphical interface 'regions' is
+        the most versatile method of selecting the line-free regions.  For
+        a multi-spw image, the chanellization must be the same for all.
+
+        The continuum channels are specified and two output images are made: a
         continuum image and a continuum-subtracted spectral line image.
 
 	The continuum subtraction can be applied to either the whole image 
