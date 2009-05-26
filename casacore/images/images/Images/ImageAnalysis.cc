@@ -7003,10 +7003,10 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
   xypix=0.0;
   whatXY.downcase();
   CoordinateSystem cSys=pImage_p->coordinates();
-  Int witch=cSys.findCoordinate(Coordinate::DIRECTION);
+  Int which=cSys.findCoordinate(Coordinate::DIRECTION);
 
   if(whatXY.contains("wor")){
-    const DirectionCoordinate& dirCoor=cSys.directionCoordinate(witch);
+    const DirectionCoordinate& dirCoor=cSys.directionCoordinate(which);
     if(!dirCoor.toPixel(xypix, xy))
       return False;    
   }
@@ -7015,7 +7015,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
       return False;
     xypix=xy;
   }
-  Vector<Int> dirPixelAxis=cSys.pixelAxes(witch);
+  Vector<Int> dirPixelAxis=cSys.pixelAxes(which);
   IPosition blc(pImage_p->ndim(),0);
   IPosition trc(pImage_p->ndim(),0);
   if( (xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || 
@@ -7023,15 +7023,17 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
     return False;
   }
-  blc[dirPixelAxis(0)]=Int(xypix(0)); 
-  trc[dirPixelAxis(0)]=Int(xypix(0));
-  blc[dirPixelAxis(1)]=Int(xypix(1)); 
-  trc[dirPixelAxis(1)]=Int(xypix(1));
+
+  blc[dirPixelAxis(0)]=Int(xypix(0)+0.5);   // note: pixel _center_ is at integer values
+  trc[dirPixelAxis(0)]=Int(xypix(0)+0.5);
+  blc[dirPixelAxis(1)]=Int(xypix(1)+0.5); 
+  trc[dirPixelAxis(1)]=Int(xypix(1)+0.5);
  
 
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
   Vector<Bool> zyaxismask;
-  trc[cSys.pixelAxes(specAx)[0]]=pImage_p->shape()(cSys.pixelAxes(specAx)[0])-1;  zyaxisval.resize();
+  trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(cSys.pixelAxes(specAx)[0]) - 1;  
+  zyaxisval.resize();
   zyaxisval=pImage_p->getSlice(blc, trc-blc+1, True);
   zyaxismask=pImage_p->getMaskSlice(blc, trc-blc+1, True);
 
@@ -7078,12 +7080,13 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
                  specaxis, whichStokes, whichTabular, 
                  whichLinear, xunits);
     }
+    // n > 1, i.e. region to average over is a rectangle or polygon
     Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
     Int pixSpecAx=cSys.pixelAxes(specAx)[0];
     Int nchan=pImage_p->shape()(pixSpecAx);
     try{
       Vector<Int> dirPixelAxis=cSys.pixelAxes(cSys.findCoordinate(Coordinate::DIRECTION));
-      if (n == 2) {
+      if (n == 2) { // rectangle
 	Vector<Quantity> blc(2);
 	Vector<Quantity> trc(2);
 	if(xytype.contains("wor")){
@@ -7096,7 +7099,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 	  imagreg=regMan.wbox(blc,trc,pixax,cSys);
 	}
       }
-      if(n > 2){
+      if(n > 2){ // polygon
 	Vector<Quantity> xvertex(n);
 	Vector<Quantity> yvertex(n);
 	for(Int k=0; k < n; ++k){ 
@@ -7157,6 +7160,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
     }
     return True;
 }
+
+
 // These should really go in a coordsys inside the casa name space
 
 Record ImageAnalysis::toWorldRecord (const Vector<Double>& pixel, 
