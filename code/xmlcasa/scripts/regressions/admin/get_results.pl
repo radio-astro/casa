@@ -167,7 +167,7 @@ sub email_notify
 	chomp($type);
 	chomp($casa); $casa =~ s/\'//g;
 	chomp($host);
-	$email  = `cat $svn_path/$tests_file | grep -wE "\\s*$testid" | awk '{print \$2}'`;  $? == 0 or die $!;
+	$email  = `cat $svn_path/$tests_file | grep -w "^$testid" | awk '{print \$2}'`;  $? == 0 or die $!;
 	chomp($email);
 
 	if ($type ne "exec") {

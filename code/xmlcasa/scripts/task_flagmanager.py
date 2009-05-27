@@ -46,7 +46,7 @@ def flagmanager(vis=None,mode=None,versionname=None,comment=None,merge=None):
 			fg.restoreflagversion(versionname=versionname,merge=merge)
 		elif (mode=='delete'):
 			fg.deleteflagversion(versionname=versionname)
-		#fg.reset()
+		fg.done()
 	except Exception, instance:
 		print '*** Error ***',instance
 

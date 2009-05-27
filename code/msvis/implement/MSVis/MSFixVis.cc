@@ -90,10 +90,8 @@ Int MSFixVis::check_fields()
   return nsel;
 }
 
-LogIO& MSFixVis::logSink() {return sink_p;};
-
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool MSFixVis::calc_uvw(const String refcode)
+Bool MSFixVis::calc_uvw(const String& refcode)
 {
   // Make sure FieldIds_p has a Field ID for each selected field, and -1 for
   // everything else!
@@ -129,7 +127,7 @@ Bool MSFixVis::calc_uvw(const String refcode)
 }
 
 // Calculate the (u, v, w)s and store them in ms_p.
-Bool MSFixVis::fixvis(const String refcode)
+Bool MSFixVis::fixvis(const String& refcode)
 {
   if(nsel_p > 0){
     if(phaseDirs_p.nelements() == static_cast<uInt>(nsel_p)){

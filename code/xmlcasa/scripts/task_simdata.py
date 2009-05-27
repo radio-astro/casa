@@ -182,7 +182,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # image, then the simulated image will be blank.  user error.
             cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
             cs.setincrement([-cell_rad,cell_rad],'direction')
-            cs.setreferencevalue([qa.convert(ra,'rad')['value']-2*pl.pi,qa.convert(dec,'rad')['value']],type="direction")
+            cs.setreferencevalue([qa.convert(ra,'rad')['value']
+                                   ,qa.convert(dec,'rad')['value']],type="direction")
             cs.setreferencevalue(startfreq,'spectral')
             ia.setcoordsys(cs.torecord())
             cl.open(complist)
@@ -344,6 +345,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         if verbose: msg("rearranging input data (may take some time for large cubes)")
         arr=in_ia.getchunk()
         axmap=[-1,-1,-1,-1]
+        axassigned=[-1,-1,-1,-1]
 
         in_nax=arr.shape.__len__()
         if in_nax<2:
@@ -363,58 +365,42 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             model_cell=out_cell # in arcsec
             axmap[0]=0 # direction in first two pixel axes
             axmap[1]=1
+            axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
+            axassigned[1]=0
             
-        else:
-            ra,dec = in_csys.referencevalue(type="direction")['numeric']
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
+        else:            
             if not in_dir['return']:
                 msg("ERROR: You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",color="31")
-                return False
-            else:
-                if in_dir['pixel'].__len__() != 2:
-                    msg("ERROR: I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",color="31")
-                    return False
-                else:
-                    dirax=in_dir['pixel']
-                    axmap[0]=dirax[0]
-                    axmap[1]=dirax[1]
-                    model_cell=in_cell # in arcsec
-        
-                    
-            
+                return False            
+            ra,dec = in_csys.referencevalue(type="direction")['numeric']
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
+            if in_dir['pixel'].__len__() != 2:
+                msg("ERROR: I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",color="31")
+                return False            
+            dirax=in_dir['pixel']
+            axmap[0]=dirax[0]
+            axmap[1]=dirax[1]                    
+            model_cell=in_cell # in arcsec
+            axassigned[dirax[0]]=0
+            axassigned[dirax[1]]=0
+            if verbose: msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
 
         # if we only have 2d to start with:
         if in_nax==2:            
-            # then we can't make a cube (or it would be boring)
+            # then we can't make a cube (at least, it would be boring)
             if nchan>1: 
                 msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
                 nchan=1
-            # add the extra axis:
+            # add an extra axis to be Spectral:
             arr=arr.reshape([arr.shape[0],arr.shape[1],1])
-            model_restfreq=startfreq
-            model_start=startfreq            
-            model_step=bandwidth
             in_shape=arr.shape
-            in_nax=in_shape.__len__() # which should be 3            
+            in_nax=in_shape.__len__() # which should be 3
+            if verbose: msg("Adding dummy spectral axis",origin="setup model")
 
         # we have at least 3 axes, either by design or by addition:
         if ignorecoord:
-            axmap[3]=2
-            if nchan>arr.shape[2]:
-                nchan=arr.shape[2]
-                msg("WARN: you are asking for more channels than you have - truncating output cube to %i channels" % nchan,color="31",origin="setup model")
-            if arr.shape[2]>nchan:
-                # actually subsample someday:
-                msg("WARN: you are asking for fewer channels (%i) than the input cube - increasing nchan to %i " % (nchan,arr.shape[2]),color="31",origin="setup model")
-                nchan=arr.shape[2]
-            if arr.shape[2]>1:
-                model_restfreq=startfreq
-                model_start=startfreq
-                model_step=chanwidth
-            else:
-                model_restfreq=startfreq
-                model_start=startfreq            
-                model_step=bandwidth
+            add_spectral_coord=True
+            extra_axis=2
         else:
             if in_spc['return']:
                 if type(in_spc['pixel']) == int :
@@ -425,64 +411,133 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 if arr.shape[foo]>1 and nchan==1:
                     if verbose: msg("WARN: You will be flattening your spectral dimension",origin="setup model")
                 axmap[3]=foo
+                axassigned[foo]=3
                 model_restfreq=in_csys.restfrequency()
                 in_startpix=in_csys.referencepixel(type="spectral")['numeric'][0]
                 model_step=in_csys.increment(type="spectral")['numeric'][0]
                 model_start=in_csys.referencevalue(type="spectral")['numeric'][0]-in_startpix*model_step
                 model_step=str(model_step)+in_csys.units(type="spectral")
                 model_start=str(model_start)+in_csys.units(type="spectral")
+                add_spectral_coord=False
+                if verbose: msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
             else:
-                msg("ERROR: You don't have a spectral coordinate that I can understand, so either edit the header or set ignorecoord=True",color="31")
-                return False
-            if in_nax>=4 and not ( ignorecoord or in_stk['return'] ):
-                # we have at least 4 axes and want channelized output,
-                # but Stokes is bad in input:
-                msg("ERROR: You don't have a Stokes coordinate that I can understand, so either edit the header or set ignorecoord=True",color="31")
-                return False
+                # we're not ignoreing coord, but we have at least one extra axis
+                # if we have a valid stokes axis, but not a valid spectral axis:
+                if in_stk['return']:
+                    axassigned[in_stk['pixel']]=2
+                    axmap[2]=in_stk['pixel']
+                    # AND, if we only had 3 axes, need to add dummy spectral:
+                    if in_nax<4:
+                        # then we can't make a cube (at least, it would be boring)
+                        if nchan>1: 
+                            msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
+                            nchan=1
+                        # add an extra axis to be Spectral:
+                        arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
+                        in_shape=arr.shape
+                        in_nax=in_shape.__len__() # which should be 4
+                        if verbose: msg("Adding dummy spectral axis",origin="setup model")
+                        
+                # find first unused axis - probably at end, but just in case its not:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:                    
+                    msg("ERROR: I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    return False
+                add_spectral_coord=True
+                
+        if add_spectral_coord:
+            axmap[3]=extra_axis
+            axassigned[extra_axis]=3
+            if nchan>arr.shape[extra_axis]:
+                nchan=arr.shape[extra_axis]
+                msg("WARN: you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),color="31",origin="setup model")
+            if arr.shape[extra_axis]>nchan:
+                # actually subsample someday:
+                msg("WARN: you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),color="31",origin="setup model")
+                nchan=arr.shape[extra_axis]
+            if arr.shape[extra_axis]>1:
+                model_restfreq=startfreq
+                model_start=startfreq
+                model_step=chanwidth
+            else:
+                model_restfreq=startfreq
+                model_start=startfreq            
+                model_step=bandwidth
+            if verbose: msg("Adding Spectral Coordinate",origin="setup model")
 
-        # if we only have three axes, add a Stokes:
+
+
+        # if we only have three axes, add one to be Stokes:
         if in_nax==3:
             arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
             in_shape=arr.shape
             in_nax=in_shape.__len__() # which should be 4
-
+            add_stokes_coord=True
+            extra_axis=3
+            if verbose: msg("Adding dummy Stokes axis",origin="setup model")
+            
+        # we have at least 3 axes, either by design or by addition:
         if ignorecoord:
-            axmap[2]=3            
-            if arr.shape[3]>4:
-                msg("ERROR: you have a 4th axis that is more than 4 possible Stokes parameters.  something is wrong.")
-                return False
-            else:
-                if arr.shape[3]==4:                    
-                    model_stokes="IQUV"
-                if arr.shape[3]==3:                    
-                    model_stokes="IQV"
-                    msg("WARN: setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
-                if arr.shape[3]==2:                    
-                    model_stokes="IQ"
-                    msg("WARN: setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
-                if arr.shape[3]<=1:                    
-                    model_stokes="I"
+            add_stokes_coord=True
+            extra_axis=3
         else:
-            if not in_stk['return']:
-                msg("ERROR: You don't have a Stokes coordinate that I can understand, so either edit the header or set ignorecoord=True",color="31")
-                return False
-            else:
+            if in_stk['return']:
                 model_stokes=in_csys.stokes()
+                foo=model_stokes[0]
+                for i in range(model_stokes.__len__()-1):
+                    foo=foo+model_stokes[i+1]
+                model_stokes=foo
                 if type(in_stk['pixel']) == int:
                     foo=in_stk['pixel']
                 else:
                     foo=in_stk['pixel'][0]
-                    msg("WARN: you seem to have two stokes axes",color="31")
+                    msg("WARN: you seem to have two stokes axes",color="31")                
                 axmap[2]=foo
+                axassigned[foo]=2
                 if in_shape[foo]>4:
                     msg("ERROR: You appear to have more than 4 Stokes components - please edit your header and/or parameters",color="31")
                     return False                        
+                add_stokes_coord=False
+                if verbose: msg("Stokes Coordinate %i parsed" % axmap[2],origin="setup model")
+            else:
+                # find the unused axis:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:
+                    msg("ERROR: I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    return False
+                add_stokes_coord=True
+                            
+
+        if add_stokes_coord:
+            axmap[2]=extra_axis
+            axassigned[extra_axis]=2
+            if arr.shape[extra_axis]>4:
+                msg("ERROR: you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis))
+                return False
+            if verbose: msg("Adding Stokes Coordinate",origin="setup model")
+            if arr.shape[extra_axis]==4:                    
+                model_stokes="IQUV"
+            if arr.shape[extra_axis]==3:                    
+                model_stokes="IQV"
+                msg("WARN: setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+            if arr.shape[extra_axis]==2:                    
+                model_stokes="IQ"
+                msg("WARN: setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+            if arr.shape[extra_axis]<=1:                    
+                model_stokes="I"
 
 
 
-
-        if verbose:
-            msg("axis map for model image = %i %i %i %i" % (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
+        if verbose: msg("axis map for model image = %i %i %i %i" %
+            (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
 
 
 
@@ -545,7 +600,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
         ##################################################################
-        # reset output shape if nchan has changed
+        # reset output shape it case nchan has changed
 
         out_shape=[out_size[0],out_size[1],out_nstk,nchan]
 
@@ -618,10 +673,10 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # but if it started as an image, then it won't get converted.
 
         if verbose: msg("im.defineimage(nx="+str(in_shape[axmap[0]])+", ny="+str(in_shape[axmap[1]])+
-                       ", cellx="+str(model_cell)+", celly="+str(model_cell)+", stokes="+str(model_stokes)+
-                       ", phasecenter="+str(model_refdir)+", nchan="+str(in_shape[axmap[3]])+ 
-                       ", mode=\"FREQ-LSRK\",start="+str(model_start)+",step="+str(model_step)+
-                       ", restfreq="+str(model_restfreq)+")")
+                       ", cellx="+str(model_cell)+", celly="+str(model_cell)+", stokes='"+str(model_stokes)+
+                       "', phasecenter='"+str(model_refdir)+"', nchan="+str(in_shape[axmap[3]])+ 
+                       ", mode=\"FREQ-LSRK\",start='"+str(model_start)+"',step="+str(model_step)+
+                       ", restfreq='"+str(model_restfreq)+"')")
 
 
         im.defineimage(nx=in_shape[axmap[0]], ny=in_shape[axmap[1]],
@@ -678,6 +733,9 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         # coord image should now have correct Coordsys and shape
 
+
+#        if shrinkspectral:
+#            # we had more channels in the cube than requested in the output image.
 
 
 
@@ -811,7 +869,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         #if verbose:
         # print clean inputs no matter what, so user can use them.
         msg("clean inputs:",origin="deconvolve")
-        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold='"+str(threshold)+"',psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
 
         if psfmode != "none": 
             if int(casalog.version().split()[2].split('.')[1]) <= 3:

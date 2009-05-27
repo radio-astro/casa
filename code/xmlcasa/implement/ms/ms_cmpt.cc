@@ -727,13 +727,16 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    String message = String(msfile) + " appended to " + itsMS->tableName();
 	    ostringstream param;
 	    param << "msfile= " << msfile
-		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='" << casaQuantity(dirtol) << "'";
+		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
+		  << casaQuantity(dirtol) << "'";
 	    String paramstr=param.str();
-	    writehistory(std::string(message.data()), std::string(paramstr.data()), std::string("ms::concatenate()"), msfile, "ms");
+	    writehistory(std::string(message.data()), std::string(paramstr.data()),
+			 std::string("ms::concatenate()"), msfile, "ms");
 	}
 	rstat = True;
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
 	Table::relinquishAutoLocks();
 	RETHROW(x);
     }
@@ -844,7 +847,7 @@ ms::split(const std::string& outputms, const ::casac::variant& field,
      delete splitter;
    
      {// Update HISTORY table of newly created MS
-       String message= String(outputms) + " split from " + itsMS->tableName();
+       String message= toCasaString(outputms) + " split from " + itsMS->tableName();
        ostringstream param;
        param << "fieldids=" << t_field << " spwids=" << t_spw
              << " nchan=" << Vector<Int>(nchan) << " start=" << Vector<Int>(start) << " step=" << Vector<Int>(step)
@@ -1011,7 +1014,8 @@ ms::fillbuffer(const std::string& item, const bool ifraxis)
      if(!detached())
         rstat =  itsFlag->fillDataBuffer(item, ifraxis);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	       << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
    }
@@ -1026,11 +1030,13 @@ ms::diffbuffer(const std::string& direction, const int window)
    ::casac::record* retval(0);
    try {
      if(!detached()){
-	casa::Record daRec = itsFlag->diffDataBuffer(casa::String(direction), window, domedian);
+	casa::Record daRec = itsFlag->diffDataBuffer(casa::String(direction),
+						     window, domedian);
         retval = fromRecord(daRec);
 	}
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	       << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
    }
@@ -1046,7 +1052,8 @@ ms::getbuffer()
    if(!detached())
       retval = fromRecord(itsFlag->getDataBuffer());
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	       << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
  }
@@ -1113,7 +1120,8 @@ ms::clearbuffer()
      if(!detached())
         rstat =  itsFlag->clearDataBuffer();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	       << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
    }
@@ -1144,7 +1152,8 @@ bool ms::continuumsub(const ::casac::variant& field,
     *itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;  
     rstat = True;
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	       << LogIO::POST;
        Table::relinquishAutoLocks();
        RETHROW(x);
  }

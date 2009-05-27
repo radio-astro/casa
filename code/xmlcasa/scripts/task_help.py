@@ -18,14 +18,15 @@ Available tasks:
    exportfits    importuvfits   sdaverage    tget      
    exportuvfits  importvla      sdbaseline   uvcontsub 
    feather       imregrid       sdcal        uvmodelfit
-   filecatalog   imstat         sdcoadd      viewer    
-   find          imval          sdfit        vishead   
-   fixvis        invert         sdflag     
+   filecatalog   imsmooth       sdcoadd      viewer
+   find          imstat         sdfit        vishead    
+   fixvis        imval          sdflag       widefield
+                 invert         
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta 0 release):
 
- simdata        blcal       fringecal   importasdm
+ simdata        blcal       importasdm
 
 Available tools:
 

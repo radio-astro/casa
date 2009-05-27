@@ -6,7 +6,7 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="setjy">
-	<shortdescription>Fills the model column with the visibility of a calibrator,</shortdescription>
+	<shortdescription>Fills the model column with the visibility of a calibrator</shortdescription>
 	<description>
        The task places the model visibility amp and phase associated
        with a specified clean components image into the model column

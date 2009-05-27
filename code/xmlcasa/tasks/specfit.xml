@@ -31,7 +31,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<description>Mode the task is operating in, which are:\
              single: fits a 1-D model to a single profile\
              all:    fits a 1-D models to all profiles\
-             poly:   fits 1-D polynomeials to profiles</description>
+             poly:   fits 1-D polynomials to profiles</description>
 	<value>single</value>
 	<allowed kind="enum">
 		<value>poly</value>

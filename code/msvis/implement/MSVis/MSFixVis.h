@@ -116,11 +116,11 @@ public:
   void setPhaseDirs(const Vector<MDirection>& phaseDirs);
 
 // Calculate the (u, v, w)s and store them in ms_p.
-  Bool calc_uvw(const String refcode);
+  Bool calc_uvw(const String& refcode);
 
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.
-  Bool fixvis(const String refcode);
+  Bool fixvis(const String& refcode);
 
 private:
   // Interpret field indices (MSSelection)
@@ -132,7 +132,7 @@ private:
 
   // Log functions and variables
   LogIO sink_p;
-  LogIO& logSink();
+  LogIO& logSink() {return sink_p;}
 
   MeasurementSet* ms_p;			// Pointer to MS
   Int             nsel_p;		// Number of selected fields.

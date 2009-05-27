@@ -16,8 +16,8 @@ namespace casa {
   MSUVWGenerator::MSUVWGenerator(MS &ms_ref, const MBaseline::Types bltype,
 				 const Muvw::Types uvwtype) :
   msc_p(ms_ref),				    	
-  bl_csys_p(MBaseline::Ref(bltype)),           // MBaseline::J2000
-  uvw_csys_p(uvwtype),                         // uvw_csys_p(Muvw::J2000)
+  bl_csys_p(MBaseline::Ref(bltype)), // MBaseline::J2000, ITRF, etc.
+  uvw_csys_p(uvwtype),               // uvw_csys_p(Muvw::J2000, ITRF, etc.)
   antColumns_p(msc_p.antenna()),
   antPositions_p(antColumns_p.positionMeas()),
   antOffset_p(antColumns_p.offsetMeas()),
@@ -43,6 +43,7 @@ void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref)
   
   bl_an_p.resize(nant_p);
   for(uInt an = 0; an < nant_p; ++an){
+    // MVBaselines are basically xyz Vectors, not Measures.
     bl_an_p[an] = MVBaseline(refpos_p.getValue(), antPositions_p(an).getValue());
 
     // MVBaseline has functions to return the length, but Manhattan distances
@@ -71,11 +72,10 @@ void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref)
     sqrt(smallestDiam * secondSmallestDiam) / max_baseline;
 }  
 
-void MSUVWGenerator::uvw_an(const Double timeCentroid, const Int fldID)
+void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
 {
   const MDirection& phasedir = msc_p.field().phaseDirMeas(fldID);
-  MeasFrame  measFrame(refpos_p, MEpoch(Quantity(timeCentroid, "s"), MEpoch::TAI),
-		       phasedir);
+  MeasFrame  measFrame(refpos_p, timeCentroid, phasedir);
   MVBaseline mvbl;
   MBaseline  basMeas;
 
@@ -84,7 +84,7 @@ void MSUVWGenerator::uvw_an(const Double timeCentroid, const Int fldID)
   basMeas.set(mvbl, basref);
   basMeas.getRefPtr()->set(measFrame);
 
-  // convert from ITRF vector to baseline vector in bl_csys_p's frame (likely J2000).
+  // convert from ITRF vector to baseline vector in bl_csys_p's frame
   MBaseline::Convert elconv(basMeas, bl_csys_p);
 
   Muvw          uvwMeas;
@@ -94,10 +94,10 @@ void MSUVWGenerator::uvw_an(const Double timeCentroid, const Int fldID)
   for(uInt i = 0; i < nant_p; ++i){
     //TODO: (Soon!) Antenna offsets are not handled yet.
     basMeas.set(bl_an_p[i], basref);
-    MBaseline bas2000 = elconv(basMeas);
-    MVuvw uvw2000(bas2000.getValue(), phasedir.getValue());
+    MBaseline basOutFrame = elconv(basMeas);
+    MVuvw uvwOutFrame(basOutFrame.getValue(), phasedir.getValue());
     
-    antUVW_p[i] = uvw2000.getValue();
+    antUVW_p[i] = uvwOutFrame.getValue();
   }
 }
 
@@ -114,8 +114,8 @@ void MSUVWGenerator::uvw_bl(const uInt ant1, const uInt feed1,
 
 Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
 {
-  ArrayColumn<Double>&      UVWcol   = msc_p.uvw();
-  const Vector<Double>&     timeCent = msc_p.timeCentroid().getColumn();
+  ArrayColumn<Double>&      UVWcol   = msc_p.uvw();  
+  const ScalarMeasColumn<MEpoch>& timeCentMeas = msc_p.timeCentroidMeas();
   const ROScalarColumn<Int> fieldID(msc_p.fieldId());
   const ROScalarColumn<Int> ant1(msc_p.antenna1());
   const ROScalarColumn<Int> ant2(msc_p.antenna2());
@@ -125,7 +125,7 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   // Use a time ordered index to minimize the number of calls to uvw_an.
   // TODO: use field as a secondary sort key.
   Vector<uInt> tOI;
-  GenSortIndirect<Double>::sort(tOI, timeCent);
+  GenSortIndirect<Double>::sort(tOI, msc_p.timeCentroid().getColumn());
 
   // Having uvw_an() calculate positions for each antenna for every field is
   // somewhat inefficient since in a multiconfig MS not all antennas will be
@@ -139,15 +139,19 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   
   logSink() << LogIO::DEBUG1 << "timeRes_p: " << timeRes_p << LogIO::POST;
 
-  Double oldTime = tOI[0] - 2.0 * timeRes_p;     // Ensure a call to uvw_an
-  Int    oldFld  = -2;				 // on the 1st iteration.
+  // Ensure a call to uvw_an on the 1st iteration.
+  const Unit sec("s");
+  Double oldTime = timeCentMeas(tOI[0]).get(sec).getValue() - 2.0 * timeRes_p;
+  Int    oldFld  = -2;
   for(uInt row = 0; row < msc_p.nrow(); ++row){
     uInt toir = tOI[row];
+    Double currTime = timeCentMeas(toir).get(sec).getValue();
+    Int    currFld  = fieldID(toir);
 
-    if(timeCent(toir) - oldTime > timeRes_p || fieldID(toir) != oldFld){
-      oldTime = timeCent(toir);
-      oldFld  = fieldID(toir);
-      uvw_an(oldTime, oldFld);
+    if(currTime - oldTime > timeRes_p || currFld != oldFld){
+      oldTime = currTime;
+      oldFld  = currFld;
+      uvw_an(timeCentMeas(toir), currFld);
     }
     
     try{

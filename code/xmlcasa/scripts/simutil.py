@@ -41,7 +41,7 @@ class simutil:
         if origin==None:
             origin="simutil"
         print clr+"["+origin+"] "+bw+s
-        casalog.post("")
+        #casalog.post("")
         casalog.post(s)
 
 
