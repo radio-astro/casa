@@ -154,6 +154,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     fixMovingSource_p=other.fixMovingSource_p;
     firstMovingDir_p=other.firstMovingDir_p;
     freqInterpMethod_p=other.freqInterpMethod_p;
+    pointingDirCol_p=other.pointingDirCol_p;
 
   };
   return *this;
@@ -320,7 +321,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     if(!pointingToImage) {
       mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
 
-      worldPosMeas=act_mspc.directionMeas(pointIndex);
+      worldPosMeas=directionMeas(act_mspc, pointIndex);
       // Make a machine to convert from the worldPosMeas to the output
       // Direction Measure type for the relevant frame
       MDirection::Ref outRef(dc.directionType(), mFrame_p);
@@ -334,7 +335,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
       mFrame_p.resetEpoch(epoch);
       mFrame_p.resetPosition(FTMachine::mLocation_p);
     }
-    worldPosMeas=(*pointingToImage)(act_mspc.directionMeas(pointIndex));
+    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc,pointIndex));
     delete pointingToImage;
     pointingToImage=0;
   }
@@ -1067,7 +1068,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     MPosition nullPos;
     mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
 
-    worldPosMeas=act_mspc.directionMeas(pointIndex);
+    worldPosMeas=directionMeas(act_mspc, pointIndex);
     // Make a machine to convert from the worldPosMeas to the output
     // Direction Measure type for the relevant frame
     MDirection::Ref outRef(directionCoord.directionType(), mFrame_p);
@@ -1082,16 +1083,22 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     mFrame_p.resetPosition(FTMachine::mLocation_p);
   }
   
-  worldPosMeas=(*pointingToImage)(act_mspc.directionMeas(pointIndex));
+  worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
   Bool result=directionCoord.toPixel(xyPos, worldPosMeas);
   
-
 
 
   if(!result) {
     logIO_p << "Failed to find a pixel for pointing direction of " 
 	    << MVTime(worldPosMeas.getValue().getLong("rad")).string(MVTime::TIME) << ", " << MVAngle(worldPosMeas.getValue().getLat("rad")).string(MVAngle::ANGLE) << LogIO::WARN << LogIO::POST;
     return False;
+  }
+
+  if((pointingDirCol_p=="SOURCE_OFFSET") ||
+     (pointingDirCol_p=="POINTING_OFFSET")){
+    //there is no sense to track in offset coordinates...hopefully the 
+    //user set the image coords right  
+    fixMovingSource_p=False;
   }
   if(fixMovingSource_p){
     if(xyPosMovingOrig_p.nelements() <2){
@@ -1104,6 +1111,8 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     Vector<Double> actPix;
     directionCoord.toPixel(actPix, actSourceDir);
 
+    //cout << row << " scan " << vb.scan()(row) << "xyPos " << xyPos << " xyposmovorig " << xyPosMovingOrig_p << " actPix " << actPix << endl; 
+
     xyPos=xyPos+xyPosMovingOrig_p-actPix;
 
   }
@@ -1113,5 +1122,31 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
   // Convert to pixel coordinates
 }
+
+  MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& index){
+    if(pointingDirCol_p=="TARGET")
+      return mspc.targetMeas(index);
+    else if(pointingDirCol_p=="POINTING_OFFSET"){
+      if(!mspc.pointingOffsetMeasCol().isNull())
+	return mspc.pointingOffsetMeas(index);
+      cerr << "No PONTING_OFFSET column in POINTING table" << endl; 
+    }
+    else if(pointingDirCol_p=="SOURCE_OFFSET"){
+      if(!mspc.sourceOffsetMeasCol().isNull())
+	return mspc.sourceOffsetMeas(index);
+      cerr << "No SOURCE_OFFSET column in POINTING table" << endl; 
+    }
+    else if(pointingDirCol_p=="ENCODER"){
+      if(!mspc.encoderMeas().isNull())
+	return mspc.encoderMeas()(index);
+      cerr << "No ENCODER column in POINTING table" << endl; 
+    }
+
+    //default  return this
+    return mspc.directionMeas(index);
+
+
+  }
+
 
 } //#End casa namespace

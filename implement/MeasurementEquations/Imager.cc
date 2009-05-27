@@ -278,6 +278,7 @@ traceEvent(1,"Entering imager::defaults",25);
   freqFrameValid_p=False;
   doTrackSource_p=False;
   freqInterpMethod_p="linear";
+  pointingDirCol_p="DIRECTION";
   logSink_p=LogSink(LogMessage::NORMAL, False);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
@@ -2413,7 +2414,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 }
 
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
-			  const Int convsupport)
+			  const Int convsupport, String pointCol)
 {
 
 #ifdef PABLO_IO
@@ -2437,7 +2438,12 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   sdScale_p=scale;
   sdWeight_p=weight;
   sdConvSupport_p=convsupport;
+  pointingDirCol_p=pointCol;
+  pointingDirCol_p.upcase();
+  if( (pointingDirCol_p != "DIRECTION") &&(pointingDirCol_p != "TARGET") && (pointingDirCol_p != "ENCODER") && (pointingDirCol_p != "POINTING_OFFSET") && (pointingDirCol_p != "SOURCE_OFFSET")){
+    os << "No such direction column as "<< pointingDirCol_p << " in pointing table "<< LogIO::EXCEPTION;
 
+  }
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}
@@ -7198,6 +7204,8 @@ Bool Imager::createFTMachine()
     else {
       ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
     }
+    ft_p->setPointingDirColumn(pointingDirCol_p);
+
     VisIter& vi(vs_p->iter());
     // Get bigger chunks o'data: this should be tuned some time
     // since it may be wrong for e.g. spectral line

@@ -228,7 +228,7 @@ class Imager
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
-		    const Int convsupport=-1);
+		    const Int convsupport=-1, String pointingColToUse="DIRECTION");
 
   // Set the voltage pattern
   Bool setvp(const Bool dovp,
@@ -693,7 +693,7 @@ protected:
   //Track moving source stuff
   Bool doTrackSource_p;
   MDirection trackDir_p;
-    
+  String pointingDirCol_p;
 
 };
 

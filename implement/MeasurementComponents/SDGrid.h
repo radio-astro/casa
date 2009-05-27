@@ -257,6 +257,9 @@ private:
 
   Bool getXYPos(const VisBuffer& vb, Int row);
 
+  //get the MDirection from a chosen column of pointing table
+  MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index);
+
 };
 
 } //# NAMESPACE CASA - END
