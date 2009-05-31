@@ -22,6 +22,7 @@ namespace casa {
   antPositions_p(antColumns_p.positionMeas()),
   antOffset_p(antColumns_p.offsetMeas()),
   refpos_p(antPositions_p(0)),  // We use the first antenna for the reference
+  refposref_p(refpos_p.getRef()),
   feedOffset_p(msc_p.feed().positionMeas())
 {
   fill_bl_an(bl_an_p, ms_ref);		
@@ -33,10 +34,11 @@ MSUVWGenerator::~MSUVWGenerator(){
 void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref)
 {
   nant_p = antPositions_p.table().nrow();
+  logSink() << LogIO::DEBUG1 << "nant_p: " << nant_p << LogIO::POST;
 
   Double max_baseline = -1.0;
   Double bl_len;
-
+ 
   const ROScalarColumn<Double>& antDiams = antColumns_p.dishDiameter();
   Double smallestDiam = antDiams(0);
   Double secondSmallestDiam = antDiams(0);
@@ -79,7 +81,14 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
   MVBaseline mvbl;
   MBaseline  basMeas;
 
+  logSink() << LogIO::DEBUG1
+    //   << "timeCentroid: " << timeCentroid
+	    << "\nfldID: " << fldID
+    //<< "\nphasedir: " << phasedir
+	    << LogIO::POST;
+
   // at ref ant, at timeCentroid, for the phaseDir
+  //  MBaseline::Ref basref(refposref_p, measFrame);
   MBaseline::Ref basref(MBaseline::ITRF, measFrame);
   basMeas.set(mvbl, basref);
   basMeas.getRefPtr()->set(measFrame);
@@ -151,6 +160,8 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
     if(currTime - oldTime > timeRes_p || currFld != oldFld){
       oldTime = currTime;
       oldFld  = currFld;
+      logSink() << LogIO::DEBUG1 << "currTime: " << currTime
+		<< "\ncurrFld: " << currFld << LogIO::POST;
       uvw_an(timeCentMeas(toir), currFld);
     }
     
@@ -170,8 +181,6 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   }
   return true;
 }
-
-LogIO& MSUVWGenerator::logSink() {return sink_p;};
 
 // void MSUVWGenerator::get_ant_offsets(const MDirection& dir_with_a_frame)
 // {

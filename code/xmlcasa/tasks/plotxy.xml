@@ -122,7 +122,7 @@
 		</param>
 
 		<param type="string" name="uvrange" subparam="true">
-			<description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
+			<description>uv range: \'\'==>all; uvrange = \'0~100klambda\'</description>
 			<value></value>
 		</param>
 
@@ -162,12 +162,12 @@
 		</param>
 
 		<param type="string" name="width" subparam="true">
-			<description>number of channels to average, default: \'1\', other options: \'all\', \'allspw\'</description>
+			<description>number of channels to average, default: \'1\', Also: \'all\', \'allspw\'</description>
 			<value>1</value>
 		</param>
 
 		<param type="string" name="timebin" subparam="true">
-			<description>length of time in seconds to average, default=\'0\', other options: \'all\'</description>
+			<description>Averaging time in seconds, default=\'0\', also: \'all\'</description>
 			<value>0</value>
 		</param>
 

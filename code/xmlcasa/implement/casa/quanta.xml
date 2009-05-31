@@ -149,7 +149,8 @@ The result will be a scalar quantity.
 <!--, or an array of quantities.-->
 If a numeric value and a unit string
 are given, the numeric value can be any numeric type, and can also be
-a vector of numeric values.
+a vector of numeric values.  print qa.map() to get a list of recognized units.
+'d' is usually days, but can be degrees (see example).
 <!--an array or a vector of them. See the introduction for an example of
 all the possibilities.-->
 </description>
@@ -168,10 +169,19 @@ print tu
 #{'value': 1.0, 'unit': 'Jy'}
 print qa.quantity(-1.3, 'Jy')		# make quantity with separate value
 #{'value': -1.3, 'unit': 'Jy'}
-q1 = qa.quantity([8.57132661e+09, 1.71426532e+10], 'km/s')
+q1 = qa.quantity([8.57132661e+09, 1.71426532e+10], 'km/s') # Composite unit
 print q1
 #{'value': array([  8.57132661e+09,   1.71426532e+10]), 'unit': 'km/s'}
-#
+q = qa.quantity('5d'); print q
+#{'value': 5.0, 'unit': 'd'}            # d = days
+q = qa.quantity('5 d'); print q
+#{'value': 5.0, 'unit': 'd'}            # even if there's a space, as of 5/28/09
+q = qa.quantity('5d30m'); print q
+#{'value': 5.5, 'unit': 'deg'}          # Unless followed by an m!
+qa.quantity('5d30s')                    # WRONG
+# {'unit': 'd30s', 'value': 5.0}        # I told you...
+qa.quantity('5d0m30s')                  # OK
+# {'unit': 'deg', 'value': 5.0083333333333337}
 """
 \end{verbatim}
 </example>
@@ -1890,7 +1900,7 @@ print qa.done(kill=T)
 <returns type="record"/>
 <description>
 unit makes a quantity from a string, or from a value and a string.
-Note that unit is a synonym for quantity.
+Note that unit is a synonym for quantity (see example there).
 </description>
 </method>
 

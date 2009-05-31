@@ -115,7 +115,7 @@ another visibility file.
 	</param>
 
 	<param type="bool" name="calwt">
-		<description>Calibrate weights along with data for all relevant calibrations</description>
+		<description>Calibrate data weights from all relevant calibrations</description>
 		<value>True</value>
 	</param>
 

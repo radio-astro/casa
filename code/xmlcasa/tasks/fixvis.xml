@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="fixvis">
 
-<shortdescription>Recalculates (u,v,w) and Changes Phase Center.</shortdescription>
+<shortdescription>Recalculates (u, v, w)<!--  and Changes Phase Center. --></shortdescription>
 <description>
      This corrects visibilities, and/or their (u, v, w) positions, for various
      effects that can be calculated without fitting a model to the data.
@@ -18,11 +18,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      The effects include:
      \begin{itemize}
        \item calculating (u, v, w) coordinates,
-       \item changing the phase tracking center(s),
-       \item correcting for differential aberration,
+<!--        \item changing the phase tracking center(s),
+       \item correcting for differential aberration,  -->
        \item changing the refcode (i.e. B1950 to J2000 or 2006.78),
-       \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-       \item refocusing.
+       \item changing the projection, as in (-)NCP to SIN,
+       \item refocusing (Not yet implemented).
      \end{itemize}
 </description>
 
@@ -32,7 +32,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value></value>
         <example>vis='ngc5921.ms'</example>
     </param>
-    <param type="string" name="outputvis" kind="ms">
+    <param type="string" name="outputvis" kind="ms" mustexist="true">
         <description>Name of the output visibility set.  (Can be the same as vis.)</description>
         <value></value>
         <example>vis='ngc5921\_fixedvis.ms'</example>
@@ -43,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>""</value>
     </param>
     <param type="string" name="refcode">
-        <description>Reference frame to use for the output.</description>
+        <description>Reference frame to use for the output.  Blank = use the frame of vis.</description>
         <value></value>
         <example>refcode = 'J2000'</example>
     </param>
@@ -52,12 +52,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value></value>
         <example>proj = 'SIN'</example>
     </param>
-    <param type="any" direction="in" name="ptcs">
-        <description>Phase tracking centers to use for the output.  Blank = use old ones.</description>
+<!--     <param type="any" direction="in" name="phasecenters">
+        <description>Phase tracking centers to use for the output, in the same order as fields.  Use LON LAT offsets (i.e. "-0.5s 0.5s") in the same frame as refcode or absolute directions (i.e. "J2000 19h55m05.6s -34d44m43.0s"). Blank = use old ones.</description>
 	<any type="variant"/>
         <value>""</value>
         <example></example>
-    </param>
+    </param>  -->
 </input>
 
 <!-- DIRTY HACK: <description> does not currently (2009-03-10) make it into help or ?,

@@ -8,25 +8,25 @@ Available tasks:
    accum         flagdata       listcal      sdlist
    applycal      flagmanager    listhistory  sdplot    
    bandpass      fluxscale      listobs      sdsave    
-   browsetable   ft             listvis      sdscale   
-   clean         gaincal        makemask     sdsmooth  
-   clearcal      hanningsmooth  mosaic       sdstat    
-   clearplot     imcontsub      peel         setjy     
-   clearstat     imhead         plotants     smoothcal 
-   concat        immoments      plotcal      specfit   
-   deconvolve    importfits     plotxy       split     
-   exportfits    importuvfits   sdaverage    tget      
-   exportuvfits  importvla      sdbaseline   uvcontsub 
-   feather       imregrid       sdcal        uvmodelfit
-   filecatalog   imsmooth       sdcoadd      viewer
-   find          imstat         sdfit        vishead    
-   fixvis        imval          sdflag       widefield
-                 invert         
+   blcal         ft             listvis      sdscale   
+   browsetable   gaincal        makemask     sdsmooth  
+   clean         hanningsmooth  mosaic       sdstat    
+   clearcal      imcontsub                   setjy     
+   clearplot     imhead         plotants     smoothcal 
+   clearstat     immoments      plotcal      specfit   
+   concat        importfits     plotxy       split     
+   deconvolve    importuvfits   sdaverage    tget      
+   exportfits    importvla      sdbaseline   uvcontsub 
+   exportuvfits  imregrid       sdcal        uvcontsub2
+   feather       imsmooth       sdcoadd      uvmodelfit
+   filecatalog   imstat         sdfit        viewer    
+   find          imval          sdflag       vishead  
+   fixvis        invert                      widefield        
                 
 Additional tasks available for ALMA commissioning use
-         (still alpha code as of Beta 0 release):
+         (still alpha code as of Beta release):
 
- simdata        blcal       importasdm
+ simdata        importasdm
 
 Available tools:
 
@@ -98,11 +98,11 @@ def tasklist():
       print 'Available tasks: \n'
       print 'Import/Export    Information  Data Editing  Display/Plot'
       print '-------------    -----------  ------------  ------------'
-      print 'importvla        listcal      flagautocorr  clearplot'
-      print '(importasdm)     listhistory  flagdata      plotants '
-      print 'importfits       listobs      flagmanager   plotcal'    
-      print 'importuvfits     listvis      plotxy        plotxy'
-      print 'exportfits       imhead                     viewer'
+      print 'importvla        listcal      (fixvis)      clearplot'
+      print '(importasdm)     listhistory  flagautocorr  plotants '
+      print 'importfits       listobs      flagdata      plotcal'    
+      print 'importuvfits     listvis      flagmanager   plotxy'
+      print 'exportfits       imhead       plotxy        viewer'
       print 'exportuvfits     imstat'
       print '                 vishead'
       print ''
@@ -110,12 +110,12 @@ def tasklist():
       print '-----------      -------      ---------     -------'
       print 'accum            clean        setjy         help task'
       print 'applycal         deconvolve   uvcontsub     help par.parameter'
-      print 'bandpass         feather      uvmodelfit    taskhelp'
-      print '(blcal)          ft                         tasklist'
+      print 'bandpass         feather      (uvcontsub2)  taskhelp'
+      print 'blcal            ft           uvmodelfit    tasklist'
       print 'gaincal          invert                     browsetable'
       print 'fluxscale        makemask                   clearplot'
       print '(fringecal)      mosaic                     clearstat'
-      print 'clearcal         peel                       concat'
+      print 'clearcal         widefield                  concat'
       print 'listcal                                     filecatalog'
       print 'smoothcal                                   startup'
       print 'polcal                                      split'
@@ -129,10 +129,10 @@ def tasklist():
       print 'immath                        sdcal'
       print 'immoments                     sdcoadd'
       print 'imregrid                      sdfit'
-      print 'imstat                        sdflag'
-      print 'imval                         sdlist'
-      print 'specfit                       sdplot'
-      print '                              sdsave'
+      print 'imsmooth                      sdflag'
+      print 'imstat                        sdlist'
+      print 'imval                         sdplot'
+      print '(specfit)                     sdsave'
       print '                              sdscale'
       print '                              sdsmooth'
       print '                              sdstat'

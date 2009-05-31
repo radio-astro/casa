@@ -79,7 +79,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="interpolation" subparam="true">
-	    <description>Type of spectral interpolation of visibilities (nearest, linear, cubic)</description>
+	    <description>Spectral interpolation(nearest, linear, cubic)</description>
 	    <value>nearest</value>
 	    <allowed kind="enum">
 	    <value>nearest</value>
@@ -160,7 +160,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 
     <param type="intArray" name="multiscale">
-      <description>set deconvolution scales (pixels), default: multiscale=[] (standard CLEAN)</description>
+      <description>deconvolution scales (pixels); [] = default standard clean</description>
       <value type="vector">
 	<value></value>
       </value>
@@ -567,6 +567,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                width -- Output channel width in units of the input
  		     channel width (&gt;1 indicates channel averaging)
                  default=1; example: width=4
+               interpolation -- Interpolation type of spectral data when gridded on
+                  the uv-plane
+                 default = 'nearest'
+                    HOWEVER, 'linear' is recommended
            examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
@@ -663,7 +667,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                synthesized beam, etc. For example if synthesized beam
                is 10" and cell=2", try multscale = [0,5,15]. Note,
                multiscale is currently a bit slow.
- 	      default: multiscale=[] (standard CLEAN using psfmode algorithm,
+ 	       default: multiscale=[] (standard CLEAN using psfmode algorithm,
                no multi-scale). Example:  multscale = [0,5,15] 
 
   &gt;&gt;&gt; multiscale expandable parameter(s): 
@@ -772,7 +776,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		       'superuniform','briggsabs','radial'
 
   &gt;&gt;&gt; Weighting expandable parameters
-               For weighting='briggs' and 'briggsabs'
+              For weighting='briggs' and 'briggsabs'
                  robust -- Brigg's robustness parameter
                    default=0.0; example: robust=0.5;
                    Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
@@ -780,10 +784,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  noise   -- noise parameter to use for Briggs "abs" 
  		weighting
                    example noise='1.0mJy'
-               For superuniform/briggs/briggsabs weighting
-                 npixels -- number of pixels to determine uv-cell size
-                   for weight calculation
-                   example npixels=7
+              npixels -- uv-cell area used for weight calculation
+                   example npixels=1
+                Default = 0
+                   superuniform:  0 Means 3x3 cells for weighting
+                     the cell weight is proportional to the weight of
+                     the 3x3 cells centered on it.
+                   superuniform = F means 1x1 cell for averaging weights.
+                   briggs/briggsabs: 0 is similar to 1x1 cell weight.
+                     1 may? be similar to 3X3 cells.
+                Only npixels 0 or 1 recommended
+                   
        restoringbeam -- Output Gaussian restoring beam for CLEAN image
                [bmaj, bmin, bpa] elliptical Gaussian restoring beam
                default units are in arc-seconds for bmaj,bmin, degrees
@@ -802,7 +813,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        minpb -- Minimum PB level to use default=0.1; example:
                minpb=0.01 Note: this minpb is always in effect
                (regardless of pbcor=True/False) 
- 	      async -- Run asynchronously 
+       async -- Run asynchronously 
   		    default = False; do not run asychronously
 
 

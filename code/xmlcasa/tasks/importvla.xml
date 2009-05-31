@@ -91,7 +91,7 @@ importvla(archivefiles=None,vis=None,
 	   </param>
 
 	   <param type="bool" name="keepblanks" >
-		   <description>Scans with blank (empty) source names (i.e. tipping scans) will be filled. The default is to not fill.</description>
+		   <description>Fill scans with blank (empty) source names (e.g. tipping scans)</description>
 		   <value>False</value>
 	   </param>
    </input>
@@ -142,9 +142,13 @@ importvla(archivefiles=None,vis=None,
       autocorr --  import autocorrelations to ms
               default:  =&gt; False (no autocorrelations)
       antnamescheme -- 'old' or 'new' antenna names.
-               default =&gt; 'new' gives antnenna names
+              default =&gt; 'new' gives antnenna names
                 'VA04' or 'EA13 for VLA telescopse 04 and 13 (EVLA)
                 'old' gives names '04' or '13'
+      keepblanks -- Should sources with blank names be filled into the data base
+              default =&gt; false.  Do not fill
+              These scans are tipping scans (as of June 1, 2009) and should not
+              be filled in the visibility data set.
       async --  Run asynchronously
               default = False; do not run asychronously
       </example>

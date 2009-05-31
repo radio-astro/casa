@@ -1,7 +1,11 @@
-import os, shutil
+import casac, os, shutil
+from tasks import *
+from taskinit import *
 
 ms_root = 'phoenix_test'
 input_ms = ms_root + '.ms'
+
+import inspect, string, sys
 
 def description():
     return "Tests time and channel averaging with split using %s." % input_ms
@@ -31,7 +35,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
         split(vis=inms, outputvis=tms, timebin=tbin)
     except Exception, e:
         print "Error", e, "from split(vis=%s, outputvis=%s, timebin=%s)." % (inms, tms, tbin)
-        if os.isdir(tms):
+        if os.path.isdir(tms):
             print "\t", tms, "has been left on disk for your inspection."
         raise e
 
@@ -76,10 +80,15 @@ def run():
 
         try:
             squash_factor = dudict[input_ms] / dudict[ms_root + '_timebin20s_width4.ms']
-            if squash_factor not in (3, 4, 5):
-                errmsg = "The compression factor, %d, is outside the expected 3-5 range" 
-                raise ValueError, errmsg % squash_factor
+            if squash_factor not in range(3, 16):
+                errmsg = "The compression factor, %d, is far outside the expected range.\n" % squash_factor
+                errmsg += "%s: %d\n" % (input_ms, dudict[input_ms])
+                errmsg += "%s: %d\n" % (ms_root + '_timebin20s_width4.ms', dudict[ms_root + '_timebin20s_width4.ms'])
+                raise ValueError, errmsg
         except Exception, e:
             raise Exception, "Error (%s) in checking the before and after disk usage." % e 
 
         ###### TODO: compare with the internals of a reference output.
+
+    return []
+
