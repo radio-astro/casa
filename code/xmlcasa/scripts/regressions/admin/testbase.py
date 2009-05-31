@@ -7,6 +7,7 @@ import shutil
 import sys
 import casac
 import inspect
+import re
 #from tasks import *  # execfile
 #from taskinit import casalog
 
@@ -105,6 +106,8 @@ class testbase :
                 # Fails if module does not
                 # define the description() function
                 desc = leTest.description()
+                desc = re.sub('\s+', ' ', desc)
+
             except:
                 desc = None
         else:

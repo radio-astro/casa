@@ -36,12 +36,6 @@
 
 namespace casa {
 
-/*
-    void changed();
-
-    void differentFromSet();
- */
-
 // GUI widget for editing a PlotMSAveraging object.
 class PlotMSAveragingWidget : public QtEditingWidget, Ui::AveragingWidget {
     Q_OBJECT

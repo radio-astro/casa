@@ -194,7 +194,7 @@ struct NRODataRecord
   // Offset for array data
   double ADOFF ;
 
-  // Spectral data: 
+  // Spectral data for OTF data: 
   // Originally the data are double array. 
   // But they are quantized and converted to the int array with 
   // a scalling factor and an offset value. Additionally, 
@@ -202,6 +202,7 @@ struct NRODataRecord
   //
   // 2009/02/26 Takeshi Nakazato  Moved to NROReader
   char *LDATA ;
+  // Spectral data for FITS data
   vector<int> JDATA ;
 } ;
 

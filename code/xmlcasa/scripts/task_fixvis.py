@@ -19,8 +19,6 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
                 casalog.post("refcode %s is invalid" % refcode, 'SEVERE')
                 casalog.post("Valid codes are %s" % refcodes, 'NORMAL')
                 badcsys = True
-        else:
-            refcode = tb.getcolkeywords('UVW')['MEASINFO']['Ref']
 
         if proj:
             projs = csys.projection('all')['types']
@@ -33,6 +31,11 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
         tb.close()
         if badcsys:
             return
+
+    if not refcode:   # measures must be told to use the one in vis.
+        tb.open(vis)
+        refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
+        tb.close()
 
     if outputvis != vis:
         try:

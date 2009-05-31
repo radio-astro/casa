@@ -124,9 +124,9 @@ const PlotAxis PMS::DEFAULT_CANVAS_YAXIS = Y_LEFT;
 
 const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT()) + " (" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT()) + ")" +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_REFVALUE()) + " (from " +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_REFVALUE()) + ")" +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());
 
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
@@ -149,8 +149,49 @@ PlotSymbolPtr PMS::DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory) {
     return factory->symbol(*symbol);
 }
 
+map<PlotSymbol::Symbol, int> PMS::SYMBOL_MINIMUM_SIZES() {
+    map<PlotSymbol::Symbol, int> m;
+    
+    m[PlotSymbol::CIRCLE] = 2;
+    m[PlotSymbol::DIAMOND] = 3;
+    
+    return m;
+}
+
 const String PMS::DEFAULT_TITLE_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
+
+const bool PMS::DEFAULT_SHOW_GRID = false;
+
+PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("gray");
+    return factory->line(*line);
+}
+
+PlotFontPtr PMS::DEFAULT_ANNOTATION_TEXT_FONT(PlotFactoryPtr factory) {
+    static PlotFontPtr font = factory->font();
+    return factory->font(*font);
+}
+
+PlotLinePtr PMS::DEFAULT_ANNOTATION_TEXT_OUTLINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("000000", PlotLine::NOLINE, 1.0);
+    return factory->line(*line);
+}
+
+PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_TEXT_BACKGROUND(PlotFactoryPtr f) {
+    static PlotAreaFillPtr fill = f->areaFill("0000FF", PlotAreaFill::NOFILL);
+    return f->areaFill(*fill);
+}
+
+PlotLinePtr PMS::DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("000000");
+    return factory->line(*line);
+}
+
+PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f) {
+    static PlotAreaFillPtr fill = f->areaFill("0000FF", PlotAreaFill::NOFILL);
+    return f->areaFill(*fill);
+}
 
 }

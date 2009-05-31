@@ -535,7 +535,7 @@ void QtCanvas::drawLabels(QPainter *painter)
     text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);                   
     font.setPixelSize(50);
     painter->rotate(-90);
-    painter->translate(- height() / 2, Margin / 4);  
+    painter->translate(- height() / 2, Margin / 6);  
     painter->fillPath(text, yLabel.color);
     painter->translate(height() / 2, - Margin / 4);
     painter->rotate(90);

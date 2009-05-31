@@ -48,6 +48,7 @@
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
+#include <casa/System/Aipsrc.h>
 
 #include <fstream>
 
@@ -61,6 +62,10 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   VisCal(vs),
   cs_(NULL),
   cint_(NULL),
+  maxTimePerSolution_p(0), 
+  minTimePerSolution_p(10000000), 
+  avgTimePerSolution_p(0),
+  timer_p(),
   calTableName_(""),
   calTableSelect_(""),
   append_(False),
@@ -90,6 +95,16 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
 
+  caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
+  cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.00001");
+  String ca_str = Aipsrc::get(caiRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
+  userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
+
+  ca_str = Aipsrc::get(cafRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
+  userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
+
   initSVC();
 
 };
@@ -98,6 +113,10 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   VisCal(nAnt),
   cs_(NULL),
   cint_(NULL),
+  maxTimePerSolution_p(0), 
+  minTimePerSolution_p(10000000), 
+  avgTimePerSolution_p(0),
+  timer_p(),
   calTableName_(""),
   calTableSelect_(""),
   append_(False),
@@ -126,6 +145,16 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
+
+  caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
+  cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.00001");
+  String ca_str = Aipsrc::get(caiRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
+  userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
+
+  ca_str = Aipsrc::get(cafRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
+  userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
 
   initSVC();
 
@@ -1956,6 +1985,52 @@ void SolvableVisCal::applyChanMask(VisBuffer& vb) {
   }
 
 }
+  //
+  //-----------------------------------------------------------------------
+  //  
+  void SolvableVisCal::printActivity(const Int nSlots, const Int slotNo, 
+				     const Int fieldId, const Int spw, 
+				     const Int nSolutions)
+  {
+    Int nMesg;
+
+    //    nSlots = rcs().nTime(spw);
+    
+    Double timeTaken = timer_p.all();
+    if (maxTimePerSolution_p < timeTaken) maxTimePerSolution_p = timeTaken;
+    if (minTimePerSolution_p > timeTaken) minTimePerSolution_p = timeTaken;
+    avgTimePerSolution_p += timeTaken;
+    Double avgT =  avgTimePerSolution_p/(nSolutions>0?nSolutions:1);
+    //
+    // Boost the no. of messages printed if the next message, based on
+    // the average time per solution, is going to appear after a time
+    // longer than your patience would permit!  The limit of
+    // patience defaults to 1h.
+    //
+    Float boost = userPrintActivityInterval_p/avgT;
+    boost = userPrintActivityInterval_p/avgT;
+    boost = (boost < 1.0)? 1.0 : nSlots*userPrintActivityFraction_p;
+    nMesg = (Int)boost;
+    
+    Int tmp=abs(nSlots-slotNo); Bool print;
+    print = False;
+    if (nMesg <= 0) print=False;
+    else if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
+    else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=True;
+    else print=False;
+
+    if (print)
+      {
+	Int f = (Int)(100*(slotNo+1)/(nSlots>0?nSlots:1));
+	logSink()<< LogIO::NORMAL 
+		 << "Spw=" << spw << " slot=" << slotNo << "/" << nSlots
+		 << " field=" << fieldId << ". Done " << f << "%"
+		 << " Time taken per solution (max/min/avg): "
+		 << maxTimePerSolution_p << "/" 
+		 << (minTimePerSolution_p<0?1:minTimePerSolution_p) << "/"
+		 << avgT << " sec" << LogIO::POST;
+      }
+  }
   
 // **********************************************************
 //  SolvableVisMueller Implementations
@@ -2198,7 +2273,7 @@ SolvableVisJones::SolvableVisJones(VisSet& vs) :
   dJ1_(NULL),                           // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(False) 
+  DJValid_(False)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(vs)" << endl;
 }
@@ -2211,7 +2286,7 @@ SolvableVisJones::SolvableVisJones(const Int& nAnt) :
   dJ1_(NULL),                 // data...
   dJ2_(NULL),
   diffJElem_(),
-  DJValid_(False) 
+  DJValid_(False)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(i,j,k)" << endl;
 }

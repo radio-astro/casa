@@ -40,32 +40,10 @@
         
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	/*
-template<class T> Array<T> operator & ( const Array<T> &arr,const T &val)
-{
-  Array<T> res( arr.shape() );
-  if( !val )
-    res.set(0);
-  else
-  {
-    Bool delres,delarr;
-    T *pres = res.getStorage(delres),*pr = pres; 
-    const T *parr = arr.getStorage(delarr), *pa = parr;
-    uInt n = arr.nelements();
-    while( n-- )
-      *(pr++) = *(pa++) & val;
-    res.putStorage(pres,delres);
-    arr.freeStorage(parr,delarr);
-  }
-  return res;
-}
-*/
-
 template<class T> LogicalArray  maskBits  ( const Array<T> &arr,const T &val)
 {
   return (arr&val) != (T)0;
 }
-
 
 } //# NAMESPACE CASA - END
 

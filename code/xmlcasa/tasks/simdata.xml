@@ -23,11 +23,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
 
-    <param type="bool" name="modifymodel">
-      <description>modify model image WCS or flux scale</description>
+
+    <param type="bool" name="ignorecoord">
+      <description>scale model coordinates to output parameters</description>
       <value>False</value>
     </param>
 
+    <param type="string" name="inbright">
+       <description>set peak surface brightness in Jy/pixel or "unchanged"</description>
+       <value>unchanged</value>
+    </param>
+
+
+<!--
     <param type="string" name="refdirection" subparam='true'>
        <description>reference direction (CRVAL): "J2000 19h00m00 -40d00m00" or "direction" or "header"</description>
        <value>direction</value>
@@ -42,11 +50,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <description>pixel size: "0.1arcsec" or "header"</description>
        <value>header</value>
     </param>
+-->
 
-    <param type="string" name="inbright" subparam='true'>
-       <description>peak surface brightness in Jy/pixel or "unchanged"</description>
-       <value>unchanged</value>
-    </param>
 
 
     <param type="string" name="complist">
@@ -95,16 +100,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>10s</value>
     </param>
 
-<!--    
-    <param type="string" name="mode">
-      <description>data type: channel, continuum</description>
-      <value>continuum</value>		  
-      <allowed kind="enum">
-	<value>channel</value>
-	<value>continuum</value>
-      </allowed>
-    </param>
--->
     
     <!-- having this an array implies a degree of complexity (multiple spws) that we don't 
 	 yet have :)  
@@ -297,15 +292,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <when param="modifymodel">
-	<equals type="bool" value="False"/>
-	<equals type="bool" value="True">
-	  <default param="refdirection"><value>"direction"</value></default>
-	  <default param="refpixel"><value>"center"</value></default>
-	  <default param="incell"><value>"header"</value></default>
-	  <default param="inbright"><value>"unchanged"</value></default>
-	</equals>
-      </when>
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
@@ -367,20 +353,9 @@ mosaic simulation task (prototype):
     Keyword arguments:
     -------------------------------
     -- Input Model:
-    modelimage -- name of an image to simulate
-        [alpha alert] input images with more than 2 dimensions 
-        have not been tested for all possible permutations.
-    modifymodel -- if you want to modify the input image either 
-        its pointing direction or cell size, or its brightness, 
-        overriding the input image header
-      refdirection -- direction of input image (i.e. CRVAL); 
-        * can be set to "direction" to use the same as the 
-        desired simulation direction specified below.
-        * can be set to "header" to keep what's in the image header
-      refpixel -- pixel at which refdirection is specified (i.e. CRPIX); 
-        can be set to "center" to use the central pixel of the image
-      incell -- pixel size of input image 
-      inbright -- peak surface brightness to scale input image 
+    modelimage -- name of an image to simulate (See below for explanation and examples!)
+    ignorecoord -- ignore whatever is in the image header for coordinates (see below)
+    inbright -- peak surface brightness to scale input image 
         in Jy/pixel.  
         [alpha alert] If you specify "unchanged" it will take the 
         numerical values in your image and assume they are in Jy/pixel, 
@@ -455,24 +430,78 @@ mosaic simulation task (prototype):
     display -- Plot array config, uv coverage, beam, and images
 
 
+
+
+    -------------------------------
+    How to specify a model image:
+    -------------------------------
+    * simdata requires a CASA or fits image. If you merely have a grid of 
+      numbers, you will need to write them out as fits or write a CASA script to
+      read them in and use the ia tool to create an image and insert the data.
+    
+    * simdata does NOT require a coordinate system in the header. If the
+      coordinate information is incomplete, missing, or you would like to
+      override it, set "ignorecoord=False".  simdata will then assume that the
+      axes of your input correspond to RA, Dec, and (optionally) frequency and
+      (optionally) Stokes parameter.  It will assume that the spatial pixel
+      size equals the output parameter "cell", the center of the image is in
+      the (average of the) output parameter "direction", the spectral reference
+      frequency and starting frequency equal the output parameter "startfreq",
+      and the channel width equals the output parameter "chanwidth".  
+
+    * [alpha alert] simdata does not easily change the number of channels yet. 
+      It will warn you about this if you ask for a different number than the input
+      data cube. 
+
+    * If you have a proper Coordinate System, simdata will so its best to
+      generate visibilities from that, and then create a synthesis image
+      according to the specified user parameters.  Again, regridding the
+      spectral dimension may not have complete flexibility yet.
+
+    * If you would like finer control of the input Coordinate System, you can 
+      run simdata once with 'ignorecoord=True' and 'checkinputs="only"' (the
+      latter causes it to stop before doing the time-intensive visibility
+      calculations). Then begin simulating from the .coord image that gets created.
+
+    * You can manipulate the image header with the "imhead" task, or you can
+      delve deeper with the ia and cs tools.  If you use the tools, you should
+      be aware that a CoordinateSystem in CASA can exist independently of an
+      Image.  Once the CoordinateSystem is detached from the image, it is the
+      users responsibility to do any manipulation e.g. axis reordering on
+      both. Example:
+        ia.open("myimage_filename")
+        ia.summary() # see header as attached to the image
+        csys=ia.coordsys() # detach the CoordinateSystem
+        csys.summary() # examine it
+        csys.setreferencepixel([100,100]) 
+        arr=ia.getchunk() # get the data from the Image
+        ia.done()
+        csys.reorder([0,2,1])  # reorder the CoordinateSystem
+        arr=arr.reorder([0,2,1])  # reorder the data         
+        ia.fromshape(outfile="mynewimage_file",shape=[32,32,256],csys=csys.torecord(),overwrite=True)
+            # make a new image, with the right shape and CoordinateSystem
+        ia.putchunk(arr)   # put the data into the new image.
+        csys.done()
+        ia.done()
+
     -------------------------------
     Output produced:
     -------------------------------
     $project.$modelimage.coord = input image recast into 4d image
-    $project.$modelimage.coord.regrid = input image regridded to size 
-        of output image.   
-    $project.convolved.im = input image regridded to output size and 
+    $project.$modelimage.flat  = input image regridded to size, moment zero
+        image if the input was a cube.
+    $project.convolved = input image regridded to output size and 
         convolved with Gaussian synthesized beam for the observation
     $project.ms = synthesized visibilities
     $project.noisy.ms = visibilities with noise added 
       ** if noise is requested, then the noisy visibilities will be 
          used to create the synthsized image.
-    $project.dirty.image = output dirty (inverted) synthesized image
     $project.clean.image = output cleaned synthesized image
     $project.clean.psf = output synthesized beam
       ** only one of dirty.image and clean.image will be created as output, 
          depending on whether niter=0 (invert to dirty) or niter>0 (clean)
-    $project.diff.im = convolved input - output
+    $project.clean.image = output cleaned synthesized image moment zero if a cube
+    $project.diff.im = convolved input - output (2D)
     $project.absdiff.im = max[ abs(diff) , 0.7*rms(diff) ]
     $project.fidelity.im = convolved input / absdiff
 

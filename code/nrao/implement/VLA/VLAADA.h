@@ -197,10 +197,12 @@ public:
   //  (auto-True prior to revision 25 [exclusive])
   Bool nomSensApplied(VLAEnum::IF which, const uInt rev) const;
 
+  // Identifies which array an antennn belongs to: VLA, EVLA, or VLBA
+  String arrayName() const;
+
   // Function which checks the internal data of this class for consistant
   // values. Returns True if everything is fine otherwise returns False.
   Bool ok() const;
-
 
 private:
   //# Contains a VLA logical record

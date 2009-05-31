@@ -105,6 +105,12 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
         raise Exception, 'Output file, '+outfile+\
               ' exists. immoment can not proceed, please\n'\
               'remove it or change the output file name.'
+    elif ( len( outfile ) < 1 ):
+        casalog.post( "The outfile paramter is empty, consequently the" \
+                      +" moment image will NOT be\nsaved on disk," \
+                      +" but an image tool (ia) will be returned and if the" \
+                      +" returned value\nis saved then you can used in" \
+                      +" the same way the image tool (ia). can", 'WARN' )    
         
     try:
 	# Translate the string value into an index value.
@@ -116,13 +122,31 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
 	# a region file it is given higher priority.
 	reg={}
 	if ( len(region)>1 ):
-	    if ( len(box)<1 or len(chans)<1 or len(stokes)<1 ):
+	    if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
 		casalog.post( "Ignoring region selection\ninformation in"\
 			      " the box, chans, and stokes parameters."\
 			      " Using region information\nin file: " + region, 'WARN' );
-	    reg=rg.fromfiletorecord( region );
+
+            if os.path.exists( region ):
+                # We have a region file on disk!
+                reg=rg.fromfiletorecord( region );
+            else:
+                # The name given is the name of a region stored
+                # with the image.
+                # Note that we accept:
+                #    'regionname'          -  assumed to be in imagename
+                #    'my.image:regionname' - in my.image
+                reg_names=region.split(':')
+                if ( len( reg_names ) == 1 ):
+                    reg=rg.fromtabletorecord( imagename, region, False )
+                else:
+                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
 	else: 
 	    reg=imregion( imagename, chans, stokes, box, '', '' )
+            
+        if ( len( reg .keys() ) < 1 ):
+            raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.'
+        
         casalog.post( 'Momements to be found in region: '+str(reg), 'DEBUG2' )
 
         # NEXT Two lines are just for debugging purposes.

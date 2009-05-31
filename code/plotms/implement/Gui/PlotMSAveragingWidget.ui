@@ -5,9 +5,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>222</width>
-    <height>130</height>
+    <width>227</width>
+    <height>138</height>
    </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle" >
    <string>Averaging Widget</string>
@@ -26,6 +32,9 @@
     <number>3</number>
    </property>
    <property name="horizontalSpacing" >
+    <number>3</number>
+   </property>
+   <property name="verticalSpacing" >
     <number>3</number>
    </property>
    <item row="0" column="0" >
@@ -170,12 +179,30 @@
     </layout>
    </item>
    <item row="3" column="0" colspan="2" >
-    <widget class="QCheckBox" name="baseline" >
-     <property name="enabled" >
-      <bool>true</bool>
+    <layout class="QHBoxLayout" >
+     <property name="spacing" >
+      <number>3</number>
      </property>
+     <item>
+      <widget class="QCheckBox" name="baseline" >
+       <property name="text" >
+        <string>All Baselines</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="antenna" >
+       <property name="text" >
+        <string>Per Antenna</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="0" colspan="2" >
+    <widget class="QCheckBox" name="spw" >
      <property name="text" >
-      <string>Baseline</string>
+      <string>All Spectral Windows</string>
      </property>
     </widget>
    </item>
@@ -206,8 +233,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>16</x>
-     <y>27</y>
+     <x>19</x>
+     <y>23</y>
     </hint>
     <hint type="destinationlabel" >
      <x>179</x>
@@ -222,12 +249,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>10</x>
-     <y>48</y>
+     <x>13</x>
+     <y>47</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>83</x>
-     <y>51</y>
+     <x>159</x>
+     <y>46</y>
     </hint>
    </hints>
   </connection>
@@ -238,12 +265,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>36</x>
-     <y>52</y>
+     <x>39</x>
+     <y>47</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>199</x>
-     <y>52</y>
+     <x>214</x>
+     <y>46</y>
     </hint>
    </hints>
   </connection>
@@ -254,12 +281,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>43</x>
-     <y>56</y>
+     <x>46</x>
+     <y>47</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>83</x>
-     <y>80</y>
+     <x>128</x>
+     <y>69</y>
     </hint>
    </hints>
   </connection>
@@ -270,12 +297,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel" >
-     <x>56</x>
-     <y>54</y>
+     <x>59</x>
+     <y>47</y>
     </hint>
     <hint type="destinationlabel" >
-     <x>179</x>
-     <y>90</y>
+     <x>211</x>
+     <y>69</y>
     </hint>
    </hints>
   </connection>

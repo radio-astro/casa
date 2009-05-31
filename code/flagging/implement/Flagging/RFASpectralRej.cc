@@ -377,10 +377,17 @@ String RFASpectralRej::getDesc ()
       sprintf(s, " %s%.2f-%.2fMHz",s1,seg.fq0,seg.fq1);
     desc+=s;
   }
-  desc+="; ";
-  sprintf(s,"%s=%d %s=%.1f %s=%d ",RF_NDEG,ndeg,RF_ROW_THR,threshold,RF_ROW_HW,halfwin);
-  desc+=s;
-  desc+=RFAFlagCubeBase::getDesc();
+  desc += "; ";
+  sprintf(s,
+	  "%s=%d %s=%.1f %s=%d",
+	  RF_NDEG,
+	  ndeg,
+	  RF_ROW_THR,
+	  threshold,
+	  RF_ROW_HW,
+	  halfwin);
+  desc += s;
+  desc += RFAFlagCubeBase::getDesc();
   return desc;
 }
 

@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="fringecal">
-<shortdescription>Calculate a baseline-based fringe-fitting solution (phase, delay, delay-rate); Note: currently this is limited to delays and delay-rates in the central ambiguity</shortdescription>
+<shortdescription>Calculate a baseline-based fringe-fitting solution (phase, delay, delay-rate)</shortdescription>
 <description>
 </description>
 <input>
@@ -95,8 +95,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </input>
 <example>
 
+        This task determines a baseline by baseline fringe solutions; that is it
+        determines the phase, phase rate and delay for each specified solution
+        interval and baseline pair.   At present there is no antenna-based fringe
+        fitter in casa (June 2009) which would supercede this task.
+
+
 	Keyword arguments:
-	vis -- Name of input visibility file (MS)
+	vis -- Name of input visibility file
 		default: &lt;unset&gt;; example: vis='ngc5921.ms'
 	caltable -- Name of output Gain calibration table
 		default: &lt;unset&gt;; example: caltable='ngc5921.gcal'
@@ -157,7 +163,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		default: 0.0 (no opacity correction)
 		example: opacity=0.051
 	solint --  Solution interval (sec)
-		default: 0; example: solint=60.
+		default: 0; example: solint=60.0
+                Cannot be a string.
 	refant -- Reference antenna *name*
 		default: '' (none); example: refant='13'
 

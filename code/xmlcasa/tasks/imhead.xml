@@ -65,7 +65,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mode" >
-	<description>imhead options: list, get, put, summary</description>
+	<description>imhead options: list, summary, get, put</description>
 	<allowed kind="enum">
 	    <value>list</value>
             <value>fits</value>
@@ -148,69 +148,70 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-Lists the header values associated with an image.  Specified
-header variables can be obtained (get) and changed (put).
+        This task allows the user to manipulate some meta-data parameters in an
+        image.  The mode='list' shows those keywords that are
+        presently implemented, with their values.  The contents associated
+        with the keywords can be obtained (get) and changed (put).
 
-This task is similar to the AIPS verbs imhead, gethead, and
-puthead. 
+        Additional image parameter listings are available.
+
+        [For visibility files, the taskname='vishead' should be used.]
+
+        The modes that are available are:
+
+	   list    --- Lists the image header keywords and values.
+                       Use this if 'get' and 'put' are executed.
+           get     --- Get the specified keyword value(s) from the image
+	   put     --- Put the specified keyword value(s) into the image 
+
+           history --- Display the history information in hte CASA logger.
+           summary --- Information summarizing the CASA image file.
+           fits    --- Lists the header information in a FITS style (not available)
+	   add     --- Adds a new header key.  Use with caution
+	   del     --- Delete a header key, hdkey.  Use with caution
 	
-Common Header Items:
-	beammaj		Major axis of the clean beam
-        beammin         Minor axis of the clean beam
-        beampa          Position angle of the clean beam
-	bunit		Image pixel units (K, Jy/beam, etc)
-	cdeltn		Pixel size, nth axis  (max n is 4)
-	crpixn		Pixel coordinate of reference point, nth axis
-	crvaln		Pixel location of reference point, nth axis
-	ctypen		Axis name, nth axis
-	cunitn		Pixel units, nth axis
-	date-obs	Date of the observation
-	equinox         Reference frame for directional coordinates
-        reffreqtype     Reference frame for the spectral coordinates
-        imtype          Image type: intensity, 
-        max             Maximum pixel value in image
-        min             Minimum pixel value in image
-	object		Source name
-	observer	Observer name
-	projection	Image projection ('SIN','TAN', or 'ZEA')
-	restfrequency	Rest Frequency
-	telescope	Telescope name
+        Parameters currently implemented are listed using mode = 'list'
 
-Keyword arguments:
-imagename -- Name of input image
-	default: none; example: imagename='ngc5921_task.image'
-mode -- Mode: options: 'list', 'summary', 'fits', 'history', 'get', 
-                       'put', 'add', and 'del'
-           'summary' Information summarizing the CASA image file.
-	   'list'    lists the CASA image header keywords and values.  This
-                     has more information than 'summary' and should be used
-                     if 'get' and 'put' are executed. The information is
-                     written to the terminal unless the returned value 
-                     is stored in a variable, results = imhead(...)
-           'fits'    Lists the header information in a FITS style
-	   'summary' lists brief header information on the logger
-           'history' Display the history information in hte CASA logger.
-           'get'     Retrieve the value, units if applicable, comments
-                     for a the header key, hdkey. The information is
-                     written to the terminal unless the returned value 
-                     is stored in a variable, results = imhead(...)
-	   'put'     Changes the value of the header item (keyword), 
-                     to the value given by hdvalue.
-	   'add'     Adds a new header key, hdkey, to the header.  The
-                     value of this header item will be set to the value of
-                     hdvalue, which may be empty.
-	   'del'     Delete/remove a header key, hdkey, form the header. 
-                     Note that the user is prevented from removing 
-                     required keywords.
-hdkey -- Header keyword to get, put, add, or del
-	default: none; example: hdkey='telescope'
-hdtype -- Data type that is to be used to store the Header Key, hdkey
-          on disk.  This parameter is to be used with the 'add' mode
-          only.  It can not be used to change the data type of a keyword.
-        options: bool, int, string, doubple, complex
-        default: none; example hdtype='double'
-hdvalue -- Value of header key to get, put, or add.            
-	default: ''; example: hdvalue='VLA'
+           beammaj	   Major axis of the clean beam
+           beammin         Minor axis of the clean beam
+           beampa          Position angle of the clean beam
+	   bunit	   Image pixel units (K, Jy/beam, etc)
+	   cdeltn	   Pixel size, nth axis  (max n is 4)
+	   crpixn	   Pixel coordinate of reference point, nth axis
+	   crvaln	   Pixel location of reference point, nth axis
+	   ctypen	   Axis name, nth axis
+	   cunitn	   Pixel units, nth axis
+           datamax         Maximum pixel value in image
+           datamin         Minimum pixel value in image
+	   date-obs	   Date of the observation
+	   equinox         Reference frame for directional coordinates
+           imtype          Image type: intensity, 
+           minpos
+           minpixpos
+           maxpos
+           maxpixpos
+	   object	   Source name
+	   observer	   Observer name
+	   projection	   Image projection ('SIN','TAN', or 'ZEA')
+           reffreqtype     Reference frame for the spectral coordinates
+	   restfrequency   Rest Frequency
+	   telescope	   Telescope name
+
+        Keyword arguments:
+
+        imagename --- Name of input image
+	                default: none; example: imagename='ngc5921_task.image'
+        mode      --- Mode: options: 
+                        default: none; 'list', 'summary', 'fits', 'history',
+                        'get', 'put', 'add', and 'del'
+
+                        NOTE:  'add' and 'del' should be used with caution
+
+        hdkey     --- keyword to use with get, put, add, or del
+	                default: none;  example: hdkey='telescope'
+        hdvalue   --- keyword value that is 'got', or to be 'put' or
+                      to be 'added'
+	                default: ''; example: hdvalue='VLA'
 	Examples: 
 		  hdkey='date-obs';hdvalue='2007/06/20/00:00:00'
 		  hdkey='beammajor';hdvalue='55arcsec'
@@ -224,14 +225,18 @@ hdvalue -- Value of header key to get, put, or add.
 		  hdkey='crval1';hdvalue='14:07:58'
 		  hdkey='crval4';hdvalue='6250000Hz'
 
-        Note that for the crval and cdelt hdkey values a variety of inputs
-        which includes strings with units, CASA quanta (see the quanta tool
-        for more information), and numeric values.  When numeric values are
-        given, or strings with no units the unit value is assumed to be the
-        same as the units used internally, which is radians for directional
-        axes, and Hz for spectral axes.
+        hdtype    --- Used only with 'add' mode.  It is the data type that
+                           is used to store the hdkey.  It can not be used to
+                           change the data type of an exiting keyword.
+                      options: bool, int, string, doubple, complex
+                      default: none; example hdtype='double'
 
-        Example to get the clean beam from one image and put it in a second image
+
+        Note that hdvalue will contain numbers, strings as well as units.
+        
+        Examples:
+
+        1)  get the clean beam from one image and put it in a second image
 
            Get the clean beam from image1 into hdvalue
                 imagename = 'image1.im'; mode = 'get'; hdkey = 'beam'
@@ -241,10 +246,33 @@ hdvalue -- Value of header key to get, put, or add.
            To then put the clean beam into image2
                 imagename = 'image2.im', mode = 'put'; imhead()
 
+        2)  Most output values are dictionaries:
 
 
-******   NOTE: The changes made by imhead are in the specified  *****
-******             CASA IMAGE file, and NOT a FITS file.        *****
+               mode = 'get'; hdkey = 'maxpos'; aa = imhead()
+
+            would give for the command print aa
+                {'value': '03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz', 'unit': ''}
+            print aa['value'] gives 
+                03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz
+            print aa['value'[1][0:12] gives 03:19:48.160
+
+      
+               mode = 'get'; hdkey = 'crpix1'; aa = imhead()
+
+            would give for the command print aa
+                {'value': '128.0', 'unit': ''}
+            print aa['value'] gives 
+                128.0    (a string)
+
+        3)  The use of put is a bit more straight-forward
+
+               mode = 'put'; hdkey = 'crpix1'; hdvalue = '200'; imhead()
+             then
+               mode = 'get'; hdkey = 'crpix1'; aa = imhead()  would give
+                   {'value': '200.0', 'unit': ''}
+
+
 </example>
 
 </task>

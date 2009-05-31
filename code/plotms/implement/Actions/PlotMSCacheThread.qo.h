@@ -98,6 +98,9 @@ protected slots:
     void cancel();
     
 private:
+    // Plot.
+    PlotMSPlot* itsPlot_;
+    
     // Data.
     PlotMSData* itsData_;
     
@@ -124,6 +127,9 @@ private:
     
     // Flag for whether thread was canceled or not.
     bool wasCanceled_;
+    
+    // Error message, if there was one (otherwise empty).
+    String itsCacheError_;
     
 private slots:
     // Slot for when the QThread finishes.

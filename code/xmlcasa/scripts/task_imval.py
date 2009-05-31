@@ -28,14 +28,15 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         if ( len(stokes) < 1 ):
             stokes='-1'
 
-        # Open the image for processing!
-	ia.open(imagename)
-
         
 	# If the user hasn't specified any region information then
 	# find the very last data point -- what ia.getpixelvalue        
-	# defaults too.     
+	# defaults too.
 	if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 ):
+            print "GETTING SINGLE PIXEL VALUE"
+            # Open the image for processing!
+            ia.open(imagename)
+
 	    # Get the default  pixelvalue() at the referencepixel pos.
             csys=ia.coordsys()
             ref_values = csys.referencepixel()['numeric']
@@ -44,11 +45,11 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
                 point.append( int(round(val) ) )
             casalog.post( 'Getting data value at point '+str(point), 'NORMAL' )
 	    results = ia.pixelvalue(point)
+
 	    retValue = _imval_process_pixel( results, point )
-	    ia.done()
 	    retValue['axes']=axes
             casalog.post( 'imval task complete for point'+str(point), 'NORMAL1' )
-            
+	    ia.done()
 	    return retValue
 
 	# If the box parameter only has two value then we copy
@@ -66,8 +67,8 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
 	singlePt = _imval_get_single( box, chans, stokes, axes )
 	#print "Single point is: ", singlePt, "   ", len(singlePt)
 	if ( len( singlePt ) == 4 and singlePt.count( -1 ) < 1 ):
-            casalog.post( 'Getting data value at point '+str(singlePt), 'NORMAL' )            
-            
+            casalog.post( 'Getting data value at point '+str(singlePt), 'NORMAL' )
+            ia.open( imagename )
 	    results = ia.pixelvalue( singlePt )
 	    retValue = _imval_process_pixel( results, singlePt )
 	    ia.done()
@@ -89,6 +90,9 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         # given for the box parameter we use the reference
         # pixel values.
         if ( len(box) < 1 ):
+            # Open the image for processing!
+            ia.open(imagename)
+            
             csys=ia.coordsys()
             ref_values = csys.referencepixel()['numeric']
             values = ref_values.tolist()
@@ -96,7 +100,8 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
                   + str(int(round(values[axes[1][0]])))+',' \
                   + str(int(round(values[axes[0][0]])))+','\
                    +str(int(round(values[axes[1][0]])))
-
+            ia.done()
+            
 	# Get the region information, if the user has specified
 	# a region file it is given higher priority.
 	reg={}
@@ -105,7 +110,20 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
 		casalog.post( "Ignoring region selection\ninformation in"\
 			      " the box, chans, and stokes parameters."\
 			      " Using region information\nin file: " + region, 'WARN' );
-	    reg=rg.fromfiletorecord( region );
+            if os.path.exists( region ):
+                # We have a region file on disk!
+                reg=rg.fromfiletorecord( region );
+            else:
+		    # The name given is the name of a region stored
+		    # with the image.
+		    # Note that we accept:
+		    #    'regionname'          -  assumed to be in imagename
+		    #    'my.image:regionname' - in my.image
+		    reg_names=region.split(':')
+		    if ( len( reg_names ) == 1 ):
+			reg=rg.fromtabletorecord( imagename, region, False )
+		    else:
+			reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
 	    #print "REGION from file: \n", reg
 	else:
 	    # Need to evaluate wheather we want dropdeg=True of False
@@ -114,6 +132,8 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
 	    # axis.
 	    reg=imregion( imagename, chans, stokes, box, '', '', False )
 	    #print "REGION from imregion: \n", reg
+        if ( len( reg .keys() ) < 1 ):
+            raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
 	    
 	# Now that we know which axes we are using, and have the region
 	# selected, lets get that stats!  NOTE: if you have axes size

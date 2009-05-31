@@ -62,6 +62,9 @@
        fluxscale will determine the flux density of the unknowns calibrators
        that are most consistent with the standard calibrator antenna gains.
 
+       Check the log output to make sure that reasonable flux densities are
+       obtained.
+
        Keyword arguments:
        vis -- Name of input visibility file
                default: none; example: vis='ngc5921.ms'

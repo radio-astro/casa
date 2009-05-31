@@ -11,11 +11,6 @@ qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = qatool.create()
 
 class simutil:
-    #def __init__(self, direction="", totaltime=qa.quantity("0h"), verbose=False):
-    #    self.direction=direction
-    #    self.verbose=verbose
-    #    self.totaltime=totaltime
-
     def __init__(self, direction="",
                  startfreq=qa.quantity("245GHz"),
                  bandwidth=qa.quantity("1GHz"),
@@ -41,12 +36,12 @@ class simutil:
         if color==None:
             clr="\x1b[32m"
         else:
-            clr="\x1b["+color+"m"
+            clr="\x1b["+color.__str__()+"m"
         bw="\x1b[0m"
         if origin==None:
             origin="simutil"
         print clr+"["+origin+"] "+bw+s
-        casalog.post("")
+        #casalog.post("")
         casalog.post(s)
 
 
@@ -490,25 +485,25 @@ class simutil:
             stnz=[]
             if (params["coordsys"].upper()=="UTM"):
         ### expect easting, northing, elevation in m
-                self.msg("Antenna locations in UTM, expecting easting, northing, elevation in m",origin="readant") 
+                self.msg("Antenna locations in UTM; will read from file easting, northing, elevation in m",origin="readantenna") 
                 if params.has_key("zone"):
                     zone=params["zone"]
                 else:
-                    self.msg("You must specify zone=NN in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
                     return -1
                 if params.has_key("datum"):
                     datum=params["datum"]
                 else:
-                    self.msg("You must specify datum in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify datum in your antenna file",origin="readantenna",color="31")
                     return -1
                 if params.has_key("hemisphere"):
                     nors=params["hemisphere"]
                     nors=nors[0].upper()
                 else:
-                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readant",color="31")
+                    self.msg("You must specify hemisphere=N|S in your antenna file",origin="readantenna",color="31")
                     return -1
                 
-                if self.verbose: foo=self.getdatum(datum,verbose=True)
+                # if self.verbose: foo=self.getdatum(datum,verbose=True)
                 for i in range(len(inx)):
                     x,y,z = self.utm2xyz(inx[i],iny[i],inz[i],int(zone),datum,nors)
                     stnx.append(x)
@@ -517,10 +512,6 @@ class simutil:
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
-#                    if params["observatory"]=="ACA":
-#                        ## cludge because ACA isn't in the data repo yet
-#                        obs=me.measure(me.observatory("ALMA"),'WGS84')
-#                    else:
                     obs=me.measure(me.observatory(params["observatory"]),'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
                     obslon=qa.convert(obs['m0'],'deg')['value']
@@ -538,10 +529,10 @@ class simutil:
                         if params.has_key("datum"):
                             datum=params["datum"]
                         else:
-                            self.msg("You must specify zone=NN in your antenna file",origin="readant",color="31")
+                            self.msg("You must specify zone=NN in your antenna file",origin="readantenna",color="31")
                             return -1
                         if (datum.upper() != "WGS84"):
-                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readant",color="31")
+                            self.msg("Unfortunately I only can deal with WGS84 right now",origin="readantenna",color="31")
                             return -1
                         self.msg("geodetic coordinates not implemented yet :(",color="31")
                     
@@ -776,8 +767,8 @@ class simutil:
             self.msg("I can't figure out what ellipsoid %s is" % ellipsoid,color="31")
             return -1
         
-        if self.verbose:
-            self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]))
+        if verbose:
+            self.msg("Using %s datum with %s ellipsoid" % (datum[4],ellipsoids[ellipsoid][2]),origin="getdatum")
         return datum[0],datum[1],datum[2],ellipsoids[ellipsoid][0],ellipsoids[ellipsoid][1]
     
     
@@ -866,7 +857,7 @@ class simutil:
         
         rad=180./pl.pi
         
-        offx,offy,offz,er,rf = self.getdatum(datum)
+        offx,offy,offz,er,rf = self.getdatum(datum,verbose=self.verbose)
 
         f=1./rf
         esq=(2*f-f*f)
@@ -936,7 +927,7 @@ class simutil:
     
     def long2xyz(self,long,lat,elevation,datum):
         
-        dx,dy,dz,er,rf = self.getdatum(datum)
+        dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
         
         f=1./rf
         esq=2*f-f**2

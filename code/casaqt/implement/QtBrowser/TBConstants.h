@@ -205,6 +205,9 @@ public:
     static const int SLICER_ROW_AXIS;
     static const int SLICER_COL_AXIS;
     // </group>
+    
+    // Number of rows in an embedded record widget to show by default.
+    static const unsigned int DEFAULT_RECORD_VISIBLE_ROWS;
 
     // Returns the path of the CASA top-level directory.  This value is
     // retrieved from the environment variables the first time it is called,

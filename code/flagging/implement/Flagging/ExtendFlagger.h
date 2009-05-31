@@ -348,8 +348,8 @@ class ExtendFlagger
 
       Bool selectdata(Bool useoriginalms = True);
 
-      Bool setmanualflags(Bool unflag = False, Bool autocorr = False, 
-                          Bool rowflag = False); 
+      Bool setmanualflags(Bool unflag = False,
+			  Bool autocorr = False);
 
       Bool run(Bool trial = False, Bool reset = False);
 

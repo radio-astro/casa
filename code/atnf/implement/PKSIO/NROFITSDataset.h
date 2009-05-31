@@ -37,8 +37,6 @@
 
 #include <atnf/PKSIO/NRODataset.h>
 
-#include <fitsio.h>
-
 #include <string>
 
 using namespace std ;
@@ -62,12 +60,6 @@ class NROFITSDataset : public NRODataset
   // data finalization
   virtual void finalize() ;
 
-  // open file
-  virtual int open() ;
-
-  // close file
-  virtual void close() ;
-  
   // fill header from file 
   virtual int fillHeader() ;
 
@@ -78,6 +70,7 @@ class NROFITSDataset : public NRODataset
   virtual vector< vector<double> > getSpectrum() ;
   virtual vector<double> getSpectrum( int i ) ;
   virtual int getIndex( int irow ) ;
+  virtual int getPolarizationNum() ;
 
  protected:
   // fill header information
@@ -86,38 +79,34 @@ class NROFITSDataset : public NRODataset
   // Read char data
   int readHeader( char *v, char *name ) ;
   int readTable( char *v, char *name ) ;
-  int readColumn( char *v, char *name, long irow ) ;
-  int readTable( vector<char *> &v, char *name ) ;
-  int readTable( vector<char *> &v, char *name, long idx ) ;
-  int readColumn( vector<char *> &v, char *name, long idx ) ;
-  int readColumn( vector<char *> &v, char *name, long irow, long nelem ) ;
+  int readTable( char *v, char *name, int idx ) ;
+  int readTable( vector<char *> &v, char *name, int idx ) ;
+  int readColumn( vector<char *> &v, char *name ) ;
+  int readColumn( vector<char *> &v, char *name, int idx ) ;
 
   // Read int data
   int readHeader( int &v, char *name, int b ) ;
   int readTable( int &v, char *name, int b ) ;
-  int readColumn( int &v, char *name, int b, long irow ) ; 
-  int readTable( vector<int> &v, char *name, int b ) ;
-  int readTable( vector<int> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<int> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<int> &v, char *name, int b, long irow, long nelem ) ;
+  int readTable( int &v, char *name, int b, int idx ) ;
+  int readTable( vector<int> &v, char *name, int b, int idx ) ;
+  int readColumn( vector<int> &v, char *name, int b ) ;
+  int readColumn( vector<int> &v, char *name, int b, int idx ) ;
 
   // Read float data
   int readHeader( float &v, char *name, int b ) ;
   int readTable( float &v, char *name, int b ) ;
-  int readColumn( float &v, char *name, int b, long irow ) ; 
-  int readTable( vector<float> &v, char *name, int b ) ;
-  int readTable( vector<float> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<float> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<float> &v, char *name, int b, long irow, long nelem ) ;
+  int readTable( float &v, char *name, int b, int idx ) ;
+  int readTable( vector<float> &v, char *name, int b, int idx ) ;
+  int readColumn( vector<float> &v, char *name, int b ) ;
+  int readColumn( vector<float> &v, char *name, int b, int idx ) ;
 
   // Read double data
   int readHeader( double &v, char *name, int b ) ;
   int readTable( double &v, char *name, int b ) ;
-  int readColumn( double &v, char *name, int b, long irow ) ; 
-  int readTable( vector<double> &v, char *name, int b ) ;
-  int readTable( vector<double> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<double> &v, char *name, int b, long idx ) ;
-  int readColumn( vector<double> &v, char *name, int b, long irow, long nelem ) ;
+  int readTable( double &v, char *name, int b, int idx ) ;
+  int readTable( vector<double> &v, char *name, int b, int idx ) ;
+  int readColumn( vector<double> &v, char *name, int b ) ;
+  int readColumn( vector<double> &v, char *name, int b, int idx ) ;
 
   // read ARRY
   int readARRY() ;
@@ -134,8 +123,11 @@ class NROFITSDataset : public NRODataset
   // fill array type
   void fillARYTP() ;
 
-  // fits file
-  fitsfile *fitsp_ ;
+  // find data for each ARYTP
+  void findData() ;
+
+  // get offset bytes for attributes
+  int getOffset( char *name ) ;
 
   // number of column for scan header
   int numField_ ;
@@ -144,17 +136,16 @@ class NROFITSDataset : public NRODataset
   int numHdu_ ;
 
   // array type
-  //vector<char *> ARYTP ;
   vector<string> ARYTP ;
 
   // reference index
   vector<int> arrayid_ ;
 
   // field names
-  vector<string> names_ ;
+  vector<string> forms_ ;
   
   // field types
-  vector<string> types_ ;
+  vector<string> names_ ;
 
   // field units
   vector<string> units_ ;

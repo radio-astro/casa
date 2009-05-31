@@ -226,6 +226,8 @@ class QtDisplayPanel : public QWidget,
   String listRegions();
   // a vector list
   Vector<String> listRegionsInImage();
+  // get an ImageRegion from active Image
+  ImageRegion getRegion(const String& name);
   
   // Set current extension policy to use to for (subsequent) image region
   // creation (and for printed region statistics):
@@ -300,6 +302,9 @@ class QtDisplayPanel : public QWidget,
   
 
  public slots:
+
+  //respond to region manager to set ImageRegion extension 
+  void extendRegion(String, String);
   
   // Register / unregister [all] DDs created by user through QtViewer.
   //<group>
@@ -841,7 +846,6 @@ class QtDisplayPanel : public QWidget,
   WCMotionEvent* lastMotionEvent_;
   
   
-      
   
   //# misc.
     
@@ -852,6 +856,10 @@ class QtDisplayPanel : public QWidget,
 
 
  
+  //image region extension flags
+  String extChan_;
+  String extPol_;
+
  public:
  
   //# This (public) bool is probably temporary.  True by default.

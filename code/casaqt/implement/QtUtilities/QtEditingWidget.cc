@@ -45,7 +45,8 @@ QtLabelWidget::QtLabelWidget(const String& defaultLabel, QWidget* parent) :
     connect(defaultButton, SIGNAL(toggled(bool)), SLOT(labelChanged(bool)));
     connect(customButton, SIGNAL(toggled(bool)), SLOT(labelChanged(bool)));
     
-    connect(customEdit, SIGNAL(editingFinished()), SLOT(labelChanged()));
+    connect(customEdit, SIGNAL(textChanged(const QString&)),
+    		SLOT(labelChanged()));
 }
 
 QtLabelWidget::~QtLabelWidget() { }
@@ -92,7 +93,7 @@ void QtLabelWidget::labelChanged(bool check) {
 QtFileWidget::QtFileWidget(bool directory, bool save, QWidget* parent) :
         QtEditingWidget(parent), isDirectory_(directory), isSave_(save) {
     setupUi(this);
-    connect(file, SIGNAL(editingFinished()), SLOT(fileChanged()));
+    connect(file, SIGNAL(textChanged(const QString&)), SLOT(fileChanged()));
     connect(FileWidget::browse, SIGNAL(clicked()), SLOT(browse()));
 }
 

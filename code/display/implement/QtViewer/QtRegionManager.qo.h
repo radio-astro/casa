@@ -33,14 +33,16 @@
 #include <casa/aips.h>
 #include <casa/Containers/List.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/DisplayDatas/DisplayData.h>
 
 #include <graphics/X11/X_enter.h>
-#  include <QtCore>
-#  include <QtGui>
+#include <QtCore>
+#include <QtGui>
+#include <QHash>
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
-#  include <display/QtViewer/QtRegionMgr.ui.h>
+#include <display/QtViewer/QtRegionMgr.ui.h>
 #include <graphics/X11/X_exit.h>
 
  
@@ -49,6 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class QtViewer;
 class ImageRegion;
 class Record;
+class RSComposite;
 template <class T> class PtrBlock;
 
 
@@ -66,51 +69,69 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
   
   ~QtRegionManager() {  }
   
+ public slots:
+  void changeAxis(String, String, String);
 
- protected:
-
-  
-  
-  // This gui receives signals from, and sends commands to this display panel.
-  QtDisplayPanel* qdp_;
-  
-  // (Usually 0 -- standalone window).
-  QWidget* parent_;
- 
- 
  protected slots:
-
-  //update the regionames in the menu
-  void updateNames();
-  //remove region from image
-  void removeRegion();
+  //draw region on viewer
+  void drawRegion(Record mousereg, WorldCanvasHolder *wch);
   // React to new region creation in display panel.
   void newRegion_(String imgFilename);
-  
-  // Save last-created region (reacts to Save button).
-  void saveRegion_();
-  void saveRegionInImage();
-  // Reacts to extent button selection -- sets extent state in display panel.
-  void setExtent_();
 
-  // Reacts to change in pathname (just to re-enable Save button).
-  void pathnameChg_();
+  // Load region from current displayed image
+  void loadRegionFromImage();
+  // Load region from ds9 or aipsbox or rgn file
+  void loadRegionFromFile();
+
+  //save region into image
+  void saveRegionInImage();
+  // react to SaveRgnn, save region to file
+  void saveRegionInFile();
+  //remove region from image
+  void removeRegion();
+
+  void toggleImageRegion();
+  void currentRegionChanged(const QString &);
+
+  //convert region to shape
+  RSComposite *regionToShape(
+        QtDisplayData* qdd, const ImageRegion* wcreg);
 
   // Cleanup on destruction
   void cleanup();
-  // Set up stuff to extend or not plane along channels and pol
+
+  // set up plane only or extending by channel and pol
   void singlePlane();
-  void planeExtension();
-  // Load region from ds9 or aipsbox or rgn file
-  void loadRegionsFromFile();
-  //draw region on viewer
-  void drawRegion(Record mousereg, WorldCanvasHolder *wch);
+  void extendChan();
+  void extendPol();
+
+  void resetRegionExtension();
+
+  void loadRegionsImageFromFile();
+  DisplayData* getImageData(QString);
+  DisplayData* getBoundingBoxData(QString);
+
+ protected:
+  void addRegionsToShape(RSComposite*& theShapes, 
+                         const WCRegion*& wcreg);
+  void displaySelectedRegion();
+  void showRegion(const String& regName);
+  
+  QtDisplayPanel* qdp_;
+  QWidget* parent_;
 
  private:
   PtrBlock<const ImageRegion * >  unionRegions_p;
   List<RegionShape*> regShapes_p;
+
+  QHash<QString, DisplayData*> regData;
+  QHash<QString, bool> regState;
+
+signals:
+  void extendRegion(String, String);
   
 };
+
 
 } //# NAMESPACE CASA - END
 

@@ -45,7 +45,31 @@ print '--Feather - create synth image--'
 #     on M43 -- but the flux is resolved out so there is no use to
 #     add it to the mosaic.  The script below leaves it out.
 default('mosaic')
-mosaic('orion.ms','orion.task','mfs','entropy',niter=31,sigma='4mJy',targetflux='180Jy',mask=datapath+'orion.mask6',field=[2,3,4,5,6,7,8,9,10],spw=[0,1],stokes='I',cell=[2,2],imsize=[300,300],weighting='briggs',mosweight=True,rmode='norm',robust=-1,cyclefactor=4,cyclespeedup=500,prior='',phasecenter=6,ftmachine='ft',minpb=0.1, scaletype='PBCOR')
+mosaic('orion.ms',
+       'orion.task',
+       'mfs',
+       'entropy',
+       niter=31,
+       sigma='4mJy',
+       targetflux='180Jy',
+       mask=datapath+'orion.mask6',
+       field=[2, 3, 4, 5, 6, 7, 8, 9,10],
+       spw=[0, 1],
+       stokes='I',
+       cell=[2, 2],
+       imsize=[300, 300],
+       weighting='briggs',
+       mosweight=True,
+       rmode='norm',
+       robust=-1,
+       cyclefactor=4,
+       cyclespeedup=500,
+       prior='',
+       phasecenter=6,
+       ftmachine='ft',
+       minpb=0.1,
+       scaletype='PBCOR')
+
 feather('orion_tfeather2.im','orion.task.image',datapath+'orion.gbt.im')
 #GBT:   Max:5.129806e+01        Flux:2.425065e+02 Jy    rms:1.277546e+01
 #VLA:   Max:8.340111e-01        Flux:1.891523e+02 Jy    rms:1.099514e-01
@@ -55,8 +79,31 @@ print '--Single Dish as Model (multi-scale)--'
 ## Starting from:
 ##    VLA calibrated visibilities: orion.ms
 ##    GBT OTF cube: orion.gbt.im
-default('mosaic')
-mosaic('orion.ms','orion_tsdms','mfs','multiscale',niter=10000,gain=0.2,threshold=10.,mask=datapath+'orion.mask6',field=range(2,11),spw=[0,1],stokes='I',cell=[2,2],imsize=[300,300],weighting='briggs',mosweight=True,rmode='norm',robust=-1,negcomponent=-1,cyclefactor=4,cyclespeedup=500,phasecenter=6,scales=[0,3,10,30],ftmachine='ft',minpb=0.1, scaletype='PBCOR')
+default('clean')
+clean('orion.ms',
+      'orion_tsdms',
+      field='2~10',
+      spw=[0,1],
+      mode='mfs',
+      niter=10000,
+      gain=0.2,
+      threshold='10.0mJy',
+      imagermode='mosaic',
+      mosweight=True,
+      ftmachine='ft',
+      cyclefactor=4,
+      cyclespeedup=500,
+      multiscale=[0,3,10,30],
+      negcomponent=-1,
+      mask=datapath+'orion.mask6',
+      imsize=[300,300],
+      cell=['2.0arcsec','2.0arcsec'],
+      phasecenter=6,
+      stokes='I',
+      weighting='briggs',
+      robust=-1.0,
+      pbcor=True,      
+      minpb=0.1)
 sdmodelmstime = time.time()
 ###combo: Max:1.195286e+00        Flux:2.873779e+02 Jy    rms:9.069330e-02
 ###GBT:   Max:5.129806e+01        Flux:2.425065e+02 Jy    rms:1.277546e+01
@@ -66,7 +113,6 @@ print '--Single Dish as Model (MEM)--'
 ### Starting from:
 ###    VLA calibrated visibilities: orion.ms
 ###    GBT OTF cube: orion.gbt.im
-datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST3/Orion/'
 default('mosaic')
 mosaic('orion.ms','orion_tsdmem','mfs','entropy',niter=3,sigma='4mJy',targetflux='240Jy',mask=datapath+'orion.mask6',field=[2,3,4,5,6,7,8,9,10],spw=[0,1],stokes='I',cell=[2,2],imsize=[300,300],weighting='briggs',mosweight=True,rmode='norm',robust=-1,cyclefactor=4,cyclespeedup=500,phasecenter=6,modelimage='orion_tsdmem',sdimage=datapath+'orion.gbt.im',ftmachine='ft',prior='orion_tsdmem',minpb=0.1, scaletype='PBCOR')
 sdmodelmemtime=time.time()
@@ -77,94 +123,72 @@ sdmodelmemtime=time.time()
 #### Create synthesis (BIMA) data cube, deconvolve single dish cube
 #### DO joint deconvolution
 ######
-print '--Joint deconvolution --'
-#
-#Regrid GBT image onto synth imaging coordinates
-ia.open('orion_tsdmem.image')
-csys=ia.coordsys()
-ia.close()
-ia.open(datapath+'orion.gbt.im')
-ia.regrid(outfile='orion_tgbt_regrid.im',shape=[300,300,1,1],csys=csys.torecord(),overwrite=True)
-ia.close()
-#
-#Deconvolve GBT image
-dc.open('orion_tgbt_regrid.im',psf='')
-#make gaussian for psf (best guess for GBT beam b ased on beamsize report in GBT image)
-dc.makegaussian('gbt_gau.im',bmaj='55arcsec',bmin='55arcsec',bpa='0deg',normalize=False)
-dc.close()
-dc.open('orion_tgbt_regrid.im',psf='gbt_gau.im')
-dc.setscales(scalemethod='uservector',uservector=[30.,100.,300.])
-dc.clean(algorithm='msclean',model='orion_tjoint3',niter=500,gain=0.4,mask=datapath+'orion.mask6',threshold='0.1Jy')
-dc.close()
-#default('mosaic')
+def joint_deconvolve(datapath):
+	print '--Joint deconvolution --'
 
-im.open('orion.ms')
-im.selectvis(field=[2,3,4,5,6,7,8,9,10],spw=[0,1])
-im.defineimage(nx=300,cellx='2arcsec',phasecenter=6,spw=[0,1])
-im.setvp(dovp=True)
-im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100]);
-###if clean componenent for large scale goes negative continue to use that scale
-im.setmfcontrol(stoplargenegatives=-1, cyclefactor=4, cyclespeedup=500)
-im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True);
-im.clean(algorithm='mfmultiscale',model='orion_tjoint3',image='orion_tjoint3.image', gain=0.2,niter=1000,mask=datapath+'orion.mask6')
-jointmemtime = time.time()
-#
+	#Regrid GBT image onto synth imaging coordinates
+	ia.open('orion_tsdmem.image')
+	csys = ia.coordsys()
+	ia.close()
+	ia.open(datapath+'orion.gbt.im')
+	ia.regrid(outfile='orion_tgbt_regrid.im',shape=[300,300,1,1],
+		  csys=csys.torecord(),overwrite=True)
+	ia.close()
+
+	#Deconvolve GBT image
+	# Sigh.  dc.open will warn about the lack of a PSF, but I can't seem to
+	# define a PSF before calling dc.open.
+	dc.open('orion_tgbt_regrid.im', psf='')
+	#make gaussian for PSF (best guess for GBT beam based on beamsize
+	#report in GBT image)
+	dc.makegaussian('gbt_gau.im',bmaj='55arcsec',bmin='55arcsec',
+			bpa='0deg',normalize=False)
+	dc.close()
+	dc.open('orion_tgbt_regrid.im',psf='gbt_gau.im')
+	dc.setscales(scalemethod='uservector',uservector=[30.,100.,300.])
+	dc.clean(algorithm='msclean',model='orion_tjoint3',niter=500,
+		 gain=0.4,mask=datapath+'orion.mask6',threshold='0.1Jy')
+	dc.close()
+	#default('clean')
+
+	im.open('orion.ms')
+	im.selectvis(field=[2,3,4,5,6,7,8,9,10],spw=[0,1])
+	im.defineimage(nx=300,cellx='2arcsec',phasecenter=6,spw=[0,1])
+	im.setvp(dovp=True)
+	#im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
+	im.setscales(scalemethod='uservector',uservector=[0,3,10,30, 70])
+	###if clean component for large scale goes negative continue to use
+	##that scale
+	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=4, cyclespeedup=500)
+	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
+	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',
+		 image='orion_tjoint3.image', gain=0.2, niter=1000,
+		 mask=datapath+'orion.mask6')
+	im.close()
+	return time.time()
+
+jointmemtime = joint_deconvolve(datapath)
+
 endProc = time.clock()
 endTime = time.time()
 
 # Regression
-
-feather1_im=ia.open('orion_tfeather.im')
-f1_stats=ia.statistics();ia.close()
-feather2_im=ia.open('orion_tfeather2.im')
-f2_stats=ia.statistics();ia.close()
-sdmodel1_im=ia.open('orion_tsdms.image')
-sd1_stats=ia.statistics();ia.close()
-sdmodel2_im=ia.open('orion_tsdmem.image')
-sd2_stats=ia.statistics();ia.close()
-jd1_im=ia.open('orion_tjoint3.image')
-jd1_stats=ia.statistics()
-
-feather1_immax=f1_stats['max'][0]
-feather1_flux=f1_stats['flux'][0]
-feather2_immax=f2_stats['max'][0]
-feather2_flux=f2_stats['flux'][0]
-sd1_immax=sd1_stats['max'][0]
-sd1_imflux=sd1_stats['flux'][0]
-sd2_immax=sd2_stats['max'][0]
-sd2_imflux=sd2_stats['flux'][0]
-jd1_immax=jd1_stats['max'][0]
-jd1_imflux=jd1_stats['flux'][0]
-#jd1_immax=1.014
-#jd1_imflux=360.468
-#
-
-f1_max=0.780
-f1_flux=242.506
-f2_max=0.868
-f2_flux=242.506
-sd1_max=0.935
-sd1_flux=187
-sd2_max=0.87
-sd2_flux=289
-jd1_max=1.03
-jd1_flux=362
-#
-diff_f1=abs((f1_max-feather1_immax)/f1_max)
-diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
-diff_f2=abs((f2_max-feather2_immax)/f2_max)
-diff_f2f=abs((f2_flux-feather2_flux)/f2_flux)
-diff_sd1=abs((sd1_max-sd1_immax)/sd1_max)
-diff_sd1f=abs((sd1_flux-sd1_imflux)/sd1_flux)
-diff_sd2=abs((sd2_max-sd2_immax)/sd2_max)
-diff_sd2f=abs((sd2_flux-sd2_imflux)/sd2_flux)
-diff_jd1=abs((jd1_max-jd1_immax)/jd1_max)
-diff_jd1f=abs((jd1_flux-jd1_imflux)/jd1_flux)
-#
 import datetime
-datestring=datetime.datetime.isoformat(datetime.datetime.today())
-outfile='orion.'+datestring+'.log'
-logfile=open(outfile,'w')
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'orion.' + datestring + '.log'
+logfile = open(outfile, 'w')
+
+test_results = {}
+for k, fn in (('Feather 1',           'orion_tfeather.im'),
+	      ('Feather 2',           'orion_tfeather2.im'),
+	      ('SD Model (MS)',       'orion_tsdms.image'),
+	      ('SD Model (MEM)',      'orion_tsdmem.image'),
+	      ('Joint Deconvolution', 'orion_tjoint3.image')):
+	if ia.open(fn):
+		test_results[k] = ia.statistics()
+		ia.close()
+	else:
+		print >>logfile, "Could not open", fn, "for reading!"
 
 print >>logfile,''
 print >>logfile,'********** Data Summary *********'
@@ -217,36 +241,67 @@ print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_f1 < 0.05): print >>logfile,'* Passed Feather 1 image max test '
-print >>logfile,'*--  Feather 1: Image max'+str(feather1_immax)+','+str(f1_max)
-if (diff_f2 < 0.05): print >>logfile,'* Passed Feather 2 image max test'
-print >>logfile,'*--  Feather 2: Image max '+str(feather2_immax)+','+str(f2_max)
-if (diff_sd1 < 0.05): print >>logfile,'* Passed SD Model (MS) image max test'
-print >>logfile,'*--  SD Model (MS): Image max'+str(sd1_immax)+','+str(sd1_max)
-if (diff_sd2 < 0.05): print >>logfile,'* Passed SD Model (MEM) image max test'
-print >>logfile,'*--  SD Model (MEM): Image max'+str(sd2_immax)+','+str(sd2_max)
-if (diff_jd1 < 0.05): print >>logfile,'* Passed Joint Deconvolution image max test'
-print >>logfile,'*--  Joint Decon1: Image max'+str(jd1_immax)+','+str(jd1_max)
-if (diff_f1f < 0.05): print >>logfile,'* Passed Feather 1 flux test '
-print >>logfile,'*--  Feather 1: Flux '+str(feather1_flux)+','+str(f1_flux)
-if (diff_f2f < 0.05): print >>logfile,'* Passed Feather 2 flux test'
-print >>logfile,'*--  Feather 2: Flux '+str(feather2_flux)+','+str(f2_flux)
-if (diff_sd1f < 0.05): print >>logfile,'* Passed Feather 3 flux test'
-print >>logfile,'*--  SD Model (MS): Flux '+str(sd1_imflux)+','+str(sd1_flux)
-if (diff_sd2f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
-print >>logfile,'*--  SD Model (MEM): Flux '+str(sd2_imflux)+','+str(sd2_flux)
-if (diff_jd1f < 0.05): print >>logfile,'* Passed Joint Deconvolution flux test'
-print >>logfile,'*--  Joint Decon2: Flux '+str(jd1_imflux)+','+str(jd1_flux)
 
-if ((diff_f1<0.05) & (diff_f2<0.05) & (diff_sd1<0.05) & (diff_sd2<0.05) & (diff_jd1<0.05) & (diff_f1f<0.05) & (diff_f2f<0.05) & (diff_sd1f<0.05) & (diff_sd2f<0.05) & (diff_jd1f < 0.05)):
-        regstate=True
-        print >>logfile,'---'
-        print >>logfile,'Passed Regression test for Orion'
-        print >>logfile,'---'
+#              Test name          Stat type Expected  Label irregularities 
+test_descs = (('Feather 1',           'max',  0.780,  ' '),
+	      ('Feather 2',           'max',  0.868,  ' '),
+	      ('SD Model (MS)',       'max',  0.935),
+	      ('SD Model (MEM)',      'max',  0.87),
+	      ('Joint Deconvolution', 'max',  1.03, '', 'Joint Decon1'), # 1.014
+	      ('Feather 1',           'flux', 242.506,  ' '),
+	      ('Feather 2',           'flux', 242.506,  ' '),
+	      ('SD Model (MS)',       'flux', 187, ' ', 'SD Model (MS)', 'Feather 3'),
+	      ('SD Model (MEM)',      'flux', 289, '', 'SD Model (MEM)', 'Joint Deconvolution'),
+	      ('Joint Deconvolution', 'flux', 362, '', 'Joint Decon2')) # 360.468
+
+def log_test_result(test_results, testdesc, logfile):
+	"""Append testdesc to logfile and return whether or not the test was
+	successful."""
+	result = test_results[testdesc[0]][testdesc[1]][0]
+	reldiff = abs(1.0 - result / testdesc[2])
+	if reldiff < 0.05:
+		print >>logfile, '* Passed',
+		retval = True
+	else:
+		print >>logfile, '! FAILED',
+		retval = False
+
+	# RR 4/18/2009: I think this complication might stem from a bug in the
+	# original version of the script, but since it is a regression script I
+	# am hesitant to change the output.
+	if len(testdesc) > 5:
+		title1 = testdesc[5]
+	else:
+		title1 = testdesc[0]
+	if len(testdesc) > 4:
+		title2 = testdesc[4]
+	else:
+		title2 = testdesc[0]
+	title2 += ':'
+	if testdesc[1] == 'max':
+		title1 += ' image max'
+		title2 += ' Image max'
+	else:
+		title1 += ' ' + testdesc[1]
+		title2 += ' ' + testdesc[1].title()
+	if len(testdesc) > 3:
+		title2 += testdesc[3]
+		
+	print >>logfile, title1, 'test'
+	print >>logfile, '*--  ' + title2 + str(result) + ',' + str(testdesc[2])
+	return retval
+
+regstate = True
+for td in test_descs:
+	regstate &= log_test_result(test_results, td, logfile)
+
+if regstate:
+        print >>logfile, '---'
+        print >>logfile, 'Passed Regression test for Orion'
+        print >>logfile, '---'
 else:
-        regstate=False
-        print >>logfile,'----FAILED Regression test for Orion'
-print >>logfile,'*********************************'
+        print >>logfile, '----FAILED Regression test for Orion'
+print >>logfile, '*********************************'
 
 print >>logfile,''
 print >>logfile,''

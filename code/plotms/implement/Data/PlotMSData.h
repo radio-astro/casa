@@ -87,6 +87,9 @@ public:
     // </group>
     
     
+    // See PlotMSCache::refTime().
+    double cacheReferenceTime() const;
+    
     // See PlotMSCache::readyForPlotting().
     bool cacheReady() const;
     
@@ -109,8 +112,13 @@ public:
     // See PlotMSCache::setUpPlot().
     void setupCache(PMS::Axis xAxis, PMS::Axis yAxis);
     
-    // See PlotMSCache::locate().
-    PlotLogMessage* locate(double xMin, double xMax, double yMin, double yMax);
+    // See PlotMSCache::locateRange().
+    PlotLogMessage* locateRange(double xMin, double xMax, double yMin,
+            double yMax);
+    
+    // See PlotMSCache::flagRange().
+    PlotLogMessage* flagRange(const PlotMSFlagging& flagging, double xMin,
+            double xMax, double yMin, double yMax, bool flag = true);
     
     // See PlotMSCache::loadedAxes().
     vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;

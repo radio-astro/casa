@@ -48,7 +48,7 @@ void PlotMSTab::changedText(QLabel* label, bool changed) {
 
 QString PlotMSTab::changedText(const QString& t, bool changed) {
     QString str(t);
-    str.replace(' ', "&nbsp;");
+    //str.replace(' ', "&nbsp;");
     if(changed) str = "<font color=\"#FF0000\">"+ t + "</font>";
     return str;
 }

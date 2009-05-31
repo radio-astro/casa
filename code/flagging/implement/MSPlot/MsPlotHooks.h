@@ -847,7 +847,6 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //cout << "------setdata=" << ret << endl;
           //
           //Bool autocorr = False;
-          //Bool rowflag = False;
           //String clipexpr = "";
           //Vector<Double> cliprange(0);
           //String clipcolumn = "DATA";
@@ -870,14 +869,14 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //        feed, scan, baseline, uvrange, time, correlation);
           //cout << "------selectdata=" << ret << endl;
           //
-          //cout << "autocorr=" << autocorr << " rowflag=" << rowflag
+          //cout << "autocorr=" << autocorr
           //   << " unflag=" << unflag
           //   << " clipexpr=" << clipexpr << " cliprange=" << cliprange
           //   << " clipcolumn=" << clipcolumn << " outside=" << outside
           //   << " quackinterval=" << quackinterval << " opmode=" << opmode
           //   << endl;
           //
-          //ret = flagger.setmanualflags(autocorr, rowflag, unflag, 
+          //ret = flagger.setmanualflags(autocorr, unflag, 
           //      clipexpr, cliprange, clipcolumn, outside, 
           //      quackinterval, opmode);
           //cout << "------setmanualflags=" << ret << endl;
@@ -886,7 +885,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //                feed, scan, baseline, uvrange, time, correlation);
           //cout << "------selectdata=" << ret << endl;
           //
-          //ret = flagger.setmanualflags(False, False, unflag, 
+          //ret = flagger.setmanualflags(False, unflag, 
           //      clipexpr, cliprange, clipcolumn, outside, 
           //      quackinterval, "SUMMARY");
           //cout << "------summary=" << ret << endl;

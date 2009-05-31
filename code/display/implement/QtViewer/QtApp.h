@@ -65,8 +65,13 @@ class QtApp {
   // Return the program's [unique] QApplication object, creating it
   // if it doesn't yet exist.
   // Note: use QtApp::destroy() to delete the QApplication.
-  static QApplication* app(Int argc=0, Char** argv=0) {
-    
+  static QApplication* app( ) {
+
+    static Int argc = 1;
+    static Char *argv[1];
+    static Char name[] = "casa.qtapp";
+    argv[0] = name;
+
     QCoreApplication* qcapp = QApplication::instance();
     if(QApplication::startingUp() || qcapp==0) {
       qcapp = new QApplication(argc, argv);  }
@@ -86,8 +91,8 @@ class QtApp {
   
   
   // Another name for app() that may be clearer during initialization....
-  static QApplication* init(Int argc=0, Char** argv=0) {
-    return app(argc, argv);  }
+  static QApplication* init( ) {
+    return app( );  }
 
   
   // Enter the QApp's event loop.

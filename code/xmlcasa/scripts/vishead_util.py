@@ -17,17 +17,11 @@ def getput_keyw(mode, vis, key, hdindex, hdvalue='', hdref=None):
     if mode == 'get':
         try:
             i = int(hdindex)
-            # The following seems more efficient but complains
-            # that 'column XYZ is not an array column'
-            #   value = tb.getcolslice(col, startrow=i-1, nrow=1)
-            #
-            # So read the entire column instead
-
             if i < 0:
                 # allowed by python, but...
                 raise Exception, "Illegal index " + str(i)
             
-            value = tb.getcol(col)[i]  # throws exception if index too large
+            value = tb.getcell(col, i)  # throws exception if index too large
         except (ValueError, TypeError):   # This is almost certainly from
             if(tb.isvarcol(col)):         # int('') or int(None).  Default
                 value = tb.getvarcol(col) # to returning the full column.

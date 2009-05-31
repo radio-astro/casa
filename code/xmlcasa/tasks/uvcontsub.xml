@@ -77,14 +77,13 @@ result.
 </input>
 <example>
 
-	Continuum fitting and subtraction in the uv plane:
 	
-	A polynomial of the desired order is fit across the specified
-	channels that define the continuum emission.  The data may be
-	averaged in time to increase the signal to noise.  This fit
-	represents a model of the continuum in all channels.
+	A polynomial of the desired order is fit to each baseline/time across the
+        specified channels that define the continuum emission.  The data may
+	be averaged in time to increase the signal to noise.  This fit
+	represents a uv-data model of the continuum across all channels.
 	
-	For fitmode='subtract', the fitted continuum spectrum is
+	For fitmode='subtract', the fitted continuum uv spectrum is
 	subtracted from all channels and the result (presumably only
 	line emission) is stored in the	CORRECTED_DATA.  The
 	continuum fit is stored in the MODEL_DATA.
@@ -94,7 +93,8 @@ result.
 
 	For fitmode='replace' the continuum model is stored in
 	the CORRECTED_DATA; this is useful to image the continuum model
-	result.
+	result.  You will have to rerun applycal to place the calibrated
+        data back in the CORRECTED_DATA
 
 	Keyword arguments:
 	vis -- Name of input visibility file
@@ -108,7 +108,7 @@ result.
 		   beginning with '13'
 	fitspw -- Selection of spectral windows and channels to use in the
 	          fit for the continuum, using general spw syntax
-		default: (all); example: fitspw='0:5~30;40~55'
+		default: ''=all; example: fitspw='0:5~30;40~55'
 	spw -- Optional per spectral window selection of channels from
 	       which to subtract the continuum. 
 		default: spw='', means subtract from all channels for
@@ -134,8 +134,9 @@ result.
 		'replace'-replace CORRECTED with continuum mode fit.
 	splitdata -- Split out continuum and continuum subtracted line data
 		default: 'False'; example: splitdata=True
-		The continuum data will be placed in: vis.cont
+		The derived continuum data will be placed in: vis.cont
 		The continuum subtracted data will be placed in: vis.contsub
+                The spw/channels selected are given in spw
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 

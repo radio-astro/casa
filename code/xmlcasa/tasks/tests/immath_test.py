@@ -48,7 +48,7 @@ def _exceptionInfo( maxLevel=5 ):
 # if we truly doubled each value.
 testPassed = True;
 print "**** Testing the doubling of every value in an image. *** "
-immath( outimage, str('"')+image1+str('" * 2' ) );
+immath( outimage, 'evalexpr', str('"')+image1+str('" * 2' ) );
 
 # Check all of the corners, note we really should get the coordsys
 # of these images and from that get their sizes with the topixel
@@ -89,8 +89,8 @@ print "**** Testing extraction of a single plane."
 # Checking the size of the resulting image and a few of the
 # points to make sure they are from the correct plane.
 default( 'immath');
-immath( outimage, str('"')+image1+str('"' ), chans='5' );
-#immath( outimage, str('"')+image1+str('"[INDEXIN(4,[5])]' ) );
+immath( outimage, 'evalexpr', str('"')+image1+str('"' ), chans='5' );
+#immath( outimage, 'evalexpr', str('"')+image1+str('"[INDEXIN(4,[5])]' ) );
 
 ia.open( outimage );
 size = ia.shape();
@@ -123,12 +123,14 @@ tmpfile="./data/temp.im"
 outimage="./data/results2.im"
 
 default( 'immath')
+mode='evalexpr'
 outfile=tmpfile
 expr=str('"')+image1+str('"' )
 chans='5'
 go()
 
 default( 'immath')
+mode='evalexpr'
 outfile=outimage
 expr=str('"')+image1+str('"' ) + str(" + " ) + str('"')+tmpfile + str('"')
 #expr=str('"')+image1+str('"' ) + str(" + " ) + str('"')+image1+str('"[INDEXIN(4,[5])]' );
@@ -179,6 +181,7 @@ rgnFile='./data/sgps.im.rgn'
 # First check some error conditions.  Each of these immath
 # calls should fail.
 default( 'immath' )
+mode='evalexpr'
 try:
     region=rgnFile
     box="[0,0,10,10]"
@@ -198,6 +201,7 @@ print 'Done testing inputs with warnings'
 # file we have a polygon region.  We don't do anything fancy with
 # the data, just get the subimage that is created from the region.
 default('immath')
+mode='evalexpr'
 outfile=outimage
 expr=str('"')+image2+str('"')
 go()

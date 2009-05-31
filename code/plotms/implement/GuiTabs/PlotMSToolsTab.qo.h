@@ -43,12 +43,16 @@ class PlotMSToolsTab : public PlotMSTab, Ui::ToolsTab,
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent and the plotter.
+    // Constructor which takes the parent plotter, and the QtActionGroup to
+    // use to synchronize tool actions with the radio buttons on the tab.
     PlotMSToolsTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSToolsTab();
     
+    
+    // Implements PlotMSTab::tabName().
+    QString tabName() const { return "Tools"; }
     
     // Implements PlotMSTab::toolButtons().
     QList<QToolButton*> toolButtons() const;
@@ -62,19 +66,15 @@ public:
     // Show/hide the iteration buttons on this tab.
     void showIterationButtons(bool show);
     
+public slots:
+    // Slot for when all tools are turned off, and the "None" radio button
+    // should be checked.
+    void toolsUnchecked();
+    
 protected:
     // Implements PlotTrackerToolNotifier::notifyTrackerChanged().  Updates the
     // tracker information in the line edit, if the proper checkbox is toggled.
     void notifyTrackerChanged(PlotTrackerTool& tool);
-    
-private slots:
-    // Slot to update the text of the hold/release drawing button to reflect
-    // the current state the of the global hold/release action.
-    void holdReleaseActionChanged();
-    
-    // Slot to update the currently select tool based on the state of the
-    // global tool actions.
-    void toolChanged();
 };
 
 }

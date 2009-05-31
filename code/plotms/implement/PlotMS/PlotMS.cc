@@ -28,23 +28,20 @@
 
 namespace casa {
 
-// TODO PlotMSAction: implement flag, unflag, iteration, release cache.  action
-//      for new plots, move actions into one class.
+// TODO PlotMSAction: iteration, release cache.  action for new plots.  update
+//      hold/release action/button text.
 // TODO PlotMSCache: multi-region locate
-// TODO PlotMSData: have stack list of caches so that common MS/Selections can
-//      be shared across different plots
 // TODO PlotMSLogger: log source (std out, text widget, casapy logger), better
-//      locate message, log message for parameters updated, log message for #
-//      of plotted points
+//      locate message, log message for parameters updated and action
+//      execution, log event flag for flag/unflag
 // TODO PlotMSParameters: canvas background, fonts, grids, spacing, cartesian
 //      axes, limit zoom/pan cache size
-// TODO PlotMSPlot: different colors within one plot, different types
-// TODO PlotMSPlotManager: unused canvases
-// TODO PlotMSPlotter: range padding, customize toolbars, override close event
-//      to call PlotMS::close() in case there's cleanup needed
+// TODO PlotMSPlot: different colors within one plot, different types, shared
+//      caches
+// TODO PlotMSPlotter: range padding, customize toolbars/tabs
 // TODO PlotMSThread: background, pause/resume
 // TODO PlotMSWidgets: label creator
-// TODO PlotTool: display tracker value as time when needed, set tracker font
+// TODO PlotTool: set tracker font
 
 ////////////////////////
 // PLOTMS DEFINITIONS //
@@ -57,6 +54,8 @@ const String PlotMS::CLASS_NAME = "PlotMS";
 const String PlotMS::LOG_INITIALIZE_GUI = "initialize_gui";
 const String PlotMS::LOG_LOAD_CACHE = "load_cache";
 const String PlotMS::LOG_LOCATE = "locate";
+const String PlotMS::LOG_FLAG = "flag";
+const String PlotMS::LOG_UNFLAG = "unflag";
 
 
 // Constructors/Destructors //
@@ -90,10 +89,7 @@ PlotMS::PlotMS(const PlotMSParameters& params) : itsPlotter_(NULL),
     }
 }
 
-PlotMS::~PlotMS() {
-    itsPlotManager_.clearPlotsAndCanvases();
-    delete itsPlotter_;
-}
+PlotMS::~PlotMS() { }
 
 
 // Public Methods //
@@ -121,13 +117,6 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
 PlotMSLogger* PlotMS::loggerFor(PlotMSLogger::Event event) {
     if(itsLogEventFlag_ & event) return &itsLogger_;
     else                               return NULL;
-}
-
-void PlotMS::triggerAction(PlotMSAction::Type type) {
-    PlotMSAction* act = PlotMSAction::action(type, itsPlotter_);
-    if(act == NULL) return;
-    act->doAction(this);
-    delete act;
 }
 
 

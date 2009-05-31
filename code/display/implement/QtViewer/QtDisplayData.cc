@@ -1155,6 +1155,7 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
 
 
     return new ImageRegion(flatpoly);
+
 	// (Caller is responsible for deletion of returned ImageRegion).
     
     
@@ -1469,6 +1470,120 @@ Float QtDisplayData::colorBarLabelSpaceAdj() {
   return charSz * spAdj;  }
 
 
+ImageRegion* QtDisplayData::mouseToImageRegion(
+     Record mouseRegion, WorldCanvasHolder* wch,
+     String& extChan, String& extPol) {
+  
+  if (dd_ == 0 || (im_ == 0 && cim_ == 0)) 
+     return 0;
+
+  PrincipalAxesDD* padd = 
+     dynamic_cast<PrincipalAxesDD*>(dd_);
+
+  if (padd==0) 
+     return 0;
+  
+  try {  
+    
+    if (!padd->conformsTo(*wch)) 
+       return 0;
+    
+    String regionType = mouseRegion.asString("type");
+    if (regionType != "box" && regionType != "polygon") 
+       return 0;
+
+    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
+    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
+    const CoordinateSystem& cs = 
+      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+					   
+    Int zIndex = padd->activeZIndex();
+    IPosition pos = padd->fixedPosition();
+    Vector<Int> dispAxes = padd->displayAxes();
+
+    if (nAxes == 2) 
+       dispAxes.resize(2, True);
+    
+    if (nAxes < 2 || Int(shp.nelements()) != nAxes ||
+        Int(pos.nelements()) != nAxes ||
+        anyLT(dispAxes, 0) || anyGE(dispAxes, nAxes)) 
+       return 0;
+    
+    if (dispAxes.nelements() > 2u) 
+       pos[dispAxes[2]] = zIndex;
+    
+    dispAxes.resize(2, True);
+    
+    WCBox dummy;
+    
+    Quantum<Double> px0(0.,"pix");
+    Vector<Quantum<Double> >  
+         blcq(nAxes, px0), trcq(nAxes, px0);
+
+    Int spaxis = -1;
+    if (extChan.length() == 0) 
+       spaxis = spectralAxis();
+      
+    for (Int ax = 0; ax < nAxes; ax++) {
+      if (ax == dispAxes[0] || ax == dispAxes[1] || 
+          extChan.length() == 0 || ax == spaxis) {
+        trcq[ax].setValue(shp[ax]-1);  
+      } 
+      else  {
+        blcq[ax].setValue(pos[ax]);
+        trcq[ax].setValue(pos[ax]);  
+      }   
+    }
+    
+    Bool useWorldCoords = mouseRegion.isDefined("world");
+    Record coords = mouseRegion.subRecord(
+         useWorldCoords ? "world" : "linear");
+
+    Vector<String> units(2, "pix");
+    if(useWorldCoords) units = coords.asArrayString("units");
+    
+    if (regionType=="box") {
+      Vector<Double> blc = coords.asArrayDouble("blc"),
+                     trc = coords.asArrayDouble("trc");
+    
+      for (Int i = 0; i < 2; i++) {
+        Int ax = dispAxes[i];
+
+        blcq[ax].setValue(blc[i]);
+	trcq[ax].setValue(trc[i]);
+      
+        if (useWorldCoords) {
+          blcq[ax].setUnit(units[i]);
+	  trcq[ax].setUnit(units[i]);  
+        }  
+      }  
+    }
+
+    WCBox box(blcq, trcq, cs, Vector<Int>());
+    
+    if (regionType=="box") 
+       return new ImageRegion(box);
+    
+    Vector<Double> x = coords.asArrayDouble("x"),
+		   y = coords.asArrayDouble("y");
+    Quantum<Vector<Double> > 
+         qx(x, units[0]), qy(y, units[1]);
+    
+    WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
+       return new ImageRegion(poly);
+    
+  }
+  catch (const casa::AipsError& err) {
+    errMsg_ = err.getMesg();
+    return 0;  
+  }
+  catch (...) { 
+    errMsg_ = "Unknown error converting region";
+    return 0;
+  }
+  
+
+}
 
 } //# NAMESPACE CASA - END
 

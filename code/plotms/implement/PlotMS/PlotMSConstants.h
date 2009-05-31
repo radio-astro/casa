@@ -29,6 +29,7 @@
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 
+#include <map>
 #include <vector>
 
 #include <casa/namespace.h>
@@ -41,7 +42,8 @@ namespace casa {
 // Parameters:
 // * NAME: name of the enum,
 // * ALLMETHOD: name of the method that returns a vector of all defined members
-//              of the enum,
+//              of the enum (also nALLMETHOD which returns the number of
+//              defined members in the enum),
 // * ALLSTRMETHOD: name of the method that returns a vector of the string
 //                 representation of all defined members of the enum,
 // * CONVMETHOD: name of the method that converts between the enum and its
@@ -63,6 +65,11 @@ namespace casa {
         static const int count = sizeof(arr) / sizeof(arr[0]);                \
         static const vector< NAME > v(arr, &arr[count]);                      \
         return v;                                                             \
+    }                                                                         \
+                                                                              \
+    static unsigned int n##ALLMETHOD () {                                     \
+        static unsigned int n = ALLMETHOD ().size();                          \
+        return n;                                                             \
     }
 
 #define PMS_ENUM2(NAME,ALLMETHOD,ALLSTRMETHOD,CONVMETHOD,...)                 \
@@ -105,7 +112,7 @@ public:
 	      ANTENNA1,ANTENNA2,BASELINE,
 	      UVDIST,UVDIST_L,U,V,W,
 	      AMP,PHASE,REAL,IMAG,FLAG,
-	      AZIMUTH,ELEVATION,PARANG,
+	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      ROW,FLAG_ROW)
 
       // VEL_RADIO, VEL_OPTICAL, VEL_RELATIVISTIC
@@ -118,7 +125,7 @@ public:
 	      "Antenna1","Antenna2","Baseline",
 	      "UVDist","UVDist_L","U","V","W",
 	      "Amp","Phase","Real","Imag","Flag",
-	      "Azimuth","Elevation","ParAng",
+	      "Antenna","Azimuth","Elevation","ParAng",
 	      "Row","FlagRow")
 
     //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",
@@ -226,8 +233,31 @@ public:
     static PlotSymbolPtr DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory);
     // </group>
     
+    // Returns the minimum visible sizes for plot symbol types.
+    static map<PlotSymbol::Symbol, int> SYMBOL_MINIMUM_SIZES();
+    
     // Default title (canvas, plot, etc.) format, in String form.
     static const String DEFAULT_TITLE_FORMAT;
+    
+    // Default show grid flags.
+    static const bool DEFAULT_SHOW_GRID;
+    
+    // Default grid lines.
+    static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
+    
+    // Default text annotation properties.
+    // <group>
+    static PlotFontPtr DEFAULT_ANNOTATION_TEXT_FONT(PlotFactoryPtr factory);
+    static PlotLinePtr DEFAULT_ANNOTATION_TEXT_OUTLINE(PlotFactoryPtr factory);
+    static PlotAreaFillPtr DEFAULT_ANNOTATION_TEXT_BACKGROUND(
+            PlotFactoryPtr factory);
+    // </group>
+    
+    // Default rectangle annotation properties.
+    // <group>
+    static PlotLinePtr DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory);
+    static PlotAreaFillPtr DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f);
+    // </group>
 };
 
 }

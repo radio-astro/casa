@@ -1,12 +1,7 @@
-#!/usr/bin/perl -W
+#!/usr/bin/perl -Ws
 
 # This script collects regression test results from remote hosts
 # and generates email notifications about failures.
-#
-# (Note: runs only on one machine but that would be simple
-#  to change when that need arises)
-#
-
 
 
 #
@@ -19,33 +14,44 @@
 	"ballista" => "http://www.aoc.nrao.edu/~jmlarsen/casa/",
 	"onager" => "http://www.aoc.nrao.edu/~jmlarsen/casa_onager/",
 	"casa-dev-15" => "http://www.aoc.nrao.edu/~jmlarsen/casa_casa-dev-15/",
-	"nb014496.ads.eso.org" => "/home/jmlarsen/ALMA/Regression",
-	"ma014655.hq.eso.org" => "/Users/jmlarsen/casa_test/result/"
+#	"nb014496.ads.eso.org" => "/home/jmlarsen/Regression",
+	"ma014655.hq.eso.org" => "/opt/casa_test/result/"
 );
 
 # Orphan test failures go to this email
-$maintainer_email = "jmlarsen\@eso.org";
+$default_email = "jmlarsen\@eso.org";
+
+$mail_dir = "" if (0); $mail_dir or die;
+$mail_no = 0;  # global counter
 
 # This file keeps track of which test failures were already reported
-$notifications_sent = "/home/jmlarsen/public_html/ALMA/notifications_sent.txt";
+$notifications_sent = "" if (0); $notifications_sent or die;
 
 # Paths to SVN:
-$svn_path = "/diska/jmlarsen/gnuactive/code";
-$tests_file = "xmlcasa/scripts/regressions/admin/tests_list.txt";
+$svn_path = "" if (0); $svn_path or die;
+#"/diska/jmlarsen/gnuactive/code";
 
+$tests_file = "" if (0); $tests_file or die;
+#= "xmlcasa/scripts/regressions/admin/tests_list.txt";
+
+$data_base = "" if (0); $data_base or die;
+
+$out_dir = "" if (0); $out_dir or die;
 
 # Start processing...
 system("date -u");
 
+$files_to_get = "result-all.tgz";
+
 foreach $host (keys %dir) {
-    mkdir("/scratch/tmp/Regression/$host/");
-    chdir("/scratch/tmp/Regression/$host/")or die;
+    mkdir("$data_base/$host/");
+    chdir("$data_base/$host/")or die;
     
-    print "Retrieving $host, ${dir{$host}}... ";
+    print "Retrieving $host, ${dir{$host}}...\n";
 
     # Lots of special cases...
     if ($dir{$host} =~ /^http/) {
-	$cmd = "wget --quiet --output-document=result-all.tgz \"${dir{$host}}/result-all.tgz\"";
+	$cmd = "curl \"${dir{$host}}/result-all.tgz\" >result-all.tgz 2>/dev/null";
     }
     else {
 	if ($dir{$host} eq "/casa/regression/01/result/" or
@@ -59,13 +65,14 @@ foreach $host (keys %dir) {
 	}
 
 	if ($dir{$host} eq "/casa/state/") {
-	    $files_to_get = "--after-date '5 hours ago' Result/ Log/";
+	    #$files_to_get = "--after-date '5 hours ago' Result/ Log/";
+	    $files_to_get = "result-*tar.gz";
 	}
 	else {
 	    $files_to_get = "result-all.tgz";
 	}
 	$cmd =
-	    'echo -e "cd ' . ${dir{$host}} . ' \n tar zc ' . $files_to_get . ' " | ' .
+	    'echo "cd ' . ${dir{$host}} . ' ; tar zc ' . $files_to_get . ' " | ' .
 	    $ssh_cmd . ' ' . $host . ' | tar zxf -';
     }
     if (mysystem($cmd) != 0) {
@@ -84,8 +91,8 @@ foreach $host (keys %dir) {
 	    }
 	}
 
-	if ($dir{$host} ne "/casa/state/") {
-	    if (mysystem("tar zxf result-all.tgz")) {
+	if (1 or $dir{$host} ne "/casa/state/")  {
+	    if ($dir{$host} ne "/casa/state/" and mysystem("tar zxf result-all.tgz")) {
 		warn "$host: $!";
 		next;
 	    }
@@ -97,7 +104,7 @@ foreach $host (keys %dir) {
 	    #
 	    # Instead, sort the tar.gz files by date and extract
 	    # in that order.
-	    if (mysystem("/bin/ls -1tr result-*tar.gz | xargs -i tar zxf {}")) {
+	    if (mysystem("/bin/ls -1tr result-*tar.gz | xargs -n 1 tar zxf")) {
 		warn "$host: $!";
 		# tolerate if one tgz file is invalid   next;
 	    }
@@ -117,11 +124,11 @@ foreach $host (keys %dir) {
 
 	# Preserve time when copying
 	if (-d "./Log") {
-	    mysystem("cp -p ./Log/* ../Log/") == 0 or warn $!;
+	    mysystem("cp -pr ./Log/ ../Log/") == 0 or warn $!;
 	    #mysystem("rm -rf ./Log/") == 0 or die $!;
 	}
 	if (-d "./Result") {
-	    mysystem("find ./Result/ -type d | grep -Ev '^./Result/\$' | xargs -i cp -pR {} ../Result") == 0 or warn $!;
+	    mysystem("find ./Result/ -type d | grep -Ev '^./Result/\$' | xargs -n 1 -I {} cp -pR {} ../Result") == 0 or warn $!;
 	    # Used to be "cp -pR ./Result/* ../Result" but too many arguments
 
 	    mysystem("rm -rf ./Result/") == 0 or warn $!;
@@ -130,8 +137,8 @@ foreach $host (keys %dir) {
     }
 }
 
-mysystem('grep       "Unexpected error" /scratch/tmp/Regression/Log/* | tee /home/jmlarsen/public_html/ALMA/error.log 1>&2');
-mysystem('grep -B200 "Unexpected error" /scratch/tmp/Regression/Log/* >> /home/jmlarsen/public_html/ALMA/error.log');
+mysystem("find $data_base/Log/ -type f | xargs grep       \"Unexpected error\" | tee $out_dir/error.log 1>&2");
+mysystem("find $data_base/Log/ -type f | xargs grep -B200 \"Unexpected error\" >> $out_dir/error.log");
 
 exit 0;
 
@@ -150,8 +157,8 @@ sub email_notify
     #print "fail logs are @fail_logs\n";
 
     foreach $fl (@fail_logs) {
+	chomp($fl);
 	$_ = $fl;
-	chomp();
 	$testid = `cat $_ | grep -E "^testid" | awk '{print \$3}'`;  $? == 0 or die $!;
 	$type   = `cat $_ | grep -E "^type" | awk '{print \$3}'`;    $? == 0 or die $!;
 	$casa   = `cat $_ | grep -E "^CASA" | grep -oE "'.*'"`;      $? == 0 or die $!;
@@ -160,11 +167,11 @@ sub email_notify
 	chomp($type);
 	chomp($casa); $casa =~ s/\'//g;
 	chomp($host);
-	$email  = `cat $svn_path/$tests_file | grep -wE "\\s*$testid" | awk '{print \$2}'`;  $? == 0 or die $!;
+	$email  = `cat $svn_path/$tests_file | grep -w "^$testid" | awk '{print \$2}'`;  $? == 0 or die $!;
 	chomp($email);
 
 	if ($type ne "exec") {
-	    $image = `cat $_ | grep -E "^image" | awk '{print \$3}'`; $? == 0 or die $!;
+	    $image = `cat $_ | grep -Ew "^image" | awk '{print \$3}'`; $? == 0 or die $!;
 	    chomp($image);
 	}
 	else {
@@ -173,7 +180,7 @@ sub email_notify
 
 	# If no email address is given then...
 	if ($email !~ /\S/) {
-	    $email = $maintainer_email;
+	    $email = $default_email;
 	}
 
 	#print "Address = '$email'\n";
@@ -189,21 +196,19 @@ sub email_notify
 	}
 	print FILE " failed on host $host using\n$casa.\n\n";
 	print FILE "Please check on\n";
-        print FILE "http://www.eso.org/~jmlarsen/ALMA/CASA/test-report.html";
+        print FILE "http://www.eso.org/~jmlarsen/ALMA/CASA_latest/test-report.html";
 	if ($type eq "exec") {
 	    print FILE " and\nhttp://www.eso.org/~jmlarsen/ALMA/CASA/summary_$testid.html\n";
 	}
 	else {
 	    print FILE "\n";
 	}
-	print FILE "to confirm and take remedial action. Be aware that it may take a few hours\n";
-	print FILE "until the HTML is updated with these results.\n";
+	print FILE "to confirm and take remedial action.\n";
 	print FILE "\n";
 	print FILE "-- \n";
 	print FILE "This is an automated message, you can reply.\n";
-	print FILE "You have received this message because your email is listed on\n";
-	print FILE "$svn_base/$tests_file r$svn_rev\n";
-	print FILE "as the contact address for $testid.\n";
+	print FILE "You have received this message as contact for $testid according to\n";
+	print FILE "$svn_base/$tests_file r$svn_rev.\n";
 	close FILE or die;
 
 
@@ -218,24 +223,41 @@ sub email_notify
 	# (better would be to check on the SVN branch but
 	#  that's not available)
 	if ($host =~ /tst/ or $host =~ /ma014655/) {
-	    
-	    (-e $notifications_sent) or die;   
-	    # This is a spam-reducing check (in case something is wrong with the given path)
+
+	    (-e $notifications_sent) or die $notifications_sent;
+	    # This is a spam-preventing check (in case something is wrong with the given path)
 	    # If the script died here and you think $notifications_sent
 	    # points to the correct place, then create an empty file at that location
-	    if (mysystem("grep \"$testid $image $type $casa\" $notifications_sent")) {
+	    if (mysystem("grep \"$casa $testid\" $notifications_sent")) {
+#	    if (mysystem("grep \"$casa $testid $image $type\" $notifications_sent")) {
 		open FILE, ">>$notifications_sent" or die;
 		$ddd = `date -u`; chomp($ddd);
-		print FILE "$ddd: $testid $image $type $casa - $fl\n";
+		print FILE "$ddd: $casa $testid $image $type - $fl\n";
 		close FILE or die;
-		mysystem("cat $message | mail -s \"$testid failure, $host, $casa\" -b $maintainer_email $email");
-		#mysystem("cat $message | mail -s \"$testid failure, $host, $casa\" -b $maintainer_email jmlarsen\@eso.org");
-		print "Sent notification to $email\n";
+
+		$subject = $testid;
+		if ($type ne "exec") {
+		    $subject = "$testid-$image-$type";
+		}
+		
+		$email_file = $mail_dir . "/" . $mail_no . ".email";
+		$mail_no++;
+		open FILE, ">$email_file";
+
+		print FILE "$email\n";
+		#print FILE "jmlarsen\@eso.org\n";   # for testing without spamming
+
+		print FILE "CASA regression failure: $subject, $casa, $host\n";
+		close FILE or die;
+		mysystem("cat $message >> $email_file");
+		print "Dumped notification to $email_file\n";
 	    }
 	    else {
 		print "Don't repeat this notification\n";
 	    }
 	}
+	
+	system("/bin/rm $message");
     }
 }
 

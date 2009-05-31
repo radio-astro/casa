@@ -197,7 +197,7 @@ im.open('orion.ms')
 im.selectvis(spwid=[0, 1] ,field=range(2,11));
 im.defineimage(nx=300, ny=300, cellx='2.0arcsec',celly='2.0arcsec' , stokes="I", phasecenter=6, spwid=[0,1])
 im.weight('natural')
-im.setvp(dovp=T, usedefaultvp=true)
+im.setvp(dovp=T, usedefaultvp=True)
 im.setoptions(ftmachine='mosaic', padding=1.0)
 im.approximatepsf(psf='LePSF.image')
 \end{verbatim}
@@ -665,7 +665,7 @@ it is processed in {\tt imager}).
 <example>
 \begin{verbatim}
 im.open('3C273XC1.ms')
-im.correct(true, '1s')
+im.correct(True, '1s')
 im.clean(model='3C273XC1.clean.model')
 \end{verbatim}
 </example>
@@ -1127,7 +1127,7 @@ and composite numbers. You may use <link anchor="image:image.subimage.function">
 <returns type="bool"/>
 <example>
 \begin{verbatim}
-im.setvp(dovp=true, usedefaultvp=true)
+im.setvp(dovp=True, usedefaultvp=True)
 im.feather(image='feathered.image', highres='casa.vlaonly',
 lowres='casa.sd');
 \end{verbatim}
@@ -1149,7 +1149,7 @@ vpman.saveastable('bonn.pb')
 vpman.done()
 
 ##....would have done  your usual imager setup (defineimage etc) then before feathering
-im.setvp(dovp=true, usedefaultvp=false, vptable='bonn.pb')
+im.setvp(dovp=True, usedefaultvp=false, vptable='bonn.pb')
 im.feather(image='feathered.image', highres='casa.vlaonly',
 lowres='casa.sd');
 
@@ -1318,7 +1318,7 @@ T (in which case the results are added to the column).
 <example>
 \begin{verbatim}
 im.ft(model='3C273XC1.nnls.model')
-im.ft(model='3C273XC1.another.model', incremental=true)
+im.ft(model='3C273XC1.another.model', incremental=True)
 \end{verbatim}
 
 Fourier transforms the model in the image 3C273XC1.nnls.model
@@ -1506,7 +1506,7 @@ threshold := s.max / 10.0;
 ia.imagecalc('sdimage',
 	      pixels=spaste('scanimage[scanweight&gt;', threshold,
 			    ']/scanweight[scanweight&gt;', threshold, ']'))
-###ia.view(raster=true, axislabels=true);
+###ia.view(raster=True, axislabels=True);
 \end{verbatim}
 
 </description>
@@ -2018,7 +2018,7 @@ Componentlists.
 If {\tt pointingcenter==false} then you must specify {\tt inimage}
 and the pointing center is taken from its reference direction.
 Otherwise, {\tt pointingcenter} must be a Direction measure.
-It cannot take on the value {\tt true}.
+It cannot take on the value {\tt True}.
 
 The applied primary beam function is deterimed as follows.  If you used
 function <link anchor="imager:imager.setvp.function">Imager.setvp</link> to set an external
@@ -2301,7 +2301,7 @@ ungridded.
 im.open('3C273XC1.ms')
 im.setimage(cellx='0.7arcsec', celly='0.7arcsec')
 im.weight('briggs')
-im.plotweights(gridded=true,increment=10)
+im.plotweights(gridded=True,increment=10)
 \end{verbatim}
 </example>
 <comments>
@@ -3925,19 +3925,20 @@ is multiplied by this factor.
    <shortdescription>Set the voltage pattern model for subsequent processing</shortdescription>
    
 <description>
-Set the voltage pattern model (and hence, the primary beam) used for a Telecope.
-There are currently two ways to set the voltage pattern: by using the extensive
-list of defaults which the system knows about, or by creating a voltage pattern
-description with the <link anchor="imager:vpmanager">vpmanager</link>.  The default voltage patterns
-include both a high and a low frequency VP for the WSRT, a VP for each observing
-band at the AT, several VP's for the VLA, including the approrpiate beam squint for
-each observing band, and  Gaussian for the BIMA dishes.  Due to temporary limitations
-in the internal structure of the visibility buffer, only one telescope's voltage
-pattern can be applied to a particular MeasurementSet.  This will be corrected shortly.
+Set the voltage pattern model (and hence, the primary beam) used for a
+telescope.  There are currently two ways to set the voltage pattern: by using
+the extensive list of defaults which the system knows about, or by creating a
+voltage pattern description with the <link
+anchor="imager:vpmanager">vpmanager</link>.  The default voltage patterns
+include both a high and a low frequency VP for the WSRT, a VP for each
+observing band at the AT, several VP's for the VLA, including the appropriate
+beam squint for each observing band, and Gaussian for the BIMA dishes.  Due to
+temporary limitations in the internal structure of the visibility buffer, only
+one telescope's voltage pattern can be applied to a particular MeasurementSet.
+This will be corrected shortly.
 </description>
 
 <input>
-
      <param type="bool" name="dovp">
      <description>Do voltage pattern (ie, primary beam) correction</description>
      <value>false</value>
@@ -3949,7 +3950,7 @@ pattern can be applied to a particular MeasurementSet.  This will be corrected s
      </param>
 
      <param type="string" name="vptable">
-     <description>If usedefaultvp is false, provide a VP Table made with vpmanager</description>
+     <description>If usedefaultvp is False, provide a VP Table made with vpmanager</description>
      <value></value>
      </param>
 
@@ -3981,7 +3982,7 @@ pattern can be applied to a particular MeasurementSet.  This will be corrected s
 <returns type="bool"/>
 <example>
 \begin{verbatim}
- im.setvp(dovp=T, usedefaultvp=T, dosquint=F);
+ im.setvp(dovp=True, usedefaultvp=True, dosquint=False)
 \end{verbatim}
 </example>
 

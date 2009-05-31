@@ -129,6 +129,82 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (init) initCalSet(0);
     
   }
+
+  VisSet::VisSet(MeasurementSet& ms,const Block<Int>& columns, 
+		 const Matrix<Int>& chanSelection,
+		 Bool addScratch,
+		 Double timeInterval, Bool compress)
+    :ms_p(ms)
+  {
+    LogSink logSink;
+    LogMessage message(LogOrigin("VisSet","VisSet"));
+    
+    blockOfMS_p= new Block<MeasurementSet> ();
+    blockOfMS_p->resize(1);
+    (*blockOfMS_p)[0]=ms_p;
+    multims_p=False;
+    // sort out the channel selection
+    Int nSpw=ms_p.spectralWindow().nrow();
+    MSSpWindowColumns msSpW(ms_p.spectralWindow());
+    if(nSpw==0)
+      throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
+    selection_p.resize(2,nSpw);
+    // fill in default selection
+    selection_p.row(0)=0; //start
+    selection_p.row(1)=msSpW.numChan().getColumn(); 
+    for (uInt i=0; i<chanSelection.ncolumn(); i++) {
+      Int spw=chanSelection(2,i);
+      if (spw>=0 && spw<nSpw && chanSelection(0,i)>=0 && 
+	  chanSelection(0,i)+chanSelection(1,i)<=selection_p(1,spw)) {
+	// looks like a valid selection, implement it
+	selection_p(0,spw)=chanSelection(0,i);
+	selection_p(1,spw)=chanSelection(1,i);
+      }
+    }
+
+    Bool init=True;
+    if (ms.tableDesc().isColumn("MODEL_DATA")) {
+      TableColumn col(ms,"MODEL_DATA");
+      if (col.keywordSet().isDefined("CHANNEL_SELECTION")) {
+	Matrix<Int> storedSelection;
+	col.keywordSet().get("CHANNEL_SELECTION",storedSelection);
+	if (selection_p.shape()==storedSelection.shape() && 
+	    allEQ(selection_p,storedSelection)) {
+	  init=False;
+	} 
+      }
+    }
+    
+    //    cout << boolalpha << "addScratch = " << addScratch << endl;
+
+    // Add scratch columns
+    if (addScratch && init) {
+      message.message("Adding MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns");
+      logSink.post(message);
+      
+      removeCalSet(ms);
+      addCalSet(ms, compress);
+      
+      ArrayColumn<Complex> mcd(ms,"MODEL_DATA");
+      mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection_p);
+      
+      // Force re-sort (in VisIter ctor below) by deleting current sort info 
+      if (ms.keywordSet().isDefined("SORT_COLUMNS")) 
+	ms.rwKeywordSet().removeField("SORT_COLUMNS");
+      if (ms.keywordSet().isDefined("SORTED_TABLE")) 
+	ms.rwKeywordSet().removeField("SORTED_TABLE");
+    }
+    
+    
+    iter_p=new VisIter(ms_p,columns,timeInterval);
+    for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
+      iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
+    }
+    
+    // Initialize MODEL_DATA and CORRECTED_DATA
+    if (addScratch && init) initCalSet(0);
+    
+  }
   
   VisSet::VisSet(Block<MeasurementSet>& mss,const Block<Int>& columns, 
 		 const Block< Matrix<Int> >& chanSelection, 
@@ -398,14 +474,39 @@ void VisSet::selectChannel(const Matrix<Int>& chansel) {
     const Int& end=chansel(ispw,2);
     Int nchan=end-start+1;
     const Int& step=chansel(ispw,3);
-
+    
     ostringstream os;
     os << ".  Spw " << spw << ":" << start << "~" << end 
        << " (" << nchan << " channels, step by " << step << ")";
     message.message(os);
     logSink.post(message);
-
+    
     this->selectChannel(1,start,nchan,step,spw,False);
+  }
+
+}
+
+void VisSet::selectAllChans() {
+
+  LogSink logSink;
+  LogMessage message(LogOrigin("VisSet","selectAllChans"));
+  ostringstream os;
+  os << ".  Selecting all channels in selected spws.";
+  message.message(os);
+  logSink.post(message);
+
+  MSSpWindowColumns msSpW(ms_p.spectralWindow());
+  Int nSpw=msSpW.nrow();
+  if(nSpw==0)
+    throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
+  selection_p.resize(2,nSpw);
+  // fill in default selection
+  selection_p.row(0)=0; //start
+  selection_p.row(1)=msSpW.numChan().getColumn(); 
+
+  // Pass to the VisIter... 
+  for (uInt spw=0; spw<selection_p.ncolumn(); ++spw) {
+    iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
   }
 }
 

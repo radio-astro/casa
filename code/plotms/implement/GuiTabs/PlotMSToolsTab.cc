@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 
+#include <casaqt/QtUtilities/QtActionGroup.qo.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/PlotMS/PlotMS.h>
 
@@ -42,59 +43,50 @@ PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     const QMap<PlotMSAction::Type, QAction*>& actionMap =
         itsPlotter_->plotActionMap();
     
-    // Set up hand tools
-    QAction* act = actionMap.value(PlotMSAction::TOOL_MARK_REGIONS);
-    connect(handMarkRegions, SIGNAL(toggled(bool)), act,
-            SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
-    act = actionMap.value(PlotMSAction::TOOL_ZOOM);
-    connect(handZoom, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
-    act = actionMap.value(PlotMSAction::TOOL_PAN);
-    connect(handPan, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), SLOT(toolChanged()));
+    // Set up synchronizer
+    QtActionSynchronizer* sync = new QtActionSynchronizer(parent);
     
-    // Set up selected regions
-    connect(regionsClear, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::CLEAR_REGIONS), SLOT(trigger()));
-    connect(regionsFlag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::FLAG), SLOT(trigger()));
-    connect(regionsUnflag, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::UNFLAG), SLOT(trigger()));
-    connect(regionsLocate, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::LOCATE), SLOT(trigger()));
+    // Synchronize hand tool buttons
+    sync->synchronize(actionMap.value(PlotMSAction::TOOL_MARK_REGIONS),
+            handMarkRegions);
+    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ZOOM),
+            handZoom);
+    sync->synchronize(actionMap.value(PlotMSAction::TOOL_PAN),
+            handPan);
+    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ANNOTATE_TEXT),
+            handAnnotateText);
+    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ANNOTATE_RECTANGLE),
+            handAnnotateRectangle);
     
-    // Set up stack
-    connect(stackBack, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_BACK), SLOT(trigger()));
-    connect(stackBase, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_BASE), SLOT(trigger()));
-    connect(stackForward, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::STACK_FORWARD), SLOT(trigger()));
+    // Synchronize selected region buttons
+    sync->synchronize(actionMap.value(PlotMSAction::SEL_CLEAR_REGIONS),
+            regionsClear);
+    sync->synchronize(actionMap.value(PlotMSAction::SEL_FLAG), regionsFlag);
+    sync->synchronize(actionMap.value(PlotMSAction::SEL_UNFLAG),regionsUnflag);
+    sync->synchronize(actionMap.value(PlotMSAction::SEL_LOCATE),regionsLocate);
     
-    // Set up tracker
-    act = actionMap.value(PlotMSAction::TRACKER_HOVER);
-    connect(trackerHover, SIGNAL(toggled(bool)), act, SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), trackerHover, SLOT(setChecked(bool)));
-    act = actionMap.value(PlotMSAction::TRACKER_DISPLAY);
-    connect(trackerDisplay, SIGNAL(toggled(bool)), act,SLOT(setChecked(bool)));
-    connect(act, SIGNAL(toggled(bool)), trackerDisplay,SLOT(setChecked(bool)));
+    // Synchronize stack buttons
+    sync->synchronize(actionMap.value(PlotMSAction::STACK_BACK), stackBack);
+    sync->synchronize(actionMap.value(PlotMSAction::STACK_BASE), stackBase);
+    sync->synchronize(actionMap.value(PlotMSAction::STACK_FORWARD),
+            stackForward);
     
-    // Set up iteration
-    connect(iterationFirst, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_FIRST), SLOT(trigger()));
-    connect(iterationPrev, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_PREV), SLOT(trigger()));
-    connect(iterationNext, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_NEXT), SLOT(trigger()));
-    connect(iterationLast, SIGNAL(clicked()),
-            actionMap.value(PlotMSAction::ITER_LAST), SLOT(trigger()));
+    // Synchronize tracker buttons
+    sync->synchronize(actionMap.value(PlotMSAction::TRACKER_HOVER),
+            trackerHover);
+    sync->synchronize(actionMap.value(PlotMSAction::TRACKER_DISPLAY),
+            trackerDisplay);
     
-    // Set up hold/release
-    act = actionMap.value(PlotMSAction::HOLD_RELEASE_DRAWING);
-    connect(holdReleaseDrawing, SIGNAL(toggled(bool)), act,
-            SLOT(setChecked(bool)));
-    connect(act, SIGNAL(changed()), SLOT(holdReleaseActionChanged()));
+    // Synchronize iteration buttons
+    sync->synchronize(actionMap.value(PlotMSAction::ITER_FIRST),
+            iterationFirst);
+    sync->synchronize(actionMap.value(PlotMSAction::ITER_PREV), iterationPrev);
+    sync->synchronize(actionMap.value(PlotMSAction::ITER_NEXT), iterationNext);
+    sync->synchronize(actionMap.value(PlotMSAction::ITER_LAST), iterationLast);
+    
+    // Synchronize hold/release button
+    sync->synchronize(actionMap.value(PlotMSAction::HOLD_RELEASE_DRAWING),
+            holdReleaseDrawing);
 }
 
 PlotMSToolsTab::~PlotMSToolsTab() { }
@@ -110,44 +102,15 @@ void PlotMSToolsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) { }
 
 void PlotMSToolsTab::showIterationButtons(bool show) {
-    iterationBox->setVisible(show);
-}
+    iterationBox->setVisible(show); }
+
+
+void PlotMSToolsTab::toolsUnchecked() { handNone->setChecked(true); }
 
 
 void PlotMSToolsTab::notifyTrackerChanged(PlotTrackerTool& tool) {
     if(trackerDisplay->isChecked())
         trackerEdit->setText(tool.getAnnotation()->text().c_str());
-}
-
-
-void PlotMSToolsTab::holdReleaseActionChanged() {
-    QAction* act = itsPlotter_->plotActionMap().value(
-                   PlotMSAction::HOLD_RELEASE_DRAWING);
-    holdReleaseDrawing->blockSignals(true);
-    holdReleaseDrawing->setChecked(act->isChecked());
-    holdReleaseDrawing->setText(act->text());
-    holdReleaseDrawing->blockSignals(false);
-}
-
-void PlotMSToolsTab::toolChanged() {
-    const QMap<PlotMSAction::Type, QAction*>& actionMap =
-        itsPlotter_->plotActionMap();
-    bool mark = actionMap[PlotMSAction::TOOL_MARK_REGIONS]->isChecked(),
-         zoom = actionMap[PlotMSAction::TOOL_ZOOM]->isChecked(),
-         pan  = actionMap[PlotMSAction::TOOL_PAN]->isChecked();
-    
-    handMarkRegions->blockSignals(true);
-    handZoom->blockSignals(true);
-    handPan->blockSignals(true);
-    
-    if(!mark && !zoom && !pan) handNone->setChecked(true);
-    else if(mark) handMarkRegions->setChecked(true);
-    else if(zoom) handZoom->setChecked(true);
-    else if(pan) handPan->setChecked(true);
-    
-    handMarkRegions->blockSignals(false);
-    handZoom->blockSignals(false);
-    handPan->blockSignals(false);
 }
 
 }

@@ -21,7 +21,7 @@
 		</param>
 
 		<param type="string" name="mode">
-			<description>Flag version operation</description>
+			<description>Operation: list, save, restore, delete</description>
 			<value>list</value>
 			<allowed kind="enum">
 				<value>list</value>
@@ -64,12 +64,12 @@
 
 <example>
 
-        Enable list, save, restore and delete flag version files.
 
         These flag version files are copies of the flag column for a
-        measurement set.  They can be restored to the data set to get
-        back to a previous flag version.  On running importvla, a flag
-        version call 'Original' is automatically produced.
+        measurement set.  They can be restored to the data set to obtain
+        a previous flag version.  On running importvla, a flag
+        version call 'Original' is automatically produced.  It is wise to
+        save a flagversion at the beginning or after serious editing.    
 
         Keyword arguments:
         vis -- Name of input visibility file

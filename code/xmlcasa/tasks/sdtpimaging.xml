@@ -53,6 +53,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="string" name="stokes">
+            <description>stokes or correlation name (e.g. "I", "XX")</description>
+            <value></value>
+    </param>
+
     <param type="bool" name="createimage">
             <description>do imaging?</description>
             <value>False</value>
@@ -141,6 +146,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: '0,1', 'DV01'
                 WARNING: currently baseline subtraction properly 
                          only one of the antennas.
+        stokes -- select data based on stokes or polarization type 
+                default: '' (use all polarizations)
+                example: 'XX'
         createimage -- do imaging? 
                 default: False 
   &gt;&gt;&gt; createimage=True expandable parameters

@@ -53,42 +53,43 @@ void PlotMSDrawThread::updatePlotterCanvases() {
     if(itsPlotter_ == NULL) return;
     
     itsOperationsMutex_.lock();
-    vector<PlotCanvasPtr> canvases = itsPlotter_->getPlotter()
-                                     ->canvasLayout()->allCanvases();
+    vector<PlotCanvasPtr> canvases = itsPlotter_->currentCanvases();
     vector<PlotOperationPtr> ops;
     PlotOperationPtr op;
     bool found;
     
-    // Make list of PlotOperations not already in itsOperations_.  Make sure
-    // list is unique.
+    // Make unique list of PlotOperations from current canvases.
     for(unsigned int i = 0; i < canvases.size(); i++) {
         if(canvases[i].null()) continue;
         op = canvases[i]->operationDraw();
         if(op.null()) continue;
         
-        found = false;
-        for(unsigned int j = 0; !found && j < itsOperations_.size(); j++)
-            if(itsOperations_[j] == op) found = true;
-        
+        found = false;        
         for(unsigned int j = 0; !found && j < ops.size(); j++)
             if(ops[j] == op) found = true;
         
         if(!found) ops.push_back(op);
     }
-    
+
     // Remove members of itsOperations_ not in list, unregistering this thread
-    // as a watcher in the process.
+    // as a watcher in the process.  If the operator is already in
+    // itsOperations_, remove it from the list so it doesn't get added twice.
     int n = (int)itsOperations_.size();
     for(int i = 0; i < n; i++) {
         op = itsOperations_[i];
         found = false;
-        for(unsigned int j = 0; !found && j < ops.size(); j++)
-            if(ops[j] == op) found = true;
+        for(unsigned int j = 0; !found && j < ops.size(); j++) {
+            if(ops[j] == op) {
+                found = true;
+                ops.erase(ops.begin() + j);
+            }
+        }
         
         if(!found) {
             op->removeWatcher(this);
             itsOperations_.erase(itsOperations_.begin() + i);
             i--;
+            n--;
         }
     }
     

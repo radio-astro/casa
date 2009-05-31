@@ -290,15 +290,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  totalrowcount++;
 		
 		for( uInt ich=0; ich<chunk.num(CHAN); ich++ ) {
-		    if(!flagchan.nelements() || flagchan[ich])
-			{
-			    totalflags += chunk.nfChanIfrTime(ich,ifrs(i),it);
-			    totalcount += chunk.num(CORR);
-			}
+
+		    if(!flagchan.nelements() || flagchan[ich]) {
+			
+			totalflags += chunk.nfChanIfrTime(ich, ifrs(i), it);
+			totalcount += chunk.num(CORR);
+		    }
 		}
 	      }
-          }
-      }// end of flagall
+	}
+    }// end of flagall
     
     accumTotalFlags    += totalflags;
     accumTotalCount    += totalcount;

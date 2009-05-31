@@ -1116,7 +1116,6 @@ void RedFlagger::run ( const RecordInterface &agents,const RecordInterface &opt,
 	this->summary(agents, opt, ind_base);
 	printSummaryReport(chunk,opt);
 	printAgentReports();
-	this->writeHistory(os, False);
       }
     }
 // call endChunk on all agents
@@ -1363,33 +1362,5 @@ int dprintf( LogIO &os,const char *format, ...)
   os<<LogIO::DEBUGGING<<str<<LogIO::POST;
   return ret;
 }
-
-void RedFlagger::writeHistory(LogIO& os, Bool cliCommand){
-  /*
-  if (!historytab_p.isNull()) {
-    if (histLockCounter_p == 0) {
-      historytab_p.lock(True);
-    }
-    ++histLockCounter_p;
-
-    os.postLocally();
-    if (cliCommand) {
-      hist_p->cliCommand(os);
-    } else {
-      hist_p->addMessage(os);
-    }
-
-    if (histLockCounter_p == 1) {
-      historytab_p.unlock();
-    }
-    if (histLockCounter_p > 0) {
-      --histLockCounter_p;
-    }
-  } else {
-    os << LogIO::SEVERE << "must attach to MeasurementSet" << LogIO::POST;
-  }
-  */
-}
-
 
 } //#end casa namespace

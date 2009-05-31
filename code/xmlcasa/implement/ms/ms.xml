@@ -210,6 +210,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     function may take some time if the measurement set to be copied is
     large. The measurement set needs to be opened for writing for this to work.
 
+  \medskip\noindent\textbf{Sorting the main table by time}
+
+    The timesort function permits you to sort the MS main table by time in
+    ascending order. This can be useful after a concatenation. 
+   
+
   \medskip\noindent\textbf{Splitting}
     The split function allows you to make a new ms from a subset of the 
     actual ms.
@@ -2006,14 +2012,14 @@ for i in range(len(tcoord)):
     
      <param type="any" direction="in" name="freqtol">
      <description>Frequency difference  within which 2
-  spectral windows are considered similar; e.g '10Hz'</description>
+ spectral windows are considered similar; e.g '10Hz'</description>
      <any type="variant"/>
      <value>1Hz</value>
      </param>
     
      <param type="any" direction="in" name="dirtol">
      <description>Direction difference within which 2
-  fields are considered the same; e.g '1mas'</description>
+ fields are considered the same; e.g '1mas'</description>
      <any type="variant"/>
      <value>1mas</value>
      </param>
@@ -2046,6 +2052,41 @@ for i in range(len(tcoord)):
     frequency tolerance of 1GHz and position tolerance of 1 arcsec in
     deciding if the spw and field in the measurementsets are
     similar or not. 
+  </example>
+</method>
+
+   <method type="function" name="timesort">
+   <shortdescription>Sort the main table of an MS by time</shortdescription>
+   
+  <keyword>timesort</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="newmsname">
+     <description> Name of the output measurement set (default: overwrite original)</description>
+     <value></value>
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function sorts the main table of the measurement set by the contents
+    of the column TIME in ascending order and writes a copy of the MS with the sorted
+    main table into newmsfile.
+
+    If no newmsname is given, a sorted copy of the MS is written into a new MS under the name
+    x.sorted (where x is the name of the original MS). The original MS is then closed and deleted.
+    The new MS is renamed to the name of the original MS and then reopened.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS", nomodify=False)
+      ms.timesort()
+      ms.done()
+    \end{verbatim}
+    This example sorts the main table of 3C273XC1.MS by time.
+    The original MS is overwritten by the sorted one.
   </example>
 </method>
 

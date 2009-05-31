@@ -10,18 +10,17 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, plotlevel):
+def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, plotlevel):
        # NEED to include spw, src? name for movingsource param. in function argument
        # put implementation here....
         casalog.origin('sdtpimaging')
-
         try:
             ### Parameter checking #############################################
             # checks performed     					       # 	
             # sdfile - must be an MS                                           # 
             # if calmode=baseline, masklist must exist, do calib               # 
             # antenna mapped to antenna ID/name in the MS                      #
-            #                                                                  # 
+            # stokes                                                           # 
             ####################################################################
             if os.path.isdir(sdfile):
                 tb.open(sdfile)
@@ -53,6 +52,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                     msg='Please specify a region to be fitted in masklist'
                     raise Exception, msg
             		
+                print "masklist...."
                 if type(masklist)==int:
                     masklist=[masklist]
                 if type(masklist)==list or type(masklist)==tuple:
@@ -99,76 +99,137 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                 for i in antid:
                     antnameused += antnames[i]+' ' 
 
-            #print "ephemsrcname handling..."
+            # check if the data contain multiple polarizations
+            # define stokestypes (only up to 'YL') based on enumerated stokes type in CASA 
+            stokestypes=['undef','I','Q','U','V','RR','RL','LR','LL','XX','XY','YX','YY','RX','RY','LX','LY','XR','XL','YR','YL']
+            tb.open(sdfile+'/POLARIZATION')
+            #only use first line of POLARIZATION table
+            npol=tb.getcol('NUM_CORR')[0]
+            corrtype=tb.getcol('CORR_TYPE')
+            #corrtypestr = (stokestypes[corrtype[0][0]],stokestypes[corrtype[1][0]])
+            corrtypestr = ([stokestypes[corrtype[i][0]] for i in range(npol)])
+
+            #print corrtypestr
+            print "no. of polarization: %s" % npol
+            tb.close()
+            selpol = 0
+            selnpol = 0
+            selcorrtypeind=[]
+            if npol>1:
+                if stokes=='':
+                    stokes='I'
+               	if stokes.upper()=='I':
+                    if set(corrtypestr).issuperset(set(("XX","YY"))):
+                        for ct in corrtypestr:
+                            if ct == 'XX' or ct == 'YY':
+                                selcorrtypeind.append(corrtypestr.index(ct))
+                        print "selected corr type indices: %s" % selcorrtypeind 
+                        #print "selected (%s,%s) data" % corrtypestr
+                    elif set(corrtypestr).issuperset(set(("RR","LL"))):
+                        for ct in corrtypestr:
+                            if ct == 'RR' or ct == 'LL':
+                                selcorrtypeind.append(ct.index(ct))
+                        print "selected corr type indices: %s" % selcorrtypeind 
+                        #print "selected (%s,%s) data" % corrtypestr
+                    else:
+                    	print "Cannot get Stokes I with the input (%s,%s) data" % corrtypestr
+                    selnpol = len(selcorrtypeind)
+                else:            
+                    if len(stokes) <= 2:
+                        for i in range(npol):
+                            if stokes.upper()==corrtypestr[i]:
+                                selcorrtypeind.append(i)
+                                selpol = selcorrtypeind[0]
+                                print "selected %s data" % corrtypestr[i]
+                        selnpol=1 
+                    else:
+                        # try to identify multiple corrtypes in stokes parm.
+                        for i in range(len(stokes)):
+                            ns = 2*i
+                            for i in range(npol):
+                                if stokes.upper()[ns:ns+2]==corrtypestr[i]:
+                                    selcorrtypeind.append(i)
+                        selnpol=len(selcorrtypeind)
+            else:
+                #single pol data
+                selpol=0
+                selnpol=1
+                selcorrtypeind.append(0)
+                if stokes=='':stokes=corrtypestr[0]
+                else:
+                    if stokes != corrtypestr[0]:
+            	        msg='stokes=%s specified but the data contains only %s' % (stokes, corrtypestr)
+                        raise Exception, msg
+
+            # check ephemsrcname and set a proper source name if not given
             if ephemsrcname=='':
-               # assume single source/field
-               # try determine if it is a known ephemeris source 
-               tb.open(sdfile+'/SOURCE')
-               src=tb.getcol('NAME')
-               tb.close()
-               src = src[0]
-               ephemobjs = set(['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','SUN','MOON'])
-               if src.upper() in ephemobjs:
-                   ephemsrcname=src
+            	# assume single source/field
+               	# try determine if it is a known ephemeris source 
+               	tb.open(sdfile+'/SOURCE')
+               	src=tb.getcol('NAME')
+               	tb.close()
+               	src = src[0]
+               	ephemobjs = set(['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','SUN','MOON'])
+               	if src.upper() in ephemobjs:
+                    ephemsrcname=src
 
+            # imaging related setup
             if createimage is True and imagename=='':
-               msg='Please specify out image name'
-	       raise Exception, msg
-
+            	msg='Please specify out image name'
+                raise Exception, msg
             if len(imsize) == 1:
-	       nx=imsize[0]
-	       ny=imsize[0]
+	        nx=imsize[0]
+	       	ny=imsize[0]
 	    else:
-	       nx=imsize[0]
-	       ny=imsize[1]
+	     	nx=imsize[0]
+	       	ny=imsize[1]
 
             cellx=celly=''
 	    if type(cell) == int or type(cell) == float:
-	       cellx=qa.quantity(cell, 'arcmin')
-	       celly=qa.quantity(cell, 'arcmin')
+	        cellx=qa.quantity(cell, 'arcmin')
+	        celly=qa.quantity(cell, 'arcmin')
 	    elif type(cell) == str:
-	       if qa.isquantity(cell):
-		   cellx=cell
-		   celly=cell
-	       else:
-		   msg='Unrecognized quantity for cell'
-		   raise Exception, msg
-	    elif type(cell) == list:
-	       if len(cell) == 1:
-		   if type(cell[0]) == int or type(cell[0]) == float:
-		       cellx=qa.quantity(cell[0], 'arcmin')
-		       celly=qa.quantity(cell[0], 'arcmin')
-		   elif type(cell[0])==str:
-		       if qa.isquantity(cell[0]):
-			   cellx=cell[0]
-			   celly=cell[0]
-		       else:
-			   msg='Unrecognized quantity for cell'
-			   raise Exception, msg
-	       else:
-		   if type(cell[0]) == int or type(cell[0]) == float:
-		      cellx=qa.quantity(cell[0], 'arcmin')
-		   elif type(cell[0])==str:
-		       if qa.isquantity(cell[0]):
-			   cellx=cell[0]
-		       else:
-			   msg='Unrecognized quantity for cell'
-                           raise Exception, msg
-		   if type(cell[1]) == int or type(cell[1]) == float:
-		      celly=qa.quantity(cell[1], 'arcmin')
-		   elif type(cell[1])==str:
-		       if qa.isquantity(cell[1]):
-			   celly=cell[1]
-		       else:
-                           msg='Unrecognized quantity for cell'
-                           raise Exception, msg
-
+                if qa.isquantity(cell):
+	            cellx=cell
+                    celly=cell
+                else:
+                    msg='Unrecognized quantity for cell'
+                    raise Exception, msg
+            elif type(cell) == list:
+                if len(cell) == 1:
+                    if type(cell[0]) == int or type(cell[0]) == float:
+                        cellx=qa.quantity(cell[0], 'arcmin')
+                        celly=qa.quantity(cell[0], 'arcmin')
+                    elif type(cell[0])==str:
+                        if qa.isquantity(cell[0]):
+                            cellx=cell[0]
+                            celly=cell[0]
+                        else:
+                            msg='Unrecognized quantity for cell'
+                            raise Exception, msg
+	        else:
+                    if type(cell[0]) == int or type(cell[0]) == float:
+                        cellx=qa.quantity(cell[0], 'arcmin')
+                    elif type(cell[0])==str:
+                        if qa.isquantity(cell[0]):
+                            cellx=cell[0]
+                        else:
+                            msg='Unrecognized quantity for cell'
+                            raise Exception, msg
+                    if type(cell[1]) == int or type(cell[1]) == float:
+                        celly=qa.quantity(cell[1], 'arcmin')
+                    elif type(cell[1])==str:
+		        if qa.isquantity(cell[1]):
+		 	    celly=cell[1]
+		       	else:
+                    	    msg='Unrecognized quantity for cell'
+                            raise Exception, msg
             # get number of scans 
             tb.open(sdfile+'/STATE')
             # assume each SUB_SCAN id represents each raster 'scan'
             nscan=tb.nrows()
-            if calmode=='none':
-                print "There are %s scans in the data." % nscan
+            #if calmode=='none':
+            print "There are %s scans in the data." % nscan
        	    tb.close()
 
             #print "calibration begins..."
@@ -191,89 +252,110 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                     datalab='DATA'
                 if abs(plotlevel) > 0:
                     if plotlevel< 0:
-                       pl.ioff()
+                        pl.ioff()
                     else:
-                       pl.ion()
-		    pl.clf()
-		    pl.subplot(311)
-		    #pl.title(sdfile+' Ant:'+str(antlist.values()))
-		    pl.title(sdfile+' Ant:'+antnameused)
+                        pl.ion()
+                # determine the size of processing data
+		subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid,antid))
+                nr = subtb.nrows()
+                #nr = len(data)*len(data[0])
+                #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float) 
+                ndatcol = subtb.getcol('CORRECTED_DATA')
+                (l,m,n) = ndatcol.shape
+                ndatcol.reshape(l,n)
+                for np in range(len(selcorrtypeind)):
+                    pl.clf()
+                    pl.figure(np+1)
+                    pl.subplot(311)
+                    #pl.title(sdfile+' Ant:'+str(antlist.values()))
 		    pl.ylabel(datalab,fontsize='smaller')
 		    symbols=['b.','c.']
                  
-                print "Arranging data by scans..."
-		for i in range(nscan):
-		# may be need to iterate on each antenna 
-		# identify 'scan' by STATE ID
-		    subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
-		    datcol=subtb.getcol(datalab)
-		    rdatcol=datcol.real
-		    (l,m,n)=datcol.shape
-	            rdatcol=rdatcol.reshape(n)
-		    data.append(rdatcol)
-		    ndat0 = ndat
-		    ndat += len(rdatcol)
-		    #pl.plot(range(ndat0,ndat),rdatcol,'k.')
-		    if abs(plotlevel) > 0: 
-                        pl.plot(range(ndat0,ndat),rdatcol,symbols[i%2])
-                        ax=pl.gca()
-                        #if i==0:
-                          #leg=ax.legend(['odd scan'],numpoints=1,handletextsep=0.01) 
-                          #for t in leg.get_texts():
-                          #    t.set_fontsize('small')
-                          #pl.draw()
-                        if i==1: 
-                          leg=ax.legend(('even scan no.', 'odd scan no.'),numpoints=1,handletextsep=0.01) 
-                          for t in leg.get_texts():
-                              t.set_fontsize('small')
-                          pl.draw()
-                if abs(plotlevel) > 0:
-		    pl.xlim(0,ndat)
-		    t1=pl.getp(pl.gca(),'xticklabels')
-		    t2=pl.getp(pl.gca(),'yticklabels')
-		    pl.setp((t1,t2),fontsize='smaller')
-		    subtb.close()
-		tb.close()
-
-		### Calibration ############################################
-		# Do a zero-th order calibration by subtracting a baseline #
-		# from each scan to take out atmospheric effect.          #
-		# The baseline fitting range specified by masklist must be #
-		# given and is the same for all the scans.                 # 
-		############################################################
-		masks=numpy.zeros(len(data[0]),dtype=numpy.int)
-		msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
-                casalog.post(msg, "INFO")
-		masks[:lmask]=True
-		masks[-rmask:]=True
+                    print "Arranging data by scans..."
+                
+                    data = []
+                    ndat0 = 0
+                    ndat = 0
+                    if selnpol==1: np = selpol
+		    pl.title(sdfile+' Ant:'+antnameused+' '+corrtypestr[np])
+		    for i in range(nscan):
+		    	# may be need to iterate on each antenna 
+		    	# identify 'scan' by STATE ID
+		       	subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
+		       	datcol=subtb.getcol(datalab)
+                       	if npol >1 and selnpol==1:
+                       	    print "select %s data..." % corrtypestr[selpol]
+		            rdatcol=datcol[selpol].real
+                        else:
+		            rdatcol=datcol[selcorrtypeind[np]].real
+		        (m,n)=rdatcol.shape
+	               	rdatcol=rdatcol.reshape(n)
+		       	data.append(rdatcol)
+		       	ndat0 = ndat
+		       	ndat += len(rdatcol)
+		       	#pl.plot(range(ndat0,ndat),rdatcol,'k.')
+		       	if abs(plotlevel) > 0:
+                            pl.plot(range(ndat0,ndat),rdatcol,symbols[i%2])
+                            ax=pl.gca()
+                            #if i==0:
+                            #leg=ax.legend(['odd scan'],numpoints=1,handletextsep=0.01) 
+                            #for t in leg.get_texts():
+                            #    t.set_fontsize('small')
+                            #pl.draw()
+                            if i==1: 
+                                leg=ax.legend(('even scan no.', 'odd scan no.'),numpoints=1,handletextsep=0.01) 
+                                for t in leg.get_texts():
+                                    t.set_fontsize('small')
+                            pl.draw()
+                    if abs(plotlevel) > 0:
+		        pl.xlim(0,ndat)
+		       	t1=pl.getp(pl.gca(),'xticklabels')
+		       	t2=pl.getp(pl.gca(),'yticklabels')
+		       	pl.setp((t1,t2),fontsize='smaller')
+		       	subtb.close()
+		    ### Calibration ############################################
+		    # Do a zero-th order calibration by subtracting a baseline #
+		    # from each scan to take out atmospheric effect.          #
+		    # The baseline fitting range specified by masklist must be #
+		    # given and is the same for all the scans.                 # 
+		    ############################################################
+                    #nr = len(data)*len(data[0])
+		    masks=numpy.zeros(len(data[0]),dtype=numpy.int)
+                    #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float) 
+		    msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
+                    casalog.post(msg, "INFO")
+		    masks[:lmask]=True
+		    masks[-rmask:]=True
             
-		f=sd.fitter()
-		f.set_function(lpoly=blpoly)
-		print "Processing %s scans" % nscan
-		for i in range(nscan):
-		    print "Processing Scan#=", i
-		    x=range(len(data[i]))
-		    if abs(plotlevel) > 1:
-		        pl.subplot(312)
-			pl.cla()
-			pl.plot(x,data[i],'b')
-		    f.set_data(x,data[i],mask=masks)
-		    f.fit()
-		    #f.plot(residual=True, components=[1], plotparms=True)
-		    fitd=f.get_fit()
-		    data[i]=data[i]-fitd
-		    if abs(plotlevel) > 1:
-			pl.plot(range(len(fitd)),fitd,'r-')
-			pl.cla()
-			pl.plot(x,data[i],'g')
-			pl.title('scan %s' % i)
-			if interactive: check=raw_input('Hit return for Next\n')
-		    cdat=numpy.concatenate(([datarr for datarr in data]))
+		    f=sd.fitter()
+		    f.set_function(lpoly=blpoly)
+		    print "Processing %s %s scans" % (corrtypestr[np], nscan)
+		    for i in range(nscan):
+		     	print "Processing Scan#=", i
+		        x=range(len(data[i]))
+		        if abs(plotlevel) > 1:
+		            pl.subplot(312)
+		            pl.cla()
+			    pl.plot(x,data[i],'b')
+		        f.set_data(x,data[i],mask=masks)
+		        f.fit()
+		        #f.plot(residual=True, components=[1], plotparms=True)
+		        fitd=f.get_fit()
+		        data[i]=data[i]-fitd
+		        if abs(plotlevel) > 1:
+			    pl.plot(range(len(fitd)),fitd,'r-')
+			    pl.cla()
+			    pl.plot(x,data[i],'g')
+			    pl.title('scan %s' % i)
+			    if interactive: check=raw_input('Hit return for Next\n')
+		        cdat=numpy.concatenate(([datarr for datarr in data]))
+                    ndatcol[np]=cdat
+                tb.close() 
 		tb.open(sdfile,nomodify=False)
                 # put the corrected data to CORRECTED_DATA column in MS
-	        # assuming the data for the vertex are stored in every other
+	        	# assuming the data for the vertex are stored in every other
                 # row starting from 2nd row for the vertex antenna....
-	        # For the alcatel startrow=0, for len(antid) >1,
+	        	# For the alcatel startrow=0, for len(antid) >1,
                 # it assumes all the data to be corrected. 
                 if type(antid)==int:
                     startrow=antid
@@ -281,9 +363,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                 else:
                     startrow=0
                     rowincr=1
-                     
-	        print "Storing the corrected data to CORRECTED_DATA column in the MS..."
-	        cdatm=cdat.reshape(1,1,len(cdat))
+	       	print "Storing the corrected data to CORRECTED_DATA column in the MS..."
+	       	cdatm=ndatcol.reshape(npol,1,len(cdat))
                 cdato=tb.getcol('CORRECTED_DATA')
 	        tb.putcol('CORRECTED_DATA', cdatm, startrow=startrow, rowincr=rowincr)
                 tb.close() 
@@ -294,67 +375,88 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
 		subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
 		cdatcol=subt.getcol('CORRECTED_DATA')
 		(l,m,n)=cdatcol.shape
-		cdatcol2=cdatcol.reshape(n)
-                if abs(plotlevel) >0:
-		    pl.subplot(313)
-		    pl.plot(range(len(cdatcol2)),cdatcol2, 'g.')
-		    pl.xlim(0,ndat)
-		    t1=pl.getp(pl.gca(),'xticklabels')
-		    t2=pl.getp(pl.gca(),'yticklabels')
-		    pl.setp((t1,t2),fontsize='smaller')
-		    pl.ylabel('CORRECTED_DATA',fontsize='smaller')
-		    #pl.text(len(cdatcol2)*1.01,cdatcol2.min(),'[row #]',fontsize='smaller')
-		    pl.xlabel('[row #]',fontsize='smaller')
 		tb.close()
-                if plotlevel < 0:
-                   outplfile=sdfile+'_scans.eps'
-                   pl.savefig(outplfile,format='eps')
-                   print "Plot was written to %s" % outplfile 
+                print "plotting corrected data..."
+                for np in range(selnpol):
+                    pl.figure(np+1)
+                    if selnpol==1:
+		        pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
+                        cdatcol2=cdatcol[selpol].reshape(n)
+                    else:
+		        pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
+                        cdatcol2=cdatcol[np].reshape(n)
+		        #cdatcol2=cdatcol.reshape(n)
+                    if abs(plotlevel) >0:
+		        pl.subplot(313)
+		        pl.plot(range(len(cdatcol2)),cdatcol2, 'g.')
+		        pl.xlim(0,ndat)
+		        t1=pl.getp(pl.gca(),'xticklabels')
+		        t2=pl.getp(pl.gca(),'yticklabels')
+		        pl.setp((t1,t2),fontsize='smaller')
+		        pl.ylabel('CORRECTED_DATA',fontsize='smaller')
+		        #pl.text(len(cdatcol2)*1.01,cdatcol2.min(),'[row #]',fontsize='smaller')
+		        pl.xlabel('[row #]',fontsize='smaller')
+                    if plotlevel < 0:
+                        outplfile=sdfile+'_scans.eps'
+                        pl.savefig(outplfile,format='eps')
+                        print "Plot was written to %s" % outplfile 
             else: # no calib, if requested plot raw/calibrated data 
                 if abs(plotlevel) > 0:
 		    tb.open(sdfile)
 		    subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
                     nrow=subt.nrows()
-                    if calibrated:
-                        datalab = 'CORRECTED_DATA'
-                        datcol=subt.getcol(datalab)
-                    else:
-                        if fdataexist:
-                            datalab='FLOAT_DATA'
+                    for np in range(selnpol):
+                        if calibrated:
+                            datalab = 'CORRECTED_DATA'
+                            datcol=subt.getcol(datalab)
                         else:
-                            datalab='DATA'
-                        datcol=subt.getcol(datalab)
-                    tb.close()
-                    pl.ioff()
-                    pl.figure(1)
-		    pl.clf()
-		    pl.title(sdfile+' Ant:'+ antnameused)
-		    pl.subplot(111)
-		    (l,m,n)=datcol.shape
-		    datcol2=datcol.reshape(n)
-                    if plotlevel>0:
-                       pl.ion()
-		    pl.plot(range(len(datcol2)),datcol2, 'g.')
-                    pl.xlim(0,nrow)
-		    t1=pl.getp(pl.gca(),'xticklabels')
-		    t2=pl.getp(pl.gca(),'yticklabels')
-		    pl.setp((t1,t2),fontsize='smaller')
-		    pl.ylabel(datalab,fontsize='smaller')
-		    #pl.text(len(datcol2)*1.01,datcol2.min(),'[row #]',fontsize='smaller')
-		    pl.xlabel('row #')
-                    #if plotlevel>0:
-                    #   pl.ion()
-                    pl.draw()
-                    if plotlevel<0:
-                       outplfile=sdfile+'_scans.eps'
-                       pl.savefig(outplfile,format='eps')
-                       print "Plot  was written to %s" % outplfile 
+                            if fdataexist:
+                                datalab='FLOAT_DATA'
+                            else:
+                                datalab='DATA'
+                            datcol=subt.getcol(datalab)
+                        tb.close()
+                        pl.ioff()
+                        pl.figure(np+1)
+		        pl.clf()
+		        (l,m,n)=datcol.shape
+                        if selnpol==1:
+		            pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
+                            datcol2=datcol[selpol].reshape(n)
+                        else:
+		            pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
+                            datcol2=datcol[np].reshape(n)
+		        pl.subplot(111)
+                        #To avoid error reported as CAS-1312
+                        #--2009/4/24 Takeshi Nakazato
+                        #datcol2=datcol.reshape(n)
+                        ##datcol2=datcol[0].reshape(n)
+                        if plotlevel>0:
+                            pl.ion()
+		        pl.plot(range(len(datcol2)),datcol2, 'g.')
+                        pl.xlim(0,nrow)
+		        t1=pl.getp(pl.gca(),'xticklabels')
+		        t2=pl.getp(pl.gca(),'yticklabels')
+		        pl.setp((t1,t2),fontsize='smaller')
+		        pl.ylabel(datalab,fontsize='smaller')
+		        #pl.text(len(datcol2)*1.01,datcol2.min(),'[row #]',fontsize='smaller')
+		        pl.xlabel('row #')
+                        #if plotlevel>0:
+                        #   pl.ion()
+                        pl.draw()
+                        if plotlevel<0:
+                            outplfile=sdfile+'_scans.eps'
+                            pl.savefig(outplfile,format='eps')
+                            print "Plot  was written to %s" % outplfile 
                    
-	
             #flag scans
             if len(flaglist) > 0:
+                tb.open(sdfile)
+		subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid,antid))
+                fdatcol = subtb.getcol('FLAG')
+                (l,m,n) = fdatcol.shape
+                fdatcol.reshape(l,n)
                 print "Flag processing..."
-                fdata=[]
                 flagscanlist=[]
                 if type(antid) == int:
                     startrow=antid
@@ -369,21 +471,28 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                     if type(flag) == int:
                         flagscanlist.append(flag)
                 flagscanset=set(flagscanlist) 
-	        for i in range(nscan):
-		    subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
-		    fcol=subtb.getcol('FLAG')
-                    (l,m,n) = fcol.shape
-                    fcoln=fcol.reshape(n)
-                    if i in flagscanset:
-                        flgs=numpy.ones(n,dtype=numpy.bool)
-                        fcoln=flgs 
-                    fdata.append(fcoln)
-                fdatac=numpy.concatenate(([datarr for datarr in fdata]))
-                flagc=tb.getcol('FLAG')
-	        fdatacm=fdatac.reshape(1,1,len(fdatac))
+                for np in range(len(selcorrtypeind)):
+                    fdata=[]
+	            for i in range(nscan):
+		        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
+		        fcolall=subtb.getcol('FLAG')
+                       	if npol >1 and selnpol==1:
+		            fcol=fcolall[selpol]
+                        else:
+		            fcol=fcolall[selcorrtypeind[np]]
+                        (m,n) = fcol.shape
+                        fcoln=fcol.reshape(n)
+                        if i in flagscanset:
+                            flgs=numpy.ones(n,dtype=numpy.bool)
+                            fcoln=flgs 
+                        fdata.append(fcoln)
+                        fdatac=numpy.concatenate(([datarr for datarr in fdata]))
+                    fdatcol[np]=fdatac
+                    #flagc=tb.getcol('FLAG')
+	        fdatacm=fdatcol.reshape(npol,1,len(fdatac))
 	        tb.putcol('FLAG', fdatacm, startrow=startrow, rowincr=rowincr)
                 # need flip True -> 0
-                iw=numpy.array(-fdatacm.reshape(1,len(fdatac)), dtype=numpy.int64)
+                iw=numpy.array(-fdatacm[0].reshape(1,len(fdatac)), dtype=numpy.int64)
 	        tb.putcol('IMAGING_WEIGHT', iw, startrow=startrow, rowincr=rowincr)
                 print "Scans flagged: %s" % list(flagscanset)
                 tb.close()
@@ -396,7 +505,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
                 print "Imaging...."
                 im.open(sdfile)
                 im.selectvis(field=0, spw='', baseline=antenna)
-                im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, movingsource=ephemsrcname)
+                im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
                 #print "im.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s, phasecenter=%s, spw=0, movingsource='moon') " % (str(imsize[0]), str(imsize[1]), cell[0], cell[1], phasecenter)
                 im.setoptions(ftmachine='sd')
                 #im.setsdoptions(convsupport=5)
@@ -406,6 +515,3 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, createimag
         except Exception, instance:
             print '***Error***',instance
             return
-
-
-

@@ -70,7 +70,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="any" name="solint">
-		<description>Solution interval (see help)</description>
+		<description>Solution interval: egs. \'inf\', \'60s\' (see help)</description>
 		<any type="variant"/>
 		<value type="string">inf</value>
 	</param>
@@ -81,12 +81,12 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="double" name="preavg">
-		<description>Pre-averaging interval (sec)</description>
+		<description>Pre-averaging interval (sec) (rarely needed)</description>
 		<value>-1.0</value>
 	</param>
 
 	<param type="string" name="refant">
-		<description>Reference antenna name</description>
+		<description>Reference antenna name.  \' \'= \'0\'</description>
 		<value></value>
 	</param>
 
@@ -156,7 +156,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="stringArray" name="interp">
-		<description>Interpolation mode (in time) to use for each gaintable</description>
+		<description>Temporal interpolation for each gaintable (''=linear)</description>
 		<value></value>
 		<allowed kind="enum">
 			<value>nearest</value>
@@ -177,11 +177,11 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="double" name="opacity">
-		<description>Opacity correction to apply (nepers)</description>
+		<description>Opacity correction to apply on the fly (nepers)</description>
 		<value>0.0</value>
 	</param>
 	<param type="bool" name="parang">
-		<description>Apply parallactic angle correction</description>
+		<description>Apply parallactic angle correction on the fly</description>
 		<value>False</value>
 	</param>
    <constraints>
@@ -211,11 +211,12 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
       The complex gains for each antenna/spwid are determined from the
       data column (raw data) divided by the model column.  The gains can
       be obtained for a specified solution interval, spw combination and
-      field combination.  The spline (smooth) option is still under development.
+      field combination.  The GSPLINE spline (smooth) option is still under
+      development.
 
-      Previous calibrations (egs, bandpass) can be applied on the fly.  At
-      present with dual-polarized data, both polarizations must be unflagged for
-      any solution to be obtained.
+      Previous calibrations (egs, bandpass, opacity, parallactic angle) can
+      be applied on the fly.  At present with dual-polarized data, both
+      polarizations must be unflagged for any solution to be obtained.
 
       Keyword arguments:
       vis -- Name of input visibility file
@@ -281,9 +282,11 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               'G' means determine gains for each polarization and sp_wid
               'T' obtains one solution for both polarizations;  Hence. their
                 phase offset must be first removed using a prior G.
-              'GSPLINE' makes a spline fit to G-type solution
-                   At present GSPLINE obtains one solution for ALL spw, so they
-                   must be in phase.  It can also lead to unstable solutions.
+              'GSPLINE' makes a spline fit to the calibrator data.  It is
+                   useful for noisy data and fits a smooth curve through the
+                   calibrated amplitude and phase.  However,
+                   at present GSPLINE is somewhat experimental.  Use with
+                   caution and check solutions.
       calmode -- Type of solution
               default: 'ap' (amp and phase); example: calmode='p'
               Options: 'p','a','ap'
@@ -303,18 +306,19 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               example: combine='scan,spw'  --> extend solutions over scan boundaries
                        (up to the solint), and combine spws for solving
       refant -- Reference antenna name
-              default: '' =&gt; refant = '0'
+              default: '' =&gt; refant = '0' (may not be a good choice)
               example: refant='4' (antenna with index 4)
                        refant='VA04' (VLA antenna #4)
-              Use taskname=listobs for antenna listing,
-      minblperant -- Minimum number of baselines required per antenna for each solve
-                   Antennas with fewer baaselines are excluded from solutions. Amplitude
-                   solutions with fewer than 4 baselines, and phase solutions with fewer 
-                   than 3 baselines are only trivially constrained, and are no better
-                   than baseline-based solutions.
-                   default: 4
-                   example: minblperant=10  =&gt; Antennas participating on 10 or more 
-                            baselines are included in the solve
+              Use taskname=listobs for antenna listing
+      minblperant --  Minimum number of baselines required per antenna for each solve
+              default = 4
+              Antennas with fewer baaselines are excluded from solutions.
+              example: minblperant=10  =&gt; Antennas participating on 10 or more 
+                       baselines are included in the solve
+              minblperant = 1 will solve for all baseline pairs, even if only
+                   one is present in the data set.  Unless closure errors are
+                   expected, use taskname=gaincal rather than taskname=blcal to
+                   obtain more options in data analysis.
       minsnr -- Reject solutions below this SNR
               default: 0.0 (accept all attempted solutions)
       solnorm -- Normalize average solution amps to 1.0 after solution (G, T only)

@@ -35,7 +35,6 @@
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 
-#include <qwt_scale_engine.h>
 #include <qwt_scale_widget.h>
 
 namespace casa {
@@ -70,19 +69,21 @@ bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
     vector<PlotCanvasPtr> canvases;
     if(plotter != NULL && !plotter->canvasLayout().null())
         canvases = plotter->canvasLayout()->allCanvases();
-    return exportHelper(plotter->canvasWidget(), canvases, fmt);
+    return exportHelper(canvases, fmt, NULL, plotter);
 }
 
 bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
     vector<PlotCanvasPtr> canvases(1, PlotCanvasPtr(canvas, false));
-    return exportHelper(canvas, canvases, format);
+    return exportHelper(canvases, format, canvas, NULL);
 }
 
 
-bool QPCanvas::exportHelper(QWidget* grabWidget,
-        vector<PlotCanvasPtr>& canvases, const PlotExportFormat& format) {
+bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
+		const PlotExportFormat& format, QPCanvas* grabCanvas,
+		QPPlotter* grabPlotter) {
     if(format.location.empty() || ((format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) && grabWidget == false))
+       format.type == PlotExportFormat::PNG) && (grabCanvas == NULL &&
+       grabPlotter == NULL)))
         return false;
     
     // Compile vector of unique, non-null QPCanvases.
@@ -124,16 +125,36 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {        
+       format.type == PlotExportFormat::PNG) {
         QImage image;
         
+        int width = grabCanvas != NULL ? grabCanvas->width() :
+                    grabPlotter->width(),
+           height = grabCanvas != NULL ? grabCanvas->height() :
+                    grabPlotter->height();
+        
         // Just grab the widget if: 1) screen resolution, or 2) high resolution
-        // but size is <= widget size or not set.        
-        if(format.resolution == PlotExportFormat::SCREEN ||
-           (format.width <= grabWidget->width() &&
-            format.height <= grabWidget->height())) {            
-            image = QPixmap::grabWidget(grabWidget).toImage();
-            
+        // but size is <= widget size or not set.
+        if(format.resolution == PlotExportFormat::SCREEN/* ||
+           (format.width <= width && format.height <= height)*/) {
+            //image = QImage(width, height, QImage::Format_ARGB32);
+   	
+        	// TODO
+            image = QPixmap::grabWidget(grabCanvas != NULL ?
+                    &grabCanvas->asQwtPlot() :
+                    grabPlotter->canvasWidget()).toImage();
+        	//if(grabCanvas != NULL) grabCanvas->asQwtPlot().render(&image);
+        	//else                   grabPlotter->render(&image);
+        	
+            //QPainter::setRedirected(grabCanvas != NULL ?
+            //        (QWidget*)&grabCanvas->asQwtPlot() :
+            //        (QWidget*)grabPlotter->canvasWidget(), &image);
+            //if(grabCanvas != NULL) grabCanvas->asQwtPlot().repaint();
+            //else grabPlotter->canvasWidget()->repaint();
+            //QPainter::restoreRedirected(grabCanvas != NULL ?
+            //        (QWidget*)&grabCanvas->asQwtPlot() :
+            //        (QWidget*)grabPlotter->canvasWidget());
+			
             // Scale to set width and height, if applicable.
             if(format.width > 0 && format.height > 0) {
                 // size is specified
@@ -152,11 +173,11 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             }
         } else {
             // High resolution, or format size larger than widget.
-            
+
             // make sure both width and height are set
-            int width = format.width, height = format.height;
-            if(width <= 0)  width  = grabWidget->width();
-            if(height <= 0) height = grabWidget->height();            
+            int widgetWidth = width, widgetHeight = height;
+            if(format.width > 0)  width  = format.width;
+            if(format.height > 0) height = format.height;
             image = QImage(width, height, QImage::Format_ARGB32);
             
             // Fill with background color.
@@ -165,8 +186,8 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
             
             // Print each canvas.
             QPainter painter(&image);
-            double widthRatio  = ((double)width)  / grabWidget->width(),
-                   heightRatio = ((double)height) / grabWidget->height();
+            double widthRatio  = ((double)width)  / widgetWidth,
+                   heightRatio = ((double)height) / widgetHeight;
             QRect geom, printGeom, imageRect(0, 0, width, height);
             QwtText title; QColor titleColor;
             PlotOperationPtr op;
@@ -197,7 +218,7 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
                 if(wasCanceled) break;
             }
         }
-        
+
         // Set DPI.
         if(!wasCanceled && format.dpi > 0) {
             // convert dpi to dpm
@@ -216,7 +237,7 @@ bool QPCanvas::exportHelper(QWidget* grabWidget,
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {        
+              format.type == PlotExportFormat::PDF) {
         // Set resolution.
         QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
         if(format.resolution == PlotExportFormat::HIGH)
@@ -302,8 +323,8 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_axesRatioLocked(false), m_axesRatios(4, 1), m_stackCache(*this),
         m_autoIncColors(false), m_picker(m_canvas.canvas()),
         m_mouseFilter(m_canvas.canvas()), m_legendFontSet(false),
-        m_inDraggingMode(false), m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL) {
+        m_inDraggingMode(false)/*, m_ignoreNextRelease(false), m_timer(this),
+        m_clickEvent(NULL)*/ {
     logObject(CLASS_NAME, this, true);
     
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
@@ -331,13 +352,21 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     connect(&m_mouseFilter, SIGNAL(mouseMoveEvent(QMouseEvent*)),
             SLOT(trackerMouseEvent(QMouseEvent*)));
     
+    m_dateFormat = Plotter::DEFAULT_DATE_FORMAT;
+    m_relativeDateFormat = Plotter::DEFAULT_RELATIVE_DATE_FORMAT;
+    for(int i = 0; i < QwtPlot::axisCnt; i++) {
+    	m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
+    	m_scaleDraws[i]->setDateFormat(m_dateFormat);
+    	m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+    }
+    
     m_canvas.enableAxis(QwtPlot::xBottom, false);
     m_canvas.enableAxis(QwtPlot::yLeft, false);
     m_canvas.setAutoReplot(true);
     
     connect(&m_picker, SIGNAL(selected(const QwtDoubleRect&)),
             this, SLOT(regionSelected(const QwtDoubleRect&)));
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
+    //connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
 }
 
 QPCanvas::~QPCanvas() {
@@ -433,49 +462,18 @@ void QPCanvas::showAxes(int axesFlag) {
 }
 
 PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const {
-    const QwtScaleEngine* e = m_canvas.axisScaleEngine(QPOptions::axis(axis));
-    
-    if(dynamic_cast<const QwtLinearScaleEngine*>(e) != NULL) {
-        const QwtScaleDraw* d = m_canvas.axisScaleDraw(QPOptions::axis(axis));
-        const QPDateScaleDraw* dd = dynamic_cast<const QPDateScaleDraw*>(d);
-        if(dd != NULL) return dd->scale();
-        else           return NORMAL;
-    }
-    if(dynamic_cast<const QwtLog10ScaleEngine*>(e) != NULL) return LOG10;
-    
-    return NORMAL;
-}
-
+	return m_scaleDraws[QPOptions::axis(axis)]->scale(); }
 void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
-    if(scale != axisScale(axis)) {
-        switch(scale) {
-        case NORMAL:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLinearScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QwtScaleDraw());
-            break;
-            
-        case LOG10:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLog10ScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QwtScaleDraw());
-            break;
-            
-        case DATE_MJ_DAY: case DATE_MJ_SEC:
-            m_canvas.setAxisScaleEngine(QPOptions::axis(axis),
-                                        new QwtLinearScaleEngine());
-            m_canvas.setAxisScaleDraw(QPOptions::axis(axis),
-                                      new QPDateScaleDraw(scale));
-            break;
-            
-        default: return;
-        }
+	m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); }
 
-        if(m_canvas.autoReplot()) m_canvas.replot();
-    }
-}
+bool QPCanvas::axisReferenceValueSet(PlotAxis axis) const {
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); }
+
+double QPCanvas::axisReferenceValue(PlotAxis axis) const {
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); }
+
+void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
+	m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); }
 
 bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
     return m_canvas.cartesianAxisShown(axis); }
@@ -553,7 +551,11 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
 
 pair<double, double> QPCanvas::axisRange(PlotAxis axis) const {
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
+#if QWT_VERSION < 0x050200
     return pair<double, double>(div->lBound(), div->hBound());
+#else
+    return pair<double, double>(div->lowerBound(), div->upperBound());
+#endif
 }
 
 void QPCanvas::setAxisRange(PlotAxis axis, double from, double to) {
@@ -607,7 +609,11 @@ void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
             if(axisIndex(xAxis) != i) {
                 newSize = size * m_axesRatios[i];
                 div = m_canvas.axisScaleDiv(QPOptions::axis(axisIndex(i)));
+#if QWT_VERSION < 0x050200
                 midPoint = (div->range() / 2) + div->lBound();
+#else
+                midPoint = (div->range() / 2) + div->lowerBound();
+#endif
                 newLow = midPoint - (newSize / 2);
                 newHigh = midPoint + (newSize / 2);
                 m_canvas.setAxisScale(QPOptions::axis(axisIndex(i)),
@@ -645,25 +651,17 @@ void QPCanvas::setAxesAutoRescale(bool autoRescale) {
         bool replot = m_canvas.autoReplot();
         m_canvas.setAutoReplot(false);
         
-        PlotAxis a = X_BOTTOM;
-        const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = X_TOP;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = Y_LEFT;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
-        
-        a = Y_RIGHT;
-        div = m_canvas.axisScaleDiv(QPOptions::axis(a));
-        m_canvas.setAxisScale(QPOptions::axis(a), div->lBound(), div->hBound(),
-                              m_canvas.axisStepSize(QPOptions::axis(a)));
+        const QwtScaleDiv* div;
+        for(int a = 0; a < QwtPlot::axisCnt; a++) {
+            div = m_canvas.axisScaleDiv(a);
+#if QWT_VERSION < 0x050200
+            m_canvas.setAxisScale(a, div->lBound(), div->hBound(),
+                    m_canvas.axisStepSize(a));
+#else
+            m_canvas.setAxisScale(a, div->lowerBound(), div->upperBound(),
+                    m_canvas.axisStepSize(a));
+#endif
+        }
 
         m_canvas.setAutoReplot(replot);
     }
@@ -856,7 +854,6 @@ unsigned int QPCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
 
 void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
     logMethod(CLASS_NAME, "removePlotItems", true);
-    int changedLayers = 0;
     bool replot = m_canvas.autoReplot();
     m_canvas.setAutoReplot(false);
     for(unsigned int i = 0; i < items.size(); i++) {
@@ -865,7 +862,7 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_plotItems[j].first) {
                 m_plotItems[j].second->detach();
                 m_plotItems.erase(m_plotItems.begin() + j);
-                changedLayers |= MAIN;
+                m_canvas.setLayerChanged(MAIN);
                 break;
             }
         }
@@ -873,14 +870,13 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
             if(items[i] == m_layeredItems[j].first) {
                 m_layeredItems[j].second->detach();
                 m_layeredItems.erase(m_layeredItems.begin() + j);
-                changedLayers |= ANNOTATION;
+                m_canvas.setLayerChanged(ANNOTATION);
                 break;
             }
         }
     }
-    if(changedLayers != 0 && replot) {
+    if(replot) {
         PRE_REPLOT
-        m_canvas.setLayersChanged(changedLayers);
         m_canvas.replot();
         POST_REPLOT
     }
@@ -1080,6 +1076,23 @@ String QPCanvas::fileChooserDialog(const String& title,
     return filename.toStdString();
 }
 
+const String& QPCanvas::dateFormat() const { return m_dateFormat; }
+void QPCanvas::setDateFormat(const String& dateFormat) {
+    if(m_dateFormat == dateFormat) return;
+    m_dateFormat = dateFormat;
+    for(int i = 0; i < QwtPlot::axisCnt; i++)
+        m_scaleDraws[i]->setDateFormat(m_dateFormat);
+}
+
+const String& QPCanvas::relativeDateFormat() const {
+    return m_relativeDateFormat; }
+void QPCanvas::setRelativeDateFormat(const String& dateFormat) {
+    if(m_relativeDateFormat == dateFormat) return;
+    m_relativeDateFormat = dateFormat;
+    for(int i = 0; i < QwtPlot::axisCnt; i++)
+        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+}
+
 PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
                                  PlotCoordinate::System newSystem) const {
     if(coord.system() == newSystem) return coord;
@@ -1229,7 +1242,9 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
     
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     bool accept = notifyReleaseHandlers(t, pcoord);
+    accept |= notifyClickHandlers(t, pcoord);
     
+    /*
     if(event->button() == Qt::LeftButton) {
         if(!m_ignoreNextRelease) {
             m_timer.start(QApplication::doubleClickInterval());
@@ -1242,14 +1257,17 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
         // Also send a click event
         accept |= notifyClickHandlers(t, pcoord);
     }
+    */
     
     if(accept) event->accept();
     else       event->ignore();
 }
 
 void QPCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
+    /*
     m_ignoreNextRelease = true;
     m_timer.stop();
+    */
     
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
@@ -1379,18 +1397,22 @@ void QPCanvas::regionSelected(const QwtDoubleRect& region) {
            t = (region.top() > region.bottom())? region.top(): region.bottom(),
            b = (region.bottom() < region.top())? region.bottom(): region.top();
            
+           /*
     if(!region.isValid()) {
         // It was really a click.
         PlotCoordinate wcoord(l, t, PlotCoordinate::WORLD);
         notifyClickHandlers(PlotMouseEvent::SINGLE, wcoord);
 
     } else {
+    */
+    if(region.isValid()) {
         PlotRegion wreg(PlotCoordinate(l, t, PlotCoordinate::WORLD),
                         PlotCoordinate(r, b, PlotCoordinate::WORLD));
         notifySelectHandlers(wreg);
     }
 }
 
+/*
 void QPCanvas::timeout() {    
     // single click has occurred    
     m_timer.stop();
@@ -1399,6 +1421,7 @@ void QPCanvas::timeout() {
     if(notifyClickHandlers(PlotMouseEvent::SINGLE, pcoord))
         m_clickEvent->accept();
 }
+*/
 
 }
 

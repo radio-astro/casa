@@ -187,6 +187,7 @@ NROReader::~NROReader()
 {
   if ( dataset_ != NULL ) {
     delete dataset_ ;
+    dataset_ = NULL ;
   }
 }
 
@@ -370,7 +371,7 @@ vector<Bool> NROReader::getBeams()
   }
 
   // DEBUG
-  cout << "NROReader::getBeams()   number of beam is " << v.size() << endl ;
+  //cout << "NROReader::getBeams()   number of beam is " << v.size() << endl ;
   //
 
   return v ;
@@ -509,7 +510,11 @@ int NROReader::getHeaderInfo( Int &nchan,
     equinox = 2000.0 ;
   char *vref = dataset_->getVREF() ;
   if ( strncmp( vref, "LSR", 3 ) == 0 ) {
-    strcat( vref, "K" ) ;
+    //strcat( vref, "K" ) ;
+    if ( strlen( vref ) == 3 )
+      strcat( vref, "K" ) ;
+    else
+      vref[3] = 'K' ;
   }
   freqref = vref ;
   NRODataRecord *record = dataset_->getRecord( 0 ) ;
@@ -522,9 +527,11 @@ int NROReader::getHeaderInfo( Int &nchan,
   if ( strcmp( poltp, "" ) == 0 ) 
     //poltp = "None" ;
     poltp = "linear" ;   // if no polarization type specified, set to "linear"
-  else if ( strcmp( poltp, "LINR" ) == 0 )
+  //else if ( strcmp( poltp, "LINR" ) == 0 )
+  else if ( strncmp( poltp, "LINR", 1 ) == 0 )
     poltp = "linear" ;
-  else if ( strcmp( poltp, "CIRL" ) == 0 )
+  //else if ( strcmp( poltp, "CIRL" ) == 0 )
+  else if ( strncmp( poltp, "CIRL", 1 ) == 0 )
     poltp = "circular" ;
   poltype = poltp ;
   // DEBUG

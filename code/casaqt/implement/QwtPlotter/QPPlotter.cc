@@ -230,6 +230,27 @@ void QPPlotter::canvasLayoutChanged(PlotCanvasLayout& layout) {
     logMethod(CLASS_NAME, "canvasLayoutChanged", false);
 }
 
+const String& QPPlotter::dateFormat() const { return m_dateFormat; }
+void QPPlotter::setDateFormat(const String& dateFormat) {
+    if(m_dateFormat == dateFormat) return;
+    m_dateFormat = dateFormat;
+    if(m_layout.null()) return;
+    vector<PlotCanvasPtr> c = m_layout->allCanvases();
+    for(unsigned int i = 0; i < c.size(); i++)
+        if(!c[i].null()) c[i]->setDateFormat(dateFormat);
+}
+
+const String& QPPlotter::relativeDateFormat() const {
+    return m_relativeDateFormat; }
+void QPPlotter::setRelativeDateFormat(const String& dateFormat) {
+    if(m_relativeDateFormat == dateFormat) return;
+    m_relativeDateFormat = dateFormat;
+    if(m_layout.null()) return;
+    vector<PlotCanvasPtr> c = m_layout->allCanvases();
+    for(unsigned int i = 0; i < c.size(); i++)
+        if(!c[i].null()) c[i]->setRelativeDateFormat(dateFormat);
+}
+
 
 bool QPPlotter::defaultPanelShown(DefaultPanel panel) {
     switch(panel) {
@@ -451,10 +472,13 @@ void QPPlotter::setupCanvasFrame() {
         // error?
     }
     
-    // Update standard mouse tools.
+    // Update standard mouse tools and date formats.
     vector<PlotCanvasPtr> canvases = m_layout->allCanvases();
     m_canvasTools.resize(canvases.size());
     for(unsigned int i = 0; i < canvases.size(); i++) {
+        canvases[i]->setDateFormat(m_dateFormat);
+        canvases[i]->setRelativeDateFormat(m_relativeDateFormat);
+        
         m_canvasTools[i] = canvases[i]->standardMouseTools();
         m_canvasTools[i]->trackerTool()->setDrawText(true);
         m_canvasTools[i]->setActive(true);
@@ -476,6 +500,9 @@ void QPPlotter::initialize() {
     exportBox->setVisible(false);
     
     setVisible(false);
+    
+    m_dateFormat = DEFAULT_DATE_FORMAT;
+    m_relativeDateFormat = DEFAULT_RELATIVE_DATE_FORMAT;
     
     // Add legend positions to chooser
     Vector<String> p = PlotCanvas::allLegendPositionStrings();

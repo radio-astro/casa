@@ -12,6 +12,21 @@ def immath(outfile=None,mode=None,expr=None,imagename=None,sigma=None,mask=None,
 	# a previous run of immath
 	tmpFilePrefix='_immath_tmp'
 	_immath_cleanup( tmpFilePrefix )
+
+	
+	# First check to see if the output file exists.  If it
+	# does then we abort.  CASA doesn't allow files to be
+	# over-written, just a policy.
+	if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
+		raise Exception, 'Output file, '+outfile+\
+		      ' exists. immath can not proceed, please\n'+\
+		      'remove it or change the output file name.'
+	elif ( len( outfile ) < 1 ):
+		casalog.post( "The outfile paramter is empty, consequently the" \
+                      +" resultant image will NOT be\nsaved on disk," \
+                      +" but an image tool (ia) will be returned and if the" \
+                      +" returned value\nis saved then you can used in" \
+                      +" the same way the image tool (ia). can", 'WARN' )
 	
 	subImages=[]
 	try :
@@ -173,7 +188,7 @@ def immath(outfile=None,mode=None,expr=None,imagename=None,sigma=None,mask=None,
 		tmpFile=tmpFilePrefix+str(i)
 		ia.subimage( region=reg, mask=mask, outfile=tmpFile )
 		subImages.append( tmpFile )
-		ia.close()
+		ia.done()
 
 	    # Make sure no problems happened
 	    if ( len(filenames) != len(subImages) ) :
@@ -189,7 +204,7 @@ def immath(outfile=None,mode=None,expr=None,imagename=None,sigma=None,mask=None,
 	    retValue=ia.imagecalc(pixels=expr, outfile=outfile, overwrite=True)
 
 	    #cleanup, including removeal of all tempfiles
-	    ia.close()
+	    ia.done()
 
             # modify stokes type for polarization intensity image
             if mode=="poli":

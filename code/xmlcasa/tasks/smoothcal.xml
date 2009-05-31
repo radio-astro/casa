@@ -53,11 +53,10 @@
 
 <example>
 
-       Smooth calibration solution(s) derived from one or more sources: 
 
-        A G- or T-type gain calibration can be smoothed.  Amplitude and
-	phase are currently smoothed with the same time.  Calibration values
-	will be smoothed over all fields.
+        A G- or T-type gain calibration can be smoothed.  The amplitude and
+	phase smoothing times are currently the same.  Calibration values
+	will be smoothed over all fields designed.
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -68,7 +67,7 @@
                 default: none; example: caltable='ngc5921_smooth.gcal'
         field -- subset of fields to select and smooth
                 default: '' means all; example: field='0319_415_1,3C286'
-        smoothtype -- The smoothing filter to be used
+        smoothtype -- The smoothing filter to be used for both amp and phase
                 default: 'median'; example: smoothtype='mean'
                 Options: 'median','mean'
         smoothtime -- Smoothing filter time (sec)

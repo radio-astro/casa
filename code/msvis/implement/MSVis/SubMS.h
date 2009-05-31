@@ -29,6 +29,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/aips.h>
+#include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <map>
 #include <vector>
@@ -135,7 +136,6 @@ class SubMS
   //void setPhaseCenter(Int fieldid, MDirection& newPhaseCenter);
 
 
-
   //Method to make the subMS
 
   Bool makeSubMS(String& submsname, String& whichDataCol);
@@ -151,12 +151,11 @@ class SubMS
   // Declared static as it can be (and is) called directly outside of SubMS.
   // Therefore it is not dependent on any member variable.
   static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
-				 String telescop, String colName="DATA", Int obstype=0);
+				 String telescop, String colName="DATA",
+				 Int obstype=0);
   
   void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
   
-  
-
  private:
   // *** Private member functions ***
 

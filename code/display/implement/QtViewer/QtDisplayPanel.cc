@@ -45,6 +45,7 @@
 #include <tables/Tables/TableRecord.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <display/RegionShapes/RegionShape.h>
+#include <display/RegionShapes/RegionShapes.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/RegionHandler.h>
@@ -71,7 +72,8 @@ QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) :
 		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 		blankCBPanel_(0), mainPanelSize_(1.),
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
-		lastMotionEvent_(0), bkgdClrOpt_(0), printStats(True)  {
+		lastMotionEvent_(0), bkgdClrOpt_(0), printStats(True),
+                extChan_(""), extPol_("")  {
     
   setWindowTitle("Viewer Display Panel");
   
@@ -300,10 +302,17 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
   
   Bool rgnSaved = False;
     
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+  for(ListIter<QtDisplayData*> qdds(qdds_); 
+        !qdds.atEnd(); qdds++) {
     QtDisplayData* qdd = qdds.getRight();
-    ImageRegion* imReg = qdd->mouseToImageRegion(mouseRegion, wch,
-					 	 rgnExtent_>0, rgnExtent_>1);
+
+    //cout << "extChan_=" << extChan_
+    //     << " extPol_=" << extPol_ << endl;
+    ImageRegion* imReg = qdd->mouseToImageRegion(
+        mouseRegion, wch, extChan_, extPol_);
+
+    //ImageRegion* imReg = qdd->mouseToImageRegion(
+    //    mouseRegion, wch, rgnExtent_>0, rgnExtent_>1);
 	// rgnExtent_ controls region extent on non-display axes.
 	// (N.B.: We're responsible for deleting imReg).
         
@@ -725,12 +734,13 @@ void QtDisplayPanel::registerRegionShape(RegionShape* rs) {
     ListIter<RegionShape*> rshapes(rshapes_);
     rshapes.toEnd();
     rshapes.addRight(rs);
-
     hold();
 
     pd_->addDisplayData(*rs);
 
     release();
+
+
 }
 
 void QtDisplayPanel::unregisterRegionShape(RegionShape* rs) {
@@ -892,6 +902,30 @@ String QtDisplayPanel::regionPathname(String origPath) {
 
 
     return retval; 
+  }
+
+  ImageRegion QtDisplayPanel::getRegion(const String& name){
+
+
+    ImageRegion reg;
+    
+    try{
+
+
+      ListIter<QtDisplayData*> qdds(qdds_);
+      qdds.toEnd();
+      qdds--;
+      QtDisplayData* qdd = qdds.getRight();
+      if( qdd->imageInterface()){
+	reg=(qdd->imageInterface())->getRegion(name); 
+      }
+    }
+    catch(...) 
+      { return ImageRegion(); 
+      }
+
+    return reg;
+
   }
 // HOLD AND RELEASE OF REFRESH.  
 
@@ -2374,6 +2408,12 @@ void QtDisplayPanel::setShapeManager(QtRegionShapeManager* manager) {
   //  i.e., that qsm_ has been set....)
   qsm_ = manager;  }
 
+void QtDisplayPanel::extendRegion(
+     String chans, String pols){
+  extChan_ = chans;
+  extPol_ = pols;
+}
 
 
 } //# NAMESPACE CASA - END
+

@@ -130,12 +130,38 @@ go
 			      + region, 'WARN' );
 	    for i in range( len( region ) ):
 		if ( len(region[i]) > 1 ):
-		    regions.append(rg.fromfiletorecord( region[i] ));
+                    if os.path.exists( region[i] ):
+                        # We have a region file on disk!
+                        regions.append( rg.fromfiletorecord( region[i] ) );
+                    else:
+                        # The name given is the name of a region stored
+                        # with the image.
+                        # Note that we accept:
+                        #    'regionname'          -  assumed to be in imagename
+                        #    'my.image:regionname' - in my.image
+                        reg_names=region[i].split(':')
+                        if ( len( reg_names ) == 1 ):
+                            regions.append(rg.fromtabletorecord( imagename, region[i], False ) )
+                        else:
+                            regions.append( rg.fromtabletorecord( reg_names[0], reg_names[1], False ) )
 		else:
 		    regions.append({})
 	else:
 	    reg=imregion( imagename, '', '', box, '', '', True )
 	    regions.append(reg)
+
+        # Loop through the list of regions, removing any of the
+        # empty ones, and if in the end there are none then
+        # throw an exception.
+        try:
+            while( 1 ):
+                idx = regions.index( {} )
+                regions.pop( idx )
+        except:
+            # If we are here we didn't find anymore empty dictionaries
+            no_op='noop'
+        if ( region!=None and len(region) > 0 and len( regions ) < 1 ):
+            raise Exception, 'Ill-formed region: '+str(region)+'. can not continue.' 
 
 	# The number of Gaussian models we'll be fitting must be
 	# equivalent, also if the user has told us what to fix then

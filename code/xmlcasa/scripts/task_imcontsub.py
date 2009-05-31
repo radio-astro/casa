@@ -14,12 +14,22 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
                           +' already exists, please delete before continuing.',\
                           'SEVERE' )
             filesExist=True
+    elif ( len( linefile ) < 1 ):
+        casalog.post( "The linefile paramter is empty, consequently the" \
+                      +" spectral line image will NOT be\nsaved on disk.", \
+                      'WARN')
+            
     if ( len( contfile ) > 0 ):
     	if ( os.path.exists( contfile ) ):
     	    casalog.post( 'Error: Unable to continue file '+contfile\
     			  +' already exists, please delete before continuing.',\
                           'SEVERE' )
     	    filesExist=True
+    elif ( len( contfile ) < 1 ):
+        casalog.post( "The contfile paramter is empty, consequently the" \
+                      +" continuum image will NOT be\nsaved on disk.", \
+                      'WARN')
+        
     if ( filesExist ):
     	raise Exception, 'Output file(s) already exist can not continue ...' 
     
@@ -35,11 +45,29 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
 			      " the in box, chans, and stokes parameters."\
 			      " Using region information\nin file: "\
 			      + region, 'WARN' );
-            reg=rg.fromfiletorecord( region );
+
+            if os.path.exists( region ):
+                # We have a region file on disk!
+                reg=rg.fromfiletorecord( region );
+            else:
+                # The name given is the name of a region stored
+                # with the image.
+                # Note that we accept:
+                #    'regionname'          -  assumed to be in imagename
+                #    'my.image:regionname' - in my.image
+                reg_names=region.split(':')
+                if ( len( reg_names ) == 1 ):
+                    reg=rg.fromtabletorecord( imagename, region, False )
+                else:
+                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
 	else:
 	    #reg=imregion( imagename, chans, stokes, box, '', '' )
             reg=imregion( imagename, '', stokes, box, '', '' )
-	    
+        if ( len( reg .keys() ) < 1 ):
+            raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
+            
+        #print "REGION: ", reg
+        
     except Exception, err:
 	casalog.post( 'Error: Unable to create the image region. '+str(err), 'SEVERE' )
 	# Cleanup

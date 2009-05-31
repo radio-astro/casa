@@ -25,6 +25,8 @@
 //#
 //# $Id: $
 #include <casaqt/QtBrowser/TBConnection.qo.h>
+
+#include <casaqt/QtBrowser/TBFileDialog.qo.h>
 #include <casaqt/QtBrowser/TBMain.qo.h>
 #include <casaqt/QtBrowser/TBTable.h>
 
@@ -114,7 +116,7 @@ void TBConnection::accepted() {
 }
 
 void TBConnection::browse() {
-    QString file = QFileDialog::getExistingDirectory(this, tr("Find Data"),
+    QString file = TBFileDialog::getExistingTable(this, tr("Find Data"),
                                 parent->getLastOpenedDirectory().c_str());
     if(!file.isEmpty()) locEdit->setText(file);
     label->setText(TBConstants::OPEN_TEXT_LOCATION.c_str());

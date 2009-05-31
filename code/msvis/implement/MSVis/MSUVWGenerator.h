@@ -145,7 +145,7 @@ private:
   //       MEpoch timeCentroid(Quantity(<double>, "s"), MEpoch::TAI);
   //      but the accuracy is limited since there is no extra precision
   //      attribute (see Main table of MS v2).
-  void uvw_an(const Double timeCentroid, const Int fldID);
+  void uvw_an(const MEpoch& timeCentroid, const Int fldID);
 
   // (Sub-)array parameters constraining order and size of the output vector 
   // of UVW coords triplets.

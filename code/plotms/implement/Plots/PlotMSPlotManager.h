@@ -27,6 +27,7 @@
 #ifndef PLOTMSPLOTMANAGER_H_
 #define PLOTMSPLOTMANAGER_H_
 
+#include <plotms/Plots/PlotMSPage.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
 #include <casa/namespace.h>
@@ -51,8 +52,14 @@ public:
     ~PlotMSPlotManager();
 
     
-    // Sets the parent to the given.
+    // Gets/Sets the parent PlotMS.
+    // <group>
+    PlotMS* parent();
     void setParent(PlotMS* parent);
+    // </group>
+    
+    // Returns the plotter used by the parent.
+    PlotterPtr plotter();
     
     // Adds the given watcher to this manager.
     void addWatcher(PlotMSPlotManagerWatcher* watcher);
@@ -72,6 +79,7 @@ public:
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
     PlotMSPlotParameters* plotParameters(unsigned int index);
+    PlotMSSinglePlotParameters* singlePlotParameters(unsigned int index);
     // </group>
     
     
@@ -103,6 +111,9 @@ private:
     
     // Watchers.
     vector<PlotMSPlotManagerWatcher*> itsWatchers_;
+    
+    // Plot pages.
+    PlotMSPages itsPages_;
     
     
     // Adds the given plot to the plotter, by creating new canvases,

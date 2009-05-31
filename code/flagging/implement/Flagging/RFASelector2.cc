@@ -39,6 +39,7 @@
 #include <casa/stdio.h>
 
 #include <iomanip>
+#include <ostream>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -649,8 +650,14 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
   if( have_subset )
     desc_str+=";";
 // unflag specified?
-  unflag = ( fieldType(parm,RF_UNFLAG,TpBool) && parm.asBool(RF_UNFLAG) );
+  unflag = ( fieldType(parm, RF_UNFLAG,TpBool) && parm.asBool(RF_UNFLAG) );
   //addString(desc_str,unflag?RF_UNFLAG:"flag");
+
+  ac = new ROMSAntennaColumns(chunk.measSet().antenna());
+  diameters = ac->dishDiameter().getColumn();
+
+  shadow = fieldType(parm, RF_SHADOW, TpBool) && parm.asBool(RF_SHADOW);
+ 
 // now, scan arguments for what to flag within the selection
 // specific times (specified by center times)
   Vector<Double> ctimes;
@@ -720,7 +727,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
   
 // if nothing has been specified to flag, flag everything within selection
   flag_everything = ( quack_si==0 && !sel_time.nelements() && !sel_autocorr 
-                      && !sel_clip.nelements() && !sel_clip_row.nelements() );
+                      && !sel_clip.nelements() && !sel_clip_row.nelements() && !shadow );
   /*
   if( flag_everything )
   {
@@ -737,6 +744,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
 
 RFASelector::~RFASelector ()
 {
+  delete ac;
+
   for( uInt i=0; i<sel_clip.nelements(); i++ )
     if( sel_clip[i].mapper )
       delete sel_clip[i].mapper;
@@ -752,8 +761,11 @@ void RFASelector::startData()
         //os << LogIO::POST;
 
         Bool have_subset = ( desc_str.length() );
-        if( flag_everything )
+
+        if( flag_everything && !shadow)
         {
+	    /* jmlarsen: Why is this useful/necessary?? */
+
                 if( !have_subset && !unflag)
                         os<<"FLAG ALL requested, but no MS subset specified.\n"
                                 "Refusing to flag the whole measurement set!\n"<<LogIO::EXCEPTION;
@@ -976,75 +988,147 @@ RFA::IterMode RFASelector::iterTime (uInt it)
       ifrs.nelements() != uvw.nelements() ) 
           cout << "RFASelector::iterTime ->  nelements mismatch " << endl;
   
+
 // do we flag the whole selection?  
   Bool flagall = flag_everything;
-  if( !flagall )
-  {
-  // flag autocorrelations
-    if( sel_autocorr )
-    { 
-      for( uInt i=0; i<ifrs.nelements(); i++ )
-      {
-        Bool inrange=False;
-        uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
-        for( uInt j=0; j<sel_uvrange.ncolumn(); j++)
-                if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
-    //    if( inrange ) cout << "x selected : " << i << " : " << uvdist << endl;
-        if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
-            (!sel_feed.nelements() || sel_feed(feeds(i))) &&
-            (!sel_uvrange.nelements() || inrange ) )
-        {
-          uInt a1,a2;
-          chunk.ifrToAnt(a1,a2,ifrs(i));
-          if( a1==a2 )
-            processRow(ifrs(i),it);
-        }
+
+  //cout << "flagall, shadow = " << flagall << ", " << shadow << endl;
+
+  if (!flagall) {
+      if (shadow) {
+	  
+	  /*
+	    1st loop: Figure out which antennas are shadowed
+	    2nd loop: Flag all data (incl self correlations)
+	              involving shadowed antennas
+	   */
+	   
+	  std::vector<bool> shadowed(diameters.nelements(), False);
+
+	  for (uInt i = 0; i < ifrs.nelements(); i++) {
+	      
+	      unsigned a1, a2;
+	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
+
+	      if (a1 != a2) {  /* Antennas don't shadow themselves. */
+		  double d1 = diameters(a1);
+		  double d2 = diameters(a2);
+		  
+		  Double uvdist2 = 
+		      uvw(i)(0) * uvw(i)(0) + 
+		      uvw(i)(1) * uvw(i)(1);
+		  
+		  /* The relevant threshold distance for shadowing is
+		     (d1+d2)/2  */
+		  if (uvdist2 < (d1+d2)*(d1+d2)/4.0) {
+		      
+		      if (0) cerr << "antenna is shadowed " << a1 << "-" << a2 << ": " <<
+				 "(u, v, w) = (" << 
+				 uvw(i)(0) << ", " <<
+				 uvw(i)(1) << ", " <<
+				 uvw(i)(2) << ")" << endl;
+		      
+		      if (uvw(i)(2) > 0) {
+			  shadowed[a1] = True;
+		      }
+		      else {
+			  shadowed[a2] = True;
+		      }
+		  }
+	      }
+	  }
+
+	  if (0) {
+	      std::copy(shadowed.begin(),
+			shadowed.end(),
+			std::ostream_iterator<bool>(std::cout, "] [" ));
+	      cout << endl;
+	  }
+
+	  for (uInt i = 0; i < ifrs.nelements(); i++) {
+	      
+	      unsigned a1, a2;
+	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
+
+	      Bool inrange = False;
+	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
+	      for (uInt j = 0; j < sel_uvrange.ncolumn(); j++)
+		  if (uvdist >= sel_uvrange(0, j) && uvdist <= sel_uvrange(1, j))
+		      inrange |= True;
+	      
+	      if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
+		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
+		  (!sel_uvrange.nelements() || inrange ) ) {
+		  
+		  if (shadowed[a1] || shadowed[a2]) {
+		      processRow(ifrs(i),it);
+		  }
+	      }
+	  }
+      } /* end if shadow */
+      
+      // flag autocorrelations
+      if (sel_autocorr) { 
+	  for (uInt i=0; i < ifrs.nelements(); i++) {
+	      Bool inrange=False;
+	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
+	      for( uInt j=0; j<sel_uvrange.ncolumn(); j++)
+		  if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
+	      //    if( inrange ) cout << "x selected : " << i << " : " << uvdist << endl;
+	      if ((!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
+		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
+		  (!sel_uvrange.nelements() || inrange ))
+		  {
+		      uInt a1,a2;
+		      chunk.ifrToAnt(a1,a2,ifrs(i));
+		      if( a1==a2 )
+			  processRow(ifrs(i),it);
+		  }
+	  }
       }
-    }
-  // flag if quacked
-    if( quack_si>0 )
-    {
-            //cout << "Start time for scan  : " << MVTime( scan_start/C::day).string( MVTime::DMY,7) ;
-            //cout << "   :::  iterTime for " << MVTime( t0/C::day).string( MVTime::DMY,7) << " and scan " << s0;
-            if( t0 <= (scan_start + quack_si) )// || t0 >= (scan_end - quack_si) ) 
-            {
-                    flagall = True; // flag this row.
-            }
-            
-            /*
-               if( t0-scan_start > quack_si ) // new scan interval?
-               scan_end = t0 + quack_dt;
-               if( t0<=scan_end ) // still within start of interval?
-               flagall = True;
-               scan_start = t0;
-             */
-    }
-  // flag if within specific timeslots
-    if( sel_time.ncolumn() )
-      if( anyEQ(sel_timerng.row(0)<=t0 && sel_timerng.row(1)>=t0,True) )
-        flagall = True;
-  // flag for specific row-based clipping expressions
-    if( sel_clip_row.nelements() )
-    {
-      // setup each row mapper
-      for( uInt i=0; i<sel_clip_row.nelements(); i++ ) 
-        sel_clip_row[i].mapper->setVisBuffer(chunk.visBuf());
-      for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
-        for( uInt j=0; j<sel_clip_row.nelements(); j++ ) 
-        {
-          Float vmin = sel_clip_row[j].vmin, vmax = sel_clip_row[j].vmax;
-          Float val = sel_clip_row[j].mapper->mapValue(i) - sel_clip_row[j].offset;
-          if( (sel_clip_row[j].clip  && ( val<vmin || val>vmax ) ) ||
-              (!sel_clip_row[j].clip && val>=vmin && val<=vmax ) )
-            processRow(ifrs(i),it);
-        } 
-    }
+      // flag if quacked
+      if (quack_si>0) {
+	  //cout << "Start time for scan  : " << MVTime( scan_start/C::day).string( MVTime::DMY,7) ;
+	  //cout << "   :::  iterTime for " << MVTime( t0/C::day).string( MVTime::DMY,7) << " and scan " << s0;
+	  if (t0 <= (scan_start + quack_si))// || t0 >= (scan_end - quack_si) ) 
+	      {
+		  flagall = True; // flag this row.
+	      }
+	  
+	  /*
+	    if( t0-scan_start > quack_si ) // new scan interval?
+	    scan_end = t0 + quack_dt;
+	    if( t0<=scan_end ) // still within start of interval?
+	    flagall = True;
+	    scan_start = t0;
+	  */
+      }
+      // flag if within specific timeslots
+      if (sel_time.ncolumn())
+	  if( anyEQ(sel_timerng.row(0)<=t0 && sel_timerng.row(1)>=t0,True) )
+	      flagall = True;
+      // flag for specific row-based clipping expressions
+      if (sel_clip_row.nelements())
+	  {
+	      // setup each row mapper
+	      for( uInt i=0; i<sel_clip_row.nelements(); i++ ) 
+		  sel_clip_row[i].mapper->setVisBuffer(chunk.visBuf());
+	      for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
+		  for( uInt j=0; j<sel_clip_row.nelements(); j++ ) 
+		      {
+			  Float vmin = sel_clip_row[j].vmin, vmax = sel_clip_row[j].vmax;
+			  Float val = sel_clip_row[j].mapper->mapValue(i) - sel_clip_row[j].offset;
+			  if( (sel_clip_row[j].clip  && ( val<vmin || val>vmax ) ) ||
+			      (!sel_clip_row[j].clip && val>=vmin && val<=vmax ) )
+			      processRow(ifrs(i),it);
+		      } 
+	  }
   }
   
 // flag whole selection, if still needed
-  if( flagall )
+  if (flagall)
   {
-    for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
+    for (uInt i=0; i<ifrs.nelements(); i++) // loop over rows
     {
         Bool inrange=False;
         uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
@@ -1057,15 +1141,15 @@ RFA::IterMode RFASelector::iterTime (uInt it)
     }
   }
 // setup each correlation clip mapper
-  for( uInt i=0; i<sel_clip.nelements(); i++ ) 
-    if( sel_clip_active(i) )
+  for (uInt i=0; i<sel_clip.nelements(); i++) 
+    if (sel_clip_active(i))
       sel_clip[i].mapper->setVisBuffer(chunk.visBuf());
   
   return RFA::CONT;
 }
 
 // -----------------------------------------------------------------------
-// itreRow
+// iterRow
 // -----------------------------------------------------------------------
 RFA::IterMode RFASelector::iterRow (uInt ir)
 {
@@ -1118,6 +1202,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.define(RF_CLIP,False);
     rec.define(RF_FLAGRANGE,False);
     rec.define(RF_UNFLAG,False);
+    rec.define(RF_SHADOW,False);
     rec.define(RF_SCAN,False);
     rec.define(RF_ARRAY,False);
     rec.define(RF_FEED,False);
@@ -1139,6 +1224,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.setComment(RF_CLIP,"Flag outside a specific range of values");
     rec.setComment(RF_FLAGRANGE,"Flag inside a specific range of values");
     rec.setComment(RF_UNFLAG,"If T, specified flags are CLEARED");
+    rec.setComment(RF_SHADOW, "If T, flag shadowed antennas");
     rec.setComment(RF_SCAN,"Restrict flagging to specific scans (integers)");
     rec.setComment(RF_ARRAY,"Restrict flagging to specific array ids (integers)");
     rec.setComment(RF_FEED,"Restrict flagging to specific feeds (2,N array of integers)");

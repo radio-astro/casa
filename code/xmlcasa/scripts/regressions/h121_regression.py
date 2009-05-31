@@ -305,10 +305,10 @@ os.system('cp -r h121.3mm.split.ms h121.3mm.concat.ms')
 os.system('cp -r h121.co10.split.ms h121.co10.concat.ms')
 default('concat')
 concat(concatvis='h121.3mm.concat.ms',vis='h121b.3mm.split.ms',
-       freqtol='0.1MHz',dirtol='0.1arcsec')
+       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
 default('concat')
 concat(concatvis='h121.co10.concat.ms',vis='h121b.co10.split.ms',
-       freqtol='0.1MHz',dirtol='0.1arcsec')
+       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
 concattime=time.time()
 
 #Image target in 3mm continuum emission

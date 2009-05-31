@@ -36,20 +36,25 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSPlotManager::PlotMSPlotManager() : itsParent_(NULL) { }
+PlotMSPlotManager::PlotMSPlotManager() : itsParent_(NULL), itsPages_(*this) { }
 
 PlotMSPlotManager::~PlotMSPlotManager() {
-    if(itsPlots_.size() > 0) clearPlotsAndCanvases(); }
+    if(itsPlots_.size() > 0) clearPlotsAndCanvases();
+    else                     itsPages_.clearPages();
+}
 
 
 // Public Methods //
 
+PlotMS* PlotMSPlotManager::parent() { return itsParent_; }
 void PlotMSPlotManager::setParent(PlotMS* parent) {
     itsParent_ = parent;
     itsPlotter_ = parent->getPlotter()->getPlotter();
     itsFactory_ = parent->getPlotter()->getFactory();
     itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
 }
+
+PlotterPtr PlotMSPlotManager::plotter() { return itsPlotter_; }
 
 void PlotMSPlotManager::addWatcher(PlotMSPlotManagerWatcher* watcher) {
     if(watcher == NULL) return;
@@ -81,6 +86,13 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
+PlotMSSinglePlotParameters*
+PlotMSPlotManager::singlePlotParameters(unsigned int index) {
+    if(index >= itsPlotParameters_.size()) return NULL;
+    else return dynamic_cast<PlotMSSinglePlotParameters*>(
+                itsPlotParameters_[index]);
+}
+
 PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
         const PlotMSSinglePlotParameters* params) {
     PlotMSSinglePlot* plot = new PlotMSSinglePlot(parent);
@@ -92,13 +104,18 @@ PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
 }
 
 void PlotMSPlotManager::clearPlotsAndCanvases() {
-    for(unsigned int i = 0; i < itsPlots_.size(); i++) {
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsPlots_[i]->detachFromCanvases();
-        delete itsPlots_[i];
-    }
+    
+    vector<PlotMSPlot*> plotsCopy = itsPlots_;
     itsPlots_.clear();
+    
     itsPlotParameters_.clear();
-    itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
+    itsPages_.clearPages();
+    
+    for(unsigned int i = 0; i < plotsCopy.size(); i++)
+        delete plotsCopy[i];
+    
     notifyWatchers();
 }
 
@@ -106,84 +123,17 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
 // Private Methods //
 
 void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
-    if(plot == NULL || plot->layoutNumCanvases() == 0) return;
+    if(plot == NULL) return;    
     
-    // Find current grid dimensions.
-    PlotCanvasLayoutPtr layout = itsPlotter_->canvasLayout();
-    PlotLayoutGrid* grid = NULL;
-    if(!layout.null()) grid = dynamic_cast<PlotLayoutGrid*>(&*layout);
+    // Generate canvases.
+    vector<PlotCanvasPtr> canvases = plot->generateCanvases(itsPages_);
+    itsPages_.setupCurrentPage();
     
-    unsigned int rows = 0, cols = 0;
-    if(grid != NULL) {
-        rows = grid->rows(); cols = grid->cols();
-    }
-    
-    // Find what dimensions the new plot requires.    
-    unsigned int newRows = plot->layoutNumRows(),
-                 newCols = plot->layoutNumCols();
-    
-    // See which is better: to the right or below.
-    unsigned int rightRows = max(rows, newRows), rightCols = cols + newCols,
-                 belowRows = rows + newRows, belowCols = max(cols, newCols);
-    double rightRatio = max(rightRows, rightCols) / min(rightRows, rightCols),
-           belowRatio = max(belowRows, belowCols) / min(belowRows, belowCols);
-    bool useRight = rightRatio <= belowRatio;
-    if(useRight) { newRows = rightRows; newCols = rightCols; }
-    else         { newRows = belowRows; newCols = belowCols; }
-    
-    // Make new grid.
-    PlotLayoutGrid* newGrid = new PlotLayoutGrid(newRows, newCols);
-    PlotGridCoordinate coord(0, 0);
-    
-    // Copy over old canvases.
-    for(unsigned int r = 0; r < rows; r++) {
-        for(unsigned int c = 0; c < cols; c++) {
-            coord.row = r; coord.col = c;
-            newGrid->setCanvasAt(coord, grid->canvasAt(coord));
-        }
-    }
-    
-    // Make new canvases.
-    PlotCanvasPtr canvas;
-    vector<PlotCanvasPtr> canvases(plot->layoutNumCanvases());
-    PlotStandardMouseToolGroupPtr tools;
-    PlotMSToolsTab* toolsTab = itsParent_->getPlotter()->getToolsTab();
-    pair<int, int> cimg = itsParent_->getParameters().cachedImageSize();
-    unsigned int i = 0;
-    for(unsigned int r = 0; r < newRows; r++) {
-        for(unsigned int c = 0; c < newCols; c++) {
-            coord.row = r; coord.col = c;
-            
-            if(!newGrid->canvasAt(coord).null()) continue;
-            
-            canvas = itsFactory_->canvas();
-            newGrid->setCanvasAt(coord, canvas);
-            
-            if(i < canvases.size()) canvases[i++] = canvas;
-            
-            // connect new canvases' tracker to tool tab
-            tools = canvas->standardMouseTools();
-            tools->trackerTool()->addNotifier(toolsTab);
-            tools->selectTool()->setDrawRects(true);
-            
-            // add plotmsplotter as draw watcher
-            canvas->registerDrawWatcher(PlotDrawWatcherPtr(
-                    itsParent_->getPlotter(), false));
-            
-            // set cached image size
-            canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
-        }
-    }
-    
-    // Set plotter with new layout.
-    itsPlotter_->setCanvasLayout(newGrid);
-    
-    itsParent_->getPlotter()->holdDrawing();
-    
-    // Initialize plot.
+    // Initialize plots.
+    bool hold = itsParent_->getPlotter()->allDrawingHeld();
+    if(!hold) itsParent_->getPlotter()->holdDrawing();
     plot->initializePlot(canvases);
-    
-    itsParent_->getPlotter()->releaseDrawing();
+    if(!hold) itsParent_->getPlotter()->releaseDrawing();
     
     // Notify watchers.
     notifyWatchers();

@@ -49,6 +49,8 @@ PlotMSSelectionWidget::PlotMSSelectionWidget(QWidget* parent) :
         connect(val, SIGNAL(textChanged(const QString&)),
                 SLOT(selectionChanged()));
     }
+    
+    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 PlotMSSelectionWidget::~PlotMSSelectionWidget() { }

@@ -37,6 +37,20 @@ namespace casa {
 bool PlotMSAveraging::fieldHasValue(Field f) {
     return f == CHANNEL || f == TIME; }
 
+const vector<PlotMSAveraging::Field>&
+PlotMSAveraging::fieldMutuallyExclusiveGroup(Field f) {
+    if(f == BASELINE) {
+        static vector<Field> v(1, ANTENNA);
+        return v;
+    } else if(f == ANTENNA) {
+        static vector<Field> v(1, BASELINE);
+        return v;
+    } else {
+        static vector<Field> v;
+        return v;
+    }
+}
+
 const String PlotMSAveraging::RKEY_VALUE = "Value";
 
 
@@ -76,15 +90,24 @@ Record PlotMSAveraging::toRecord() const {
 
 bool PlotMSAveraging::getFlag(Field f) const {
     return const_cast<map<Field, bool>&>(itsFlags_)[f]; }
-void PlotMSAveraging::setFlag(Field f, bool on) { itsFlags_[f] = on; }
+void PlotMSAveraging::setFlag(Field f, bool on) {
+	itsFlags_[f] = on;
+	
+	// Check for mutually exclusive fields.  The mutual exclusivity (should) be
+	// already enforced in the GUI, but this check is needed for non-GUI
+	// averaging parameter setting.
+	const vector<Field>& mutExFields = fieldMutuallyExclusiveGroup(f);
+	if(on && mutExFields.size() > 0)
+	    for(unsigned int i = 0; i < mutExFields.size(); i++)
+	        itsFlags_[mutExFields[i]] = false;
+}
 
 double PlotMSAveraging::getValue(Field f) const {
     if(!fieldHasValue(f)) return 0;
     else return const_cast<map<Field, double>&>(itsValues_)[f];
 }
 void PlotMSAveraging::setValue(Field f, double value) {
-    if(fieldHasValue(f)) itsValues_[f] = value;
-}
+    if(fieldHasValue(f)) itsValues_[f] = value; }
 
 
 bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {

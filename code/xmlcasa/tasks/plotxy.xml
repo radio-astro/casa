@@ -505,6 +505,8 @@
 	     flagmanager(vis='vis_name',mode='save',versionname='before_plotxy',
 	     comment=versionname)
 
+             See hints on using plotxy at the end.
+
 	     
      Keyword arguments:
      vis -- Name of input visibility file
@@ -737,6 +739,23 @@
 	    default: '' = do not save figure; 
             example: figfile='myPlot.png' save figure to png file
                      figfile='myPlot.txt' append plotted xy to an ascii file
+
+         Hints on using plotxy (see section 3.4 in cookbook)
+
+         Useful Buttons at bottom left:
+              5th--magnifying glass.  Click on this,
+                       left mouse button rectangle drag will zoom
+                       right mose button rectangle drag will unzoom a certain amount
+              1st--restore original magnification
+
+         Useful regions just above:
+              Quit will terminate plotter
+              Next will go to next plot as specified by iteration
+              To flag, unflag, locate, you must click 'Mark Region' first
+                 then make appropriate region(s)
+                 then click flag, unflag, locate for the desired operation
+                 plot will then refrest
+            
  </example>
  </task>
  </casaxml>

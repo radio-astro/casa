@@ -27,8 +27,6 @@
 #include <graphics/GenericPlotter/PlotTool.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 
-#include <casa/OS/Time.h>
-
 #include <iomanip>
 
 namespace casa {
@@ -61,6 +59,7 @@ bool PlotTool::lastEventWasHandled() const { return m_lastEventHandled; }
 
 
 PlotCanvas* PlotTool::canvas() const { return m_canvas; }
+PlotFactory* PlotTool::factory() const { return m_factory; }
 bool PlotTool::isAttached() const { return m_canvas != NULL; }
 
 void PlotTool::attach(PlotCanvas* canvas) {
@@ -636,28 +635,6 @@ String PlotTrackerTool::formattedString(const String& format, double x,
         double y, PlotCanvas* canvas, PlotAxis xAxis, PlotAxis yAxis) {
     stringstream ss;
     
-    // calculate time values
-    int xy, xm, xd, xh, xn, yy, ym, yd, yh, yn;
-    double xs, ys, temp = x;
-    if(canvas != NULL && canvas->axisScale(xAxis) == DATE_MJ_SEC)
-        temp /= 86400;
-    Time tx(temp + 2400000.5);
-    xs = modf(temp, &xs);
-    
-    temp = y;
-    if(canvas != NULL && canvas->axisScale(yAxis) == DATE_MJ_SEC)
-        temp /= 86400;
-    Time ty(temp + 2400000.5);
-    ys = modf(temp, &ys);
-    
-    xy = tx.year();       yy = ty.year();
-    xm = tx.month();      ym = ty.month();
-    xd = tx.dayOfMonth(); yd = ty.dayOfMonth();
-    xh = tx.hours();      yh = ty.hours();
-    xn = tx.minutes();    yn = ty.minutes();
-    xs = modf(x, &xs);    ys = modf(y, &ys);
-    xs += tx.seconds();   ys += ty.seconds();
-    
     unsigned int i = 0, j = 0;
     String token;
     while(i < format.length()) {
@@ -688,27 +665,20 @@ String PlotTrackerTool::formattedString(const String& format, double x,
         
         token = format.substr(i, (j - i));
         i = j + FORMAT_DIVIDER.size(); // i after token
-        
-        if(token.substr(0, FORMAT_X.size()) == FORMAT_X ||
-           token.substr(0, FORMAT_Y.size()) == FORMAT_Y) {
-            if(token == FORMAT_X)      ss << x;                
-            else if(token == FORMAT_Y) ss << y;
-            else {
-                // x or y as a date, or invalid token
-                bool isX = token.substr(0, FORMAT_X.size()) == FORMAT_X;
-                if(isX) token = token.substr(FORMAT_X.size());
-                else    token = token.substr(FORMAT_Y.size());
-                
-                if(token == FORMAT_YEAR)        ss << (isX ? xy : yy);
-                else if(token == FORMAT_MONTH)  ss << (isX ? xm : ym);
-                else if(token == FORMAT_DAY)    ss << (isX ? xd : yd);
-                else if(token == FORMAT_HOUR)   ss << (isX ? xh : yh);
-                else if(token == FORMAT_MINUTE) ss << (isX ? xn : yn);
-                else if(token == FORMAT_SECOND) ss << (isX ? xs : ys);
-                else // invalid token
-                    ss << FORMAT_DIVIDER << (isX ? FORMAT_X : FORMAT_Y)
-                       << token << FORMAT_DIVIDER;
-            }
+
+        if(token == FORMAT_X) {
+            PlotAxisScale scale = canvas->axisScale(xAxis);
+            String format(canvas->dateFormat()); format.gsub("\n", " ");
+            if(scale == DATE_MJ_SEC || scale == DATE_MJ_DAY)
+                ss << Plotter::formattedDateString(format, x, scale);
+            else ss << x;
+            
+        } else if(token == FORMAT_Y) {
+            PlotAxisScale scale = canvas->axisScale(yAxis);
+            String format(canvas->dateFormat()); format.gsub("\n", " ");
+            if(scale == DATE_MJ_SEC || scale == DATE_MJ_DAY)
+                ss << Plotter::formattedDateString(format, y, scale);
+            else ss << y;
             
         } else if(token.substr(0, FORMAT_PRECISION.size())== FORMAT_PRECISION){
             if(token.size() == FORMAT_PRECISION.size()) // invalid
@@ -735,17 +705,10 @@ String PlotTrackerTool::formattedString(const String& format, double x,
 const String PlotTrackerTool::FORMAT_DIVIDER = "%%";
 const String PlotTrackerTool::FORMAT_X = "x";
 const String PlotTrackerTool::FORMAT_Y = "y";
-const String PlotTrackerTool::FORMAT_YEAR = ":y";
-const String PlotTrackerTool::FORMAT_MONTH = ":m";
-const String PlotTrackerTool::FORMAT_DAY = ":d";
-const String PlotTrackerTool::FORMAT_HOUR = ":h";
-const String PlotTrackerTool::FORMAT_MINUTE = ":n";
-const String PlotTrackerTool::FORMAT_SECOND = ":s";
-const String PlotTrackerTool::FORMAT_PRECISION = "P";
+const String PlotTrackerTool::FORMAT_PRECISION = "p";
 
-const String PlotTrackerTool::DEFAULT_FORMAT = "(" + FORMAT_DIVIDER + FORMAT_X+
-        FORMAT_DIVIDER + ", " + FORMAT_DIVIDER + FORMAT_Y + FORMAT_DIVIDER +
-        ")";
+const String PlotTrackerTool::DEFAULT_FORMAT = "("+FORMAT_DIVIDER+FORMAT_X+
+        FORMAT_DIVIDER + ", " + FORMAT_DIVIDER+FORMAT_Y+FORMAT_DIVIDER + ")";
 
 
 ////////////////////////////////////

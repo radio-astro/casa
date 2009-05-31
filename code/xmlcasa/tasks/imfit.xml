@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Image Region.  Use viewer</description>
+        <description>Image Region or name.  Use viewer</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
@@ -96,13 +96,18 @@ component size.
 		Default: none (whole 2-D plane--dangerous); 
                 Example: box='10,10,50,50' or two regions
                   box = '10,10,30,30,40,45,55,54'
-        region -- The region file name.
-                An region file can be created with the CASA
-                viewer's region manager.  This must be used to select
+        region -- region file or name.
+                Use the viewer, then region manager to select regions of
+                   the image to process.  Similar to box, but graphical
+                Or the name of a region stored with the image, 
+                      use rg.namesintable()
+                to retrieve the list of names. This must be used to select
                 one spectral line lane or one Stokes plane.
-                Default: none; Example: region='myimage.im.rgn'
+                Default: none
+                Example: region='myimage.im.rgn'
+                         region='region1'
         mask -- Mask expression or file to be applied to image before fitting.
-                Can be used in place of region
+                Can be used in place of region.  See taskname = 'makemask'
                 Default: none;  Example: mask='ngc5921_mask'.  
         fixed -- Select which values to hold fixed and which to solve for.
                 Not yet implemented
@@ -157,21 +162,21 @@ component size.
 EXAMPLES
 -------------
 
-# A fit done selecting a box region.  The box values are, at the
-# moment, only allowed in pixel values.  Boxes are specified with
-# the following syntax
-#     box=[bottom-left corner (blc), top-left corner(trc)]
-# In this example the blc=0,10 and trc=50,51
-# So the coordinates of the 4 corners of the box are:
-#     0,10   0,51  50,10 and 50,51 all in pixels
+    A fit done selecting a box region.  The box values are, at the
+    moment, only allowed in pixel values.  Boxes are specified with
+    the following syntax
+        box=[bottom-left corner (blc), top-left corner(trc)]
+    In this example the blc=0,10 and trc=50,51
+    So the coordinates of the 4 corners of the box are:
+        0,10   0,51  50,10 and 50,51 all in pixels
 imfit( imagename='myImage.im', box='0,10,50,51' )
 print ct.torecord()
 
-# Fitting in a region specified in a region file that has been
-# created with the CASA viewer.  Do not select the "all axes" nor
-# the "all channels" option when saving the region file. This task
-# takes 2-D regions on the sky only.  In this example the returned
-# component tool is used to display there results.
+    Fitting in a region specified in a region file that has been
+    created with the CASA viewer.  Do not select the "all axes" nor
+    the "all channels" option when saving the region file. This task
+    takes 2-D regions on the sky only.  In this example the returned
+    component tool is used to display there results.
 ct = imfit( imagename='cleanedImage.im', region='cleanedImage.rgn' )
 print "Flux:       ", ct.getflux(0)
 print "Major Axis: ", ct.getshape(0)['majoraxis']
@@ -179,28 +184,28 @@ print "Spectrum:   ", ct.getspectrum(0)
 print "Full Fit info:, ct.getshape(0)
 
 
-# Create an estimate using on a point source and use this estimate
-# when fitting. This is a cumbersome process at the moment, but hope
-# to make it easier in the future.
-#
-# This example makes use of the region manager tool, image analysis
-# tool, and utilities tool.  These are all described in the user
-# reference manual.
-#
-# The four basic step taken in this example are:
-#    1. read in the region file.  It's assumed that the region file
-#       was created with the CASA viewer's region manager.  The
-#       regionmanager tool is used for this.  "rg1" is a Python
-#       dictionary, which is used as input in the image analysis
-#       functions.
-#    2. Create the estimate. Unfortuneatly the only was to create
-#       an estimate in CASA is by using the image analysis tool.
-#       In this example we use the findsources function.  The
-#       region from step 1 is used and we also specify a mask to use.
-#       The findsources function returns a .
-#    3. For better or worse the imfit task uses a Python dictionary
-#       which reprsents a component (see component tool for details)
-#       into an XML file.  The utils tool is used to do this for us.
+    Create an estimate using on a point source and use this estimate
+    when fitting. This is a cumbersome process at the moment, but hope
+    to make it easier in the future.
+   
+    This example makes use of the region manager tool, image analysis
+    tool, and utilities tool.  These are all described in the user
+    reference manual.
+   
+    The four basic step taken in this example are:
+       1. read in the region file.  It's assumed that the region file
+          was created with the CASA viewer's region manager.  The
+          regionmanager tool is used for this.  "rg1" is a Python
+          dictionary, which is used as input in the image analysis
+          functions.
+       2. Create the estimate. Unfortuneatly the only was to create
+          an estimate in CASA is by using the image analysis tool.
+          In this example we use the findsources function.  The
+          region from step 1 is used and we also specify a mask to use.
+          The findsources function returns a .
+       3. For better or worse the imfit task uses a Python dictionary
+          which reprsents a component (see component tool for details)
+          into an XML file.  The utils tool is used to do this for us.
 
 rg1 = rg.fromfiletorecord( 'myImage-3.rgn')
 
@@ -234,7 +239,7 @@ WARNING: This tool is still under active development.  The basics
         to combine multiple regions together and do the fit
         for all simultaneously.
 
-#Combining multiple regions to do a single fit.
+Combining multiple regions to do a single fit.
 tmpRegions={}
 tmpRegions['r0']=rg.fromfiletorecord('ngc5921.rgn')
 tmpRegions['r1']=rg.fromfiletorecord('ngc5921_2.rgn')

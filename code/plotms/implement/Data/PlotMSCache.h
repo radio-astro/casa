@@ -29,8 +29,10 @@
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
+#include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
+#include <plotms/Data/PlotMSVBAverager.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -63,6 +65,9 @@ public:
   // Report the total number of points currently arranged for plotting
   //  (TBD: this is incorrect unless ALL cache spaces are full!!)
   Int nPoints() const { return nPoints_(nChunk_-1); };
+
+  // Report the reference time for this cache (in seconds)
+  inline Double refTime() { return refTime_p; };
 
   // Clears the cache of all stored values.  This should be called when the
   // underlying MS or MS selection is changed, thus invalidating stored data.
@@ -140,16 +145,29 @@ public:
   inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getAz() { return *(az_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
-  inline Double getEl() { return *(el_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
-  inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_%iantmax_(currChunk_))); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
+  // These are antenna-based
+  inline Double getAntenna() { return *(antenna_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getAz() { return *(az_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getEl() { return *(el_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
+  inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
 
   // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
   PlotLogMessage* locateNearest(Double x, Double y);
   PlotLogMessage* locateRange(Double xmin,Double xmax,Double ymin,Double ymax);
-  
+  PlotLogMessage* flagRange(const PlotMSFlagging& flagging, Double xmin, Double xmax,
+			      Double ymin,Double ymax, Bool flag=True);
+
+  // Set flags in the cache
+  void flagInCache(const PlotMSFlagging& flagging,Bool flag);
+
+  // Sets the plot mask for a single chunk
+  void setPlotMask(Int chunk);
+
+  // Set flags in the MS
+  void flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
+
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
   // eventually be used for a cache manager to let the user know the
@@ -164,6 +182,36 @@ private:
 
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
+
+  // Loop over VisIter, filling the cache
+  void loadChunks(VisSet& vs,
+		  const vector<PMS::Axis> loadAxes,
+		  const vector<PMS::DataColumn> loadData,
+		  const PlotMSAveraging& averaging,
+		  PlotMSCacheThread* thread);
+  void loadChunks(VisSet& vs,
+		  const PlotMSAveraging& averaging,
+		  const Vector<Int>& nIterPerAve,
+		  const vector<PMS::Axis> loadAxes,
+		  const vector<PMS::DataColumn> loadData,
+		  PlotMSCacheThread* thread);
+
+  // Force read on vb for requested axes 
+  //   (so pre-cache averaging treats all data it should)
+  void forceVBread(VisBuffer& vb,
+		   vector<PMS::Axis> loadAxes,
+		   vector<PMS::DataColumn> loadData);
+
+  // Tell time averager which data column to read
+  void discernData(vector<PMS::Axis> loadAxes,
+		   vector<PMS::DataColumn> loadData,
+		   PlotMSVBAverager& vba);
+
+
+  // Count the chunks required in the cache
+  void countChunks(VisSet& vs);  // old
+  void countChunks(VisSet& vs, Vector<Int>& nIterPerAve,  // supports time-averaging 
+		   const PlotMSAveraging& averaging);
 
   // Fill a chunk with a VisBuffer.  
   void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,
@@ -191,6 +239,9 @@ private:
 
   // Private data
 
+  // The number of antennas
+  Int nAnt_;
+
   // The number of chunks
   Int nChunk_;
 
@@ -199,6 +250,12 @@ private:
 
   // The cumulative running total of points
   Vector<Int> nPoints_;
+
+  // The reference time for this cache, in seconds
+  Double refTime_p;
+
+  // Axes mask
+  Vector<Bool> netAxesMask_;
 
   Double minX_,maxX_,minY_,maxY_;
 
@@ -225,11 +282,12 @@ private:
   PtrBlock<Array<Bool>*> plmask_;
 
   PtrBlock<Vector<Float>*> parang_;
+  PtrBlock<Vector<Int>*> antenna_;
   PtrBlock<Vector<Double>*> az_,el_;
 
   // Indexing help
   Vector<Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
-  Vector<Int> nperchan_, nperbsln_;
+  Vector<Int> nperchan_, nperbsln_, nperant_;
   Vector<Int> ichanbslnmax_;
   Vector<Int> iantmax_;
 
@@ -239,8 +297,17 @@ private:
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
+
+  // A copy of the PlotMSAveraging object passed in by load
+  PlotMSAveraging averaging_;
+
+  // Provisional flagging helpers
+  Vector<Int> nVBPerAve_;
+
+
 };
 typedef CountedPtr<PlotMSCache> PlotMSCachePtr;
+
 
 }
 

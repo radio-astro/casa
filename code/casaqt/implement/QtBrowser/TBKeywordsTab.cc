@@ -180,7 +180,7 @@ void TBTableKeywordsTab::updateTable(ProgressHelper* pp) {
 
 void TBTableKeywordsTab::clearWidgetInSplitter() {
     QWidget* widget = rightWidget->getCurrentWidget();
-    if(arrayPanel != NULL) {
+    if(widget == arrayPanel) {
         arrayPanel->removeActionsAssociatedWithArrays();
         arrayPanel = NULL;
     }
@@ -191,6 +191,8 @@ void TBTableKeywordsTab::clearWidgetInSplitter() {
 }
 
 void TBTableKeywordsTab::showWidgetInSplitter(QWidget* widget) {
+    if(rightWidget->getCurrentWidget() != widget)
+        clearWidgetInSplitter();
     rightWidget->setWidget(widget, true);
     rightWidget->show();
 }
@@ -210,7 +212,6 @@ void TBTableKeywordsTab::doubleClicked(int row, int col) {
                 arrayPanel = new TBArrayPanel(ttabs);
                 connect(arrayPanel, SIGNAL(allArraysClosed()),
                         this, SLOT(clearWidgetInSplitter()));
-                rightWidget->setCloseButtonText("Close All");
                 show = true;
             }
             
@@ -220,7 +221,10 @@ void TBTableKeywordsTab::doubleClicked(int row, int col) {
                               false);
             bool b = arrayPanel->addArray(va, -1);
             if(!b) delete va;
-            if(show) showWidgetInSplitter(arrayPanel);
+            if(show) {
+                showWidgetInSplitter(arrayPanel);
+                rightWidget->setCloseButtonText("Close All");
+            }
         //}
     } else if(type == TBConstants::TYPE_RECORD) {
         TBDataRecord* r = (TBDataRecord*)table->keyword(row)->getValue();
@@ -350,7 +354,7 @@ void TBFieldKeywordsTab::updateTable(ProgressHelper* pp) {
 
 void TBFieldKeywordsTab::clearWidgetInSplitter() {
     QWidget* widget = rightWidget->getCurrentWidget();
-    if(arrayPanel != NULL) {
+    if(widget == arrayPanel) {
         arrayPanel->removeActionsAssociatedWithArrays();
         arrayPanel = NULL;
     }
@@ -361,6 +365,8 @@ void TBFieldKeywordsTab::clearWidgetInSplitter() {
 }
 
 void TBFieldKeywordsTab::showWidgetInSplitter(QWidget* widget) {
+    if(rightWidget->getCurrentWidget() != widget)
+        clearWidgetInSplitter();
     rightWidget->setWidget(widget, true);
     rightWidget->show();
 }
@@ -384,7 +390,6 @@ void TBFieldKeywordsTab::doubleClicked(QTreeWidgetItem* item, int col) {
                 arrayPanel = new TBArrayPanel(ttabs);
                 connect(arrayPanel, SIGNAL(allArraysClosed()),
                         this, SLOT(clearWidgetInSplitter()));
-                rightWidget->setCloseButtonText("Close All");
                 show = true;
             }
             
@@ -393,7 +398,10 @@ void TBFieldKeywordsTab::doubleClicked(QTreeWidgetItem* item, int col) {
                                      TBConstants::itoa(row), d, -1, -1, false);
             bool b = arrayPanel->addArray(va, -1);
             if(!b) delete va;
-            if(show) showWidgetInSplitter(arrayPanel);
+            if(show) {
+                showWidgetInSplitter(arrayPanel);
+                rightWidget->setCloseButtonText("Close All");
+            }
         //}
     } else if(type == TBConstants::TYPE_RECORD) {
         TBDataRecord* r = (TBDataRecord*)f->keyword(row)->getValue();

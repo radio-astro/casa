@@ -3,7 +3,7 @@
 #       observing time to it, and warn or abort (printing the valid
 #       timerange) depending on how badly the user missed it.
 # look for antenna list in default repository also
-# allow user to report statistics in J/ybm instead of Jy/arcsec
+# allow user to report statistics in Jy/bm instead of Jy/arcsec
 # Pad input image to a composite number of pixels on a side.  I don't
 #       know if it would speed things up much, but it would suppress a warning.
 #       Large primes are surprisingly common.
@@ -18,7 +18,7 @@ import pylab as pl
 import pdb
 
 
-def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None, incell=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
+def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
 
@@ -44,7 +44,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
             toJypix=1.
         else:
-            msg("WARN: don't know image units for %s" % image,color="31")
+            msg("WARN: don't know image units for %s" % image,origin="statim")
             toJyarcsec=1.
             toJypix=1.
         stats=ia.statistics(robust=True)
@@ -70,7 +70,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 if type(incell)=='str':
                     incell=qa.quantity(incell)
                 pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
-            if verbose: msg("pixel size= %s" % pixsize,origin="statim")
+            #if verbose: msg("pixel size= %s" % pixsize,origin="statim")
             xextent=imsize[0]*abs(pixsize[0])*0.5
             xextent=[xextent,-xextent]
             yextent=imsize[1]*abs(pixsize[1])*0.5
@@ -105,8 +105,12 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
     casalog.origin('simdata')
+    if verbose: casalog.filter(level="DEBUG2")
 
+    # this is the output desired bandwidth:
     bandwidth=qa.mul(qa.quantity(nchan),qa.quantity(chanwidth))
+
+    # create the utility object:
     util=simutil(direction,startfreq=qa.quantity(startfreq),
                  bandwidth=bandwidth)
     if verbose: util.verbose=True
@@ -117,84 +121,10 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         return
     
     try:
-        ##################################################################
-        # set up pointings
-        # uses imsize*cell, or could use insize*incell I suppose
-
-        nfld, pointings = util.calc_pointings(pointingspacing,imsize,cell,direction,relmargin)
-        if nfld==1:
-            imagermode=''
-        else:
-            imagermode="mosaic"
-        ave , off = util.average_direction(pointings)
 
         nbands = 1;    
         fband  = 'band'+startfreq
-
         msfile=project+'.ms'
-        casalog.origin('simdata')
-
-        ##################################################################
-        # if needed, make a model image from the input clean component list
-
-        if (modelimage == ''):
-            if incell=="header":
-                incell=cell
-            # should we be using incell since there is not an image?
-            if verbose: msg("creating an image from your clean components")
-            components_only=True
-            modelimage=project+'.ccmodel.im'
-            ia.fromshape(modelimage,[imsize[0],imsize[1],1,nchan])
-            cs=ia.coordsys()
-            epoch,ra,dec=util.direction_splitter(direction)
-            cs.setunits(['rad','rad','','Hz'])
-            cell_rad=qa.convert(qa.quantity(incell),"rad")['value']
-            cs.setincrement([-cell_rad,cell_rad],'direction')
-            cs.setreferencevalue([qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']],'direction')
-            cs.setreferencevalue(startfreq,'spectral')
-            ia.setcoordsys(cs.torecord())
-            cl.open(complist)
-            ia.setbrightnessunit("Jy/pixel")
-            ia.modify(cl.torecord(),subtract=False)
-            cl.done()
-            ia.done() # to make sure its saved to disk at the start
-        else:
-            components_only=False
-            if (complist != ''):
-                msg("WARNING: I can't use clean components AND an image yet - using image",color=31)
-        
-            
-
-
-        # open model image as ia tool "model"; leave open
-        modelia=ia.newimagefromfile(modelimage)
-
-        # for people who have put in an array, we should print an error.
-        if type(incell) == 'list':
-            incell=incell[0]
-        # optionally use image header for cell size
-        if incell=='header':                
-            incellx,incelly=modelia.coordsys().increment()['numeric']
-            incellx=qa.quantity(incellx,'rad')
-            incelly=qa.quantity(incelly,'rad')
-            # warn if incells are not square 
-            if not incellx == incelly:
-                msg("input pixels are not square!",color="31")
-                msg("using incell=incellx=%s" % incellx,color="31")
-            incell=qa.convert(incellx,'arcsec')
-        else:
-            incellx=incell
-            incelly=incell
-
-        # now that incell is set by the user or has been retrieved from the 
-        # image header, we can use it for the output cell also
-        if cell=="incell":
-            cell=incell
-
-
-        if verbose: msg("imsize= %s" % imsize)
-
-
 
 
         ##################################################################
@@ -204,6 +134,414 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         antnames=[]
         for k in range(0,nant): antnames.append('A%02d'%k)
         aveant=stnd.mean()
+
+        # (set back to simdata after calls to util -
+        #   there must be an automatic way to do this)
+        casalog.origin('simdata')
+
+
+
+
+
+        ##################################################################
+        # set output shape:
+
+        if imsize.__len__()==1:
+            imsize=[imsize,imsize]
+        out_size=imsize
+            
+        out_nstk=stokes.__len__()
+        out_shape=[out_size[0],out_size[1],out_nstk,nchan]
+
+
+
+        ##################################################################
+        # if needed, make a model image from the input clean component list
+        # (make it the desired 4d output shape)
+        # visibilities will be calculated from the component list - this
+        # image is just for display and fidelity
+
+        if (modelimage == ''):
+            
+            if cell=="incell":
+                msg("ERROR: You can't use the input header for the pixel size if you don't have an input header!",color="31")
+                return False
+            else:
+                out_cell=qa.convert(cell,'arcsec')
+
+            if verbose: msg("creating an image from your clean components",origin="setup model")
+            components_only=True
+            modelimage=project+'.ccmodel'
+            ia.fromshape(modelimage,out_shape)
+            cs=ia.coordsys()
+            # use output direction to create model image:
+            epoch,ra,dec=util.direction_splitter(direction)
+            cs.setunits(['rad','rad','','Hz'])
+            # use output cell size to create model image:
+            # this is okay - if none of the clean components fit in the output
+            # image, then the simulated image will be blank.  user error.
+            cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
+            cs.setincrement([-cell_rad,cell_rad],'direction')
+            cs.setreferencevalue([qa.convert(ra,'rad')['value']
+                                   ,qa.convert(dec,'rad')['value']],type="direction")
+            cs.setreferencevalue(startfreq,'spectral')
+            ia.setcoordsys(cs.torecord())
+            cl.open(complist)
+            ia.setbrightnessunit("Jy/pixel")
+            ia.modify(cl.torecord(),subtract=False)
+            cl.done()
+            ia.done() # to make sure its saved to disk at the start
+
+
+        else:  # we have a model image already
+            components_only=False
+            if (complist != ''):
+                msg("WARN: I will use clean components and model image to calculate visibilities,",color="31",origin="setup model")
+                msg("         but the difference image won't have the clean components in it",color="31",origin="setup model")
+        
+
+
+
+
+
+        ##################################################################
+        # open original model image as in_ia and keep open for now
+
+        in_ia=ia.newimagefromfile(modelimage)
+    
+        # model image size and coordsys:
+        in_shape=in_ia.shape()
+        in_csys=in_ia.coordsys()
+
+        # if the user wants to use the input pixel size for the output, then
+        # get that from the header:                
+        if ignorecoord:
+            if cell=="incell":
+                msg("ERROR: You can't use the input header for the pixel size and also ignore the input header information!",color="31")
+                return False
+            else:
+                in_cell=qa.convert(cell,'arcsec')
+        else:
+            # model image pixel sizes
+            increments=in_csys.increment(type="direction")['numeric']
+            incellx=abs(increments[0])
+            incelly=increments[1]
+    
+            # warn if input pixels are not square
+            if (abs(incellx)-abs(incelly))/abs(incellx) > 0.001 and not ignorecoord:
+                msg("input pixels are not square!",color="31",origin="setup model")
+                if verbose:
+                    msg("using cell = %s (not %s)" % (incellx,incelly),origin="setup model")
+                else:
+                    msg("using cell = %s" % incellx,origin="setup model")
+            incellx=qa.quantity(incellx,'rad')
+            incelly=qa.quantity(incelly,'rad')
+            in_cell=qa.convert(incellx,'arcsec')
+            
+
+        if cell=="incell":                
+            out_cell=in_cell
+        else:
+            out_cell=qa.convert(cell,'arcsec')
+
+        if verbose:
+            msg("input model image shape= %s" % in_shape,origin="setup model")
+            msg("input model pixel size = %8.2e arcsec" % in_cell['value'],origin="setup model")
+
+
+
+
+
+
+
+        ##################################################################
+        # set imcenter to the center of the mosaic
+        # in clean, we also set to phase center; cleaning with no pointing
+        # at phase center causes issues
+
+        if type(direction) == list:
+            # manually specified pointings            
+            nfld = direction.__len__()
+            if nfld > 1 :
+                pointings = direction
+                if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
+            else:
+                # calculate pointings for the user 
+                nfld, pointings = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
+                #if verbose: msg("Calculated %i pointings in an output image of %s pixels by %s" % (nfld,str(out_size),str(pointingspacing)))
+        else:
+            # calculate pointings for the user 
+            nfld, pointings = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
+            #if verbose: msg("Calculated %i pointings in an output image of %s pixels by %s" % (nfld,str(out_size),str(pointingspacing)))
+            
+                
+
+        # find imcenter=average central point, and centralpointing
+        # (to be used for phase center)
+        imcenter , offsets = util.average_direction(pointings)
+
+        minoff=1e10
+        central=-1
+        
+        for i in range(nfld):
+            o=pl.sqrt(offsets[0,i]**2+offsets[1,i]*2)
+            if o<minoff:
+                minoff=o
+                central=i
+        centralpointing=pointings[central]
+            
+        # (set back to simdata after calls to util -
+        #   there must be an automatic way to do this)
+        casalog.origin('simdata')
+
+        if nfld==1:
+            imagermode=''
+            msg("phase center = " + centralpointing)
+        else:
+            imagermode="mosaic"
+            msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
+            if verbose: 
+                for dir in pointings:
+                    msg("   "+dir)
+
+
+                
+
+        ##################################################################
+        # fit modelimage into a 4 coordinate image defined by the parameters
+        # we will have one because we made one from clean components above
+
+        # deal with brightness scaling here since we may close in_ia below.
+        if (inbright=="unchanged") or (inbright=="default"):
+            scalefactor=1.
+        else:
+            stats=in_ia.statistics()
+            highvalue=stats['max']
+            scalefactor=float(inbright)/highvalue.max()
+
+        if verbose: msg("scaling image brightness by a factor of %f" % scalefactor,origin="setup model")
+            
+
+
+        # truncate model image name to craete new images in current dir:
+        (modelimage_path,modelimage_local)=os.path.split(os.path.normpath(modelimage))
+        modelimage_local=modelimage_local.strip()
+        if modelimage_local.endswith(".fits"): modelimage_local=modelimage_local.replace(".fits","")
+        if modelimage_local.endswith(".FITS"): modelimage_local=modelimage_local.replace(".FITS","")
+        if modelimage_local.endswith(".fit"): modelimage_local=modelimage_local.replace(".fit","")
+
+
+
+
+
+
+        # check shape characteristics of the input; add degenerate axes as needed:
+        # does input model have direction/spectral/stokes data?
+        in_dir=in_csys.findcoordinate("direction")
+        in_spc=in_csys.findcoordinate("spectral")
+        in_stk=in_csys.findcoordinate("stokes")
+
+
+        if verbose: msg("rearranging input data (may take some time for large cubes)")
+        arr=in_ia.getchunk()
+        axmap=[-1,-1,-1,-1]
+        axassigned=[-1,-1,-1,-1]
+
+        in_nax=arr.shape.__len__()
+        if in_nax<2:
+            msg("ERROR: Your input model has fewer than 2 dimensions.  Can't proceed",color="31")
+            return False
+
+        # we have at least two axes:
+
+        # set model_refdir and model_cell according to ignorecoord
+        # do we want to set model_refdir to imcenter or centralpointing?  I think
+        # centralpointing, since that's where the output image will get made
+        if ignorecoord:
+            epoch, ra, dec = util.direction_splitter(centralpointing)
+            if verbose: msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")
+            #model_refdir=[qa.convert(ra,'rad')['value'],qa.convert(dec,'rad')['value']]
+            model_refdir='J2000 '+qa.formxxx(ra,format='hms')+" "+qa.formxxx(dec,format='dms')
+            model_cell=out_cell # in arcsec
+            axmap[0]=0 # direction in first two pixel axes
+            axmap[1]=1
+            axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
+            axassigned[1]=0
+            
+        else:            
+            if not in_dir['return']:
+                msg("ERROR: You don't have direction coordinates that I can understand, so either edit the header or set ignorecoord=True",color="31")
+                return False            
+            ra,dec = in_csys.referencevalue(type="direction")['numeric']
+            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms')+" "+qa.formxxx(str(dec)+"rad",format='dms')
+            if in_dir['pixel'].__len__() != 2:
+                msg("ERROR: I can't understand your direction coordinates, so either edit the header or set ignorecoord=True",color="31")
+                return False            
+            dirax=in_dir['pixel']
+            axmap[0]=dirax[0]
+            axmap[1]=dirax[1]                    
+            model_cell=in_cell # in arcsec
+            axassigned[dirax[0]]=0
+            axassigned[dirax[1]]=0
+            if verbose: msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
+
+        # if we only have 2d to start with:
+        if in_nax==2:            
+            # then we can't make a cube (at least, it would be boring)
+            if nchan>1: 
+                msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
+                nchan=1
+            # add an extra axis to be Spectral:
+            arr=arr.reshape([arr.shape[0],arr.shape[1],1])
+            in_shape=arr.shape
+            in_nax=in_shape.__len__() # which should be 3
+            if verbose: msg("Adding dummy spectral axis",origin="setup model")
+
+        # we have at least 3 axes, either by design or by addition:
+        if ignorecoord:
+            add_spectral_coord=True
+            extra_axis=2
+        else:
+            if in_spc['return']:
+                if type(in_spc['pixel']) == int :
+                    foo=in_spc['pixel']
+                else:
+                    foo=in_spc['pixel'][0]
+                    msg("WARN: you seem to have two spectral axes",color="31")
+                if arr.shape[foo]>1 and nchan==1:
+                    if verbose: msg("WARN: You will be flattening your spectral dimension",origin="setup model")
+                axmap[3]=foo
+                axassigned[foo]=3
+                model_restfreq=in_csys.restfrequency()
+                in_startpix=in_csys.referencepixel(type="spectral")['numeric'][0]
+                model_step=in_csys.increment(type="spectral")['numeric'][0]
+                model_start=in_csys.referencevalue(type="spectral")['numeric'][0]-in_startpix*model_step
+                model_step=str(model_step)+in_csys.units(type="spectral")
+                model_start=str(model_start)+in_csys.units(type="spectral")
+                add_spectral_coord=False
+                if verbose: msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
+            else:
+                # we're not ignoreing coord, but we have at least one extra axis
+                # if we have a valid stokes axis, but not a valid spectral axis:
+                if in_stk['return']:
+                    axassigned[in_stk['pixel']]=2
+                    axmap[2]=in_stk['pixel']
+                    # AND, if we only had 3 axes, need to add dummy spectral:
+                    if in_nax<4:
+                        # then we can't make a cube (at least, it would be boring)
+                        if nchan>1: 
+                            msg("WARN: you are trying to create a cube from a flat image; I can't do that (yet) so am going to make a flat image",color="31",origin="setup model")
+                            nchan=1
+                        # add an extra axis to be Spectral:
+                        arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
+                        in_shape=arr.shape
+                        in_nax=in_shape.__len__() # which should be 4
+                        if verbose: msg("Adding dummy spectral axis",origin="setup model")
+                        
+                # find first unused axis - probably at end, but just in case its not:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:                    
+                    msg("ERROR: I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    return False
+                add_spectral_coord=True
+                
+        if add_spectral_coord:
+            axmap[3]=extra_axis
+            axassigned[extra_axis]=3
+            if nchan>arr.shape[extra_axis]:
+                nchan=arr.shape[extra_axis]
+                msg("WARN: you are asking for more channels than you have - truncating output cube to %i channels (%s each)" % (nchan,str(chanwidth)),color="31",origin="setup model")
+            if arr.shape[extra_axis]>nchan:
+                # actually subsample someday:
+                msg("WARN: you are asking for fewer channels (%i) than the input cube - increasing nchan to %i (%s each) " % (nchan,arr.shape[extra_axis],str(chanwidth)),color="31",origin="setup model")
+                nchan=arr.shape[extra_axis]
+            if arr.shape[extra_axis]>1:
+                model_restfreq=startfreq
+                model_start=startfreq
+                model_step=chanwidth
+            else:
+                model_restfreq=startfreq
+                model_start=startfreq            
+                model_step=bandwidth
+            if verbose: msg("Adding Spectral Coordinate",origin="setup model")
+
+
+
+        # if we only have three axes, add one to be Stokes:
+        if in_nax==3:
+            arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
+            in_shape=arr.shape
+            in_nax=in_shape.__len__() # which should be 4
+            add_stokes_coord=True
+            extra_axis=3
+            if verbose: msg("Adding dummy Stokes axis",origin="setup model")
+            
+        # we have at least 3 axes, either by design or by addition:
+        if ignorecoord:
+            add_stokes_coord=True
+            extra_axis=3
+        else:
+            if in_stk['return']:
+                model_stokes=in_csys.stokes()
+                foo=model_stokes[0]
+                for i in range(model_stokes.__len__()-1):
+                    foo=foo+model_stokes[i+1]
+                model_stokes=foo
+                if type(in_stk['pixel']) == int:
+                    foo=in_stk['pixel']
+                else:
+                    foo=in_stk['pixel'][0]
+                    msg("WARN: you seem to have two stokes axes",color="31")                
+                axmap[2]=foo
+                axassigned[foo]=2
+                if in_shape[foo]>4:
+                    msg("ERROR: You appear to have more than 4 Stokes components - please edit your header and/or parameters",color="31")
+                    return False                        
+                add_stokes_coord=False
+                if verbose: msg("Stokes Coordinate %i parsed" % axmap[2],origin="setup model")
+            else:
+                # find the unused axis:
+                i=0
+                extra_axis=-1
+                while extra_axis<0 and i<4:
+                    if axassigned[i]<0: extra_axis=i
+                    i+=1
+                if extra_axis<0:
+                    msg("ERROR: I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),color="31",origin="setup model")
+                    return False
+                add_stokes_coord=True
+                            
+
+        if add_stokes_coord:
+            axmap[2]=extra_axis
+            axassigned[extra_axis]=2
+            if arr.shape[extra_axis]>4:
+                msg("ERROR: you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis))
+                return False
+            if verbose: msg("Adding Stokes Coordinate",origin="setup model")
+            if arr.shape[extra_axis]==4:                    
+                model_stokes="IQUV"
+            if arr.shape[extra_axis]==3:                    
+                model_stokes="IQV"
+                msg("WARN: setting IQV Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+            if arr.shape[extra_axis]==2:                    
+                model_stokes="IQ"
+                msg("WARN: setting IQ Stokes parameters from the 4th axis of you model.  If that's not what you want, then edit the header",origin="setup model")
+            if arr.shape[extra_axis]<=1:                    
+                model_stokes="I"
+
+
+
+        if verbose: msg("axis map for model image = %i %i %i %i" %
+            (axmap[0],axmap[1],axmap[2],axmap[3]),origin="setup model")
+
+
+
+
 
 
 
@@ -218,7 +556,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             pl.ion()
             pl.clf()
             pl.subplot(121)
-            model_min,model_max, model_rms = statim(modelimage,plot=display,incell=incell)
+            model_min,model_max, model_rms = statim(modelimage,plot=display,incell=in_cell)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -226,8 +564,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 plotcolor='w'
             else:
                 plotcolor='k'
-            for i in range(off.shape[1]):
-                pl.plot(pl.cos(tt)*pb/2+off[0,i]*3600,pl.sin(tt)*pb/2+off[1,i]*3600,plotcolor)
+            for i in range(offsets.shape[1]):
+                pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,plotcolor)
             xlim=max(abs(pl.array(lims[0])))
             ylim=max(abs(pl.array(lims[1])))
             # show entire pb: (statim doesn't by default)
@@ -255,14 +593,30 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                     pl.figure(currfignum+1)
                     pl.clf()
         else:
-            model_min,model_max, model_rms = statim(modelimage,plot=False,incell=incell)
+            model_min,model_max, model_rms = statim(modelimage,plot=False,incell=in_cell)
 
 
 
 
 
         ##################################################################
-        # set up observatory, feeds, etc:
+        # reset output shape it case nchan has changed
+
+        out_shape=[out_size[0],out_size[1],out_nstk,nchan]
+
+        if verbose:
+            msg("simulated image desired shape= %s" % out_shape,origin="setup model")
+            msg("simulated image desired pixel size = %8.2e arcsec" % out_cell['value'],origin="setup model")
+
+
+
+
+        ##################################################################
+        # set up observatory, feeds, etc
+        # (has to be here since we may have changed nchan)
+
+        if verbose:
+            msg("preparing empty measurement set")
 
         sm.open(msfile)
         posobs=me.observatory(telescopename)
@@ -295,189 +649,119 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
-        # set imcenter to the center of the mosaic;  this is used in clean
-        # as the phase center, which could be nonideal if there is no
-        # pointing exactly in the middle of the mosaic.
-        if type(direction) == list:
-            imcenter , discard = util.average_direction(direction)
-            msg("using phasecenter " + imcenter)
-            if verbose:
-                print direction
-                for dir in direction:
-                    msg("   "+dir)
-        else:
-            imcenter = direction
+        msg("done setting up observations (blank visibilities)")
 
-        msg("done setting up observations")
-
-
-
-
-
-
-
-        ##################################################################
-        # fit modelimage into a 4 coordinate image defined by the parameters
-
-        if (modelimage != ''):
-            # modelia is already open with the original input model from above
-            insize=modelia.shape()
-
-            # first make a blank 4-dimensional image w/the right cell size
-            modelimage4d=project+"."+modelimage+'.coord'
-            im.open(msfile)    
-            im.selectvis(field=range(nfld), spw=0)
-            # imcenter is the average of the desired pointings
-            # we put the phase center there, rather than at the
-            # reference direction for the input model (refdirection)
-            im.defineimage(nx=insize[0], ny=insize[1], cellx=incellx, celly=incelly, phasecenter=imcenter)
-            im.make(modelimage4d)
-            im.close()
-            im.done()
-
-            if refdirection!=None:
-                if verbose: msg("setting model image direction to "+refdirection)
-                if refdirection!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
-                    if refdirection=="direction":
-                        epoch, ra, dec = util.direction_splitter(imcenter)
-                    else:
-                        epoch, ra, dec = util.direction_splitter(refdirection)
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=qa.convert(ra,modelcs.units()[raax])['value']
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=qa.convert(dec,modelcs.units()[deax])['value']
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=qa.convert(startfreq,modelcs.units()[spax])['value']
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=1
-                    modelcs.setreferencevalue(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
-                    if verbose: msg(" ra="+qa.angle(ra)+" dec="+qa.angle(dec))
-
-
-            if refpixel!=None:
-                if refpixel!="header":
-                    ia.open(modelimage4d)
-                    modelcs=ia.coordsys()
-                    if refpixel=="center":
-                        crpix=pl.array([insize[0]/2,insize[1]/2])
-                    else:
-                        # XXX this is pretty fragile code right now
-                        refpixel=refpixel.replace('[','')
-                        refpixel=refpixel.replace(']','')
-                        crpix=pl.array(refpixel.split(','))
-                    ref=[0,0,0,0]
-                    raax=modelcs.findcoordinate("direction")['pixel'][0]
-                    ref[raax]=float(crpix[0])
-                    deax=modelcs.findcoordinate("direction")['pixel'][1]
-                    ref[deax]=float(crpix[1])
-                    spax=modelcs.findcoordinate("spectral")['pixel']
-                    ref[spax]=0
-                    ref[modelcs.findcoordinate("stokes")['pixel']]=0
-                    if verbose: msg("setting model image ref pixel to %f,%f" % (ref[0],ref[1]))
-                    modelcs.setreferencepixel(ref)
-                    ia.setcoordsys(modelcs.torecord())
-                    ia.done()
-                
-
-            if (inbright=="unchanged") or (inbright=="default"):
-                scalefactor=1.
-            else:
-                # scale to Jy/arcsec
-                #if type(incell)==str:
-                #    incell=qa.quantity(incell)
-                #inbrightpix=float(inbright)*(qa.convert(incell,'arcsec')['value'])**2            
-                stats=modelia.statistics()
-                highvalue=stats['max']
-                #scalefactor=inbrightpix/highvalue                
-                scalefactor=float(inbright)/highvalue.max()
-
-
-            # arr is the chunk of the input image
-            arr=modelia.getchunk()*scalefactor;
-            blc=[0,0,0,0]
-            trc=[0,0,1,1]
-            naxis=len(arr.shape);
-            modelia.done();
-
-
-            # now open spatially rescaled output image
-            modelia.open(modelimage4d)            
-            # and overwrite the input shapes with the 4d shapes
-            insize=modelia.shape()
-            incoordsys=modelia.coordsys()
-
-            # arr2 is the chunk of the resized input image
-            arr2=modelia.getchunk()
-
-            if(arr2.shape[0] >= arr.shape[0] and arr2.shape[1] >= arr.shape[1]):
-                arrin=arr
-                arrout=arr2
-                reversi=False
-            elif(arr2.shape[0] < arr.shape[0] and arr2.shape[1] < arr.shape[1]):
-                arrin=arr2
-                arrout=arr
-                reversi=True
-            blc[0]=(arrout.shape[0]-arrin.shape[0])/2;
-            blc[1]=(arrout.shape[1]-arrin.shape[1])/2;
-            trc[0]=blc[0]+arrin.shape[0];
-            trc[1]=blc[1]+arrin.shape[1];
-            if(naxis==2):
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], 0, 0]=arrin
-                else:
-                    arrin[:,:,0,0]=arrout[blc[0]:trc[0], blc[1]:trc[1]]
-            if(naxis==3):
-                if(arrout.shape[2]==arrin.shape[2]):
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], 0]=arrin
-                else:
-                    arrin[:,:,:,0]=arrout[blc[0]:trc[0], blc[1]:trc[1], :]
-            if(naxis==4):
-                # XXX input images with more than 1 channel need more testing!
-                if((arrout.shape[3]==arrin.shape[3]) and
-                   (arrout.shape[2]==arrin.shape[2])):
-                    blc[3]=0
-                    trc[3]=arrin.shape[3]
-                    blc[2]=0
-                    trc[2]=arrin.shape[2]
-                if(not reversi):
-                    arrout[blc[0]:trc[0], blc[1]:trc[1], blc[2]:trc[2], blc[3]:trc[3]]=arrin
-                else:
-                    arrin=arrout[blc[0]:trc[0], blc[1]:trc[1], : :]
-
-
-            modelia.putchunk(arr2)
-            modelia.done()
-
-            # image should now have 4 axes and same size as output
-            # XXX at least in xy (check channels later)        
 
 
 
             
-            ##################################################################
-            # do actual calculation of visibilities from the model image:
+        # now, make a blank 4-dimensional image in the imager tool, 
+        # with the same shape as input, and same stokes params as input,
+        # but output _cell_ sizes and channel widths
+        # this sets up the image for processing inside of the simulated ms,
+        # and also gives us a template coordinate system
+        modelimage4d=project+"."+modelimage_local+'.coord'        
+        im.open(msfile)    
+        im.selectvis(field=range(nfld), spw=0)
+
+        # XXX should we center this at imcenter or at centralpointing?
+        # the user may be surprised if the center of their image moves. 
+        
+        # XXXX if the input cube is in VEL, we need to actually
+        # make sure it is getting importfitted to turn into freq -
+        # if it started as fits, then it got transformed on ia.open,
+        # but if it started as an image, then it won't get converted.
+
+        if verbose: msg("im.defineimage(nx="+str(in_shape[axmap[0]])+", ny="+str(in_shape[axmap[1]])+
+                       ", cellx="+str(model_cell)+", celly="+str(model_cell)+", stokes='"+str(model_stokes)+
+                       "', phasecenter='"+str(model_refdir)+"', nchan="+str(in_shape[axmap[3]])+ 
+                       ", mode=\"FREQ-LSRK\",start='"+str(model_start)+"',step="+str(model_step)+
+                       ", restfreq='"+str(model_restfreq)+"')")
+
+
+        im.defineimage(nx=in_shape[axmap[0]], ny=in_shape[axmap[1]],
+                       cellx=model_cell,celly=model_cell, stokes=model_stokes,
+                       phasecenter=model_refdir, nchan=in_shape[axmap[3]], 
+                       mode="FREQ-LSRK",start=model_start,step=model_step,
+                       restfreq=model_restfreq)
+
+        im.make(modelimage4d)
+        im.close()
+        ia.open(modelimage4d)
+        modelcsys=ia.coordsys()
+        modelsize=ia.shape()
+
+
+
+        # first assure that the ia image created by Imager has the expected
+        # order - Kumar has enough hardcoded that it is unlikely to be otherwise.
+        expected=['Direction', 'Direction', 'Stokes', 'Spectral']
+        if modelcsys.axiscoordinatetypes() != expected:
+            msg("ERROR: internal error with coordinate axis order created by Imager",color="31")
+            msg(modelcsys.axiscoordinatetypes().__str__(),color="31")
+            return False
+
+        # more checks:
+        foo=pl.array(modelsize)
+        if not (pl.array(arr.shape) == pl.array(foo.take(axmap).tolist())).all():
+            msg("ERROR: internal error: I'm confused about the shape if your model data cube",color="31")
+            msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),color="31")
+            return False
+
+        for ax in range(4):
+            if axmap[ax] != ax:
+                if verbose: msg("swapping input axes %i with %i" % (ax,axmap[ax]),origin="setup model")
+                arr=arr.swapaxes(ax,axmap[ax])                        
+                tmp=axmap[ax]
+                axmap[ax]=ax
+                axmap[tmp]=tmp                
+
+
+        # there's got to be a better way to remove NaNs: :)
+        for i0 in range(arr.shape[0]):
+            for i1 in range(arr.shape[1]):
+                for i2 in range(arr.shape[2]):
+                    for i3 in range(arr.shape[3]):
+                        foo=arr[i0,i1,i2,i3]
+                        if foo!=foo: arr[i0,i1,i2,i3]=0.0
+
+        if verbose: msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")
+        ia.putchunk(arr*scalefactor)                    
+        ia.close()
+
+        in_ia.close()
+
+        # coord image should now have correct Coordsys and shape
+
+
+#        if shrinkspectral:
+#            # we had more channels in the cube than requested in the output image.
+
+
+
+
+
+
+
+            
+        ##################################################################
+        # do actual calculation of visibilities from the model image:
 
         if not components_only:
             # right now this is ok - if we only had components,
             # we have created modelimage4d from them but if
             # we had components and model image they are not yet combined
-            if verbose: msg("predicting from "+modelimage4d)
-            sm.predict(imagename=[modelimage4d], complist=complist)
-            
+            msg("predicting from "+modelimage4d)
+            if arr.nbytes > 5e7:
+                msg("WARN: your model is large - this may take a while")
+            sm.predict(imagename=[modelimage4d],complist=complist)
         else:   # if we're doing only components
-            if verbose: msg("predicting from "+complist)
+            msg("predicting from "+complist)
             sm.predict(complist=complist)
 
         sm.done()
         
-        msg('generation of measurement set ' + msfile + ' complete.')
+        msg('generation of measurement set ' + msfile + ' complete')
 
 
 
@@ -491,18 +775,18 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
     
         if noise_thermal:
             if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
-                msg("WARNING: thermal noise only works properly for ALMA/ACA",color=31)
+                msg("WARN: thermal noise only works properly for ALMA/ACA",color="31",origin="noise")
                 
             noise_any=True
 
             noisymsfile = project + ".noisy.ms"
-            msg('adding thermal noise to ' + noisymsfile)
+            msg('adding thermal noise to ' + noisymsfile,origin="noise")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
-            if verbose: msg('antenna efficiency = ' + str(eta_a))
+            if verbose: msg('antenna efficiency = ' + str(eta_a),origin="noise")
  
             # Ambient surface radiation temperature in K. 
             # FOR NOW, T_atm = T_ground = T_amb = parameter, also tau0=parameter
@@ -530,7 +814,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             sm.corrupt();
             sm.done();
 
-            if verbose: msg("done corrupting with thermal noise")
+            if verbose: msg("done corrupting with thermal noise",origin="noise")
 
             
         # not yet implemented:
@@ -556,29 +840,27 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         # do we want to invert the noiseless one anyway for comparison?
 
         if noise_any:
-            imgroot = project 
             mstoimage = noisymsfile
         else:
-            imgroot = project
             mstoimage = msfile
 
         if fidelity == True and psfmode == "none":
-            msg("You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.")
+            msg("WARN: You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve")
             fidelity=False
 
         if display == True and psfmode == "none":
-            msg("Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.")
+            msg("WARN: Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve")
             display=False
 
         if psfmode != "none": 
             if niter == 0:
-                image=imgroot+'.dirty'
-                msg("inverting to "+image)
+                image=project+'.dirty'
+                msg("inverting to "+image,origin="deconvolve")
             else:
-                image=imgroot+'.clean'
-                msg("cleaning to "+image)            
+                image=project+'.clean'
+                msg("cleaning to "+image,origin="deconvolve")
         else:
-            image=imgroot+'.clean'
+            image=project+'.clean'
 
         if uvtaper == False:
             outertaper=[]
@@ -586,13 +868,13 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
         #if verbose:
         # print clean inputs no matter what, so user can use them.
-        msg("clean inputs:")
-        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold="+threshold+",psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(imcenter)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        msg("clean inputs:",origin="deconvolve")
+        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold='"+str(threshold)+"',psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
 
         if psfmode != "none": 
             if int(casalog.version().split()[2].split('.')[1]) <= 3:
                 # XXX 2.3.1 syntax:
-                clean(vis=mstoimage,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode=imagermode,ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=imcenter,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+                clean(vis=mstoimage,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode=imagermode,ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=centralpointing,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
                 # XXX 2.4.0 syntax:
             else:
                 clean(vis=mstoimage, imagename=image, field='', spw='', selectdata=False,
@@ -601,96 +883,91 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                       psfmode=psfmode, imagermode=imagermode, ftmachine="mosaic",
                       mosweight=False, scaletype="SAULT", multiscale=[],
                       negcomponent=-1, interactive=False, mask=[], nchan=nchan,
-                      start=0, width=1, imsize=imsize, cell=cell, phasecenter=imcenter,
+                      start=0, width=1, imsize=imsize, cell=cell, phasecenter=centralpointing,
                       restfreq='', stokes=stokes, weighting=weighting, robust=robust,
                       uvtaper=uvtaper, outertaper=outertaper, innertaper=innertaper,
                       modelimage='', restoringbeam=[''], pbcor=False, minpb=0.1,
                       noise=noise, npixels=npixels, npercycle=100,
                       cyclefactor=1.5, cyclespeedup=-1)
         else:
-            image=imgroot
+            image=project
 
 
 
 
-        # need this filename whether or not we create the image
-        modelregrid=project+"."+modelimage+".regrid"
-
-
-
+        # need this filename whether or not we create the output image
+        modelregrid=project+"."+modelimage_local+".flat"
 
 
 
         #####################################################################
         # prepare for diff and fidelity and display by making a moment 0 image
 
-        if fidelity == True or display == True:
 
-            inspectax=incoordsys.findcoordinate('spectral')['pixel']
-            innchan=insize[inspectax]
-            # modelimage4d is the .coord version w/spectral axis.
-            # modelflat should be the moment zero of that
-            modelflat=project+"."+modelimage+".mom0" 
-            if innchan>1:
-                if verbose: msg("creating moment zero input image")
-                # actually run ia.moments
-                ia.open(modelimage4d)
-                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                ia.done()
-            else:
-                # just remove degenerate axes from modelimage4d
-                ia.newimagefromimage(infile=modelimage4d,outfile=modelflat,dropdeg=True,overwrite=True)
-                # why can't I just remove spectral and leave stokes?
-                os.system("mv "+modelflat+" "+modelflat+".tmp")
-                ia.open(modelflat+".tmp")
-                ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                ia.done()
-                os.system("rm -rf "+modelflat+".tmp")
+        inspectax=modelcsys.findcoordinate('spectral')['pixel']
+        innchan=modelsize[inspectax]
+        # modelimage4d is the .coord version w/spectral axis.
+        
+        # modelflat should be the moment zero of that
+        modelflat=project+"."+modelimage_local+".flat0" 
+        if innchan>1:
+            if verbose: msg("creating moment zero input image",origin="analysis")
+            # actually run ia.moments
+            ia.open(modelimage4d)
+            ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+            ia.done()
+        else:
+            # just remove degenerate axes from modelimage4d
+            ia.newimagefromimage(infile=modelimage4d,outfile=modelflat,dropdeg=True,overwrite=True)
+            # why can't I just remove spectral and leave stokes?
+            os.system("mv "+modelflat+" "+modelflat+".tmp")
+            ia.open(modelflat+".tmp")
+            ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+            ia.done()
+            os.system("rm -rf "+modelflat+".tmp")
 
 
-            # flat output
-            outflat=image+".mom0"
-            # should we really be calling this mom0, if we use the mean, or mom-1?
-            if nchan>1:
-                # image is either .clean or .dirty
-                if verbose: msg("creating moment zero output image")
-                ia.open(image+".image")
-                ia.moments(moments=[-1],outfile=outflat,overwrite=True)
-                ia.done()
-            else:
-                if verbose: msg("flattening output image to "+outflat)
-                # just remove degenerate axes from image
-                ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
-                # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
-                os.system("mv "+outflat+" "+outflat+".tmp")
-                ia.open(outflat+".tmp")
-                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
-                ia.done()
-                os.system("rm -rf "+outflat+".tmp")
+        # flat output -- needed even if fideilty is not calculated
+        outflat=image+".flat"
+        if nchan>1:
+            # image is either .clean or .dirty
+            if verbose: msg("creating moment zero output image",origin="analysis")
+            ia.open(image+".image")
+            ia.moments(moments=[-1],outfile=outflat,overwrite=True)
+            ia.done()
+        else:
+            if verbose: msg("flattening output image to "+outflat,origin="analysis")
+            # just remove degenerate axes from image
+            ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
+            # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
+            os.system("mv "+outflat+" "+outflat+".tmp")
+            ia.open(outflat+".tmp")
+            ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+            ia.done()
+            os.system("rm -rf "+outflat+".tmp")
             
-            # be sure to get outflatcoordsys from outflat
-            ia.open(outflat)
-            outflatcoordsys=ia.coordsys()
-            outflatshape=ia.shape()
-            ia.done()            
+        # be sure to get outflatcoordsys from outflat
+        ia.open(outflat)
+        outflatcoordsys=ia.coordsys()
+        outflatshape=ia.shape()
+        ia.done()            
 
-            # regrid flat input to flat output shape, for convolution, etc
-            modelia.open(modelflat)
-            imrr = modelia.regrid(outfile=modelregrid, overwrite=True,
-                                  csys=outflatcoordsys.torecord(),shape=outflatshape)
-            imrr.done()
+        # regrid flat input to flat output shape, for convolution, etc
+        ia.open(modelflat)
+        imrr = ia.regrid(outfile=modelregrid, overwrite=True,
+                         csys=outflatcoordsys.torecord(),shape=outflatshape)
+        imrr.done()
 
-            # XXX when we get to using both clean components and model image,
-            # we should add them together here if not before.
-            # modelia.immath
+        # XXX when we get to using both clean components and model image,
+        # we should add them together here if not before.
 
-            modelia.done()
-            outflatcoordsys.done()
-            del outflatcoordsys
-            del imrr
+        ia.done()
+        outflatcoordsys.done()
+        del outflatcoordsys
+        del imrr
 
-            if innchan==1:
-                os.system("rm -rf "+modelflat)  # no need to keep this
+        
+        os.system("rm -rf "+modelflat)  # no need to keep this
 
 
         if psfmode != "none":
@@ -708,7 +985,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
         if os.path.exists(modelimage) and (fidelity == True or display == True):
             # get beam from output clean image
-            if verbose: msg("getting beam from "+image+".image")
+            if verbose: msg("getting beam from "+image+".image",origin="analysis")
             ia.open(image+".image")
             beam=ia.restoringbeam()
             ia.done()
@@ -717,15 +994,15 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # from math import sqrt
             
             # Convolve model with beam.
-            convolved = project + '.convolved.im'
-            modelia.open(modelregrid)
-            modelia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
+            convolved = project + '.convolved'
+            ia.open(modelregrid)
+            ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
 
             # Make difference image.
-            difference = imgroot + '.diff.im'
-            modelia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
-            modelia.done()
+            difference = project + '.diff.im'
+            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite = True)
+            ia.done()
             # Get rms of difference image.
             ia.open(difference)
             diffstats = ia.statistics(robust = True)
@@ -733,18 +1010,18 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             maxdiff=diffstats['medabsdevmed']
             if maxdiff!=maxdiff: maxdiff=0.
             # Make fidelity image.
-            absdiff = imgroot + '.absdiff.im'
+            absdiff = project + '.absdiff.im'
             ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
-            fidelityim = imgroot + '.fidelity.im'
+            fidelityim = project + '.fidelity.im'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
             ia.done()
 
-            msg("fidelity image calculated")
+            msg("fidelity image calculated",origin="analysis")
 
             # clean up moment zero maps if we don't need them anymore
-            if nchan==1:
-                os.system("rm -rf "+outflat) 
+#            if nchan==1:
+#                os.system("rm -rf "+outflat) 
 
 
 
@@ -764,7 +1041,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             else:
                 pl.subplot(222)
         if psfmode != "none":
-            sim_min,sim_max,sim_rms = statim(image+".image",plot=display)
+            sim_min,sim_max,sim_rms = statim(outflat,plot=display)
 
         # plot model image if exists
         if os.path.exists(modelimage) and display==True:
@@ -782,8 +1059,8 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
                 pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
                 # XXX change this to use tb.open(ms/POINTINGS)/direction
                 # and them make it a helper function
-                for i in range(off.shape[1]):
-                    pl.plot(pl.cos(tt)*pb/2+off[0,i]*3600,pl.sin(tt)*pb/2+off[1,i]*3600,'w')
+                for i in range(offsets.shape[1]):
+                    pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,'w')
                 pl.xlim([xlim,-xlim])
                 pl.ylim([-ylim,ylim])
 
@@ -791,9 +1068,9 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)
-                statim(imgroot+".diff.im",plot=display)
+                statim(project+".diff.im",plot=display)
                 if display: pl.subplot(234)
-                fidel_min, fidel_max, fidel_rms = statim(imgroot+".fidelity.im",plot=display)
+                fidel_min, fidel_max, fidel_rms = statim(project+".fidelity.im",plot=display)
 
         if display:
             tb.open(mstoimage)
@@ -855,13 +1132,13 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
         
         # if not displaying still print stats:
         if psfmode != "none":
-            msg('Simulation rms: '+str(sim_rms))
-            msg('Simulation max: '+str(sim_max))
+            msg('Simulation rms: '+str(sim_rms),origin="analysis")
+            msg('Simulation max: '+str(sim_max),origin="analysis")
         
         if display == True or fidelity == True:
-            msg('Model rms: '+str(model_rms))
-            msg('Model max: '+str(model_max))
-            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']))
+            msg('Model rms: '+str(model_rms),origin="analysis")
+            msg('Model max: '+str(model_max),origin="analysis")
+            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 
 
@@ -869,7 +1146,7 @@ def simdata(modelimage=None, modifymodel=None, refdirection=None, refpixel=None,
 
 
     except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,color="red")
+        msg("task_simdata -- TypeError: %s" % e,color="31")
         return
     except ValueError, e:
         print "task_simdata -- OptionError: ", e

@@ -38,6 +38,7 @@ namespace casa {
 
 //# Forward declarations
 class PlotMS;
+class PlotMSPages;
 
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
@@ -61,11 +62,15 @@ public:
     // unique.
     virtual String name() const = 0;
     
-    // Returns the number of rows/columns that this plot requires.
-    // <group>
-    virtual unsigned int layoutNumRows() const = 0;
-    virtual unsigned int layoutNumCols() const = 0;
-    // </group>
+    // Returns the total number of canvases required by this plot.
+    virtual unsigned int layoutNumCanvases() const = 0;
+    
+    // Returns the number of pages required by this plot.
+    virtual unsigned int layoutNumPages() const = 0;
+    
+    // Generates canvases that this plot will be using, with the given
+    // PlotMSPages object, and returns them.
+    virtual vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages) = 0;
     
     // Returns a reference to the plot's parameters.
     // <group>
@@ -76,9 +81,8 @@ public:
     
     // IMPLEMENTED METHODS //
     
-    // Returns the number of canvases that this plot requires.  Default value
-    // is layoutNumRows() * layoutNumCols().
-    virtual unsigned int layoutNumCanvases() const;
+    // Returns the canvases that have been assigned to this plot.
+    virtual vector<PlotCanvasPtr> canvases() const;
     
     // Initializes the plot with the given canvases.  Initializes any internal
     // plot objects via the protected initializePlot() method, then assigns
@@ -87,9 +91,6 @@ public:
     // Drawing is held before these operations, and then released afterwards.
     // Returns true if all operations succeeded; false if at least one failed.
     virtual bool initializePlot(const vector<PlotCanvasPtr>& canvases);
-    
-    // Returns the canvases that have been assigned to this plot.
-    virtual vector<PlotCanvasPtr> canvases() const;
     
     // Attaches/Detaches internal plot objects to their assigned canvases.
     // <group>
@@ -101,6 +102,14 @@ public:
     // <group>
     virtual PlotMSData& data();
     virtual const PlotMSData& data() const;
+    // </group>
+    
+    // Gets the plot's MS and selected MS sources.
+    // <group>
+    virtual MeasurementSet& ms();
+    virtual const MeasurementSet& ms() const;
+    virtual MeasurementSet& selectedMS();
+    virtual const MeasurementSet& selectedMS() const;
     // </group>
     
     // Gets the plot's VisSet source.  WARNING: could be null if MS hasn't been
@@ -118,9 +127,17 @@ public:
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag, bool redrawRequired);
     
+    // Calls the dataChanged() method on the MaskedScatterPlots.  This WILL
+    // cause a redraw of the affected canvases.
+    virtual void plotDataChanged();
+    
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
     virtual bool exportToFormat(const PlotExportFormat& format);
+    
+    // This method should be called when the given canvas (which was owned by
+    // this plot) was disowned.
+    virtual void canvasWasDisowned(PlotCanvasPtr canvas);
     
 protected:
     // ABSTRACT METHODS //
@@ -168,9 +185,9 @@ protected:
     // the MS, selected MS, and VisSet with the current parameters.
     virtual bool updateMS();    
     
-    // Returns true if drawing is currently being held on at least one plot
-    // canvas, false otherwise.
-    virtual bool drawingHeld();
+    // Returns true if drawing is currently being held on all plot canvases,
+    // false otherwise.
+    virtual bool allDrawingHeld();
     
     // Holds drawing on all plot canvases.
     virtual void holdDrawing();
@@ -219,7 +236,7 @@ protected:
     
     // Flags for threaded cache loading.
     bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_,
-         itsTCLlogNumPoints_;
+         itsTCLlogNumPoints_, itsTCLplotDataChanged_;
     
 private:
     // Disable copy constructor and operator for now.

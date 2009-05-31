@@ -6,8 +6,14 @@
     <x>0</x>
     <y>0</y>
     <width>310</width>
-    <height>50</height>
+    <height>58</height>
    </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Maximum" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle" >
    <string>Plot Line Widget</string>
@@ -36,7 +42,7 @@
      <widget class="QWidget" name="cPage" >
       <layout class="QHBoxLayout" >
        <property name="spacing" >
-        <number>3</number>
+        <number>0</number>
        </property>
        <property name="leftMargin" >
         <number>0</number>
@@ -51,21 +57,23 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QSpinBox" name="cWidth" >
-         <property name="maximum" >
-          <number>99</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="cWidthLabel" >
-         <property name="text" >
-          <string>px</string>
+        <widget class="QLineEdit" name="cWidth" >
+         <property name="maximumSize" >
+          <size>
+           <width>25</width>
+           <height>16777215</height>
+          </size>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QFrame" name="cColorFrame" >
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="frameShape" >
           <enum>QFrame::NoFrame</enum>
          </property>
@@ -76,6 +84,18 @@
        </item>
        <item>
         <widget class="QComboBox" name="cStyle" >
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize" >
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <item>
           <property name="text" >
            <string>solid</string>
@@ -83,17 +103,17 @@
          </item>
          <item>
           <property name="text" >
-           <string>dashed</string>
+           <string>dash</string>
           </property>
          </item>
          <item>
           <property name="text" >
-           <string>dotted</string>
+           <string>dot</string>
           </property>
          </item>
          <item>
           <property name="text" >
-           <string>no line</string>
+           <string>none</string>
           </property>
          </item>
         </widget>

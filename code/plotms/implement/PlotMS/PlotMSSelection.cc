@@ -42,8 +42,10 @@ String PlotMSSelection::defaultValue(Field f) { return ""; }
 // Non-Static //
 
 PlotMSSelection::PlotMSSelection() {
-    initDefaults();
-}
+    initDefaults(); }
+
+PlotMSSelection::PlotMSSelection(const PlotMSSelection& copy) {
+    operator=(copy); }
 
 PlotMSSelection::~PlotMSSelection() { }
 
@@ -70,18 +72,26 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     // Set the selected MeasurementSet to be the same initially as the input
     // MeasurementSet
     selMS = ms;
+
+    if (corr()!="") {
+      cout << "WARNING: Sorry, Correlation selection is not yet working." << endl;
+      cout << "         Proceding with no correlation selection." << endl;
+    }
+
     mssSetData(ms, selMS, "", timerange(), antenna(), field(), spw(),
-               uvrange(), msselect(), corr(), scan(), array());
+               uvrange(), msselect(), "", scan(), array());
 
     MSSelection mss;
     mss.setSpwExpr(spw());
     chansel=mss.getChanList(&selMS);
 }
 
+
 const String& PlotMSSelection::getValue(Field f) const {
     return const_cast<map<Field,String>&>(itsValues_)[f]; }
 void PlotMSSelection::setValue(Field f, const String& value) {
     itsValues_[f] = value; }
+
 
 bool PlotMSSelection::operator==(const PlotMSSelection& other) const {    
     vector<Field> f = fields();
@@ -90,6 +100,12 @@ bool PlotMSSelection::operator==(const PlotMSSelection& other) const {
     
     return true;
 }
+
+PlotMSSelection& PlotMSSelection::operator=(const PlotMSSelection& copy) {
+    itsValues_ = copy.itsValues_;    
+    return *this;
+}
+
 
 void PlotMSSelection::initDefaults() {
     vector<Field> f = fields();

@@ -27,14 +27,16 @@
 <returns type="void"/>
 
 <example>
-        Help for hanningsmooth task
 
-        This function Hanning smooths the frequency channels with
-        a weighted running average of smoothedData[i] =
-        0.25*correctedData[i-1] + 0.50*correctedData[i] +
-        0.25*correctedData[i-1].  The first and last channels are flagged.
-        Inclusion of a flagged value in an average causes that data value
-        to be flagged.
+        The hanningsmooth task smooths the frequency channels with
+        a weighted running average of 
+
+            SData[i] = 0.25 * OData[i-1] + 0.50 * OData[i] + 0.25 * OData[i-1]
+
+        where SData is the smoothed data and OData is the original data.
+
+        The first and last channels are flagged. Inclusion of a flagged value in
+        an average causes that data value to be flagged.
 
         Keyword arguments:
         vis -- Name of input visibility file (MS)

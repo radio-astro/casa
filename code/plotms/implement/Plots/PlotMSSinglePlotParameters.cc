@@ -79,6 +79,12 @@ bool PlotMSSinglePlotParameters::equals(const PlotMSWatchedParameters& other,
         if(itsXAxis_ != o->itsXAxis_ || itsYAxis_ != o->itsYAxis_ ||
            itsXCanvasAxis_ != o->itsXCanvasAxis_ ||
            itsYCanvasAxis_ != o->itsYCanvasAxis_ ||
+           itsXReferenceValueSet_ != o->itsXReferenceValueSet_ ||
+           (itsXReferenceValueSet_ &&
+            itsXReferenceValue_ != o->itsXReferenceValue_) ||
+           itsYReferenceValueSet_ != o->itsYReferenceValueSet_ ||
+           (itsYReferenceValueSet_ &&
+            itsYReferenceValue_ != o->itsYReferenceValue_) ||
            itsXRangeSet_ != o->itsXRangeSet_ ||
            itsYRangeSet_ != o->itsYRangeSet_ ||
            (itsXRangeSet_ && itsXRange_ != o->itsXRange_) ||
@@ -91,7 +97,19 @@ bool PlotMSSinglePlotParameters::equals(const PlotMSWatchedParameters& other,
                  itsCanvasYAxisLabelFormat_!= o->itsCanvasYAxisLabelFormat_) ||
            itsShowLegend_ != o->itsShowLegend_ ||
            (itsShowLegend_ && itsLegendPos_ != o->itsLegendPos_) ||
-           itsCanvasTitleFormat_ != o->itsCanvasTitleFormat_) return false;
+           itsCanvasTitleFormat_ != o->itsCanvasTitleFormat_ ||
+           itsCanvasGridMajor_ != o->itsCanvasGridMajor_ ||
+           itsCanvasGridMinor_ != o->itsCanvasGridMinor_ ||
+           (itsCanvasGridMajor_ &&
+           ((itsCanvasGridMajorLine_.null()
+           != o->itsCanvasGridMajorLine_.null()) ||
+           (!itsCanvasGridMajorLine_.null() && *itsCanvasGridMajorLine_
+           != *o->itsCanvasGridMajorLine_))) ||
+           (itsCanvasGridMinor_ &&
+           ((itsCanvasGridMinorLine_.null()
+           != o->itsCanvasGridMinorLine_.null()) ||
+           (!itsCanvasGridMinorLine_.null() && *itsCanvasGridMinorLine_
+           != *o->itsCanvasGridMinorLine_)))) return false;
     }
     
     // Check plot
@@ -149,6 +167,28 @@ void PlotMSSinglePlotParameters::setCanvasAxes(PlotAxis xAxis, PlotAxis yAxis){
     }
 }
 
+bool PlotMSSinglePlotParameters::xReferenceValueSet() const {
+	return itsXReferenceValueSet_; }
+bool PlotMSSinglePlotParameters::yReferenceValueSet() const {
+	return itsYReferenceValueSet_; }
+double PlotMSSinglePlotParameters::xReferenceValue() const {
+	return itsXReferenceValue_; }
+double PlotMSSinglePlotParameters::yReferenceValue() const {
+	return itsYReferenceValue_; }
+void PlotMSSinglePlotParameters::setReferenceValues(bool xSet, double xValue,
+		bool ySet,double yValue) {
+	if(xSet != itsXReferenceValueSet_ || ySet != itsYReferenceValueSet_ ||
+	   (xSet && xValue != itsXReferenceValue_) ||
+	   (ySet && yValue != itsYReferenceValue_)) {
+		itsXReferenceValueSet_ = xSet;
+		itsYReferenceValueSet_ = ySet;
+		itsXReferenceValue_ = xValue;
+		itsYReferenceValue_ = yValue;
+		
+		if(updateFlag_) updateFlag(CANVAS);
+	}
+}
+
 bool PlotMSSinglePlotParameters::xRangeSet() const { return itsXRangeSet_; }
 bool PlotMSSinglePlotParameters::yRangeSet() const { return itsYRangeSet_; }
 pair<double, double> PlotMSSinglePlotParameters::xRange() const {
@@ -165,7 +205,7 @@ void PlotMSSinglePlotParameters::setRanges(bool xSet,
         itsYRangeSet_ = ySet;
         itsYRange_ = yRange;
         
-        if(updateFlag_) updateFlag(CANVAS);
+        if(updateFlag_) updateFlag(CANVAS, true, false);
     }
 }
 
@@ -181,10 +221,10 @@ void PlotMSSinglePlotParameters::setCanvasAxesLabelFormats(
         const PlotMSLabelFormat& x, const PlotMSLabelFormat& y) {
     if(itsCanvasXAxisLabelFormat_ != x || itsCanvasYAxisLabelFormat_ != y) {
         // Only redraw if the label is shown/hidden.
-        bool redraw = (x.getLabel(itsXAxis_).empty() !=
-            itsCanvasXAxisLabelFormat_.getLabel(itsXAxis_).empty()) ||
-            (y.getLabel(itsYAxis_).empty() !=
-            itsCanvasYAxisLabelFormat_.getLabel(itsYAxis_).empty());           
+        bool redraw = (x.getLabel(*this, true).empty() !=
+            itsCanvasXAxisLabelFormat_.getLabel(*this, true).empty()) ||
+            (y.getLabel(*this, false).empty() !=
+            itsCanvasYAxisLabelFormat_.getLabel(*this, false).empty());
         
         itsCanvasXAxisLabelFormat_ = x;
         itsCanvasYAxisLabelFormat_ = y;
@@ -194,9 +234,9 @@ void PlotMSSinglePlotParameters::setCanvasAxesLabelFormats(
 }
 
 String PlotMSSinglePlotParameters::canvasXAxisLabel() const {
-    return itsCanvasXAxisLabelFormat_.getLabel(itsXAxis_); }
+    return itsCanvasXAxisLabelFormat_.getLabel(*this, true); }
 String PlotMSSinglePlotParameters::canvasYAxisLabel() const {
-    return itsCanvasYAxisLabelFormat_.getLabel(itsYAxis_); }
+    return itsCanvasYAxisLabelFormat_.getLabel(*this, false); }
 
 
 bool PlotMSSinglePlotParameters::showXAxis() const { return itsShowXAxis_; }
@@ -241,8 +281,8 @@ void PlotMSSinglePlotParameters::setCanvasTitleFormat(
         const PlotMSLabelFormat& format) {
     if(itsCanvasTitleFormat_ != format) {
         // Only redraw if the title is shown/hidden.
-        bool redraw = format.getLabel(itsXAxis_, itsYAxis_).empty() !=
-            itsCanvasTitleFormat_.getLabel(itsXAxis_, itsYAxis_).empty();
+        bool redraw = format.getLabel(*this).empty() !=
+            itsCanvasTitleFormat_.getLabel(*this).empty();
         
         itsCanvasTitleFormat_ = format;
         
@@ -251,7 +291,45 @@ void PlotMSSinglePlotParameters::setCanvasTitleFormat(
 }
 
 String PlotMSSinglePlotParameters::canvasTitle() const {
-    return itsCanvasTitleFormat_.getLabel(itsXAxis_, itsYAxis_); }
+    return itsCanvasTitleFormat_.getLabel(*this); }
+
+bool PlotMSSinglePlotParameters::showGridMajor() const {
+    return itsCanvasGridMajor_; }
+bool PlotMSSinglePlotParameters::showGridMinor() const {
+    return itsCanvasGridMinor_; }
+
+void PlotMSSinglePlotParameters::setShowGrid(bool major, bool minor) {
+    if(itsCanvasGridMajor_ != major || itsCanvasGridMinor_ != minor) {
+        itsCanvasGridMajor_ = major;
+        itsCanvasGridMinor_ = minor;
+        if(updateFlag_) updateFlag(CANVAS, true, true);
+    }
+}
+
+PlotLinePtr PlotMSSinglePlotParameters::gridMajorLine() const {
+    return itsCanvasGridMajorLine_; }
+PlotLinePtr PlotMSSinglePlotParameters::gridMinorLine() const {
+    return itsCanvasGridMinorLine_; }
+
+void PlotMSSinglePlotParameters::setGridLines(PlotLinePtr major,
+        PlotLinePtr minor) {
+    // first check for different nulls
+    bool update = itsCanvasGridMajorLine_.null() != major.null() ||
+                  itsCanvasGridMinorLine_.null() != minor.null();
+    
+    // if they're all the same, check equality if not null
+    if(!update && !itsCanvasGridMajorLine_.null())
+        update = *itsCanvasGridMajorLine_ != *major;
+    if(!update && !itsCanvasGridMinorLine_.null())
+        update = *itsCanvasGridMinorLine_!= *minor;
+    
+    if(update) {
+        itsCanvasGridMajorLine_ = major;
+        itsCanvasGridMinorLine_ = minor;
+        
+        if(updateFlag_) updateFlag(CANVAS, true, true);
+    }
+}
 
 
 PlotSymbolPtr PlotMSSinglePlotParameters::symbol() const { return itsSymbol_; }
@@ -291,7 +369,7 @@ void PlotMSSinglePlotParameters::setPlotTitleFormat(
 }
 
 String PlotMSSinglePlotParameters::plotTitle() const {
-    return itsPlotTitleFormat_.getLabel(itsXAxis_, itsYAxis_); }
+    return itsPlotTitleFormat_.getLabel(*this); }
 
 
 PlotMSSinglePlotParameters& PlotMSSinglePlotParameters::operator=(
@@ -303,12 +381,16 @@ PlotMSSinglePlotParameters& PlotMSSinglePlotParameters::operator=(
                           copy.yDataColumn());
     
     setCanvasAxes(copy.canvasXAxis(), copy.canvasYAxis());
+    setReferenceValues(copy.xReferenceValueSet(), copy.xReferenceValue(),
+    		           copy.yReferenceValueSet(), copy.yReferenceValue());
     setRanges(copy.xRangeSet(), copy.xRange(), copy.yRangeSet(),copy.yRange());
     setCanvasAxesLabelFormats(copy.canvasXAxisLabelFormat(),
                               copy.canvasYAxisLabelFormat());
     setShowAxes(copy.showXAxis(), copy.showYAxis());
     setLegend(copy.showLegend(), copy.legendPosition());
     setCanvasTitleFormat(copy.canvasTitleFormat());
+    setShowGrid(copy.showGridMajor(), copy.showGridMinor());
+    setGridLines(copy.gridMajorLine(), copy.gridMinorLine());
 
     setSymbols(copy.symbol(), copy.maskedSymbol());
     setPlotTitleFormat(copy.plotTitleFormat());
@@ -326,6 +408,8 @@ void PlotMSSinglePlotParameters::setDefaults(PlotFactoryPtr factory) {
     
     itsXCanvasAxis_ = PMS::DEFAULT_CANVAS_XAXIS;
     itsYCanvasAxis_ = PMS::DEFAULT_CANVAS_YAXIS;
+    itsXReferenceValueSet_ = itsYReferenceValueSet_ = false;
+    itsXReferenceValue_ = itsYReferenceValue_ = 0;
     itsXRangeSet_ = itsYRangeSet_ = false;
     itsXRange_ = itsYRange_ = pair<double, double>(0, 0);
     
@@ -335,6 +419,9 @@ void PlotMSSinglePlotParameters::setDefaults(PlotFactoryPtr factory) {
     itsShowLegend_ = PMS::DEFAULT_SHOWLEGEND;
     itsLegendPos_ = PMS::DEFAULT_LEGENDPOSITION;
     itsCanvasTitleFormat_ = itsPlotTitleFormat_ = PMS::DEFAULT_TITLE_FORMAT;
+    itsCanvasGridMajor_ = itsCanvasGridMinor_ = PMS::DEFAULT_SHOW_GRID;
+    itsCanvasGridMajorLine_ = PMS::DEFAULT_GRID_LINE(factory);
+    itsCanvasGridMinorLine_ = PMS::DEFAULT_GRID_LINE(factory);
     itsSymbol_ = PMS::DEFAULT_SYMBOL(factory);
     itsMaskedSymbol_ = PMS::DEFAULT_MASKED_SYMBOL(factory);
     

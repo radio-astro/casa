@@ -37,19 +37,52 @@ namespace casa {
 // PLOTRANGEWIDGET DEFINITIONS //
 /////////////////////////////////
 
-PlotRangeWidget::PlotRangeWidget(QWidget* parent) : QtEditingWidget(parent) {
+PlotRangeWidget::PlotRangeWidget(bool customOnTwoLines, QWidget* parent) :
+		QtEditingWidget(parent) {
     setupUi(this);
     
-    doubleFrom->setMinimum(numeric_limits<double>::min());
-    doubleFrom->setMaximum(numeric_limits<double>::max());
-    doubleTo->setMinimum(numeric_limits<double>::min());
-    doubleTo->setMaximum(numeric_limits<double>::max());
+    if(customOnTwoLines) {
+    	// double page
+    	QVBoxLayout* vl = new QVBoxLayout();
+    	vl->setContentsMargins(0, 0, 0, 0);
+    	vl->setSpacing(3);
+    	
+    	QHBoxLayout* hl = new QHBoxLayout();
+    	hl->setContentsMargins(0, 0, 0, 0);
+    	hl->setSpacing(3);
+    	hl->addWidget(doubleFrom);
+    	hl->addWidget(doubleLabel);
+    	vl->addLayout(hl);
+    	vl->addWidget(doubleTo);
+    	delete doublePage->layout();
+    	doublePage->setLayout(vl);
+    	
+    	// time page
+    	vl = new QVBoxLayout();
+    	vl->setContentsMargins(0, 0, 0, 0);
+    	vl->setSpacing(3);
+    	
+    	hl = new QHBoxLayout();
+    	hl->setContentsMargins(0, 0, 0, 0);
+    	hl->setSpacing(3);
+    	hl->addWidget(timeFrom);
+    	hl->addWidget(timeLabel);
+    	vl->addLayout(hl);
+    	vl->addWidget(timeTo);
+    	delete timePage->layout();
+    	timePage->setLayout(vl);
+    }
+    
+    doubleFrom->setValidator(new QDoubleValidator(doubleFrom));
+    doubleTo->setValidator(new QDoubleValidator(doubleTo));
     
     setRange(false, false, 0, 0);
     
     connect(automatic, SIGNAL(toggled(bool)), SLOT(rangeChanged()));
-    connect(doubleFrom, SIGNAL(valueChanged(double)), SLOT(rangeChanged()));
-    connect(doubleTo, SIGNAL(valueChanged(double)), SLOT(rangeChanged()));
+    connect(doubleFrom, SIGNAL(textChanged(const QString&)),
+    		SLOT(rangeChanged()));
+    connect(doubleTo, SIGNAL(textChanged(const QString&)),
+    		SLOT(rangeChanged()));
     connect(timeFrom, SIGNAL(dateTimeChanged(const QDateTime&)),
             SLOT(rangeChanged()));
     connect(timeTo, SIGNAL(dateTimeChanged(const QDateTime&)),
@@ -79,7 +112,8 @@ pair<double, double> PlotRangeWidget::getRange() const {
         return pair<double, double>(from, to);
         
     } else
-        return pair<double, double>(doubleFrom->value(), doubleTo->value());
+        return pair<double, double>(doubleFrom->text().toDouble(),
+        		                    doubleTo->text().toDouble());
 }
 
 void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
@@ -109,8 +143,8 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
                           (int)((modf(sec, &temp) * 1000) + 0.5)));
         
     } else {
-        doubleFrom->setValue(from);
-        doubleTo->setValue(to);
+        doubleFrom->setText(QString::number(from));
+        doubleTo->setText(QString::number(to));
     }
     
     isCustom_ = isCustom;

@@ -68,7 +68,7 @@ IDL::IDL(Int options)
   }
   IDL_ToutPush(idl_output);
 #else
-  os << LogIO::SEVERE << "IDL processing is not available in this installation of AIPS++" << LogIO::EXCEPTION;
+  os << LogIO::SEVERE << "IDL processing is not available in this CASA installation." << LogIO::EXCEPTION;
 #endif
 }
 

@@ -109,6 +109,19 @@ public:
     void setCanvasAxes(PlotAxis xAxis, PlotAxis yAxis);
     // </group>
     
+    // Gets/Sets axes reference values.
+    // <group>
+    bool xReferenceValueSet() const;
+    bool yReferenceValueSet() const;
+    double xReferenceValue() const;
+    double yReferenceValue() const;
+    void setXReferenceValue(bool set, double value = 0) {
+    	setReferenceValues(set,value,yReferenceValueSet(),yReferenceValue()); }
+    void setYReferenceValue(bool set, double value = 0) {
+    	setReferenceValues(xReferenceValueSet(),xReferenceValue(),set,value); }
+    void setReferenceValues(bool xSet, double xValue, bool ySet,double yValue);
+    // </group>
+    
     // Gets/Sets axes ranges.
     // <group>
     bool xRangeSet() const;
@@ -181,6 +194,20 @@ public:
     
     // Gets the canvas's title using the set format and axes.
     String canvasTitle() const;
+    
+    // Gets/Sets whether grid major/minor lines are shown.
+    // <group>
+    bool showGridMajor() const;
+    bool showGridMinor() const;
+    void setShowGrid(bool major, bool minor);
+    // </group>
+    
+    // Gets/Sets grid major/minor lines.
+    // <group>
+    PlotLinePtr gridMajorLine() const;
+    PlotLinePtr gridMinorLine() const;
+    void setGridLines(PlotLinePtr major, PlotLinePtr minor);
+    // </group>
 
     
     // Gets/Sets the symbol for normal and masked points.
@@ -221,6 +248,12 @@ private:
     // Canvas axes.
     PlotAxis itsXCanvasAxis_, itsYCanvasAxis_;
     
+    // Axes reference values.
+    // <group>
+    bool itsXReferenceValueSet_, itsYReferenceValueSet_;
+    double itsXReferenceValue_, itsYReferenceValue_;
+    // </group>
+    
     // Axes ranges.
     // <group>
     bool itsXRangeSet_, itsYRangeSet_;
@@ -241,6 +274,12 @@ private:
     
     // Canvas title format.
     PlotMSLabelFormat itsCanvasTitleFormat_;
+    
+    // Show grid major/minor lines.
+    bool itsCanvasGridMajor_, itsCanvasGridMinor_;
+    
+    // Grid major/minor lines.
+    PlotLinePtr itsCanvasGridMajorLine_, itsCanvasGridMinorLine_;
     
     // Normal and masked symbols.
     PlotSymbolPtr itsSymbol_, itsMaskedSymbol_;

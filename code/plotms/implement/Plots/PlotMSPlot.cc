@@ -50,16 +50,13 @@ PlotMSPlot::~PlotMSPlot() {
 
 // Public Methods //
 
-unsigned int PlotMSPlot::layoutNumCanvases() const {
-    return layoutNumRows() * layoutNumCols(); }
-
 vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
 
 bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
     if(canvases.size() != layoutNumCanvases()) return false;
     itsCanvases_ = canvases;
     
-    bool hold = drawingHeld();
+    bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
     // Initialize plot objects and assign canvases.
@@ -96,6 +93,10 @@ const PlotMSData& PlotMSPlot::data() const { return itsData_; }
 
 VisSet* PlotMSPlot::visSet() { return itsVisSet_; }
 const VisSet* PlotMSPlot::visSet() const { return itsVisSet_; }
+MeasurementSet& PlotMSPlot::ms() { return itsMS_; }
+const MeasurementSet& PlotMSPlot::ms() const { return itsMS_; }
+MeasurementSet& PlotMSPlot::selectedMS() { return itsSelectedMS_; }
+const MeasurementSet& PlotMSPlot::selectedMS() const { return itsSelectedMS_; }
 
 PlotMS* PlotMSPlot::parent() { return itsParent_; }
 
@@ -118,10 +119,10 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     
     if(!msUpdated && !cacheUpdated && !canvasUpdated && !plotUpdated) return;
     
-    bool hold = drawingHeld();
+    bool hold = allDrawingHeld();
     if(!hold && redrawRequired) holdDrawing();
     
-    itsTCLendLog_ = itsTCLlogNumPoints_ = false;
+    itsTCLendLog_ = itsTCLlogNumPoints_ = itsTCLplotDataChanged_ = false;
     itsTCLupdateCanvas_ = msUpdated || canvasUpdated || !params.isSet();
     itsTCLupdatePlot_ = plotUpdated;
     itsTCLrelease_ = !hold && redrawRequired;
@@ -129,11 +130,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Update MS/cache as needed.
     bool msSuccess = true, callCacheLoaded = true;
     if(params.isSet()) {
-        if(msUpdated || cacheUpdated) {
-            // Let the plot(s) know that the data will be updated.
-            for(unsigned int i = 0; i < itsPlots_.size(); i++)
-                itsPlots_[i]->dataChanged();
-            
+        if(msUpdated || cacheUpdated) {            
             itsTCLlogNumPoints_ = true;
             
             startLogCache();
@@ -141,6 +138,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
             
             if(msUpdated) msSuccess = updateMS();
             itsTCLupdateCanvas_ |= !msSuccess;
+            itsTCLplotDataChanged_ |= msSuccess;
             
             // Only update cache if MS opening succeeded.
             if(msSuccess) {
@@ -153,6 +151,16 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Do the rest immediately if 1) cache not updated, or 2) cache not
     // threaded.  Otherwise wait for the thread to call cacheLoaded_().
     if(callCacheLoaded) cacheLoaded_(false);
+}
+
+void PlotMSPlot::plotDataChanged() {
+    bool hold = allDrawingHeld();
+    if(!hold) holdDrawing();
+    
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        itsPlots_[i]->dataChanged();
+    
+    if(!hold) releaseDrawing();
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
@@ -170,6 +178,13 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
         
         return success;        
     }
+}
+
+void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {
+    if(canvas.null()) return;
+
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        canvas->removePlotItem(itsPlots_[i]);
 }
 
 
@@ -214,7 +229,7 @@ bool PlotMSPlot::updateMS() {
         columns[4]=MS::TIME;
         
         // Open VisSet.
-        itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),
+        itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),False,
                                 interval);
         itsVisSet_->selectChannel(chansel);
         return true;
@@ -228,10 +243,10 @@ bool PlotMSPlot::updateMS() {
     }
 }
 
-bool PlotMSPlot::drawingHeld() {
+bool PlotMSPlot::allDrawingHeld() {
     for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        if(itsCanvases_[i]->drawingIsHeld()) return true;
-    return false;
+        if(!itsCanvases_[i]->drawingIsHeld()) return false;
+    return true;
 }
 
 void PlotMSPlot::holdDrawing() {
@@ -276,20 +291,26 @@ void PlotMSPlot::logNumPoints() {
 }
 
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
+    // Let the plot(s) know that the data has been changed as needed, unless
+    // the thread was canceled.
+    if(itsTCLplotDataChanged_ && !wasCanceled)
+        for(unsigned int i = 0; i < itsPlots_.size(); i++)
+            itsPlots_[i]->dataChanged();
+    
     // End log as needed.
     if(itsTCLendLog_) endLogCache();
     
-    // Update canvas as needed.
-    if(itsTCLupdateCanvas_) updateCanvas();
+    // Update canvas as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLupdateCanvas_) updateCanvas();
     
-    // Update plot as needed.
-    if(itsTCLupdatePlot_) updatePlot();
+    // Update plot as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLupdatePlot_) updatePlot();
     
     // Release drawing if needed.
     if(itsTCLrelease_) releaseDrawing();
     
-    // Log number of points plotted, if needed.
-    if(itsTCLlogNumPoints_) logNumPoints();
+    // Log number of points plotted as needed, unless the thread was canceled.
+    if(!wasCanceled && itsTCLlogNumPoints_) logNumPoints();
 }
 
 }

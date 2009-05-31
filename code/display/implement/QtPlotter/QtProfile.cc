@@ -42,6 +42,10 @@
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/QtProfile.qo.h>
 
+#include <display/QtPlotter/QtMWCTools.qo.h>
+
+#include <display/DisplayEvents/MWCPTRegion.h>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -73,8 +77,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
         :QWidget(parent), //MWCCrosshairTool(),
          pc(0), te(0), analysis(0), 
          coordinate("world"), coordinateType("velocity"),
-         fileName(name), position(""), xpos(""), ypos(""),
-         cube(0)
+         fileName(name), position(""), yUnit(""), xpos(""), ypos(""),
+	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()) 
 {
 
     initPlotterResource();
@@ -226,7 +230,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
                    "'crosshair' or 'rectangle' or 'polygon'\n"
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
-    pc->setYLabel("Flux Density (mJy)", 10, 0.5, "Helvetica [Cronyx]");
+    
+    yUnit = QString(img->units().getName().chars());
+
+    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
     pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
     pc->setAutoScale(autoScale->checkState());
        
@@ -392,7 +399,7 @@ void QtProfile::writeText()
     ts << "#title: Image profile - " << fileName << " " << position << "\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
-    ts << "#yLabel: " << "Flux Density (mJy)\n";
+    ts << "#yLabel: " << "(" << yUnit << ")\n";
     
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
@@ -428,19 +435,15 @@ void QtProfile::updateZoomer()
 }
  
 void QtProfile::changeCoordinate(const QString &text) {
-    coordinate = String(text.toStdString());
-    //Double x1, y1;
-    //getProfileRange(x1, y1, coordinate.chars());
-    //qDebug() << "coordinate:" << QString(coordinate.chars()) 
-    //           << "profile Range:" << x1 << y1;
-    xpos = "";
-    ypos = "";
-    position = QString("");
-    te->setText(position);
-    pc->clearCurve(0);
-    //cout << "changeCoordinate: coordinate=" 
-    //       << coordinate << endl;
-    emit coordinateChange(coordinate);
+
+  coordinate = String(text.toStdString());
+
+  //Double x1, y1;
+  //getProfileRange(x1, y1, coordinate.chars());
+  //qDebug() << "coordinate:" << QString(coordinate.chars()) 
+  //           << "profile Range:" << x1 << y1;
+
+  emit coordinateChange(coordinate);
 }
 
 void QtProfile::changeCoordinateType(const QString &text) {
@@ -467,42 +470,17 @@ void QtProfile::changeCoordinateType(const QString &text) {
     leftButton->setVisible(0);
     rightButton->setVisible(0);
 
-}
-/*
-void QtProfile::crosshairReady(const String& evtype) {
-   //qDebug() << "profile: " << evtype.c_str() << x << y;	
-   pc->setTitle("");
-   pc->setWelcome("");
-   if (!analysis) return;
-   //qDebug() << "analysis != 0";
-   Double x, y;
-   if (coordinate == "world") {
-      getWorld(x, y);	
-      position = getRaDec(x, y);
-   }
-   else {
-      getLin(x, y);	
-      position = QString("[%1, %2]").arg(x).arg(y);
-   }
- 
-   xpos = QString::number(x);
-   ypos = QString::number(y);
+    if(lastX.nelements() > 0){ // update display with new coord type
+      wcChanged(coordinate, lastX, lastY);
+    }
 
-   te->setText(position);
-   Vector<Double> xy(2);
-   xy[0]=x; xy[1]=y;
-   Vector<Float> z_xval;
-   Vector<Float> z_yval;
-   //Get Profile Flux density v/s velocity
-   Bool ok = False;
-   ok=analysis->getFreqProfile(xy, z_xval, z_yval, coordinate, coordinateType);
-   //qDebug() << "ok" << ok;
-   pc->plotPolyLine(z_xval, z_yval);
 }
-*/
+
 void QtProfile::closeEvent (QCloseEvent* event) {
    //qDebug() << "closeEvent";
-   emit hideProfile();
+  lastX.resize(0);
+  lastY.resize(0);
+  emit hideProfile();
 }
 
 QString QtProfile::getRaDec(double x, double y) {
@@ -547,11 +525,15 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     analysis = new ImageAnalysis(img);
     setWindowTitle(QString("Image Profile - ").append(name));
 
-    pc->setYLabel("Flux Density (mJy)", 10, 0.5, "Helvetica [Cronyx]");
+    yUnit = QString(img->units().getName().chars());
+
+    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
     pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
        
     xpos = "";
     ypos = "";
+    lastX.resize(0);
+    lastY.resize(0);
     position = QString("");
     te->setText(position);
     pc->clearCurve(0);
@@ -607,7 +589,8 @@ void QtProfile::wcChanged(const String c,
     //xpos, ypos and position only used for display
     xpos = QString::number(xv[0]);
     ypos = QString::number(yv[0]);
-    //qDebug() << c.chars() << "xpos:" << xpos << "ypos:" << ypos;
+    //qDebug() << c.chars() << "xpos:" 
+    //           << xpos << "ypos:" << ypos;
 
     if (coordinate == "world") {
        position = getRaDec(xv[0], yv[0]);
@@ -626,6 +609,19 @@ void QtProfile::wcChanged(const String c,
                 coordinate, coordinateType);
     pc->plotPolyLine(z_xval, z_yval);
 
+    lastX.assign(xv);
+    lastY.assign(yv);
+
+    //cout << "ok=" << ok << endl;
+    //cout << "xv=" << xv << " yv=" << yv << endl;
+    //cout << "coordinate=" << coordinate 
+    //     << " coordinateType=" << coordinateType << endl;
+    
+    //cout << "z_xval=" << z_xval 
+    //     << " z_yval=" << z_yval << endl;
+    //QMessageBox::warning(this, "QtProfile",
+    //                "pauss to check the values\n");
+
 }
 
 void QtProfile::changeAxis(String xa, String ya, String za) {
@@ -635,6 +631,10 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
    if (xa.contains("Decl") && ya.contains("Right"))
        cb = -1;
    if (xa.contains("Right") && ya.contains("Decl"))
+       cb = 1;
+   if (xa.contains("atitu") && ya.contains("ongitu"))
+       cb = -1;
+   if (xa.contains("ongitu") && ya.contains("atitu"))
        cb = 1;
    if (!za.contains("Freq"))
        cb = 0;
@@ -661,3 +661,4 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
 }
 
 }
+

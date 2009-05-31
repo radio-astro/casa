@@ -14,6 +14,8 @@
 # group id from that of its parent. Secondly, this process must be terminated cleanly
 # (i.e., not SIGKILLed or SIGSTOPped) to ensure proper cleanup.
 
+# Distribution: END_USER_BINARY
+
 $#ARGV >= 1 or die "Usage: $0 TIMEOUT_IN_SECONDS command [args ...]";
 
 $ppid = getppid();

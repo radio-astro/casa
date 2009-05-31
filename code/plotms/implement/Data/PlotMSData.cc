@@ -69,6 +69,8 @@ bool PlotMSData::minsMaxes(double& xMin, double& xMax, double& yMin,
 }
 
 
+double PlotMSData::cacheReferenceTime() const { return itsCache_->refTime(); }
+
 bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
 
 void PlotMSData::clearCache() { itsCache_->clear(); }
@@ -86,9 +88,13 @@ void PlotMSData::loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
 void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
     itsCache_->setUpPlot(xAxis, yAxis); }
 
-PlotLogMessage* PlotMSData::locate(double xMin, double xMax, double yMin,
+PlotLogMessage* PlotMSData::locateRange(double xMin, double xMax, double yMin,
         double yMax) {
     return itsCache_->locateRange(xMin, xMax, yMin, yMax); }
+
+PlotLogMessage* PlotMSData::flagRange(const PlotMSFlagging& flagging,
+        double xMin, double xMax, double yMin, double yMax, bool flag) {
+    return itsCache_->flagRange(flagging, xMin, xMax, yMin, yMax, flag); }
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSData::loadedAxes() const {
     return itsCache_->loadedAxes(); }

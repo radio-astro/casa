@@ -1133,6 +1133,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 		    const ::casac::variant& distance)
 {
   Bool rstat(False);
+
   if(hasValidMS_p){
     try {
       
@@ -1183,6 +1184,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       casa::Quantity qstep;
       casa::Int startoo=-1;
       casa::Int stepoo=0;
+
       //qstart=casac::image::casaQuantityFromVar(start, *itsLog);
       //qstep=casac::image::casaQuantityFromVar(step, *itsLog);
       if(lamoda.contains(String("VEL"))){
@@ -1225,9 +1227,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
     } catch  (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
-    }
-    
-    
+    }    
   } else {
     *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open or selectvis" << LogIO::POST;
   }

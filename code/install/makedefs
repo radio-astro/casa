@@ -626,7 +626,7 @@ LINKdish        := dish tableplot graphics
 LINKsimulators  := simulators tableplot graphics 
 LINKsynthesis   := synthesis calibration graphics casaqt msvis tableplot flagging
 LINKplotms      :=  plotms casaqt synthesis calibration graphics msvis tableplot flagging 
-LINKxmlcasa     := xmlcasa nrao display casaqt synthesis calibration graphics msvis tableplot flagging 
+LINKxmlcasa     := xmlcasa nrao display casaqt synthesis calibration graphics msvis tableplot flagging plotms
 LINKgraphics    := graphics 
 LINKatmosphere  := atmosphere 
 

@@ -94,15 +94,13 @@ public slots:
     //virtual void crosshairReady(const String& evtype);
     virtual void closeEvent ( QCloseEvent * event ); 
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
+    void wcChanged(const String,
+                     const Vector<Double>, const Vector<Double>);
+    void changeAxis(String, String, String);
 
 signals:
     void hideProfile();
     void coordinateChange(const String&);
-
-public slots:
-    void wcChanged(const String,
-                     const Vector<Double>, const Vector<Double>);
-    void changeAxis(String, String, String);
 
 private:
 
@@ -131,10 +129,13 @@ private:
     String coordinateType;
     QString fileName;
     QString position;
+    QString yUnit;
 
     QString xpos;
     QString ypos;
     int cube;
+
+    Vector<Double> lastX, lastY;
 
     QString getRaDec(double x, double y);
 };

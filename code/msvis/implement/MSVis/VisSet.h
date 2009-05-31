@@ -124,6 +124,12 @@ public:
 	 const Matrix<Int>& chanSelection, Double timeInterval=0,
 	 Bool compress=False);
 
+  // Same as above, but provide scratch column option
+  VisSet(MeasurementSet& ms,const Block<Int>& columns, 
+	 const Matrix<Int>& chanSelection, 
+	 Bool addScratch,
+	 Double timeInterval=0,Bool compress=False);
+
   // This is a constructor for multiple MS...but everything is same as the one 
   // above
 
@@ -172,8 +178,12 @@ public:
   // call to VisIter origin optional:
   void selectChannel(Int nGroup,Int start, Int width, Int increment, 
 		     Int spectralWindow, Bool callOrigin);
+
   // Collective selection via MSSelection channel selection Matrix
   void selectChannel(const Matrix<Int>& chansel);
+
+  // Set nominal selection to ALL channels
+  void selectAllChans();
 
   // number of antennas
   Int numberAnt();

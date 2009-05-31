@@ -7,6 +7,8 @@
 #      - removes install and working directories
 #      - restarts test executor
 
+# Distribution: END_USER_BINARY
+
 $safe = 0;
 
 system("date -u");
@@ -96,6 +98,7 @@ if (! -e "$prefix/cksum" or
 }
 else {
     print "$prefix/$latest_release: same checksum as previous install\n";
+    sys_exe("rm -f $prefix/$latest_release");
     exit 0;
 }
 
@@ -142,7 +145,7 @@ chdir($unpacked_dir) or die $unpacked_dir;
 # Mac  : ./data is a link to /opt/casa/data
 if (`uname` eq "Linux\n") {
     sys_exe("echo PATH=$install_dir/$unpacked_dir:\\\$PATH > $prefix/test_env");
-    sys_exe("ln -s $data_dir ./data/regression");
+    sys_exe("ln -s $data_dir/regression ./data/regression");
 
 } else {
     $unpacked_dir =~ s/ /\\ /g;    # escape spaces
@@ -159,7 +162,7 @@ if (`uname` eq "Linux\n") {
     sys_exe("chmod +x ./casapy");
     sys_exe("cat ./casapy");
 
-    sys_exe("./casapy < /dev/null");
+    system("./casapy < /dev/null"); # don't stop on error
 
     sys_exe("rm -rf /opt/casa/data");
     sys_exe("ln -s $data_dir /opt/casa/data");

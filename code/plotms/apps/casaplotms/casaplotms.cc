@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     String arg, arg2, arg3;
     size_t index;
     bool ok;
-    String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_MS = "ms",
+    String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_VIS = "vis",
            ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
            ARG_LOG2 = "--loglevel", ARG_LOGDEBUG1 = "-ld",
            ARG_LOGDEBUG2 = "--logdebug", ARG_CISTSR = "-c",
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
                  << "* " << ARG_HELP1 << " or " << ARG_HELP2 << "\n     "
                  << "Prints this message then exits."
                  
-                 << "\n* " << ARG_MS << "=[ms]\n     "
+                 << "\n* " << ARG_VIS << "=[ms]\n     "
                  << "Path to MS used for initial plot."
                  
                  << "\n* " << ARG_XAXIS << "=[axis], " << ARG_YAXIS
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
         
         if(arg2[arg2.size() - 1] == '=') arg2.erase(arg2.size() - 1);
         
-        if(arg2 == ARG_MS)         ms = arg3;
+        if(arg2 == ARG_VIS)         ms = arg3;
         else if(arg2 == ARG_XAXIS) xaxis = arg3;
         else if(arg2 == ARG_YAXIS) yaxis = arg3;
         else if(arg2 == ARG_LOG1 || arg2 == ARG_LOG2) {

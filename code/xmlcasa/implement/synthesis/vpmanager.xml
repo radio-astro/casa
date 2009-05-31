@@ -4,32 +4,6 @@
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  
         <tool name="vpmanager" module="imager">
 
@@ -61,32 +35,36 @@ currently limit the functionality within imager to a single telescope.
 
 \begin{description}
 \item[Set a Given Telescope's VP/PB model] The vpmanager recognizes the
-names of several telescopes: ATCA, GBT, GMRT, HATCREEK, 
-NMA, NRAO12M, NRAO140FT, OVRO, VLA, WSRT.  New telescopes and their default
-VP/PB models will need to be added to the system.
+names of several telescopes: ATCA, GBT, GMRT, HATCREEK, NMA, NRAO12M,
+NRAO140FT, OVRO, VLA, WSRT.  New telescopes and their default VP/PB models will
+need to be added to the system.
+
 \item[Common VP/PB Models] Many common voltage pattern (vp) and primary beam (pb)
 models have been coded into \casa.  Currently, the recognized models include
 DEFAULT, ATCA\_L1, ATCA\_L2, ATCA\_L3, ATCA\_S, ATCA\_C, ATCA\_X, GBT, GMRT,
 HATCREEK, NRAO12M, NRAO140FT, OVRO, VLA, VLA\_INVERSE, VLA\_NVSS,
 VLA\_2NULL, VLA\_4, VLA\_P, VLA\_L, VLA\_C, VLA\_X, VLA\_U, VLA\_K, VLA\_Q,
-WSRT, and WSRT\_LOW.  In all cases, the VP/PB model and the beam squint (if present)
-scale linearly with wavelength.  If DEFAULT is selected, the approrpiate VP/PB model
-is selected for the telescope and observing frequency.
+WSRT, and WSRT\_LOW.  In all cases, the VP/PB model and the beam squint (if
+present) scale linearly with wavelength.  If DEFAULT is selected, the
+appropriate VP/PB model is selected for the telescope and observing frequency.
 \item[1-D Beam Models] Most beam models are rotationally symmetric (excepting
-beam squint).  From the beam parameterization in terms of the various coefficients
-and other terms, an internal lookup table with 10000 elements is created for application
-of the VP/PB to an image.
+beam squint).  From the beam parameterization in terms of the various
+coefficients and other terms, an internal lookup table with 10000 elements is
+created for application of the VP/PB to an image.
+
 \item[Beam Squint] The VP/PB models include beam squint.  The VLA\_L,
-VLA\_C, VLA\_X, VLA\_U, VLA\_K, and VLA\_Q models (which are the
-defaults for those VLA bands), have the appropriate squint magnitude and orientation,
-though the orientation has not been verified through processing actual data.
-\item[Multiple VP/PB Models for one MS] The VPManager can have VP information for multiple
-telescopes.  However, the internals of imager cannot yet deal with
+VLA\_C, VLA\_X, VLA\_U, VLA\_K, and VLA\_Q models (which are the defaults for
+those VLA bands), have the appropriate squint magnitude and orientation, though
+the orientation has not been verified through processing actual data.
+\item[Multiple VP/PB Models for one MS] The VPManager can have VP information
+for multiple telescopes.  However, the internals of imager cannot yet deal with
 VP/PB's for multiple telescopes.  In the case of a MS with multiple
 telescopes present, the primary beam of the first telescope present in
 the MS will be used, even if it is not the first telescope specified
 in the VP description table produced by vpmanager.
+
 \item[Antenna-dependent Voltage Patterns] are not yet supported.
+
 \item[Two-dimensional Voltage Pattern Images] are supported via
 <link anchor="synthesis:imager.vpmanager.setpbimage.function">setpbimage</link>.
 \end{description}
@@ -187,8 +165,7 @@ Eliminate the current vpmanager.
    <shortdescription>Select a vp/pb from our library of common pb models</shortdescription>
    
 <description>
-We have many vp/pb models ready to go for a variety of telescopes.  If 'DEFAULT' is
-selected, the system default for that telescope and frequency is used.
+We have many vp/pb models ready to go for a variety of telescopes.  If 'DEFAULT' isselected, the system default for that telescope and frequency is used.
 </description>
 <input>
 
@@ -237,8 +214,8 @@ selected, the system default for that telescope and frequency is used.
    
 <description>
 Information sufficient to create a portion of the Airy disk voltage pattern.
-The Airy disk pattern is formed by Fourier transforming a uniformly illuminated aperture
-and is given by
+The Airy disk pattern is formed by Fourier transforming a uniformly illuminated
+aperture and is given by
 \begin{equation}
 vp_p(i) = ( areaRatio * 2.0 * j_{1}(x)/x 
                   - 2.0 * j_{1}(x*lengthRatio)/(x*lengthRatio) )/ areaNorm,

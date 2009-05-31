@@ -951,10 +951,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}
       }
 
-      // when setting in velocity its in LSRK
-      mySpectral = new SpectralCoordinate(MFrequency::LSRK, freqs(0),
-					  freqs(1)-freqs(0), refChan,
-					  restFreq);
+      // when setting in velocity its in LSRK or REST ?
+      {
+	MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::LSRK;
+	mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
+					    freqs(1)-freqs(0), refChan,
+					    restFreq);
+      }
+     
       {
 	ostringstream oos;
 	oos << "Reference Frequency = "
@@ -1004,7 +1008,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       }
       // Use this next line when non-linear is working
       // when selecting in velocity its LSRK
-      mySpectral = new SpectralCoordinate(MFrequency::LSRK, freqs,
+      MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : MFrequency::LSRK;
+      mySpectral = new SpectralCoordinate(imfreqref, freqs,
 					  restFreq);
       // mySpectral = new SpectralCoordinate(MFrequency::DEFAULT, freqs(0),
       //				       freqs(1)-freqs(0), refChan,
@@ -1031,7 +1036,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     //In FTMachine lsrk is used for channel matching with data channel 
     //hence we make sure that
     // we convert to lsrk when dealing with the channels
-    
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
   if(freqFrameValid_p){
       mySpectral->setReferenceConversion(MFrequency::LSRK, obsEpoch, 
 					 obsPosition,
@@ -1559,6 +1564,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
+  os << "Defining image properties:";
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
      << "' celly='" << celly.getValue() << celly.getUnit()
@@ -1568,17 +1574,18 @@ Bool Imager::defineImage(const Int nx, const Int ny,
      << " spwids=" << spectralwindowids
      << " fieldid=" <<   fieldid << " facets=" << facets
      << " distance='" << distance.getValue() << distance.getUnit() <<"'";
+  os << LogIO::POST;
   ostringstream clicom;
   clicom << " phaseCenter='" << phaseCenter;
-  clicom << "' mStart='" << mStart << "' mStep='" << qStep << "'";
+  clicom << "' mStart='" << mStart << "' qStep='" << qStep << "'";
+  clicom << "' mFreqStart='" << mFreqStart;
   os << String(clicom);
+  os << LogIO::POST;
   
   try {
     
     this->lock();
     this->writeCommand(os);
-
-    os << "Defining image properties" << LogIO::POST;
   
     doTrackSource_p=dotrackDir;
     trackDir_p=trackDir;
@@ -1603,10 +1610,10 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 	Int nxc = (Int)cn.nextLargerEven(nx);
 	Int nnxc = (Int)cn.nearestEven(nx);
 	if (nxc == nnxc) {
-	  os << LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	  os << LogIO::POST << "nx = " << nx << " is not composite; nx = " 
 	     << nxc << " will be more efficient" << LogIO::POST;
 	} else {
-	  os <<  LogIO::WARN << "nx = " << nx << " is not composite; nx = " 
+	  os <<  LogIO::POST << "nx = " << nx << " is not composite; nx = " 
 	     << nxc <<  " or " << nnxc << " will be more efficient" << LogIO::POST;
 	}
       }
@@ -1614,13 +1621,13 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 	Int nyc = (Int)cn.nextLargerEven(ny);
 	Int nnyc = (Int)cn.nearestEven(ny);
 	if (nyc == nnyc) {
-	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " 
+	  os <<  LogIO::POST << "ny = " << ny << " is not composite; ny = " 
 	     << nyc << " will be more efficient" << LogIO::POST;
 	} else {
-	  os <<  LogIO::WARN << "ny = " << ny << " is not composite; ny = " << nyc << 
+	  os <<  LogIO::POST << "ny = " << ny << " is not composite; ny = " << nyc << 
 	      " or " << nnyc << " will be more efficient" << LogIO::POST;
 	}
-	os << LogIO::WARN 
+	os << LogIO::POST
 	   << "You may safely ignore this message for single dish imaging" 
 	   << LogIO::POST;
 
@@ -2113,7 +2120,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
     
     if (datafieldids_p.nelements() > 1) {
-      os << "Multiple fields specified" << LogIO::POST;
+      os << LogIO::NORMAL4<< "Multiple fields specified" << LogIO::POST;
       multiFields_p = True;
     }
 
@@ -8628,7 +8635,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
      clone(image, mask);
    }
    INITIALIZE_PGPLOT
-   QtApp::init();
+   //QtApp::init();
    QtClean vwrCln(image, mask); 
    //  if(!vwrCln.loadImage(image, mask)){
    if(!vwrCln.imageLoaded()){

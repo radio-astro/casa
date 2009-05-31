@@ -370,7 +370,9 @@ plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',field='8',spw='12~15',
 print "You can see some bad data here"
 print "Mark Region and Locate, look in logger"
 print "This is a correlator glitch in baseline 3-9 at 06:19:30"
-print "You could Mark Region and Flag but we will use flagdata instead"
+print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
+print "In a normal session you could Mark Region and Flag."
+print "Here we will use flagdata instead."
 # Pause script if you are running in scriptmode
 user_check=raw_input('Return to continue script\n')
 
@@ -847,7 +849,7 @@ print "Calculating Moments 0,1 for PBcor image"
 
 immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',
 	  moments=0,axis=3,
-	  planes='7~28',
+	  chans='7~28',
           outfile='ngc4826.tutorial.16apr98.moments.integrated') 
 
 # TUTORIAL NOTES: For moment 0 we use the image corrected for the
@@ -865,7 +867,7 @@ immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',
 
 immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
 	  moments=1,axis=3,includepix=[0.2,1000.0],
-	  planes='7~28',
+	  chans='7~28',
           outfile='ngc4826.tutorial.16apr98.moments.mom1') 
 
 # Now view the resulting images
@@ -941,7 +943,7 @@ print "Found moment 1 median = "+str(momonestat['median'][0])
 #	
 #immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor.masked',
 #          moments=0,axis=3,
-#	   planes='7~28',
+#	   chans='7~28',
 #	   outfile='ngc4826.tutorial.16apr98.moments.integratedmasked') 
 #
 #print 'Creating masked moment 1 image ngc4826.tutorial.16apr98.moments.mom1masked'
@@ -949,7 +951,7 @@ print "Found moment 1 median = "+str(momonestat['median'][0])
 #immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor.masked',
 #          moments=1,axis=3,
 #	   includepix=[0.2,1000.0],
-#	   planes='7~28',
+#	   chans='7~28',
 #	   outfile='ngc4826.tutorial.16apr98.moments.mom1masked') 
 
 # Now view the resulting images

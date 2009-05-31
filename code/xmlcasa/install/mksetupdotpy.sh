@@ -6,7 +6,7 @@ ARCHLIB=`echo $CASAPATH | awk '{printf "%s/%s/lib", $1,$2}'`
 ARCH=`echo $CASAPATH | awk '{print $2}'`
 SITE=`echo $CASAPATH | awk '{print $3}'`
 MAKEDEFS=$AIPSROOT/$ARCH/$SITE/makedefs
-VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB CFITSIOLIBD CFITSIOINCD XTRNLIBS_rpath"
+VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB QT4INCD CFITSIOLIBD CFITSIOINCD XTRNLIBS_rpath"
 eval `gmake -f $AIPSROOT/$ARCH/makedefs VARS="$VARS" eval_vars`
 DEFINES2=`for i in $CPPSTD; do echo $i | grep "\-D"; done`
 DEFINES2="$DEFINES2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE_64_SOURCE"
@@ -68,7 +68,7 @@ else
 fi
 
 core_libraries=`echo "$CORELIB" | perl -pe "s/-l//g; s/(\S+)/'\\\$1'/g; \\\$_ = join(', ', split(/\s+/))"`
-echo "               libraries=[ 'nrao', 'xmlcasa', 'display', 'flagging', 'calibration', 'msvis'," >> $SETUPDOTPY
+echo "               libraries=[ 'nrao', 'xmlcasa', 'display', 'flagging', 'calibration', 'msvis', 'plotms'," >> $SETUPDOTPY
 echo "                           'synthesis', 'graphics', 'casaqt', 'qwt'," >> $SETUPDOTPY
 echo "                           $core_libraries," >> $SETUPDOTPY
 #
@@ -100,4 +100,11 @@ echo "                                     ]," >> $SETUPDOTPY
 if [ "$SETUPEXTRALINK" != "" ]; then
 echo "               extra_link_args = [$SETUPEXTRALINK])], " >> $SETUPDOTPY
 fi
-echo "       include_dirs = ['$AIPSROOT/code/include', '$AIPSROOT/code/casa', '$COREINCD', '$WCSLIBINCD', '.', '..', '$CCMTOOLSINCD', '$CFITSIOINCD', '../impl'])" >> $SETUPDOTPY
+
+echo "       include_dirs = ['$AIPSROOT/code/include', '$AIPSROOT/code/casa', '$COREINCD', '$WCSLIBINCD', '.', '..', '$CCMTOOLSINCD', '$CFITSIOINCD', '../impl'" >> $SETUPDOTPY
+if [ "$QT4INCD" != "" ]; then
+   for i in $QT4INCD; do
+      echo ", '$i'" >> $SETUPDOTPY
+   done
+fi
+echo "])" >> $SETUPDOTPY

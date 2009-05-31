@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="listcal">
 
-  <shortdescription>List calibrated antenna gain solutions</shortdescription>
+  <shortdescription>List antenna gain solutions</shortdescription>
 
   <description>
 

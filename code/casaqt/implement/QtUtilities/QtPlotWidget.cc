@@ -57,7 +57,7 @@ PlotColorWidget::PlotColorWidget(PlotFactoryPtr factory, bool showAlpha,
     connect(colorEdit, SIGNAL(editingFinished()), SLOT(colorChanged()));
     connect(choose, SIGNAL(clicked()), SLOT(colorChoose()));
     if(showAlpha)
-        connect(alpha, SIGNAL(valueChanged(int)), SLOT(colorChanged()));
+        connect(alpha, SIGNAL(valueChanged(double)), SLOT(colorChanged()));
 }
 
 PlotColorWidget::~PlotColorWidget() { }
@@ -177,7 +177,9 @@ PlotLineWidget::PlotLineWidget(PlotFactoryPtr factory, bool useCompact,
     setLine(factory->line("black"));
     
     if(useCompact) {
-        connect(cWidth, SIGNAL(valueChanged(int)), SLOT(lineChanged()));
+        cWidth->setValidator(new QIntValidator(1, 99, cWidth));
+        connect(cWidth, SIGNAL(textChanged(const QString&)),
+                SLOT(lineChanged()));
         connect(cStyle, SIGNAL(currentIndexChanged(int)), SLOT(lineChanged()));
     } else {
         connect(nWidth, SIGNAL(valueChanged(int)), SLOT(lineChanged()));
@@ -191,7 +193,7 @@ PlotLineWidget::~PlotLineWidget() { }
 PlotLinePtr PlotLineWidget::getLine() const {
     PlotLinePtr line = itsFactory_->line("");
     line->setWidth((stackedWidget->currentIndex() == 0) ?
-                   cWidth->value() : nWidth->value());
+                   cWidth->text().toInt() : nWidth->value());
     line->setStyle(lineStyle());
     line->setColor(itsColorWidget_->getColor());
     return line;
@@ -204,8 +206,9 @@ void PlotLineWidget::setLine(PlotLinePtr line) {
         
         itsLine_ = itsFactory_->line(*line);
         int width = (int)(line->width() + 0.5);
-        if(stackedWidget->currentIndex() == 0) cWidth->setValue(width);
-        else                                   nWidth->setValue(width);
+        if(stackedWidget->currentIndex() == 0)
+            cWidth->setText(QString::number(width));
+        else nWidth->setValue(width);
         setLineStyle(line->style());
         itsColorWidget_->setColor(line->color());
         
@@ -246,7 +249,8 @@ void PlotLineWidget::lineChanged() {
 
 PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         PlotSymbolPtr defaultSymbol, bool showAlphaFill, bool showCustom,
-        bool showAlphaLine, QWidget* parent) : QtPlotWidget(factory, parent) {
+        bool showAlphaLine, bool showCharacter, QWidget* parent) :
+        QtPlotWidget(factory, parent) {
     setupUi(this);
     itsFillWidget_ = new PlotFillWidget(factory, showAlphaFill);
     itsLineWidget_ = new PlotLineWidget(factory, false, showAlphaLine);
@@ -262,6 +266,11 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
         itsDefault_ = itsFactory_->symbol(*defaultSymbol);
     
     setSymbol(itsDefault_);
+    
+    if(!showCharacter && itsDefault_->symbol() != PlotSymbol::CHARACTER) {
+        SymbolWidget::style->removeItem(4);
+        charEdit->hide();
+    }
     
     // only emit change for radio buttons turned on
     connect(noneButton, SIGNAL(toggled(bool)), SLOT(symbolChanged(bool)));
@@ -310,11 +319,10 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
             sym->setLine(itsLineWidget_->getLine());
         
         return sym;
-    }
-    return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
+    } else return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
 }
 
-void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
+void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {    
     if(symbol.null()) itsSymbol_ = itsFactory_->symbol(PlotSymbol::NOSYMBOL);
     else              itsSymbol_ = itsFactory_->symbol(*symbol);
 
@@ -325,9 +333,17 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
         noneButton->setChecked(true);
     else if(*itsSymbol_ == *itsDefault_) defaultButton->setChecked(true);
     else customButton->setChecked(true);
+
+    if(itsSymbol_->symbol() == PlotSymbol::PIXEL)
+        itsSymbol_->setSize(1, 1);
+
+    if(itsMinSizes_.find(itsSymbol_->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[itsSymbol_->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
     
     SymbolWidget::size->setValue((int)(itsSymbol_->size().first + 0.5));
-
+    SymbolWidget::size->setEnabled(itsSymbol_->symbol() != PlotSymbol::PIXEL);
+    
     PlotSymbol::Symbol s = itsSymbol_->symbol();
     int index = 0;
     if(s == PlotSymbol::SQUARE)    index = 1;
@@ -360,14 +376,105 @@ void PlotSymbolWidget::addRadioButtonsToGroup(QButtonGroup* group) const {
     group->addButton(customButton);
 }
 
+void PlotSymbolWidget::setMinimumSizes(const map<PlotSymbol::Symbol, int>& m) {
+    for(map<PlotSymbol::Symbol, int>::const_iterator iter = m.begin();
+        iter != m.end(); iter++)
+        itsMinSizes_[iter->first] = iter->second;
+    
+    PlotSymbolPtr currSymbol = getSymbol();
+    
+    if(itsMinSizes_.find(currSymbol->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[currSymbol->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
+}
+
 void PlotSymbolWidget::symbolChanged(bool check) {
     if(!check) return;
     
-    emit changed();
     PlotSymbolPtr currSymbol = getSymbol();
+    
+    if(itsMinSizes_.find(currSymbol->symbol()) != itsMinSizes_.end())
+        SymbolWidget::size->setMinimum(itsMinSizes_[currSymbol->symbol()]);
+    else SymbolWidget::size->setMinimum(1);
+    
+    if(currSymbol->symbol() == PlotSymbol::PIXEL) {
+        currSymbol->setSize(1, 1);
+        SymbolWidget::size->setValue(1);
+    }
+    
     charEdit->setEnabled(currSymbol->symbol() == PlotSymbol::CHARACTER);
     SymbolWidget::size->setEnabled(currSymbol->symbol() != PlotSymbol::PIXEL);
+    
+    emit changed();
     if(*currSymbol != *itsSymbol_) emit differentFromSet();
+}
+
+
+////////////////////////////////
+// PLOTFONTWIDGET DEFINITIONS //
+////////////////////////////////
+
+PlotFontWidget::PlotFontWidget(PlotFactoryPtr factory, bool showAlpha,
+        QWidget* parent) : QtPlotWidget(factory, parent) {
+    setupUi(this);
+    itsColorWidget_ = new PlotColorWidget(factory, showAlpha);
+    QtUtilities::putInFrame(colorFrame, itsColorWidget_);
+        
+    setFont(itsFactory_->font());
+    
+    // only emit change for radio buttons turned on
+    connect(family, SIGNAL(currentIndexChanged(int)), SLOT(fontChanged()));
+    connect(FontWidget::size, SIGNAL(valueChanged(int)), SLOT(fontChanged()));
+    connect(sizeUnit, SIGNAL(currentIndexChanged(int)), SLOT(fontChanged()));
+    connect(itsColorWidget_, SIGNAL(changed()), SLOT(fontChanged()));
+    connect(bold, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+    connect(italic, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+    connect(underline, SIGNAL(toggled(bool)), SLOT(fontChanged()));
+}
+
+PlotFontWidget::~PlotFontWidget() { }
+
+PlotFontPtr PlotFontWidget::getFont() const {
+    PlotFontPtr font = itsFactory_->font(family->currentText().toStdString());
+    font->setPointSize(sizeUnit->currentIndex() == 0 ?
+                       FontWidget::size->value() : -1);
+    font->setPixelSize(sizeUnit->currentIndex() == 1 ?
+                       FontWidget::size->value() : -1);
+    font->setColor(itsColorWidget_->getColor());
+    font->setBold(bold->isChecked());
+    font->setItalics(italic->isChecked());
+    font->setUnderline(underline->isChecked());
+    return font;
+}
+
+void PlotFontWidget::setFont(PlotFontPtr font) {
+    if(!font.null()) {
+        blockSignals(true);
+        bool changed = itsFont_.null() || *itsFont_ != *font;
+        
+        itsFont_ = itsFactory_->font(*font);
+        family->setCurrentFont(QFont(itsFont_->fontFamily().c_str()));
+        if(itsFont_->pointSize() >= 0) {
+            FontWidget::size->setValue((int)(itsFont_->pointSize() + 0.5));
+            sizeUnit->setCurrentIndex(0);
+        } else {
+            FontWidget::size->setValue((int)(itsFont_->pixelSize() + 0.5));
+            sizeUnit->setCurrentIndex(1);
+        }
+        itsColorWidget_->setColor(itsFont_->color());
+        bold->setChecked(itsFont_->bold());
+        italic->setChecked(itsFont_->italics());
+        underline->setChecked(itsFont_->underline());
+        
+        blockSignals(false);
+        if(changed) emit this->changed();
+    }
+}
+
+void PlotFontWidget::fontChanged() {
+    emit changed();
+    PlotFontPtr currFont = getFont();
+    if(*currFont != *itsFont_) emit differentFromSet();
 }
 
 }

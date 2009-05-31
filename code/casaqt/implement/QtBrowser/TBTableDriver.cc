@@ -166,6 +166,11 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
     if(f == NULL || f->size() == 0) {
         table = m_table;
     } else {
+        Block<String> cols(f->size());
+        for(unsigned int i = 0; i < f->size(); i++)
+            cols[i] = f->at(i);
+        table = m_table.project(cols);
+        /*
         if(taql) {
             TableExprNode cols = m_table.col(f->at(0));
             
@@ -185,6 +190,7 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
             if(printdebug) TBConstants::dprint(TBConstants::DEBUG_HIGH, query);
             table = tableCommand(query);
         }
+        */
     }
     if(pp != NULL) pp->step();
 

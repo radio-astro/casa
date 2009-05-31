@@ -221,12 +221,6 @@ public:
 			 Vector<Int>& dataStart, Vector<Int>& dataStep,
 			 MRadialVelocity& mDataStart, 
 			 MRadialVelocity& mDataStep);
-			 
-  // Methods to write to the history table of Measurement Set.
-  // Write an entry to the history table
-  void writeHistory(LogIO& os);
-  // write command line command
-  void writeCommand(LogIO& os);
 
   
 private:
@@ -244,9 +238,6 @@ private:
   Table historytab_p;
   MSHistoryHandler *hist_p;
   Int histLockCounter_p;
-
-  // Method to update MS History Table
-  void writeHistory(LogIO& os, Bool cliCommand);
 };
 
 

@@ -248,6 +248,7 @@ void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
         // draw text
         QPen pen = painter->pen();
         pen.setColor(m_label.color());
+        pen.setStyle(Qt::SolidLine);
         painter->setPen(pen);
         painter->setFont(m_label.font());    
         painter->drawText(r, Qt::AlignLeft | Qt::AlignTop, m_label.text());

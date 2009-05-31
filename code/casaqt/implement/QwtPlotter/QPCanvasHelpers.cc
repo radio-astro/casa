@@ -28,15 +28,13 @@
 
 #include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
-#include <casa/OS/Time.h>
 #include <casaqt/QtUtilities/QtLayeredLayout.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
 #include <qwt_painter.h>
+#include <qwt_scale_engine.h>
 
 #include <QPainter>
-
-#include <iomanip>
 
 namespace casa {
 
@@ -62,103 +60,69 @@ bool QPMouseFilter::eventFilter(QObject* obj, QEvent* ev) {
 }
 
 
-/////////////////////////////
-// QPDATESCALEDRAW METHODS //
-/////////////////////////////
+/////////////////////////
+// QPSCALEDRAW METHODS //
+/////////////////////////
 
-QPDateScaleDraw::QPDateScaleDraw(PlotAxisScale scale, unsigned int numDecimals,
-        const String& format) : m_scale(scale), m_decimals(numDecimals),
-        m_format(format) {
-    if(!formatIsValid(m_format)) m_format = DEFAULT_FORMAT;
+QPScaleDraw::QPScaleDraw(QwtPlot* parent, QwtPlot::Axis axis) :
+		m_parent(parent), m_axis(axis), m_scale(NORMAL),
+		m_dateFormat(Plotter::DEFAULT_DATE_FORMAT),
+		m_relativeDateFormat(Plotter::DEFAULT_RELATIVE_DATE_FORMAT),
+		m_referenceSet(false), m_referenceValue(0) {
+	parent->setAxisScaleDraw(axis, this);
 }
 
-QPDateScaleDraw::~QPDateScaleDraw() { }
+QPScaleDraw::~QPScaleDraw() { }
 
+PlotAxisScale QPScaleDraw::scale() const { return m_scale; }
+void QPScaleDraw::setScale(PlotAxisScale scale) {
+	if(scale != m_scale) {
+		m_scale = scale;
+		
+		if(m_scale == LOG10)
+			m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
+		else
+			m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
 
-PlotAxisScale QPDateScaleDraw::scale() const { return m_scale; }
+        if(m_parent->autoReplot()) m_parent->replot();
+	}
+}
 
-QwtText QPDateScaleDraw::label(double value) const {
-    if(m_scale != DATE_MJ_DAY && m_scale != DATE_MJ_SEC)
-        return QwtText(QString().setNum(value, 'g', m_decimals));
-        
-    stringstream ss;
-    if(m_scale == DATE_MJ_SEC) value /= 86400;
-    
-    Time t(value + 2400000.5);
+const String& QPScaleDraw::dateFormat() const { return m_dateFormat; }
+void QPScaleDraw::setDateFormat(const String& newFormat) {
+	if(newFormat != m_dateFormat) {
+		m_dateFormat = newFormat;
+		invalidateCache();
+	}
+}
 
-    char c;
-    for(unsigned int i = 0; i < m_format.length(); i++) {
-        c = m_format[i];
-        if(c == '%' && i < m_format.length() - 1) {
-            c = m_format[++i];
-            switch(c) {
-            case 'y': case 'Y': ss << t.year(); break;
-            case 'm': case 'M':
-                if(t.month() < 10) ss << '0';
-                ss << t.month();
-                break;
-            case 'd': case 'D':
-                if(t.dayOfMonth() < 10) ss << '0';
-                ss << t.dayOfMonth();
-                break;
-            case 'h': case 'H':
-                if(t.hours() < 10) ss << '0';
-                ss << t.hours();
-                break;
-            case 'n': case 'N':
-                if(t.minutes() < 10) ss << '0';
-                ss << t.minutes();
-                break;
-            case 's': case 'S':
-                double sec;
-                sec = modf(value, &sec);
-                sec += t.seconds();
-                
-                if(sec < 10) ss << '0';
-                ss << fixed << setprecision(m_decimals) << sec;
-                break;
-            
-            default: ss << m_format[i - 1] << c; break;
-            }
-        } else ss << c;
+const String& QPScaleDraw::relativeDateFormat() const {
+    return m_relativeDateFormat; }
+void QPScaleDraw::setRelativeDateFormat(const String& newFormat) {
+    if(newFormat != m_relativeDateFormat) {
+        m_relativeDateFormat = newFormat;
+        invalidateCache();
     }
-    
-    return QString(ss.str().c_str());
 }
 
-
-// Static //
-
-bool QPDateScaleDraw::formatIsValid(String d) {
-    unsigned int i;
-    if((i = d.find("%y")) < d.size()) {
-        if((i = d.find("%y", i + 1)) < d.size()) return false;
-    } else return false;
-
-    if((i = d.find("%m")) < d.size()) {
-        if((i = d.find("%m", i + 1)) < d.size()) return false;
-    } else return false;
-
-    if((i = d.find("%d")) < d.size()) {
-        if((i = d.find("%d", i + 1)) < d.size()) return false;
-    } else return false;
-
-    if((i = d.find("%h")) < d.size()) {
-        if((i = d.find("%h", i + 1)) < d.size()) return false;
-    } else return false;
-
-    if((i = d.find("%n")) < d.size()) {
-        if((i = d.find("%n", i + 1)) < d.size()) return false;
-    } else return false;
-
-    if((i = d.find("%s")) < d.size()) {
-        if((i = d.find("%s", i + 1)) < d.size()) return false;
-    } else return false;
-
-    return false;
+bool QPScaleDraw::referenceValueSet() const { return m_referenceSet; }
+double QPScaleDraw::referenceValue() const { return m_referenceValue; }
+void QPScaleDraw::setReferenceValue(bool on, double value) {
+	if(on != m_referenceSet || (on && value != m_referenceValue)) {
+		m_referenceSet = on;
+		m_referenceValue = value;
+		invalidateCache();
+	}
 }
 
-const String QPDateScaleDraw::DEFAULT_FORMAT = "%y-%m-%d\n%h:%n:%s";
+QwtText QPScaleDraw::label(double value) const {
+    if(m_referenceSet) value -= m_referenceValue;
+    if(m_scale == DATE_MJ_DAY || m_scale == DATE_MJ_SEC) {
+        return QString(Plotter::formattedDateString(
+                m_referenceSet ? m_relativeDateFormat : m_dateFormat, value,
+                m_scale, m_referenceSet).c_str());        
+    } else return QwtScaleDraw::label(value);
+}
 
 
 //////////////////////////
@@ -223,7 +187,7 @@ void QPLegend::drawOutlineAndBackground(QPainter* painter, const QRect& rect,
 }
 
 
-void QPLegend::paintEvent(QPaintEvent* event) {    
+void QPLegend::paintEvent(QPaintEvent* event) {
     // Draw outline and background if needed.
     QRect geom(QPoint(0, 0), size());
     geom.setRight(geom.right() - 1);   // Compensate for +1 in sizeHint().
@@ -244,7 +208,7 @@ void QPLegend::paintEvent(QPaintEvent* event) {
         rect.setLeft(rect.left() + width);
         rect.setRight(rect.right() - width);
         rect.setBottom(rect.bottom() - width);
-    }    
+    }
 
     // Have rest of the legend draw itself normally.
     QPaintEvent innerEvent(rect);
@@ -277,7 +241,7 @@ QPLegendHolder::QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition ps,
     // Set up layout.
     QGridLayout* l = new QGridLayout(this);
     int ml, mt, mr, mb;
-    canvas->asQwtPlot().getContentsMargins(&ml, &mt, &mr, &mb);    
+    canvas->asQwtPlot().getContentsMargins(&ml, &mt, &mr, &mb);
     l->setContentsMargins(ml, mt, mr, mb);
     l->setSpacing(0);
     if(m_padding < 0) m_padding = DEFAULT_INTERNAL_PADDING;

@@ -9,16 +9,12 @@
 #    If $DISPLAY is undefined, a virtual Xvfb server is
 #    started and stopped
 
+# Distribution: END_USER_BINARY
+
 use FindBin;
 use Sys::Hostname;
 
 $#ARGV == 3 or die "Usage: $0 [options] reg_dir data_dir load_limit timeout";
-
-$already_running = `ps -A | grep -w scheduler.pl | wc -l`;
-if ($already_running != 1) {
-    print "scheduler.pl is already running, bye\n";
-    exit 0;
-}
 
 # Supported command line options
 $work    = "" if (0);   # non-default work dir
@@ -89,10 +85,13 @@ printf "la %.2f ", $load_average_15;
 printf "lim %.2f\n", $la_limit;
 
 $reached_the_end = 0;
-$executeproc = `ps -Af | grep execute.py | wc -l`;
+$executeproc = `ps -Af | grep execute.py | grep -vw grep | wc -l`;
 if ($load_average_15 < $la_limit) {
-    if ($executeproc >= 3) {
+    if ($executeproc > 0) {
         print gettime(), "execute.py already running\n";
+    }
+    elsif (!(-d $data_dir)) {
+        print gettime(), "Data directory $data_dir does not exist!\n";
     }
     else {
         # increment next
@@ -158,12 +157,12 @@ if ($load_average_15 < $la_limit) {
 	    # can no longer write to logfile from here
 	    system("/bin/rm -rf $workdir/work") == 0 or die $!;
 	    if (! $noclean) {
-		$cmd = "tar zc $result_files Log/ > $res_dir/result-$date.tar.gz";
+		$cmd = "tar zc $result_files Log/ > $res_dir/result-$hostname$date.tar.gz";
 		if (system($cmd) != 0) {
 		    print STDERR "$cmd: $!";
 		}
 		else {
-		    print "Created $res_dir/result-$date.tar.gz\n";
+		    print "Created $res_dir/result-$hostname$date.tar.gz\n";
 		}
 	    }
 	    else {

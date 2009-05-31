@@ -6,7 +6,7 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="makemask">
-	<shortdescription>Derive a mask image from a cleanbox blc, trc regions </shortdescription>
+	<shortdescription>Make a mask image from rectangular boxes</shortdescription>
 	<description>
 	</description>
 	<input>
@@ -138,7 +138,22 @@
 
 <example>
 
-Derive a mask image from a cleanbox blc, trc regions 	
+        The mask image must be consistent with a particular visibility file and source
+        selection; hence the need to specify the imaging parameters and source
+        selection.
+
+        If the source image has already been made, then a mask image can be made by:
+ 
+                 Load the image into the viewer
+                 click on tools (top just left of center)
+                 click on Region Manager
+                 make  rectangular and/or polygon areas as needed 
+                 save as region file
+                 This region file can substitute as a mask in most application.
+
+        You can also use taskname='clean' with interactive = T to make a mask when the
+        dirty image is produced.
+                 
 
 	Keyword arguments:
         cleanbox -- Cleaning region:
@@ -150,7 +165,7 @@ Derive a mask image from a cleanbox blc, trc regions
                 Filename with pixel values with ascii format:
                    &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line
 	----------------------------------------------------------------
-        vis -- Name of input visibility file (MS)
+        vis -- Name of input visibility file
                 default: none; example: vis='ngc5921.ms'
         imagename -- Name of output mask image
                 default: none; example: imagename='ngc5921.mask'
@@ -175,25 +190,25 @@ Derive a mask image from a cleanbox blc, trc regions
         stokes -- Stokes parameters to image
                 default='I'; example: stokes='IQUV'; 
                 Options: 'I','IV','IQU','IQUV'
-       field -- Select field using field id(s) or field name(s).
+        field -- Select field using field id(s) or field name(s).
                   [run listobs to obtain the list id's or names]
-               default: ''=all fields
-               If field string is a non-negative integer, it is assumed a field index
-                 otherwise, it is assumed a field name
-               field='0~2'; field ids 0,1,2
-               field='0,4,5~7'; field ids 0,4,5,6,7
-               field='3C286,3C295'; field named 3C286 adn 3C295
-               field = '3,4C*'; field id 3, all names starting with 4C
-       spw -- Select spectral window/channels
-               default: ''=all spectral windows and channels
-               spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-               spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
-               spw='0:5~61'; spw 0, channels 5 to 61
-               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
-               spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-               spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
-                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+                default: ''=all fields
+                If field string is a non-negative integer, it is assumed a field index
+                  otherwise, it is assumed a field name
+                field='0~2'; field ids 0,1,2
+                field='0,4,5~7'; field ids 0,4,5,6,7
+                field='3C286,3C295'; field named 3C286 adn 3C295
+                field = '3,4C*'; field id 3, all names starting with 4C
+        spw -- Select spectral window/channels
+                default: ''=all spectral windows and channels
+                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+                spw='0:5~61'; spw 0, channels 5 to 61
+                spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+                spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+                spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                   spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
 
  </example>
  </task>

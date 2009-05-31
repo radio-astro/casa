@@ -127,9 +127,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Full description of the syntax can be found at
                 http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series
 
-        region -- File path to an ImageRegion file.
-                Default: none; Example: region=&quot;myimage.im.rgn&quot;
-                  Not yet implemented
+        region -- File path to an ImageRegion file or the name of
+                  a region stored within the image..
+                Default: none; 
+                Example: region=&quot;myimage.im.rgn&quot;
+                         region=&quot;region1&quot;
 	box --  A box region on the directional plane
 	        Only pixel values acceptable at this time.
 		Default: none (whole 2-D plane); 

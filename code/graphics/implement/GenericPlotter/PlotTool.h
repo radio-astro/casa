@@ -138,6 +138,10 @@ protected:
     // Returns the canvas this tool is attached to, or NULL for none.
     virtual PlotCanvas* canvas() const;
     
+    // Returns a factory that can be used for generating
+    // implementation-specific classes, or NULL for none.
+    virtual PlotFactory* factory() const;
+    
     // Returns true if this tool is attached to a canvas, false otherwise.
     virtual bool isAttached() const;
     
@@ -483,13 +487,13 @@ public:
     // Sets whether the tracker will draw the text on the canvas or not.
     virtual void setDrawText(bool draw = true);
     
-    // Sets the tracker text format to the given.
-    // %%x%% and %%y%% give x and y values.
-    // %%x:y%%, %%x:m%%, %%x:d%%, %%x:h%%, %%x:n%%, and %%x:s%% give the year,
-    // month, day, hour, minute, and second (respectively) of x interpreted as
-    // a date.  Note: this is only valid if the respective axis on the canvas
-    // is set to DATE_MJ_SEC or DATE_MJ_DAY (see PlotCanvas::axisScale()).
-    // %%P#%% sets the precision for following numbers to the value after P.
+    // Sets the tracker text format to the given.  The following tags can be
+    // used in the format:
+    // * %%x%% : x value
+    // * %%y%% : y values
+    // * %%pX%% : sets the precision to X for any following numbers.
+    // NOTICE: if the x or y value is a date, the date format set on the
+    // canvas this tool is attached to will be used to display the value.
     // Default format is "(%%x%%, %%y%%)".
     virtual void setFormat(const String& format);
     
@@ -539,8 +543,6 @@ protected:
     // <group>
     static const String FORMAT_DIVIDER;
     static const String FORMAT_X, FORMAT_Y;
-    static const String FORMAT_YEAR, FORMAT_MONTH, FORMAT_DAY, FORMAT_HOUR,
-                        FORMAT_MINUTE, FORMAT_SECOND;
     static const String FORMAT_PRECISION;
     static const String DEFAULT_FORMAT;
     // </group>

@@ -55,6 +55,8 @@ public:
     static const String LOG_INITIALIZE_GUI;
     static const String LOG_LOAD_CACHE;
     static const String LOG_LOCATE;
+    static const String LOG_FLAG;
+    static const String LOG_UNFLAG;
     // </group>
     
     
@@ -77,6 +79,9 @@ public:
     
     // See PlotMSPlotter::showGUI().
     void showGUI(bool show = true) { itsPlotter_->showGUI(show); }
+    
+    // See PlotMSPlotter::guiShown().
+    bool guiShown() const { return itsPlotter_->guiShown(); }
     
     // See PlotMSPlotter::execLoop().
     int execLoop() { return itsPlotter_->execLoop(); }
@@ -134,13 +139,6 @@ public:
     PlotMSSinglePlot* addSinglePlot(const PlotMSSinglePlotParameters* p= NULL) {
         return itsPlotManager_.addSinglePlot(this, p); }
     
-    
-    // Action Methods //
-
-    // Triggers the given action, using the PlotMSPlotter for the action's
-    // parameters.
-    void triggerAction(PlotMSAction::Type type);
-    
 private:
     // Plotter GUI.
     PlotMSPlotter* itsPlotter_;
@@ -151,10 +149,8 @@ private:
     // Logger.
     PlotMSLogger itsLogger_;
     
-    // Log states.
-    // <group>
+    // Log events flag.
     int itsLogEventFlag_;
-    // </group>
     
     // Plot manager.
     PlotMSPlotManager itsPlotManager_;

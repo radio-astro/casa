@@ -30,6 +30,7 @@
 
 #include <flagging/Flagging/RFAFlagCubeBase.h> 
 #include <flagging/Flagging/RFDataMapper.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <casa/Arrays/LogiVector.h>
     
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -103,6 +104,10 @@ protected:
   void parseClipField  ( const RecordInterface &spec,Bool clip );
   void addClipInfoDesc ( const Block<ClipInfo> &clip );
 
+  // shadow mode
+  Vector< Double > diameters;
+  ROMSAntennaColumns *ac;
+
 // description of agent
   String desc_str;
 // selection arguments
@@ -118,8 +123,8 @@ protected:
   Double        quack_si,quack_dt,scan_start,scan_end;
   Vector<Int>   sel_scannumber,sel_arrayid;
   String        sel_column;
-  
-  Bool select_fullrow,flag_everything;
+
+  Bool select_fullrow,flag_everything, shadow;
 
 };
 

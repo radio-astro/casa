@@ -3,10 +3,30 @@ import shutil
 import stat
 from taskinit import *
 
-def concat(vislist,concatvis,freqtol,dirtol):
+def initcal(vis=None):
+
+	# we will initialize scr cols only if we don't create them
+	doinit=False;
+
+	tb.open(vis)
+	doinit = (tb.colnames().count('CORRECTED_DATA')>0)
+	tb.close()
+	cb.open(vis)
+
+	# If necessary (scr col not just created), initialize scr cols
+	if doinit:
+		cb.initcalset()
+	cb.close()
+
+
+def concat(vislist,concatvis,freqtol,dirtol,timesort):
 	"""Concatenate two visibility data sets.
 	A second data set is appended to the input data set with
 	checking of the frequency and position.
+	If none of the input MSs have any scratch columns, none are created.
+	Otherwise scratch columns are created and initialized in those MSs
+	which don't have a complete set.
+
 
 	Keyword arguments:
 	vis -- Name of input visibility file (MS)
@@ -21,6 +41,8 @@ def concat(vislist,concatvis,freqtol,dirtol):
 		default: ;; means always combine
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		their phase center is less than 1 arcsec.
+	timesort -- if true, sort the main table of the resulting MS by time
+	        default: false; example: timesort=true
 
 	"""
 
@@ -48,29 +70,89 @@ def concat(vislist,concatvis,freqtol,dirtol):
 				os.chmod(concatvis, stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
 				for root, dirs, files in os.walk(concatvis):
 					for name in files:
-						os.chmod(os.path.join(root, name), stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
+						os.chmod(os.path.join(root, name), 
+							 stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
 					for name in dirs:
-						os.chmod(os.path.join(root, name), stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
-
+						os.chmod(os.path.join(root, name), 
+							 stat.S_IRWXU | stat.S_IRGRP |  stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH )
 				vis.remove(vis[0])
 
+		# Determine if scratch columns should be considered at all
+		# by checking if any of the MSs has them.
+		
+		considerscrcols = False
+		needscrcols = []
                 if ((type(concatvis)==str) & (os.path.exists(concatvis))):
-                        ms.open(concatvis,False) # nomodify=False to enable writing
+			
+			# check if all scratch columns are present
+			tb.open(concatvis)
+			if(tb.colnames().count('CORRECTED_DATA')==1 
+			   or  tb.colnames().count('MODEL_DATA')==1 
+			   or  tb.colnames().count('IMAGING_WEIGHT')==1):
+				considerscrcols = True  # there are scratch columns
+				
+			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
+					   or  tb.colnames().count('MODEL_DATA')==0 
+					   or  tb.colnames().count('IMAGING_WEIGHT')==0)			
+			tb.close()
                 else:
                         raise Exception, 'Visibility data set '+concatvis+' not found - please verify the name'
-	
-		for elvis in vis :
-			###Oh no Elvis does not exist Mr Bill
+
+		for elvis in vis : 			###Oh no Elvis does not exist Mr Bill
 			if(not os.path.exists(elvis)):
 				raise Exception, 'Visibility data set '+elvis+' not found - please verify the name'
+
+			# check if all scratch columns are present
+			tb.open(elvis)
+			if(tb.colnames().count('CORRECTED_DATA')==1 
+			   or  tb.colnames().count('MODEL_DATA')==1 
+			   or  tb.colnames().count('IMAGING_WEIGHT')==1):
+				considerscrcols = True  # there are scratch columns
+
+			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
+					  or  tb.colnames().count('MODEL_DATA')==0 
+					  or  tb.colnames().count('IMAGING_WEIGHT')==0)			
+			tb.close()
+
+		# start actual work, file existence has already been checked
+		i = 0
+		if(considerscrcols and needscrcols[i]):
+			# create scratch cols			
+			casalog.post('creating scratch columns in '+concatvis , 'INFO')
+			cb.open(concatvis) # calibrator-open creates scratch columns
+			cb.close()
+
+		ms.open(concatvis,False) # nomodify=False to enable writing
+	
+		for elvis in vis : 
+			i = i + 1
 			casalog.post('concatenating '+elvis+' into '+concatvis , 'INFO')
-			ms.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+			if(considerscrcols and needscrcols[i]):
+				# create scratch cols			
+				casalog.post('creating scratch columns for '+elvis+' (original MS unchanged)', 'INFO')
+				tempname = elvis+'_with_scrcols'
+				os.system('rm -rf '+tempname)
+				os.system('cp -R '+elvis+' '+tempname)
+				cb.open(tempname) # calibrator-open creates scratch columns
+				cb.close()
+				# concatenate copy instead of original file
+				ms.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol)
+				os.system('rm -rf '+tempname)
+			else:
+				ms.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+
 			ms.writehistory(message='taskname=concat',origin='concat')
 			ms.writehistory(message='vis         = "'+str(concatvis)+'"',origin='concat')
 			ms.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='concat')
 			ms.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='concat')
 			ms.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='concat')
+
+		if(timesort):
+			casalog.post('Sorting main table by TIME ...', 'INFO')
+			ms.timesort()
+
 		ms.close()
+			
 
 	except Exception, instance:
 		print '*** Error ***',instance
