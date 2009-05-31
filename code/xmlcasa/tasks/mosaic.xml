@@ -213,7 +213,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="cyclefactor">
-	    <description>Change the threshold at which the deconvolution cycle will stop, degrid, and subtract from the visiblities.</description>
+	    <description>Threshold for minor/major cycles (see pdoc)</description>
 	    <value>1.5</value>
     </param>
 

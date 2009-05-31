@@ -204,7 +204,8 @@ private:
 
   // The position of the first antenna.
   MPosition refpos_p;
-
+  MeasRef<MPosition> refposref_p;
+  
   // Ditto for feed.
   //const ROMSFeedColumns *feedColumns_;
 
@@ -229,7 +230,7 @@ private:
   
   // Log functions and variables
   LogIO sink_p;
-  LogIO& logSink();
+  LogIO& logSink() {return sink_p;}
 
   //map<Tag, ArrayParam>      m_array_p;     // FIX: Tag
 

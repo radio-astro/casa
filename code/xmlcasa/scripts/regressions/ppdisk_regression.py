@@ -117,9 +117,9 @@ regstate = True
 rskes = refstats.keys()
 rskes.sort()
 for ke in rskes:
-    adiff=abs(ppdso_stats[ke][0] - refstats[ke])/abs(refstats['sigma'])
+    adiff=abs(ppdso_stats[ke][0] - refstats[ke])/abs(refstats[ke])
     if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s test, got within %8.3g of % -11.5g." % (ke, reftol[ke]*refstats[ke], refstats[ke])
+        print >> logfile, "* Passed %-5s test, got % -11.5g , expected % -11.5g." % (ke, ppdso_stats[ke][0], refstats[ke])
     else:
         print >> logfile, "* FAILED %-5s test, got % -11.5g instead of % -11.5g." % (ke, ppdso_stats[ke][0], refstats[ke])
         regstate = False

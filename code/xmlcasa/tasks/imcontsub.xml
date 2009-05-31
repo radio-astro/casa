@@ -47,17 +47,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="region">
-        <description>Image region or name to process see viewer</description>
+        <description>Image region used for continuum area</description>
         <value></value>
     </param>
 
     <param type="string" name="box">
-        <description>Select one or more box regions</description>
+        <description>Box pixels regions for continuum area</description>
         <value></value>
     </param>
 
     <param type="string" name="chans" >
-	<description>Select the channel ranges for continuum</description>
+	<description>Channel ranges for continuum</description>
     	<value></value>
     </param>
 
@@ -97,15 +97,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		Default: none; Example: contfile='ngc5921_cont.im'
         fitorder -- Polynomial order for the continuum estimation.
                 Default: 0; Example fitorder=2
-        region -- File path to an ImageRegion file or name.
-                Use the viewer, then region manager to select regions of
-                   the image to process.  Similar to box, but graphical
-                Or the name of a region stored with the image, 
-                      use rg.namesintable()
-                to retrieve the list of names.
-                Default: none
+        region -- ImageRegion file to define continuum
+                Default: ''; none
                 Example: region='myimage.im.rgn'
                          region='region1'
+                Use the viewer on the image cube to define the continuum,
+                   regions.  More general than box/chans.  Still experimental
+                to retrieve the list of names.
 	box --  A box region on the directional plane
 	        ONLY pixel values acceptable at this time.
 		Default: none (whole 2-D plane); Example: box='10,10,50,50'
