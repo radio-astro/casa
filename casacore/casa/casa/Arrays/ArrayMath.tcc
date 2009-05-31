@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 20557 2009-04-02 14:11:08Z gervandiepen $
+//# $Id: ArrayMath.tcc 20564 2009-04-07 16:22:23Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -855,6 +855,16 @@ template<class T> Array<T> floor(const Array<T> &a)
     return arrayTransformResult (a, casa::Floor<T>());
 }
 
+template<class T> Array<T> round(const Array<T> &a)
+{
+    return arrayTransformResult (a, casa::Round<T>());
+}
+
+template<class T> Array<T> sign(const Array<T> &a)
+{
+    return arrayTransformResult (a, casa::Sign<T>());
+}
+
 template<class T> Array<T> tan(const Array<T> &a)
 {
     return arrayTransformResult (a, casa::Tan<T>());
@@ -992,6 +1002,38 @@ template<class T> T variance(const Array<T> &a)
 			 "elements"));
     }
     return variance(a, mean(a));
+}
+
+template<class T> Bool allSame(const Array<T>& a)
+{
+  Bool ss = True;
+
+  if(a.nelements() > 1){
+    if(a.contiguousStorage()){  				// Faster
+      typename Array<T>::const_contiter oldpos  = a.cbegin();
+      typename Array<T>::const_contiter iter    = a.cbegin();
+      typename Array<T>::const_contiter iterEnd = a.cend();
+      
+      ++iter;
+      for(typename Array<T>::const_contiter newpos = iter; ss && iter != iterEnd;
+	  ++iter){
+	ss = (*newpos == *oldpos);
+	oldpos = newpos;
+      }
+    }
+    else {
+      typename Array<T>::const_iterator oldpos  = a.begin();      
+      typename Array<T>::const_iterator iter    = a.begin();
+      typename Array<T>::const_iterator iterEnd = a.end();
+
+      for(typename Array<T>::const_iterator newpos = iter;
+	  ss && iter != iterEnd; ++iter){
+	ss = (*newpos == *oldpos);
+	oldpos = newpos;
+      }
+    }
+  }
+  return ss;
 }
 
 // <thrown>

@@ -487,8 +487,7 @@ class ImageAnalysis
     //specified by specaxis...possibilities are "pixel", "freq" or "vel"
     // xunits determines the units of the x-axis values...default is "GHz" for 
     // freq and "km/s" for vel
-    //PLEASE note that the returned value of zyaxisval is in 
-    // mJy or mJy/beam or mJy/pixel depending units of the image
+    //PLEASE note that the returned value of zyaxisval are the units of the image
     Bool getFreqProfile(const Vector<Double>& xy,  
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 			const String& xytype="world", 

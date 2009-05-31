@@ -1,5 +1,5 @@
 //# MVTime.cc: Class to handle date/time type conversions and I/O
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003,2004
+//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003,2004,2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVTime.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVTime.cc 20579 2009-04-23 13:28:04Z wbrouw $
 
 //# Includes
 #include <casa/Quanta/MVTime.h>
@@ -203,8 +203,8 @@ uInt MVTime::yearweek() const {
   yd %= 7;
   // Check for other week
   if (yd >= 0) {
-    if (yd > (Int)weekday()) return yw+1;
-  } else if (yd+7 > (Int)weekday()) return yw+1;
+    if (yd >= (Int)weekday()) return yw+1;
+  } else if (yd+7 >= (Int)weekday()) return yw+1;
   return yw;
 }
 

@@ -812,6 +812,9 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     }
   }
 
+  Vector<Int> antnumbers;
+  handleAntNumbers(rawms,antnumbers);
+
   // Loop through all rows.
   ProgressMeter meter(0.0, nrow*1.0, "UVFITS Writer", "Rows copied", "", "",
 		      True, nrow/100);
@@ -938,7 +941,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
       *odate2 = dayFraction;
       
       // BASELINE
-      *obaseline = (inant1(i)+1)*256 + inant2(i) + 1 + inarray(i)*0.01;
+      *obaseline = antnumbers(inant1(i))*256 + antnumbers(inant2(i)) + inarray(i)*0.01;
       
       // FREQSEL (in the future it might be FREQ_GRP+1)
       //    *ofreqsel = inddid(i) + 1;
@@ -1266,22 +1269,40 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     *polab = 0.0;
     *polcalb = 0.0;
 
+
+ /*
     Block<Int> id(nant);
-    Bool useAntId = True;
+    Bool useAntName = True;
     for (uInt a = 0; a < nant; a++) {
-      const String& antName = antid(a) ;
-      if (antName.matches(RXint)) {
+      String antName = antid(a) ;   // antid here is from the NAME column
+
+      // For *VLA*, may need to strip off leading VA or EA
+      if (arrayName.contains("VLA")) {
+	if (!antName.matches(RXint))
+	  antName=antName.after("A");
+      }
+
+      // Attempt to interpret as an integer
+      if (antName.matches(RXint) ) {
 	id[a] = atoi(antName.chars());
-      } else {
-	useAntId = False;
+      }
+      else {
+	useAntName = False;
 	break;
       }
     }
-    if (useAntId == False) {
+    // at least one antenna name failed to resolve as a number, 
+    //   so punt and use indices+1
+    if (useAntName == False) {
       for (uInt a = 0; a < nant; a++) {
 	id[a] = a + 1; // 1 relative antenna numbers in FITS
       }
     }
+ */
+ 
+    Vector<Int> id;
+    handleAntNumbers(ms,id);
+
     // A hack for old WSRT observations which stored the antenna name
     // in the STATION column instead of the NAME column.
     // So if all NAMES are equal use STATIONS (unless they are all equal).
@@ -1666,13 +1687,17 @@ Bool MSFitsOutput::writeTY(FitsOutput *output, const MeasurementSet &ms,
     tant2 = RecordFieldPtr<Array<Float> > (writer.row(), "TANT 2");
   }
 
+  Vector<Int> antnums;
+  handleAntNumbers(ms,antnums);
+
   Vector<Float> tsysval;
   for (uInt i=0; i<nrow; i+=nrif) {
     Double tim = sysCalColumns.time()(i);
     *time = (tim - refTime) / C::day;
     *interval = sysCalColumns.interval()(i) / C::day;
     *sourceId = 1;
-    *antenna = 1 + sysCalColumns.antennaId()(i);
+    //    *antenna = 1 + sysCalColumns.antennaId()(i);
+    *antenna = antnums( sysCalColumns.antennaId()(i) );
     *arrayId = 1;
     *spwId = 1 + spwidMap[sysCalColumns.spectralWindowId()(i)];
     sysCalColumns.tsys().get (i, tsysval);
@@ -1870,13 +1895,18 @@ Bool MSFitsOutput::writeGC(FitsOutput *output, const MeasurementSet &ms,
     sens2  = RecordFieldPtr<Array<Float> > (writer.row(), "SENS_2");
   }
 
+  // The antenna numbers
+  Vector<Int> antnums;
+  handleAntNumbers(ms,antnums);
+
   // Iterate through the table.
   // Each chunk should have the same size.
   while (!tabiter.pastEnd()) {
     Table tableChunk (tabiter.table());
     MSSysCal syscal (tableChunk);
     ROMSSysCalColumns sysCalColumns (syscal);
-    *antenna = sysCalColumns.antennaId()(0) + 1;
+    //    *antenna = sysCalColumns.antennaId()(0) + 1;
+    *antenna = antnums(sysCalColumns.antennaId()(0));
     //    *arrayId = sysCalColumns.arrayId()(0) + 1;
     *arrayId = 1;
     if (tableChunk.nrow() != havec.nelements()) {
@@ -2082,6 +2112,55 @@ Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
   }
   return nrid;
 }
+
+
+void MSFitsOutput::handleAntNumbers(const MeasurementSet& ms,
+				    Vector<Int>& antnumbers) {
+
+  // This method parses the MS ANTENNA NAME into a antenna
+  //  number appropriate for the UVFITS output
+  // For VLA antennas, the names are nominally numbers, and
+  //  may be prepended with EA or VA.  These prefixes are
+  //  properly stripped before the remaining string is parsed
+  //  as a number.
+  // For other telescopes, the name is used if it is a pure
+  //  integer; otherwise the index + 1 is used (NB: AIPS demands
+  //  one-basedness.)
+
+  // Discern if which telescope
+  ROMSObservationColumns obscol(ms.observation());
+  String arrayName;
+  if (obscol.nrow()>0)
+    arrayName=obscol.telescopeName()(0);
+
+  ROMSAntennaColumns antcol(ms.antenna());
+  ROScalarColumn<String> antname(antcol.name());
+  Int nAnt=antcol.nrow();
+
+  antnumbers.resize(nAnt);
+
+  for (Int iant=0;iant<nAnt;++iant) {
+    String name;
+    if (arrayName.contains("VLA"))
+      // Trim leading EA/VA, if present
+      name=antname(iant).from(RXint);
+    else
+      name=antname(iant);
+
+    if (name.matches(RXint)) 
+      antnumbers(iant)=atoi(name.chars());
+    else {
+      // at least one name isn't a number, so use use index+1 for ALL
+      indgen(antnumbers);
+      antnumbers+=1;
+      break;
+    }
+  }
+
+  //  cout << "antnumbers = " << antnumbers << endl;
+
+}
+
 // Local Variables: 
 // compile-command: "gmake MSFitsOutput"
 // End: 

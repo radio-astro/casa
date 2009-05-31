@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprLogicNode.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ExprLogicNode.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/ExprLogicNode.h>
 #include <tables/Tables/ExprDerNode.h>
@@ -46,6 +46,16 @@ TableExprNodeEQBool::~TableExprNodeEQBool()
 Bool TableExprNodeEQBool::getBool (const TableExprId& id)
 {
     return lnode_p->getBool(id) == rnode_p->getBool(id);
+}
+
+TableExprNodeEQInt::TableExprNodeEQInt (const TableExprNodeRep& node)
+: TableExprNodeBinary (NTBool, node, OtEQ)
+{}
+TableExprNodeEQInt::~TableExprNodeEQInt()
+{}
+Bool TableExprNodeEQInt::getBool (const TableExprId& id)
+{
+    return lnode_p->getInt(id) == rnode_p->getInt(id);
 }
 
 TableExprNodeEQDouble::TableExprNodeEQDouble (const TableExprNodeRep& node)
@@ -109,6 +119,16 @@ Bool TableExprNodeNEBool::getBool (const TableExprId& id)
     return lnode_p->getBool(id) != rnode_p->getBool(id);
 }
 
+TableExprNodeNEInt::TableExprNodeNEInt (const TableExprNodeRep& node)
+: TableExprNodeBinary (NTBool, node, OtNE)
+{}
+TableExprNodeNEInt::~TableExprNodeNEInt()
+{}
+Bool TableExprNodeNEInt::getBool (const TableExprId& id)
+{
+    return lnode_p->getInt(id) != rnode_p->getInt(id);
+}
+
 TableExprNodeNEDouble::TableExprNodeNEDouble (const TableExprNodeRep& node)
 : TableExprNodeBinary (NTBool, node, OtNE)
 {}
@@ -160,6 +180,16 @@ Bool TableExprNodeNEDate::getBool (const TableExprId& id)
 }
 
 
+TableExprNodeGTInt::TableExprNodeGTInt (const TableExprNodeRep& node)
+: TableExprNodeBinary (NTBool, node, OtGT)
+{}
+TableExprNodeGTInt::~TableExprNodeGTInt()
+{}
+Bool TableExprNodeGTInt::getBool (const TableExprId& id)
+{
+    return lnode_p->getInt(id) > rnode_p->getInt(id);
+}
+
 TableExprNodeGTDouble::TableExprNodeGTDouble (const TableExprNodeRep& node)
 : TableExprNodeBinary (NTBool, node, OtGT)
 {}
@@ -201,6 +231,16 @@ Bool TableExprNodeGTDate::getBool (const TableExprId& id)
 }
 
 
+TableExprNodeGEInt::TableExprNodeGEInt (const TableExprNodeRep& node)
+: TableExprNodeBinary (NTBool, node, OtGE)
+{}
+TableExprNodeGEInt::~TableExprNodeGEInt()
+{}
+Bool TableExprNodeGEInt::getBool (const TableExprId& id)
+{
+    return lnode_p->getInt(id) >= rnode_p->getInt(id);
+}
+
 TableExprNodeGEDouble::TableExprNodeGEDouble (const TableExprNodeRep& node)
 : TableExprNodeBinary (NTBool, node, OtGE)
 {}
@@ -241,6 +281,16 @@ Bool TableExprNodeGEDate::getBool (const TableExprId& id)
     return lnode_p->getDate(id) >= rnode_p->getDate(id);
 }
 
+
+TableExprNodeINInt::TableExprNodeINInt (const TableExprNodeRep& node)
+: TableExprNodeBinary (NTBool, node, OtIN)
+{}
+TableExprNodeINInt::~TableExprNodeINInt()
+{}
+Bool TableExprNodeINInt::getBool (const TableExprId& id)
+{
+    return rnode_p->hasInt (id, lnode_p->getInt (id));
+}
 
 TableExprNodeINDouble::TableExprNodeINDouble (const TableExprNodeRep& node)
 : TableExprNodeBinary (NTBool, node, OtIN)

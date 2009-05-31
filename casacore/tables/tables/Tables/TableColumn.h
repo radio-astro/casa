@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableColumn.h 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #ifndef TABLES_TABLECOLUMN_H
 #define TABLES_TABLECOLUMN_H
@@ -227,6 +227,8 @@ public:
     void getScalar (uInt rownr, Int& value) const
 	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->getScalar (rownr, value); }
     void getScalar (uInt rownr, uInt& value) const
+	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->getScalar (rownr, value); }
+    void getScalar (uInt rownr, Int64& value) const
 	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->getScalar (rownr, value); }
     void getScalar (uInt rownr, float& value) const
 	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->getScalar (rownr, value); }

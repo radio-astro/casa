@@ -120,9 +120,8 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 //
 // List information about an ms to the logger
 //
-void MSSummary::list (LogIO& os, Bool verbose)
+void MSSummary::list (LogIO& os, Bool verbose) const
 {
-
   // List a title for the Summary
   listTitle (os);
 
@@ -174,7 +173,7 @@ void MSSummary::listWhere (LogIO& os, Bool verbose) const
 }
 
 
-void MSSummary::listWhat (LogIO& os, Bool verbose)
+void MSSummary::listWhat (LogIO& os, Bool verbose) const
 {
   listMain (os,verbose);
   listField (os,verbose);
@@ -195,7 +194,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 //
 // SUBTABLES
 //
-void MSSummary::listMain (LogIO& os, Bool verbose)
+void MSSummary::listMain (LogIO& os, Bool verbose) const
 {
   if (nrow()<=0) {
     os << "The MAIN table is empty: there are no data!!!" << endl;
@@ -876,6 +875,10 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
   // Create a MS-source-columns object
   ROMSSourceColumns msSC(pMS->source());
 
+  // Are restFreq and sysvel present?
+  Bool restFreqOK=pMS->source().tableDesc().isColumn("REST_FREQUENCY");
+  Bool sysVelOK=pMS->source().tableDesc().isColumn("SYSVEL");
+
   if (msSC.name().nrow()<=0) {
     os << "The SOURCE table is empty: see the FIELD table" << endl;
   }
@@ -902,8 +905,12 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
     //      os.output().width(widthRA);	os << "RA";
     //      os.output().width(widthDec);	os << "Decl";
     os.output().width(widthSpw);      os << "SpwId";
-    os.output().width(widthRF);       os << "RestFreq(MHz)";
-    os.output().width(widthVel);	os << "SysVel(km/s)";
+    if (restFreqOK) {
+      os.output().width(widthRF);      os << "RestFreq(MHz)";
+    }    
+    if (sysVelOK) {
+      os.output().width(widthVel);     os << "SysVel(km/s)";
+    }
     os << endl;
     
     os.output().precision(12);
@@ -928,23 +935,39 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
       Int spwid=msSC.spectralWindowId()(row);
       if (spwid<0) os<< "any";
       else os<<spwid;
+      if (restFreqOK) {
+	os.output().width(widthRF);
+	if (msSC.restFrequency().isDefined(row)) {
+	  Vector<Double> restfreq=msSC.restFrequency()(row);
+	  if (restfreq.nelements()>0)
+	    os<< restfreq(0)/1.0e6;
+	  else 
+	    os<< "-";
+	}
+	else
+	  os<<"-";
+      }
 
-      Vector<Double> restfreq=msSC.restFrequency()(row);
-      Vector<Double> sysvel=msSC.sysvel()(row);
-      os.output().width(widthRF);
-      if (restfreq.nelements()>0)
-	os<< restfreq(0)/1.0e6;
-      else 
-	os<< "-";
-      //	os<< "      ---      ";
-      os.output().width(widthVel);
-      if (sysvel.nelements()>0)
-	os<< sysvel(0)/1.0e3;
-      else
-	os<< "-";
-      //	os<< "     ---     ";
+      if (sysVelOK) {
+	os.output().width(widthVel);
+	if (msSC.sysvel().isDefined(row)) {
+	  Vector<Double> sysvel=msSC.sysvel()(row);
+	  if (sysvel.nelements()>0)
+	    os<< sysvel(0)/1.0e3;
+	  else
+	    os<< "-";
+	}
+	else
+	  os<<"-";
+      }
       os << endl;
     }
+
+    if (!restFreqOK)
+      os << "  NB: No rest frequency information found in SOURCE table." << endl;
+    if (!sysVelOK)
+      os << "  NB: No systemic velocity information found in SOURCE table." << endl;
+
   }
   os << LogIO::POST;
 }

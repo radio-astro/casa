@@ -194,6 +194,7 @@ void ROScalarColumn<T>::getColumnCells (const RefRows& rownrs,
 }
 
 
+
 template<class T>
 ScalarColumn<T>::ScalarColumn()
 : ROTableColumn     (),

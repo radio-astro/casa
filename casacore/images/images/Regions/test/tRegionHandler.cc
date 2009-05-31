@@ -33,7 +33,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/PagedArray.h>
 #include <lattices/Lattices/LCSlicer.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>

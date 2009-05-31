@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseColumn.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: BaseColumn.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/BaseColumn.h>
 #include <casa/Arrays/IPosition.h>
@@ -272,6 +272,42 @@ void BaseColumn::getScalar (uInt rownr, uInt& value) const
 	return;
     default:
 	throw (TableInvDT ("invalid type promotion in getScalar(uInt)"));
+    }
+}
+
+void BaseColumn::getScalar (uInt rownr, Int64& value) const
+{
+    if (!colDescPtr_p->isScalar()) {
+	throw (TableInvOper ("getScalar only possible for scalars"));
+    }
+    switch (colDescPtr_p->dataType()) {
+    case TpUChar:
+	uChar valuc;
+	get (rownr, &valuc);
+	value = valuc;
+	return;
+    case TpShort:
+	Short vals;
+	get (rownr, &vals);
+	value = vals;
+	return;
+    case TpUShort:
+	uShort valus;
+	get (rownr, &valus);
+	value = valus;
+	return;
+    case TpInt:
+        Int vali;
+	get (rownr, &vali);
+        value = vali;
+	return;
+    case TpUInt:
+        uInt valui;
+	get (rownr, &valui);
+        value = valui;
+	return;
+    default:
+	throw (TableInvDT ("invalid type promotion in getScalar(Int64)"));
     }
 }
 
