@@ -1511,8 +1511,10 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          BasePlotError(String("Need Scaler column for ") + collist[i+2]);
       
       /* Check datatype of column */
-      if((ctens[i].dataType() != TpDouble) && (ctens[i].dataType() != TpInt)) 
-            BasePlotError(String("Need Double or TpInt, and not ") + 
+      if(!(ctens[i].dataType() == TpDouble) 
+	      || (ctens[i].dataType() == TpFloat) 
+	      || (ctens[i].dataType() == TpInt)) 
+            BasePlotError(String("Need Double, Float or Int, and not ") + 
                      ctens[i].dataType() + String(" for ") + collist[i+2]);
          
    }// for ncoll-2
@@ -1726,8 +1728,8 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          BasePlotError(String("Need Scaler column for ") + collist[i+2]);
       
       /* Check datatype of column */
-      if ((ctens[i].dataType() != TpInt) &&
-          (ctens[i].dataType() != TpDouble)) 
+      if (!(ctens[i].dataType() == TpInt) ||
+          (ctens[i].dataType() == TpDouble)) 
          BasePlotError(String("Need Double or TpInt, and not ") + 
                   ctens[i].dataType() + String(" for ") + collist[i+2]);
          
@@ -2151,7 +2153,10 @@ Int BasePlot::createXTENS(Vector<String> &datastr)
    {
       xtens_p[i] = RecordGram::parse(SelTab_p,datastr[i*2]);
       
-      if( (xtens_p[i].dataType() != TpDouble)  ) 
+      //if( (xtens_p[i].dataType() != TpDouble)  ) 
+      if(!((xtens_p[i].dataType() == TpDouble) ||
+           (xtens_p[i].dataType() == TpInt) || 
+           (xtens_p[i].dataType() == TpFloat))) 
       {
          ostringstream dtype;
          dtype << xtens_p[i].dataType();
@@ -2179,7 +2184,10 @@ Int BasePlot::createYTENS(Vector<String> &datastr)
    {
       ytens_p[i] = RecordGram::parse(SelTab_p,datastr[i*2+1]);
 
-      if( (ytens_p[i].dataType() != TpDouble) ) 
+      //if( (ytens_p[i].dataType() != TpDouble) ) 
+      if(!((ytens_p[i].dataType() == TpDouble) ||
+           (ytens_p[i].dataType() == TpInt) ||
+           (ytens_p[i].dataType() == TpFloat))) 
       {
          ostringstream dtype;
          dtype << ytens_p[i].dataType();
