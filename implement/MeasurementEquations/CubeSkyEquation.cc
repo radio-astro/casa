@@ -1201,12 +1201,14 @@ void CubeSkyEquation::fixImageScale()
 	      Float planeMax;
 	      LatticeExprNode LEN = max( ggSSub );
 	      planeMax =  LEN.getFloat();
+	      ///As we chop the image later...the weight can vary per channel
+	      ///lets be conservative and go to 10% of ggsmin2
 	      if(planeMax !=0){
 		fscalesub.copyData( (LatticeExpr<Float>) 
-				    (iif(ggSSub < (ggSMin2), 
+				    (iif(ggSSub < (ggSMin2/10.0), 
 					 0.0, (ggSSub/planeMax))));
 		ggSSub.copyData( (LatticeExpr<Float>) 
-				 (iif(ggSSub < (ggSMin2), 0.0, 
+				 (iif(ggSSub < (ggSMin2/10.0), 0.0, 
 				      (planeMax))));
 	
 	
