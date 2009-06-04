@@ -1022,7 +1022,8 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
     else {
       // Is the midpoint of this pointing table entry within the specified
       // tolerance of the main table entry?
-      if(abs(midpoint-time) < (mspc.interval()(i)/2.0)) {
+      //if(abs(midpoint-time) < (mspc.interval()(i)/2.0)) {
+      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0)) {
       	lastIndex_p=i;
 	return i;
       }
