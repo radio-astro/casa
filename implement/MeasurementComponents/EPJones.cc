@@ -61,11 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SolvableVisJones(vs),
     pointPar_(),
     ms_p(0), vs_p(&vs),
-    polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500),
-    maxTimePerSolution(0), 
-    minTimePerSolution(10000000), 
-    avgTimePerSolution(0),
-    timer()
+    maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
+    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.1), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -79,11 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SolvableVisJones(vs),
     pointPar_(),
     ms_p(&ms), vs_p(&vs),
-    polMap_p(), tolerance_p(1e-9), gain_p(0.2), niter_p(500),
-    maxTimePerSolution(0), 
-    minTimePerSolution(10000000), 
-    avgTimePerSolution(0),
-    timer()
+    maxTimePerSolution(0), minTimePerSolution(10000000), avgTimePerSolution(0),
+    timer(), polMap_p(), tolerance_p(1e-12), gain_p(0.1), niter_p(500)
   {
     if (prtlev()>2) cout << "EP::EP(vs)" << endl;
     pbwp_p = NULL;
@@ -749,28 +743,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void EPJones::printActivity(const Int nSlots, const Int slotNo, const Int fieldId, 
+  void EPJones::printActivity(const Int slotNo, const Int fieldId, 
 			      const Int spw, const Int nSolutions)
   {
-    Int nMesg;
+    Int nSlots, nMesg;
 
-    //    nSlots = rcs().nTime(spw);
+    nSlots = rcs().nTime(spw);
     
-    uInt caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "600.0");
-    uInt cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.1");
-    Float userPrintActivityInterval_p, userPrintActivityFraction_p;
-    String ca_str = Aipsrc::get(caiRC_p);
-    std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
-    userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
-    ca_str = Aipsrc::get(cafRC_p);
-    std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
-    userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
-
     Double timeTaken = timer.all();
     if (maxTimePerSolution < timeTaken) maxTimePerSolution = timeTaken;
     if (minTimePerSolution > timeTaken) minTimePerSolution = timeTaken;
     avgTimePerSolution += timeTaken;
-
     Double avgT =  avgTimePerSolution/(nSolutions>0?nSolutions:1);
     //
     // Boost the no. of messages printed if the next message, based on
@@ -778,14 +761,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // longer than my (SB) patience would permit!  The limit of
     // patience is set to 10 min.
     //
-    Float boost = userPrintActivityInterval_p/avgT;
-    boost = (boost < 1.0)? 1.0 : nSlots*userPrintActivityFraction_p;
-    nMesg = (Int)boost;
-
+    Float boost = avgT*printFraction(nSlots)*nSlots/(10*60.0);
+    boost = (boost < 1.0)? 1.0:boost;
+    nMesg = (Int)(nSlots*printFraction(nSlots)/boost);
+    nMesg = (nMesg<1?1:nMesg);
+    
     Int tmp=abs(nSlots-slotNo); Bool print;
     print = False;
-    if (nMesg <= 0) print=False;
-    else if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
+    if ((slotNo == 0) || (slotNo == nSlots-1))  print=True;
     else if ((tmp > 0 ) && ((slotNo+1)%nMesg ==0)) print=True;
     else print=False;
 
@@ -793,8 +776,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Int f = (Int)(100*(slotNo+1)/(nSlots>0?nSlots:1));
 	logSink()<< LogIO::NORMAL 
-		 << "Spw=" << spw << " slot=" << slotNo << "/" << nSlots
-		 << " field=" << fieldId << ". Done " << f << "%"
+		 << "Spw=" << spw << " slot=" << slotNo << "/" << nSlots 
+                 << " field=" << fieldId << ". Done " << f << "%"
 		 << " Time taken per solution (max/min/avg): "
 		 << maxTimePerSolution << "/" 
 		 << (minTimePerSolution<0?1:minTimePerSolution) << "/"
@@ -811,7 +794,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     SteepestDescentSolver sds(nPar(),polMap_p,niter_p,tolerance_p);
     sds.setGain(gain_p);
-    sds.setGain(1);
+    //sds.setGain(1);
     //
     // Inform logger/history
     //
@@ -880,8 +863,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  		    postSolveMassage(vb);
 		    totalGoodSol=True;
 		    keep(islot(spw));
-		    Int n=rcs().nTime(spw);
-		    printActivity(n,islot(spw),vi.fieldId(),spw,nGood);	      
+		    printActivity(islot(spw),vi.fieldId(),spw,nGood);	      
 		  }
 	      } // parameter channels
 	    if (totalGoodSol)	nGood++;
@@ -911,17 +893,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Load the offsets from the internal EPJones storage
     // (ultimately change the data structures to not need these copies)
     //
-    IPosition ndx(1);
     //    Cube<Float> pointingOffsets(2,1,nAnt());
-    Cube<Float> pointingOffsets(nPar(),1,nAnt());
-    for(ndx(0)=0;ndx(0)<nAnt();ndx(0)++)
-      {
-	// Use solveRPar()(nPar,0,Ant)
-	for(Int j=0;j<nPar();j++)
-	  {
-	    pointingOffsets(j,0,ndx(0)) = solveRPar()(j,0,ndx(0));//pointPar_(0,0,ndx(0));
-	  }
-      }
+//     Int nchan=1;
+//     Cube<Float> pointingOffsets(nPar(),nchan,nAnt());
+//     for(Int ant=0;ant<nAnt();ant++)
+//       for(Int par=0;par<nPar();par++)
+// 	for(Int chan=0;chan<nchan;chan++)
+// 	  pointingOffsets(par,chan,ant) = solveRPar()(par,chan,ant);//pointPar_(0,0,ndx(0));
+
     //    cout << "EPJ: " << pointingOffsets << endl;
     //
     // Model vis shape must match visibility
@@ -931,7 +910,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     residuals.modelVisCube() = Complex(0,0);
     dAZVB.modelVisCube() = dELVB.modelVisCube() = Complex(0,0);  
     static Int j=0;
-
+/*
+    cout << "EPJ::diff: " << residuals.modelVisCube().shape() << " "
+                          << vb.visCube().shape() << " " 
+                          << vb.modelVisCube().shape() << " "
+                          << dAZVB.modelVisCube().shape() << " "
+                          << dELVB.modelVisCube().shape() << endl;
+*/
     for (vi.origin(); vi.more(); vi++) 
       {
 	//	ve.collapse(vb);
@@ -944,7 +929,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	dELVB.modelVisCube().resize(shp);
 	vb.modelVisCube() = dAZVB.modelVisCube() = dELVB.modelVisCube() = Complex(0,0);
 
-	pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
+	//	pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
+	pbwp_p->get(vb, dAZVB, dELVB, solveRPar());
 	//	pbwp_p->get(vb);
 	/*
 	//
@@ -959,33 +945,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (isVBNaN(dAZVB,mesg)) throw(AipsError("AZVB has NaN "+mesg+String(mesg2.str().c_str())));
 	if (isVBNaN(dELVB,mesg)) throw(AipsError("ELVB has NaN "+mesg+String(mesg2.str().c_str())));
 	*/
-	/*
-	if (j == 4)
+	//	if (j == 4)
+/*
 	  {
 	    //	    pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
 	    cout << "chunk==========================================" << endl;
 	    cout << vb.modelVisCube().shape() << " " << vb.visCube().shape() << " " << vb.flag().shape() 
-		 << vb.flagRow().shape() << " " << vb.flagCube().shape() << endl;
+		 << vb.flagRow().shape() << " " << vb.flagCube().shape() 
+                 << solveRPar().shape() << " "
+	         << endl;
 	    Int m=1;
 	    for(Int i=0;i<vb.modelVisCube().shape()(2);i++)
+	    //for(Int i=0;i<2;i++)
 	      {
-		cout << "Residual: " << i 
-		     << " " << vb.modelVisCube()(0,0,i) 
+		cout << "EPJ Residual: " << i 
+		     << " " << getCurrentTimeStamp(vb)/1e9-4.68002
 		     << " " << vb.modelVisCube()(m,0,i)
-		     << " " << vb.visCube()(0,0,i) 
 		     << " " << vb.visCube()(m,0,i)
-		     << " " << vb.modelVisCube()(0,0,i)-vb.visCube()(0,0,i) 
 		     << " " << vb.modelVisCube()(m,0,i)-vb.visCube()(m,0,i) 
-		     << " " << vb.flag()(0,i) 
 		     << " " << vb.antenna1()(i)<< "-" << vb.antenna2()(i) 
-		     << " " << vb.flagRow()(i) 
-		     << " " << vb.flagCube()(0,0,i) 
-		     << " " << vb.flagCube()(m,0,i) 
+ 		     << " " << vb.flag()(0,i) 
+ 		     << " " << vb.flagRow()(i) 
+ 		     << " " << vb.flagCube()(m,0,i) 
+		     << " " << solveRPar()(0,0,vb.antenna1()(i))
+		     << " " << solveRPar()(0,0,vb.antenna2()(i))
+		     << " " << solveRPar()(1,0,vb.antenna1()(i))
+		     << " " << solveRPar()(1,0,vb.antenna2()(i))
+		     << " " << solveRPar()(2,0,vb.antenna1()(i))
+		     << " " << solveRPar()(2,0,vb.antenna2()(i))
 		     << endl;
 	      }
-	    exit(0);
+	    //	    exit(0);
 	  }
-	*/
+*/
+
 	vb.modelVisCube() -= vb.visCube();  // Residual = VModel - VObs
 
 	resAvgr.accumulate(vb);
@@ -1010,16 +1003,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // resizing the LHS in LHS=RHS of CASA Arrays must be leading to
     // extra code of this type all over the place)
     //
-    shp = resAvgr.aveVisBuff().modelVisCube().shape();  residuals.modelVisCube().resize(shp);
-    shp = dRes1Avgr.aveVisBuff().modelVisCube().shape();  dAZVB.modelVisCube().resize(shp);
-    shp = dRes2Avgr.aveVisBuff().modelVisCube().shape();  dELVB.modelVisCube().resize(shp);
+    //    shp = resAvgr.aveVisBuff().modelVisCube().shape();  
+    //
+    // The data cubes...
+    //
+    residuals.modelVisCube().resize(resAvgr.aveVisBuff().modelVisCube().shape());
+    dAZVB.modelVisCube().resize(dRes1Avgr.aveVisBuff().modelVisCube().shape());
+    dELVB.modelVisCube().resize(dRes2Avgr.aveVisBuff().modelVisCube().shape());
+    // The flag cubes..
+    residuals.flagCube().resize(resAvgr.aveVisBuff().flagCube().shape());
+    dAZVB.flagCube().resize(dRes1Avgr.aveVisBuff().flagCube().shape());
+    dELVB.flagCube().resize(dRes2Avgr.aveVisBuff().flagCube().shape());
+    // The flags...
+    residuals.flag().resize(resAvgr.aveVisBuff().flag().shape());
+    dAZVB.flag().resize(dRes1Avgr.aveVisBuff().flag().shape());
+    dELVB.flag().resize(dRes2Avgr.aveVisBuff().flag().shape());
+    // The row flags....
+    residuals.flagRow().resize(resAvgr.aveVisBuff().flagRow().shape());
+    dAZVB.flagRow().resize(dRes1Avgr.aveVisBuff().flagRow().shape());
+    dELVB.flagRow().resize(dRes2Avgr.aveVisBuff().flagRow().shape());
+
+    residuals.weight().resize(resAvgr.aveVisBuff().weight().shape());
     //
     // Now copy the modelVisCube() from the averaged VisBuffers to the
     // target VisBuffers().
     //
+    // The data cubes...
     residuals.modelVisCube() = resAvgr.aveVisBuff().modelVisCube();
     dAZVB.modelVisCube()     = dRes1Avgr.aveVisBuff().modelVisCube();
     dELVB.modelVisCube()     = dRes2Avgr.aveVisBuff().modelVisCube();
+
+    // The flag cubes...    
+    residuals.flagCube() = resAvgr.aveVisBuff().flagCube();
+    dAZVB.flagCube()     = dRes1Avgr.aveVisBuff().flagCube();
+    dELVB.flagCube()     = dRes2Avgr.aveVisBuff().flagCube();
+    // The flags...
+    residuals.flag() = resAvgr.aveVisBuff().flag();
+    dAZVB.flag()     = dRes1Avgr.aveVisBuff().flag();
+    dELVB.flag()     = dRes2Avgr.aveVisBuff().flag();
+    // The row flags...
+    residuals.flagRow() = resAvgr.aveVisBuff().flagRow();
+    dAZVB.flagRow()     = dRes1Avgr.aveVisBuff().flagRow();
+    dELVB.flagRow()     = dRes2Avgr.aveVisBuff().flagRow();
+
+    residuals.weight() = resAvgr.aveVisBuff().weight();
+    //
+    // Average the residuals and the derivates in frequency.
+    //
+    residuals.freqAveCubes();
+    dAZVB.freqAveCubes();
+    dELVB.freqAveCubes();
     /*
     residuals=dAZVB=dELVB=vb;
     shp = vb.modelVisCube().shape();  
@@ -1031,6 +1064,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dAZVB.modelVisCube()     = dAZVB.modelVisCube();
     dELVB.modelVisCube()     = dELVB.modelVisCube();
     */
+/*
+	  {
+	    //	    pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
+	    cout << "chunk==========================================" << endl;
+	    cout << residuals.modelVisCube().shape() << " " 
+		 << residuals.visCube().shape() << " " 
+		 << residuals.flag().shape() 
+		 << residuals.flagRow().shape() << " " 
+		 << residuals.flagCube().shape() << endl;
+	    Int m=1;
+	    for(Int i=0;i<residuals.modelVisCube().shape()(2);i++)
+	    //for(Int i=0;i<2;i++)
+	      {
+		cout << "EPJ AvgResidual: " << i 
+		     << " " << getCurrentTimeStamp(vb)/1e9-4.68002
+		     << " " << residuals.modelVisCube()(m,0,i)
+		     << " " << residuals.visCube()(m,0,i)
+		     << " " << residuals.modelVisCube()(m,0,i)-residuals.visCube()(m,0,i) 
+		     << " " << residuals.antenna1()(i)<< "-" << residuals.antenna2()(i) 
+ 		     << " " << residuals.flag()(0,i) 
+ 		     << " " << residuals.flagRow()(i) 
+ 		     << " " << residuals.flagCube()(m,0,i) 
+		     << " " << solveRPar()(0,0,residuals.antenna1()(i))
+		     << " " << solveRPar()(0,0,residuals.antenna2()(i))
+		     << " " << solveRPar()(1,0,residuals.antenna1()(i))
+		     << " " << solveRPar()(1,0,residuals.antenna2()(i))
+		     << " " << solveRPar()(2,0,residuals.antenna1()(i))
+		     << " " << solveRPar()(2,0,residuals.antenna2()(i))
+		     << endl;
+	      }
+	    //	    exit(0);
+	  }
+*/
     Mflg.reference(residuals.flag());  
     //    shp = residuals.flag().shape();
   }
@@ -1049,18 +1115,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition shp=par.shape();
 
     for(uInt i=0;i<nTimes;i++)
-      {	  
-	if (abs(time[i]-thisTime) < dT)
-	  {
-	    dT = abs(time[i]-thisTime);
-	    slot=i;
-	  }
-      }
-    if (slot >= nTimes) throw(AipsError("EPJones::nearest(): Internal problem - nearest slot is out of range"));
+      if (abs(time[i]-thisTime) < dT)
+	{
+	  dT = abs(time[i]-thisTime);
+	  slot=i;
+	}
+
+    if (slot >= nTimes) throw(AipsError("EPJones::nearest(): Internal problem - "
+					"nearest slot is out of range"));
     Array<Float> tmp=par(IPosition(4,0,0,0,slot), IPosition(4,shp[0]-1,shp[1]-1,shp[2]-1,slot));
 
     return tmp;
   }
+
+void EPJones::printRPar()
+{
+     Int n=solveRPar().shape()(2);
+     for(Int i=0;i<n;i++)
+	cout << solveRPar()(0,0,i) << " "
+             << solveRPar()(1,0,i) << " "
+             << solveRPar()(2,0,i) << " "
+             << solveRPar()(3,0,i) 
+             << endl;
+}
 
 } //# NAMESPACE CASA - END
 
