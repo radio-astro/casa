@@ -167,6 +167,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
+    // This version returns the gridded vis...should be used in conjunction 
+    // with the version of 'get' that needs the gridded visdata 
+    virtual void initializeToVis(ImageInterface<Complex>& image,
+			 const VisBuffer& vb, Array<Complex>& griddedVis,
+			 Vector<Double>& uvscale);
     
     // Finalize transform to Visibility plane: flushes the image
     // cache and shows statistics if it is being used.
@@ -186,6 +191,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get actual coherence from grid by degridding
     void get(VisBuffer& vb, Int row=-1);
+    
+    // Get the coherence from grid return it in the degrid 
+    // is used especially when scratch columns are not 
+    // present in ms.
+    void get(VisBuffer& vb, Cube<Complex>& degrid, 
+	     Array<Complex>& griddedVis, Vector<Double>& scale, 
+	     Int row=-1);
     
     void get(VisBuffer& vb, Cube<Float>& pointingOffsets, Int row=-1,
 	     Type whichVBColumn=FTMachine::MODEL,Int Conj=0)
@@ -297,15 +309,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Complex>& sky)
     {return verifyShapes(pb.shape(),sky.shape());}
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
+    Bool findSupport(Array<Complex>& func, Float& threshold, Int& origin, Int& R);
   protected:
-    //** Members which are set in the initialization list of the c'tor. **
-    Float				padding_p;	// Padding in FFT
-    Int					nWPlanes_p;
-    LatticeCache<Complex> *		imageCache;
-    Long				cachesize;
-    Int					tilesize;
-    ConvolveGridder<Double, Complex>*	gridder;
-    Bool				isTiled;
+    
+    // Padding in FFT
+    Float padding_p;
+    
+    Int nint(Double val) {return Int(floor(val+0.5));};
+    
+    // Make the PB part of the convolution function
+    Int makePBPolnCoords(//const ImageInterface<Complex>& image,
+			 CoordinateSystem& coord, const VisBuffer& vb);
+    // Locate convolution functions on the disk
+    Int locateConvFunction(Int Nw, Int polInUse, const VisBuffer& vb, Float &pa);
+    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
+    // Find the convolution function
+    void findConvFunction(const ImageInterface<Complex>& image,
+			  const VisBuffer& vb);
+    void makeConvFunction(const ImageInterface<Complex>& image,
+			  const VisBuffer& vb, Float pa);
+    
+    Int nWPlanes_p;
+    
+    // Get the appropriate data pointer
+    Array<Complex>* getDataPointer(const IPosition&, Bool);
+    
+    void ok();
+    
+    void init();
+    //    Int getVisParams();
+    Int getVisParams(const VisBuffer& vb);
+    // Is this record on Grid? check both ends. This assumes that the
+    // ends bracket the middle
+    Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+    
+    // Image cache
+    LatticeCache<Complex> * imageCache;
+    
+    // Sizes
+    Long cachesize;
+    Int tilesize;
+    
+    // Gridder
+    ConvolveGridder<Double, Complex>* gridder;
+    
+    // Is this tiled?
+    Bool isTiled;
+    
+    // Array lattice
     //Lattice<Complex> * arrayLattice;
     CountedPtr<Lattice<Complex> > arrayLattice;
     
@@ -314,23 +365,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Lattice<Complex>* lattice;
     CountedPtr<Lattice<Complex> > lattice;
     
-    Float			maxAbsData;
-    IPosition			centerLoc, offsetLoc;	// Useful IPositions    
-    MSPointingColumns*		mspc;
-    MSAntennaColumns*		msac;
-    MDirection::Convert*	pointingToImage;
-    Bool			usezero_p;	// Grid/degrid zero spacing points?
-    Bool			doPBCorrection;
-    Unit			Second, Radian, Day;
-    Int				noOfPASteps;
-    Bool			pbNormalized, resetPBs;
-    Bool			avgPBSaved;
-    ConvFuncDiskCache		cfCache;
-    ParAngleChangeDetector	paChangeDetector;
-    Vector<Int>			cfStokes;
-    Vector<Complex>		Area;
-            
-    //** End of members which are set in the initialization list of the c'tor. **
+    Float maxAbsData;
+    
+    // Useful IPositions
+    IPosition centerLoc, offsetLoc;
     
     // Image Scaling and offset
     Vector<Double> uvScale, uvOffset;
@@ -338,7 +376,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Array for non-tiled gridding
     Array<Complex> griddedData;
     
+    // Pointing columns
+    MSPointingColumns* mspc;
+    
+    // Antenna columns
+    MSAntennaColumns* msac;
+    
     DirectionCoordinate directionCoord;
+    
+    MDirection::Convert* pointingToImage;
     
     Vector<Double> xyPos;
     
@@ -346,7 +392,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int priorCacheSize;
     
+    // Grid/degrid zero spacing points?
+    Bool usezero_p;
+    
     Array<Complex> convFunc;
+    Array<Complex> convWeights;
+    CoordinateSystem convFuncCS_p;
     Int convSize;
     //
     // Vector to hold the support size info. for the convolution
@@ -354,13 +405,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // co-ordinates of this array are (W-term, Poln, PA).
     //
     Int convSampling;
-    Cube<Int> convSupport;
+    Cube<Int> convSupport, convWtSupport;
     //
     // Holder for the pointers to the convolution functions. Each
     // convolution function itself is a complex 3D array (U,V,W) per
     // PA.
     //
-    PtrBlock < Array<Complex> *> convFuncCache;
+    PtrBlock < Array<Complex> *> convFuncCache, convWeightsCache;
     //    Array<Complex>* convFunc_p;
 
     //
@@ -375,6 +426,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int wConvSize;
     
     Int lastIndex_p;
+    
+    Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
+		 const Double& interval);
+    
+    Bool getXYPos(const VisBuffer& vb, Int row);
     //    VPSkyJones *vpSJ;
     //
     // The PA averaged (and potentially antenna averaged) PB for
@@ -397,46 +453,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double HPBW, Diameter_p, sigma;
     Int Nant_p;
     Int doPointing;
+    Bool doPBCorrection;
     Bool makingPSF;
     
-    Array<Float> l_offsets, m_offsets;
+    Unit Second, Radian, Day;
+    Array<Float> l_offsets,m_offsets;
+    Int noOfPASteps;
     Vector<Float> pbPeaks;
+    Bool pbNormalized,resetPBs;
     Vector<Float> paList;
+    ConvFuncDiskCache cfCache;
     Double currentCFPA;
+    ParAngleChangeDetector paChangeDetector;
+    Vector<Int> cfStokes;
+    Vector<Complex> Area;
     Double cfRefFreq_p;
+    Bool avgPBSaved;
+    Bool avgPBReady;
     //    VLACalcIlluminationConvFunc vlaPB;
-    
-    
-    Int nint(Double val) {return Int(floor(val+0.5));};
-    
-    // Make the PB part of the convolution function
-    Int makePBPolnCoords(//const ImageInterface<Complex>& image,
-			 CoordinateSystem& coord, const VisBuffer& vb);
-    // Locate convolution functions on the disk
-    Int locateConvFunction(Int Nw, Int polInUse, const VisBuffer& vb, Float &pa);
-    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
-    // Find the convolution function
-    void findConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb);
-    void makeConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb, Float pa);
-    
-    // Get the appropriate data pointer
-    Array<Complex>* getDataPointer(const IPosition&, Bool);
-    
-    void ok();
-    
-    void init();
-    //    Int getVisParams();
-    Int getVisParams(const VisBuffer& vb);
-    // Is this record on Grid? check both ends. This assumes that the
-    // ends bracket the middle
-    Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
-    
-    Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		 const Double& interval);
-    
-    Bool getXYPos(const VisBuffer& vb, Int row);
     //
     //----------------------------------------------------------------------
     //
