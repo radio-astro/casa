@@ -8548,6 +8548,15 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
   ctemp.set(1.0);
   pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
   StokesImageUtil::To(pbImage, ctemp);
+  Float cutoffval=minPB_p;
+  LatticeExpr<Bool> lemask(iif(pbImage < cutoffval, 
+			       False, True));
+  ImageRegion outreg=pbImage.makeMask("mask0", False, True);
+  LCRegion& outmask=outreg.asMask();
+  outmask.copyData(lemask);
+  pbImage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
+  pbImage.setDefaultMask("mask0");
+  
   return True;
 }
 void Imager::setObsInfo(ObsInfo& obsinfo){
