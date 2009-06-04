@@ -62,12 +62,13 @@ namespace casa {
     LogIO& logIO() {return logIO_p;};
     
   private:
-    Vector<Complex> getVj(VisBuffer& vb, Int NAnt, Int whichAnt, Double& sumWt,Int negate=0, Int weighted=1);
-    Double getGOF(VisBuffer& residual,Double& sumWt);
+    Vector<Complex> getVj(const VisBuffer& vb, Int NAnt, Int whichAnt, Int whichPol,
+			  Double& sumWt,Int negate=0, Int weighted=1);
+    Double getGOF(const VisBuffer& residual,Int& whichPol, Double& sumWt,char *msg="");
 
     Int maxIter,maxParams;
     
-    VisBuffer residual,gradient0,gradient1;
+    VisBuffer residual_p,gradient0_p,gradient1_p;
     Matrix<Bool> flags;
 
     LogIO logIO_p;
