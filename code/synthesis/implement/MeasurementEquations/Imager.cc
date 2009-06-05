@@ -4734,7 +4734,7 @@ Bool Imager::clean(const String& algorithm,
        << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
     
-    if((algorithm=="clark" || algorithm=="hogbom" || algorithm=="multiscale") 
+    if(( (algorithm.substr(0,5)=="clark") || algorithm=="hogbom" || algorithm=="multiscale") 
        && (niter !=0)){
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
