@@ -77,9 +77,9 @@
 #include <casa/sstream.h>
 #include <fstream.h>
 #include <strstream>
-#include <images/Images/WCBox.h>
+#include <images/Regions/WCBox.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageSummary.h>
 #include <casa/BasicMath/Random.h>
 
