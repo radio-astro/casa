@@ -1728,9 +1728,10 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          BasePlotError(String("Need Scaler column for ") + collist[i+2]);
       
       /* Check datatype of column */
-      if (!(ctens[i].dataType() == TpInt) ||
-          (ctens[i].dataType() == TpDouble)) 
-         BasePlotError(String("Need Double or TpInt, and not ") + 
+      if (!(ctens[i].dataType() == TpInt)
+          || (ctens[i].dataType() == TpFloat)
+          || (ctens[i].dataType() == TpDouble)) 
+         BasePlotError(String("Need Double, Float or TpInt, and not ") + 
                   ctens[i].dataType() + String(" for ") + collist[i+2]);
          
    }// for ncoll-2
