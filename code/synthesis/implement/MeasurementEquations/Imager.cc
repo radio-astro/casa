@@ -4734,7 +4734,7 @@ Bool Imager::clean(const String& algorithm,
        << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
     
-    if((algorithm=="clark" || algorithm=="hogbom" || algorithm=="multiscale") 
+    if(( (algorithm.substr(0,5)=="clark") || algorithm=="hogbom" || algorithm=="multiscale") 
        && (niter !=0)){
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
@@ -8548,6 +8548,15 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
   ctemp.set(1.0);
   pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
   StokesImageUtil::To(pbImage, ctemp);
+  Float cutoffval=minPB_p;
+  LatticeExpr<Bool> lemask(iif(pbImage < cutoffval, 
+			       False, True));
+  ImageRegion outreg=pbImage.makeMask("mask0", False, True);
+  LCRegion& outmask=outreg.asMask();
+  outmask.copyData(lemask);
+  pbImage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
+  pbImage.setDefaultMask("mask0");
+  
   return True;
 }
 void Imager::setObsInfo(ObsInfo& obsinfo){

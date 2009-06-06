@@ -63,6 +63,7 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 			imCln.setvp(dovp=True)
 		else:
 			imCln.setoptions(freqinterp=interpolation)
+
 		###PBCOR or not
 		sclt='SAULT'
 		if((scaletype=='PBCOR') or (scaletype=='pbcor')):
@@ -71,6 +72,7 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		else:
 			if(imagermode != 'mosaic'):
 				##make a pb for flux scale
+				imCln.setmfcontrol(minpb=minpb, constpb=1.0)
 				imCln.setvp(dovp=True)
 				imCln.makeimage(type='pb', image=imagename+'.flux')
 				imCln.setvp(dovp=False)
@@ -80,16 +82,22 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		imset.convertmodelimage(modelimages=modelimage,
 					outputmodel=imagename+'.model')
 
-		####after all the mask shenanigans...make sure to use the
-		####last mask
-		maskimage=imset.outputmask
+
+		###
 		if((imagermode=='mosaic')):
 			if(ftmachine=='ft'):
 				imCln.setmfcontrol(stoplargenegatives=negcomponent,scaletype=sclt,minpb=minpb, constpb=1.0, cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,fluxscale=[imagename+'.flux'])
 			else:
 				imCln.setmfcontrol(stoplargenegatives=negcomponent,scaletype=sclt,minpb=minpb,cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,fluxscale=[imagename+'.flux'])
 		else:
-			imCln.setmfcontrol(stoplargenegatives=negcomponent,cyclefactor=cyclefactor,cyclespeedup=cyclespeedup)
+			imCln.setmfcontrol(stoplargenegatives=negcomponent,cyclefactor=cyclefactor,cyclespeedup=cyclespeedup, minpb=minpb)
+
+
+
+		####after all the mask shenanigans...make sure to use the
+		####last mask
+		maskimage=imset.outputmask
+		
 			
 		imCln.clean(algorithm=alg,niter=niter,gain=gain,threshold=qa.quantity(threshold,'mJy'),model=[imagename+'.model'],residual=[imagename+'.residual'],image=[imagename+'.image'], psfimage=[imagename+'.psf'], mask=maskimage, interactive=interactive, npercycle=npercycle)
 		imCln.close()
