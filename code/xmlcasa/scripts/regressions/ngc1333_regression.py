@@ -394,12 +394,12 @@ default('gaincal')
 gtable1 = prefix1 + '.1.gcal'
 gaincal(vis=msfile1,caltable=gtable1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='27',minsnr=2.,gaincurve=True)
+	opacity=0.06,solint='int',combine='',refant='VA27',minsnr=2.,gaincurve=True)
 
 gtable2 = prefix1 + '.2.gcal'
 gaincal(vis=msfile1,caltable=gtable2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='27',gaincurve=True)
+	opacity=0.06,solint='int',combine='',refant='VA27',gaincurve=True)
 
 # gaincal calibration completion time
 if benchmarking:
@@ -417,12 +417,12 @@ btable1 = prefix1 + '.1.bcal'
 bandpass(vis=msfile1,caltable=btable1,
 	 field='0',spw='0',
 	 opacity=0.06,gaintable=gtable1,interp='nearest',
-	 refant='27',solint='inf',combine='scan',gaincurve=True)
+	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
 btable2 = prefix1 + '.2.bcal'
 bandpass(vis=msfile1,caltable=btable2,
 	 field='6',spw='1',
 	 opacity=0.06,gaintable=gtable2,interp='nearest',
-	 refant='27',solint='inf',combine='scan',gaincurve=True)
+	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
 
 # bandpass calibration completion time
 if benchmarking:
@@ -687,11 +687,11 @@ default('gaincal')
 gtable2_1 = prefix2 + '.1.gcal'
 gaincal(vis=msfile2,caltable=gtable2_1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='27',gaincurve=True)
+	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
 gtable2_2 = prefix2 + '.2.gcal'
 gaincal(vis=msfile2,caltable=gtable2_2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='27',gaincurve=True)
+	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
 
 # gaincal calibration completion time
 if benchmarking:
@@ -711,14 +711,14 @@ bandpass(vis=msfile2,caltable=btable2_1,
 	 field='0',spw='0',
 	 opacity=0.062,
 	 gaintable=gtable2_1,interp='nearest',
-	 refant='27',
+	 refant='VA27',
 	 solint='inf',combine='scan',gaincurve=True)
 btable2_2 = prefix2 + '.2.bcal'
 bandpass(vis=msfile2,caltable=btable2_2,
 	 field='6',spw='1',
 	 opacity=0.062,
 	 gaintable=gtable2_2,interp='nearest',
-	 refant='27',
+	 refant='VA27',
 	 solint='inf',combine='scan',gaincurve=True)
 
 # bandpass calibration completion time

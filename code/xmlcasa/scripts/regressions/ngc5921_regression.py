@@ -100,7 +100,6 @@ import listing
 
 # Enable benchmarking?
 benchmarking = True
-usedasync = False
 
 # 
 # Set up some useful variables
@@ -669,9 +668,9 @@ multisource = True
 # Run asynchronously so as not to interfere with other tasks
 # (BETA: also avoids crash on next importuvfits)
 async = True
-if async: usedasync = True
 
-exportuvfits()
+async_split_id = exportuvfits()
+
 # Record exportuvfits completion time
 # NOTE: If async=true this can't be used to time exportuvfits
 #       but it is still needed as a start time for uvcontsub.
@@ -888,9 +887,8 @@ fitsimage = clnfits
 # Run asynchronously so as not to interfere with other tasks
 # (BETA: also avoids crash on next importfits)
 async = True
-if async: usedasync=True
 
-exportfits()
+async_clean_id = exportfits()
 
 # Record export FITS image completion time
 # NOTE: this is currently irrelevant because its async
@@ -1059,20 +1057,19 @@ print ''
 tstutl.note("Opening UVFITS file " + srcuvfits +
                 " to verify its existence")
 
-uvfitsexists=False
-nsecmax=15
-nsecs=0
-for i in range(nsecmax):
-    if os.path.isfile(srcuvfits):
-        uvfitsexists=True
+while True:
+    if tm.retrieve(async_split_id):
         break
     else:
         time.sleep(1)
-        nsecs += 1
+
+uvfitsexists=False
+if os.path.isfile(srcuvfits):
+    uvfitsexists=True
 
 diff_uvfits = 1.0
 if uvfitsexists:
-    tstutl.note("Opening the UVFITS file.  Waited "+str(nsecs)+"secs","NORMAL")
+    tstutl.note("Opening the UVFITS file", "NORMAL")
     try:
         ms.fromfits(prefix+".fromuvfits.ms", srcuvfits)
         ms.summary()
@@ -1090,8 +1087,7 @@ if uvfitsexists:
     except Exception, e:
         tstutl.note("Failed to open UVFITS file because: "+e,"SEVERE")
 else:
-    tstutl.note("Could not open the UVFITS file.  Waited "
-                +str(nsecs)+"secs","SEVERE")
+    tstutl.note("Could not open the UVFITS file", "SEVERE")
 
 #
 # Now the Clean FITS
@@ -1100,21 +1096,20 @@ print ''
 tstutl.note("Opening FITS image file " + fitsimage +
                 " to verify its existence")
 
-fitsimageexists=False
-nsecmax=15
-nsecs=0
-for i in range(nsecmax):
-    if os.path.isfile(fitsimage):
-        fitsimageexists=True
+while True:
+    if tm.retrieve(async_clean_id):
         break
     else:
         time.sleep(1)
-        nsecs += 1
+
+fitsimageexists=False
+if os.path.isfile(fitsimage):
+    fitsimageexists=True
 
 diff_fitsmax = 1.0
 diff_fitsrms = 1.0
 if fitsimageexists:
-    tstutl.note("Opening the FITS image.  Waited "+str(nsecs)+"secs","NORMAL")
+    tstutl.note("Opening the FITS image", "NORMAL")
     try:
         default('imstat')
         imagename = fitsimage
@@ -1137,8 +1132,7 @@ if fitsimageexists:
     except Exception, e:
         tstutl.note("Failed to open FITS image file because: "+e,"SEVERE")
 else:
-    tstutl.note("Could not open the FITS image.  Waited "+str(nsecs)+"secs",
-                "SEVERE")
+    tstutl.note("Could not open the FITS image", "SEVERE")
 
 #
 #=====================================================================
@@ -1243,7 +1237,7 @@ else:
     print >>logfile,'*  Image rms '+str(thistest_imrms)
 
     if ( passcal & passsrc & passimmax & passimrms & passuvfits & passfits &
-         passlistvis ): 
+         passlistvis & passlistcal ): 
 	regstate=True
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC5921'
