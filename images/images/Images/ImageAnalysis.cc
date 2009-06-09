@@ -6960,6 +6960,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
   axis.downcase();
   Bool ok=False;
   if(axis.contains("vel") || axis.contains("freq")){ // need a conversion
+
     // first convert from pixels to frequencies
     Vector<String> tmpstr(1);
     Vector<Double> fworld(pix.nelements());
@@ -6983,6 +6984,9 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
       }
       else if(axis.contains("radio")){ // radio velocity
 	specCoor.setVelocity(xunits, MDoppler::RADIO); 
+      }
+      else { // true relativistic velocity (default)
+	specCoor.setVelocity(xunits, MDoppler::RELATIVISTIC); 
       }
       ok=specCoor.frequencyToVelocity(xworld, fworld);
     }
