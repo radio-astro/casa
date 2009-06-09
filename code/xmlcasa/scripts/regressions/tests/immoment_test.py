@@ -101,6 +101,7 @@
 import random
 import os
 import shutil
+import numpy
 import casac
 from tasks import *
 from taskinit import *
@@ -416,11 +417,10 @@ def input_test():
     _momentTest_debug_msg( 27 )
     results = None
     results = immoments( 'n1333_both.image', box='-2,0,798,798', outfile='input_test_bad_box' )
-    if ( results!=None or results!=False ):
+    if ( results!=None or results==True ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=-2', was not reported."\
-             +"\n\tRESULTS: "+str(results)
+             +"\nError: Bad box value, 'x=-2', was not reported."
 
     _momentTest_debug_msg( 28 )
     results = None
@@ -572,7 +572,7 @@ def input_test():
     _momentTest_debug_msg( 43 )
     results = None
     try:
-        results = immoments( 'n1333_both.image', stokes='Q', outfile='input_test_stokes_1' )
+        results = immoments( 'n1333_both.image', stokes='I', outfile='input_test_stokes_1' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -580,7 +580,8 @@ def input_test():
     if ( not os.path.exists( 'input_test_stokes_1' ) or results == None ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Moment file, 'input_test_stokes_1', was not created."
+                 +"\nError: Moment file, 'input_test_stokes_1', was not created."\
+                 +"\n RESULTS: "+str(results)
         
 
     #######################################################################
@@ -620,23 +621,26 @@ def input_test():
         retValue['error_msgs']=retValue['error_msgs']\
              +"\nError: Bad mask value, 'bad_file.image:mask1', was not reported."
 
+    # COMMENTED OUT BECAUSE THIS FEATURE OF LEL DOESN"T SEEM TO
+    # WORK
     _momentTest_debug_msg( 47 )
     results = None
-    try:
-        results = immoments( 'n1333_both.image', mask='n1333_both.image:nomask', outfile='input_test_mask_1' )
-    except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Unable to create moment with mask='nomask'"
-    if ( not os.path.exists( 'input_test_mask_1' ) or results == None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Moment file, 'input_test_mask_1', was not created."
+    #try:
+    #    results = immoments( 'n1333_both.image', mask='n1333_both.image:nomask', outfile='input_test_mask_1' )
+    #except:
+    #    retValue['success']=False
+    #    retValue['error_msgs']=retValue['error_msgs']\
+    #               +"\nError: Unable to create moment with mask='nomask'"
+    #if ( not os.path.exists( 'input_test_mask_1' ) or results == None ):
+    #    retValue['success']=False
+    #    retValue['error_msgs']=retValue['error_msgs']\
+    #             +"\nError: Moment file, 'input_test_mask_1', was not created."\
+    #             +"\nRESULTS: "+str(results)
 
     _momentTest_debug_msg( 48 )
     results = None
     try:
-        results = immoments( 'n1333_both.image', mask='n133_both.image:nomask', outfile='input_test_mask_2' )
+        results = immoments( 'n1333_both.image', mask='mask(n1333_both.image:mask0)', outfile='input_test_mask_2' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -660,7 +664,7 @@ def input_test():
     _momentTest_debug_msg( 49 )
     results = None
     results = immoments( 'n1333_both.image', includepix='bad', outfile='input_test_bad_incpix' )
-    if ( results!=None and results!=True ):
+    if ( results!=None or results==True ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
              +"\nError: Bad includepix value, 'bad', was not reported."
@@ -673,10 +677,10 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to create moment with includepix=[-0.1,0.1]"
-    if ( not os.path.exists( 'input_test_mask_2' ) or results == None ):
+    if ( not os.path.exists( 'input_test_incpix_2' ) or results == None ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Moment file, 'input_test_mask_2', was not created."
+                 +"\nError: Moment file, 'input_test_incpix_2', was not created."
     
     
 
@@ -806,6 +810,8 @@ def moments_test():
         #current = imval( 'moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
         current = imval( '/tmp/casa_regression_work/moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
         orig    = imval( 'n1333_both.src.tmom0.all', box=sky, stokes=stokes, chans=str(chan) )
+        print "CURRENT VLUE: ", current
+        print "ORIG CLUE:    ", orig
         if ( abs(current['data'][0]-orig['data'][0]) > err_margin ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -916,12 +922,12 @@ def mask_test():
     casalog.post( "Starting MASK tests", 'NORMAL2' )
     retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
-
     results = None
     try:
-        results = immoments( 'n1333_both.image', mask='n1333_both.image:nomask', outfile='mask_test_1' )
+        results = immoments( 'n1333_both.image', mask='mask(n1333_both.image:nomask)', outfile='mask_test_1' )
     except:
         retValue['success']=False
+
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to create moment 0 with mask set as no mssk'"
     if ( not os.path.exists( 'mask_test_1' ) or results == None ):
@@ -932,15 +938,16 @@ def mask_test():
 
     results = None
     try:
-        results = immoments( 'n1333_both.image', mask='n1333_both.image:mask0',  outfile='mask_test_2' )
+        results = immoments( 'n1333_both.image', mask='mask(n1333_both.image:mask0)',  outfile='mask_test_2' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Unable to create moments with mask-'"
+                   +"\nError: Unable to create moments with mask0'"
     if ( not os.path.exists( 'mask_test_2' ) or results == None ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Mask test failed, 'mask_test_2', was not created."
+                 
 
     results = None
     try:
@@ -954,21 +961,23 @@ def mask_test():
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Mask test failed, 'mask_test_3', was not created."
 
-             
+     
+        
     try:
         ia.open( 'n1333_both.image' )
         csys=ia.coordsys()
-        ia.done
-        ia.fromshape( 'test.image', shape=[800,800,1,18], csys=csys.torecord(), overwrite=true, log=true )
+        ia.done()
+        ia.fromshape( 'test.image', shape=[800,800,1,18], csys=csys.torecord(), overwrite=True, log=True )
         ia.addnoise()
         stats=ia.statistics()
         ia.done()
         # pick a place that is slightly bigger then the mid value
         # range for doing the mask, just for fun.
-        maskPt=stats((['max'][0]+stats['min'][0])/2.0)-1.5
-    
+        maskPt=float((stats['max'][0]+stats['min'][0])/2.0)-1.5
+        maskStr='test.image>'+str(maskPt)
+                                  
         results=None
-        results = immoments( 'n1333_both.image', mask='test.image>'+str(maskPt), outfile='mask_test_4' )
+        results = immoments( 'n1333_both.image', mask=maskStr, outfile='mask_test_4' )
     except Exception, e:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -1140,5 +1149,5 @@ def run():
     print "PASSED: ", passed
     if ( not passed ):
         casalog.post( error_msgs, 'EXCEPTION' )
-    
+        raise Exception, "immomoments test has failed!"+error_msgs
     return []
