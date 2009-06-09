@@ -159,7 +159,7 @@ def joint_deconvolve(datapath):
 	im.setscales(scalemethod='uservector',uservector=[0,3,10,30, 70])
 	###if clean component for large scale goes negative continue to use
 	##that scale
-	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=4, cyclespeedup=500)
+	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=5, cyclespeedup=100)
 	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
 	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',
 		 image='orion_tjoint3.image', gain=0.2, niter=1000,

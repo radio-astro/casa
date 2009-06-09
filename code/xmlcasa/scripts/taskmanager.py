@@ -36,7 +36,7 @@ class taskmanager(object):
             self.__hub['mec'].execute("from task_" + taskname + " import " + taskname,block=False)
             self.__hub['tasks initialized'].append(taskname)
 
-        return self.__hub['tc'].run(client.StringTask("result = " + taskname + "(*args,**kwargs)",
+        return self.__hub['tc'].run(client.StringTask("import os; os.chdir('" + os.getcwd() + "'); result = " + taskname + "(*args,**kwargs)",
                                                       push={'args': args, 'kwargs': kwargs }, pull=['result']))
 
     def __finalize(self):
