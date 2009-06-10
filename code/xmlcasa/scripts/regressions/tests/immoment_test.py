@@ -807,11 +807,11 @@ def moments_test():
         sky=str(x)+','+str(y)
         stokes = 'I'
         chan = 0
-        #current = imval( 'moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
-        current = imval( '/tmp/casa_regression_work/moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
+        current = imval( 'moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
+        #current = imval( '/tmp/casa_regression_work/moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
         orig    = imval( 'n1333_both.src.tmom0.all', box=sky, stokes=stokes, chans=str(chan) )
         print "CURRENT VLUE: ", current
-        print "ORIG CLUE:    ", orig
+        print "ORIG VaLUE:    ", orig
         if ( abs(current['data'][0]-orig['data'][0]) > err_margin ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
