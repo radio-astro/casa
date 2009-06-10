@@ -872,6 +872,8 @@ Bool Simulator::setnoise(const String& mode,
     }
     else {
       os << "Using the Brown calculated noise model" << LogIO::POST;
+      os << "  eta_ant=" << antefficiency << " eta_corr=" << correfficiency << " eta_spill=" << spillefficiency << LogIO::POST;
+      os << "  tau=" << tau << " trx=" << trx << " tatmos=" << tatmos << " tcmb=" << tcmb << LogIO::POST;
 	if(ac_p) delete ac_p; ac_p = 0;
 	ac_p = new SimACohCalc(seed_p, antefficiency, correfficiency,
 			       spillefficiency, tau, Quantity(trx, "K"), 
