@@ -22,6 +22,7 @@
 # Updated by STM    2008-11-03                  minor updates            #
 # Updated by STM    2008-11-19                  Patch 3 400x400 image    #
 # Updated by STM    2008-12-01                  Patch 3 release          #
+# Updated by STM    2008-06-03                  Patch 4, fix error       #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -77,6 +78,7 @@ prefix='ngc4826.tutorial'
 msfile = prefix + '.16apr98.ms'
 
 print 'Tutorial Regression Script for BIMASONG NGC4826 Mosaic'
+print 'Version for Beta Patch 4 (2.4.0) 3-June-2009'
 print 'Will do: import, flagging, calibration, imaging'
 print ''
 #
@@ -482,7 +484,7 @@ print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
 print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='VA03&VA09', 
+flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='3&9', 
          timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
 
 #
@@ -1281,27 +1283,46 @@ if benchmarking:
 
 #New values STM 2008-12-01 Patch3 (released version)
 #for 400x400 clean 
-clean_image_max = 1.481322
-clean_offsrc_rms = 0.043665
-clean_offline_rms = 0.055379
-clean_momentzero_max = 174.731827
-clean_momentzero_rms = 14.858011
+#testdate = '2008-12-01 (STM)'
+#testvers = 'CASA Version 2.3.0 Rev 6654'
+#clean_image_max = 1.481322
+#clean_offsrc_rms = 0.043665
+#clean_offline_rms = 0.055379
+#clean_momentzero_max = 174.731827
+#clean_momentzero_rms = 14.858011
+#clean_momentone_median = 428.499237
+#clean_momentone_planezero = 688.575012
+#clean_momentone_planelast = 119.659264
+#vis_mean_cal = 194.915497
+#vis_mean_src = 54.627127
+#model_sum = 72.437971
+#model_pbcor_sum = 70.417830
+
+#New values STM 2009-06-03 Patch4 (released version)
+#for 400x400 clean
+testdate = '2009-06-03 (STM)'
+testvers = 'CASA Version 2.4.0 Rev 8037'
+clean_image_max = 1.418478
+clean_offsrc_rms = 0.043584
+clean_offline_rms = 0.056824
+clean_momentzero_max = 171.492584
+clean_momentzero_rms = 15.494859
 clean_momentone_median = 428.499237
 clean_momentone_planezero = 688.575012
 clean_momentone_planelast = 119.659264
 vis_mean_cal = 194.915497
 vis_mean_src = 54.627127
-model_sum = 72.437971
-model_pbcor_sum = 70.417830
+model_sum = 70.707411
+model_pbcor_sum = 62.240024
 
 canonical = {}
 canonical['exist'] = True
 
-canonical['date'] = '2008-12-01 (STM)'
-canonical['version'] = 'CASA Version 2.3.0 Rev 6654'
+canonical['date'] = testdate
+canonical['version'] = testvers
 canonical['user'] = 'smyers'
 canonical['host'] = 'sandrock'
-canonical['cwd'] = '/home/sandrock/smyers/Testing/Patch3/N4826'
+canonical['cwd'] = '/home/sandrock/smyers/Testing/Patch4/N4826'
 print "Using internal regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
