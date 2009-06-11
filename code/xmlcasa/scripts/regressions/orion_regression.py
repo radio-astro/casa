@@ -49,7 +49,7 @@ mosaic('orion.ms',
        'orion.task',
        'mfs',
        'entropy',
-       niter=31,
+       niter=34,
        sigma='4mJy',
        targetflux='180Jy',
        mask=datapath+'orion.mask6',
@@ -247,12 +247,12 @@ test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'max',  0.868,  ' '),
 	      ('SD Model (MS)',       'max',  0.935),
 	      ('SD Model (MEM)',      'max',  0.87),
-	      ('Joint Deconvolution', 'max',  1.03, '', 'Joint Decon1'), # 1.014
+	      ('Joint Deconvolution', 'max',  1.06, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
 	      ('SD Model (MS)',       'flux', 187, ' ', 'SD Model (MS)', 'Feather 3'),
 	      ('SD Model (MEM)',      'flux', 289, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 362, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 620, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was
