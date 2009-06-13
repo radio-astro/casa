@@ -1510,12 +1510,14 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
       if(!ctens[i].isScalar()) 
          BasePlotError(String("Need Scaler column for ") + collist[i+2]);
       
+      //cout << "2--type=" << ctens[i].dataType() << endl;
       /* Check datatype of column */
-      if(!(ctens[i].dataType() == TpDouble) 
-	      || (ctens[i].dataType() == TpFloat) 
-	      || (ctens[i].dataType() == TpInt)) 
+      if(!(ctens[i].dataType() == TpDouble 
+      	      || ctens[i].dataType() == TpFloat 
+      	      || ctens[i].dataType() == TpInt))
             BasePlotError(String("Need Double, Float or Int, and not ") + 
                      ctens[i].dataType() + String(" for ") + collist[i+2]);
+
          
    }// for ncoll-2
 
@@ -1726,13 +1728,14 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
       /* Check shape of column */
       if (!ctens[i].isScalar()) 
          BasePlotError(String("Need Scaler column for ") + collist[i+2]);
-      
+
+      //cout << "1 ---type=" << ctens[i].dataType() << endl;
       /* Check datatype of column */
-      if (!(ctens[i].dataType() == TpInt)
-          || (ctens[i].dataType() == TpFloat)
-          || (ctens[i].dataType() == TpDouble)) 
-         BasePlotError(String("Need Double, Float or TpInt, and not ") + 
-                  ctens[i].dataType() + String(" for ") + collist[i+2]);
+      if(!(ctens[i].dataType() == TpDouble 
+      	      || ctens[i].dataType() == TpFloat 
+      	      || ctens[i].dataType() == TpInt))
+            BasePlotError(String("Need Double, Float or Int, and not ") + 
+                     ctens[i].dataType() + String(" for ") + collist[i+2]);
          
    }// for ncoll-2
 
