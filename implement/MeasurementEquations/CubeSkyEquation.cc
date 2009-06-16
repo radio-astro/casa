@@ -591,17 +591,23 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
 	if(!incremental && !predictedComp) {
+          //This here forces the modelVisCube shape and prevents reading model column
 	  vb.setModelVisCube(Complex(0.0,0.0));
 	}
 	  // get the model visibility and write it to the model MS
 	if(!isEmpty)
 	  getSlice(vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
 	//this need to be done only when saving the model
-	if(commitModel)
+        if(commitModel && !noModelCol_p)
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	// Now lets grid the -ve of residual
-	// Here we need to use visCube if there is no correctedData
-	vb.modelVisCube()-=vb.correctedVisCube();
+        // use visCube if there is no correctedData
+        if(noModelCol_p){
+            vb.modelVisCube()-=vb.visCube();
+        }
+        else{
+            vb.modelVisCube()-=vb.correctedVisCube();
+        }
 	putSlice(vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
 	cohDone+=vb.nRow();
 	pm.update(Double(cohDone));

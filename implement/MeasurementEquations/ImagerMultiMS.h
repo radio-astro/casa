@@ -54,7 +54,8 @@ namespace casa {
 				 const String& antnames="",
 				 const String& spwstring="",
 				 const String& uvdist="",
-				 const String& scan="");
+                                 const String& scan="",
+                                 const Bool useModel=False);
 
 
        // Set image construction parameters

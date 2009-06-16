@@ -49,6 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class VisSet;
+class VisImagingWeight_p;
 class MSHistoryHandler;
 class PBMath;
 class MeasurementSet;
@@ -69,7 +70,7 @@ class Imager
 
   Imager();
 
-  Imager(MeasurementSet& ms, Bool compress=False);
+  Imager(MeasurementSet& ms, Bool compress=False, Bool useModel=False);
   Imager(MeasurementSet& ms, PGPlotter& pgplotter, Bool compress=False);
 
   // Copy constructor and assignment operator
@@ -140,7 +141,7 @@ class Imager
 // Close the current ms, and replace it with the supplied ms.
   // Optionally compress the attached calibration data
   // columns if they are created here.
-  Bool open(MeasurementSet &thems, Bool compress=False);
+  Bool open(MeasurementSet &thems, Bool compress=False, Bool useModel=False);
   
   // Flush the ms to disk and detach from the ms file. All function
   // calls after this will be a no-op.
@@ -195,7 +196,8 @@ class Imager
 			     const String& antnames="",
 			     const String& spwstring="",
 			     const String& uvdist="",
-			     const String& scan="");
+                             const String& scan="",
+                             const Bool useModelCol=False);
 
 
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
@@ -211,12 +213,13 @@ class Imager
 	       const String& antnames="",
 	       const String& spwstring="",
 	       const String& uvdist="",
-	       const String& scan="");
+               const String& scan="",
+               const Bool usemodelCol=False);
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
 		  const String& gridfunction, const MPosition& mLocation,
-		  const Float padding, const Bool usemodelcol=True, 
+                  const Float padding,
 		  const Int wprojplanes=1,
 		  const String& epJTableName="",
 		  const Bool applyPointingOffsets=True,
@@ -694,6 +697,7 @@ protected:
   Bool doTrackSource_p;
   MDirection trackDir_p;
   String pointingDirCol_p;
+  VisImagingWeight imwgt_p;
 
 };
 
