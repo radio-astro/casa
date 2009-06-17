@@ -246,8 +246,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     log << LogIO::WARN << "Can't add rows to this ms!  Something is serious wrong with " << itsMS.tableName() << endl << LogIO::POST;
   }
 
+  log << "trying to add " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
   itsMS.addRow(newRows);
-  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
+  log << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
   ROArrayColumn<Float> otherImagingWeight;
@@ -376,7 +377,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
 
-    log << LogIO::DEBUG1 << "added basics for row " << curRow << endl;
+    log << "added basics for row " << curRow << endl;
     
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;
