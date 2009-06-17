@@ -1105,6 +1105,7 @@ void NewMSSimulator::observe(const String& sourceName,
       msc.fieldId().put(row+1,baseFieldID);
       msc.dataDescId().put(row+1,baseSpWID);
       msc.time().put(row+1,Time+Tint/2);
+      msc.timeCentroid().put(row+1,Time+Tint/2);
       msc.arrayId().put(row+1,maxArrayId);
       msc.processorId().put(row+1,0);
       msc.exposure().put(row+1,Tint);
