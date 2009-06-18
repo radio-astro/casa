@@ -5361,6 +5361,13 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	    se_p->getCoverageImage(thismodel, coverimage);
             cover=&(coverimage);
             coverimage.table().unmarkForDelete();
+	    LatticeExpr<Bool> lemask(iif((*cover) < cutoffval, 
+				       False, True));
+	    ImageRegion outreg=coverimage.makeMask("mask0", False, True);
+	    LCRegion& outmask=outreg.asMask();
+	    outmask.copyData(lemask);
+	    coverimage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
+	    coverimage.setDefaultMask("mask0");
 	  }
 	  LatticeExpr<Bool> lemask(iif((*cover) < cutoffval, 
 				       False, True));

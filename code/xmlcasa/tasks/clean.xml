@@ -107,8 +107,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- Getting rid of this
     <param type="bool" name="csclean">
       <description>Use Cotton-Schwab style reconciliation with UV-data</description>
-      <value>False</value>
-      
+      <value>False</value>     
     </param>
 -->
 
@@ -477,6 +476,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         With or without primary beam correction
                  m2.psf; point-spread function (dirty beam)
                  m2.flux;  relative sky sensitivity over field
+                 m2.flux.pbcoverage;  relative pb coverage over field 
+                                      (gets created only for ft='mosaic')
                  m2.model; image of clean components
                  m2.residual; image of residuals
                  m2.interactive.mask; image containing clean regions
@@ -811,6 +812,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                recover the pbcor image by dividing by the .flux image
                (e.g. using immath)
        minpb -- Minimum PB level to use default=0.1; example:
+                The flux image is used to determine this
+		except for the case of mosaic with ft='mosaic'
+		where the flux.pbcoverage image is used.
                minpb=0.01 Note: this minpb is always in effect
                (regardless of pbcor=True/False) 
        async -- Run asynchronously 
