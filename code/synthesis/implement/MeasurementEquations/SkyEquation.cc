@@ -1289,12 +1289,13 @@ void SkyEquation::scaleDeltaImage(Int model)
   
 };
 
-void SkyEquation::getFluxImage(Int model){
+void SkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
   if ((sm_->doFluxScale(model))){
-    ft_->getFluxImage(sm_->fluxScale(model)); 
+    ft_->getFluxImage(im);
   }
 
 }
+
 
 void SkyEquation::unScaleDeltaImage(Int model)
 {

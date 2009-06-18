@@ -5286,18 +5286,22 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      cutoffval=minPB_p*minPB_p;
 
 	    if (sm_p->doFluxScale(thismodel)) {
-	      se_p->getFluxImage(thismodel);
+	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
+	      if(ft_p->name()=="MosaicFT")
+                  se_p->getCoverageImage(thismodel, cover);
+              else
+                  cover.copyData(sm_p->fluxScale(thismodel));
 	      if(scaleType_p=="NONE"){
-		LatticeExpr<Float> le(iif(sm_p->fluxScale(thismodel) < cutoffval, 
+		LatticeExpr<Float> le(iif(cover < cutoffval, 
 					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
 		restored.copyData(le);
-		LatticeExpr<Float> le1(iif(sm_p->fluxScale(thismodel) < cutoffval, 
+		LatticeExpr<Float> le1(iif(cover < cutoffval, 
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
 		
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
+	      LatticeExpr<Bool> lemask(iif(cover < cutoffval, 
 					  False, True));
 	      ImageRegion outreg=restored.makeMask("mask0", False, True);
 	      LCRegion& outmask=outreg.asMask();
@@ -5336,20 +5340,29 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 {
   LogIO os(LogOrigin("imager", "writeFluxScales()", WHERE));
   Bool answer = False;
+  ImageInterface<Float> *cover;
   if(fluxScaleNames.nelements()>0) {
     for (Int thismodel=0;thismodel<Int(fluxScaleNames.nelements());++thismodel) {
       if(fluxScaleNames(thismodel)!="") {
         PagedImage<Float> fluxScale(images_p[thismodel]->shape(),
                                     images_p[thismodel]->coordinates(),
                                     fluxScaleNames(thismodel));
-
+	PagedImage<Float> coverimage(images_p[thismodel]->shape(),
+                                    images_p[thismodel]->coordinates(),
+                                    fluxScaleNames(thismodel)+".pbcoverage");
+        coverimage.table().markForDelete();
         if (sm_p->doFluxScale(thismodel)) {
+	  cover=&(sm_p->fluxScale(thismodel));
 	  answer = True;
           fluxScale.copyData(sm_p->fluxScale(thismodel));
 	  Float cutoffval=minPB_p;
-	  if(ft_p->name()=="MosaicFT")
+	  if(ft_p->name()=="MosaicFT"){
 	    cutoffval=minPB_p*minPB_p;
-	  LatticeExpr<Bool> lemask(iif(sm_p->fluxScale(thismodel) < cutoffval, 
+	    se_p->getCoverageImage(thismodel, coverimage);
+            cover=&(coverimage);
+            coverimage.table().unmarkForDelete();
+	  }
+	  LatticeExpr<Bool> lemask(iif((*cover) < cutoffval, 
 				       False, True));
 	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);
 	  LCRegion& outmask=outreg.asMask();
