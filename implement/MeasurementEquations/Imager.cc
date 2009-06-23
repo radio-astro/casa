@@ -3650,23 +3650,32 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
   this->lock();
   try {
     
-    os << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
+   
     
     Double sumwt=0.0;
     Double maxfilter=0.0;
     Double minfilter=1.0;
     
-    VisSetUtil::Filter(*vs_p, type, bmaj, bmin, bpa, sumwt, minfilter,
-		       maxfilter);
-    
-    if(sumwt>0.0) {
-      os << "Sum of weights = " << sumwt << endl;
-      os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
+    if(useModelCol_p){
+      os << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
+      VisSetUtil::Filter(*vs_p, type, bmaj, bmin, bpa, sumwt, minfilter,
+			 maxfilter);
+      
+      if(sumwt>0.0) {
+	os << "Sum of weights = " << sumwt << endl;
+	os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
+      }
+      else {
+	os << LogIO::SEVERE
+	   << "Sum of weights is zero: perhaps you need to weight the data"
+	   << LogIO::EXCEPTION;
+      }
     }
-    else {
-      os << LogIO::SEVERE
-	 << "Sum of weights is zero: perhaps you need to weight the data"
-	 << LogIO::EXCEPTION;
+    else{
+       os << "Imaging weights will be tapered" << LogIO::POST;
+      imwgt_p.setFilter(type, bmaj, bmin, bpa);
+
+
     }
     
     // Beam is no longer valid
