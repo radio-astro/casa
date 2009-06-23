@@ -223,8 +223,10 @@ public:
   // Return the name of the underlying MeasurementSet
   virtual String associatedMSName();
 
-  //assign the Skymodel flux scale  the flux scale that the ftmachines have if they have
-  virtual void getFluxImage(Int model);
+
+  //assign  the flux scale that the ftmachines have if they have
+  virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
+    
   
  protected:
 

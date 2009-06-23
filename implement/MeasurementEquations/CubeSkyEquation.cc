@@ -693,12 +693,14 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   vb_p.updateCoordInfo();
 }
 
-void CubeSkyEquation::getFluxImage(Int model){
+
+void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
   if ((sm_->doFluxScale(model)) && (ftm_p.nelements() > uInt(model))){
-    ftm_p[model]->getFluxImage(sm_->fluxScale(model)); 
+    ftm_p[model]->getFluxImage(im);
   }
 
 }
+
 
 void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
