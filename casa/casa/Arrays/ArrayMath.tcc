@@ -157,7 +157,6 @@ void minMax(T &minVal, T &maxVal,
   }
   size_t minp = 0;
   size_t maxp = 0;
-  size_t i = 0;
   T minv = array.data()[0];
   T maxv = minv;
   if (array.contiguousStorage()) {
