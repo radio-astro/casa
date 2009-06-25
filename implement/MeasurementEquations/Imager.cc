@@ -657,32 +657,32 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   refCoord(1)=dec;    
   
   Vector<Double> refPixel(2); 
-  refPixel(0)=Double(nx_p/2);
-  refPixel(1)=Double(ny_p/2);
+  refPixel(0) = Double(nx_p / 2);
+  refPixel(1) = Double(ny_p / 2);
   
   //defining observatory...needed for position on earth
-  String telescop=msc.observation().telescopeName()(0);
+  String telescop = msc.observation().telescopeName()(0);
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch=msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
 
   MPosition obsPosition;
-  if(! (MeasTable::Observatory(obsPosition, telescop))){
+  if(!(MeasTable::Observatory(obsPosition, telescop))){
     os << LogIO::WARN << "Did not get the position of " << telescop 
-       << " from data repository" << LogIO::POST ;
+       << " from data repository" << LogIO::POST;
     os << LogIO::WARN 
-       << "Please do inform aips++  to put in the repository "
+       << "Please contact CASA to add it to the repository."
        << LogIO::POST;
     os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-    freqFrameValid_p=False;
+    freqFrameValid_p = False;
   }
   else{
-    mLocation_p=obsPosition;
-    freqFrameValid_p=True;
+    mLocation_p = obsPosition;
+    freqFrameValid_p = True;
   }
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
@@ -691,13 +691,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     os << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
        << LogIO::POST;
     Vector<Double> projectionParameters(2);
-    projectionParameters(0)=0.0;
-    if(sin(dec)!=0.0) {
-      projectionParameters(1)=cos(dec)/sin(dec);
+    projectionParameters(0) = 0.0;
+    if(sin(dec) != 0.0){
+      projectionParameters(1) = cos(dec)/sin(dec);
       projection=Projection(Projection::SIN, projectionParameters);
     }
     else {
-      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN" << LogIO::POST;
+      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN"
+         << LogIO::POST;
       projection=Projection(Projection::SIN);
     }
   }
