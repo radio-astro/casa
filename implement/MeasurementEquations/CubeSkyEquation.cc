@@ -579,6 +579,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
       
     vi.originChunks();
     vi.origin();
+    Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+
     vb.invalidate();
     if(!isEmpty){
       initializeGetSlice(vb, 0, False, cubeSlice, nCubeSlice);
@@ -602,7 +604,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	// Now lets grid the -ve of residual
         // use visCube if there is no correctedData
-        if(noModelCol_p){
+        if(!useCorrected){
             vb.modelVisCube()-=vb.visCube();
         }
         else{
