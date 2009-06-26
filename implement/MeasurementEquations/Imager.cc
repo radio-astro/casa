@@ -3675,7 +3675,7 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     else{
        os << "Imaging weights will be tapered" << LogIO::POST;
       imwgt_p.setFilter(type, bmaj, bmin, bpa);
-
+      vs_p->iter().useImagingWeight(imwgt_p);
 
     }
     
