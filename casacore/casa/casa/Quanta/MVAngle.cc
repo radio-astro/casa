@@ -378,15 +378,18 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
       tp = 0;
     } else {
       Char tc = 'm';
-      if (tp == 3) tc = ':';
+      if (tp == 3)
+	tc = ':';
       in.push();
       Double r1 = in.getuInt();
       if (in.tSkipCharNC(tc)) {
 	r += r1/60.0 + in.getDouble()/3600.;
-	if (tp != 3) in.tSkipCharNC('s');
-      } else if (tp == 1 && r1 == 0 && !in.testCharNC('.') &&
-		 !in.testCharNC('/')) {
-	r += r1/60.0;
+	if (tp != 3)
+	  in.tSkipCharNC('s');
+      // RR: r was getting 0 added to it.
+      //} else if (tp == 1 && r1 == 0 && !in.testCharNC('.') &&
+	//	 !in.testCharNC('/')) {
+	//r += r1/60.0;
       } else if (tp == 3 && !in.testCharNC('.') &&
 		 !in.testCharNC('/') && !in.testAlpha()) {
 	r += r1/60.0;
@@ -404,9 +407,9 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
   }
 
   if (chk) {
-
     in.skipBlank();
-    if (!in.eos()) tp = 0;	     // incorrect
+    if (!in.eos())
+      tp = 0;	     // incorrect
   }
   switch (tp) {
 

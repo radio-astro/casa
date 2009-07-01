@@ -259,6 +259,30 @@ void TableCopy::copyInfo (Table& out, const Table& in)
   out.flushTableInfo();
 }
 
+  // Commented out because of the risk of copying over the wrong keywords in
+  // some tables.
+// void TableCopy::deepCopy(Table& out, const Table& in, Bool noRows)
+// {
+//   const TableDesc inTD(in.tableDesc());
+//   TableDesc outTD(out.tableDesc());
+  
+//   const Vector<String> inColNames(inTD.columnNames());
+//   const Vector<String> outColNames(outTD.columnNames());
+  
+//   uInt nInCol = inColNames.nelements();
+//   for(uInt i = 0; i < nInCol; ++i){
+//     if(outTD.isColumn(inColNames[i])){
+// 	TableColumn newTC(out, inColNames[i]);
+// 	const TableColumn oldTC(in, inColNames[i]);
+
+// 	newTC.rwKeywordSet() = oldTC.keywordSet();
+//     }
+//   }
+//   copySubTables(out, in, noRows);
+//   copyRows(out, in);
+//   copyInfo(out, in);
+// }
+
 void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows)
 {
   copySubTables (out.rwKeywordSet(), in.keywordSet(), out.tableName(),

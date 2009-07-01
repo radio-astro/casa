@@ -484,7 +484,11 @@ class ImageAnalysis
     //On success returns true
     //return value of profile is in zyaxisval, zxaxisval contains the spectral 
     //values at which zyaxisval is evaluated its in the spectral type
-    //specified by specaxis...possibilities are "pixel", "freq" or "vel"
+    //specified by specaxis...possibilities are "pixel", "freq", "radiovel", or "opticalvel"
+    //(the code looks for the keywords "pixel", "freq", "vel", "optical", and "radio"
+    // in the string)
+    // if "vel" is found but no "radio" or "optical", the full relativistic velocity
+    // is generated (MFrequency::RELATIVISTIC)
     // xunits determines the units of the x-axis values...default is "GHz" for 
     // freq and "km/s" for vel
     //PLEASE note that the returned value of zyaxisval are the units of the image

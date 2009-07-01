@@ -116,6 +116,10 @@ public:
   // Copy the table info block from input to output table.
   static void copyInfo (Table& out, const Table& in);
 
+  // Commented out because of the risk of copying over the wrong keywords in
+  // some tables.
+  //static void deepCopy(Table& out, const Table& in, Bool noRows);
+
   // Copy all subtables (in table and column keywords) from input to
   // output table.
   // Optionally the row contents are not copied.

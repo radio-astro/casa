@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functors.h 20562 2009-04-07 16:20:10Z gervandiepen $
+//# $Id: Functors.h 20598 2009-05-11 09:24:24Z gervandiepen $
 
 #ifndef CASA_FUNCTORS_H
 #define CASA_FUNCTORS_H
@@ -435,6 +435,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     RES operator() (T value) const
       { return (value<0 ? -1 : (value>0 ? 1:0)); }
+  };
+
+  // Functor to form a complex number from the left and right value.
+  template<typename L, typename R, typename RES>
+  struct MakeComplex : public std::binary_function<L,R,RES>
+  {
+    RES operator() (L l, R r) const
+      { return RES(l, r); }
+  };
+
+  // Functor to form a complex number from the real part of the
+  // left value and the right value.
+  template<typename L, typename R, typename RES>
+  struct MakeComplexReal : public std::binary_function<L,R,RES>
+  {
+    RES operator() (L l, R r) const
+      { return RES(real(l), r); }
+  };
+
+  // Functor to form a complex number from the left value and the
+  // imaginary part of the right value.
+  template<typename L, typename R, typename RES>
+  struct MakeComplexImag : public std::binary_function<L,R,RES>
+  {
+    RES operator() (L l, R r) const
+      { return RES(l, imag(r)); }
+  };
+
+  // Functor to form a complex number from the real part of the
+  // left value and the imaginary part of the right value.
+  template<typename L, typename R, typename RES>
+  struct MakeComplexRealImag : public std::binary_function<L,R,RES>
+  {
+    RES operator() (L l, R r) const
+      { return RES(real(l), imag(r)); }
   };
 
   // Functor to apply complex function conj.

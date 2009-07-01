@@ -267,6 +267,17 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   // Now we can create the MeasurementSet and add the (empty) subtables
   ms_p=new MeasurementSet(newMS,0);
   ms_p->createDefaultSubtables(Table::New);
+  // Its better to have an empty SOURCE subtable than none 
+  // (ms.tofits for example requires one)
+  // We really should fill it in ::setfield() but that can wait
+  // This is from SimpleSimulator - not sure why we're not using that.
+  // add the SOURCE table
+  TableDesc tdesc = MSSource::requiredTableDesc();
+  MSSource::addColumnToDesc(tdesc, MSSourceEnums::REST_FREQUENCY, 1);
+  SetupNewTable sourceSetup(ms_p->sourceTableName(),tdesc,Table::New);
+  ms_p->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+				   Table(sourceSetup));
+  //
   ms_p->flush();
   
   // Set the TableInfo
@@ -1094,6 +1105,7 @@ void NewMSSimulator::observe(const String& sourceName,
       msc.fieldId().put(row+1,baseFieldID);
       msc.dataDescId().put(row+1,baseSpWID);
       msc.time().put(row+1,Time+Tint/2);
+      msc.timeCentroid().put(row+1,Time+Tint/2);
       msc.arrayId().put(row+1,maxArrayId);
       msc.processorId().put(row+1,0);
       msc.exposure().put(row+1,Tint);

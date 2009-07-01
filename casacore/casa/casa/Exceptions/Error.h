@@ -366,6 +366,10 @@ public:
 
 } //# NAMESPACE CASA - END
 
+#ifdef AIPS_NEEDS_RETHROW
+#define CASACORE_NEEDS_RETHROW
+#endif
+
 #ifdef CASACORE_NEEDS_RETHROW
 #define RETHROW(X) throw(X);
 #else

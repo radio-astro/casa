@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConvertArray.cc 20582 2009-05-06 07:35:33Z gervandiepen $
+//# $Id: tConvertArray.cc 20599 2009-05-11 09:31:08Z gervandiepen $
 
 //# Includes
 #include <casa/Arrays/Array.h>
@@ -36,36 +36,58 @@
 
 
 template<typename T, typename F>
-void tConvertEQ()
+void tConvertEQ (const IPosition& shape)
 {
-  Array<F> arr(IPosition(3,4,5,6));
-  Array<T> res(IPosition(3,4,5,6));
-  Array<T> exp(IPosition(3,4,5,6));
+  Array<F> arr(shape);
+  Array<T> res(shape);
+  Array<T> exp(shape);
   indgen (arr, F(0), F(1));
   indgen (exp, T(0), T(1));
   convertArray (res, arr);
   AlwaysAssertExit (allEQ(res, exp));
+  // Test on non-contiguous array.
+  IPosition st(shape.size(), 1);
+  IPosition end(shape-2);
+  Array<F> arr1 = arr(st,end);
+  Array<T> exp1 = exp(st,end);
+  Array<T> res1 = res(st,end);
+  res1 = 0;
+  convertArray (res1, arr1);
+  AlwaysAssertExit (allEQ(res1, exp1));
+  AlwaysAssertExit (allEQ(res, exp));
 }
 
 template<typename T, typename F>
-void tConvertNear()
+void tConvertNear (const IPosition& shape)
 {
-  Array<F> arr(IPosition(3,4,5,6));
-  Array<T> res(IPosition(3,4,5,6));
-  Array<T> exp(IPosition(3,4,5,6));
+  Array<F> arr(shape);
+  Array<T> res(shape);
+  Array<T> exp(shape);
   indgen (arr, F(0), F(1));
   indgen (exp, T(0), T(1));
   convertArray (res, arr);
+  AlwaysAssertExit (allNear(res, exp, 1e-5));
+  // Test on non-contiguous array.
+  IPosition st(shape.size(), 1);
+  IPosition end(shape-2);
+  Array<F> arr1 = arr(st,end);
+  Array<T> exp1 = exp(st,end);
+  Array<T> res1 = res(st,end);
+  res1 = 0;
+  convertArray (res1, arr1);
+  AlwaysAssertExit (allNear(res1, exp1, 1e-5));
   AlwaysAssertExit (allNear(res, exp, 1e-5));
 }
 
 int main()
 {
   try {
-    tConvertEQ<Int,Short>();
-    tConvertEQ<Short,Int>();
-    tConvertNear<Float,Int>();
-    tConvertNear<Complex,Float>();
+    IPosition shape1(3,40,50,6);   // size should fit in Short
+    IPosition shape2(3,40,50,600);
+    tConvertEQ<Int,Short> (shape1);
+    tConvertEQ<Short,Int> (shape1);
+    tConvertNear<Float,Int> (shape2);
+    tConvertNear<Complex,Float> (shape2);
   } catch (AipsError x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 20564 2009-04-07 16:22:23Z gervandiepen $
+//# $Id: ArrayMath.tcc 20598 2009-05-11 09:24:24Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -157,7 +157,6 @@ void minMax(T &minVal, T &maxVal,
   }
   size_t minp = 0;
   size_t maxp = 0;
-  size_t i = 0;
   T minv = array.data()[0];
   T maxv = minv;
   if (array.contiguousStorage()) {
@@ -1199,6 +1198,31 @@ template<class T> T fractile(const Array<T> &a, Block<T>& tmp, Float fraction,
         fracval = data[n2];
     }
     return fracval;
+}
+
+template<typename T>
+Array<std::complex<T> > makeComplex(const Array<T> &left, const Array<T>& right)
+{
+  checkArrayShapes (left, right, "makeComplex");
+  Array<std::complex<T> > res(left.shape());
+  arrayContTransform (left, right, res,
+                      casa::MakeComplex<T,T,std::complex<T> >());
+  return res;
+}
+
+template<typename C, typename R>
+void setReal(Array<C> &carray, const Array<R> &rarray)
+{
+  checkArrayShapes (carray, rarray, "setReal");
+  // Cannot be done in place, because imag is taken from second operand.
+  arrayTransform (rarray, carray, carray, casa::MakeComplexImag<R,C,C>());
+}
+
+template<typename C, typename R>
+void setImag(Array<C> &carray, const Array<R> &rarray)
+{
+  checkArrayShapes (carray, rarray, "setImag");
+  arrayTransformInPlace (carray, rarray, casa::MakeComplexReal<C,R,C>());
 }
 
 

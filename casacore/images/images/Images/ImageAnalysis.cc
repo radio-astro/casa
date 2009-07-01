@@ -5453,7 +5453,7 @@ ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	if(cSys.findCoordinate(Coordinate::STOKES)>=0 && cSys.nCoordinates()>1){ 
 	  // Stokes axis exists and its not the only one
 	  Vector<String> cNames = cSys.worldAxisNames();
-	  // cout << "cNames = " << cNames << endl;
+	  //cout << "cNames = " << cNames << endl;
 	  keepAxes = IPosition(cNames.size()-1);
 	  uInt j = 0;
 	  for(uInt i=0; i<cNames.size(); i++){
@@ -5463,8 +5463,8 @@ ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	    }
 	  }
 	}
-	// cout << "keepAxes = " << keepAxes << endl;
-	// else: nothing to drop
+	//cout << "keepAxes = " << keepAxes << endl;
+	//else: nothing to drop
       }
     }
 
@@ -6959,13 +6959,11 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
   String axis=specaxis;
   axis.downcase();
   Bool ok=False;
-  if(axis.contains("vel")){
-    specCoor.setVelocity(xunits); 
-    ok=specCoor.pixelToVelocity(xworld, pix);
-  }
-  else if(axis.contains("fre")){
-    ok=True;
+  if(axis.contains("vel") || axis.contains("freq")){ // need a conversion
+
+    // first convert from pixels to frequencies
     Vector<String> tmpstr(1);
+    Vector<Double> fworld(pix.nelements());
     if(xunits==String("")){
       tmpstr[0]=String("GHz");
     }
@@ -6973,11 +6971,30 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
       tmpstr[0]=xunits;
     }
     specCoor.setWorldAxisUnits(tmpstr);
+    ok = True;
     for (uInt k=0; k< pix.nelements(); ++k){ 
-      ok=ok && specCoor.toWorld(xworld[k], pix[k]);
+      ok = ok && specCoor.toWorld(fworld[k], pix[k]);
+    }
+
+    // then, if necessary, from frequencies to velocity
+    if(ok && axis.contains("vel")){
+      ok=False;
+      if(axis.contains("optical")){ // optical velocity
+	specCoor.setVelocity(xunits, MDoppler::OPTICAL); 
+      }
+      else if(axis.contains("radio")){ // radio velocity
+	specCoor.setVelocity(xunits, MDoppler::RADIO); 
+      }
+      else { // true relativistic velocity (default)
+	specCoor.setVelocity(xunits, MDoppler::RELATIVISTIC); 
+      }
+      ok=specCoor.frequencyToVelocity(xworld, fworld);
+    }
+    else{
+      xworld = fworld;
     }
   }
-  else{
+  else{ // no conversion necessary
     xworld=pix;
     ok=True;
   }
