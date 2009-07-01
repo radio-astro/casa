@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- imgr.weight('natural'); -->
 <!-- imgr.clean(algorithm='csclean',niter=500,model='field1') -->
 
-<task type="function" name="clean">
+<task type="function" name="clean" category="imaging">
 
   <shortdescription>Deconvolve an image with selected algorithm</shortdescription>
 
@@ -107,7 +107,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- Getting rid of this
     <param type="bool" name="csclean">
       <description>Use Cotton-Schwab style reconciliation with UV-data</description>
-      <value>False</value>     
+      <value>False</value>
+      
     </param>
 -->
 
@@ -307,6 +308,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>0.1</value>
     </param>
 
+    <param type="bool" name="calready">
+	    <description>Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
+	    <value>False</value>
+    </param>
 
     <param type="any" name="noise"  subparam='true'>
 	    <description>noise parameter for briggs abs mode weighting</description>
@@ -476,7 +481,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         With or without primary beam correction
                  m2.psf; point-spread function (dirty beam)
                  m2.flux;  relative sky sensitivity over field
-                 m2.flux.pbcoverage;  relative pb coverage over field 
+		 m2.flux.pbcoverage;  relative pb coverage over field 
                                       (gets created only for ft='mosaic')
                  m2.model; image of clean components
                  m2.residual; image of residuals
@@ -811,12 +816,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                minpb) Note: if you set pbcor=False, you can later
                recover the pbcor image by dividing by the .flux image
                (e.g. using immath)
-       minpb -- Minimum PB level to use default=0.1; example:
-                The flux image is used to determine this
-		except for the case of mosaic with ft='mosaic'
-		where the flux.pbcoverage image is used.
+       minpb -- Minimum PB level to use default=0.1;
+               The flux image is used to determine this
+	       except for the case of mosaic with ft='mosaic'
+	       where the flux.pbcoverage image is used.
+               example:
                minpb=0.01 Note: this minpb is always in effect
                (regardless of pbcor=True/False) 
+       calready -- if True will create scratch columns if they are 
+                not there. And after clean completes the predicted model 
+                visibility is from the clean components are
+                written to the ms.
        async -- Run asynchronously 
   		    default = False; do not run asychronously
 

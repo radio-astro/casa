@@ -271,8 +271,12 @@ clean(vis='srca.split.ms',imagename='tmosaica',
 exportfits('tmosaica.image','tmosaica.fits')
 
 #Combine and Image
-print '-- Concatenate --'
+print '-- Initialize src.split.ms --'
 os.system('cp -r srca.split.ms n4826_tboth.ms');
+cb.open('src.split.ms')
+cb.initcalset()
+cb.close()
+print '-- Concatenate --'
 ms.open(thems='n4826_tboth.ms',nomodify=False);
 ms.concatenate(msfile='src.split.ms',freqtol='50MHz')
 ms.close()

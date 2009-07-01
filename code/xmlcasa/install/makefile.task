@@ -225,6 +225,16 @@ $(XDOCTIME) :
 	   $(AR) r $(XDOCTIME) $(ARCHTMPD)/$*gdocs ; \
 	   $(RM) $(ARCHTMPD)/$*gdocs
 
+tasklist : 
+	cp /dev/null $(ARCHTMPD)/tasklist
+	echo "from odict import odict" >> $(ARCHTMPD)/tasklist
+	echo "tlist = odict()" >> $(ARCHTMPD)/tasklist
+	for task in *.xml ; do \
+	$(SAXON) $$task  $(AIPSROOT)/code/xmlcasa/install/casatlist.xsl >> $(ARCHTMPD)/tasklist ; \
+	done 
+	echo >> $(ARCHTMPD)/tasklist
+	cat $(ARCHTMPD)/tasklist
+
 pytasks : 
 	cp /dev/null $(ARCHTMPD)/taskinfo
 	amkdir $(DOCSAREA)/helpfiles

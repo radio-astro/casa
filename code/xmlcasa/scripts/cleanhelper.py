@@ -70,13 +70,13 @@ class cleanhelper:
             if(qa.quantity(start)['unit'].find('Hz') < 1):
                 raise TypeError, "start parameter is not a valid frequency quantity "
             if(qa.quantity(width)['unit'].find('Hz') < 1):
-                raise TypeError, "start parameter is not a valid frequency quantity "	
+                raise TypeError, "width parameter is not a valid frequency quantity "	
         elif(mode=='velocity'):
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('m/s') < 0):
                 raise TypeError, "start parameter is not a valid velocity quantity "
             if(qa.quantity(width)['unit'].find('m/s') < 0):
-                raise TypeError, "start parameter is not a valid velocity quantity "	
+                raise TypeError, "width parameter is not a valid velocity quantity "	
         else:
             if((type(width) != int) or 
                (type(start) != int)):
@@ -94,28 +94,35 @@ class cleanhelper:
                 tmppc=phasecenter
                 try:
                     if(len(ms.msseltoindex(self.vis, field=phasecenter)['field']) > 0):
-                        tmppc=int(ms.msseltoindex(self.vis, field=phasecenter)['field'][0])
+                        tmppc = int(ms.msseltoindex(self.vis,
+                                                    field=phasecenter)['field'][0])
                     ##succesful must be string like '0' or 'NGC*'
                 except Exception, instance:
                     ##failed must be a string 'J2000 18h00m00 10d00m00'
-                    tmppc=phasecenter
-                phasecenter=tmppc
-        self.phasecenter=phasecenter
+                    tmppc = phasecenter
+                phasecenter = tmppc
+        self.phasecenter = phasecenter
         #print 'cell', cellx, celly, restfreq
         ####understand spw
-        spwindex=-1;		
-        if( (spw==-1) or (spw=='-1') or (spw=='*') or (spw=='') or (spw==' ')):
-            spwindex=-1
+        if spw in (-1, '-1', '*', '', ' '):
+            spwindex = -1
         else:
             spwindex=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
-            if(len(spwindex)==0):
-                spwindex=-1
-        self.spwindex=spwindex
+            if(len(spwindex) == 0):
+                spwindex = -1
+        self.spwindex = spwindex
         ##end spwindex
-        self.im.defineimage(nx=imsize[0],ny=imsize[1],cellx=cellx,celly=celly,mode=mode,nchan=nchan,start=start,step=width,spw=spwindex,stokes=stokes, restfreq=restfreq,phasecenter=phasecenter, facets=facets)
+        self.im.defineimage(nx=imsize[0],      ny=imsize[1],
+                            cellx=cellx,       celly=celly,
+                            mode=mode,         nchan=nchan,
+                            start=start,       step=width,
+                            spw=spwindex,      stokes=stokes,
+                            restfreq=restfreq, phasecenter=phasecenter,
+                            facets=facets)
 
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
-                          nchan, start, width, restfreq, field, phasecenters, names=[], facets=1):
+                          nchan, start, width, restfreq, field, phasecenters,
+                          names=[], facets=1):
         #will do loop in reverse assuming first image is main field
         self.nimages=len(imsizes)
         if((len(imsizes)<=2) and (type(imsizes[0])==int)):
@@ -339,7 +346,7 @@ class cleanhelper:
         #Done with making masks
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
-                           innertaper, outertaper):
+                           innertaper, outertaper, calready):
         rmode='none'
         weighting='natural';
         if(wgttype=='briggsabs'):
@@ -360,15 +367,16 @@ class cleanhelper:
         if(weighting=='natural'):
             mosweight=False
         if(mosweight):
+            calready=True
             for k in self.fieldindex :
-                self.im.selectvis(field=k, spw=self.spwindex,time=timerange)
+                self.im.selectvis(field=k, spw=self.spwindex,time=timerange, usescratch=calready)
                 self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'))
             ###now redo the selectvis
             self.im.selectvis(field=field,spw=spw,time=timerange,
-                              baseline=antenna, scan=scan, uvrange=uvrange)
+                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
         else:
             self.im.selectvis(field=field,spw=spw,time=timerange,
-                              baseline=antenna, scan=scan, uvrange=uvrange)
+                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
             self.im.weight(type=weighting,rmode=rmode,robust=robust,
                            npixels=npixels, noise=qa.quantity(noise, 'Jy'))
         if((type(outertaper)==list) and (len(outertaper) > 0)):

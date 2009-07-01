@@ -657,6 +657,9 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm ) :
   diameters = ac->dishDiameter().getColumn();
 
   shadow = fieldType(parm, RF_SHADOW, TpBool) && parm.asBool(RF_SHADOW);
+  if (shadow) {
+    diameter = parm.asDouble(RF_DIAMETER);
+  }
  
 // now, scan arguments for what to flag within the selection
 // specific times (specified by center times)
@@ -1003,7 +1006,7 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	              involving shadowed antennas
 	   */
 	   
-	  std::vector<bool> shadowed(diameters.nelements(), False);
+          std::vector<bool> shadowed(diameters.nelements(), False);
 
 	  for (uInt i = 0; i < ifrs.nelements(); i++) {
 	      
@@ -1011,8 +1014,15 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
 
 	      if (a1 != a2) {  /* Antennas don't shadow themselves. */
-		  double d1 = diameters(a1);
-		  double d2 = diameters(a2);
+                  double d1, d2;
+                  if (diameter < 0) {
+                    d1 = diameters(a1);
+                    d2 = diameters(a2);
+                  }
+                  else {
+                    d1 = diameter;
+                    d2 = diameter;
+                  }
 		  
 		  Double uvdist2 = 
 		      uvw(i)(0) * uvw(i)(0) + 
@@ -1208,6 +1218,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.define(RF_FEED,False);
     rec.define(RF_UVRANGE,False);
     rec.define(RF_COLUMN,False);
+    rec.define(RF_DIAMETER, False);
     
     rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
     rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");
@@ -1230,6 +1241,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.setComment(RF_FEED,"Restrict flagging to specific feeds (2,N array of integers)");
     rec.setComment(RF_UVRANGE,"Restrict flagging to specific uv-distance ranges in meters (2,N array of doubles )");
     rec.setComment(RF_COLUMN,"Data column to clip on.");
+    rec.setComment(RF_DIAMETER, "Effective diameter to use. If negative, the true antenna diameters are used");
   }
   return rec;
 }

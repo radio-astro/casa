@@ -70,9 +70,9 @@ flagger::open(const std::string& msname)
 	    flagger_p = new Flagger();
 	}
         if ( flagger_p ) {
-	    return flagger_p->attach(*ms_p);
+          return flagger_p->attach(*ms_p);
         }
-	return false;
+	return new ::casac::record();
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
@@ -263,7 +263,8 @@ flagger::setshadowflags(const std::string& field,
 			const std::string& baseline, 
 			const std::string& uvrange,
 			const std::string& time, 
-			const std::string& correlation)
+			const std::string& correlation,
+                        double diameter)
 {
     try {
 	if(flagger_p) {
@@ -278,7 +279,7 @@ flagger::setshadowflags(const std::string& field,
 		ret = flagger_p->setmanualflags(
 		    False, False,
 		    String(""), Vector<Double>(), String(""),
-		    False, 0.0, String("SHADOW"));
+		    False, 0.0, String("SHADOW"), diameter);
 	    }
 	    
 	    return true;
@@ -331,19 +332,18 @@ flagger::setextendflag(const std::string& field, const std::string& spw, const s
     }
 }
 
-bool
+::casac::record*
 flagger::run(const bool trial, const bool reset)
 {
-    try
-    {
-	if(flagger_p)
-        {
-	        return flagger_p->run(Bool(trial),Bool(reset));
+    try {
+        if(flagger_p){
+            return fromRecord(flagger_p->run(Bool(trial),Bool(reset)));
         }
-        return false;
+
+        return fromRecord(Record());
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-            RETHROW(x);
+        *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        RETHROW(x);
     }
 }
 

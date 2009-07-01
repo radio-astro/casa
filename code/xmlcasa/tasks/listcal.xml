@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the param set for listcal -->
 <!-- This does the equivalent of -->
 
-<task type="function" name="listcal">
+<task type="function" name="listcal" category="information, calibration">
 
   <shortdescription>List antenna gain solutions</shortdescription>
 

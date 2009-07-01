@@ -39,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#define DOPLOT  // to activate ds9 and bandpass-fit plots
 
 /* Constructor for 'RFATimeFreqCrop' */
-RFATimeFreqCrop :: RFATimeFreqCrop( RFChunkStats &ch,const RecordInterface &parm ): 
+RFATimeFreqCrop :: RFATimeFreqCrop( RFChunkStats &ch,const RecordInterface &parm ):
 	                    RFAFlagCubeBase(ch,parm) ,
 	                    RFDataMapper(parm.asArrayString(RF_EXPR),parm.asString(RF_COLUMN)),
 	                    vi(ch.visIter()),
@@ -110,7 +110,7 @@ Bool RFATimeFreqCrop :: newChunk (Int &i)
 	
 	//flg = RFADiffMapBase::newChunk(i);
 
-// Initialize NumT - number of timestamps to work with in one go 
+	// Initialize NumT - number of timestamps to work with in one go
 
 	if(NumTime==0) NumTime=50;
 	if(num(TIME) >= NumTime) NumT = NumTime;
@@ -208,46 +208,46 @@ void RFATimeFreqCrop :: startData ()
 /* Called once for every TIMESTAMP - for each VisBuf */
 RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime) 
 {
- Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
- uInt a1,a2,antcnt;
- Bool flg=False;
- 
- RFDataMapper::setVisBuffer(vb);
-
- flag.advance(itime,True);
- 
-	//vc = vb.visCube(); // extract a viscube - one timestamp - one VisBuf
-	vv = &vb.visCube(); // extract a viscube - one timestamp - one VisBuf
-	vi.flag(ff); // extract the corresponding flags
+    Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
+    uInt a1,a2,antcnt;
+    Bool flg=False;
+    
+    RFDataMapper::setVisBuffer(vb);
+    
+    flag.advance(itime,True);
+    
+    //vc = vb.visCube(); // extract a viscube - one timestamp - one VisBuf
+    vv = &vb.visCube(); // extract a viscube - one timestamp - one VisBuf
+    vi.flag(ff); // extract the corresponding flags
+    
+    if(ant1.shape() != (vb.antenna1()).shape())
+	ant1.resize((vb.antenna1()).shape());
+    ant1 = vb.antenna1();
+    
+    if(ant2.shape() != (vb.antenna2()).shape())
+	ant2.resize((vb.antenna2()).shape());
+    ant2 = vb.antenna2();
+    const Vector<Int> &ifrs( chunk.ifrNums() );
+    
+    //uInt npols = vv->nrow();
+    uInt npols = 1;
+    uInt nbs = ant1.nelements();
+    
+    /*
+      cout << " Nrows in viscube = " << " " << vv->nrow() << endl;
+      cout << " Ncolumns in viscube = " << " " << vv->ncolumn() << endl;
+      cout << " Nplanes in viscube = " << " " << vv->nplane()<< endl;
+      
+      cout << " Nrows in flagcube = " << ff.nrow() << endl;
+      cout << " Ncolumns in flagcube = " << ff.ncolumn() << endl;
+      cout << " Nplanes in flagcube = " << ff.nplane() << endl;
+      
+      cout << " itime : " << itime << "  Nelements in ant1 = " << ant1.nelements() << endl;
+      cout << " itime : " << itime << "  Nelements in ant2 = " << ant2.nelements() << endl;
+    */
+    
 	
-	if(ant1.shape() != (vb.antenna1()).shape())
-		ant1.resize((vb.antenna1()).shape());
-	ant1 = vb.antenna1();
-	
-	if(ant2.shape() != (vb.antenna2()).shape())
-		ant2.resize((vb.antenna2()).shape());
-	ant2 = vb.antenna2();
-        const Vector<Int> &ifrs( chunk.ifrNums() );
-
-	//uInt npols = vv->nrow();
-	uInt npols = 1;
-        uInt nbs = ant1.nelements();
-	
-	/*
-    	cout << " Nrows in viscube = " << " " << vv->nrow() << endl;
-	cout << " Ncolumns in viscube = " << " " << vv->ncolumn() << endl;
-	cout << " Nplanes in viscube = " << " " << vv->nplane()<< endl;
-	
-	cout << " Nrows in flagcube = " << ff.nrow() << endl;
-	cout << " Ncolumns in flagcube = " << ff.ncolumn() << endl;
-	cout << " Nplanes in flagcube = " << ff.nplane() << endl;
-
-	cout << " itime : " << itime << "  Nelements in ant1 = " << ant1.nelements() << endl;
-	cout << " itime : " << itime << "  Nelements in ant2 = " << ant2.nelements() << endl;
-	*/
-
-	
-/* BEGIN TIME-FLAGGING ALGORITHM HERE */
+    /* BEGIN TIME-FLAGGING ALGORITHM HERE */
 
 	/* Read in the data AND any existing flags into the flagCube - accumulate */
 	for(uInt pl=0;pl<npols;pl++)
@@ -273,67 +273,65 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	timecnt++;
 	iterTimecnt++; // running count of visbuffers going by.
 
-/* After accumulating NumT timestamps, start processing this block */
-/////if(iterTimecnt > 0 && (timecnt==NumT || iterTimecnt == (vi.nRowChunk()/NumB)))
-if(iterTimecnt > 0 && (timecnt==NumT || itime==(num(TIME)-1) ))
-{
-
-	
-/* Update RowFlags - Flags to indicate which baselines are missing in
- * each integration timestamp */
-
-	RowFlags=False;
-
-	for(int pl=0;pl<matpos[0];pl++)
-	{
-		for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
-		{
-			for(uInt bs=0;bs<NumB;bs++)
-			{
-				temp=0;
-				flg=True;
-				for(int ch=0;ch<matpos[2];ch++)
-				{
-					temp += visc(pl,ch,tm*NumB+bs);
-					flg &= flagc(pl,ch,tm*NumB+bs);
-				}
-				RowFlags(pl,tm*NumB+bs)=flg;
-				if(temp==0) 
-				{
-					RowFlags(pl,tm*NumB+bs)=True;
+	/* After accumulating NumT timestamps, start processing this block */
+	/////if(iterTimecnt > 0 && (timecnt==NumT || iterTimecnt == (vi.nRowChunk()/NumB)))
+	if(iterTimecnt > 0 && (timecnt==NumT || itime==(num(TIME)-1) ))
+	    {
+		/* Update RowFlags - Flags to indicate which baselines are missing in
+		 * each integration timestamp */
+		
+		RowFlags=False;
+		
+		for(int pl=0;pl<matpos[0];pl++)
+		    {
+			for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
+			    {
+				for(uInt bs=0;bs<NumB;bs++)
+				    {
+					temp=0;
+					flg=True;
 					for(int ch=0;ch<matpos[2];ch++)
-						flagc(pl,ch,tm*NumB+bs)=True;
-				}
-			}// for bs
-		}// for tm
-	}// for pl
-	
-
-/* For each Channel - fit lines to 1-D data in time - flag according 
- * to them and build up the mean bandpass */
-
-	//flagc = (Bool)False;
-	meanBP = 0;
-	cleanBP = 0;
-	flagcnt = 0;
-	antcnt = 0;
-	
-cout << endl << " Flag across " << timecnt << " timesteps and create a time-averaged bandpass " << endl;
-	
-Float rmean=0;
-	for(int pl=0;pl<matpos[0];pl++)
-	{
-		antcnt=0;
-		for(uInt bs=0;bs<NumB;bs++)
-		{
-			Ants(bs,&a1,&a2);
-			if(CorrChoice==0)
-			{if(a1 != a2) continue;} // choose auto correlations
-			else
-			{if(a1==a2) continue;} // choose cross correlations
-
-			
-			rmean=0;
+					    {
+						temp += visc(pl,ch,tm*NumB+bs);
+						flg &= flagc(pl,ch,tm*NumB+bs);
+					    }
+					RowFlags(pl,tm*NumB+bs)=flg;
+					if(temp==0) 
+					    {
+						RowFlags(pl,tm*NumB+bs)=True;
+						for(int ch=0;ch<matpos[2];ch++)
+						    flagc(pl,ch,tm*NumB+bs)=True;
+					    }
+				    }// for bs
+			    }// for tm
+		    }// for pl
+		
+		
+		/* For each Channel - fit lines to 1-D data in time - flag according 
+		 * to them and build up the mean bandpass */
+		
+		//flagc = (Bool)False;
+		meanBP = 0;
+		cleanBP = 0;
+		flagcnt = 0;
+		antcnt = 0;
+		
+		cout << endl << " Flag across " << timecnt << " timesteps and create a time-averaged bandpass " << endl;
+		
+		Float rmean=0;
+		for(int pl=0;pl<matpos[0];pl++)
+		    {
+			antcnt=0;
+			for(uInt bs=0;bs<NumB;bs++)
+			    {
+				Ants(bs,&a1,&a2);
+				if(CorrChoice==0)
+				    {if(a1 != a2) continue;} // choose auto correlations
+				else
+				    {if(a1==a2) continue;} // choose cross correlations
+				
+				
+				rmean=0;
 //			cout << " Antennas : " << a1 << " & " << a2 << endl;
 			for(int ch=0;ch<matpos[2];ch++)
 			{

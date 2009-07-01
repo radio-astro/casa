@@ -235,19 +235,7 @@ public:
     // user cancels, an empty String is returned.
     virtual String fileChooserDialog(const String& title = "File Chooser",
                                      const String& directory = "") = 0;
-    
-    
-    // Logging methods //
-    
-    // Gets/sets which events, as a flag, this Plotter should log.  The flag
-    // should be a bitwise-or of one or more values in PlotLogger::Event.  This
-    // call should trickle down to relevant objects associated with this
-    // plotter as necessary.
-    // <group>
-    virtual int logEventFlags() const = 0;
-    virtual void setLogEventFlags(int flags) = 0;
-    // </group>
-    
+
     
     // Event Handling methods //
     
@@ -272,9 +260,27 @@ public:
     // Sets the layout to a single layout with the given canvas.
     virtual void setCanvas(PlotCanvasPtr canvas);
     
+    // See PlotLogger::filterMinPriority().
+    LogMessage::Priority logFilterMinPriority() const;
+    
+    // See PlotLogger::setFilterMinPriority().
+    void setLogFilterMinPriority(PlotLogMessage::Priority minPriority);
+    
+    // See PlotLogger::eventFlag().
+    virtual bool logFilterEventFlag(int flag) const;
+    
+    // See PlotLogger::setEventFlag().
+    virtual void setLogFilterEventFlag(int flag, bool on);
+    
+    // See PlotLogger::eventFlags().
+    virtual int logFilterEventFlags() const;
+    
+    // See PlotLogger::setEventFlags().
+    virtual void setLogFilterEventFlags(int flags);
+    
     // Gets the PlotLogger associated with this Plotter.  There should be
     // exactly one PlotLogger per Plotter.
-    virtual PlotLoggerPtr logger();
+    virtual PlotLoggerPtr logger() const;
     
 protected:
     // Logger.

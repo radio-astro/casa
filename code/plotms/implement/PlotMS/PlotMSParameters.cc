@@ -36,9 +36,11 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSParameters::PlotMSParameters(PlotMSLogger::Level logLevel, bool debug,
-        bool clearSelection, int cachedImageWidth, int cachedImageHeight) :
-        itsLogLevel_(logLevel), itsLogDebug_(debug),
+PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
+        LogMessage::Priority logPriority, bool clearSelection,
+        int cachedImageWidth, int cachedImageHeight) :
+        itsLogFilename_(logFilename), itsLogEvents_(logEvents),
+        itsLogPriority_(logPriority),
         itsClearSelectionsOnAxesChange_(clearSelection),
         itsCachedImageWidth_(cachedImageWidth),
         itsCachedImageHeight_(cachedImageHeight) { }
@@ -53,13 +55,22 @@ PlotMSParameters::~PlotMSParameters() { }
 
 // Public Methods //
 
-PlotMSLogger::Level PlotMSParameters::logLevel() const { return itsLogLevel_; }
-bool PlotMSParameters::logDebug() const { return itsLogDebug_; }
+String PlotMSParameters::logFilename() const { return itsLogFilename_; }
+void PlotMSParameters::setLogFilename(const String& filename) {
+    if(filename != itsLogFilename_) {
+        itsLogFilename_ = filename;
+        updateFlag(LOG, true, false);
+    }
+}
 
-void PlotMSParameters::setLogLevel(PlotMSLogger::Level level, bool debug) {
-    if(level != itsLogLevel_ || debug != itsLogDebug_) {
-        itsLogLevel_ = level;
-        itsLogDebug_ = debug;
+int PlotMSParameters::logEvents() const { return itsLogEvents_; }
+LogMessage::Priority PlotMSParameters::logPriority() const {
+    return itsLogPriority_; }
+
+void PlotMSParameters::setLogFilter(int e, LogMessage::Priority p) {
+    if(e != itsLogEvents_ || p != itsLogPriority_) {
+        itsLogEvents_ = e;
+        itsLogPriority_ = p;
         updateFlag(LOG, true, false);
     }
 }
@@ -96,8 +107,9 @@ bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
     const PlotMSParameters* o = dynamic_cast<const PlotMSParameters*>(&other);
     if(o == NULL) return false;
     
-    if(updateFlags & LOG) return itsLogLevel_ == o->itsLogLevel_ &&
-                                 itsLogDebug_ == o->itsLogDebug_ &&
+    if(updateFlags & LOG) return itsLogFilename_ == o->itsLogFilename_ &&
+                                 itsLogEvents_ == o->itsLogEvents_ &&
+                                 itsLogPriority_ == o->itsLogPriority_ &&
                                  itsClearSelectionsOnAxesChange_ ==
                                      o->itsClearSelectionsOnAxesChange_ &&
                                  itsCachedImageWidth_ ==
@@ -109,7 +121,8 @@ bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
 
 PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
     PlotMSWatchedParameters::operator=(copy);
-    setLogLevel(copy.logLevel(), copy.logDebug());
+    setLogFilename(copy.logFilename());
+    setLogFilter(copy.logEvents(), copy.logPriority());
     setClearSelectionsOnAxesChange(copy.clearSelectionsOnAxesChange());
     pair<int, int> size = copy.cachedImageSize();
     setCachedImageSize(size.first, size.second);

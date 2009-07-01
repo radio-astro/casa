@@ -15,7 +15,9 @@ regman = casac.homefinder.find_home_by_name('regionmanagerHome')
 quanta=casac.homefinder.find_home_by_name('quantaHome')
 
 class ImageTest:
-    def __init__(self, imageName, write=True, resultDir='WEBPAGES/imageTest/',imDir='IMAGES/'):
+    def __init__(self, imageName, write=True,
+                 resultDir='WEBPAGES/imageTest/',
+                 imDir='IMAGES/'):
 
         self.imTool=image.create()
         self.imTool.open(imageName) #open('tables/squint_corr.restored')
@@ -169,12 +171,12 @@ class ImageTest:
         body2=[]
         resid=pylab.array(a['pixels'])
         if(a['return'].has_key('component0')):
-            ra=self.qaTool.time(a['return']['component0']['shape']['direction']['m0'])
-            dec=self.qaTool.angle(a['return']['component0']['shape']['direction']['m1'])
+            ra = self.qaTool.time(a['return']['component0']['shape']['direction']['m0'])
+            dec = self.qaTool.angle(a['return']['component0']['shape']['direction']['m1'])
             bmaj= self.qaTool.angle(a['return']['component0']['shape']['majoraxis'], form='dig2')
-            bmin=self.qaTool.angle(a['return']['component0']['shape']['minoraxis'], form='dig2')
-            bpa=self.qaTool.angle(a['return']['component0']['shape']['positionangle'])
-            flux=str('%4.2f'%a['return']['component0']['flux']['value'][0])+a['return']['component0']['flux']['unit']
+            bmin = self.qaTool.angle(a['return']['component0']['shape']['minoraxis'], form='dig2')
+            bpa = self.qaTool.angle(a['return']['component0']['shape']['positionangle'])
+            flux = str('%4.2f'%a['return']['component0']['flux']['value'][0])+a['return']['component0']['flux']['unit']
             result.append([ra, dec, bmaj, bmin, bpa, flux])
             ss='fit:\testimated center: %s  %s\n'%(ra,dec)+'\tMajAxis : %s  \tMinAxis: %s \tPosAng: %s'%(bmaj, bmin, bpa)+' flux= '+flux
             body2.append('<pre>%s</pre>'%ss)

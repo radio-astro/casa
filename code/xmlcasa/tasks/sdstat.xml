@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdstat -->
 
-<task type="function" name="sdstat" startup="false">
+<task type="function" name="sdstat" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: list statistics of spectral region</shortdescription>
 
@@ -220,19 +220,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         -------------------------------------------------------------------
                 Returns: a Python dictionary of line statistics
-                   keys: 'rms','stddev','max','min','sum','median','mean',
-                         'totint','eqw'
+                   keys: 'rms','stddev','max','min','max_abscissa',
+                         'min_abscissa','sum','median','mean','totint','eqw'
                 example: xstat=sdstat(); print "rms = ",xstat['rms']
                          these can be used for testing in scripts or
                          for regression
 
+                         'max_abscissa' and 'min_abscissa' refer to the abscissa
+                         (channel/frequency/velocity) of max and min intensity.
                          'totint' is the integrated intensity (sum*dx)
                          where dx is the abscissa interval in 'specunit'.
                          'eqw' is equivalent width (totint/mag) where mag
                          is either max or min depending on which has
                          greater magnitude. 
-                         Note that both 'totint' and 'eqw' are quantities
-                         (dictionaries) with 'unit' and 'value'. 
+                         Note that 'max_abscissa', 'min_abscissa', 'totint' 
+                         and 'eqw' are quantities (python dictionaries with
+                         keys, 'unit' and 'value').
 
 
        DESCRIPTION:

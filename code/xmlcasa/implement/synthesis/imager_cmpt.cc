@@ -594,7 +594,7 @@ imager::nnls(const std::vector<std::string>& model, const std::vector<bool>& kee
 }
 
 bool
-imager::open(const std::string& thems, const bool compress)
+imager::open(const std::string& thems, const bool compress, const bool useScratch)
 {
     bool rstat(False);
     try {
@@ -610,7 +610,7 @@ imager::open(const std::string& thems, const bool compress)
       itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
       // itsImager = new Imager(*itsMS, compress);
       AlwaysAssert(itsMS, AipsError);
-      rstat = itsImager->open(*itsMS, compress);
+      rstat = itsImager->open(*itsMS, compress, useScratch);
       if(rstat) hasValidMS_p=true;
     } catch  (AipsError x) {
 
@@ -1060,12 +1060,12 @@ imager::setdata(const std::string& mode, const std::vector<int>& nchan, const st
 }
 
 bool
-imager::selectvis(const std::string& vis, const std::vector<int>& nchan, 
+imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 		  const std::vector<int>& start, const std::vector<int>& step, 
-		  const ::casac::variant& spw, const ::casac::variant& field,
-		  const ::casac::variant& baseline, 
+                  const ::casac::variant& spw, const ::casac::variant& field,
+                  const ::casac::variant& baseline,
 		  const ::casac::variant& time,const ::casac::variant& scan,
-		  const ::casac::variant& uvrange, const std::string& taql)
+                  const ::casac::variant& uvrange, const std::string& taql, const bool useScratch)
 {
     Bool rstat(False);
     if(itsMS || (vis != "")){
@@ -1108,7 +1108,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 					 fieldIndex, 
 					 String(taql), String(timerange),
 					 fieldnames, antIndex, antennanames, 
-					 spwstring, uvdist, scanrange);
+                                         spwstring, uvdist, scanrange, useScratch);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1327,7 +1327,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const bool usemodelcol, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit)
 {
 
    Bool rstat(False);
@@ -1340,7 +1340,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 	  }
           rstat = itsImager->setoptions(String(ftmachine), cache, tile, 
 					String(gridfunction),
-					mlocation, padding, usemodelcol, 
+                                        mlocation, padding,
 					wprojplanes, String(epjtablename), 
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
@@ -1401,13 +1401,15 @@ imager::settaylorterms(const int ntaylorterms, const double reffreq)
 }
 
 bool
-imager::setsdoptions(const double scale, const double weight, const int convsupport)
+imager::setsdoptions(const double scale, const double weight, const int convsupport, const std::string& pointingcolumntouse)
 {
 
    Bool rstat(False);
    if(hasValidMS_p){
       try {
-          rstat = itsImager->setsdoptions(scale, weight, convsupport);
+	casa::String pcolToUse(pointingcolumntouse);
+	
+	rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
       } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

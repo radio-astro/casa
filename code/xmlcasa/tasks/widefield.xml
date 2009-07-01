@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="widefield">
+<task type="function" name="widefield" category="imaging">
 
   <shortdescription>Wide-field imaging and deconvolution with selected algorithm</shortdescription>
 

@@ -79,13 +79,17 @@ namespace casa{
 		 const Vector<Float>& paList, Int bandID);
     void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1);
     void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1);
+    void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
+		 const Vector<Float>& paList, Int bandID);
+    void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1);
+    void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1);
     void skyMuller(ImageInterface<Complex>& skyJones);
 
 
   private:
     
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg);
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg);
+    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg, Bool Square=False);
+    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg, Bool Square=False);
 
     TempImage<Complex> convFunc_p;
     //    TempImage<Float> reAperture_p, imAperture_p;

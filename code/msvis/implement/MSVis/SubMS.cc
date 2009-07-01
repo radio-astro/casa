@@ -2,18 +2,18 @@
 //# Copyright (C) 1996-2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
-//# This program is free software; you can redistribute it and/or modify
+//# This library is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# This library is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //# 
 //# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
+//# along with this library; if not, write to the Free Software
 //# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //#
 //# Correspondence concerning AIPS++ should be addressed as follows:
@@ -86,6 +86,8 @@ namespace casa {
     scanString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
+    timeRange_p(""),
+    arrayExpr_p(""),
     nant_p(0)
   {
   }
@@ -103,6 +105,8 @@ namespace casa {
     scanString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
+    timeRange_p(""),
+    arrayExpr_p(""),
     nant_p(0)
   {
   }
@@ -198,7 +202,7 @@ namespace casa {
 			  const String& scan, const String& uvrange, 
 			  const String& taql, const Vector<Int>& nchan, 
 			  const Vector<Int>& start, const Vector<Int>& step,
-			  const Bool averchan){
+			  const Bool averchan, const String& subarray){
     Vector<Int> inchan(1,-1);
     Vector<Int> istart(1,0);
     Vector<Int> istep(1,1);
@@ -262,19 +266,15 @@ namespace casa {
     
   }
   
-  void SubMS::selectSource(Vector<Int> fieldid){
-    
-    
+  void SubMS::selectSource(Vector<Int> fieldid)
+  {
     fieldid_p.resize();
     fieldid_p=fieldid;
     if(fieldid.nelements()==1 && fieldid(0)<0){
       fieldid_p.resize(ms_p.field().nrow());
-      for (uInt k =0 ; k < fieldid_p.nelements() ; ++k){
-	fieldid_p[k]=k;
-	
-      }
+      for(uInt k = 0; k < fieldid_p.nelements(); ++k)
+		fieldid_p[k]=k;
     }
-    
   }
   
   
@@ -326,7 +326,8 @@ namespace casa {
       
       // Watch out!  This throws an AipsError if ms_p doesn't have the
       // requested columns.
-      verifyColumns(ms_p, parseColumnNames(colname));
+      const Vector<String> colNamesTok=SubMS::parseColumnNames(colname);
+      verifyColumns(ms_p, colNamesTok);
 
       if(!makeSelection()){
 	os << LogIO::SEVERE 
@@ -353,13 +354,29 @@ namespace casa {
 	return False;
       }
       
-      
-      
-      
       //  msOut_p.relinquishAutoLocks (True);
       //  msOut_p.unlock();
       //Detaching the selected part
       ms_p=MeasurementSet();
+      
+      //
+      // If all columns are in the new MS, set the CHANNEL_SELECTION
+      // keyword for the MODEL_DATA column.  This is apparently used
+      // in at least imager to decide if MODEL_DATA and CORRECTED_DATA
+      // columns should be initialized or not.
+      //
+      if (isAllColumns(colNamesTok))
+	{
+	  MSSpWindowColumns msSpW(msOut_p.spectralWindow());
+	  Int nSpw=msOut_p.spectralWindow().nrow();
+	  if(nSpw==0) nSpw=1;
+	  Matrix<Int> selection(2,nSpw);
+	  selection.row(0)=0; //start
+	  selection.row(1)=msSpW.numChan().getColumn();
+	  ArrayColumn<Complex> mcd(msOut_p,MS::columnName(MS::MODEL_DATA));
+	  mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection);
+	}
+
       delete outpointer;
       return True;
     }
@@ -452,8 +469,14 @@ namespace casa {
     if(!fillDDTables()){
       return False;
     }
+
+    // SourceIDs need to be remapped around here.  It could not be done in
+    // selectSource() because mssel_p was not setup yet.
+    relabelSources();
+
     fillFieldTable();
     copySource();
+
     copyAntenna();
     copyFeed();    // Feed table writing has to be after antenna 
     copyObservation();
@@ -501,22 +524,19 @@ namespace casa {
     if(spw_p.nelements() > 0)
       thisSelection.setSpwExpr(MSSelection::indexExprStr(spw_p));
     if(antennaSel_p){
-      if(antennaId_p.nelements() >0){
+      if(antennaId_p.nelements() > 0){
 	thisSelection.setAntennaExpr( MSSelection::indexExprStr( antennaId_p ));
       }
-      if(antennaSelStr_p[0] != ""){
+      if(antennaSelStr_p[0] != "")
         thisSelection.setAntennaExpr(MSSelection::nameExprStr( antennaSelStr_p));
-	
-	
-      }
-      
     }
-    if(timeRange_p != ""){
+    if(timeRange_p != "")
       thisSelection.setTimeExpr(timeRange_p);
-    }
     
     thisSelection.setUvDistExpr(uvrangeString_p);
     thisSelection.setScanExpr(scanString_p);
+    if(arrayExpr_p != "")
+      thisSelection.setArrayExpr(arrayExpr_p);
     thisSelection.setTaQLExpr(taqlString_p);
     
     TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
@@ -592,6 +612,13 @@ namespace casa {
 	  td.defineHypercolumn(hcolName,3,
 			       stringToVector(colNamesTok[i]));
 	}
+    if (isAllColumns(colNamesTok))
+      {
+	MS::addColumnToDesc(td, MS::IMAGING_WEIGHT, 1);
+	td.defineHypercolumn("TiledImagingWeight", 2, 
+			     stringToVector(MS::columnName(MS::IMAGING_WEIGHT)));
+      }
+    
     
     // add this optional column because random group fits has a
     // weight per visibility
@@ -675,6 +702,13 @@ namespace casa {
     newtab.bindColumn(MS::columnName(MS::UVW),tiledStMan3);
     newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
     newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
+
+    if (isAllColumns(colNamesTok))
+      {
+	TiledShapeStMan tiledStManImgWts("TiledImagingWeight",
+					 IPosition(1,tileShape(1)));
+	newtab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT),tiledStManImgWts);
+      }
     
     // avoid lock overheads by locking the table permanently
     TableLock lock(TableLock::AutoLocking);
@@ -860,9 +894,8 @@ namespace casa {
   }
   
   
-  Bool SubMS::fillFieldTable() {
-    
-    
+  Bool SubMS::fillFieldTable() 
+  {  
     MSFieldColumns& msField(msc_p->field());
     
     //MSField fieldtable= mssel_p.field();
@@ -895,10 +928,10 @@ namespace casa {
     ROScalarColumn<Int> sourceId(fieldIn.sourceId());
     ROScalarColumn<Double> time(fieldIn.time());
     
-    
+
     fieldRelabel_p.resize(mscIn_p->field().nrow());
     fieldRelabel_p.set(-1);
-    
+
     
     for(uInt k=0; k < fieldid_p.nelements(); ++k){
       fieldRelabel_p[fieldid_p[k]]=k;
@@ -911,15 +944,42 @@ namespace casa {
       msField.numPoly().put(k, numPoly(fieldid_p[k]));
       msField.phaseDir().put(k, phaseDir(fieldid_p[k]));
       msField.referenceDir().put(k, refDir(fieldid_p[k]));
-      msField.sourceId().put(k, sourceId(fieldid_p[k]));
-      
-      
-      
+
+      Int inSrcID = sourceId(fieldid_p[k]);
+      if(inSrcID < 0)
+	msField.sourceId().put(k, -1);
+      else
+	msField.sourceId().put(k, sourceRelabel_p[inSrcID]);
     }
-    
-    return True;
-    
+  
+    return True;    
   }
+
+  // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
+  // ones.  Must be called after fieldid_p is set and before calling
+  // fillFieldTable() or copySource().
+  void SubMS::relabelSources()
+  {
+    // Note that mscIn_p->field().sourceId() has ALL of the sourceIDs in
+    // the input MS, not just the selected ones.
+    const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
+
+    uInt nInputSrcs = inSrcIDs.nelements();
+    
+    sourceRelabel_p.resize(nInputSrcs > 1 ? nInputSrcs : 1); // Ensure space for -1.
+    sourceRelabel_p.set(-1);    			     // Default to "any".
+
+    // Enable sourceIDs that are actually referred to by selected fields, and
+    // remap them using j.
+    uInt j = 0;
+    for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+      if(inSrcIDs[fieldid_p[k]] > -1){
+	sourceRelabel_p[inSrcIDs[fieldid_p[k]]] = j;
+	++j;
+      }
+    }
+  }
+
   //
   // The method is called only in makeSubMS().  Should really be
   // called in setupMS.  But the latter has been made into a static
@@ -936,6 +996,22 @@ namespace casa {
 	       << ms_p.tableName() << ").";
 	  throw(AipsError(ostr.str()));
 	}
+  }
+
+  Bool SubMS::doWriteImagingWeight(const MSColumns& inMsc, const Vector<String>& columnName)
+  {
+    Bool allCols=isAllColumns(columnName);
+    Bool inputImgWtsExist=(!inMsc.imagingWeight().isNull() &&
+			inMsc.imagingWeight().isDefined(0));
+    if (allCols && !inputImgWtsExist)
+      {
+	LogIO os(LogOrigin("SubMS", "doWriteImgingWeight()"));
+	os << LogIO::WARN 
+	   << "All data columns found, but not the IMAGING_WEIGHT column in the input MS. "
+	   << "This is strange.  Brace for unnatural results."
+	   << LogIO::POST;
+      }
+    return  (allCols && inputImgWtsExist);
   }
 
   const Vector<String>& SubMS::parseColumnNames(const String col)
@@ -996,9 +1072,9 @@ namespace casa {
 	  if (tokens[i]=="OBSERVED" || 
 	      tokens[i]=="DATA" || 
 	      tokens[i]==MS::columnName(MS::DATA)) 
-	    
-	    my_colNameVect[i] = MS::columnName(MS::DATA);
-	  
+	    {
+	      my_colNameVect[i] = MS::columnName(MS::DATA);
+	    }
 	  else if(tokens[i]=="MODEL" || 
 		  tokens[i]=="MODEL_DATA" || 
 		  tokens[i]==MS::columnName(MS::MODEL_DATA)) 
@@ -1124,9 +1200,15 @@ namespace casa {
     if(!doChanAver_p){
       ROArrayColumn<Complex> data;
       for(uInt ni = 0;ni < columnName.nelements(); ++ni){
-	getDataColumn(*msc_p, data, columnName[ni]);
+	getDataColumn(*mscIn_p, data, columnName[ni]);
 	putDataColumn(*msc_p, data, columnName[ni], (columnName.nelements() == 1));
       }
+      if (doWriteImagingWeight(*mscIn_p,columnName))
+	{
+	  ROArrayColumn<Float> imgWts(mscIn_p->imagingWeight());
+	  msc_p->imagingWeight().putColumn(imgWts);
+	}
+
       msc_p->flag().putColumn(mscIn_p->flag());
     }
     else{
@@ -1228,34 +1310,33 @@ void SubMS::relabelIDs()
     return True; 
   }
   
-  
   Bool SubMS::copyAntenna(){
-    Table oldAnt(mssel_p.antennaTableName(), Table::Old);
-    Table& newAnt = msOut_p.antenna();
+    const MSAntenna& oldAnt = mssel_p.antenna();
+    MSAntenna& newAnt = msOut_p.antenna();
+    const ROMSAntennaColumns incols(oldAnt);
+    MSAntennaColumns         outcols(newAnt);
     
+    outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
+    outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
+
     if(!antennaSel_p){
-      
-      
       TableCopy::copyRows(newAnt, oldAnt);
-      return True;
     }
     else{
       //Now we try to re-index the antenna list;
       Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
-      Int nAnt1=GenSort<Int>::sort(ant1,Sort::Ascending,
-				   Sort::NoDuplicates);
+      Int nAnt1=GenSort<Int>::sort(ant1,Sort::Ascending, Sort::NoDuplicates);
       ant1.resize(nAnt1, True);
       Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
-      Int nAnt2=GenSort<Int>::sort(ant2,Sort::Ascending,
-				   Sort::NoDuplicates);
+      Int nAnt2=GenSort<Int>::sort(ant2,Sort::Ascending, Sort::NoDuplicates);
       ant2.resize(nAnt2, True);
       ant1.resize(nAnt2+nAnt1, True);
       ant1(Slice(nAnt1,nAnt2))=ant2;
-      nAnt1=GenSort<Int>::sort(ant1,Sort::Ascending,
-			       Sort::NoDuplicates);
+      nAnt1 = GenSort<Int>::sort(ant1,Sort::Ascending, Sort::NoDuplicates);
       ant1.resize(nAnt1, True);
       antNewIndex_p.resize(oldAnt.nrow());
-      antNewIndex_p.set(-1); //So if you see -1 in the main table or feed fix it
+      antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
+			     //tables, fix it
       for (Int k=0; k < nAnt1; ++k){
 	antNewIndex_p[ant1[k]]=k;
 	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1);
@@ -1263,14 +1344,21 @@ void SubMS::relabelIDs()
       
       return True;
     }
-    return False;
-    
+    return False;    
   }
-  
-  Bool SubMS::copyFeed(){
+
+
+  Bool SubMS::copyFeed()
+  {
+    const MSFeed& oldFeed = mssel_p.feed();
+    MSFeed& newFeed = msOut_p.feed();
+    const ROMSFeedColumns incols(oldFeed);
+    MSFeedColumns         outcols(newFeed);
     
-    Table oldFeed(mssel_p.feedTableName(), Table::Old);
-    Table& newFeed = msOut_p.feed();
+    outcols.setDirectionRef(MDirection::castType(incols.beamOffsetMeas().getMeasRef().getType()));
+    outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
+    outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
+
     if(!antennaSel_p){
       TableCopy::copyRows(newFeed, oldFeed);
       return True;
@@ -1278,12 +1366,14 @@ void SubMS::relabelIDs()
     else{
       Vector<Bool> feedRowSel(oldFeed.nrow());
       feedRowSel.set(False);
-      Vector<Int> antIds=ROScalarColumn<Int> (oldFeed, "ANTENNA_ID").getColumn();
-      Vector<Int> feedIds=ROScalarColumn<Int> (oldFeed, "FEED_ID").getColumn();
+      const Vector<Int>&  antIds = incols.antennaId().getColumn();
+      const Vector<Int>& feedIds = incols.feedId().getColumn();
+
       feedNewIndex_p.resize(max(feedIds)+1);
       feedNewIndex_p.set(-1);
       uInt feedSelected=0;
-      for (uInt k=0; k < antIds.nelements(); ++k){
+      uInt nAnts = antIds.nelements();
+      for (uInt k = 0; k < nAnts; ++k){
 	if(antNewIndex_p[antIds[k]] > -1){
 	  feedRowSel[k]=True;
 	  feedNewIndex_p[feedIds[k]]=feedSelected;
@@ -1291,10 +1381,11 @@ void SubMS::relabelIDs()
 	  ++feedSelected;
 	}
       }
-      ScalarColumn<Int> antCol(newFeed, "ANTENNA_ID");
-      ScalarColumn<Int> feedCol(newFeed, "FEED_ID");
-      Vector<Int> newAntIds=antCol.getColumn();
-      Vector<Int> newFeedIds=feedCol.getColumn();
+      ScalarColumn<Int>& antCol = outcols.antennaId();
+      ScalarColumn<Int>& feedCol = outcols.feedId();
+
+      Vector<Int> newAntIds = antCol.getColumn();
+      Vector<Int> newFeedIds = feedCol.getColumn();
       for (uInt k=0; k< feedSelected; ++k){
 	newAntIds[k]=antNewIndex_p[newAntIds[k]];
 	newFeedIds[k]=feedNewIndex_p[newFeedIds[k]];
@@ -1303,79 +1394,152 @@ void SubMS::relabelIDs()
       feedCol.putColumn(newFeedIds);
       
       return True;
-      
     }
-    
     return True;
-    
   }
   
   
   Bool SubMS::copySource(){
-    //Source is an optinal table..so it may not exist
+    //Source is an optional table, so it may not exist
     if(Table::isReadable(mssel_p.sourceTableName())){
-      Table oldSource(mssel_p.sourceTableName(), Table::Old);
-      Table& newSource=msOut_p.source();
+      LogIO os(LogOrigin("SubMS", "copySource()"));
+
+      const MSSource& oldSource = mssel_p.source();
+      MSSource& newSource = msOut_p.source();
       
-      if(newSource.actualTableDesc().ncolumn() != 
-	 oldSource.actualTableDesc().ncolumn()){      
-	Vector<String> oldColumnNames=oldSource.actualTableDesc().columnNames();
-	Vector<String> optionalCols(6);
-	optionalCols[0]="TRANSITION";
-	optionalCols[1]="REST_FREQUENCY";
-	optionalCols[2]="SYSVEL";
-	optionalCols[3]="SOURCE_MODEL";
-	optionalCols[4]="PULSAR_ID";
-	optionalCols[5]="POSITION";
-	for (uInt k=0; k< oldSource.actualTableDesc().ncolumn(); ++k){
-	  for (uInt j=0; j < optionalCols.nelements(); ++j){
-	    if(oldColumnNames[k].contains(optionalCols[j])){
-	      TableDesc tabDesc;
-	      MSSource::addColumnToDesc(tabDesc, MSSource::columnType(optionalCols[j]));
-	      newSource.addColumn(tabDesc[0]);
-	    }
-	  }
+      // Add optional columns if present in oldSource.
+      Vector<String> optionalCols(6);
+      optionalCols[0] = "TRANSITION";
+      optionalCols[1] = "REST_FREQUENCY";
+      optionalCols[2] = "SYSVEL";
+      optionalCols[3] = "SOURCE_MODEL";
+      optionalCols[4] = "PULSAR_ID";
+      optionalCols[5] = "POSITION";
+      uInt nAddedCols = addOptionalColumns(oldSource, newSource, optionalCols, true);
+      os << LogIO::DEBUG1 << "SOURCE has " << nAddedCols
+	 << " optional columns." << LogIO::POST;
+      
+      const ROMSSourceColumns incols(oldSource);
+      MSSourceColumns         outcols(newSource);
+
+      // Copy the Measures frame info.  This has to be done before filling the
+      // rows.
+      outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
+      outcols.setDirectionRef(MDirection::castType(incols.directionMeas().getMeasRef().getType()));
+      outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
+      outcols.setFrequencyRef(MFrequency::castType(incols.restFrequencyMeas().getMeasRef().getType()));
+      outcols.setRadialVelocityRef(MRadialVelocity::castType(incols.sysvelMeas().getMeasRef().getType()));
+
+      const ROScalarColumn<Int>& inSId   = incols.sourceId();
+      ScalarColumn<Int>& 	 outSId  = outcols.sourceId();
+      const ROScalarColumn<Int>& inSPW   = incols.spectralWindowId();
+      ScalarColumn<Int>& 	 outSPW  = outcols.spectralWindowId();
+
+      // 2009-06-09: It is hard to say whether to remap pulsarID when the
+      // PULSAR table is not described in the MS v2.0 def'n.
+//       const ROScalarColumn<Int>& inPId   = incols.pulsarId();
+//       ScalarColumn<Int>& 	 outPId  = outcols.pulsarId();
+
+      uInt outrn = 0; 		   	   		// row number in output.
+      uInt nInputRows = inSId.nrow();
+      for(uInt inrn = 0; inrn < nInputRows; ++inrn){
+	Int inSidVal = inSId(inrn);
+	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
+	
+	if(inSidVal > -1 && sourceRelabel_p[inSidVal] > -1){
+	  // Copy inrn to outrn.
+	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);
+	  outSId.put(outrn, sourceRelabel_p[inSidVal]);
+	  outSPW.put(outrn, inSPWVal > -1 ? spwRelabel_p[inSPWVal] : -1);
+	  
+	  ++outrn;
 	}
       }
-      TableCopy::copyRows(newSource, oldSource);
+
       return True;
-    }
-    
-    
+    }    
+  
     return False;
-    
   }
   
-  Bool SubMS::copyObservation(){
-    
-    Table oldObs(mssel_p.observationTableName(), Table::Old);
-    Table& newObs=msOut_p.observation();
+  Bool SubMS::copyObservation()
+  {  
+    const MSObservation& oldObs = mssel_p.observation();
+    MSObservation& newObs = msOut_p.observation();
+    const ROMSObservationColumns oldObsCols(oldObs);
+    MSObservationColumns newObsCols(newObs);
+    newObsCols.setEpochRef(MEpoch::castType(oldObsCols.releaseDateMeas().getMeasRef().getType()));
+
     TableCopy::copyRows(newObs, oldObs);
-    
+    //W TableCopy::deepCopy(newObs, oldObs, false);
     
     return True;
-    
   }
   
   Bool SubMS::copyPointing(){
     //Pointing is allowed to not exist
     Bool pointExists=Table::isReadable(mssel_p.pointingTableName());
     if(pointExists){
-      const Table oldPoint(mssel_p.pointingTableName(), Table::Old);
+      //Wconst Table oldPoint(mssel_p.pointingTableName(), Table::Old);
+      const MSPointing& oldPoint = mssel_p.pointing();
+
       if(oldPoint.nrow() > 0){
-	Table& newPoint=msOut_p.pointing();
-	//TableCopy::copyInfo(newPoint, oldPoint);
-	TableColumn newTC(newPoint, "DIRECTION");
-	const TableColumn oldTC(oldPoint, "DIRECTION");
-	newTC.rwKeywordSet() = oldTC.keywordSet();
-	TableCopy::copyRows(newPoint, oldPoint);
+	MSPointing& newPoint = msOut_p.pointing();  // Could be declared as
+						    // Table&
+
+	LogIO os(LogOrigin("SubMS", "copyPointing()"));
+
+	// Add optional columns if present in oldPoint.
+	Vector<String> optionalCols(6);
+	optionalCols[0] = "POINTING_OFFSET";
+	optionalCols[1] = "SOURCE_OFFSET";
+	optionalCols[2] = "ENCODER";
+	optionalCols[3] = "POINTING_MODEL_ID";
+	optionalCols[4] = "ON_SOURCE";
+	optionalCols[5] = "OVER_THE_TOP";
+	uInt nAddedCols = addOptionalColumns(oldPoint, newPoint, optionalCols, true);
+	os << LogIO::DEBUG1 << "POINTING has " << nAddedCols
+	   << " optional columns." << LogIO::POST;
+	
+	// W = Works, DW = Doesn't Work
+//DW  	msOut_p.pointing() = mssel_p.pointing();	
+//DW  	//TableCopy::copyInfo(newPoint, oldPoint);
+//W  	TableColumn newTC(newPoint, "DIRECTION");
+//W  	const ROScalarColumn<MDirection> oldTC(oldPoint, "DIRECTION");
+//W  	const TableColumn oldTC(oldPoint, "DIRECTION");
+//W  	newTC.rwKeywordSet() = oldTC.keywordSet();
+
+  	const ROMSPointingColumns oldPCs(oldPoint);
+	MSPointingColumns newPCs(newPoint);
+	newPCs.setEpochRef(MEpoch::castType(oldPCs.timeMeas().getMeasRef().getType()));
+	newPCs.setDirectionRef(MDirection::castType(oldPCs.directionMeasCol().getMeasRef().getType()));
+	newPCs.setEncoderDirectionRef(MDirection::castType(oldPCs.encoderMeas().getMeasRef().getType()));
+
+	
+	if(!antennaSel_p){
+	  TableCopy::copyRows(newPoint, oldPoint);
+	}
+	else{
+	  const ROScalarColumn<Int>& antIds  = oldPCs.antennaId();
+	  ScalarColumn<Int>& 	     outants = newPCs.antennaId();
+
+	  uInt selRow = 0;
+	  for (uInt k = 0; k < antIds.nrow(); ++k){
+	    Int newAntInd = antNewIndex_p[antIds(k)];
+	    
+	    if(newAntInd > -1){
+	      TableCopy::copyRows(newPoint, oldPoint, selRow, k, 1);
+	      outants.put(selRow, newAntInd);
+	      ++selRow;
+	    }
+	  }
+	}
+//DW 	//	TableCopy::copySubTables(newPoint, oldPoint);
+//DW	oldPoint.deepCopy(msOut_p.pointingTableName(), Table::NewNoReplace);
       }
     }
     return True;
-    
   }
-  
-  
   
   Bool SubMS::writeDiffSpwShape(const String& columnName){
     
@@ -1386,6 +1550,7 @@ void SubMS::relabelIDs()
     Int rowsnow=0;
     Block<Int> sort(0);
     Matrix<Int> noselection;
+    Bool idelete;
     
     VisSet *vs= new VisSet(mssel_p, noselection);
     ROVisIter& vi(vs->iter());
@@ -1404,13 +1569,20 @@ void SubMS::relabelIDs()
       {
 	for (vi.origin(); vi.more(); vi++) 
 	  {
+	    Int spw=spwindex[vb.spectralWindow()];
 	    rowsnow=vb.nRow();
 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
 	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
 	    Cube<Bool> locflag;
+	    Matrix<Float> inImgWts;
+	    Matrix<Float> avgImgWts(nchan_p[spw],rowsnow);
+	    inImgWts.reference(vb.imagingWeight());
+	    avgImgWts.set(0.0);
+	    Float *oproxyImgWtsP = avgImgWts.getStorage(idelete);
+	    Float *iproxyImgWtsP = inImgWts.getStorage(idelete);
+
 	    for(uInt ni=0;ni<ntok;ni++)
 	      {
-		Int spw=spwindex[vb.spectralWindow()];
 		Cube<Complex> vis;
 
 		if(colNameTok[ni]== MS::columnName(MS::DATA))
@@ -1434,7 +1606,6 @@ void SubMS::relabelIDs()
 		  spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);
 		
 		locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
-		Bool idelete;
 		const Bool* iflag=inFlag.getStorage(idelete);
 		const Complex* idata=vis.getStorage(idelete);
 		//      const Float* iweight=inSpWeight.getStorage(idelete);
@@ -1443,44 +1614,48 @@ void SubMS::relabelIDs()
 		// We have to revisit this once visBuffer provides the spectral Weights
 		
 		
-		for(Int k=0; k < rowsnow; ++k){
-		  for(Int j=0; j < nchan_p[spw]; ++j){
-		    Vector<Int>counter(npol_p[spw]);
-		    counter.set(0);
-		    for (Int pol=0; pol < npol_p[spw]; ++pol){
-		      Int outoffset=k*nchan_p[spw]*npol_p[spw]+j*npol_p[spw]+pol;
-		      if(!averageChannel_p){
-			averdata.xyPlane(k).column(j)=
-			  vis.xyPlane(k).column(chanStart_p[spw]+ j*chanStep_p[spw]); 
-			locflag.xyPlane(k).column(j)=
-			  inFlag.xyPlane(k).column(chanStart_p[spw]+ j*chanStep_p[spw]); 
-		      }
-		      else{  
-			for (Int m=0; m < chanStep_p[spw]; ++m){
-			  Int inoffset=k*inNumChan_p[spw]*npol_p[spw]+
-			    (j*chanStep_p[spw]+m)*npol_p[spw]+ pol;
-			  
-			  if(!iflag[inoffset]){
-			    odata[outoffset] += idata[inoffset];
-			    ++counter[pol];
+		for(Int r=0; r < rowsnow; ++r)
+		  {
+		    for(Int c=0; c < nchan_p[spw]; ++c)
+		      {
+			Vector<Int>counter(npol_p[spw]);
+			counter.set(0);
+			for (Int pol=0; pol < npol_p[spw]; ++pol)
+			  {
+			    Int outoffset=r*nchan_p[spw]*npol_p[spw]+c*npol_p[spw]+pol;
+			    if(!averageChannel_p)
+			      {
+				Int whichChan=chanStart_p[spw]+ c*chanStep_p[spw];
+				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
+				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan); 
+			      }
+			    else
+			      for (Int m=0; m < chanStep_p[spw]; ++m)
+				{
+				  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
+				    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
+				    
+				  if(!iflag[inoffset])
+				    {
+				      odata[outoffset]               += idata[inoffset];
+				      ++counter[pol];
+				    }
+				}
+					      
+			    if(averageChannel_p)
+			      if(counter[pol] >0)
+				{
+				  odata[outoffset]               /= counter[pol];
+				  oflag[outoffset]=False;
+				}
+			      else
+				{
+				  odata[outoffset]=0;
+				  oflag[outoffset]=True;
+				}
 			  }
-			}
 		      }
-		      
-		      if(averageChannel_p){
-			if(counter[pol] >0){
-			  odata[outoffset] = odata[outoffset]/counter[pol];
-			  oflag[outoffset]=False;
-			  
-			}
-			else{
-			  odata[outoffset]=0;
-			  oflag[outoffset]=True;
-			}
-		      }
-		    }
-		  }
-		}  
+		  }  
 		
 		if (ntok==1)
 		  msc_p->data().putColumnCells(rowstoadd, averdata);
@@ -1493,7 +1668,42 @@ void SubMS::relabelIDs()
 		    else
 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
 		  }
+	      } // End ntok loop
+
+	    //
+	    //----------------------------------------------------------------------
+	    // Average the imaging weights - if required.
+	    //
+	    Bool doImgWeight = !mscIn_p->imagingWeight().isNull() &&
+	      mscIn_p->imagingWeight().isDefined(0);
+	    if (doImgWeight)
+	      {
+		for(Int r=0; r < rowsnow; ++r)
+		  for(Int c=0; c < nchan_p[spw]; ++c)
+		    {
+		      Int outImgWtsoffset=r*nchan_p[spw]+c,
+			imgWtsCounter=0,
+			whichChan=chanStart_p[spw]+ c*chanStep_p[spw];
+		      if(!averageChannel_p)
+			avgImgWts(r,c) = inImgWts(r,whichChan);
+		      else
+			for (Int m=0; m < chanStep_p[spw]; ++m)
+			  {
+			    Int inImgWtsoffset=r*inNumChan_p[spw]+(c*chanStep_p[spw]+m);
+			    oproxyImgWtsP[outImgWtsoffset] += iproxyImgWtsP[inImgWtsoffset];
+			    imgWtsCounter++;
+			  }
+		      
+		      if(averageChannel_p)
+			if(imgWtsCounter >0)
+			  oproxyImgWtsP[outImgWtsoffset] /= imgWtsCounter;
+			else
+			  oproxyImgWtsP[outImgWtsoffset]=0;
+		    }
+		msc_p->imagingWeight().putColumnCells(rowstoadd,avgImgWts);
 	      }
+	    //----------------------------------------------------------------------
+
 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
 	    rowsdone+=rowsnow;
 
@@ -1528,45 +1738,45 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
     
   // RR 5/15/2009: columnName has already been vetted higher up in the
   // calling chain by verifyColumns().
-  const Vector<String> colNameTok=parseColumnNames(columnName);
-  const uInt ntok=colNameTok.nelements();
+  const Vector<String> colNameTok = parseColumnNames(columnName);
+  const uInt ntok = colNameTok.nelements();
   ROArrayColumn<Complex> data;
   ROArrayColumn<Float> wgtSpec;
 
-  for(uInt ni=0; ni<ntok; ni++){
+  ROArrayColumn<Bool> flag(mscIn_p->flag());
+  for(uInt ni = 0; ni < ntok; ni++){
     data.reference(right_column(mscIn_p, colNameTok[ni]));
-    ROArrayColumn<Bool> flag(mscIn_p->flag());
     if(doSpWeight){ 
       outspweight.resize(npol_p[0], nchan_p[0], nrow);
       wgtSpec.reference(mscIn_p->weightSpectrum());
     }
 
-    for (Int row=0; row < nrow; ++row){
+    for (Int row = 0; row < nrow; ++row){
       data.get(row, indatatmp);
       flag.get(row, inflagtmp);
 
       if(doSpWeight)
 	wgtSpec.get(row, inwgtspectmp);
 
-      Int ck=0;
-      Int chancounter=0;
+      Int ck = 0;
+      Int chancounter = 0;
       Vector<Int> avcounter(npol_p[0]);
       outdatatmp.set(0); outwgtspectmp.set(0);
       avcounter.set(0);
       
-      for (Int k=chanStart_p[0]; k< (nchan_p[0]*chanStep_p[0]+chanStart_p[0]);
-	   ++k) {
+      for(Int k = chanStart_p[0]; k < (nchan_p[0] * chanStep_p[0] +
+                                       chanStart_p[0]); ++k){
 	if(chancounter == chanStep_p[0]){
 	  outdatatmp.set(0); outwgtspectmp.set(0);
-	  chancounter=0;
+	  chancounter = 0;
 	  avcounter.set(0);
 	}
 	++chancounter;
-	for (Int j=0; j< npol_p[0]; ++j){
-	  Int offset= j + k*npol_p[0];
+	for(Int j = 0; j < npol_p[0]; ++j){
+	  Int offset = j + k * npol_p[0];
 	  if(!iflg[offset]){
 	    if(doSpWeight){
-	      outdatatmp[j] += iptr[offset]*inwptr[offset];
+	      outdatatmp[j] += iptr[offset] * inwptr[offset];
 	      outwgtspectmp[j] += inwptr[offset];
 	    }
 	    else
@@ -1574,21 +1784,22 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
 	    ++avcounter[j];
 	  }
 
-	  if(chancounter==chanStep_p[0]){
-	    if(avcounter[j] !=0){
+	  if(chancounter == chanStep_p[0]){
+	    if(avcounter[j] != 0){
 	      if(doSpWeight){
-		outdata(j,ck,row)=outdatatmp[j]/outwgtspectmp[j];	 
-		outspweight(j,ck,row)=outwgtspectmp[j];
+		outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];	 
+		outspweight(j, ck, row) = outwgtspectmp[j];
 	      }
 	      else{
-		outdata(j,ck,row)=outdatatmp[j]/avcounter[j];	    
+		outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
 	      }
-	      outflag(j,ck,row)=False;
-	    } 
-	    else{	    
-	      outdata(j,ck,row)=0;
-	      outflag(j,ck,row)=True;
-	      if(doSpWeight)
+              if(ni == 0)                       // Only initialize it
+                outflag(j, ck, row) = False;    // on the 1st pass, to
+	    }                                   // avoid overwriting a true
+	    else{	                        // from another column.
+	      outdata(j, ck, row) = 0;          // Should there be a warning if
+	      outflag(j, ck, row) = True;       // one data column wants flagging
+	      if(doSpWeight)                    // and another does not?
 		outspweight(j, ck, row) = 0;
 	    }	
 	  }
@@ -1598,12 +1809,58 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
       }
     }
     
-    putDataColumn(*msc_p, outdata, colNameTok[ni], (ntok==1));
-    
-    msc_p->flag().putColumn(outflag);
-    if(doSpWeight)
-      msc_p->weightSpectrum().putColumn(outspweight);
+    putDataColumn(*msc_p, outdata, colNameTok[ni], (ntok == 1));
   }
+  
+  msc_p->flag().putColumn(outflag);
+  if(doSpWeight)
+    msc_p->weightSpectrum().putColumn(outspweight);
+
+  //-----------------------------------------------------------------------------
+  // Write the IMAGING_WEIGHTs column as well if all data columns are written out.
+  //
+  //  Bool doImgWeight = !mscIn_p->imagingWeight().isNull() &&
+  //                    mscIn_p->imagingWeight().isDefined(0);
+  if(doWriteImagingWeight(*mscIn_p, colNameTok)){
+    //      ROArrayColumn<Bool> rowFlag(mscIn_p->rowFlags());
+    ROArrayColumn<Float> inImgWts(mscIn_p->imagingWeight());
+
+    Float outImgWtsAccum = 0;
+    Vector<Float> inImgWtsSpectrum;
+    Matrix<Float> outImgWts(nchan_p[0], nrow);
+    Vector<Bool> rowFlag(mscIn_p->flagRow().getColumn());
+
+    for(Int row = 0; row < nrow; ++row){
+      inImgWts.get(row, inImgWtsSpectrum);
+
+      Int ck = 0;
+      Int chancounter = 0;
+      Int counter = 0;
+      outdatatmp = 0; 
+
+      Int chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
+      for (Int c = chanStart_p[0]; c < chanStop; c++){
+        if(chancounter == chanStep_p[0]){
+          chancounter = 0;
+          counter = 0;
+        }
+        chancounter++;
+        //	      Int offset= p + c*npol_p[0];
+        if(!rowFlag(row)){
+          outImgWtsAccum += inImgWtsSpectrum(c);
+          counter++;
+
+          if(chancounter == chanStep_p[0])
+            if(counter != 0)
+              outImgWts(ck, row) = outImgWtsAccum/counter;
+        }
+        if(chancounter == chanStep_p[0])
+          ck++;
+      }
+    }
+    msc_p->imagingWeight().putColumn(outImgWts);
+  }
+  //-----------------------------------------------------------------------------
   return True;
 }
 
@@ -1614,7 +1871,7 @@ const ROArrayColumn<Complex>& SubMS::right_column(const MSColumns *ms_p,
   
   if(myColName == MS::columnName(MS::DATA))
     return ms_p->data();
-  else if(myColName == "MODEL_DATA")
+  else if(myColName == MS::columnName(MS::MODEL_DATA))
     return ms_p->modelData();
   else
     return ms_p->correctedData();
@@ -1896,6 +2153,11 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 
   //Vector<ROArrayColumn<Complex> > data(ntok);
   ROArrayColumn<Complex> data[ntok];
+
+  Bool hasImagingWeight = doWriteImagingWeight(*mscIn_p, colNameTok);
+  const ROArrayColumn<Float> inImagingWeight(mscIn_p->imagingWeight());
+  Vector<Float> inImgWtsSpectrum;
+
   const ROScalarColumn<Double> time(mscIn_p->time());
   const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
   const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
@@ -1920,7 +2182,11 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   const ROScalarColumn<Int> inArr(mscIn_p->arrayId());
 
   const ROArrayColumn<Bool> flag(mscIn_p->flag());
-  const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
+
+  // Flagged rows have already been excluded from the bins, so there is no
+  // need to worry about them here.
+  //const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
+
   const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
   const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
@@ -1954,11 +2220,13 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   Matrix<Float> outRowWeight(npol_p[0], outNrow);
   outRowWeight.set(0.0);
 
+  Matrix<Float> outImagingWeight(hasImagingWeight ? nchan_p[0] : 0,
+				 hasImagingWeight ? outNrow    : 0);
+  if(hasImagingWeight)
+    outImagingWeight.set(0.0);
+
   Cube<Bool> outFlag(npol_p[0], nchan_p[0], outNrow);
   outFlag.set(True);
-
-  Vector<Bool> outRowFlag(outNrow);
-  outRowFlag.set(True);
 
   Vector<Int> outAnt1(outNrow);
   outAnt1.set(-1);
@@ -2022,6 +2290,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   os << LogIO::DEBUG1
      << "unflgWtSpec.shape() = " << unflgWtSpec.shape()
      << LogIO::POST;
+  uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
     
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
@@ -2127,13 +2396,24 @@ Bool SubMS::fillTimeAverData(const String& columnName)
        
 	outTC[orn] += totweight * inTC(*toikit);
 	outExposure[orn] += totweight * inExposure(*toikit);
+
+	if(hasImagingWeight){
+	  inImagingWeight.get(*toikit, inImgWtsSpectrum);
+	  
+	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
+	    outImagingWeight(c, orn) += totweight * inImgWtsSpectrum[c];
+	}
       } // End of iterating through the slot's rows.
 
-	// Average the accumulated values.
+      // Average the accumulated values.
       totweight = sum(outRowWeight.column(orn));
       if(totweight > 0.0){
 	outTC[orn] /= totweight;
 	outExposure[orn] *= slotv.size() / totweight;
+	if(hasImagingWeight){
+	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
+	    outImagingWeight(c, orn) /= totweight;
+	}
       }
       slotv.clear();  // Free some memory.
       if(product(outRowWeight.column(orn)) > 0.0){
@@ -2188,7 +2468,6 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 				 abs(inObs(besttoik)));
       outArr[orn]     = inArr(besttoik);	        // Don't remap!
       dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
-      outRowFlag[orn] = false;
 
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.
@@ -2205,6 +2484,12 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   outRowWeight.resize();
   msc_p->sigma().putColumn(outSigma);
   outSigma.resize();
+
+  if(hasImagingWeight){
+    msc_p->imagingWeight().putColumn(outImagingWeight);
+    outImagingWeight.resize();
+  }
+
   msc_p->antenna1().putColumn(outAnt1);
   msc_p->antenna2().putColumn(outAnt2);
   msc_p->arrayId().putColumn(outArr);
@@ -2213,7 +2498,12 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   msc_p->feed1().putColumn(outFeed1);
   msc_p->feed2().putColumn(outFeed2);
   msc_p->fieldId().putColumn(outField);
+
+  // No flagged rows are written, so just set the whole flagRow column to false.
+  Vector<Bool> outRowFlag(outNrow);
+  outRowFlag.set(false);
   msc_p->flagRow().putColumn(outRowFlag);
+
   // interval is done in fillAverMainTable().
   msc_p->observationId().putColumn(outObs);
   msc_p->processorId().putColumn(outProc);
@@ -2234,5 +2524,17 @@ inline Bool SubMS::checkSpwShape()
 {
   return allSame(inNumChan_p) && allSame(nchan_p);
 }
+
+  Bool isAllColumns(const Vector<String>& colNames)
+  {
+    Bool dCol=False, mCol=False, cCol=False;
+    for(uInt i=0;i<colNames.nelements();i++)
+      {
+	if (colNames[i]==MS::columnName(MS::DATA))           dCol=True;
+	if (colNames[i]==MS::columnName(MS::MODEL_DATA))     mCol=True;
+	if (colNames[i]==MS::columnName(MS::CORRECTED_DATA)) cCol=True;
+      }
+    return (dCol && mCol && cCol);
+  }
 
 } //#End casa namespace

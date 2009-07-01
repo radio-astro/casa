@@ -63,6 +63,16 @@ void PlotMSPlotManager::addWatcher(PlotMSPlotManagerWatcher* watcher) {
     itsWatchers_.push_back(watcher);
 }
 
+void PlotMSPlotManager::removeWatcher(PlotMSPlotManagerWatcher* watcher) {
+    if(watcher == NULL) return;
+    for(unsigned int i = 0; i < itsWatchers_.size(); i++) {
+        if(itsWatchers_[i] == watcher) {
+            itsWatchers_.erase(itsWatchers_.begin() + i);
+            break;
+        }
+    }
+}
+
 unsigned int PlotMSPlotManager::numPlots() const { return itsPlots_.size(); }
 
 const vector<PlotMSPlot*>& PlotMSPlotManager::plots() const {

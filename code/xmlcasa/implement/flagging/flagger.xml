@@ -426,6 +426,12 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
+     <param type="double" name="diameter">
+     <description>Antenna diameter to use. If negative,
+     the default dish sizes stored in the MS are used : example : diameter = '30'
+     </description>
+     <value>-1.0</value>
+     </param>
 <!-- Selection parameters : end -->
  
 </input>
@@ -734,7 +740,7 @@ Executes a flagging run.
      <value>false</value>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="record"/>
 <example>
 </example>
 </method>

@@ -34,10 +34,18 @@ namespace casa {
 // PLOTMSPLOT DEFINITIONS //
 ////////////////////////////
 
+// Static //
+
+const String PlotMSPlot::CLASS_NAME = "PlotMSPlot";
+
+const String PlotMSPlot::LOG_PARAMSCHANGED = "parametersChanged";
+
+
 // Constructors/Destructors //
 
 PlotMSPlot::PlotMSPlot(PlotMS* parent) : itsParent_(parent),
-        itsFactory_(parent->getPlotter()->getFactory()), itsVisSet_(NULL) { }
+        itsFactory_(parent->getPlotter()->getFactory()), itsVisSet_(NULL),
+        itsData_(parent) { }
 
 PlotMSPlot::~PlotMSPlot() {
     // Clean up MS
@@ -51,6 +59,18 @@ PlotMSPlot::~PlotMSPlot() {
 // Public Methods //
 
 vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
+
+vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
+    vector<PlotCanvasPtr> v, canv= itsParent_->getPlotter()->currentCanvases();
+    bool found = false;
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
+        found = false;
+        for(unsigned int j = 0; !found && j < canv.size(); j++)
+            if(itsCanvases_[i] == canv[j]) found = true;
+        if(found) v.push_back(itsCanvases_[i]);
+    }
+    return v;
+}
 
 bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
     if(canvases.size() != layoutNumCanvases()) return false;
@@ -105,17 +125,24 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Make sure it's this plot's parameters.
     PlotMSPlotParameters& params = parameters();
     if(&p != &params) return;
-    
+
     bool msUpdated = updateFlag & PlotMSWatchedParameters::MS,
          cacheUpdated = updateFlag & PlotMSWatchedParameters::CACHE,
          canvasUpdated = updateFlag & PlotMSWatchedParameters::CANVAS,
          plotUpdated = updateFlag & PlotMSWatchedParameters::PLOT;
     
-    /*
-    cout << "PlotMSPlot::parametersHaveChanged(" << updateFlag << ") "
-         << msUpdated << ' ' << cacheUpdated << ' ' << canvasUpdated << ' '
-         << plotUpdated << ' ' << redrawRequired << endl;
-    */
+    // Log what we're going to be updating.
+    stringstream ss;
+    ss << "Updating: ";
+    if(msUpdated) ss << "MS, ";
+    if(cacheUpdated) ss << "cache, ";
+    if(canvasUpdated) ss << "canvas, ";
+    if(plotUpdated) ss << "plot, ";
+    ss << "redraw is ";
+    if(!redrawRequired) ss << "not ";
+    ss << "required.";    
+    itsParent_->getLogger()->postMessage(CLASS_NAME, LOG_PARAMSCHANGED,
+            ss.str());
     
     if(!msUpdated && !cacheUpdated && !canvasUpdated && !plotUpdated) return;
     
@@ -261,33 +288,26 @@ void PlotMSPlot::releaseDrawing() {
 }
 
 void PlotMSPlot::startLogCache() {
-    PlotMSLogger* log = itsParent_->loggerFor(PlotMSLogger::LOAD_CACHE);
-    if(log != NULL)
-        log->markMeasurement(PlotMS::CLASS_NAME, PlotMS::LOG_LOAD_CACHE);
+    itsParent_->getLogger()->markMeasurement(PlotMS::CLASS_NAME,
+            PlotMS::LOG_LOAD_CACHE, PMS::LOG_LOAD_CACHE);
 }
-
 void PlotMSPlot::endLogCache() {
-    PlotMSLogger* log = itsParent_->loggerFor(PlotMSLogger::LOAD_CACHE);
-    if(log != NULL) log->releaseMeasurement();
-}
+    itsParent_->getLogger()->releaseMeasurement(); }
 
 void PlotMSPlot::logNumPoints() {
-    PlotMSLogger* log = itsParent_->loggerFor(PlotMSLogger::NUM_POINTS);
-    if(log != NULL) {
-        PlotMaskedPointDataPtr data;
-        unsigned int total = 0, flagged = 0, unflagged = 0;
-        for(unsigned int i = 0; i < itsPlots_.size(); i++) {
-            data = itsPlots_[i]->maskedData();
-            total += data->size();
-            flagged += data->sizeMasked();
-            unflagged += data->sizeUnmasked();
-        }
-        
-        stringstream ss;
-        ss << "Plotted " << total << " points (" << unflagged << " unflagged, "
-           << flagged << " flagged).";
-        log->postMessage(PlotMS::CLASS_NAME, "plot", ss.str());
+    PlotMaskedPointDataPtr data;
+    unsigned int total = 0, flagged = 0, unflagged = 0;
+    for(unsigned int i = 0; i < itsPlots_.size(); i++) {
+        data = itsPlots_[i]->maskedData();
+        total += data->size();
+        flagged += data->sizeMasked();
+        unflagged += data->sizeUnmasked();
     }
+        
+    stringstream ss;
+    ss << "Plotted " << total << " points (" << unflagged << " unflagged, "
+        << flagged << " flagged).";
+    itsParent_->getLogger()->postMessage(PlotMS::CLASS_NAME, "plot", ss.str());
 }
 
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {

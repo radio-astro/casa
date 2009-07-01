@@ -26,27 +26,49 @@
 //# $Id: $
 #include <graphics/GenericPlotter/PlotLogger.h>
 
+#include <casa/Logging/LogFilter.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/StreamLogSink.h>
+#include <casa/OS/Memory.h>
 #include <graphics/GenericPlotter/Plotter.h>
 
-#include <casa/OS/Memory.h>
+#include <fstream>
 
 namespace casa {
 
 ////////////////////////////////
-// PLOTLOGGENERIC DEFINITIONS //
+// PLOTLOGMESSAGE DEFINITIONS //
 ////////////////////////////////
 
-PlotLogGeneric::PlotLogGeneric(const String& origin1, const String& origin2,
-        const String& message, LogMessage::Priority priority) :
-        m_origin1(origin1), m_origin2(origin2), m_message(message),
-        m_priority(priority) { }
+// Static //
 
-PlotLogGeneric::~PlotLogGeneric() { }
+const int PlotLogMessage::DEFAULT_EVENT_TYPE = PlotLogger::MSG_INFO;
 
-const String& PlotLogGeneric::origin1() const { return m_origin1; }
-const String& PlotLogGeneric::origin2() const { return m_origin2; }
-void PlotLogGeneric::message(ostream& os) const { os << m_message; }
-LogMessage::Priority PlotLogGeneric::priority() const { return m_priority; }
+
+// Non-Static //
+
+PlotLogMessage::PlotLogMessage(int eventType) :
+        LogMessage(PlotLogger::EVENT_PRIORITY(eventType)),
+        m_eventType(eventType) { }
+
+PlotLogMessage::PlotLogMessage(const String& origin1, const String& origin2,
+        int eventType) :
+        LogMessage(LogOrigin(origin1, origin2),
+                   PlotLogger::EVENT_PRIORITY(eventType)),
+        m_eventType(eventType) { }
+
+PlotLogMessage::PlotLogMessage(const String& origin1, const String& origin2,
+        const String& message, int eventType) :
+        LogMessage(message, LogOrigin(origin1, origin2),
+                   PlotLogger::EVENT_PRIORITY(eventType)),
+        m_eventType(eventType) { }
+
+PlotLogMessage::PlotLogMessage(const PlotLogMessage& copy) : LogMessage(copy),
+        m_eventType(copy.eventType()) { }
+
+PlotLogMessage::~PlotLogMessage() { }
+
+int PlotLogMessage::eventType() const { return m_eventType; }
 
 
 ////////////////////////////////////
@@ -54,6 +76,11 @@ LogMessage::Priority PlotLogGeneric::priority() const { return m_priority; }
 ////////////////////////////////////
 
 // Static //
+
+const PlotLogMeasurement::TimeUnit PlotLogMeasurement::DEFAULT_TIME_UNIT =
+    SECOND;
+const PlotLogMeasurement::MemoryUnit PlotLogMeasurement::DEFAULT_MEMORY_UNIT =
+    KILOBYTE;
 
 String PlotLogMeasurement::timeUnits(TimeUnit t) {
     switch(t) {
@@ -78,31 +105,18 @@ String PlotLogMeasurement::memoryUnits(MemoryUnit m) {
 
 PlotLogMeasurement::PlotLogMeasurement(const String& origin1,
         const String& origin2, TimeUnit timeUnit, MemoryUnit memoryUnit,
-        LogMessage::Priority priority): m_origin1(origin1), m_origin2(origin2),
-        m_time(-1), m_memory(0), m_timeUnit(timeUnit), m_memoryUnit(memoryUnit),
-        m_priority(priority) {
+        int eventType) : PlotLogMessage(origin1, origin2, eventType),
+        m_time(-1), m_memory(0), m_timeUnit(timeUnit),m_memoryUnit(memoryUnit){
     startMeasurement();
 }
 
+PlotLogMeasurement::PlotLogMeasurement(const PlotLogMeasurement& copy) :
+        PlotLogMessage(copy), m_startTime(copy.m_startTime),
+        m_startMemory(copy.m_startMemory), m_time(copy.m_time),
+        m_memory(copy.m_memory), m_timeUnit(copy.m_timeUnit),
+        m_memoryUnit(copy.m_memoryUnit) { }
+
 PlotLogMeasurement::~PlotLogMeasurement() { }
-
-const String& PlotLogMeasurement::origin1() const { return m_origin1; }
-const String& PlotLogMeasurement::origin2() const { return m_origin2; }
-
-void PlotLogMeasurement::message(ostream& outstream) const {
-    if(m_time < 0) const_cast<PlotLogMeasurement*>(this)->stopMeasurement();
-    
-    outstream << "END\tTime: ";
-    if(m_time >= 0)
-        outstream << "+" << m_time << " " << timeUnits(m_timeUnit);
-    else outstream << "unreported";
-    outstream << ".  Memory: ";
-    if(m_memory >= 0) outstream << "+";
-    outstream << m_memory << " " << memoryUnits(m_memoryUnit);
-    outstream << '.';
-}
-
-LogMessage::Priority PlotLogMeasurement::priority() const { return m_priority;}
 
 
 time_t PlotLogMeasurement::startTime() const { return m_startTime; }
@@ -120,11 +134,22 @@ void PlotLogMeasurement::startMeasurement() {
 }
 
 void PlotLogMeasurement::stopMeasurement() {
+    // Get measurement values.
     time_t t = std::time(NULL);
     m_time = t - m_startTime;
     m_memory = ((double)Memory::allocatedMemoryInBytes()) - m_startMemory;
     if(m_memoryUnit == KILOBYTE)      m_memory /= 1024;
     else if(m_memoryUnit == MEGABYTE) m_memory /= 1024 * 1024;
+    
+    // Set string message.
+    stringstream ss;
+    ss << "END       Time: ";
+    if(m_time >= 0) ss << "+" << m_time << " " << timeUnits(m_timeUnit);
+    else ss << "unreported";
+    ss << ".  Memory: ";
+    if(m_memory >= 0) ss << "+";
+    ss << m_memory << " " << memoryUnits(m_memoryUnit) << '.';    
+    message(ss.str(), true);
 
     startMeasurement();
 }
@@ -133,6 +158,8 @@ void PlotLogMeasurement::stopMeasurement() {
 ///////////////////////////////
 // PLOTLOGLOCATE DEFINITIONS //
 ///////////////////////////////
+
+// Static //
 
 PlotLogLocate PlotLogLocate::canvasLocate(PlotCanvas* canv,
         const PlotRegion& reg) {
@@ -143,60 +170,56 @@ PlotLogLocate PlotLogLocate::canvasLocate(PlotCanvas* canv,
 }
 
 
+// Non-Static //
+
 PlotLogLocate::PlotLogLocate(const String& origin1, const String& origin2,
         const PlotRegion& locateRegion,
         vector<vector<pair<unsigned int,unsigned int> > >* locatedIndices,
-        LogMessage::Priority priority, bool deleteIndicesOnDestruction) :
-        m_origin1(origin2), m_origin2(origin2), m_priority(priority),
-        m_region(locateRegion), m_indices(locatedIndices),
-        m_shouldDelete(deleteIndicesOnDestruction) { }
-
-PlotLogLocate::PlotLogLocate(const PlotLogLocate& copy) :
-    m_origin1(copy.origin1()), m_origin2(copy.origin2()),
-    m_priority(copy.priority()), m_region(copy.locateRegion()),
-    m_indices(copy.indices()), m_shouldDelete(copy.willDeleteIndices()) {
-    const_cast<PlotLogLocate&>(copy).m_shouldDelete = false;
-}
-
-PlotLogLocate::~PlotLogLocate() {
-    if(m_shouldDelete && m_indices != NULL) delete m_indices;
-}
-
-
-const String& PlotLogLocate::origin1() const { return m_origin1; }
-const String& PlotLogLocate::origin2() const { return m_origin2; }
-
-void PlotLogLocate::message(ostream& os) const {
+        int eventType, bool deleteIndicesOnDestruction) :
+        PlotLogMessage(origin1, origin2, eventType), m_region(locateRegion),
+        m_indices(locatedIndices), m_shouldDelete(deleteIndicesOnDestruction) {
+    // Generate message.
+    stringstream ss;
     unsigned int np = numSearchedPlots(), ni = numLocatedIndices();
-    os << "Locating indices with x in [" << m_region.left() << ", "
+    ss << "Locating indices with x in [" << m_region.left() << ", "
        << m_region.right() << "] and y in [" << m_region.bottom() << ", "
        << m_region.top() << ".  Searched " << np << " plots and found " << ni
        << " indices.";
-    if(np > 0 && ni > 0) os << '\n';
+    if(np > 0 && ni > 0) ss << '\n';
     
     bool first = true;
     unsigned int n, from, to;
     for(unsigned int i = 0; i < np; i++) {
         n = m_indices->at(i).size();
         if(n > 0) {
-            if(!first) os << '\n';
+            if(!first) ss << '\n';
             first = false;
         }
-        if(np > 0 && n > 0) os << "Plot " << i << ": ";
-        if(n > 0) os << "[";
+        if(np > 0 && n > 0) ss << "Plot " << i << ": ";
+        if(n > 0) ss << "[";
         
         for(unsigned int j = 0; j < n; i++) {
             from = (*m_indices)[i][j].first;
             to = (*m_indices)[i][j].second;
-            os << from;
-            if(to != from) os << "-" << to;
-            if(j < n - 1) os << ", ";
+            ss << from;
+            if(to != from) ss << "-" << to;
+            if(j < n - 1) ss << ", ";
         }
-        if(n > 0) os << "]";
+        if(n > 0) ss << "]";
     }
+    
+    message(ss.str(), true);
 }
 
-LogMessage::Priority PlotLogLocate::priority() const { return m_priority; }
+PlotLogLocate::PlotLogLocate(const PlotLogLocate& copy) : PlotLogMessage(copy),
+        m_region(copy.locateRegion()), m_indices(copy.indices()),
+        m_shouldDelete(copy.willDeleteIndices()) {
+    const_cast<PlotLogLocate&>(copy).m_shouldDelete = false;
+}
+
+PlotLogLocate::~PlotLogLocate() {
+    if(m_shouldDelete && m_indices != NULL) delete m_indices;
+}
 
 
 const PlotRegion& PlotLogLocate::locateRegion() const { return m_region; }
@@ -230,22 +253,17 @@ bool PlotLogLocate::willDeleteIndices() const { return m_shouldDelete; }
 ///////////////////////////////
 
 PlotLogMethod::PlotLogMethod(const String& className, const String& methodName,
-        bool entering, const String& message, LogMessage::Priority priority) :
-        m_class(className), m_method(methodName), m_priority(priority) {
+        bool entering, const String& message, int eventType) :
+        PlotLogMessage(className, methodName, eventType) {
     stringstream ss;
     if(entering) ss << "ENTERING.";
-    else         ss << "EXITING. ";
-    
+    else         ss << "EXITING. ";    
     if(!message.empty()) ss << "  " << message;
-    m_message = ss.str();
+    
+    PlotLogMessage::message(ss.str(), true);
 }
 
 PlotLogMethod::~PlotLogMethod() { }
-
-const String& PlotLogMethod::origin1() const { return m_class; }
-const String& PlotLogMethod::origin2() const { return m_method; }
-void PlotLogMethod::message(ostream& outstream) const{ outstream << m_message;}
-LogMessage::Priority PlotLogMethod::priority() const { return m_priority; }
 
 
 ///////////////////////////////
@@ -253,61 +271,277 @@ LogMessage::Priority PlotLogMethod::priority() const { return m_priority; }
 ///////////////////////////////
 
 PlotLogObject::PlotLogObject(const String& className, void* address,
-        bool creation, const String& message, LogMessage::Priority priority) :
-        m_class(className), m_method(creation ? "alloc" : "dealloc"),
-        m_priority(priority) {
+        bool creation, const String& message, int eventType) :
+        PlotLogMessage(className, creation ? "alloc" : "dealloc", eventType) {
     stringstream ss;
     if(creation) ss << "Creating";
     else         ss << "Destroying";
-    ss << " object at " << address << ".";
-    
+    ss << " object at " << address << ".";    
     if(!message.empty()) ss << " " << message;
-    m_message = ss.str();
+    
+    PlotLogMessage::message(ss.str(), true);
 }
 
 PlotLogObject::~PlotLogObject() { }
 
 
-const String& PlotLogObject::origin1() const { return m_class; }
-const String& PlotLogObject::origin2() const { return m_method; }
-void PlotLogObject::message(ostream& outstream) const{ outstream << m_message;}
-LogMessage::Priority PlotLogObject::priority() const { return m_priority; }
+//////////////////////////////////
+// PLOTLOGGERFILTER DEFINITIONS //
+//////////////////////////////////
+
+PlotLoggerFilter::PlotLoggerFilter(int eventFlags,
+        LogMessage::Priority minPriority) : m_eventFlags(eventFlags),
+        m_minPriority(minPriority) { }
+
+PlotLoggerFilter::~PlotLoggerFilter() { }
+
+LogFilterInterface* PlotLoggerFilter::clone() const {
+    return new PlotLoggerFilter(m_eventFlags, m_minPriority); }
+
+Bool PlotLoggerFilter::pass(const LogMessage& message) const {
+    if(message.priority() < m_minPriority) return false;
+    
+    /*
+     * This causes an error when a non-PlotLogMessage is sent into the filter.
+     * Cannot dynamic cast because LogMessage is not polymorphic. :(
+     * Instead, moved this functionality to PlotLogger::postMessage()...
+    try {
+        int type = ((const PlotLogMessage&)message).eventType();
+        return type <= 0 || m_eventFlags & type;
+    } catch(...) { return true; }
+    */
+    return true;
+}
+
+int PlotLoggerFilter::eventFlags() const { return m_eventFlags; }
+void PlotLoggerFilter::setEventFlags(int flags) { m_eventFlags = flags; }
+
+LogMessage::Priority PlotLoggerFilter::minimumPriority() const {
+    return m_minPriority; }
+void PlotLoggerFilter::setMinimumPriority(LogMessage::Priority minPriority) {
+    m_minPriority = minPriority; }
 
 
 ////////////////////////////
 // PLOTLOGGER DEFINITIONS //
 ////////////////////////////
 
-PlotLogger::PlotLogger(Plotter* plotter) : m_plotter(plotter) { }
+// Static //
+
+int PlotLogger::ALL_EVENTS_FLAG() {
+    int flag = 0;
+    vector<int> v = ALL_EVENTS();
+    for(unsigned int i = 0; i < v.size(); i++) flag |= v[i];
+    return flag;
+}
+
+vector<int> PlotLogger::ALL_EVENTS() {
+    vector<int> v(6 + EXTENDED_TYPES.size());
+    v[0] = MSG_DEBUG; v[1] = DRAW_TOTAL;
+    v[2] = DRAW_INDIVIDUAL; v[3] = METHODS_MAJOR;
+    v[4] = OBJECTS_MAJOR; v[5] = EXPORT_TOTAL;
+    for(unsigned int i = 6; i < v.size(); i++)
+        v[i] = EXTENDED_TYPES[i - 6];
+    return v;
+}
+
+int PlotLogger::REGISTER_EVENT_TYPE(const String& name,
+        LogMessage::Priority priority) {
+    static int value = EXPORT_TOTAL;
+    value *= 2;
+    EXTENDED_TYPES.push_back(value);
+    EXTENDED_NAMES.push_back(name);
+    SET_EVENT_PRIORITY(value, priority);
+    return value;
+}
+
+void PlotLogger::UNREGISTER_EVENT_TYPE(int event) {
+    for(unsigned int i = 0; i < EXTENDED_TYPES.size(); i++) {
+        if(event == EXTENDED_TYPES[i]) {
+            EXTENDED_TYPES.erase(EXTENDED_TYPES.begin() + i);
+            EXTENDED_NAMES.erase(EXTENDED_NAMES.begin() + i);
+        }
+    }
+}
+
+void PlotLogger::UNREGISTER_EVENT_TYPE(const String& name) {
+    for(unsigned int i = 0; i < EXTENDED_TYPES.size(); i++) {
+        if(name == EXTENDED_NAMES[i]) {
+            EXTENDED_TYPES.erase(EXTENDED_TYPES.begin() + i);
+            EXTENDED_NAMES.erase(EXTENDED_NAMES.begin() + i);
+        }
+    }
+}
+
+vector<String> PlotLogger::EVENT_NAMES() {
+    vector<int> e = ALL_EVENTS();
+    vector<String> v(e.size());
+    for(unsigned int i = 0; i < v.size(); i++) v[i] = EVENT(e[i]);
+    return v;
+}
+
+String PlotLogger::EVENT(int type) {
+    if(type == MSG_INFO)             return "MSG_INFO";
+    else if(type == MSG_WARN)        return "MSG_WARN";
+    else if(type == MSG_ERROR)       return "MSG_ERROR";
+    else if(type == MSG_DEBUG)       return "MSG_DEBUG";
+    else if(type == DRAW_TOTAL)      return "DRAW_TOTAL";
+    else if(type == DRAW_INDIVIDUAL) return "DRAW_INDIVIDUAL";
+    else if(type == METHODS_MAJOR)   return "METHODS_MAJOR";
+    else if(type == OBJECTS_MAJOR)   return "OBJECTS_MAJOR";
+    else if(type == EXPORT_TOTAL)    return "EXPORT_TOTAL";
+    else {
+        for(unsigned int i = 0; i < EXTENDED_TYPES.size(); i++)
+            if(type == EXTENDED_TYPES[i]) return EXTENDED_NAMES[i];
+        return "";
+    }
+}
+
+int PlotLogger::EVENT(const String& name) {
+    if(name == EVENT(MSG_INFO))             return MSG_INFO;
+    else if(name == EVENT(MSG_WARN))        return MSG_WARN;
+    else if(name == EVENT(MSG_ERROR))       return MSG_ERROR;
+    else if(name == EVENT(MSG_DEBUG))       return MSG_DEBUG;
+    else if(name == EVENT(DRAW_TOTAL))      return DRAW_TOTAL;
+    else if(name == EVENT(DRAW_INDIVIDUAL)) return DRAW_INDIVIDUAL;
+    else if(name == EVENT(METHODS_MAJOR))   return METHODS_MAJOR;
+    else if(name == EVENT(OBJECTS_MAJOR))   return OBJECTS_MAJOR;
+    else if(name == EVENT(EXPORT_TOTAL))    return EXPORT_TOTAL;
+    else {
+        for(unsigned int i = 0; i < EXTENDED_NAMES.size(); i++)
+            if(name == EXTENDED_NAMES[i]) return EXTENDED_TYPES[i];
+        return NO_EVENTS;
+    }
+}
+
+int PlotLogger::FLAG_FROM_EVENTS(const vector<int>& events) {
+    int flag = 0;
+    for(unsigned int i = 0; i < events.size(); i++) flag |= events[i];
+    return flag;
+}
+
+int PlotLogger::FLAG_FROM_EVENTS(const vector<String>& names) {
+    int flag = 0;
+    for(unsigned int i = 0; i < names.size(); i++) flag |= EVENT(names[i]);
+    return flag;
+}
+
+int PlotLogger::FLAG_FROM_PRIORITY(LogMessage::Priority minPriority) {
+    int flag = 0;
+    vector<int> v = ALL_EVENTS();
+    for(unsigned int i = 0; i < v.size(); i++)
+        if(EVENT_PRIORITY(v[i]) >= minPriority) flag |= v[i];
+    return flag;
+}
+
+LogMessage::Priority PlotLogger::EVENT_PRIORITY(int event) {
+    if(EVENT_PRIORITIES.find(event) == EVENT_PRIORITIES.end()) {
+        LogMessage::Priority p = LogMessage::NORMAL;
+        if(event == MSG_DEBUG || event == METHODS_MAJOR ||
+           event == OBJECTS_MAJOR)        p = LogMessage::DEBUGGING;
+        else if(event == DRAW_INDIVIDUAL) p = LogMessage::NORMAL5;
+        else if(event == MSG_WARN)        p = LogMessage::WARN;
+        else if(event == MSG_ERROR)       p = LogMessage::SEVERE;
+        EVENT_PRIORITIES[event] = p;
+    }
+    return EVENT_PRIORITIES[event];
+}
+
+void PlotLogger::SET_EVENT_PRIORITY(int event, LogMessage::Priority priority) {
+    EVENT_PRIORITIES[event] = priority; }
+
+
+vector<int> PlotLogger::EXTENDED_TYPES = vector<int>();
+
+vector<String> PlotLogger::EXTENDED_NAMES = vector<String>();
+
+map<int, LogMessage::Priority> PlotLogger::EVENT_PRIORITIES =
+    map<int, LogMessage::Priority>();
+
+
+// Non-Static //
+
+PlotLogger::PlotLogger(Plotter* plotter, int filterEventFlags,
+        LogMessage::Priority filterMinPriority) : m_plotter(plotter),
+        m_logger(&LogSink::globalSink(), false),
+        m_filter(filterEventFlags, filterMinPriority) {
+    m_logger->filter(m_filter);
+}
 
 PlotLogger::~PlotLogger() { }
 
-int PlotLogger::eventFlags() const {
-    if(m_plotter != NULL) return m_plotter->logEventFlags();
-    else                  return NO_EVENTS;
+CountedPtr<LogSinkInterface> PlotLogger::sink() { return m_logger; }
+const CountedPtr<LogSinkInterface> PlotLogger::sink() const {
+    return m_logger; }
+
+const String& PlotLogger::sinkLocation() const { return m_loggerLocation; }
+void PlotLogger::setSinkLocation(const String& logFile) {
+    CountedPtr<LogSinkInterface> oldSink = m_logger;
+    try {
+        if(logFile.empty())
+            m_logger = CountedPtr<LogSinkInterface>(&LogSink::globalSink(),
+                       false);
+        else
+            m_logger = new StreamLogSink(LogMessage::NORMAL,
+                       new ofstream(logFile.c_str(), ios::app));
+        m_logger->filter(m_filter);
+        m_loggerLocation = logFile;
+    } catch(...) {
+        m_logger = oldSink;
+    }
 }
 
-void PlotLogger::setEventFlags(int flags) {
-    if(m_plotter != NULL) m_plotter->setLogEventFlags(flags); }
+LogMessage::Priority PlotLogger::filterMinPriority() const {
+    return m_filter.minimumPriority(); }
+void PlotLogger::setFilterMinPriority(PlotLogMessage::Priority minPriority) {
+    if(minPriority != m_filter.minimumPriority()) {
+        m_filter.setMinimumPriority(minPriority);
+        if(!m_logger.null()) m_logger->filter(m_filter);
+    }
+}
+
+bool PlotLogger::filterEventFlag(int flag) const {
+    return flag <= 0 || flag & m_filter.eventFlags(); }
+void PlotLogger::setFilterEventFlag(int flag, bool on) {
+    int flags = m_filter.eventFlags();    
+    if(on && !(flags & flag)) setFilterEventFlags(flags | flag);
+    else if(!on && (flags & flag)) setFilterEventFlags(flags & ~flag);
+}
+
+int PlotLogger::filterEventFlags() const { return m_filter.eventFlags(); }
+void PlotLogger::setFilterEventFlags(int flags) {
+    if(flags != m_filter.eventFlags()) {
+        m_filter.setEventFlags(flags);
+        if(!m_logger.null()) m_logger->filter(m_filter);
+    }
+}
 
 void PlotLogger::postMessage(const PlotLogMessage& message) {
-    m_logger.origin(LogOrigin(message.origin1(), message.origin2()));
-    m_logger.priority(message.priority());
-    message.message(m_logger.output());
-    m_logger << LogIO::POST;
+    try {
+        if(!m_logger.null()) {
+            // Do events type check here.
+            int type = message.eventType();
+            if(type <= 0 || m_filter.eventFlags() & type)
+                m_logger->postLocally(message);
+        }
+    } catch(...) { }
 }
 
 void PlotLogger::postMessage(const String& origin1, const String& origin2,
-        const String& message, LogMessage::Priority priority) {
-    postMessage(PlotLogGeneric(origin1, origin2, message, priority)); }
+        const String& message, int eventType) {
+    postMessage(PlotLogMessage(origin1, origin2, message, eventType)); }
 
-PlotLogGeneric PlotLogger::markMeasurement(const String& origin1,
-        const String& origin2, bool postStartMessage) {
-    PlotLogGeneric startMessage(origin1, origin2, "START\tCurrent memory usage"
-            ": "+String::toString(Memory::allocatedMemoryInBytes()/1024.0)+" "+
-            PlotLogMeasurement::memoryUnits(PlotLogMeasurement::KILOBYTE)+".");
+PlotLogMessage PlotLogger::markMeasurement(const String& origin1,
+        const String& origin2, int eventType, bool postStartMessage) {
+    PlotLogMessage startMessage(origin1, origin2,
+            "START     Current memory usage: " +
+            String::toString(Memory::allocatedMemoryInBytes()/1024.0) + " " +
+            PlotLogMeasurement::memoryUnits(PlotLogMeasurement::KILOBYTE)+".",
+            eventType);
     if(postStartMessage) postMessage(startMessage);
-    m_measurements.push_back(PlotLogMeasurement(origin1, origin2));  
+    m_measurements.push_back(PlotLogMeasurement(origin1, origin2,
+            PlotLogMeasurement::DEFAULT_TIME_UNIT,
+            PlotLogMeasurement::DEFAULT_MEMORY_UNIT, eventType));
     return startMessage;
 }
 
@@ -325,13 +559,12 @@ PlotLogMeasurement PlotLogger::releaseMeasurement(bool postReleaseMessage) {
 }
 
 PlotLogLocate PlotLogger::locate(PlotCanvas* canvas, const PlotRegion& region,
-            bool postLocateMessage) {
+            int eventType, bool postLocateMessage) {
     if(canvas == NULL) return PlotLogLocate("", "", region, NULL);
     
     vector<vector<pair<unsigned int, unsigned int> > >* res = canvas->locate(
             region);
-    PlotLogLocate msg("PlotCanvas", "locate", region, res, LogMessage::NORMAL,
-            false);
+    PlotLogLocate msg("PlotCanvas", "locate", region, res, eventType, false);
     if(postLocateMessage) postMessage(msg);
     return msg;
 }

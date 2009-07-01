@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="plotcal">
+      <task type="function" name="plotcal" category="display/plot">
 	
 	<shortdescription>An all-purpose plotter for calibration results </shortdescription>
 	<description>

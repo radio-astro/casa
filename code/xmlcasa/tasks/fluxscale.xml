@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="fluxscale">
+<task type="function" name="fluxscale" category="calibration">
 	<shortdescription>Bootstrap the flux density scale from standard calibrators</shortdescription>
 	<description>
 

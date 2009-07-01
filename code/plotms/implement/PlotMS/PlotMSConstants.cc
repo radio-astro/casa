@@ -194,4 +194,9 @@ PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f) {
     return f->areaFill(*fill);
 }
 
+
+const int PMS::LOG_LOAD_CACHE = PlotLogger::REGISTER_EVENT_TYPE("LOAD_CACHE");
+const int PMS::LOG_DBUS = PlotLogger::REGISTER_EVENT_TYPE("DBUS",
+                          LogMessage::NORMAL3);
+
 }

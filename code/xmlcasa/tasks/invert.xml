@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="invert">
+<task type="function" name="invert" category="imaging">
 
   <shortdescription>Calculate the dirty image and dirty beam from a visibility set</shortdescription>
 

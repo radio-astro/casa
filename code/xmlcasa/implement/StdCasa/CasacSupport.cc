@@ -60,31 +60,64 @@ Quantity casaQuantity(const casac::Quantity &cquant){
 }
 
 Quantity casaQuantity(const casac::variant &theVar){
-   casa::Quantity retval;
    casa::QuantumHolder qh;
    String error;
-   if(theVar.type()== ::casac::variant::STRING ||
-         theVar.type()== ::casac::variant::STRINGVEC){
-         if(!qh.fromString(error, theVar.toString())){
-            ostringstream oss;
-            oss << "Error " << error << " in converting quantity ";
-            throw( AipsError(oss.str()));
-         }
-         retval=qh.asQuantity();
+
+   // Strange "defaults" like BOOLVECs can come in are expected to go out as
+   // 0.0.  Therefore unhandled types should produce a default Quantity, not an
+   // exception.
+   Bool triedAndFailed = false;
+
+   const ::casac::variant::TYPE theType = theVar.type();
+
+   if(theType == ::casac::variant::STRING ||
+      theType == ::casac::variant::STRINGVEC){
+     triedAndFailed = !qh.fromString(error, theVar.toString());
    }
-   if(theVar.type()== ::casac::variant::RECORD){
-      //NOW the record has to be compatible with QuantumHolder::toRecord
-         ::casac::variant localvar(theVar); //cause its const
-         Record * ptrRec = toRecord(localvar.asRecord());
-         if(!qh.fromRecord(error, *ptrRec)){
-           ostringstream oss;
-           oss << "Error " << error << " in converting quantity ";
-            throw( AipsError(oss.str()));
-         }
-         delete ptrRec;
-         retval=qh.asQuantity();
+   else if(theType == ::casac::variant::RECORD){
+     //NOW the record has to be compatible with QuantumHolder::toRecord
+     ::casac::variant localvar(theVar); 	// Because theVar is const.
+     Record * ptrRec = toRecord(localvar.asRecord());
+
+     triedAndFailed = !qh.fromRecord(error, *ptrRec);
+     delete ptrRec;
    }
-   return retval;
+   else if(::casac::variant::compatible_type(theType, ::casac::variant::DOUBLE)
+	   == ::casac::variant::DOUBLE){
+     const casa::Unit unitless("_");	 		// Dimensionless
+
+     //qh = casa::QuantumHolder(casa::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble()),
+     //unitless));
+     qh = casa::QuantumHolder(casa::Quantity(const_cast<Double &>(const_cast<casac::variant &>(theVar).asDouble())));
+     
+     triedAndFailed = false;
+   }
+   else if(::casac::variant::compatible_type(theType, ::casac::variant::COMPLEX)
+	   == ::casac::variant::COMPLEX){
+     const casa::Unit unitless("_");	 		// Dimensionless
+     const casa::Complex casaVal(const_cast<casac::variant &>(theVar).asComplex());
+     
+     //qh = casa::QuantumHolder(casa::Quantum<casa::Complex>(casaVal,
+     //unitless));
+     qh = casa::QuantumHolder(casa::Quantum<casa::Complex>(casaVal));
+     triedAndFailed = false;
+   }
+   
+   if(triedAndFailed){
+     ostringstream oss;
+
+     oss << "Error " << error << " in converting quantity";
+     throw(AipsError(oss.str()));
+   }
+
+   if(qh.isQuantum()){		// Remember casac::Quantity is a broader class
+     return qh.asQuantity();	// than casa::Quantity, so use qh.isQuantum().
+   }
+   else{			// Probably variant's type was not handled above.
+     casa::Quantity retval;	// Defaults to 0.0.
+
+     return retval;
+   }
 }
 
 Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Quantity>& theQuants){

@@ -50,6 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
     //desc_str = String("flagexaminer");
     if(dbg3) cout<<"FlagExaminer constructor "<<endl;
+
+
     totalflags    = accumTotalFlags    = 0;
     totalcount    = accumTotalCount    = 0;
     totalrowflags = accumTotalRowFlags = 0;
@@ -84,10 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
-    totalflags    = accumTotalFlags    = 0;
-    totalcount    = accumTotalCount    = 0;
-    totalrowflags = accumTotalRowFlags = 0;
-    totalrowcount = accumTotalRowCount = 0;
+    totalflags    = 0;//  accumTotalFlags    = 0;
+    totalcount    = 0;//  accumTotalCount    = 0;
+    totalrowflags = 0;//  accumTotalRowFlags = 0;
+    totalrowcount = 0;//  accumTotalRowCount = 0;
     inTotalFlags =
 	inTotalCount = 
 	inTotalRowCount = 
@@ -145,10 +147,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
-    totalflags    = accumTotalFlags    = 0;
-    totalcount    = accumTotalCount   = 0;
-    totalrowflags = accumTotalRowFlags = 0;
-    totalrowcount = accumTotalRowCount = 0;
+    totalflags    = 0;// accumTotalFlags    = 0;
+    totalcount    = 0;//  accumTotalCount   = 0;
+    totalrowflags = 0;//  accumTotalRowFlags = 0;
+    totalrowcount = 0;//  accumTotalRowCount = 0;
     
     inTotalFlags = 
 	inTotalCount = 
@@ -301,11 +303,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }// end of flagall
     
-    accumTotalFlags    += totalflags;
-    accumTotalCount    += totalcount;
-    accumTotalRowFlags += totalrowflags;
-    accumTotalRowCount += totalrowcount;
-    
     return;
   }
   // -----------------------------------------------------------------------
@@ -380,9 +377,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     os << "---------------------------------------------------------------------" << LogIO::POST;
     
+    accumTotalFlags    += totalflags;
+    accumTotalCount    += totalcount;
+    accumTotalRowFlags += totalrowflags;
+    accumTotalRowCount += totalrowcount;
+    
+    cerr << "accumTotalFlags " << accumTotalFlags -totalflags
+         << " + " << totalflags << " -> " << accumTotalFlags << endl;
+    cerr << "accumTotalCount " << accumTotalCount -totalcount
+         << " + " << totalcount << " -> " << accumTotalCount << endl;
+
     return;
   }
-  
+
+  /*
+    Return results of this run over all chunks:
+    How many flags were set / unset
+   */
+  Record RFAFlagExaminer::getResult()
+    {
+      Record r;
+
+      r.define("flagged", (Int) accumTotalFlags);
+      r.define("total"  , (Int) accumTotalCount);
+          
+      return r;
+    }
+
 #if 0
   String RFAFlagExaminer::getDesc ()
   {
@@ -411,7 +432,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rec.define(RF_ARRAY,False);
 	rec.define(RF_FEED,False);
 	rec.define(RF_UVRANGE,False);
-	
+        
 	rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
 	rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");
 	rec.setComment(RF_CHANS,"Restrict flagging to specific channels (2,N array of integers)");

@@ -43,11 +43,13 @@ class plotms
     plotms();
     virtual ~plotms();
 
-    void setLogLevel(const std::string& logLevel, const bool logDebug = false);
+    void setLogFilename(const std::string& logFilename = "casapy.log");
 
-    std::string getLogLevel();
+    std::string getLogFilename();
 
-    bool getLogDebug();
+    void setLogFilter(const std::string& priority);
+
+    std::string getLogFilter();
 
     void setClearSelectionOnAxesChange(const bool clearSelection);
 
@@ -71,7 +73,7 @@ class plotms
 
     ::casac::record* getPlotMSSelection(const int plotIndex = 0);
 
-    void setPlotMSAveraging(const bool channel = false, const double channelValue = 0.0, const bool time = false, const double timeValue = 0.0, const bool scan = false, const bool field = false, const bool baseline = false, const bool antenna = false, const bool spw = false, const bool updateImmediately = true, const int plotIndex = 0);
+    void setPlotMSAveraging(const std::string& channel = "", const std::string& time = "", const bool scan = false, const bool field = false, const bool baseline = false, const bool antenna = false, const bool spw = false, const bool updateImmediately = true, const int plotIndex = 0);
 
     void setPlotMSAveragingRec(const ::casac::record& averaging, const bool updateImmediately = true, const int plotIndex = 0);
 
@@ -81,7 +83,7 @@ class plotms
 
     void setPlotYAxis(const std::string& yAxis, const std::string& yDataColumn = "", const bool updateImmediately = true, const int plotIndex = 0);
 
-    void setPlotAxes(const std::string& xAxis, const std::string& yAxis, const std::string& xDataColumn = "", const std::string& yDataColumn = "", const bool updateImmediately = true, const int plotIndex = 0);
+    void setPlotAxes(const std::string& xAxis = "", const std::string& yAxis = "", const std::string& xDataColumn = "", const std::string& yDataColumn = "", const bool updateImmediately = true, const int plotIndex = 0);
 
     std::string getPlotXAxis(const int plotIndex = 0);
 
@@ -91,9 +93,19 @@ class plotms
 
     std::string getPlotYDataColumn(const int plotIndex = 0);
 
+    ::casac::record* getPlotParams(const int plotIndex = 0);
+
+    void setFlagExtension(const bool extend = false, const std::string& correlation = "", const bool channel = false, const bool spw = false, const std::string& antenna = "", const bool time = false, const bool scans = false, const bool field = false, const ::casac::record& alternateSelection = ::casac::initialize_record(""));
+
+    void setFlagExtensionRec(const ::casac::record& flagExtension);
+
+    ::casac::record* getFlagExtension();
+
     void update();
 
-    int execLoop();
+    void show();
+
+    void hide();
 
     private:
 

@@ -6,35 +6,35 @@ from math import *
 # lists of units for dynamic selection of units for printing
 
 _imfit_angunits_  = [ "deg    ",
-		      "arcmin ",
-		      "arcsec ",
-		      "marcsec",
-		      "uarcsec"]
+                      "arcmin ",
+                      "arcsec ",
+                      "marcsec",
+                      "uarcsec"]
 
 _imfit_distunits_ = [ "km",
-		      "m ",
-		      "cm",
-		      "mm",
-		      "um"]
+                      "m ",
+                      "cm",
+                      "mm",
+                      "um"]
 
 _imfit_fluxunits_ = [ "MJy",
-		      "kJy",
-		      "Jy ",
-		      "mJy",
-		      "uJy"]
+                      "kJy",
+                      "Jy ",
+                      "mJy",
+                      "uJy"]
 
 _imfit_frequnits_ = [ "THz",
-		      "GHz",
-		      "MHz",
-		      "kHz",
-		      "Hz ",
-		      "mHz"]
+                      "GHz",
+                      "MHz",
+                      "kHz",
+                      "Hz ",
+                      "mHz"]
 
 _imfit_timeunits_ = [ "h      ",
-		      "min    ",
-		      "s      ",
-		      "ms     ",
-		      "us     "]
+                      "min    ",
+                      "s      ",
+                      "ms     ",
+                      "us     "]
 
 def imfit (imagename=None,
            box=None,
@@ -47,11 +47,11 @@ def imfit (imagename=None,
     """
     Fits 2-dimensional Gaussians to regions of the sky in a CASA image.
 
-	imagename -- Input image that continuum subtraction is applied too.
-		Default: none; Example: imagename='ngc5921_task.im'
-	box --  A box region on the directional plane
-	        Only pixel values acceptable at this time.
-		Default: none (whole 2-D plane); Example: box='10,10,50,50'
+        imagename -- Input image that continuum subtraction is applied too.
+                Default: none; Example: imagename='ngc5921_task.im'
+        box --  A box region on the directional plane
+                Only pixel values acceptable at this time.
+                Default: none (whole 2-D plane); Example: box='10,10,50,50'
         region -- File path to an ImageRegion file.
                 An ImageRegion file can be created with the CASA
                 viewer's region manager.  Typically ImageRegion files
@@ -76,10 +76,10 @@ def imfit (imagename=None,
         usecleanbeam -- Estimate the true source size by deconvolving the
                 fitted beam with the clean beam
                 Default: False; Example: usecleanbeam=True
-	estfile -- File containing an estimate of the fit
-		Default: none; Example: estfit='ngc5921_estimate.im'
-	estfile -- Output file containing an the residual of the fit
-		Default: none; Example: estfit='ngc5921_fit_resid.im'
+        estfile -- File containing an estimate of the fit
+                Default: none; Example: estfit='ngc5921_estimate.im'
+        estfile -- Output file containing an the residual of the fit
+                Default: none; Example: estfit='ngc5921_fit_resid.im'
 
 
 # Fitting in a region specified in a region file that has been
@@ -114,22 +114,22 @@ fixed=['f', '', '', 'a', '']
 go
     """
     try:
-	casalog.origin('imfit')
+        casalog.origin('imfit')
 
-	# Create the sky region(s) from the information provided by
-	# the user.  Note, we are only interested in the "sky" portion
-	# of the image, so we don't allow channels and stokes values
-	# to be given.
-	regions=[]
-	if ( isinstance( region, str ) ):
-	     region=[region]
-	if ( len(region)>0 and len(region[0])>1 ):
-	    if ( len(box)>1 ):
-		casalog.post( str( "Ignoring box paramter value, using " )
-			      + str(" \nregion information\nin file: ")
-			      + region, 'WARN' );
-	    for i in range( len( region ) ):
-		if ( len(region[i]) > 1 ):
+        # Create the sky region(s) from the information provided by
+        # the user.  Note, we are only interested in the "sky" portion
+        # of the image, so we don't allow channels and stokes values
+        # to be given.
+        regions=[]
+        if ( isinstance( region, str ) ):
+             region=[region]
+        if ( len(region)>0 and len(region[0])>1 ):
+            if ( len(box)>1 ):
+                casalog.post( str( "Ignoring box paramter value, using " )
+                              + str(" \nregion information\nin file: ")
+                              + region, 'WARN' );
+            for i in range( len( region ) ):
+                if ( len(region[i]) > 1 ):
                     if os.path.exists( region[i] ):
                         # We have a region file on disk!
                         regions.append( rg.fromfiletorecord( region[i] ) );
@@ -144,11 +144,11 @@ go
                             regions.append(rg.fromtabletorecord( imagename, region[i], False ) )
                         else:
                             regions.append( rg.fromtabletorecord( reg_names[0], reg_names[1], False ) )
-		else:
-		    regions.append({})
-	else:
-	    reg=imregion( imagename, '', '', box, '', '', True )
-	    regions.append(reg)
+                else:
+                    regions.append({})
+        else:
+            reg=imregion( imagename, '', '', box, '', '', True )
+            regions.append(reg)
 
         # Loop through the list of regions, removing any of the
         # empty ones, and if in the end there are none then
@@ -163,89 +163,89 @@ go
         if ( region!=None and len(region) > 0 and len( regions ) < 1 ):
             raise Exception, 'Ill-formed region: '+str(region)+'. can not continue.' 
 
-	# The number of Gaussian models we'll be fitting must be
-	# equivalent, also if the user has told us what to fix then
-	# we need to make sure that is the same length as well.
-	numFits = len( regions )
-	if ( numFits <> 1 ):
-	    casalog.post( "Sorry! Only fits on a single region are supported", 'WARN' );
-	    return None
+        # The number of Gaussian models we'll be fitting must be
+        # equivalent, also if the user has told us what to fix then
+        # we need to make sure that is the same length as well.
+        numFits = len( regions )
+        if ( numFits <> 1 ):
+            casalog.post( "Sorry! Only fits on a single region are supported", 'WARN' );
+            return None
 
-	# Now make sure we have enough models, estimate files, and
-	# residual files, as well as "fixed" parameters.
-	models=[]
-	for i in range( numFits ):
-	    models.append( 'gaussian' )
+        # Now make sure we have enough models, estimate files, and
+        # residual files, as well as "fixed" parameters.
+        models=[]
+        for i in range( numFits ):
+            models.append( 'gaussian' )
 
-	# If the user specified somthing to "fix" make sure we have
-	# something for each region.
-	if ( isinstance(fixed, str) ):
-	    fixed=[fixed]
-	fixedVals=[]
-	if ( len( fixed ) > 1 and numFits > 1 ) :
-	    if ( numFits != len(fixed) ) :
-		casalog.post( str("Error: Number of fits with fixed" )
-			      +str( " values must be the same as the" )
-			      +str( " number of regions to be fitted." ),
-			      'SEVERE' )
-		return None
-	    fixedVals=fixed
-	elif ( len( fixed[0] ) > 0 ):
-	    casalog.post( str("Using " )+str(fixed)
-			  +str( " on all regions to be fitted: " ),
-			  'NORMAL1' )		    
-	    for i in range( numFits ):
-		fixedVals.append(fixed[0])
+        # If the user specified somthing to "fix" make sure we have
+        # something for each region.
+        if ( isinstance(fixed, str) ):
+            fixed=[fixed]
+        fixedVals=[]
+        if ( len( fixed ) > 1 and numFits > 1 ) :
+            if ( numFits != len(fixed) ) :
+                casalog.post( str("Error: Number of fits with fixed" )
+                              +str( " values must be the same as the" )
+                              +str( " number of regions to be fitted." ),
+                              'SEVERE' )
+                return None
+            fixedVals=fixed
+        elif ( len( fixed[0] ) > 0 ):
+            casalog.post( str("Using " )+str(fixed)
+                          +str( " on all regions to be fitted: " ),
+                          'NORMAL1' )		    
+            for i in range( numFits ):
+                fixedVals.append(fixed[0])
     
-	if ( isinstance(estfile, str) ):
-	    estfile=[estfile]
-	if ( len( estfile ) > 1 and len(estfile) != numFits ):
-	    casalog.post( str("Error: Number of estimate files" )
-			  +str( " must be the same as the" )
-			  +str( " number of regions to be fitted." ),
-			  'SEVERE' )
-	    return None
+        if ( isinstance(estfile, str) ):
+            estfile=[estfile]
+        if ( len( estfile ) > 1 and len(estfile) != numFits ):
+            casalog.post( str("Error: Number of estimate files" )
+                          +str( " must be the same as the" )
+                          +str( " number of regions to be fitted." ),
+                          'SEVERE' )
+            return None
     
-	if ( isinstance(residfile, str) ):
-	    residfile=[residfile]
-	if ( len( residfile ) > 1 and len(residfile) != numFits ):
-	    casalog.post( str("Error: Number of estimate files" )
-			  +str( " must be the same as the" )
-			  +str( " number of regions to be fitted." ),
-			  'SEVERE' )
-	    return None		    
-	
-	retValue=[]
-	beams=[]
-	
-	for regId in range( numFits ):
-	    # Read in the estimate file(s) if there is any
-	    estRecord={}
-	    if ( len(estfile)>regId and len(estfile[regId]) > 1 ):
-		utils_in = utilstool.create()
-		estRecord = utils_in.torecord( str("file:///")+estfile[i] )
+        if ( isinstance(residfile, str) ):
+            residfile=[residfile]
+        if ( len( residfile ) > 1 and len(residfile) != numFits ):
+            casalog.post( str("Error: Number of estimate files" )
+                          +str( " must be the same as the" )
+                          +str( " number of regions to be fitted." ),
+                          'SEVERE' )
+            return None		    
+        
+        retValue=[]
+        beams=[]
+        
+        for regId in range( numFits ):
+            # Read in the estimate file(s) if there is any
+            estRecord={}
+            if ( len(estfile)>regId and len(estfile[regId]) > 1 ):
+                utils_in = utilstool.create()
+                estRecord = utils_in.torecord( str("file:///")+estfile[i] )
 
-	    fixedparams=""
-	    if ( len(fixedVals)>regId ):
-		fixedparams=fixedVals[regId]
+            fixedparams=""
+            if ( len(fixedVals)>regId ):
+                fixedparams=fixedVals[regId]
 
-	    # Open the image, and get the restoring beam info.
-	    ia.open( imagename );
-	    
-	    # Save the image coordinate system
-	    csys=ia.coordsys();
+            # Open the image, and get the restoring beam info.
+            ia.open( imagename );
+            
+            # Save the image coordinate system
+            csys=ia.coordsys();
 
-	    # If we've made it here then perform the fit
-	    # The ia.fitsky() tool function returns the following inf:
-	    #	  'return' : A component list record which can be used with
-	    #		     the component list tool.  Returned flux values
-	    #		     are integral, not peak.
-	    #	  'pixelmask': mask on the image where the residual values
-	    #		       are invalid
-	    #	  'pixels'   : float array containing the residuals after
-	    #		       subtracting the fitted components.
-	    #	  'converged': True if converged to a a fit.
-	    fit = ia.fitsky( region=regions[regId],
+            # If we've made it here then perform the fit
+            # The ia.fitsky() tool function returns the following inf:
+            #	  'return' : A component list record which can be used with
+            #		     the component list tool.  Returned flux values
+            #		     are integral, not peak.
+            #	  'pixelmask': mask on the image where the residual values
+            #		       are invalid
+            #	  'pixels'   : float array containing the residuals after
+            #		       subtracting the fitted components.
+            #	  'converged': True if converged to a a fit.
+            fit = ia.fitsky( region=regions[regId],
                              mask=mask,
                              models=models[regId],
                              estimate=estRecord,
@@ -253,84 +253,84 @@ go
                              deconvolve=False,
                              fixedparams=fixedparams )
 
-	    if ( not fit['converged'] ):
-		casalog.post( "Fit did not converge, no fits found for region" \
-			      +str(regId), "SEVERE" )
+            if ( not fit['converged'] ):
+                casalog.post( "Fit did not converge, no fits found for region" \
+                              +str(regId), "SEVERE" )
                 ia.close()
                 del csys
-		retValue.append(None)
-		continue
+                retValue.append(None)
+                continue
 
-	    # return the fit as a component tool.  Note that the only
-	    # values this component will have is a shape, label, flux,
-	    # refdir and spectrum
-	    results = cltool.create()
-	    if ( not results.fromrecord( fit['return'] ) ):
-		casalog.post( "Error: Unable to create component tool for fit information", SEVERE )
+            # return the fit as a component tool.  Note that the only
+            # values this component will have is a shape, label, flux,
+            # refdir and spectrum
+            results = cltool.create()
+            if ( not results.fromrecord( fit['return'] ) ):
+                casalog.post( "Error: Unable to create component tool for fit information", SEVERE )
                 ia.close()
                 del fit, csys, results
-		retValue.append(None)
-		continue
-	    if ( results.length() < 1 ):
-		casalog.post( "Error: component tool is empty for fit information", SEVERE )
+                retValue.append(None)
+                continue
+            if ( results.length() < 1 ):
+                casalog.post( "Error: component tool is empty for fit information", SEVERE )
                 ia.close()
                 del fit, csys, results
-		retValue.append(None)
-		continue
+                retValue.append(None)
+                continue
 
-	    # Extract beam information from the image
-	    imageInfo=ia.summary(list=False)['header']
-	    component = results.getshape(0)
-	    deconvolved_component = None
+            # Extract beam information from the image
+            imageInfo=ia.summary(list=False)['header']
+            component = results.getshape(0)
+            deconvolved_component = None
 
-	    cleanbeam=None
-	    if ( imageInfo.has_key("restoringbeam") ):
-		 cleanbeam=ia.restoringbeam()
+            cleanbeam=None
+            if ( imageInfo.has_key("restoringbeam") ):
+                 cleanbeam=ia.restoringbeam()
 
-	    _imfit_print_ ( imagename, regId, cleanbeam, results, component, usecleanbeam )
+            _imfit_print_ ( imagename, regId, cleanbeam, results, component, usecleanbeam )
 
-	    # Save residual image
-	    #print "RESID: ", residfile, "  length ", len( residfile )
-	    if ( len( residfile ) > regId and len(residfile[regId])>1 ):
-		#print "Creating residual file"
-		resid=fit['pixels']
-		#print "DATA: ", resid
-		#ia.newimagefromarray( outfile=residfile[regId], pixels=resid, csys=csys.torecord(), overwrite=True )
-		regCsys=coordsystool.create()
-		regCsys.fromrecord(regions[regId]['coordinates'])
-		#ia.newimagefromarray( outfile=residfile[regId], pixels=resid, retCsys=csys.torecord(), overwrite=True )
-		ia.newimagefromarray( outfile=residfile[regId], pixels=resid, overwrite=True )
-		#ia.adddegaxes( spectral=True, stokes='Q', overwrite=True )
-		ia.close()
-		
-		#TODO set the mask
-		residMask=fit['pixelmask']
+            # Save residual image
+            #print "RESID: ", residfile, "  length ", len( residfile )
+            if ( len( residfile ) > regId and len(residfile[regId])>1 ):
+                #print "Creating residual file"
+                resid=fit['pixels']
+                #print "DATA: ", resid
+                #ia.newimagefromarray( outfile=residfile[regId], pixels=resid, csys=csys.torecord(), overwrite=True )
+                regCsys=coordsystool.create()
+                regCsys.fromrecord(regions[regId]['coordinates'])
+                #ia.newimagefromarray( outfile=residfile[regId], pixels=resid, retCsys=csys.torecord(), overwrite=True )
+                ia.newimagefromarray( outfile=residfile[regId], pixels=resid, overwrite=True )
+                #ia.adddegaxes( spectral=True, stokes='Q', overwrite=True )
+                ia.close()
+                
+                #TODO set the mask
+                residMask=fit['pixelmask']
 
-		#ia.maskhandler()
-		#maskExpr='mask('+
-		#ia.calcmask( mask='"'+)
-		ia.done()
+                #ia.maskhandler()
+                #maskExpr='mask('+
+                #ia.calcmask( mask='"'+)
+                ia.done()
 
-	    retValue.append(results)
-	    csys.done()
-	    del csys
-	    
-	if ( len( retValue ) < 2 ):
-	    return retValue[0]
-	else:
-	    return retValue
+            retValue.append(results)
+            csys.done()
+            del csys
+            
+        if ( len( retValue ) < 2 ):
+            return retValue[0]
+        else:
+            return retValue
     except Exception, instance:
-	try:
-	    ia.done()
-	    del csys		    
-	except Exception :
-	    noop='noop'
-	    
-	casalog.post( str( '*** Error ***')+str(instance),'SEVERE' )
-	return None
+        try:
+            ia.done()
+            del csys		    
+        except Exception :
+            noop='noop'
+            
+        casalog.post( str( '*** Error ***')+str(instance),'SEVERE' )
+        return None
 
     return
-	
+        
 # INPUTS:
 #    imagename - file name of the image we found the fit for.
 #    fit       - component tool descrbing a fit with only 1 component
@@ -363,37 +363,37 @@ def _imfit_print_ ( imagename, regId, cleanbeam, fit, component, usecleanbeam ):
     ### Component
 
     casalog.post ( "Image component size --- ", 'NORMAL' );
-	
+        
     _imfit_beamprint_ (component['majoraxis'], 
-		       component['minoraxis'],
-		       component['positionangle'],
-		       component['majoraxiserror'], 
-		       component['minoraxiserror'],
-		       component['positionangleerror'])
+                       component['minoraxis'],
+                       component['positionangle'],
+                       component['majoraxiserror'], 
+                       component['minoraxiserror'],
+                       component['positionangleerror'])
 
     ### Deconvolved component
 
     if ( usecleanbeam ):
 
-	pointOn, pointOff, dc = _imfit_deconvolve_component_with_errors_ ( component, cleanbeam )
+        pointOn, pointOff, dc = _imfit_deconvolve_component_with_errors_ ( component, cleanbeam )
 
-	if (dc[0]["value"] == 0):
-	    casalog.post ( "Deconvolution of component failed", 'NORMAL' );
-	else:
-	    casalog.post ( "Deconvolved component size --- ", 'NORMAL' );
-	    if (pointOn):
-		casalog.post ( "                             Unresolved component", 'NORMAL'  )
-	    elif (pointOff):
-		casalog.post ( "                             An unresolved solution is within the error box", 'NORMAL'  )
-	    _imfit_beamprint_ (*dc)
+        if (dc[0]["value"] == 0):
+            casalog.post ( "Deconvolution of component failed", 'NORMAL' );
+        else:
+            casalog.post ( "Deconvolved component size --- ", 'NORMAL' );
+            if (pointOn):
+                casalog.post ( "                             Unresolved component", 'NORMAL'  )
+            elif (pointOff):
+                casalog.post ( "                             An unresolved solution is within the error box", 'NORMAL'  )
+            _imfit_beamprint_ (*dc)
 
     ### Clean beam
 
     if ( cleanbeam != None ):
-	casalog.post ( "Clean beam size --- ", 'NORMAL' );
+        casalog.post ( "Clean beam size --- ", 'NORMAL' );
         _imfit_beamprint_ (cleanbeam['major'],
-			   cleanbeam['minor'],
-			   cleanbeam['positionangle'])
+                           cleanbeam['minor'],
+                           cleanbeam['positionangle'])
 
     ### Flux
 
@@ -410,7 +410,7 @@ def _imfit_print_ ( imagename, regId, cleanbeam, fit, component, usecleanbeam ):
          cleanArea  = qa.convert(cleanbeam['major'],'arcsec')['value'] \
                     * qa.convert(cleanbeam['minor'],'arcsec')['value']
          peakFlux = fit.getfluxvalue(0)[0] * cleanArea / fittedArea 
-	 peakFluxError = fluxInfo['error'][0] * cleanArea / fittedArea
+         peakFluxError = fluxInfo['error'][0] * cleanArea / fittedArea
     
     casalog.post( "Flux --- ", 'NORMAL' )
     casalog.post( "       --- integrated:       " \
@@ -418,9 +418,9 @@ def _imfit_print_ ( imagename, regId, cleanbeam, fit, component, usecleanbeam ):
                                  qa.quantity(str(fluxInfo['error'][0])+fit.getfluxunit(0)) ),
                   'NORMAL' );
     if ( peakFlux != None ):    
-	casalog.post( "       --- peak:             " \
+        casalog.post( "       --- peak:             " \
                       +_imfit_flux_(qa.quantity(str(peakFlux)+fit.getfluxunit(0)),
-				     qa.quantity(str(peakFluxError)+fit.getfluxunit(0)) ),
+                                     qa.quantity(str(peakFluxError)+fit.getfluxunit(0)) ),
                       'NORMAL' )
     casalog.post( "       --- polarization:     "+str(fluxInfo['polarisation']), 'NORMAL' )
 
@@ -465,8 +465,8 @@ def _imfit_posprint_ (ra, dec, dra, ddec):
         draval  = _imfit_round_(qa.convert(qa.quantity(str(dra)+"rad"),"s")['value'])
         ddecval = _imfit_round_(qa.convert(qa.quantity(str(ddec)+"rad"),"arcsec")['value'])
         format, decimals  = _imfit_format_2_(draval,draval,ddecval,ddecval)
-	raout  = "  " + qa.angle ( ra,  prec=(6+decimals), form="tim" )
-	decout =        qa.angle ( dec, prec=(6+decimals) )
+        raout  = "  " + qa.angle ( ra,  prec=(6+decimals), form="tim" )
+        decout =        qa.angle ( dec, prec=(6+decimals) )
         strdra  = " +/- " + str(format % draval)
         strddec = " +/- " + str(format % ddecval)
 
@@ -507,15 +507,15 @@ def _imfit_posprint2_ (raPix, decPix, raPixErr, decPixErr):
     return
 
 def _imfit_beamprint_ (major, minor, posangle,
-			majorErr=None, minorErr=None, posanErr=None,
-			majorMinus=None, minorMinus=None, posanMinus=None):
+                        majorErr=None, minorErr=None, posanErr=None,
+                        majorMinus=None, minorMinus=None, posanMinus=None):
 
     # Inputs all as angle quanta
 
     # First force position angle to be between 0 and 180 deg
 
     if ( posangle["value"] < 0 ):
-	posangle = qa.add ( posangle, qa.quantity(180,"deg"))
+        posangle = qa.add ( posangle, qa.quantity(180,"deg"))
 
     # Find appropriate ranges in arcsec
 
@@ -530,71 +530,71 @@ def _imfit_beamprint_ (major, minor, posangle,
     if ( (majorMinus <> None and minorMinus <> None) and
          (majorMinus['value'] > 0 and minorMinus['value'] > 0) ):
 
-	# Formatting as "value + poserr - negerr" for asymmetric errors
+        # Formatting as "value + poserr - negerr" for asymmetric errors
 
-	majorPlus = majorErr
-	minorPlus = minorErr
-	posanPlus = posanErr
+        majorPlus = majorErr
+        minorPlus = minorErr
+        posanPlus = posanErr
 
         dmajPlus  = qa.convert(majorPlus,"arcsec")['value']
         dminPlus  = qa.convert(minorPlus,"arcsec")['value']
         dmajMinus = qa.convert(majorMinus,"arcsec")['value']
         dminMinus = qa.convert(minorMinus,"arcsec")['value']
 
-	dmaj=min(abs(dmajPlus),abs(dmajMinus))
-	dmin=min(abs(dminPlus),abs(dminMinus))
+        dmaj=min(abs(dmajPlus),abs(dmajMinus))
+        dmin=min(abs(dminPlus),abs(dminMinus))
 
         # Now choose a unified unit and format for both axes and their errors
 
-	for r in ranges:
-	    if ( valmax > r[0] ):
+        for r in ranges:
+            if ( valmax > r[0] ):
                 format = _imfit_format_(vmaj/r[0],dmaj/r[0],vmin/r[0],dmin/r[0])
-		strmaj = str(format % (vmaj/r[0]))
-		strmin = str(format % (vmin/r[0]))
-		strmaj  += " + " + string.lstrip(str(format % (dmajPlus/r[0])))
-		strmaj  += " - " + string.lstrip(str(format % (dmajMinus/r[0]))) + " " + r[1]
-		strmin  += " + " + string.lstrip(str(format % (dminPlus/r[0])))
-		strmin  += " - " + string.lstrip(str(format % (dminMinus/r[0]))) + " " + r[1]
-		break
+                strmaj = str(format % (vmaj/r[0]))
+                strmin = str(format % (vmin/r[0]))
+                strmaj  += " + " + string.lstrip(str(format % (dmajPlus/r[0])))
+                strmaj  += " - " + string.lstrip(str(format % (dmajMinus/r[0]))) + " " + r[1]
+                strmin  += " + " + string.lstrip(str(format % (dminPlus/r[0])))
+                strmin  += " - " + string.lstrip(str(format % (dminMinus/r[0]))) + " " + r[1]
+                break
 
-	pa       = qa.convert(posangle,"deg")['value']
-	dpaPlus  = qa.convert(posanPlus,"deg")['value']
-	dpaMinus = qa.convert(posanMinus,"deg")['value']
-	format = _imfit_format_(pa,dpaPlus,pa,dpaMinus)
-	strpos = string.lstrip(str(format % pa))
+        pa       = qa.convert(posangle,"deg")['value']
+        dpaPlus  = qa.convert(posanPlus,"deg")['value']
+        dpaMinus = qa.convert(posanMinus,"deg")['value']
+        format = _imfit_format_(pa,dpaPlus,pa,dpaMinus)
+        strpos = string.lstrip(str(format % pa))
         strpos += " + " + string.lstrip(str(format % dpaPlus))
         strpos += " - " + string.lstrip(str(format % dpaMinus)) + " deg"
 
     elif ( (majorErr <> None and minorErr <> None) and
          (majorErr['value'] > 0 and minorErr['value'] > 0) ):
 
-	# Formatting as "value +/- err" for symmetric errors
+        # Formatting as "value +/- err" for symmetric errors
 
         dmaj = qa.convert(majorErr,"arcsec")['value']
         dmin = qa.convert(minorErr,"arcsec")['value']
 
-	for r in ranges:
-	    if ( valmax > r[0] ):
+        for r in ranges:
+            if ( valmax > r[0] ):
                 format = _imfit_format_(vmaj/r[0],dmaj/r[0],vmin/r[0],dmin/r[0])
-		strmaj = str(format % (vmaj/r[0]))
-		strmin = str(format % (vmin/r[0]))
-		strmaj  += " +/- " + string.lstrip(str(format % (dmaj/r[0]))) + " " + r[1]
-		strmin  += " +/- " + string.lstrip(str(format % (dmin/r[0]))) + " " + r[1]
-		break
+                strmaj = str(format % (vmaj/r[0]))
+                strmin = str(format % (vmin/r[0]))
+                strmaj  += " +/- " + string.lstrip(str(format % (dmaj/r[0]))) + " " + r[1]
+                strmin  += " +/- " + string.lstrip(str(format % (dmin/r[0]))) + " " + r[1]
+                break
 
-	pa  = qa.convert(posangle,"deg")['value']
-	dpa = qa.convert(posanErr,"deg")['value']
-	format = _imfit_format_(pa,dpa)
-	strpos = string.lstrip(str(format % pa ))
+        pa  = qa.convert(posangle,"deg")['value']
+        dpa = qa.convert(posanErr,"deg")['value']
+        format = _imfit_format_(pa,dpa)
+        strpos = string.lstrip(str(format % pa ))
         strpos += " +/- " + string.lstrip(str(format % dpa)) + " deg"
 
     else:
-	for r in ranges:
-	    if ( valmax > r[0] ):
-		strmaj = string.lstrip(str("%7.3f" % (vmaj/r[0]))) + " " + r[1]
-		strmin = string.lstrip(str("%7.3f" % (vmin/r[0]))) + " " + r[1]
-		break
-	strpos = string.lstrip(str("%5.2f" % qa.convert(posangle,"deg")['value'])) + " deg"
+        for r in ranges:
+            if ( valmax > r[0] ):
+                strmaj = string.lstrip(str("%7.3f" % (vmaj/r[0]))) + " " + r[1]
+                strmin = string.lstrip(str("%7.3f" % (vmin/r[0]))) + " " + r[1]
+                break
+        strpos = string.lstrip(str("%5.2f" % qa.convert(posangle,"deg")['value'])) + " deg"
 
     casalog.post ( "       --- major axis:       "+strmaj, 'NORMAL'  )
     casalog.post ( "       --- minor axis:       "+strmin, 'NORMAL'  )
@@ -653,21 +653,21 @@ def _imfit_flux_ (flux, fluxerr=None):
     fv = flux['value']
 
     if ( fluxerr != None and fluxerr['value'] > 0 ):
-	fluxerr = qa.convert (fluxerr, "Jy")
-	fe = fluxerr['value']
+        fluxerr = qa.convert (fluxerr, "Jy")
+        fe = fluxerr['value']
 
-	for r in ranges:
-	    if ( fv > r[0] ):
+        for r in ranges:
+            if ( fv > r[0] ):
                 format = _imfit_format_(fv/r[0],fe/r[0])
-		flxstr = str(format % (fv/r[0]))
-		flxstr += " +/- " + string.lstrip(str(format % (fe/r[0]))) + " " + r[1]
-		break
+                flxstr = str(format % (fv/r[0]))
+                flxstr += " +/- " + string.lstrip(str(format % (fe/r[0]))) + " " + r[1]
+                break
 
     else:
-	for r in ranges:
-	    if ( fv > r[0] ):
-		flxstr = string.lstrip(str("%7.3f" % (fv/r[0]))) + " " + r[1]
-		break
+        for r in ranges:
+            if ( fv > r[0] ):
+                flxstr = string.lstrip(str("%7.3f" % (fv/r[0]))) + " " + r[1]
+                break
 
     return flxstr
 
@@ -693,12 +693,12 @@ def _imfit_format_2_ (val1, err1, val2=None, err2=None):
             val1 = abs(val1)
             val2 = abs(val2)
         value = max(val1,val2)
-	if ( abs(err1) == 0 ):
-	    error = abs(err2)
-	elif ( abs(err2) == 0 ):
-	    error = abs(err1)
-	else:
-	    error = min(abs(err1),abs(err2))
+        if ( abs(err1) == 0 ):
+            error = abs(err2)
+        elif ( abs(err2) == 0 ):
+            error = abs(err1)
+        else:
+            error = min(abs(err1),abs(err2))
     else:
         sign = 0
         if (val1 < 0):
@@ -714,16 +714,16 @@ def _imfit_format_2_ (val1, err1, val2=None, err2=None):
     # reversed.
 
     if ( value < error ):
-	value = max(value,0.1*error)
-	value, error = error, value
+        value = max(value,0.1*error)
+        value, error = error, value
 
     # A value of precisely 0 formats as if it were 1.  If the error is
     # precisely 0, we print to 3 significant digits
 
     if ( value == 0 ):
-	value = 1
+        value = 1
     if ( error == 0 ):
-	error = 0.1*value
+        error = 0.1*value
 
     # Arithmetically we have to draw the limit somewhere.  It is
     # unlikely that numbers (and errors) < 1e-10 are reasonably
@@ -792,15 +792,15 @@ def _imfit_deconvolve_component_with_errors_ ( component, beam ):
     positionAngleBeam = qa.convert(beam["positionangle"],"rad")["value"]
 
     beamList = [str("%.15e" % majorAxisBeam)+"rad", \
-		str("%.15e" % minorAxisBeam)+"rad", \
-		str("%.15e" % positionAngleBeam)+"rad"]
+                str("%.15e" % minorAxisBeam)+"rad", \
+                str("%.15e" % positionAngleBeam)+"rad"]
 
     # First find the central solution and check for point source and "invalid Gaussian" 
 
     pointOff = False
     sourceList = [str("%.15e" % majorVal)+"rad", \
-		  str("%.15e" % minorVal)+"rad", \
-		  str("%.15e" % paVal)+"rad"]
+                  str("%.15e" % minorVal)+"rad", \
+                  str("%.15e" % paVal)+"rad"]
     recout = ia.deconvolvefrombeam ( source=sourceList, beam=beamList )
 
     majorOn_qa = recout["fit"]["major"]
@@ -816,11 +816,11 @@ def _imfit_deconvolve_component_with_errors_ ( component, beam ):
     # component minor axis size to that of the beam minor axis
 
     if ( majorOn == 0.0 or pointOn ):
-	if ( minorVal > minorAxisBeam ):
-	    # An (as yet) unknown problem
-	    return pointOn, pointOff, (majorOn_qa, minorOn_qa, paOn_qa)
-	else:
-	    minorVal = minorAxisBeam
+        if ( minorVal > minorAxisBeam ):
+            # An (as yet) unknown problem
+            return pointOn, pointOff, (majorOn_qa, minorOn_qa, paOn_qa)
+        else:
+            minorVal = minorAxisBeam
 
     # Try solutions at (value-err), (value), (value+err)
 
@@ -843,30 +843,30 @@ def _imfit_deconvolve_component_with_errors_ ( component, beam ):
             minTry = max(minorVal+minInc[y],0)
             for z in range(3):
                 paTry = paVal+paInc[z]
-		sourceList = [str("%.15e" % majTry)+"rad", \
-			      str("%.15e" % minTry)+"rad", \
-			      str("%.15e" % paTry)+"rad"]
-		recout = ia.deconvolvefrombeam ( source=sourceList, beam=beamList )
+                sourceList = [str("%.15e" % majTry)+"rad", \
+                              str("%.15e" % minTry)+"rad", \
+                              str("%.15e" % paTry)+"rad"]
+                recout = ia.deconvolvefrombeam ( source=sourceList, beam=beamList )
 
-		major = recout["fit"]["major"]["value"]
-		minor = recout["fit"]["minor"]["value"]
-		pa    = recout["fit"]["pa"]["value"]
-		point = recout["return"]
+                major = recout["fit"]["major"]["value"]
+                minor = recout["fit"]["minor"]["value"]
+                pa    = recout["fit"]["pa"]["value"]
+                point = recout["return"]
 
-		pointOff = pointOff or point
-		if ( major != 0.0 and not point ):
-		    if ( x == 0 ):
-			majMinusList.append ( major )
-		    if ( x == 2 ):
-			majPlusList.append ( major )
-		    if ( y == 0 ):
-			minMinusList.append ( minor )
-		    if ( y == 2 ):
-			minPlusList.append ( minor )
-		    if ( z == 0 ):
-			paMinusList.append ( pa )
-		    if ( z == 2 ):
-			paPlusList.append ( pa )
+                pointOff = pointOff or point
+                if ( major != 0.0 and not point ):
+                    if ( x == 0 ):
+                        majMinusList.append ( major )
+                    if ( x == 2 ):
+                        majPlusList.append ( major )
+                    if ( y == 0 ):
+                        minMinusList.append ( minor )
+                    if ( y == 2 ):
+                        minPlusList.append ( minor )
+                    if ( z == 0 ):
+                        paMinusList.append ( pa )
+                    if ( z == 2 ):
+                        paPlusList.append ( pa )
 
     # We may need to examine these value lists more closely.  For the
     # moment, we will just take the average of the extrema to estimate
@@ -880,13 +880,13 @@ def _imfit_deconvolve_component_with_errors_ ( component, beam ):
     paPlus     = abs( paOn - _imfit_maxminlist_(paPlusList) )
 
     return pointOn, pointOff, \
-	   (majorOn_qa, minorOn_qa, paOn_qa, \
-	    qa.quantity(majorPlus,"rad"), \
-	    qa.quantity(minorPlus,"rad"), \
-	    qa.quantity(paPlus,"rad"), \
-	    qa.quantity(majorMinus,"rad"), \
-	    qa.quantity(minorMinus,"rad"), \
-	    qa.quantity(paMinus,"rad"))
+           (majorOn_qa, minorOn_qa, paOn_qa, \
+            qa.quantity(majorPlus,"rad"), \
+            qa.quantity(minorPlus,"rad"), \
+            qa.quantity(paPlus,"rad"), \
+            qa.quantity(majorMinus,"rad"), \
+            qa.quantity(minorMinus,"rad"), \
+            qa.quantity(paMinus,"rad"))
 
 def _imfit_maxminlist_ ( L ):
 
@@ -894,6 +894,6 @@ def _imfit_maxminlist_ ( L ):
     # empty
 
     if ( len(L) == 0 ):
-	return 0
+        return 0
     else:
-	return 0.5*(max(L)+min(L))
+        return 0.5*(max(L)+min(L))

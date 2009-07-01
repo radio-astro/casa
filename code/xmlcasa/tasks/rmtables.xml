@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="rmtables">
+<task type="function" name="rmtables" category="utility">
 	<shortdescription></shortdescription>
 	remove tables cleanly, use this instead of rm -rf 
 	<description>

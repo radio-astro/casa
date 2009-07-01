@@ -73,7 +73,9 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 	    #    stokes: I or V
 	    axisTypes=csys.axiscoordinatetypes()
 	    axisNames=csys.names()
-	    stokesValues=csys.stokes()
+            stokesValues=[]
+	    if ( len(axes[3][1] ) > 0  ):
+	        stokesValues=csys.stokes()
 
 	    # Warn user if they've given a selection for an axis
 	    # that doesn't exist.
@@ -226,17 +228,18 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 			     + coords[2] + ".\nExpected values in the range " \
 			     + str(mins[axes[0][0]]) + " to "\
 			     + str(maxs[axes[0][0]])
-			    
-		    if ( int(coords[3]) >= mins[axes[1][0]] and
-			 int(coords[3]) <= maxs[axes[1][0]] ):
-			trc[axes[1][0]]=int(coords[3])
-		    elif( int(coords[2]) == -1 ):
-			trc[axes[1][0]] = maxs[axes[1][0]]
-		    else:
-			raise Exception, "Out of range box pixel coordinate: " \
-			     + coords[3] + ".\nExpected values in the range " \
-			     + str(mins[axes[1][0]]) + " to "\
-			     + str(maxs[axes[1][0]])
+
+                    if ( len(stokesValues) > 0 ):			    
+		        if ( int(coords[3]) >= mins[axes[1][0]] and
+			     int(coords[3]) <= maxs[axes[1][0]] ):
+			    trc[axes[1][0]]=int(coords[3])
+		        elif( int(coords[2]) == -1 ):
+			    trc[axes[1][0]] = maxs[axes[1][0]]
+		        else:
+			    raise Exception, "Out of range box pixel coordinate: " \
+			        + coords[3] + ".\nExpected values in the range " \
+			        + str(mins[axes[1][0]]) + " to "\
+			        + str(maxs[axes[1][0]])
 		elif ( not dropExtra ):
 		    blc[axes[0][0]]=mins[axes[0][0]]
 		    blc[axes[1][0]]=mins[axes[1][0]]
@@ -277,7 +280,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 		    # polarization/stokes values rather then a single value.
 		    polVals=_parse_stokes( stokesValues, pols[polIndex],mins[axes[3][0]],maxs[axes[3][0]] )
 
-		    if ( polVals[0] == -1 ):
+		    if ( len(stokesValues) > 0 and polVals[0] == -1 ):
 			blc[axes[3][0]]=mins[axes[3][0]]
 		    else:
 			blc[axes[3][0]]=polVals[0]
@@ -286,7 +289,7 @@ def imregion(imagename='', spectral='', stokes='', box='', poly='', circ='', dro
 		    else:
 			trc[axes[3][0]]=polVals[1]
 
-		elif ( axes[3][0]!='' ):
+		elif ( len(stokesValues) > 0 and axes[3][0]!='' ):
 		    blc[axes[3][0]]=mins[axes[3][0]]
 		    trc[axes[3][0]]=maxs[axes[3][0]]
         
@@ -476,6 +479,9 @@ def _make_pol_list( stokesStr='', stokesValues=[] ):
     #		  'PFtotal','PFlinear','Pangle']
 
  	 
+    if ( len(stokesValues) < 0 ):
+         #We have no stokes values so we have nothing to do
+         return retValue
     i=0;
     stokesStr = stokesStr.strip()
     while ( i < len(stokesStr) ):

@@ -21,8 +21,14 @@ class ValueHolder;
 Vector<String>    toVectorString(const std::vector<std::string> &);
 std::vector<std::string> fromVectorString(const Vector<String> &);
  String toCasaString(const casac::variant &);
+
 Quantity          casaQuantity(const casac::Quantity &);
+
+// Constructs and returns a Quantity from its input.  It will throw an
+// exception if given a malformed string or string vector, but otherwise will
+// generate a default Quantity (0.0) for unhandled variants.
 Quantity          casaQuantity(const casac::variant &);
+
 ::casac::Quantity casacQuantity(const Quantity &);
 ::casac::record  *fromRecord(const Record &);
 // makes a Vector of Quntity out of strings or vector of such or later records

@@ -97,6 +97,7 @@ const char
     RF_ARRAY[]   = "array",
     RF_FEED[]    = "feed",
     RF_UVRANGE[] = "uvrange",
+    RF_DIAMETER[] = "diameter",
     
     RF_TIMERANGE[] = "timerng",
     RF_CENTERTIME[] = "timeslot",

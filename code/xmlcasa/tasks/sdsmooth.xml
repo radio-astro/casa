@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdsmooth -->
 
-<task type="function" name="sdsmooth" startup="false">
+<task type="function" name="sdsmooth" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do smoothing of spectra</shortdescription>
 

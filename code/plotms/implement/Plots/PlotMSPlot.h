@@ -30,6 +30,7 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <msvis/MSVis/VisSet.h>
 #include <plotms/Data/PlotMSData.h>
+#include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <casa/namespace.h>
@@ -39,6 +40,7 @@ namespace casa {
 //# Forward declarations
 class PlotMS;
 class PlotMSPages;
+class PlotMSPlotTab;
 
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
@@ -47,7 +49,18 @@ class PlotMSPages;
 // class PlotMSPlot handles interfacing with the rest of PlotMS and MS file and
 // selection, and provides some useful members and methods for subclasses.
 class PlotMSPlot: public PlotMSParametersWatcher {
-public:    
+public:
+    // Static //
+    
+    // Convenient access to class name.
+    static const String CLASS_NAME;
+    
+    // Constants for logging.
+    static const String LOG_PARAMSCHANGED;
+    
+    
+    // Non-Static //
+    
     // Constructor which takes the parent PlotMS object.  Starts out with
     // default parameters.
     PlotMSPlot(PlotMS* parent);
@@ -72,17 +85,32 @@ public:
     // PlotMSPages object, and returns them.
     virtual vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages) = 0;
     
+    // Sets up subtabs for the given plot tab, using the add/insert subtab
+    // methods.
+    virtual void setupPlotSubtabs(PlotMSPlotTab& tab) const = 0;
+    
     // Returns a reference to the plot's parameters.
     // <group>
     virtual const PlotMSPlotParameters& parameters() const = 0;
     virtual PlotMSPlotParameters& parameters() = 0;
     // </group>
     
+    // Returns all selected regions on all canvases associated with this plot.
+    virtual PlotMSRegions selectedRegions() const = 0;
+    
+    // Returns selected regions on all visible canvases (accessible via
+    // PlotMSPlotter::currentCanvases()) associated with this plot.
+    virtual PlotMSRegions visibleSelectedRegions() const = 0;
+    
     
     // IMPLEMENTED METHODS //
     
     // Returns the canvases that have been assigned to this plot.
     virtual vector<PlotCanvasPtr> canvases() const;
+    
+    // Returns the visible canvases (accessible via
+    // PlotMSPlotter::currentCanvases()) associated with this plot.
+    virtual vector<PlotCanvasPtr> visibleCanvases() const;
     
     // Initializes the plot with the given canvases.  Initializes any internal
     // plot objects via the protected initializePlot() method, then assigns

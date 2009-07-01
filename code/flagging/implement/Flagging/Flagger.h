@@ -188,7 +188,15 @@ public:
 	       String correlation);
   
   // Make a selection for manual flagging
-  Bool setmanualflags(Bool autocorr, Bool unflag, String clipexpr, Vector<Double> cliprange, String clipcolumn, Bool outside, Double quackinterval=0.0, String opmode=String("flag"));
+  Bool setmanualflags(Bool autocorr,
+                      Bool unflag, 
+                      String clipexpr, 
+                      Vector<Double> cliprange, 
+                      String clipcolumn, 
+                      Bool outside, 
+                      Double quackinterval=0.0, 
+                      String opmode=String("flag"),
+                      Double diameter = -1.0);
 
   Bool applyFlags(const std::vector<FlagIndex> &fi);
 
@@ -211,14 +219,7 @@ public:
   // Detaches from the MS  
   void detach();
   
-// Runs the flagger. agent is a record of agents (name+options). opt is a
-// record of additional options.
-// Set indexing_base to 1 if agent options use 1-based indexing.  usually,
-// this is only necessary if options are being passed from Glish.
-
-  //void run ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
-  //void summary ( const RecordInterface &agents,const RecordInterface &opt,uInt indexing_base=0 );    
-  bool run (Bool trial, Bool reset);    
+  Record run(Bool trial, Bool reset);    
 
   void summary ( const RecordInterface &agents,const RecordInterface &opt ); 
 

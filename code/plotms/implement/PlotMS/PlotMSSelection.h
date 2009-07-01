@@ -45,6 +45,9 @@ public:
     // Static //
     
     // Enum and methods to define the different fields for an MS selection.
+    // **If these are changed, also update: convenience methods below,
+    // xmlcasa/implement/plotms/plotms*, xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               FIELD, SPW, TIMERANGE, UVRANGE, ANTENNA, SCAN,

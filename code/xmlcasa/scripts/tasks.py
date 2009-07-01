@@ -55,6 +55,7 @@ from mosaic import *
 from plotants import *
 from plotcal import *
 from plotxy import *
+from plotms import *
 #from pointcal import *
 #from sdcal import *
 #from sdfit import *

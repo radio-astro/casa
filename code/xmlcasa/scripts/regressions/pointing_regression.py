@@ -8,16 +8,17 @@ MODELIMAGE = "pointingmodel50m.im";
 EPJTABLE   = "epjones2.tab";
 EPJCACHE   = "pointing.cf";
 PASTEP     = 360.0;  # No. PA based conv. func. computation (takes longer)
-INTEG      = '30.0s';# Test VB integration as well in the solver loop
+INTEG      = '60.0s';# Test VB integration as well in the solver loop
 THISHOME   = "./pointing_regression_data/"; # Local directory for scratch use
 #
 TOTALTIME  = '*+1:0:0';  # Select only first 1hr worth of data to solve (keep run time small)
 EPS        = 1E-4;       # Logical "zero"
 
 TEMPLATEEPJ='template2.epj'; # The template EP-Jones table to check the results against.
+TEMPLATEEPJ='template.epj'; # The template EP-Jones table to check the results against.
 
 REPOSNAME  = os.environ.get('CASAPATH').split()[0]+"/data/regression/"+REGNAME+'/';
-#REPOSNAME  = 'DataRepos/';
+#REPOSNAME  = './';
 REUSELOCALREPOS = False;
 #
 #--------------------------------------------------------------

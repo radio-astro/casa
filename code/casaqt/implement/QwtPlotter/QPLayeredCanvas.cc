@@ -330,7 +330,7 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         else maps[i].setPaintInterval(0, rect.height());
     }
     
-    PlotLoggerPtr infoLog = m_parent->loggerForEvent(PlotLogger::MSG_INFO);
+    PlotLoggerPtr infoLog = m_parent->logger();
     
     // We can used a cached image if:
     // 1) none of the items have changed, which is checked via the
@@ -368,7 +368,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
                }
             }
             ss << '.';
-            infoLog->postMessage(CLASS_NAME, "drawItems", ss.str());
+            infoLog->postMessage(CLASS_NAME, "drawItems", ss.str(),
+                                 PlotLogger::MSG_DEBUG);
         }
         
         m_layerBase.drawItems(painter, cRect, cMaps);
@@ -411,14 +412,14 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     if(clearCache) {
         if(!infoLog.null())
             infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache "
-                    "because canvas size has changed.");
+                    "because canvas size has changed.", PlotLogger::MSG_DEBUG);
         axesCache.clear();
         
         if(resize) axesCache.setFixedSize(QSize());
     } else if(anyChangedLayer()) { // check #2
         if(!infoLog.null())
             infoLog->postMessage(CLASS_NAME, "drawItems", "Clearing cache of "
-                    "changed layers.");
+                    "changed layers.", PlotLogger::MSG_DEBUG);
         // clear out just those layers that have changed
         axesCache.clearLayers(changedLayersFlag());
     }
@@ -427,7 +428,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     if(m_drawThread != NULL) {
         if(!infoLog.null())
             infoLog->postMessage(CLASS_NAME, "drawItems", "A draw thread is "
-                    "currently running.  Canceling it and restarting draw.");
+                    "currently running.  Canceling it and restarting draw.",
+                    PlotLogger::MSG_DEBUG);
         
         const_cast<bool&>(m_redrawWaiting) = true;
         
@@ -488,9 +490,10 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     
     // Start logging.
     PlotLoggerPtr log;
-    if(m_parent != NULL) log= m_parent->loggerForEvent(PlotLogger::DRAW_TOTAL);
+    if(m_parent != NULL) log= m_parent->logger();
     if(!log.null() && anyDraw)
-        log->markMeasurement(QPCanvas::CLASS_NAME, QPCanvas::DRAW_NAME);
+        log->markMeasurement(QPCanvas::CLASS_NAME, QPCanvas::DRAW_NAME,
+                             PlotLogger::DRAW_TOTAL);
             
     // Start drawing thread if needed.
     if(anyDraw) {
@@ -504,7 +507,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
             }
 
             infoLog->postMessage(CLASS_NAME, "drawItems", "Starting draw "
-                    "thread for layer(s): " + layers + ".");
+                    "thread for layer(s): " + layers + ".",
+                    PlotLogger::MSG_DEBUG);
         }
         
         drawThread->start();
@@ -718,7 +722,7 @@ void QPLayeredCanvas::itemDrawingFinished() {
     
     // Finish logging.
     PlotLoggerPtr log;
-    if(m_parent != NULL) log= m_parent->loggerForEvent(PlotLogger::DRAW_TOTAL);
+    if(m_parent != NULL) log = m_parent->logger();
     if(!log.null()) log->releaseMeasurement();
 
     // Finish operation.

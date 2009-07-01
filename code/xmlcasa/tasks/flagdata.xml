@@ -5,217 +5,238 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagdata">
-	<shortdescription> All purpose flagging task based on selections</shortdescription>
-	<description>
+<task type="function" name="flagdata" category="data editing">
+        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <description>
         The task will select a subset of data explicitly for flagging,
         quacking, clipping, and autocorrelation flagging, or flagging
-	of shadowed antennas. Unflagging is also available.
+        of shadowed antennas. Unflagging is also available.
 
-	In a dual polarization data set, each polarization can be flagged
-	separately.  However, at present the calibration and imaging will
-	only use data with both parallel hands unflagged.
+        In a dual polarization data set, each polarization can be flagged
+        separately.  However, at present the calibration and imaging will
+        only use data with both parallel hands unflagged.
 
         There is a vector mode of operation to execute several flagging options
         in one execution.
 
-	</description>
-	<input>
-		<param type="string" name="vis" mustexist="true">
-		        <description>Name of file to flag</description>
-			<value></value>
-		</param>
+        </description>
+        <input>
+                <param type="string" name="vis" mustexist="true">
+                        <description>Name of file to flag</description>
+                        <value></value>
+                </param>
 
-		<param type="string" name="mode">
-			<description>Mode (manualflag, quack, shadow, autoflag, summary)</description>
-			<value>manualflag</value>
-			<allowed kind="enum">
-			<value>manualflag</value>
-			<value>autoflag</value>
-			<value>summary</value>
-			<value>quack</value>
-			<value>shadow</value>
-		        </allowed>
-		</param>
+                <param type="string" name="mode">
+                        <description>Mode (manualflag,quack,shadow,autoflag,summary,alma)</description>
+                        <value>manualflag</value>
+                        <allowed kind="enum">
+                        <value>manualflag</value>
+                        <value>autoflag</value>
+                        <value>summary</value>
+                        <value>quack</value>
+                        <value>shadow</value>
+                        <value>alma</value>
+                        </allowed>
+                </param>
 
-		<param type="any" name="spw">
-			<description>spectral-window/frequency/channel</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="spw">
+                        <description>spectral-window/frequency/channel</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="field">
-			<description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="field">
+                        <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="bool" name="selectdata">
-			<description>More data selection parameters (antenna, timerange etc)</description>
-			<value>True</value>
-		</param>
+                <param type="bool" name="selectdata">
+                        <description>More data selection parameters (antenna, timerange etc)</description>
+                        <value>True</value>
+                </param>
 
-		<param type="any" name="antenna" subparam="true">
-			<description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="antenna" subparam="true">
+                        <description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="uvrange" subparam="true">
-			<description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="uvrange" subparam="true">
+                        <description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="timerange" subparam="true">
-			<description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="timerange" subparam="true">
+                        <description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="correlation" subparam="true">
-			<description>Select data based on correlation</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="correlation" subparam="true">
+                        <description>Select data based on correlation</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="scan" subparam="true">
-			<description>scan numbers: \'\'==>all</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="scan" subparam="true">
+                        <description>scan numbers: \'\'==>all</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="feed" subparam="true">
-			<description>multi-feed numbers: Not yet implemented</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="feed" subparam="true">
+                        <description>multi-feed numbers: Not yet implemented</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="array" subparam="true">
-			<description>(sub)array numbers: \'\'==>all</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string"></value>
-		</param>
+                <param type="any" name="array" subparam="true">
+                        <description>(sub)array numbers: \'\'==>all</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
 
-		<param type="any" name="clipexpr" subparam="true">
-			<description>Expression to clip on</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string">ABS RR</value>
-		</param>
+                <param type="any" name="clipexpr" subparam="true">
+                        <description>Expression to clip on</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string">ABS RR</value>
+                </param>
 
-		<param type="any" name="clipminmax" subparam="true">
-			<description>Range to use for clipping</description>
-		        <any type="variant" limittypes="doubleArray doubleArrayArray"/>
-			<value type="doubleArray"></value>
-		</param>
+                <param type="any" name="clipminmax" subparam="true">
+                        <description>Range to use for clipping</description>
+                        <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+                        <value type="doubleArray"></value>
+                </param>
 
-		<param type="any" name="clipcolumn" subparam="true">
-			<description>Data column to use for clipping</description>
-		        <any type="variant" limittypes="string stringArray"/>
-			<value type="string">DATA</value>
-			 <!-- <allowed kind="enum">
-			   <value>'DATA'</value>
-			   <value>'CORRECTED'</value>
-			   <value>'MODEL'</value>
-			</allowed> -->
-		</param>
+                <param type="any" name="clipcolumn" subparam="true">
+                        <description>Data column to use for clipping</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string">DATA</value>
+                         <!-- <allowed kind="enum">
+                           <value>'DATA'</value>
+                           <value>'CORRECTED'</value>
+                           <value>'MODEL'</value>
+                        </allowed> -->
+                </param>
 
-		<param type="any" name="clipoutside" subparam="true">
-			<description>Clip outside the range, or within it</description>
-		        <any type="variant" limittypes="bool boolArray"/>
-			<value type="bool">True</value>
-		</param>
+                <param type="any" name="clipoutside" subparam="true">
+                        <description>Clip outside the range, or within it</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">True</value>
+                </param>
 
-		<param type="any" name="quackinterval" subparam="true">
-			<description>Quack n seconds from scan beginning</description>
-		        <any type="variant" limittypes="double doubleArray"/>
-			<value type="double">0.0</value>
-		</param>
+                <param type="any" name="quackinterval" subparam="true">
+                        <description>Quack n seconds from scan beginning</description>
+                        <any type="variant" limittypes="double doubleArray"/>
+                        <value type="double">0.0</value>
+                </param>
 
-		<param type="any" name="autocorr" subparam="true">
-			<description>Flag autocorrelations</description>
-		        <any type="variant" limittypes="bool boolArray"/>
-			<value type="bool">False</value>
-		</param>
+                <param type="any" name="autocorr" subparam="true">
+                        <description>Flag autocorrelations</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
 
-		<param type="any" name="unflag" subparam="true">
-			<description>Unflag the data specified</description>
-		        <any type="variant" limittypes="bool boolArray"/>
-			<value type="bool">False</value>
-		</param>
+                <param type="any" name="unflag" subparam="true">
+                        <description>Unflag the data specified</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
 
-		<param type="string" name="algorithm" subparam="true">
-			<description>Autoflag algorithm (timemed,freqmed)</description>
-			<value>timemed</value>
-			<allowed kind="enum">
-			<value>timemed</value>
-			<value>freqmed</value>
-		        </allowed>
-		</param>
+                <param type="string" name="algorithm" subparam="true">
+                        <description>Autoflag algorithm (timemed,freqmed)</description>
+                        <value>timemed</value>
+                        <allowed kind="enum">
+                        <value>timemed</value>
+                        <value>freqmed</value>
+                        </allowed>
+                </param>
 
-		<param type="string" name="column" subparam="true">
-			<description>Data column to operate on.</description>
-			<value>DATA</value>
-			<allowed kind="enum">
-			<value>DATA</value>
-			<value>CORRECTED</value>
-			<value>MODEL</value>
-		        </allowed>
-		</param>
+                <param type="string" name="recipe" subparam="true">
+                        <description>Flagging algorithm (pdb_recipe,vla_recipe)</description>
+                        <value>vla_recipe</value>
+                        <allowed kind="enum">
+                        <value>pdb_recipe</value>
+                        <value>vla_recipe</value>
+                        </allowed>
+                </param>
 
-		<param type="string" name="expr" subparam="true">
-			<description>Expression to flag on</description>
-			<value>ABS RR</value>
-		</param>
+                <param type="string" name="column" subparam="true">
+                        <description>Data column to operate on.</description>
+                        <value>DATA</value>
+                        <allowed kind="enum">
+                        <value>DATA</value>
+                        <value>CORRECTED</value>
+                        <value>MODEL</value>
+                        </allowed>
+                </param>
 
-		<param type="double" name="thr" subparam="true">
-			<description>Flagging threshold (n sigma)</description>
-			<value>5.0</value>
-		</param>
+                <param type="string" name="expr" subparam="true">
+                        <description>Expression to flag on</description>
+                        <value>ABS RR</value>
+                </param>
 
-		<param type="int" name="window" subparam="true">
-			<description>Sliding median filter width</description>
-			<value>10</value>
-		</param>
-		<constraints>
-			<when param="mode">
-				<equals value="manualflag">
-					<default param="autocorr"><value type="bool">False</value></default>
-					<default param="unflag"><value type="bool">False</value></default>
-					<default param="clipexpr"><value type="string">ABS RR</value></default>
-					<default param="clipminmax"><value type="doubleArray"></value></default>
-					<default param="clipcolumn"><value type="string">DATA</value></default>
-					<default param="clipoutside"><value type="bool">True</value></default>
-				</equals>
-				<equals value="autoflag">
-					<default param="algorithm"><value type="string">timemed</value></default>
-					<default param="column"><value type="string">DATA</value></default>
-					<default param="expr"><value type="string">ABS RR</value></default>
-					<default param="thr"><value type="double">5.0</value></default>
-					<default param="window"><value type="int">10</value></default>
-				</equals>
-				<equals value="quack">
-					<default param="autocorr"><value type="bool">False</value></default>
-					<default param="unflag"><value type="bool">False</value></default>
-					<default param="quackinterval"><value type="double">0.0</value></default>
-				</equals>
-				<equals value="summary"/>
-				<equals value="shadow"/>
-			</when>
-			<when param="selectdata">
-				<equals type="bool" value="True">
-					<default param="antenna"><value type="string"></value></default>
-					<default param="timerange"><value type="string"></value></default>
-					<default param="correlation"><value type="string"></value></default>
-					<default param="scan"><value type="string"></value></default>
-					<default param="feed"><value type="string"></value></default>
-					<default param="array"><value type="string"></value></default>
-					<default param="uvrange"><value type="string"></value></default>
-				</equals>
-				<equals type="bool" value="False"/>
-			</when>
-		</constraints>
-	</input>
+                <param type="double" name="thr" subparam="true">
+                        <description>Flagging threshold (n sigma)</description>
+                        <value>5.0</value>
+                </param>
+
+                <param type="int" name="window" subparam="true">
+                        <description>Sliding median filter width</description>
+                        <value>10</value>
+                </param>
+
+                <param type="double" name="diameter" subparam="true">
+                        <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
+                        <value>-1.0</value>
+                </param>
+
+                <constraints>
+                        <when param="mode">
+                                <equals value="manualflag">
+                                        <default param="autocorr"><value type="bool">False</value></default>
+                                        <default param="unflag"><value type="bool">False</value></default>
+                                        <default param="clipexpr"><value type="string">ABS RR</value></default>
+                                        <default param="clipminmax"><value type="doubleArray"></value></default>
+                                        <default param="clipcolumn"><value type="string">DATA</value></default>
+                                        <default param="clipoutside"><value type="bool">True</value></default>
+                                </equals>
+                                <equals value="autoflag">
+                                        <default param="algorithm"><value type="string">timemed</value></default>
+                                        <default param="column"><value type="string">DATA</value></default>
+                                        <default param="expr"><value type="string">ABS RR</value></default>
+                                        <default param="thr"><value type="double">5.0</value></default>
+                                        <default param="window"><value type="int">10</value></default>
+                                </equals>
+                                <equals value="quack">
+                                        <default param="autocorr"><value type="bool">False</value></default>
+                                        <default param="unflag"><value type="bool">False</value></default>
+                                        <default param="quackinterval"><value type="double">0.0</value></default>
+                                </equals>
+                                <equals value="summary"/>
+                                <equals value="shadow">
+                                        <default param="diameter"><value type="double">-1.0</value></default>
+                                </equals>
+                                <equals value="alma">
+                                        <default param="recipe"><value type="string">vla_recipe</value></default>
+                                </equals>
+                        </when>
+                        <when param="selectdata">
+                                <equals type="bool" value="True">
+                                        <default param="antenna"><value type="string"></value></default>
+                                        <default param="timerange"><value type="string"></value></default>
+                                        <default param="correlation"><value type="string"></value></default>
+                                        <default param="scan"><value type="string"></value></default>
+                                        <default param="feed"><value type="string"></value></default>
+                                        <default param="array"><value type="string"></value></default>
+                                        <default param="uvrange"><value type="string"></value></default>
+                                </equals>
+                                <equals type="bool" value="False"/>
+                        </when>
+                </constraints>
+        </input>
 <returns type="void"/>
 
 <example>
@@ -228,11 +249,11 @@
             autoflag = experimental auto-flagging outliers;
             summary = report the amount of flagged flagged.
 
-	Unflagging is also available with all options (except shadowing)
+        Unflagging is also available with all options (except shadowing)
 
-	Note: I a dual polarization data set, each polarization can be flagged
-	separately.  However, at present the calibration and imaging will
-	only use only data with both parallel hands unflagged.
+        Note: I a dual polarization data set, each polarization can be flagged
+        separately.  However, at present the calibration and imaging will
+        only use only data with both parallel hands unflagged.
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -245,8 +266,8 @@
                If autocorr = F; clipminmax = [], then
                   flagging or unflagging [unflag=F, unflag=T] is specified by
                   the data selection parameters.
-		     
-	   Other flagging options, with the appropriate data selection
+                     
+           Other flagging options, with the appropriate data selection
            parameters, that are available are:
 
               autocorr -- Flag autocorrelations 
@@ -256,7 +277,7 @@
               clipexpr -- Clip using the following:
                 default: 'ABS RR'; example: clipexpr='RE XX'
                 Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-		          'I','XX','YY','RR','LL'
+                          'I','XX','YY','RR','LL'
               clipminmax -- Range of data (Jy) that will NOT be flagged
                 default: [] means do not use clip option
                 example: [0.0,1.5]
@@ -278,14 +299,17 @@
            autocorr -- Flag autocorrelations (independent option)
                 default =&gt; False
 
-        shadow: option to flag data or shadowed antennas
-           No subparameters
+        shadow: option to flag data of shadowed antennas
+           diameter -- effective diameter to use when determining if an antenna
+                    is shadowed at a given time stamp. The given value is used
+                    for all antennas. If this is set to a negative number
+                    (default), the actual antenna diameters are used.
 
         summary: lists number of rows and data points flagged
            No subparameters
 
         autoflag: experimental automatic flagging of outliers.
-	   It is still under development
+           It is still under development
            algorithm -- autoflag algorithm name
                 default: 'timemed'
                 options: 'timemed','freqmed'
@@ -293,11 +317,11 @@
            expr -- expression to use for flagging option
                 default: 'ABS RR'; example: expr='RE XX'
                 Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-		     'I','XX','YY','RR','LL'
+                     'I','XX','YY','RR','LL'
            thr -- flagging threshold as a multiple of standard-deviation ( n sigma )
            window -- half width for sliding window median filters.  The size should be
-	          about the number of integration in a scan, or the number of
-		  spectral channels.
+                  about the number of integration in a scan, or the number of
+                  spectral channels.
 
 
         selectdata -- Other data selection parameters

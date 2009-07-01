@@ -29,9 +29,10 @@
 
 #include <graphics/GenericPlotter/PlotOptions.h>
 
-#include <casa/Logging/LogIO.h>
+#include <casa/Logging/LogSinkInterface.h>
 #include <casa/Utilities/CountedPtr.h>
 
+#include <map>
 #include <time.h>
 #include <vector>
 
@@ -45,67 +46,53 @@ class PlotCanvas;
 class Plotter;
 
 
-// Abstract superclass for all messages going through the PlotLogger.
-class PlotLogMessage {
+// Superclass for all messages going through the PlotLogger.  This class has
+// been refactored to just be a thin layer on top of LogMessage.
+class PlotLogMessage : public LogMessage {
 public:
-    // Constructor.
-    PlotLogMessage() { }
+    // Static //
     
-    // Destructor.
-    virtual ~PlotLogMessage() { }    
+    // Default event type.
+    static const int DEFAULT_EVENT_TYPE;
     
     
-    // Returns the first (main) origin for this message.  Usually a class name.
-    // See LogIO::origin().
-    virtual const String& origin1() const = 0;
+    // Non-Static //
     
-    // Returns the second origin for this message.  Usually a method name.  See
-    // LogIO::origin().
-    virtual const String& origin2() const = 0;
+    // Constructor which takes an optional priority.
+    PlotLogMessage(int eventType = DEFAULT_EVENT_TYPE);
     
-    // Reports the message to the given output stream.
-    virtual void message(ostream& outstream) const = 0;
+    // Constructor which takes the origin(s) and an optional priority.
+    PlotLogMessage(const String& origin1, const String& origin2,
+            int eventType = DEFAULT_EVENT_TYPE);
     
-    // Returns the message's priority.  See LogIO::priority().
-    virtual LogMessage::Priority priority() const = 0;
-};
-
-
-// A generic log message that could be anything.
-class PlotLogGeneric : public virtual PlotLogMessage {
-public:    
     // Constructor which takes the origin(s), the message, and an optional
     // priority.
-    PlotLogGeneric(const String& origin1, const String& origin2,
-            const String& message,
-            LogMessage::Priority priority = LogMessage::NORMAL);
+    PlotLogMessage(const String& origin1, const String& origin2,
+            const String& message, int eventType = DEFAULT_EVENT_TYPE);
+    
+    // Copy constructor.
+    PlotLogMessage(const PlotLogMessage& copy);
     
     // Destructor.
-    virtual ~PlotLogGeneric();
+    virtual ~PlotLogMessage();
     
     
-    // Implements PlotLogMessage::origin1().
-    virtual const String& origin1() const;
+    // Returns the event type of this message.
+    virtual int eventType() const;
     
-    // Implements PlotLogMessage::origin2().
-    virtual const String& origin2() const;
-    
-    // Implements PlotLogMessage::message().
-    virtual void message(ostream& outstream) const;
-    
-    // Implements PlotLogMessage::priority().
-    virtual LogMessage::Priority priority() const;
-    
-private:
-    String m_origin1, m_origin2, m_message; // Origins and message.
-    LogMessage::Priority m_priority;        // Priority.
+protected:
+    // Event type, either a value from PlotLogger::Event, or a custom
+    // user-defined value.
+    int m_eventType;
 };
 
 
 // Used to report time and memory measurements.  This functionality can be
 // accessed either directly with a PlotLogMeasurement object or indirectly
-// through the PlotLogger class.
-class PlotLogMeasurement : public virtual PlotLogMessage {
+// through the PlotLogger class.  Message is:
+// END.\tTime: [time] [timeUnits].  Memory: [memory] [memoryUnits].
+// If the measurement has not been ended, calls stopMeasurement() first.
+class PlotLogMeasurement : public PlotLogMessage {
 public:
     // Static //
     
@@ -120,6 +107,12 @@ public:
         BYTE, KILOBYTE, MEGABYTE
     };
     
+    // Default units.
+    // <group>
+    static const TimeUnit DEFAULT_TIME_UNIT;
+    static const MemoryUnit DEFAULT_MEMORY_UNIT;
+    // </group>
+    
     // Get a string representation of the given time/memory unit.
     // <group>
     static String timeUnits(TimeUnit t);   
@@ -132,27 +125,15 @@ public:
     // Constructor which takes the origin(s), optional time and memory
     // units, and an optional priority.  Also calls startMeasurement().
     PlotLogMeasurement(const String& origin1, const String& origin2,
-                       TimeUnit timeUnit = SECOND,
-                       MemoryUnit memoryUnit = KILOBYTE,
-                       LogMessage::Priority priority = LogMessage::NORMAL);
+                       TimeUnit timeUnit = DEFAULT_TIME_UNIT,
+                       MemoryUnit memoryUnit = DEFAULT_MEMORY_UNIT,
+                       int eventType = DEFAULT_EVENT_TYPE);
+    
+    // Copy constructor.
+    PlotLogMeasurement(const PlotLogMeasurement& copy);
     
     // Destructor.
     ~PlotLogMeasurement();
-    
-    
-    // Implements PlotLogMessage::origin1().
-    const String& origin1() const;
-    
-    // Implements PlotLogMessage::origin2().
-    const String& origin2() const;
-    
-    // Implements PlotLogMessage::message().  Message is:
-    // END.\tTime: [time] [timeUnits].  Memory: [memory] [memoryUnits].
-    // If the measurement has not been ended, calls stopMeasurement() first.
-    void message(ostream& outstream) const;
-    
-    // Implements PlotLogMessage::priority().
-    LogMessage::Priority priority() const;
     
     
     // Returns the time/memory when the measurement started.
@@ -185,19 +166,26 @@ public:
     void stopMeasurement();
     
 private:
-    String m_origin1, m_origin2;     // Origins
-    time_t m_startTime;              // Start time
-    unsigned int m_startMemory;      // Start memory
-    double m_time, m_memory;         // Time and memory
-    TimeUnit m_timeUnit;             // Time unit
-    MemoryUnit m_memoryUnit;         // Memory unit
-    LogMessage::Priority m_priority; // Message priority
+    // Start time
+    time_t m_startTime;
+    
+    // Start memory
+    unsigned int m_startMemory;
+    
+    // Time and memory differences
+    double m_time, m_memory;
+    
+    // Time unit
+    TimeUnit m_timeUnit;
+    
+    // Memory unit
+    MemoryUnit m_memoryUnit;
 };
 
 
 // Used to report located indices.  Basically just a container for the results
 // of a PlotCanvas::locate.
-class PlotLogLocate : public virtual PlotLogMessage {
+class PlotLogLocate : public PlotLogMessage {
 public:
     // Static //
     
@@ -218,7 +206,7 @@ public:
     PlotLogLocate(const String& origin1, const String& origin2,
             const PlotRegion& locateRegion,
             vector<vector<pair<unsigned int,unsigned int> > >* locatedIndices,
-            LogMessage::Priority priority = LogMessage::NORMAL,
+            int eventType = DEFAULT_EVENT_TYPE,
             bool deleteIndicesOnDestruction = true);
     
     // Copy constructor.  NOTE: will set the deleteIndicesOnDestruction flag on
@@ -228,19 +216,6 @@ public:
     
     // Destructor.
     ~PlotLogLocate();
-    
-    
-    // Implements PlotLogMessage::origin1().
-    const String& origin1() const;
-    
-    // Implements PlotLogMessage::origin2().
-    const String& origin2() const;
-    
-    // Implements PlotLogMessage::message().
-    void message(ostream& outstream) const;
-    
-    // Implements PlotLogMessage::priority().
-    LogMessage::Priority priority() const;
     
     
     // Returns the region that was located.
@@ -265,75 +240,81 @@ public:
     bool willDeleteIndices() const;
     
 private:
-    String m_origin1, m_origin2;     // Origins
-    LogMessage::Priority m_priority; // Priority
-    PlotRegion m_region;             // Region
-    vector<vector<pair<unsigned int, unsigned int> > >* m_indices; // Indices
-    bool m_shouldDelete;             // Should delete indices
+    // Region.
+    PlotRegion m_region;
+    
+    // Indices.
+    vector<vector<pair<unsigned int, unsigned int> > >* m_indices;
+    
+    // Should delete indices.
+    bool m_shouldDelete;
 };
 
 
 // Subclass of PlotLogMessage to unify messages for method entering/exiting.
-class PlotLogMethod : public virtual PlotLogMessage {
+class PlotLogMethod : public PlotLogMessage {
 public:
     // Constructor which takes the class and method names, a flag for whether
     // the method is entering or exiting, and an optional additional message
     // and priority.
     PlotLogMethod(const String& className, const String& methodName,
             bool entering, const String& message = String(),
-            LogMessage::Priority priority = LogMessage::NORMAL);
+            int eventType = DEFAULT_EVENT_TYPE);
     
     // Destructor.
     ~PlotLogMethod();
-    
-    
-    // Implements PlotLogMessage::origin1().
-    const String& origin1() const;
-    
-    // Implements PlotLogMessage::origin2().
-    const String& origin2() const;
-    
-    // Implements PlotLogMessage::message().
-    void message(ostream& outstream) const;
-    
-    // Implements PlotLogMessage::priority().
-    LogMessage::Priority priority() const;
-    
-private:
-    String m_class, m_method, m_message; // Class, method, and message.
-    LogMessage::Priority m_priority;     // Priority.
 };
 
 
 // Subclass of PlotLogMessage to unify messages for object creation/deletion.
-class PlotLogObject : public virtual PlotLogMessage {
+class PlotLogObject : public PlotLogMessage {
 public:
     // Constructor which takes the class name and object address, a flag for
     // whether the object is being created or destroyed, and an optional
     // additional message and priority.
     PlotLogObject(const String& className, void* address, bool creation,
             const String& message = String(),
-            LogMessage::Priority priority = LogMessage::NORMAL);
+            int eventType = DEFAULT_EVENT_TYPE);
     
     // Destructor.
     ~PlotLogObject();
+};
+
+
+// Subclass of LogFilterInterface to filter on both event flags and minimum
+// priority.
+class PlotLoggerFilter : public LogFilterInterface {
+public:
+    // Constructor which takes optional event flags and minimum priority.
+    PlotLoggerFilter(int eventFlags, LogMessage::Priority minPriority);
     
+    // Destructor.
+    ~PlotLoggerFilter();
     
-    // Implements PlotLogMessage::origin1().
-    const String& origin1() const;
+    // Implements LogFilterInterface::clone().
+    LogFilterInterface* clone() const;
     
-    // Implements PlotLogMessage::origin2().
-    const String& origin2() const;
+    // Implements LogFilterInterface::pass().
+    Bool pass(const LogMessage& message) const;
     
-    // Implements PlotLogMessage::message().
-    void message(ostream& outstream) const;
+    // Gets/Sets the event flags.
+    // <group>
+    int eventFlags() const;
+    void setEventFlags(int flags);
+    // </group>
     
-    // Implements PlotLogMessage::priority().
-    LogMessage::Priority priority() const;
+    // Gets/Sets the minimum priority.
+    // <group>
+    LogMessage::Priority minimumPriority() const;
+    void setMinimumPriority(LogMessage::Priority minPriority);
+    // </group>
     
 private:
-    String m_class, m_method, m_message; // Class, method, and message.
-    LogMessage::Priority m_priority;     // Priority.
+    // Event flags.
+    int m_eventFlags;
+    
+    // Minimum priority.
+    LogMessage::Priority m_minPriority;
 };
 
 
@@ -341,56 +322,152 @@ private:
 // well as provide access to different logging functionality like measurements.
 // PlotLogger is associated with a single Plotter object and should be used by
 // all children of that Plotter (canvases, plot items, etc.) to report their
-// behavior if the proper flag is turned on.
+// behavior if the proper flag is turned on.  The logger can also filter out
+// messages by priority.  Therefore a message must BOTH have its event type
+// flag turned on, AND meet the priority minimum in order to be posted to the
+// log.  The exception to this is for the MSG_* event types, which are logged
+// as long as they meet the filtered priority requirement.  The actual log can
+// either be the global sink, or can be set to a file.
 class PlotLogger {
 public:
     // Static //
     
-    // Events that someone may want to log.  Specifying more than one event can
-    // be used by doing a bitwise or of one or more enum values into a flag.
-    enum Event {
-        DRAW_TOTAL      = 1,   // Replotting/redrawing the whole GUI.
-        DRAW_INDIVIDUAL = 2,   // Replotting/redrawing each plot item.
-        METHODS_MAJOR   = 4,   // Entering/exiting major methods.
-        OBJECTS_MAJOR   = 8,   // Creation/deletion of major objects.
-        EXPORT_TOTAL    = 16,  // Exporting canvases to file.
-        
-        MSG_INFO        = 32,  // Messages with information.
-        MSG_WARN        = 64,  // Messages with warnings.
-        MSG_ERROR       = 128, // Messages with errors.
-        
-        NO_EVENTS       = 0    // No measurement events.
-    };
+    // Event types //
+    
+    // Event types that are always allowed.
+    // <group>
+    static const int MSG_INFO  = -1;
+    static const int MSG_WARN  = -2;
+    static const int MSG_ERROR = -3;
+    // </group>
+    
+    // Miscellaneous debugging messages.
+    static const int MSG_DEBUG       = 1;
+    
+    // Replotting/redrawing the whole GUI.
+    static const int DRAW_TOTAL      = 2;
+    
+    // Replotting/redrawing each plot item.
+    static const int DRAW_INDIVIDUAL = 4;
+    
+    // Entering/exiting major methods.
+    static const int METHODS_MAJOR   = 8;
+    
+    // Creation/deletion of major objects.
+    static const int OBJECTS_MAJOR   = 16;
+    
+    // Exporting canvases to file.
+    static const int EXPORT_TOTAL    = 32;
+    
+    
+    // No events.
+    static const int NO_EVENTS = 0;
+    
+    // All events as a flag.
+    static int ALL_EVENTS_FLAG();
+    
+    // All events as a vector.
+    static vector<int> ALL_EVENTS();
+    
+    
+    // Registers an extended event type with the given name and optional
+    // priority and returns its value.
+    static int REGISTER_EVENT_TYPE(const String& name,
+            LogMessage::Priority priority = LogMessage::NORMAL);
+    
+    // Unregisters the given extended event type.  If a priority has been set,
+    // it is NOT removed.
+    // <group>
+    static void UNREGISTER_EVENT_TYPE(int event);
+    static void UNREGISTER_EVENT_TYPE(const String& name);
+    // </group>
+    
+    // Returns all the event names.
+    static vector<String> EVENT_NAMES();
+    
+    // Converts between an event type and its name.
+    // <group>
+    static String EVENT(int type);
+    static int EVENT(const String& name);
+    // </group>
+    
+    // Returns an event flag from the given vector.
+    // <group>
+    static int FLAG_FROM_EVENTS(const vector<int>& events);
+    static int FLAG_FROM_EVENTS(const vector<String>& names);
+    // </group>
+    
+    // Returns an event flag for all events that meet the given minimum
+    // priority.
+    static int FLAG_FROM_PRIORITY(LogMessage::Priority minPriority);
+    
+    
+    // Gets/Sets the message priority for the given log event.  Uses a default
+    // if the event has not been set.
+    // <group>
+    static LogMessage::Priority EVENT_PRIORITY(int event);
+    static void SET_EVENT_PRIORITY(int event, LogMessage::Priority priority);
+    // </group>
     
     
     // Non-Static //
     
-    // Constructor which takes the Plotter this logger is associated with.
-    PlotLogger(Plotter* plotter);
+    // Constructor which takes the Plotter this logger is associated with.  The
+    // global log sink is used, and the minimum priority filter is set.
+    PlotLogger(Plotter* plotter, int filterEventFlags = NO_EVENTS,
+            LogMessage::Priority filterMinPriority = LogMessage::DEBUGGING);
     
     // Destructor.
     virtual ~PlotLogger();
     
     
-    // Event Methods //
+    // Log IO Methods //
     
-    // Calls Plotter::logEventFlags().
-    int eventFlags() const;
+    // Gets the log sink interface.
+    // <group>
+    CountedPtr<LogSinkInterface> sink();
+    const CountedPtr<LogSinkInterface> sink() const;
+    // </group>
     
-    // Calls Plotter::setLogEventFlags().
-    void setEventFlags(int flags);
+    // Gets/Sets the log sink file location.  If the filename is empty, it
+    // means the global sink.
+    // <group>
+    const String& sinkLocation() const;
+    void setSinkLocation(const String& logFile);
+    // </group>
+    
+    
+    // Filtering Methods //
+    
+    // Gets/Sets the log filter priority level.
+    // <group>
+    LogMessage::Priority filterMinPriority() const;
+    void setFilterMinPriority(PlotLogMessage::Priority minPriority);
+    // </group>
+    
+    // Gets/Sets the log filter event flag for a single event type.
+    // <group>
+    bool filterEventFlag(int flag) const;
+    void setFilterEventFlag(int flag, bool on);
+    // </group>
+    
+    // Gets/Sets the log filter event flag(s).  The flag should be a bitwise-or
+    // of one or more values in PlotLogger events and any extended event types.
+    // <group>
+    int filterEventFlags() const;
+    void setFilterEventFlags(int flags);
+    // <group>
     
     
     // Message Methods //
     
-    // Posts the given message to the underlying CASA logger.
+    // Posts the given message to the underlying log sink.
+    // <group>
     void postMessage(const PlotLogMessage& message);
-    
-    // Plots a PlotLogGeneric message with the given parameters to the
-    // underlying CASA logger.
     void postMessage(const String& origin1, const String& origin2,
                      const String& message,
-                     LogMessage::Priority priority = LogMessage::NORMAL);
+                     int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE);
+    // </group>
     
     
     // Measurement Methods //
@@ -398,7 +475,8 @@ public:
     // Marks the logger to begin a time/memory measurement.  Measurement marks
     // can be recursive.  Returns a generic message saying that measurement has
     // begun, which will be also posted to the log if postStartMessage is true.
-    PlotLogGeneric markMeasurement(const String& origin1,const String& origin2,
+    PlotLogMessage markMeasurement(const String& origin1,const String& origin2,
+            int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE,
             bool postStartMessage = true);
     
     // Gets the measurement since the last mark.  The message will also be
@@ -411,14 +489,35 @@ public:
     // Calls locate on the given canvas and returns the result as a message
     // that will also be posted if postLocateMessage is true.
     PlotLogLocate locate(PlotCanvas* canvas, const PlotRegion& region,
-            bool postLocateMessage = true);
+            int eventType = MSG_INFO, bool postLocateMessage = true);
     
 private:
-    Plotter* m_plotter; // Plotter.    
-    LogIO m_logger;     // For reporting log information.
+    // Plotter.
+    Plotter* m_plotter;
+    
+    // Log sink.
+    CountedPtr<LogSinkInterface> m_logger;
+    
+    // Log filter.
+    PlotLoggerFilter m_filter;
+    
+    // Log sink location.
+    String m_loggerLocation;
     
     // Current measurement marks.
     vector<PlotLogMeasurement> m_measurements;
+
+    
+    // Static //
+    
+    // Registered extended types.
+    static vector<int> EXTENDED_TYPES;
+    
+    // Registered extended type names.
+    static vector<String> EXTENDED_NAMES;
+    
+    // Map from log event to priority.
+    static map<int, LogMessage::Priority> EVENT_PRIORITIES;
 };
 typedef CountedPtr<PlotLogger> PlotLoggerPtr;
 

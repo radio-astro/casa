@@ -164,7 +164,8 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
   VisBuffer vb(vi);
    // Do the component model only if this is not an incremental update;
   if(sm_->hasComponentList() &&  !incremental ) {
-    
+    if(noModelCol_p)
+        throw(AipsError("Cannot deal with componentlists without using scratch columns yet"));
     // Reset the various SkyJones
     resetSkyJones();
 

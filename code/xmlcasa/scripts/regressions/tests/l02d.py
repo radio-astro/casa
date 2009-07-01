@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on l02d_regression.py"
+    return "PdB, flagging, calibration, imaging"
 
 def run():
     lepath=locatescript('l02d_regression.py')

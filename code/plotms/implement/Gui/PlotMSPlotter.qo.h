@@ -38,7 +38,6 @@
 #include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
 
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>

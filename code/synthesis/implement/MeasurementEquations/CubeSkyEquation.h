@@ -65,9 +65,8 @@ class CubeSkyEquation : public SkyEquation {
   //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
   void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
 
-   //Get the flux scale that the ftmachines have if they have
+  //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
-
  protected:
 
   //Different versions of psf making

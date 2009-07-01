@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- Documentation here.                                                -->
 
-<task type="function" name="fixvis">
+<task type="function" name="fixvis" category="data editing, utility" visibility="experimental">
 
 <shortdescription>Recalculates (u, v, w)<!--  and Changes Phase Center. --></shortdescription>
 <description>
@@ -22,7 +22,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        \item correcting for differential aberration,  -->
        \item changing the refcode (i.e. B1950 to J2000 or 2006.78),
        \item changing the projection, as in (-)NCP to SIN,
-       \item refocusing (Not yet implemented).
+       \item refocusing (Not yet incorporated).
      \end{itemize}
 </description>
 
@@ -32,7 +32,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value></value>
         <example>vis='ngc5921.ms'</example>
     </param>
-    <param type="string" name="outputvis" kind="ms" mustexist="true">
+    <param type="string" name="outputvis" kind="ms">
         <description>Name of the output visibility set.  (Can be the same as vis.)</description>
         <value></value>
         <example>vis='ngc5921\_fixedvis.ms'</example>
@@ -65,21 +65,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- <description> -->
 <example>
 
-          This task will
-                calculating (u, v, w) coordinates,
-                changing the refcode (i.e. B1950 to J2000 or 2006.78),
-                changing the phase tracking center(s),
+This task
+   calculates (u, v, w) coordinates,
+   changes the reference frame (i.e. B1950 to J2000 or 2006.78 and back),
+   and/or the projection (not well tested).
 
-             not yet implemented are:
-                correcting for differential aberration,
-                changing the refcode (i.e. B1950 to J2000 or 2006.78),
-                changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-                and refocusing to a finite distance.
+Not yet implemented, or incorporated in this task, are:
+   changing the phase tracking center(s),
+   correcting for differential aberration,
+   adjusting antenna positions,
+   and refocusing to a finite distance.
 
 Input Parameters:
 
-vis  --- Name of input visibility file
-         ex: vis='my.ms'
+vis       --- Name of input visibility file
+              ex: vis='my.ms'
 
 outputvis --- Name of the output visibility set.  (Can be the same as vis.)
               ex: outputvis = 'myrefocused.ms'

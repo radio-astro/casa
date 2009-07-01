@@ -46,8 +46,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   class EPJones;
   class PBMosaicFT : public nPBWProjectFT {
+
   public:
-    
     // Constructor: cachesize is the size of the cache in words
     // (e.g. a few million is a good number), tilesize is the
     // size of the tile used in gridding (cannot be less than
@@ -96,7 +96,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   private:
     Complex nApertures;
     Vector<Int> fieldIds_p;
-    Bool avgPBReady;
     TempImage<Complex> griddedWeights;
     Float pbNorm;
     virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,

@@ -133,9 +133,10 @@ public:
   // This is a constructor for multiple MS...but everything is same as the one 
   // above
 
+
   VisSet(Block<MeasurementSet>& mss, const Block<Int>& columns, 
-	 const Block< Matrix<Int> >& chanSelections, Double timeInterval=0, 
-	 Bool compress=False);
+         const Block< Matrix<Int> >& chanSelections, Bool addStratch=False, Double timeInterval=0,
+         Bool compress=False);
 
 
 

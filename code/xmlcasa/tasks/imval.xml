@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- ia.getregion();                                          -->
 
 
-<task type="function" name="imval">
+<task type="function" name="imval" category="image analysis">
 
 <shortdescription>Get the data value(s) and/or mask value in an image.</shortdescription>
 

@@ -53,8 +53,8 @@ bool PlotMSPlotParameters::equals(const PlotMSWatchedParameters& other,
     
     if(updateFlags & MS) {
         if(itsMSFilename_ != o->itsMSFilename_ ||
-           (!itsMSFilename_.empty() && itsMSSelection_ != o->itsMSSelection_)||
-           (!itsMSFilename_.empty() && itsMSAveraging_ != o->itsMSAveraging_))
+           itsMSSelection_ != o->itsMSSelection_ ||
+           itsMSAveraging_ != o->itsMSAveraging_)
             return false;
     }
     

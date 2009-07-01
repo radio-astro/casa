@@ -26,10 +26,10 @@
 #ifndef PLOTMSPARAMETERS_H_
 #define PLOTMSPARAMETERS_H_
 
-#include <plotms/PlotMS/PlotMSLogger.h>
+#include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
-//#include <casa/namespace.h>
+#include <casa/namespace.h>
 
 namespace casa {
 
@@ -39,9 +39,11 @@ namespace casa {
 class PlotMSParameters : public PlotMSWatchedParameters {
 public:
     // Constructor, with default parameter values.
-    PlotMSParameters(PlotMSLogger::Level logLevel = PlotMSLogger::OFF,
-            bool debug = false, bool clearSelection = true,
-            int cachedImageWidth = -1, int cachedImageHeight = -1);
+    PlotMSParameters(const String& logFilename = "",
+            int logEvents = PlotLogger::NO_EVENTS,
+            LogMessage::Priority logPriority = LogMessage::DEBUGGING,
+            bool clearSelection = true, int cachedImageWidth = -1,
+            int cachedImageHeight = -1);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
@@ -54,15 +56,20 @@ public:
     using PlotMSWatchedParameters::operator=;
 
     
-    // Returns the current log level.
-    PlotMSLogger::Level logLevel() const;
+    // Gets/Sets the log sink location/filename.
+    // <group>
+    String logFilename() const;
+    void setLogFilename(const String& filename);
+    // </group>
     
-    // Returns the current log debug flag.
-    bool logDebug() const;
+    // Returns the current log events.
+    int logEvents() const;
     
-    // Sets the current log level.  Note: this will notify any watchers unless
-    // notifications are being held.
-    void setLogLevel(PlotMSLogger::Level level, bool debug);
+    // Returns the current log minimum priority.
+    LogMessage::Priority logPriority() const;
+    
+    // Sets the current log filter.
+    void setLogFilter(int logEvents, LogMessage::Priority priority);
     
     // Gets/Sets whether any selections are cleared when plot axes are changed
     // or not.
@@ -91,11 +98,14 @@ public:
     PlotMSParameters& operator=(const PlotMSParameters& copy);
     
 private:
-    // Log level.
-    PlotMSLogger::Level itsLogLevel_;
+    // Log filename.
+    String itsLogFilename_;
     
-    // Log debug flag.
-    bool itsLogDebug_;
+    // Log events flag.
+    int itsLogEvents_;
+    
+    // Log minimum priority.
+    LogMessage::Priority itsLogPriority_;
     
     // Clear selections on axes change flag.
     bool itsClearSelectionsOnAxesChange_;

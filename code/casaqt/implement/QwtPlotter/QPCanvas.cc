@@ -110,7 +110,7 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
     vector<PlotLoggerPtr> loggers;
     PlotLoggerPtr logger;
     for(unsigned int i = 0; i < qcanvases.size(); i++) {        
-        logger = qcanvases[i]->loggerForEvent(PlotLogger::EXPORT_TOTAL);
+        logger = qcanvases[i]->logger();
         if(logger.null()) continue;
         
         found = false;
@@ -121,7 +121,8 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
     
     // Start logging.
     for(unsigned int i = 0; i < loggers.size(); i++)
-        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME);
+        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME,
+                                    PlotLogger::EXPORT_TOTAL);
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
@@ -424,7 +425,7 @@ void QPCanvas::setCursor(PlotCursor cursor) {
 void QPCanvas::refresh() {
     logMethod(CLASS_NAME, "refresh", true);
     PRE_REPLOT
-    QCoreApplication::processEvents();
+    QApplication::processEvents();
     m_canvas.replot();
     POST_REPLOT
     logMethod(CLASS_NAME, "refresh", false);
@@ -435,7 +436,7 @@ void QPCanvas::refresh(int drawLayersFlag) {
     
     if(drawLayersFlag != 0) {
         PRE_REPLOT
-        QCoreApplication::processEvents();
+        QApplication::processEvents();
         m_canvas.setLayersChanged(drawLayersFlag);
         m_canvas.replot();
         POST_REPLOT
@@ -944,7 +945,7 @@ void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
 void QPCanvas::releaseDrawing() {
     logMethod(CLASS_NAME, "releaseDrawing", true);
     PRE_REPLOT
-    QCoreApplication::processEvents();
+    QApplication::processEvents();
     m_canvas.releaseDrawing();
     POST_REPLOT
     logMethod(CLASS_NAME, "releaseDrawing", false);
@@ -1192,7 +1193,7 @@ QSize QPCanvas::minimumSizeHint() const { return QSize(); }
 void QPCanvas::setQPPlotter(QPPlotter* parent) {
     m_parent = parent;
     if(parent != NULL) {
-        PlotLoggerPtr log = loggerForEvent(PlotLogger::OBJECTS_MAJOR);
+        PlotLoggerPtr log = logger();
         if(!log.null())
             for(unsigned int i = 0; i < m_queuedLogs.size(); i++)
                 log->postMessage(m_queuedLogs[i]);
@@ -1200,11 +1201,9 @@ void QPCanvas::setQPPlotter(QPPlotter* parent) {
     }
 }
 
-PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) const {
-    if(event == PlotLogger::NO_EVENTS || m_parent == NULL)
-        return PlotLoggerPtr();
-    if(event & m_parent->logEventFlags()) return m_parent->logger();
-    else                                  return PlotLoggerPtr();
+PlotLoggerPtr QPCanvas::logger() const {
+    if(m_parent == NULL) return PlotLoggerPtr();
+    else                 return m_parent->logger();
 }
 
 void QPCanvas::logObject(const String& className, void* address, bool creation,
@@ -1213,7 +1212,8 @@ void QPCanvas::logObject(const String& className, void* address, bool creation,
         m_parent->logObject(className, address, creation, message);
     else
         m_queuedLogs.push_back(
-                PlotLogObject(className, address, creation, message));
+                PlotLogObject(className, address, creation, message,
+                              PlotLogger::OBJECTS_MAJOR));
 }
 
 void QPCanvas::logMethod(const String& className, const String& methodName,

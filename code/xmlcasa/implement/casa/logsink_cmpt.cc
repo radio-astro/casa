@@ -21,6 +21,7 @@
 #include <xmlcasa/version.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <xmlcasa/utils/CasapyWatcher.h>
 
 using namespace std;
 using namespace casa;
@@ -133,6 +134,9 @@ bool logsink::filter(const std::string &level)
 	if(rstat){
 	   LogFilter filter(priority);
 	   thelogsink->filter(filter);
+	   
+	   // Also set for any watchers.
+	   CasapyWatcher::logChanged_(priority);
 	}
 	return rstat;
 }
@@ -232,6 +236,10 @@ bool logsink::setlogfile(const std::string& filename)
       static_cast<TSLogSink*>(thelogsink)->setLogSink(filename);
    else
       thelogsink = new NullLogSink();
+      
+   // Also set for any watchers.
+   CasapyWatcher::logChanged_(filename);
+      
    return rstat;
 }
 

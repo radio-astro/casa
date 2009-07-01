@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="clearplot">
+<task type="function" name="clearplot" category="utility">
 
   <shortdescription>Clear the matplotlib plotter and all layers</shortdescription>
   <input>

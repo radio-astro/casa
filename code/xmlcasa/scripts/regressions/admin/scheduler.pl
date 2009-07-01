@@ -52,6 +52,9 @@ $file_tests = $reg_dir . "/tests_list.txt";
 (-d $reg_dir) or mkdir($reg_dir) or die "$reg_dir: $!";
 (-e $file_tests) or $file_tests = $admin_dir . "/tests_list.txt";
 
+if ($all) {
+    unlink($file_next) or die;
+}
 
 repeat:
 
@@ -70,6 +73,8 @@ while(<FILE>) {
 	push @tests, $t[0];
     }
 }
+
+@tests = sort @tests;
 
 #print $#tests+1, " tests:\n";
 #print join("\n", @tests), "\n";

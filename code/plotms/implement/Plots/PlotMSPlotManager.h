@@ -64,6 +64,9 @@ public:
     // Adds the given watcher to this manager.
     void addWatcher(PlotMSPlotManagerWatcher* watcher);
     
+    // Removes the given watcher from this manager.
+    void removeWatcher(PlotMSPlotManagerWatcher* watcher);
+    
     
     // Returns the number of plots.
     unsigned int numPlots() const;

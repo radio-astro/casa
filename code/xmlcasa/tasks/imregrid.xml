@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="imregrid" >
+<task type="function" name="imregrid" category="image analysis">
 <shortdescription>regrid an image onto a template image</shortdescription>
 <description>
 Imregrid will regrid an input image onto a template image

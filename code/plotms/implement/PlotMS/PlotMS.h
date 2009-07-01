@@ -29,7 +29,6 @@
 
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
@@ -37,9 +36,13 @@ namespace casa {
 
 // Version definitions.
 // <group>
-#define PLOTMS_VERSION 0x001250;
-#define PLOTMS_VERSION_STR "1.25";
+#define PLOTMS_VERSION 0x002250;
+#define PLOTMS_VERSION_STR "2.25";
 // </group>
+
+
+//# Forward declarations.
+class PlotMSDBusApp;
 
 
 // Controller class for plotms.  Handles interactions between the UI and plots.
@@ -50,23 +53,27 @@ public:
     // Convenient access to class name (PlotMS).
     static const String CLASS_NAME;
     
-    // Constants for origin names for logging measurement events.
+    // Constants for origin names for logging events.
     // <group>
-    static const String LOG_INITIALIZE_GUI;
     static const String LOG_LOAD_CACHE;
     static const String LOG_LOCATE;
     static const String LOG_FLAG;
     static const String LOG_UNFLAG;
+    static const String LOG_DBUS;
     // </group>
-    
+
     
     // Non-Static //
     
-    // Default constructor that uses default options.
-    PlotMS();
+    // Default constructor that uses default options.  If connectToDBus is
+    // true, then the application registers itself with CASA's DBus server
+    // using the PlotMSDBusApp::dbusName() with the current process ID.
+    PlotMS(bool connectToDBus = false);
     
-    // Constructor which takes the given parameters.
-    PlotMS(const PlotMSParameters& params);
+    // Constructor which takes the given parameters.  If connectToDBus is true,
+    // then the application registers itself with CASA's DBus server using the
+    // PlotMSDBusApp::dbusName() with the current process ID.
+    PlotMS(const PlotMSParameters& params, bool connectToDBus = false);
     
     // Destructor
     ~PlotMS();
@@ -122,12 +129,8 @@ public:
     
     // Logger Methods //
     
-    // Gets the PlotMSLogger associated with this PlotMS.
-    PlotMSLogger& getLogger() { return itsLogger_; }
-    
-    // Returns this object's PlotMSLogger if logging for the given event is
-    // turned on, NULL otherwise.
-    PlotMSLogger* loggerFor(PlotMSLogger::Event event);
+    // Gets the logger associated with this PlotMS.
+    PlotLoggerPtr getLogger() { return itsLogger_; }
     
     
     // Plot Management Methods //
@@ -147,17 +150,17 @@ private:
     PlotMSParameters itsParameters_;
     
     // Logger.
-    PlotMSLogger itsLogger_;
-    
-    // Log events flag.
-    int itsLogEventFlag_;
+    PlotLoggerPtr itsLogger_;
     
     // Plot manager.
     PlotMSPlotManager itsPlotManager_;
+    
+    // DBus application, or NULL if one is not needed.
+    PlotMSDBusApp* itsDBus_;
 
     
     // Initializes a new PlotMS object, to be called from constructor.
-    void initialize();    
+    void initialize(bool connectToDBus);    
     
     // Disable copy constructor and operator for now.
     // <group>

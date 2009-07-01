@@ -30,7 +30,6 @@
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 
@@ -42,9 +41,23 @@
 
 namespace casa {
 
+//# Forward declarations.
+class PlotMS;
+
+
 class PlotMSCache {
   
 public:
+    // Convenient access to class name.
+    static const String CLASS_NAME;
+    
+    // Log method name constants.
+    // <group>
+    static const String LOG_COMPUTERANGES;
+    static const String LOG_COUNTCHUNKS;
+    static const String LOG_FLAG;
+    static const String LOG_LOAD;
+    // </group>
     
     static const PMS::Axis METADATA[];
     static const unsigned int N_METADATA;
@@ -53,8 +66,8 @@ public:
     
     static const unsigned int THREAD_SEGMENT;
 
-  // Constructor
-  PlotMSCache();
+  // Constructor which takes parent PlotMS.
+  PlotMSCache(PlotMS* parent);
   
   // Destructor
   ~PlotMSCache();
@@ -155,9 +168,9 @@ public:
 
   // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
   PlotLogMessage* locateNearest(Double x, Double y);
-  PlotLogMessage* locateRange(Double xmin,Double xmax,Double ymin,Double ymax);
-  PlotLogMessage* flagRange(const PlotMSFlagging& flagging, Double xmin, Double xmax,
-			      Double ymin,Double ymax, Bool flag=True);
+  PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
+  PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
+          const Vector<PlotRegion>& regions, Bool flag = True);
 
   // Set flags in the cache
   void flagInCache(const PlotMSFlagging& flagging,Bool flag);
@@ -236,8 +249,28 @@ private:
   // Computes the X and Y limits for the currently set axes.  In the future we
   // may want to cache ALL ranges for all loaded values to avoid recomputation.
   void computeRanges();
+  
+  // Convenience methods that call log() with the given method name and the
+  // appropriate event type.
+  // <group>
+  void logInfo(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_INFO); }
+  void logDebug(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_DEBUG); }
+  void logWarn(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_WARN); }
+  void logError(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_ERROR); }
+  // </group>
+  
+  // Logs the given message from the given method name as the given event type
+  // (see PlotLogger).
+  void log(const String& method, const String& message, int eventType);
 
   // Private data
+  
+  // Parent plotms.
+  PlotMS* plotms_;
 
   // The number of antennas
   Int nAnt_;

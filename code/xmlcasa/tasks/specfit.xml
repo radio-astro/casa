@@ -13,7 +13,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- TODO                                                     -->
 <!--  - decide if we want to add the following params:        -->
 <!--         axis                                             -->
-<task type="function" name="specfit">
+<task type="function" name="specfit" category="image analysis" visibility="experimental">
 
 <shortdescription>Fit 1-dimentional profile(s) or polynomial(s) to an image or image region</shortdescription>
 

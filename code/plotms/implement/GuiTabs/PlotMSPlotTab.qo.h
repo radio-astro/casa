@@ -29,16 +29,58 @@
 
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
 
-#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
-#include <plotms/Gui/PlotMSAveragingWidget.qo.h>
-#include <plotms/Gui/PlotMSSelectionWidget.qo.h>
-#include <plotms/Gui/PlotRangeWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations.
+class PlotMSAxesTab;
+class PlotMSCacheTab;
+class PlotMSCanvasTab;
+class PlotMSDisplayTab;
+class PlotMSExportTab;
+class PlotMSMSTab;
+
+
+// Subclass of PlotMSTab for tabs that are meant to be used as subtabs in a
+// PlotMSPlotTab.
+class PlotMSPlotSubtab : public PlotMSTab {
+    Q_OBJECT
+    
+public:
+    // Constructor which takes the parent plotter.
+    PlotMSPlotSubtab(PlotMSPlotter* parent) : PlotMSTab(parent) { }
+    
+    // Destructor.
+    virtual ~PlotMSPlotSubtab() { }
+    
+    
+    // Gets/Sets the MS filename, selection, and averaging using a
+    // PlotMSPlotParameters.
+    // <group>
+    virtual void getValue(PlotMSPlotParameters& params) const = 0;
+    virtual void setValue(const PlotMSPlotParameters& params) = 0;
+    // </group>
+    
+    // Updates the labels and other widgets in the subtab using the given
+    // plot to check changes against.
+    virtual void update(const PlotMSPlot& plot) = 0;
+    
+    
+    // Implements PlotMSParametersWatcher::parametersHaveChanged() to do
+    // nothing unless overridden in the child class.
+    virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
+            int updateFlag, bool redrawRequired) { }
+    
+signals:
+    // This signal should be emitted whenever the value of the widget changes
+    // because of user interaction.
+    void changed();
+};
+
 
 // Subclass of PlotMSTab that manages PlotMSPlots in the GUI.  WARNING:
 // currently can only handle PlotMSSinglePlots.  Watches the current
@@ -49,7 +91,9 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     Q_OBJECT
     
     //# Friend class declarations.
+    friend class PlotMSPlot;
     friend class PlotMSPlotter;
+    friend class PlotMSSinglePlot;
     
 public:
     // Constructor which takes the parent plotter.
@@ -62,7 +106,7 @@ public:
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Plots"; }
     
-    // Implements PlotMSTab::toolButtons().  Should be called AFTER any tabs
+    // Overrides PlotMSTab::toolButtons().  Should be called AFTER any tabs
     // are added using addTab().
     QList<QToolButton*> toolButtons() const;
     
@@ -95,36 +139,38 @@ public:
     vector<PMS::Axis> selectedReleaseAxes() const {
         return selectedLoadOrReleaseAxes(false); }
     
-protected:
-    // Adds the given tab to the end of the tab widget.
-    void addTab(PlotMSTab* tab);
+public slots:
+    // Slot for doing the plot, using the parameters set on the GUI for the
+    // current plot.
+    void plot();
     
-private:
-    // PlotMSTab objects in tab widget.
-    QList<PlotMSTab*> itsTabs_;
+protected:    
+    // Adds the given subtab to the end of the tab widget.
+    void addSubtab(PlotMSPlotSubtab* tab);
     
-    // Widgets for file selection for the MS and export, respectively.
-    QtFileWidget* itsMSFileWidget_, *itsExportFileWidget_;
+    // Inserts the given subtab in the tab widget.
+    void insertSubtab(int index, PlotMSPlotSubtab* tab);
     
-    // Widget for MS selection.
-    PlotMSSelectionWidget* itsMSSelectionWidget_;
+    // Inserts one of the known subtab types IF it is not already present,
+    // and returns it.
+    // <group>
+    PlotMSAxesTab* addAxesSubtab();
+    PlotMSAxesTab* insertAxesSubtab(int index);
+    PlotMSCacheTab* addCacheSubtab();
+    PlotMSCacheTab* insertCacheSubtab(int index);
+    PlotMSCanvasTab* addCanvasSubtab();
+    PlotMSCanvasTab* insertCanvasSubtab(int index);
+    PlotMSDisplayTab* addDisplaySubtab();
+    PlotMSDisplayTab* insertDisplaySubtab(int index);
+    PlotMSExportTab* addExportSubtab();
+    PlotMSExportTab* insertExportSubtab(int index);
+    PlotMSMSTab* addMSSubtab();
+    PlotMSMSTab* insertMSSubtab(int index);
+    // </group>
     
-    // Widget for MS averaging.
-    PlotMSAveragingWidget* itsMSAveragingWidget_;
-    
-    // Widgets for titles/labels for the plot, canvas, x axis, and y axis,
-    // respectively.
-    QtLabelWidget* itsPlotTitleWidget_, *itsCanvasTitleWidget_,
-                  *itsXLabelWidget_, *itsYLabelWidget_;
-    
-    // Widgets for lines for grid major and minor.
-    PlotLineWidget* itsGridMajorLineWidget_, *itsGridMinorLineWidget_;
-    
-    // Widgets for symbols for unflagged and flagged points, respectively.
-    PlotSymbolWidget* itsSymbolWidget_, *itsMaskedSymbolWidget_;
-    
-    // Widgets for the range for the x axis and y axis, respectively.
-    PlotRangeWidget* itsXRangeWidget_, *itsYRangeWidget_;
+private:    
+    // PlotMSPlotSubtab objects in tab widget.
+    QList<PlotMSPlotSubtab*> itsSubtabs_;
     
     // Reference to plot manager.
     PlotMSPlotManager& itsPlotManager_;
@@ -147,9 +193,6 @@ private:
     // the load flag.
     vector<PMS::Axis> selectedLoadOrReleaseAxes(bool load) const;
     
-    // Updates the cache axes tables to reflect the current plot.
-    void updateCacheTables();
-    
 private slots:
     // Slot for when the user changes the "go" chooser on the top.
     void goChanged(int index);
@@ -160,12 +203,6 @@ private slots:
     // Slot for when the user changes the value for any parameters.  Updates
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
-    
-    // Slot for clearing the MS parameters (but doesn't apply the changes).
-    void msClear();
-    
-    // Slot for plotting after setting parameters.
-    void plot();
 };
 
 }

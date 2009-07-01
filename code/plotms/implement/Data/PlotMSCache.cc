@@ -36,6 +36,13 @@
 
 namespace casa {
 
+const String PlotMSCache::CLASS_NAME = "PlotMSCache";
+
+const String PlotMSCache::LOG_COMPUTERANGES = "computeRanges";
+const String PlotMSCache::LOG_COUNTCHUNKS = "countChunks";
+const String PlotMSCache::LOG_FLAG = "flag";
+const String PlotMSCache::LOG_LOAD = "load";
+
 const PMS::Axis PlotMSCache::METADATA[] =
     { PMS::TIME, PMS::TIME_INTERVAL, PMS::FIELD, PMS::SPW, PMS::SCAN,
       PMS::ANTENNA1, PMS::ANTENNA2, PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
@@ -51,7 +58,8 @@ bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
 const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
 
                                            
-PlotMSCache::PlotMSCache():
+PlotMSCache::PlotMSCache(PlotMS* parent):
+  plotms_(parent),
   nAnt_(0),
   nChunk_(0),
   nPoints_(),
@@ -206,36 +214,52 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
     scrcolOk=cds.isDefined("CORRECTED_DATA");
   }
 
-  cout << endl << "Caching for the new plot: " 
+  stringstream ss;
+  ss << "Caching for the new plot: " 
        << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " 
-       << PMS::axis(axes[0]) << "(" << axes[0] << ")..." << endl;
+       << PMS::axis(axes[0]) << "(" << axes[0] << ")...\n";
 
   if (!scrcolOk) 
-    cout << "NB: Scratch columns not present; will use DATA exclusively." << endl;
+    ss << "NB: Scratch columns not present; will use DATA exclusively.\n";
 
-  cout << "Spectral window averaging is " << (averaging.spw() ? "ON." : "off.") << endl;
-
-  cout << "Channel averaging is " << (averaging.channel() ? "ON" : "off");
-  if (averaging.channel())
-    if (averaging.channelValue()<=0.0) 
-      cout << ", but with an ambiguous value of " << averaging.channelValue()
-	   << ", so no channel averaging will occur.";
-    else
-      cout << ", with a value of " << averaging.channelValue() 
-	   << ( (averaging.channelValue()>1) ? " channels" : " (i.e. full spw)" );
-  cout << "." << endl;
-  
-  cout << "Time averaging is " << (averaging.time() ? "ON" : "off");
-  if (averaging.time()) {
-    cout << ", with a value of " << averaging.timeValue() << " seconds." << endl;
-    cout << "  Scan averaging is " << (averaging.scan() ? "ON" : "off") << "; ";
-    cout << "  Field averaging is "<< (averaging.field()? "ON" : "off");
+  ss << "Averaging on:";
+  bool anyAveraging = false;
+  if(averaging.spw()) { ss << " spw"; anyAveraging = true; }
+  if(averaging.channel()) {
+      if(anyAveraging) ss << ",";
+      ss << " channel (";
+      double val = averaging.channelValue();
+      if(val <= 0)
+          ss << "but with an ambiguous value of " << val
+             << ", so no channel averaging will occur";
+      else
+          ss << "with a value of " << val
+             << (val > 1 ? " channels" : ", i.e. full spw");
+      ss << ")";
+      anyAveraging = true;
   }
-  cout << "." << endl;
-
-  cout << "Baseline averaging is " << (averaging.baseline() ? "ON." : "off.") << endl;
-  cout << "Antenna averaging is " << (averaging.antenna() ? "ON." : "off.") << endl;
-
+  if(averaging.time()) {
+      if(anyAveraging) ss << ",";
+      ss << " time (with a value of " << averaging.timeValue() << " seconds)";
+      if(averaging.scan()) ss << ", scan";
+      if(averaging.field()) ss << ", field";
+      anyAveraging = true;
+  }
+  if(averaging.baseline()) {
+      if(anyAveraging) ss << ",";
+      ss << " baseline";
+      anyAveraging = true;
+  }
+  if(averaging.antenna()) {
+      if(anyAveraging) ss << ",";
+      ss << " antenna";
+      anyAveraging = true;
+  }
+  
+  if(!anyAveraging) ss << " none";
+  ss << ".";
+  logInfo(LOG_LOAD, ss.str());
+  
   
   // Calculate which axes need to be loaded; those that have already been
     // loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
@@ -322,8 +346,7 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         
     dataLoaded_ = true;
 
-    cout << "Finished loading." << endl;
-
+    logInfo(LOG_LOAD, "Finished loading.");
 }
 
 void PlotMSCache::loadChunks(VisSet& vs,
@@ -331,8 +354,8 @@ void PlotMSCache::loadChunks(VisSet& vs,
 			     const vector<PMS::DataColumn> loadData,
 			     const PlotMSAveraging& averaging,
 			     PlotMSCacheThread* thread) {
-
-  cout << "Loading chunks..." << endl;
+    
+  logInfo(LOG_LOAD, "Loading chunks...");
 
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -392,7 +415,7 @@ void PlotMSCache::loadChunks(VisSet& vs,
 			     const vector<PMS::DataColumn> loadData,
 			     PlotMSCacheThread* thread) {
   
-  cout << "Loading chunks with averaging..." << endl;
+  logInfo(LOG_LOAD, "Loading chunks with averaging...");
 
   Bool verby(False);
 
@@ -428,7 +451,8 @@ void PlotMSCache::loadChunks(VisSet& vs,
     // Sort out which data to read
     discernData(loadAxes,loadData,pmsvba);
 
-    if (verby) cout << chunk << "----------------------------------" << endl;
+    stringstream ss;
+    if (verby) ss << chunk << "----------------------------------\n";
 
     for (Int iter=0;iter<nIterPerAve(chunk);++iter) {
 
@@ -436,7 +460,7 @@ void PlotMSCache::loadChunks(VisSet& vs,
       forceVBread(vb,loadAxes,loadData);
       
       if (verby) {
-	cout << "ck=" << chunk << " vb=" << iter << " (" << nIterPerAve(chunk) << ");  " 
+	ss << "ck=" << chunk << " vb=" << iter << " (" << nIterPerAve(chunk) << ");  " 
 	     << "sc=" << vb.scan()(0) << " "
 	     << "time=" << vb.time()(0)-time0 << " "
 	     << "fl=" << vb.fieldId() << " "
@@ -455,17 +479,19 @@ void PlotMSCache::loadChunks(VisSet& vs,
       // Advance to next VB
       vi++;
 
-      if (verby) cout << " next VB ";
+      if (verby) ss << " next VB ";
       
       
       if (!vi.more() && vi.moreChunks()) {
 	// go to first vb in next chunk
-	if (verby) cout << "  stepping VI";
+	if (verby) ss << "  stepping VI";
 	vi.nextChunk();
 	vi.origin();
       }
-      if (verby) cout << endl;
+      if (verby) ss << "\n";
     }
+    
+    logInfo(LOG_LOAD, ss.str());
 
 
     // Finalize the averaging
@@ -669,7 +695,8 @@ void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
 
   vi.originChunks();
   vi.origin();
-
+  stringstream ss;
+  
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
     Int iter(0);
     for (vi.origin(); vi.more();vi++,iter++) {
@@ -689,21 +716,20 @@ void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
 	  (ave==-1))  {                            // this is the first interval
 
 	if (verby) {
-	  cout << "--------------------------------" << endl;
-	  cout << boolalpha << interval << " " 
+	  ss << "--------------------------------\n";
+	  ss << boolalpha << interval << " " 
 	       << ((time1-avetime1)>interval)  << " "
 	       << ((time1-avetime1)<0.0) << " "
 	       << (!combscan && (thisscan!=lastscan)) << " "
 	       << (!combspw && (thisspw!=lastspw)) << " "
 	       << (!combfld && (thisfld!=lastfld)) << " "
-	       << (ave==-1) << " "
-	       << endl;
+	       << (ave==-1) << "\n";
 	}
 
 	avetime1=time1;  // for next go
 	ave++;
 	
-	if (verby) cout << "ave = " << ave << endl;
+	if (verby) ss << "ave = " << ave << "\n";
 
 
 	// increase size of nIterPerAve array, if needed
@@ -716,17 +742,17 @@ void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
       nIterPerAve(ave)++;
       
       if (verby) {
-	cout << "          ck=" << chunk << " " << avetime1-time0 << endl;
+	ss << "          ck=" << chunk << " " << avetime1-time0 << "\n";
 	time=vb.time()(0);
-	cout  << "                 " << "vb=" << iter << " ";
-	cout << "ar=" << vb.arrayId() << " ";
-	cout << "sc=" << vb.scan()(0) << " ";
-	if (!combfld) cout << "fl=" << vb.fieldId() << " ";
-	if (!combspw) cout << "sp=" << vb.spectralWindow() << " ";
-	cout << "t=" << floor(time-time0)  << " (" << floor(time-avetime1) << ") ";
-	if (combfld) cout << "fl=" << vb.fieldId() << " ";
-	if (combspw) cout << "sp=" << vb.spectralWindow() << " ";
-	cout << endl;
+	ss  << "                 " << "vb=" << iter << " ";
+	ss << "ar=" << vb.arrayId() << " ";
+	ss << "sc=" << vb.scan()(0) << " ";
+	if (!combfld) ss << "fl=" << vb.fieldId() << " ";
+	if (!combspw) ss << "sp=" << vb.spectralWindow() << " ";
+	ss << "t=" << floor(time-time0)  << " (" << floor(time-avetime1) << ") ";
+	if (combfld) ss << "fl=" << vb.fieldId() << " ";
+	if (combspw) ss << "sp=" << vb.spectralWindow() << " ";
+	ss << "\n";
 	
       }
       
@@ -739,7 +765,8 @@ void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
   Int nAve(ave+1);
   nIterPerAve.resize(nAve,True);
   
-  if (verby)  cout << "nIterPerAve = " << nIterPerAve << endl;
+  if (verby)  ss << "nIterPerAve = " << nIterPerAve;
+  logInfo(LOG_COUNTCHUNKS, ss.str());
 
 
   if (nChunk_ != nAve) increaseChunks(nAve);
@@ -1151,6 +1178,7 @@ PlotLogMessage* PlotMSCache::locateNearest(Double x, Double y) {
 
 }
 
+/*
 PlotLogMessage* PlotMSCache::locateRange(Double xmin,Double xmax,Double ymin,Double ymax) {
 
   Timer locatetimer;
@@ -1179,8 +1207,37 @@ PlotLogMessage* PlotMSCache::locateRange(Double xmin,Double xmax,Double ymin,Dou
 
   return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
 }
+*/
 
- 
+PlotLogMessage* PlotMSCache::locateRange(const Vector<PlotRegion>& regions) {    
+    Timer locatetimer;
+    locatetimer.mark();
+    
+    Double thisx, thisy;
+    stringstream ss;
+    Int nFound = 0, n = nPoints();
+    
+    for(Int i = 0; i < n; i++) {
+        getXY(i, thisx, thisy);
+        
+        for(uInt j = 0; j < regions.size(); j++) {
+            if(thisx > regions[j].left() && thisx < regions[j].right() &&
+               thisy > regions[j].bottom() && thisy < regions[j].top()) {
+                nFound++;
+                reportMeta(thisx, thisy, ss);
+                ss << '\n';
+                break;
+            }
+        }
+    }
+    
+    ss << "Found " << nFound << " points among " << n << " in "
+       << locatetimer.all_usec()/1.0e6 << "s.";
+    
+    return new PlotLogMessage(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+}
+
+/*
 PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
 				       Double xmin,Double xmax,
 				       Double ymin,Double ymax,
@@ -1249,6 +1306,74 @@ PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
 
   return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
 }
+*/
+
+
+PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
+        const Vector<PlotRegion>& regions, Bool flag) {
+    Timer flagtimer;
+    flagtimer.mark();
+
+    // List of flags
+    Vector<Int> flagchunk(1000,-1),flagindex(1000,-1);
+
+    Double thisx, thisy;
+    stringstream ss;
+    Int nFound = 0, n = nPoints(), flsz;
+    
+    for(Int i = 0; i < n; i++) {      
+        getXY(i, thisx, thisy);
+        
+        for(uInt j = 0; j < regions.size(); j++) {
+            if(thisx > regions[j].left() && thisx < regions[j].right() &&
+               thisy > regions[j].bottom() && thisy < regions[j].top()) {
+                nFound++;
+                
+                flagInCache(flagging, flag);
+                
+                // Record this flags indices so we can apply to MS (VisSet) below
+                flsz = flagchunk.nelements();
+                if(flsz < nFound) {
+                    // Add 50% more space (w/ copy!)
+                    flagchunk.resize(Int(flsz * 1.5), True);
+                    flagindex.resize(Int(flsz * 1.5), True);
+                }
+                flagchunk(nFound - 1) = currChunk_;
+                flagindex(nFound - 1) = irel_;
+                
+                //  reportMeta(thisx,thisy,ss);
+                //  ss << '\n';
+            }
+        }
+    }
+
+    // Refresh the plot mask to reflect newly flagged data
+    for(Int ichk = 0; ichk < nChunk_; ichk++)
+        setPlotMask(ichk);
+
+    // cout << "Finished in-memory flagging." << endl;
+
+
+    // shrink flag list to correct size
+    if(flagchunk.nelements() > uInt(nFound)) {
+        flagchunk.resize(nFound, True);
+        flagindex.resize(nFound, True);
+    }
+
+    // cout << "&VisSet = " << flagging.getVisSet() << endl;
+
+
+    // Set the flags in the MS
+    flagInVisSet(flagging, flagchunk, flagindex, flag);
+
+    ss << (flag ? "FLAGGED " : "UNFLAGGED ") << nFound 
+       << " points among " << n << " in "
+       << flagtimer.all_usec()/1.0e6 << "s.";
+
+    return new PlotLogMessage(PlotMS::CLASS_NAME,
+            flag ? PlotMS::LOG_FLAG : PlotMS::LOG_UNFLAG, ss.str());
+}
+
 
 void PlotMSCache::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
@@ -1352,6 +1477,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 
   vi.originChunks();
   vi.origin();
+  stringstream ss;
 
   Int iflag(0);
   for (Int ichk=0;ichk<nChunk_;++ichk) {
@@ -1387,9 +1513,9 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 	if (False) {
 	  currChunk_=flchunks(order[iflag]);
 	  irel_=flrelids(order[iflag]);
-	  cout << "Time diff: " << getTime()-vb.time()(0) << " " << getTime() << " " << vb.time()(0) << endl;
-	  cout << "Spw diff:  " << Int(getSpw())-vb.spectralWindow() << " " << getSpw() << " " << vb.spectralWindow() << endl;
-	  cout << "Field diff:  " << Int(getField())-vb.fieldId() << " " << getField() << " " << vb.fieldId() << endl;
+	  ss << "Time diff: " << getTime()-vb.time()(0) << " " << getTime() << " " << vb.time()(0) << "\n";
+	  ss << "Spw diff:  " << Int(getSpw())-vb.spectralWindow() << " " << getSpw() << " " << vb.spectralWindow() << "\n";
+	  ss << "Field diff:  " << Int(getField())-vb.fieldId() << " " << getField() << " " << vb.fieldId() << "\n";
 	}
 
 	// Apply all flags in this chunk to this VB
@@ -1460,7 +1586,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
 		  vbflag(corr,chan,Slice(irow,1,1))=flag;
 
 		  if (False) {
-		    cout << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
+		    ss << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
 			 << " corr: " << corr.start() << " " << corr.length()
 			 << " chan: " << chan.start() << " " << chan.length()
 			 << endl;
@@ -1513,7 +1639,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
     
   } // ichk
 
-
+  logInfo(LOG_FLAG, ss.str());
 }
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {    
@@ -1886,7 +2012,8 @@ unsigned int PlotMSCache::nPointsForAxis(PMS::Axis axis) const {
 
 void PlotMSCache::computeRanges() {
 
-  cout << "Computing ranges..." << flush;
+  stringstream ss;
+  ss << "Computing ranges...";
 
     Vector<Int> plaxes(2);
     plaxes(0)=currentX_;
@@ -2283,9 +2410,13 @@ void PlotMSCache::computeRanges() {
     minY_=limits(2);
     maxY_=limits(3);
 
-    cout << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << endl;
-    cout << "Npoints = " << totalN << endl;
-
+    ss << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << "\n";
+    ss << "Npoints = " << totalN;
+    logInfo(LOG_COMPUTERANGES, ss.str());
 }
+
+void PlotMSCache::log(const String& method, const String& message,
+        int eventType) {
+    plotms_->getLogger()->postMessage(CLASS_NAME, method, message, eventType);}
 
 }

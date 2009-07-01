@@ -113,13 +113,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setCacheDir(const char *dir) {Dir = dir;}
     void initCache();
     void cacheConvFunction(Int which, Float pa, Array<Complex>& cf, CoordinateSystem& coords,
-			   Int& convSize, Cube<Int>& convSupport, Float convSampling);
+			   CoordinateSystem& ftcoords, Int& convSize, Cube<Int>& convSupport, 
+			   Float convSampling, String nameQualifier="");
+    void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, CoordinateSystem& coords,
+			      Int& convSize, Cube<Int>& convSupport, Float convSampling);
     Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, Int& which, Float &pa);
     Bool searchConvFunction(const VisBuffer& vb, ParAngleChangeDetector& vpSJ, 
 			    Int& which, Float &pa);
     Bool loadConvFunction(Int where, Int Nx, PtrBlock < Array<Complex> *> & convFuncCache,
 			  Cube<Int> &convSupport, Vector<Float>& convSampling,
-			  Double& cfRefFreq);
+			  Double& cfRefFreq,CoordinateSystem& coordys, String prefix="/CF");
     void finalize();
     void finalize(ImageInterface<Float>& avgPB);
     void loadAvgPB(ImageInterface<Float>& avgPB);

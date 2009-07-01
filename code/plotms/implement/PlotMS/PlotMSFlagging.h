@@ -47,6 +47,9 @@ public:
     // fieldDefault()), with a default double value of 0 or empty/default
     // PlotMSSelection value if applicable.  Some fields are in mutually
     // exclusive groups (see fieldMutuallyExclusiveGroup()).
+    // **If these are changed, also update: convenience methods below,
+    // xmlcasa/implement/plotms/plotms*, xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               EXTEND, CORR, CORR_ALL,
@@ -120,7 +123,7 @@ public:
     // selected MS, and the vis set) are NOT included in the record.
     // <group>
     void fromRecord(const RecordInterface& record);
-    Record toRecord() const;
+    Record toRecord(bool useStrings = false) const;
     // </group>
     
     // Gets/Sets the on/off flag for the given field.
@@ -135,6 +138,16 @@ public:
     double getValue(Field f) const;
     void getValue(Field f, double& value) const { value = getValue(f); }
     void setValue(Field f, double value);
+    // </group>
+    
+    // Gets/Sets the value for the given field as a String.  Only applicable
+    // for special cases (correlation, antenna).
+    // Correlation: "", "all", or "poln-dep".
+    // Antenna: "", "all", or antenna-based value.
+    // <group>
+    String getValueStr(Field f) const;
+    void getValue(Field f, String& value) const { value = getValueStr(f); }
+    void setValue(Field f, const String& value);
     // </group>
     
     // Gets/Sets the selection value for the given field, if applicable.
@@ -152,12 +165,14 @@ public:
     bool corr() const { return (extend() && getFlag(CORR)); }
     bool corrAll() const { return (corr() && getFlag(CORR_ALL)); }
     bool corrPolnDep() const { return (corr() && getFlag(CORR_POLN_DEP)); }
+    String corrStr() const { return getValueStr(CORR); }
     bool channel() const { return (extend() && getFlag(CHANNEL)); }
     bool spw() const { return (extend() && getFlag(SPW)); }
     bool antenna() const { return (extend() && getFlag(ANTENNA)); }
     bool antennaAntennaBased() const { return (antenna() && getFlag(ANTENNA_ANTENNA)); }
     double antennaAntennaBasedValue() const{ return getValue(ANTENNA_ANTENNA);}
     bool antennaBaselinesBased() const { return (antenna() && getFlag(ANTENNA_BASELINES)); }
+    String antennaStr() const { return getValueStr(ANTENNA); }
     bool time() const { return (extend() && getFlag(TIME)); }
     bool scans() const { return (time() && getFlag(SCANS)); }
     bool field() const { return (time() && getFlag(FIELD)); }
@@ -173,6 +188,7 @@ public:
     void setCorr(bool flag) { setFlag(CORR, flag); }
     void setCorrAll(bool flag) { setFlag(CORR_ALL, flag); }
     void setCorrPolnDep(bool flag) { setFlag(CORR_POLN_DEP, flag); }
+    void setCorr(const String& value) { setValue(CORR, value); }
     void setChannel(bool flag) { setFlag(CHANNEL, flag); }
     void setSpw(bool flag) { setFlag(SPW, flag); }
     void setAntenna(bool flag) { setFlag(ANTENNA, flag); }
@@ -180,6 +196,7 @@ public:
     void setAntennaAntennaBasedValue(double value) {
         setValue(ANTENNA_ANTENNA, value); }
     void setAntennaBaselinesBased(bool flag){setFlag(ANTENNA_BASELINES, flag);}
+    void setAntenna(const String& value) { setValue(ANTENNA, value); }
     void setTime(bool flag) { setFlag(TIME, flag); }
     void setScans(bool flag) { setFlag(SCANS, flag); }
     void setField(bool flag) { setFlag(FIELD, flag); }

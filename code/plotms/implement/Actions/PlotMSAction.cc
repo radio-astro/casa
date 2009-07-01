@@ -94,8 +94,8 @@ bool PlotMSAction::isValid() const {
 
 	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: case SEL_CLEAR_REGIONS:
 	case ITER_FIRST: case ITER_PREV: case ITER_NEXT: case ITER_LAST:
-	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: case CLEAR_PLOTTER:
-	case QUIT:
+	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: case PLOT:
+	case CLEAR_PLOTTER: case QUIT:
 		return true;
 
 	default: return false;
@@ -159,130 +159,118 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	switch(itsType_) {
 	
 	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: {
+	    // Locate/Flag/Unflag on all visible canvases.
 	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 	    vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
                                             ->currentCanvases();
-	    PlotMSSinglePlot* plot;
-
-	    stringstream ss;
-	    stringstream tempx, tempy, temp;
-	    bool ssFlag = false;
-	    PlotLogMessage* m;
-	    LogMessage::Priority p = LogMessage::NORMAL;
 	    
-	    // TODO !distance from GUI
+	    // Get flagging parameters.
 	    PlotMSFlagging flagging = plotms->getPlotter()->getFlaggingTab()
 	                              ->getValue();
 
-	    vector<PlotCanvasPtr> canv;
-	    vector<PlotRegion> regions;
+	    // Keep list of plots that have to be redrawn.
 	    vector<PlotMSSinglePlot*> redrawPlots;
-	    bool found;
 
 	    for(unsigned int i = 0; i < plots.size(); i++) {
 	        // NOTE: for now, only works with single plots
-	        plot = dynamic_cast<PlotMSSinglePlot*>(plots[i]);
+	        PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(plots[i]);
 	        if(plot == NULL) continue;
 
-	        if(i > 0) ss.str("");
-
+	        // Get parameters.
 	        PlotMSSinglePlotParameters& params = plot->singleParameters();
 	        PlotMSData& data = plot->data();
-
             if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
                 flagging.setMS(&plot->ms(),&plot->selectedMS(),plot->visSet());
 
-	        canv = plot->canvases();
+	        vector<PlotCanvasPtr> canv = plot->canvases();
 	        for(unsigned int j = 0; j < canv.size(); j++) {
-	            if(canv[j].null()) continue;
-
 	            // Only apply to visible canvases.
-	            found = false;
-	            for(unsigned int k = 0; !found && k < visibleCanv.size(); k++)
-	                if(canv[j] == visibleCanv[k]) found = true;
-	            if(!found) continue;
+	            bool visible = false;
+	            for(unsigned int k= 0; !visible && k < visibleCanv.size(); k++)
+	                if(canv[j] == visibleCanv[k]) visible = true;
+	            if(!visible) continue;
 
-	            regions = canv[j]->standardMouseTools()->selectTool()
-	                      ->getSelectedRects();
+	            // Get selected regions on that canvas.
+	            vector<PlotRegion> regions= canv[j]->standardMouseTools()
+                                            ->selectTool()->getSelectedRects();
 	            if(regions.size() == 0) continue;
-
-	            if(j > 0) {
-	                tempx.str(""); tempy.str(""); temp.str("");
-	            }
-
-	            for(unsigned int k = 0; k < regions.size(); k++) {
-	                if(k > 0) {
-	                    tempx << " or ";
-	                    tempy << " or ";
-	                    temp << '\n';
+	            
+	            // Actually do locate/flag/unflag...
+	            PlotLogMessage* m = NULL;
+	            try {
+	                if(itsType_ == SEL_LOCATE) {
+	                    m = data.locateRange(Vector<PlotRegion>(regions));
+	                    
+	                } else {
+	                    m = data.flagRange(flagging,
+	                            Vector<PlotRegion>(regions),
+	                            itsType_ == SEL_FLAG);
 	                }
-	                tempx << '[' << regions[k].left() << ' '
-	                      << regions[k].right()	<< ']';
-	                tempy << '[' << regions[k].bottom() << ' '
-	                      << regions[k].top() << ']';
-                    m = NULL;
+	                
+	            // ...and catch any reported errors.
+	            } catch(AipsError& err) {
+                    itsDoActionResult_ = "Error during ";
+                    if(itsType_ == SEL_LOCATE) itsDoActionResult_ += "locate";
+                    else if(itsType_==SEL_FLAG) itsDoActionResult_+="flagging";
+                    else itsDoActionResult_ += "unflagging";
+                    itsDoActionResult_ += ": " + err.getMesg();
+                    return false;
+	            } catch(...) {
+                    itsDoActionResult_ = "Unknown error during ";
+                    if(itsType_ == SEL_LOCATE) itsDoActionResult_ += "locate";
+                    else if(itsType_==SEL_FLAG) itsDoActionResult_+="flagging";
+                    else itsDoActionResult_ += "unflagging";
+                    itsDoActionResult_ += "!";
+                    return false;
+	            }
+
+	            // Log results.
+                if(m != NULL) {
+                    stringstream msg;
                     
-                    try {
-                    if(itsType_ == SEL_LOCATE) {
-                        m = data.locateRange(regions[k].left(),
-                                regions[k].right(), regions[k].bottom(),
-                                regions[k].top());
-                    } else {                        
-                        m = data.flagRange(flagging, regions[k].left(),
-                                regions[k].right(), regions[k].bottom(),
-                                regions[k].top(), itsType_ == SEL_FLAG);
+                    // For multiple plots or canvases, add a note at the
+                    // beginning to indicate which one this is.
+                    if(plots.size() > 1 || canv.size() > 1) {
+                        msg << "[";
+                        
+                        if(plots.size() > 1) msg << "Plot #" << i;
+                        if(plots.size() > 1 && canv.size() > 1) msg << ", ";
+                        if(canv.size() > 1) msg << "Canvas #" << j;
+                        
+                        msg << "]: ";
                     }
-                    } catch(AipsError& err) {
-                        itsDoActionResult_ = "Error during ";
-                        if(itsType_ == SEL_LOCATE)
-                            itsDoActionResult_ += "locate";
-                        else if(itsType_ == SEL_FLAG)
-                            itsDoActionResult_ += "flagging";
-                        else itsDoActionResult_ += "unflagging";
-                        itsDoActionResult_ += ": " + err.getMesg();
-                        return false;
-                    } catch(...) {
-                        itsDoActionResult_ = "Unknown error during ";
-                        if(itsType_ == SEL_LOCATE)
-                            itsDoActionResult_ += "locate";
-                        else if(itsType_ == SEL_FLAG)
-                            itsDoActionResult_ += "flagging";
-                        else itsDoActionResult_ += "unflagging";
-                        itsDoActionResult_ += "!";
-                        return false;
+                    
+                    // Append region values for x-axis.
+                    msg << PMS::axis(params.xAxis()) << " in ";                    
+                    for(unsigned int k = 0; k < regions.size(); k++) {
+                        if(k > 0) msg << " or ";
+                        msg << "[" << regions[k].left() << " "
+                            << regions[k].right() << "]";
                     }
-                    if(m != NULL) {
-                        m->message(temp);
-                        p = m->priority();
-                        delete m;
+                    
+                    // Append region values for y-axis.
+                    msg << ", " << PMS::axis(params.yAxis()) << " in ";
+                    for(unsigned int k = 0; k < regions.size(); k++) {
+                        if(k > 0) msg << " or ";
+                        msg << "[" << regions[k].bottom() << " "
+                            << regions[k].top() << "]";
                     }
-	            }
-
-	            if(!temp.str().empty()) {
-	                if(ssFlag) ss << "\n\n";
-	                else       ssFlag = true;
-
-	                if(itsType_ == SEL_LOCATE) ss << "Locate ";
-                    else if(itsType_ == SEL_FLAG) ss << "Flag ";
-                    else ss << "Unflag ";
-                    ss << PMS::axis(params.xAxis()) << " in " << tempx.str()
-                       << ", " << PMS::axis(params.yAxis()) << " in "
-                       << tempy.str() << ":\n" << temp.str();
-	            }
+                    
+                    // Append result as returned by cache.
+                    msg << ":\n" << m->message();
+                    m->message(msg.str(), true);
+                    
+                    // Log message.
+                    plotms->getLogger()->postMessage(*m);
+                    
+                    delete m;
+                    m = NULL;
+                }
 	            
 	            // If this plot was flagged/unflagged, add it to the redraw
 	            // list.
 	            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
 	                redrawPlots.push_back(plot);
-	        }
-
-	        if(!ss.str().empty()) {
-                const String* method = NULL;
-                if(itsType_ == SEL_LOCATE) method = &PlotMS::LOG_LOCATE;
-                else if(itsType_ == SEL_FLAG) method = &PlotMS::LOG_FLAG;
-                else if(itsType_ == SEL_UNFLAG) method = &PlotMS::LOG_UNFLAG;
-                plotms->getLogger().postMessage(PlotMS::CLASS_NAME, *method,
-                        ss.str(), p);
 	        }
 	        
 	        // For a flag/unflag, need to tell the plots to redraw themselves,
@@ -294,16 +282,14 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	            for(unsigned int i = 0; i < redrawPlots.size(); i++) {
 	                redrawPlots[i]->plotDataChanged();
 	                
-	                canv = plot->canvases();
+	                vector<PlotCanvasPtr> canv = plot->canvases();
 	                for(unsigned int j = 0; j < canv.size(); j++) {
-	                    if(canv[j].null()) continue;
-	                    
 	                    // Only apply to visible canvases.
-	                     found = false;
+	                     bool visible = false;
 	                     for(unsigned int k = 0;
-	                         !found && k < visibleCanv.size(); k++)
-	                         if(canv[j] == visibleCanv[k]) found = true;
-	                     if(!found) continue;
+	                         !visible && k < visibleCanv.size(); k++)
+	                         if(canv[j] == visibleCanv[k]) visible = true;
+	                     if(!visible) continue;
 	                     
 	                     canv[j]->standardMouseTools()->selectTool()
 	                            ->clearSelectedRects();
@@ -494,6 +480,11 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 
 	    return true;
 	}
+	
+	case PLOT: {
+	    plotms->getPlotter()->getPlotTab()->plot();
+	    return true;
+	}
 
 	case PLOT_EXPORT: {
 	    const String& file = valueString(P_FILE);
@@ -540,6 +531,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 
 	case QUIT:
+	    QApplication::setQuitOnLastWindowClosed(true);
 		plotms->close();
 		return true;
 

@@ -23,6 +23,7 @@
 # Updated by STM    2008-11-19                  Patch 3 400x400 image    #
 # Updated by STM    2008-12-01                  Patch 3 release          #
 # Updated by STM    2008-06-03                  Patch 4, fix error       #
+# Updated by RR     2009-06-10                  Commented out SPWID hack #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -250,18 +251,20 @@ if benchmarking:
 #
 ##########################################################################
 #
-# Fix up the MS (temporary, changes to importfits underway)
+# Fix up the MS (no longer necessary or desirable, but this is how you say "any
+# spectral window ID is OK".  That works here because all of the rest
+# frequencies in the SOURCE table happen to be the same.)
 #
-print '--Fixing up spw rest frequencies in MS--'
-vis='ngc4826.tutorial.ms'
-tb.open(vis+'/SOURCE',nomodify=false)
-spwid=tb.getcol('SPECTRAL_WINDOW_ID')
-#spwid.setfield(-1,int)
-# Had to do this for 64bit systems 08-Jul-2008
-spwid.setfield(-1,'int32')
-tb.putcol('SPECTRAL_WINDOW_ID',spwid)
-tb.close()
-
+## print '--Fixing up spw rest frequencies in MS--'
+## vis='ngc4826.tutorial.ms'
+## tb.open(vis+'/SOURCE',nomodify=false)
+## spwid=tb.getcol('SPECTRAL_WINDOW_ID')
+## #spwid.setfield(-1,int)
+## # Had to do this for 64bit systems 08-Jul-2008
+## spwid.setfield(-1,'int32')
+## tb.putcol('SPECTRAL_WINDOW_ID',spwid)
+## tb.close()
+#
 # This ensures that the rest freq will be found for all spws. 
 
 #

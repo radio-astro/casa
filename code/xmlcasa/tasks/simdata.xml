@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="simdata">
+<task type="function" name="simdata" category="simulation">
 
   <shortdescription>mosaic simulation task:</shortdescription>
   <description>
@@ -100,6 +100,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>10s</value>
     </param>
 
+    <param type="int" name="scanlength">
+      <description>number of integrations per pointing in the mosaic</description>
+      <value type="int">5</value>
+    </param>
+
     
     <!-- having this an array implies a degree of complexity (multiple spws) that we don't 
 	 yet have :)  
@@ -165,12 +170,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="niter">
     <description>maximum number of iterations</description>
-    <value>200</value>
+    <value>500</value>
     </param>
 
     <param type="double" name="threshold" units="mJy">
 	    <description>flux level (+units) to stop cleaning</description>
-	    <value>0.0</value>
+	    <value>0.01</value>
     </param>
 
     <param type="string" name="psfmode">

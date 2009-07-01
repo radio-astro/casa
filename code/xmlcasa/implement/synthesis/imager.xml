@@ -2000,6 +2000,11 @@ the data selection.
      <description>Compress calibration columns?</description>
      <value>false</value>
      </param>
+
+     <param type="bool" name="usescratch">
+     <description>If true: Imager will use corrected data column and make scratch columns of they donot exist</description>
+     <value>false</value>
+     </param>
 </input>
 <returns type="bool"/>
 </method>
@@ -3104,6 +3109,12 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
      <value></value>
      </param>
+
+     <param type="bool" name="usescratch">
+     <description>If True: imager will use CORRECTED_DATA column and will make scratch columns and store Model visibilities
+      after deconvolution </description>
+     <value>false</value>
+     </param>
 </input>
 <example>
 \begin{verbatim}
@@ -3659,10 +3670,6 @@ especially in wide-field cleaning.
 	 <value>spline</value>
        </allowed>
      </param>
-     <param type="bool" name="usemodelcol">
-     <description>use MODEL\_DATA column or not</description>
-     <value>true</value>
-     </param>
 
      <param type="int" name="wprojplanes">
      <description>No of gridding convolution functions used in
@@ -3890,7 +3897,8 @@ factor.
 is multiplied by this factor.
 \end{description}
 \item[convsupport] This parameter can be used to change the support used in gridding single dish data in imaging. If 'PB' or 'pb' is used as the 'convtype' in 
- <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 means 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
+ <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 mans 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
+\item[pointingcolumntouse] This parameter is NOT to be changed under normal circumstances. This is to be used by those who know what they are doing and want to try to use different columns in the POINTING table especially if they believe their dish direction is wrong. And if any of the {\tt _OFFSET} columns is used do not expect to be able to use a different frame in the image setup in <link anchor="imager:imager.defineimage.function">defineimage</link>. Possible values are {\tt DIRECTION, TARGET, ENCODER, POINTING_OFFSET, SOURCE_OFFSET} 
 
 </description>
 
@@ -3910,6 +3918,20 @@ is multiplied by this factor.
      <description>number of pixel for convolution support</description>
      <value>-1</value>
      </param>
+
+     <param type="string" name="pointingcolumntouse">
+     <description>Which Pointing Table column to use to get direction</description>
+     <value>DIRECTION</value>
+     <allowed kind="enum">
+	    <value>DIRECTION</value>
+	    <value>TARGET</value>
+	    <value>ENCODER</value>
+	    <value>POINTING_OFFSET</value>
+	    <value>SOURCE_OFFSET</value>
+     </allowed>
+
+     </param>
+
 </input>
 <returns type="bool"/>
 <example>

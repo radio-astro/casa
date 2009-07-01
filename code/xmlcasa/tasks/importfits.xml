@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="importfits">
+      <task type="function" name="importfits" category="import/export">
 	<shortdescription>Convert an image FITS file into a CASA image</shortdescription>
 	<description>Convert an image FITS file into a CASA image
 	</description>

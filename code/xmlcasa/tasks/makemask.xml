@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="makemask">
+<task type="function" name="makemask" category="imaging">
 	<shortdescription>Make a mask image from rectangular boxes</shortdescription>
 	<description>
 	</description>

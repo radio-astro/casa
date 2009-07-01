@@ -90,6 +90,8 @@ public:
   virtual void finalizeIter(uInt it);
   virtual String getID() {return String("FlagExaminer");};
 
+  virtual Record getResult();
+
 //  virtual String getDesc ();
 //  static const RecordInterface & getDefaults ();
 
@@ -97,7 +99,12 @@ protected:
     void processRow  ( uInt ifr,uInt it ) ;
     Int totalflags,totalcount;
     Int totalrowflags,totalrowcount;
-    Int accumTotalFlags, accumTotalCount, accumRowFlags, accumTotalRowCount, accumTotalRowFlags;
+
+    // accumulated over all chunks
+    Int 
+      accumTotalFlags, accumTotalCount, accumRowFlags, 
+      accumTotalRowCount, accumTotalRowFlags;
+
     Int inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
     Int outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
 };

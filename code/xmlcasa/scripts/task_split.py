@@ -80,9 +80,10 @@ def split(vis,outputvis,datacolumn, field,spw,width,antenna,timebin,timerange,sc
 			antenna = ', '.join([str(ant) for ant in antenna])
 			
 		ms.split(outputms=outputvis,field=field,spw=spw, step=width, baseline=antenna,timebin=timebin,time=timerange,whichcol=datacolumn, scan=scan, uvrange=uvrange)
-		#ms.close()
+		ms.close()
+                #the history should go to splitted ms, not the source ms
 		# Write history to output MS
-        	#ms.open(outputvis,nomodify=False)
+        	ms.open(outputvis,nomodify=False)
         	ms.writehistory(message='taskname=split',origin='split')
         	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='split')
         	ms.writehistory(message='outputvis   = "'+str(outputvis)+'"',origin='split')

@@ -59,6 +59,7 @@ __calibraterhome__ = casac.homefinder.find_home_by_name('calibraterHome')
 __mshome__ = casac.homefinder.find_home_by_name('msHome')
 __tableplothome__ = casac.homefinder.find_home_by_name('tableplotHome')
 __msplothome__ = casac.homefinder.find_home_by_name('msplotHome')
+__plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
 __calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
 __tablehome__ = casac.homefinder.find_home_by_name('tableHome')
 __flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
@@ -82,6 +83,7 @@ calibrater = __calibraterhome__.create( )
 ms = __mshome__.create( )
 tableplot = __tableplothome__.create( )
 msplot = __msplothome__.create( )
+pmtool = __plotmshome__.create( )
 calplot = __calplothome__.create( )
 table = __tablehome__.create( )
 flagger = __flaggerhome__.create( )
@@ -130,6 +132,7 @@ from imregrid import imregrid
 from newclean import newclean
 from listcal import listcal
 from plotxy import plotxy
+from plotms import plotms
 from ft import ft
 from importuvfits import importuvfits
 from setjy import setjy

@@ -140,7 +140,7 @@ MotifROOT := $(X11ROOT)/LessTif/Motif2.1
 C++ROOT := /usr
 
 # Preprocessor flags for system debug/optimized compilations.
-CPPSTD   += -DAIPS_64B -DAIPS_STDLIB -DAIPS_AUTO_STL
+CPPSTD   += -DAIPS_64B -DAIPS_LINUX -DAIPS_STDLIB -DAIPS_AUTO_STL
 
 
 # C compiler flags for system debug/optimized compilations.

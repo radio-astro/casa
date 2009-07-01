@@ -49,11 +49,9 @@ PlotMSFlaggingTab::PlotMSFlaggingTab(PlotMSPlotter* parent) :
 PlotMSFlaggingTab::~PlotMSFlaggingTab() { }
 
 
-QList<QToolButton*> PlotMSFlaggingTab::toolButtons() const {
-    return QList<QToolButton*>(); }
-
-
 PlotMSFlagging PlotMSFlaggingTab::getValue(PlotMSPlot* plot) const {
     return flaggingWidget->getValue(plot); }
+void PlotMSFlaggingTab::setValue(const PlotMSFlagging& value) {
+    flaggingWidget->setValue(value); }
 
 }

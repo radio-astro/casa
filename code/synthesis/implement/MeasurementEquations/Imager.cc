@@ -73,6 +73,7 @@
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
@@ -274,11 +275,13 @@ traceEvent(1,"Entering imager::defaults",25);
   constPB_p = 0.4;
   redoSkyModel_p=True;
   nmodels_p=0;
-  useModelCol_p=True;  
+  useModelCol_p=False;
   freqFrameValid_p=False;
   doTrackSource_p=False;
   freqInterpMethod_p="linear";
+  pointingDirCol_p="DIRECTION";
   logSink_p=LogSink(LogMessage::NORMAL, False);
+  imwgt_p=VisImagingWeight();
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -290,13 +293,13 @@ traceEvent(1,"Entering imager::defaults",25);
 }
 
 
-Imager::Imager(MeasurementSet& theMS,  Bool compress)
+Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
   lockCounter_p=0;
   LogIO os(LogOrigin("Imager", "Imager(MeasurementSet &theMS)", WHERE));
-  if(!open(theMS, compress)) {
+  if(!open(theMS, compress, useModel)) {
     os << LogIO::SEVERE << "Open of MeasurementSet failed" << LogIO::EXCEPTION;
   };
 
@@ -443,7 +446,7 @@ Imager::~Imager()
 }
 
 
-Bool Imager::open(MeasurementSet& theMs, Bool compress)
+Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
 {
 
 #ifdef PABLO_IO
@@ -488,7 +491,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress)
     // same as the original MeasurementSet
 
     mssel_p=new MeasurementSet(*ms_p);
-    
+    useModelCol_p=useModelCol;
     
     // Now create the VisSet
     this->makeVisSet(vs_p, *mssel_p);
@@ -505,10 +508,9 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress)
 	 << "Results open to question!" << LogIO::POST;
     }
     
-    
     // Initialize the weights if the IMAGING_WEIGHT column
     // was just created
-    if(initialize) {
+    if(initialize && useModelCol_p) {
       os << LogIO::NORMAL
 	 << "Initializing natural weights"
 	 << LogIO::POST;
@@ -655,32 +657,32 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   refCoord(1)=dec;    
   
   Vector<Double> refPixel(2); 
-  refPixel(0)=Double(nx_p/2);
-  refPixel(1)=Double(ny_p/2);
+  refPixel(0) = Double(nx_p / 2);
+  refPixel(1) = Double(ny_p / 2);
   
   //defining observatory...needed for position on earth
-  String telescop=msc.observation().telescopeName()(0);
+  String telescop = msc.observation().telescopeName()(0);
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch=msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
 
   MPosition obsPosition;
-  if(! (MeasTable::Observatory(obsPosition, telescop))){
+  if(!(MeasTable::Observatory(obsPosition, telescop))){
     os << LogIO::WARN << "Did not get the position of " << telescop 
-       << " from data repository" << LogIO::POST ;
+       << " from data repository" << LogIO::POST;
     os << LogIO::WARN 
-       << "Please do inform aips++  to put in the repository "
+       << "Please contact CASA to add it to the repository."
        << LogIO::POST;
     os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-    freqFrameValid_p=False;
+    freqFrameValid_p = False;
   }
   else{
-    mLocation_p=obsPosition;
-    freqFrameValid_p=True;
+    mLocation_p = obsPosition;
+    freqFrameValid_p = True;
   }
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
@@ -689,13 +691,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     os << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
        << LogIO::POST;
     Vector<Double> projectionParameters(2);
-    projectionParameters(0)=0.0;
-    if(sin(dec)!=0.0) {
-      projectionParameters(1)=cos(dec)/sin(dec);
+    projectionParameters(0) = 0.0;
+    if(sin(dec) != 0.0){
+      projectionParameters(1) = cos(dec)/sin(dec);
       projection=Projection(Projection::SIN, projectionParameters);
     }
     else {
-      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN" << LogIO::POST;
+      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN"
+         << LogIO::POST;
       projection=Projection(Projection::SIN);
     }
   }
@@ -1947,7 +1950,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const Vector<Int>& antIndex,
 			  const String& antnames,
 			  const String& spwstring,
-			  const String& uvdist, const String& scan)
+                          const String& uvdist, const String& scan, const Bool useModelCol)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1968,7 +1971,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
 		   fieldids, msSelect, timerng, fieldnames, antIndex, 
-		   antnames, spwstring, uvdist, scan);
+                   antnames, spwstring, uvdist, scan, useModelCol);
 
 }
 
@@ -1982,7 +1985,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& msSelect, const String& timerng,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
-		     const String& uvdist, const String& scan)
+                     const String& uvdist, const String& scan, const Bool useModelCol)
   
 {
   logSink_p.clearLocally();
@@ -2022,7 +2025,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     dataspectralwindowids_p=spectralwindowids;
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
-    
+    useModelCol_p=useModelCol;
     
     
     
@@ -2224,7 +2227,12 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     this->selectDataChannel(*vs_p, dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
-			    mDataStart_p, mDataStep_p);
+                            mDataStart_p, mDataStep_p);
+    ///Tell iterator to use on the fly imaging weights if scratch columns is not in use
+    if(!useModelCol_p){
+        VisImagingWeight imwgt("natural");
+        vs_p->iter().useImagingWeight(imwgt);
+    }
 
     // Guess that the beam is no longer valid
     beamValid_p=False;
@@ -2263,6 +2271,7 @@ Bool Imager::setmfcontrol(const Float cyclefactor,
   fluxscale_p = fluxscale;
   scaleType_p = scaleType;
   minPB_p = minPB;
+
   constPB_p = constPB;
   return True;
 }  
@@ -2336,7 +2345,7 @@ Bool Imager::setvp(const Bool dovp,
 
 Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int tile,
 			const String& gridfunction, const MPosition& mLocation,
-			const Float padding, const Bool usemodelcol, 
+                        const Float padding,
 			const Int wprojplanes,
 			const String& epJTableName,
 			const Bool applyPointingOffsets,
@@ -2370,7 +2379,6 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   LogIO os(LogOrigin("imager", "setoptions()", WHERE));
   
   os << "Setting processing options" << LogIO::POST;
-  useModelCol_p=usemodelcol;
 
   ftmachine_p=downcase(ftmachine);
   if(ftmachine_p=="gridft") {
@@ -2413,7 +2421,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 }
 
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
-			  const Int convsupport)
+			  const Int convsupport, String pointCol)
 {
 
 #ifdef PABLO_IO
@@ -2437,7 +2445,12 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   sdScale_p=scale;
   sdWeight_p=weight;
   sdConvSupport_p=convsupport;
+  pointingDirCol_p=pointCol;
+  pointingDirCol_p.upcase();
+  if( (pointingDirCol_p != "DIRECTION") &&(pointingDirCol_p != "TARGET") && (pointingDirCol_p != "ENCODER") && (pointingDirCol_p != "POINTING_OFFSET") && (pointingDirCol_p != "SOURCE_OFFSET")){
+    os << "No such direction column as "<< pointingDirCol_p << " in pointing table "<< LogIO::EXCEPTION;
 
+  }
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}
@@ -3499,7 +3512,11 @@ Bool Imager::weight(const String& type, const String& rmode,
     
     if (type=="natural") {
       os << "Natural weighting" << LogIO::POST;
-      VisSetUtil::WeightNatural(*vs_p, sumwt);
+      if(useModelCol_p)
+	VisSetUtil::WeightNatural(*vs_p, sumwt);
+      else{
+	imwgt_p=VisImagingWeight("natural");
+      }
     }
     else if(type=="superuniform"){
       if(!assertDefinedImageParameters()) return False;
@@ -3509,10 +3526,19 @@ Bool Imager::weight(const String& type, const String& rmode,
       os << "SuperUniform weighting over a square cell spanning [" 
 	 << -actualNpix 
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
-      VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, nx_p,
-				ny_p,
-				mcellx_p, mcelly_p, sumwt, actualNpix, 
-				actualNpix);
+      if(useModelCol_p){
+	VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, nx_p,
+				  ny_p,
+				  mcellx_p, mcelly_p, sumwt, actualNpix, 
+				  actualNpix);
+      }
+      else{
+	imwgt_p=VisImagingWeight(vs_p->iter(), rmode, noise, robust, nx_p, 
+				 ny_p, mcellx_p, mcelly_p, actualNpix, 
+				 actualNpix);
+
+      }
+	
 
     }
     else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
@@ -3548,14 +3574,29 @@ Bool Imager::weight(const String& type, const String& rmode,
       os << "                 : using " << actualNPixels << " pixels in the uv plane"
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
-      
-      VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, actualNPixels,
-                                actualNPixels,
-                                actualCellSize, actualCellSize, sumwt);
+      if(useModelCol_p){
+	VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, actualNPixels,
+				  actualNPixels,
+				  actualCellSize, actualCellSize, sumwt);
+      }
+      else{
+
+	imwgt_p=VisImagingWeight(vs_p->iter(), rmode, noise, robust, 
+				 actualNPixels, actualNPixels, actualCellSize, 
+				 actualCellSize, 0, 0);
+
+      }
+
     }
     else if (type=="radial") {
       os << "Radial weighting" << LogIO::POST;
-      VisSetUtil::WeightRadial(*vs_p, sumwt);
+      if(useModelCol_p){
+	VisSetUtil::WeightRadial(*vs_p, sumwt);
+      }
+      else{
+	imwgt_p=VisImagingWeight("radial");
+      }
+
     }
     else {
       this->unlock();
@@ -3564,14 +3605,20 @@ Bool Imager::weight(const String& type, const String& rmode,
       return False;
     }
     
-    if(sumwt>0.0) {
-      os << "Sum of weights = " << sumwt << LogIO::POST;
-    }
-    else {
-      this->unlock();
+    if(useModelCol_p){
+      if(sumwt>0.0) {
+	os << "Sum of weights = " << sumwt << LogIO::POST;
+      }
+      else {
+	this->unlock();
       os << LogIO::SEVERE << "Sum of weights is not positive" 
 	 << LogIO::EXCEPTION;
       return False;
+      }
+    }
+    else{
+      vs_p->iter().useImagingWeight(imwgt_p);
+
     }
     
     // Beam is no longer valid
@@ -3604,23 +3651,32 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
   this->lock();
   try {
     
-    os << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
+   
     
     Double sumwt=0.0;
     Double maxfilter=0.0;
     Double minfilter=1.0;
     
-    VisSetUtil::Filter(*vs_p, type, bmaj, bmin, bpa, sumwt, minfilter,
-		       maxfilter);
-    
-    if(sumwt>0.0) {
-      os << "Sum of weights = " << sumwt << endl;
-      os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
+    if(useModelCol_p){
+      os << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
+      VisSetUtil::Filter(*vs_p, type, bmaj, bmin, bpa, sumwt, minfilter,
+			 maxfilter);
+      
+      if(sumwt>0.0) {
+	os << "Sum of weights = " << sumwt << endl;
+	os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
+      }
+      else {
+	os << LogIO::SEVERE
+	   << "Sum of weights is zero: perhaps you need to weight the data"
+	   << LogIO::EXCEPTION;
+      }
     }
-    else {
-      os << LogIO::SEVERE
-	 << "Sum of weights is zero: perhaps you need to weight the data"
-	 << LogIO::EXCEPTION;
+    else{
+       os << "Imaging weights will be tapered" << LogIO::POST;
+      imwgt_p.setFilter(type, bmaj, bmin, bpa);
+      vs_p->iter().useImagingWeight(imwgt_p);
+
     }
     
     // Beam is no longer valid
@@ -5348,8 +5404,8 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
                                     images_p[thismodel]->coordinates(),
                                     fluxScaleNames(thismodel));
 	PagedImage<Float> coverimage(images_p[thismodel]->shape(),
-                                    images_p[thismodel]->coordinates(),
-                                    fluxScaleNames(thismodel)+".pbcoverage");
+				     images_p[thismodel]->coordinates(),
+				     fluxScaleNames(thismodel)+".pbcoverage");
         coverimage.table().markForDelete();
         if (sm_p->doFluxScale(thismodel)) {
 	  cover=&(sm_p->fluxScale(thismodel));
@@ -5712,7 +5768,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	stepsize[0]=1;
 	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
 		MRadialVelocity(),
-		selectSpw, selectField, msSelectString);
+		selectSpw, selectField, msSelectString, "", "", Vector<Int>(), 
+		"", "", "", "", True);
 
 	if (!nullSelect_p) {
 
@@ -6036,7 +6093,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	stepsize[0]=1;
 	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
 		MRadialVelocity(),
-		selectSpw, selectField, msSelectString);
+		selectSpw, selectField, msSelectString, "", "",
+		Vector<Int>(), "", "", "", "", True);
 
 	if (!nullSelect_p) {
 
@@ -7220,6 +7278,8 @@ Bool Imager::createFTMachine()
     else {
       ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p, sdConvSupport_p);
     }
+    ft_p->setPointingDirColumn(pointingDirCol_p);
+
     VisIter& vi(vs_p->iter());
     // Get bigger chunks o'data: this should be tuned some time
     // since it may be wrong for e.g. spectral line
@@ -8403,7 +8463,7 @@ void Imager::makeVisSet(VisSet* & vs, MeasurementSet& ms,
   }
   Matrix<Int> noselection;
   Double timeInterval=0;
-  vs = new VisSet(ms,sort,noselection,timeInterval,compress);
+  vs = new VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
 
 }
 void Imager::makeVisSet(MeasurementSet& ms, 
@@ -8430,7 +8490,7 @@ void Imager::makeVisSet(MeasurementSet& ms,
   Matrix<Int> noselection;
   Double timeInterval=0;
 
-  VisSet vs(ms,sort,noselection,timeInterval,compress);
+  VisSet vs(ms,sort,noselection,useModelCol_p,timeInterval,compress);
 
 }
 
@@ -8578,7 +8638,9 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
   outmask.copyData(lemask);
   pbImage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
   pbImage.setDefaultMask("mask0");
-  
+
+
+
   return True;
 }
 void Imager::setObsInfo(ObsInfo& obsinfo){

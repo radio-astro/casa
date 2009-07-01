@@ -1,0 +1,362 @@
+//# VisImagingWeight.cc: imaging weight calculation for a give buffer
+//# Copyright (C) 2009
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be adressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//#
+//# $Id$
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisImagingWeight.h>
+#include <casa/Quanta/MVAngle.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
+
+
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+  VisImagingWeight::VisImagingWeight() : wgtType_p("none"), doFilter_p(False) {
+
+    }
+
+  VisImagingWeight::VisImagingWeight(const String& type) : doFilter_p(False) {
+
+        wgtType_p=type;
+        wgtType_p.downcase();
+        if (wgtType_p != "natural" && wgtType_p != "radial"){
+
+            throw(AipsError("Programmer error...wrong constructor used"));
+        }
+  
+    }
+
+
+    VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
+                                       const Double robust, const Int nx, const Int ny,
+                                       const Quantity& cellx, const Quantity& celly,
+                                       const Int uBox, const Int vBox) : doFilter_p(False) {
+  
+        LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
+  
+        Double sumwt=0.0;
+
+        const VisBuffer vb(vi);
+  
+        wgtType_p="uniform";
+        // Float uscale, vscale;
+        //Int uorigin, vorigin;
+        Vector<Double> deltas;
+        uscale_p=(nx*cellx.get("rad").getValue())/2.0;
+        vscale_p=(ny*celly.get("rad").getValue())/2.0;
+        uorigin_p=nx/2;
+        vorigin_p=ny/2;
+        nx_p=nx;
+        ny_p=ny;
+  
+        // Simply declare a big matrix
+        //Matrix<Float> gwt(nx,ny);
+        gwt_p.resize(nx, ny);
+        gwt_p=0.0;
+  
+        Float u, v;
+        sumwt=0.0;
+        for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+            for (vi.origin();vi.more();vi++) {
+              Int nRow=vb.nRow();
+              Int nChan=vb.nChannel();
+              for (Int row=0; row<nRow; row++) {
+                for (Int chn=0; chn<nChan; chn++) {
+                  if(!vb.flag()(chn,row)) {
+                    Float f=vb.frequency()(chn)/C::c;
+                    u=vb.uvw()(row)(0)*f;
+                    v=vb.uvw()(row)(1)*f;
+                    Int ucell=Int(uscale_p*u+uorigin_p);
+                    Int vcell=Int(vscale_p*v+vorigin_p);
+                    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                      for (Int iv=-vBox;iv<=vBox;iv++) {
+                        for (Int iu=-uBox;iu<=uBox;iu++) {
+                          gwt_p(ucell+iu,vcell+iv)+=vb.weight()(row);
+                          sumwt+=vb.weight()(row);
+                        }
+                      }
+                    }
+                    ucell=Int(-uscale_p*u+uorigin_p);
+                    vcell=Int(-vscale_p*v+vorigin_p);
+                    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                      for (Int iv=-vBox;iv<=vBox;iv++) {
+                        for (Int iu=-uBox;iu<=uBox;iu++) {
+                          gwt_p(ucell+iu,vcell+iv)+=vb.weight()(row);
+                          sumwt+=vb.weight()(row);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+        }
+  
+        // We use the approximation that all statistical weights are equal to
+        // calculate the average summed weights (over visibilities, not bins!)
+        // This is simply to try an ensure that the normalization of the robustness
+        // parameter is similar to that of the ungridded case, but it doesn't have
+        // to be exact, since any given case will require some experimentation.
+  
+        //Float f2, d2;
+  
+        if (rmode=="norm") {
+            os << "Normal robustness, robust = " << robust << LogIO::POST;
+            Double sumlocwt = 0.;
+            for(Int vgrid=0;vgrid<ny;vgrid++) {
+                for(Int ugrid=0;ugrid<nx;ugrid++) {
+                    if(gwt_p(ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p(ugrid,vgrid));
+                }
+            }
+            f2_p = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt);
+            d2_p = 1.0;
+        }
+        else if (rmode=="abs") {
+            os << "Absolute robustness, robust = " << robust << ", noise = "
+                    << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
+            f2_p = square(robust);
+            d2_p = 2.0 * square(noise.get("Jy").getValue());
+        }
+        else {
+            f2_p = 1.0;
+            d2_p = 0.0;
+        }
+  
+    }
+
+    VisImagingWeight::~VisImagingWeight(){
+
+        gwt_p.resize();
+    }
+
+
+  void VisImagingWeight::setFilter(const String& type, const Quantity& bmaj,
+			const Quantity& bmin, const Quantity& bpa)
+  {
+
+     LogIO os(LogOrigin("VisImagingWeight", "setFilter()", WHERE));
+
+    if (type=="gaussian") {
+      
+      Bool lambdafilt=False;
+      
+      if( bmaj.getUnit().contains("lambda"))
+	lambdafilt=True;
+      if(lambdafilt){
+	os << "Filtering for Gaussian of shape: " 
+	   << bmaj.get("klambda").getValue() << " by " 
+	   << bmin.get("klambda").getValue() << " (klambda) at p.a. "
+	   << bpa.get("deg").getValue() << " (degrees)" << LogIO::POST;
+	rbmaj_p=log(2.0)/square(bmaj.get("lambda").getValue());
+	rbmin_p=log(2.0)/square(bmin.get("lambda").getValue());
+      }
+      else{
+	os << "Filtering for Gaussian of shape: " 
+	   << bmaj.get("arcsec").getValue() << " by " 
+	   << bmin.get("arcsec").getValue() << " (arcsec) at p.a. "
+	   << bpa.get("deg").getValue() << " (degrees)" << LogIO::POST;
+	
+	// Convert to values that we can use
+	Double fact = 4.0*log(2.0);
+	rbmaj_p = fact*square(bmaj.get("rad").getValue());
+	rbmin_p = fact*square(bmin.get("rad").getValue());
+      }
+      Double rbpa  = MVAngle(bpa).get("rad").getValue();
+      cospa_p = sin(rbpa);
+      sinpa_p = cos(rbpa);
+      doFilter_p=True;
+
+    }
+    else {
+      os << "Unknown filtering " << type << LogIO::EXCEPTION;    
+    }
+  
+
+
+  
+  }
+
+
+  Bool VisImagingWeight::doFilter() const{
+
+    return doFilter_p;
+  }
+
+
+  void VisImagingWeight::filter(Matrix<Float>& imWeight, const Matrix<Bool>& flag, 
+				const Matrix<Double>& uvw,
+				const Vector<Double>& frequency, const Vector<Float>& weight) const{
+
+
+    Int nRow=imWeight.shape()(1);
+    Int nChan=imWeight.shape()(0);
+    for (Int row=0; row<nRow; row++) {
+      for (Int chn=0; chn<nChan; chn++) {
+	Double invLambdaC=frequency(chn)/C::c;
+	Double u = uvw(0,row);
+	Double v = uvw(1,row);
+	if(!flag(chn,row) && (weight(row)>0.0) ) {
+	  Double ru = invLambdaC*(  cospa_p * u + sinpa_p * v);
+	  Double rv = invLambdaC*(- sinpa_p * u + cospa_p * v);
+	  Double filter = exp(-rbmaj_p*square(ru) - rbmin_p*square(rv));
+	  imWeight(chn,row)*=filter;
+	}
+	else {
+	  imWeight(chn,row)=0.0;
+	}
+      }
+    }
+
+
+  }
+
+
+    void VisImagingWeight::weightUniform(Matrix<Float>& imWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
+                                         const Vector<Double>& frequency,
+                                         const Vector<Float>& weight) const{
+
+
+
+
+      // cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p.shape() << endl;
+      // cout << "f2 " << f2_p << " d2 " << d2_p << " uscale " << uscale_p << " vscal " << vscale_p << endl;
+      // cout << "min max gwt " << min(gwt_p) << "    " << max(gwt_p) << endl; 
+        Int ndrop=0;
+        Double sumwt=0.0;
+        Int nRow=imWeight.shape()(1);
+        Int nChannel=imWeight.shape()(0);
+
+        Float u, v;
+        for (Int row=0; row<nRow; row++) {
+            for (Int chn=0; chn<nChannel; chn++) {
+                if (!flag(chn,row)) {
+                    Float f=frequency(chn)/C::c;
+                    u=uvw(0, row)*f;
+                    v=uvw(1, row)*f;
+                    Int ucell=Int(uscale_p*u+uorigin_p);
+                    Int vcell=Int(vscale_p*v+vorigin_p);
+                    imWeight(chn,row)=weight(row);
+                    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p)) {
+                        if(gwt_p(ucell,vcell)>0.0) {
+                            imWeight(chn,row)/=gwt_p(ucell,vcell)*f2_p+d2_p;
+                            sumwt+=imWeight(chn,row);
+                        }
+                    }
+                    else {
+                        imWeight(chn,row)=0.0;
+                        ndrop++;
+                    }
+                }
+            }
+        }
+
+
+
+    }
+
+
+    void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
+                                         const Vector<Float>& weight) const{
+
+        Double sumwt=0.0;
+
+        Int nRow=imagingWeight.shape()(1);
+        Int nChan=imagingWeight.shape()(0);
+        for (Int row=0; row<nRow; row++) {
+            for (Int chn=0; chn<nChan; chn++) {
+                if( !flag(chn,row) ) {
+                    imagingWeight(chn,row)=weight(row);
+                    sumwt+=imagingWeight(chn,row);
+                }
+                else {
+                    imagingWeight(chn,row)=0.0;
+                }
+            }
+        }
+
+
+    }
+
+
+    void VisImagingWeight::weightRadial(Matrix<Float>& imagingWeight,
+                                        const Matrix<Bool>& flag,
+                                        const Matrix<Double>& uvw,
+                                        const Vector<Double>& frequency,
+                                        const Vector<Float>& weight) const{
+
+        Double sumwt=0.0;
+        Int nRow=imagingWeight.shape()(1);
+        Int nChan=imagingWeight.shape()(0);
+
+        for (Int row=0; row<nRow; row++) {
+            for (Int chn=0; chn< nChan; chn++) {
+                Float f=frequency(chn)/C::c;
+                if( !flag(chn,row) ) {
+                    imagingWeight(chn,row)=
+		      f*sqrt(square(uvw(0, row))+square(uvw(1, row)))
+                            *weight(row);
+                    sumwt+=imagingWeight(chn,row);
+                }
+                else {
+                    imagingWeight(chn,row)=0.0;
+                }
+            }
+        }
+
+
+    }
+
+    VisImagingWeight& VisImagingWeight::operator=(const VisImagingWeight& other){
+        if(this != &other){
+            gwt_p.reference(other.gwt_p);
+            wgtType_p=other.wgtType_p;
+            uscale_p=other.uscale_p;
+            vscale_p=other.vscale_p;
+            f2_p=other.f2_p;
+            d2_p=other.d2_p;
+            uorigin_p=other.uorigin_p;
+            vorigin_p=other.vorigin_p;
+            nx_p=other.nx_p;
+            ny_p=other.ny_p;
+	    doFilter_p=other.doFilter_p;
+	    cospa_p=other.cospa_p;
+	    sinpa_p=other.sinpa_p;
+	    rbmaj_p=other.rbmaj_p;
+	    rbmin_p=other.rbmin_p;
+        }
+        return *this;
+    }
+
+    String VisImagingWeight::getType() const{
+
+        return wgtType_p;
+
+    }
+
+
+}//# NAMESPACE CASA - END

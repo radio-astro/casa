@@ -15,8 +15,52 @@ if homedir == None :
    print "Environment variable HOME is not set, please set it"
    exit(1)
 
-ipythonenv = homedir + '/.casa/ipython'
-ipythonpath = homedir + '/.casa/ipython/security'
+casa = { 'helpers': {
+             'logger': 'casalogger'
+         },
+         'dirs': {
+             'rc': homedir + '/.casa'
+         },
+         'flags': { }
+       }
+
+a = [] + sys.argv             ## get a copy from goofy python
+a.reverse( )
+while len(a) > 0:
+    c = a.pop()
+    ##
+    ## we join multi-arg parameters here
+    ##
+    if c == '--logfile' or c == '-c' :
+        if len(a) == 0 :
+            print "A file must be specified with " + c + "..."
+            exit(1)
+        else :
+            casa['flags'][c] = a.pop( )
+    else :
+        casa['flags'][c] = ''
+
+if os.uname()[0]=='Darwin' :
+    casa_path = os.environ['CASAPATH'].split()
+    casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
+#           from Carbon.CoreFoundation import kCFURLPOSIXPathStyle
+#           kLSUnknownCreator = '\x00\x00\x00\x00'
+#           fsRef, cfURL = LSFindApplicationForInfo(kLSUnknownCreator, None, "casalogger.app")
+#           casa['helpers']['logger'] = os.path.join(fsRef.as_pathname(), 'Contents', 'MacOS', 'casalogger')
+
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## ensure default initialization occurs before this point...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/init.py' )
+    except:
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
+        exit(1)
+
+ipythonenv  = casa['dirs']['rc'] + '/ipython'
+ipythonpath = casa['dirs']['rc'] + '/ipython'
 try :
    os.makedirs(ipythonpath, 0755)
 except :
@@ -37,16 +81,7 @@ if not os.environ.has_key('DISPLAY') and matplotlib.get_backend() == "TkAgg" :
 #
 from taskinit import *
 
-casapy_flags=sys.argv
 logpid=[]
-
-if (os.uname()[0]=='Darwin'):
-    casa_path = os.environ['CASAPATH'].split()
-    logger_path = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
-#           from Carbon.CoreFoundation import kCFURLPOSIXPathStyle
-#           kLSUnknownCreator = '\x00\x00\x00\x00'
-#           fsRef, cfURL = LSFindApplicationForInfo(kLSUnknownCreator, None, "casalogger.app")
-#           logger_path = os.path.join(fsRef.as_pathname(), 'Contents', 'MacOS', 'casalogger')
 
 def casalogger(logfile='casapy.log'):
     """
@@ -61,9 +96,9 @@ def casalogger(logfile='casapy.log'):
     """
     pid=9999
     if (os.uname()[0]=='Darwin'):
-        pid=os.spawnvp(os.P_NOWAIT,logger_path,[logger_path, logfile])
+        pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
     elif (os.uname()[0]=='Linux'):
-        pid=os.spawnlp(os.P_NOWAIT,'casalogger','casalogger',logfile)
+        pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
     else:
         print 'Unrecognized OS: No logger available'
 
@@ -73,44 +108,21 @@ showconsole = False
 
 thelogfile = 'casapy.log'
 
-try:
-    showconsole = casapy_flags.index('--log2term')
-    showconsole = True
-except ValueError,e:
-    thelogfile = 'casapy.log'
-
-try:
-    mylogfile = casapy_flags.index('--nologfile')
+showconsole = casa['flags'].has_key('--log2term')
+if casa['flags'].has_key('--logfile') :
+    thelogfile = casa['flags']['--logfile']
+if casa['flags'].has_key('--nologfile') :
     thelogfile = 'null'
-except ValueError,e :
-    pass
 
-try:
-    mylogfile = casapy_flags.index('--logfile')
-    thelogfile = casapy_flags[mylogfile+1]
-except ValueError,e:
-    if thelogfile != 'null' :
-       thelogfile = 'casapy.log'
-except IndexError,e:
-    if thelogfile != 'null' :
-       thelogfile = 'casapy.log'
-
-deploylogger1 = False
-deploylogger2 = False
-try:
-    nolog=casapy_flags.index('--nolog')
-    deploylogger1 = False
+deploylogger = True
+if casa['flags'].has_key('--nolog') :
     print "--nolog is deprecated, please use --nologger"
-except ValueError,e:
-    deploylogger1 = True
+    deploylogger = False
 
-try:
-    nolog=casapy_flags.index('--nologger')
-    deploylogger2 = False
-except ValueError,e:
-    deploylogger2 = True
+if casa['flags'].has_key('--nologger') :
+    deploylogger = False
 
-if deploylogger1 & deploylogger2 & (thelogfile != 'null') :
+if deploylogger and (thelogfile != 'null') :
 	casalogger( thelogfile)
 
 ###################
@@ -787,11 +799,7 @@ false = False
 F     = False
 
 # Case where casapy is run non-interactively
-try:
-    noipython=casapy_flags.index('--noipython')
-    ipython = False
-except ValueError,e:
-    ipython = True
+ipython = not casa['flags'].has_key('--noipython')
 
 # setup available tasks
 #
@@ -820,22 +828,20 @@ if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
 
 if ipython:
-    try:
-        script=casapy_flags.index('-c')
-        scriptindex=script+1
-        print 'will execute script',casapy_flags[scriptindex]
-        if os.path.exists( home+'/.casa/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython','-c','execfile("'+casapy_flags[scriptindex]+'")'], user_ns=globals() )
+    if casa['flags'].has_key('-c') :
+        print 'will execute script',casa['flags']['-c']
+        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
         else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',home+'/.casa/ipython','-c','execfile("'+casapy_flags[scriptindex]+'")'], user_ns=globals() )
-    except ValueError,e:
-        if os.path.exists( home+'/.casa/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+    else:
+        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
+            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
         ipshell.IP.runlines('execfile("'+fullpath+'")')
 
-#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',home+'/.casa/ipython'], user_ns=globals() )
+#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
 casalog.setlogfile(thelogfile)
 casalog.showconsole(showconsole)
 casalog.version()

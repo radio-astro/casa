@@ -105,6 +105,8 @@ class PMS {
 public:
     // Enum for the axis choices that are available to be plotted.  Used both
     // by the user to select what to plot and by the cache loading system.
+    // **If these are changed, also update: xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Axis, axes, axesStrings, axis,
 	      SCAN,FIELD,TIME,TIME_INTERVAL,
@@ -141,6 +143,7 @@ public:
     
     
     // Enum for the different data columns for data axes.
+    // **If these are changed, also update: xmlcasa/tasks/plotms.xml.**
     // <group>
     PMS_ENUM1(DataColumn, dataColumns, dataColumnStrings, dataColumn,
               DATA, CORRECTED, MODEL, RESIDUAL)
@@ -258,6 +261,15 @@ public:
     static PlotLinePtr DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory);
     static PlotAreaFillPtr DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f);
     // </group>
+    
+    
+    // Logging Constants //
+    
+    // Log event for loading the cache.
+    static const int LOG_LOAD_CACHE;
+    
+    // Log event for DBus messages.
+    static const int LOG_DBUS;
 };
 
 }

@@ -167,6 +167,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
+    // This version returns the gridded vis...should be used in conjunction 
+    // with the version of 'get' that needs the gridded visdata 
+    virtual void initializeToVis(ImageInterface<Complex>& image,
+			 const VisBuffer& vb, Array<Complex>& griddedVis,
+			 Vector<Double>& uvscale);
     
     // Finalize transform to Visibility plane: flushes the image
     // cache and shows statistics if it is being used.
@@ -186,6 +191,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get actual coherence from grid by degridding
     void get(VisBuffer& vb, Int row=-1);
+    
+    // Get the coherence from grid return it in the degrid 
+    // is used especially when scratch columns are not 
+    // present in ms.
+    void get(VisBuffer& vb, Cube<Complex>& degrid, 
+	     Array<Complex>& griddedVis, Vector<Double>& scale, 
+	     Int row=-1);
     
     void get(VisBuffer& vb, Cube<Float>& pointingOffsets, Int row=-1,
 	     Type whichVBColumn=FTMachine::MODEL,Int Conj=0)
@@ -297,6 +309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Complex>& sky)
     {return verifyShapes(pb.shape(),sky.shape());}
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
+    Bool findSupport(Array<Complex>& func, Float& threshold, Int& origin, Int& R);
   protected:
     
     // Padding in FFT
@@ -383,6 +396,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool usezero_p;
     
     Array<Complex> convFunc;
+    Array<Complex> convWeights;
+    CoordinateSystem convFuncCS_p;
     Int convSize;
     //
     // Vector to hold the support size info. for the convolution
@@ -390,13 +405,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // co-ordinates of this array are (W-term, Poln, PA).
     //
     Int convSampling;
-    Cube<Int> convSupport;
+    Cube<Int> convSupport, convWtSupport;
     //
     // Holder for the pointers to the convolution functions. Each
     // convolution function itself is a complex 3D array (U,V,W) per
     // PA.
     //
-    PtrBlock < Array<Complex> *> convFuncCache;
+    PtrBlock < Array<Complex> *> convFuncCache, convWeightsCache;
     //    Array<Complex>* convFunc_p;
 
     //
@@ -428,7 +443,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Int polInUse, bandID_p;
     Int maxConvSupport;
-    Bool avgPBSaved;
     //
     // Percentage of the peak of the PB after which the image is set
     // to zero.
@@ -454,6 +468,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> cfStokes;
     Vector<Complex> Area;
     Double cfRefFreq_p;
+    Bool avgPBSaved;
+    Bool avgPBReady;
     //    VLACalcIlluminationConvFunc vlaPB;
     //
     //----------------------------------------------------------------------

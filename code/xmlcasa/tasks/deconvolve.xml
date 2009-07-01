@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- imgr.weight('natural'); -->
 <!-- imgr.clean(algorithm='csclean',niter=500,model='field1') -->
 
-<task type="function" name="deconvolve">
+<task type="function" name="deconvolve" category="imaging">
 
   <shortdescription>Image based deconvolver</shortdescription>
 

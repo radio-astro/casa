@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdplot -->
 
-<task type="function" name="sdplot" startup="false">
+<task type="function" name="sdplot" startup="false" category="single dish">
 
   <shortdescription>ASAP SD plotting task </shortdescription>
 
@@ -476,11 +476,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         each IF panel to be the same (an example of the limitations
         of ASAP plotting at present).
 
-        After plotting, you can display a spectral value on a pop-up 
-        window along with mouse movement. Click the LEFT-mouse button 
-        over a spectrum to select it, and drag mouse in the panel to 
-        output its value at the x-position of mouse cursor. The selection 
-        is released when you release the mouse button. 
+        This task adds an additional toolbar to ASAP plotter which
+        has three buttons, 'spec value', 'statistics', and 'Quit'. 
+        When the 'spec value' button is pressed and activated, you can 
+        display a spectral value on the toolbar along with mouse
+        movement. Click the LEFT-mouse button over a spectrum to select
+        it, and drag mouse in the panel to output the spectral value of
+        x-position of mouse cursor. The selection is released when you
+        release the mouse button. 
+        When 'statistic' button is pressed and activated, you can get
+        statistic values of a channel region selected by mouse. Select a
+        rectangle region with LEFT/RIGHT-mouse to SELECT/EXCLUDE the
+        channel region to calculate statistics for the all spectra
+        plotted. The results are printed on the casapy console. 
+        Press 'Quit' button to close the plotter. 
 
         *** other plottype options ***
         Currently most of the parameters are ignored in these modes.

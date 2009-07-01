@@ -103,11 +103,11 @@ def mosaic(vis,imagename,mode,alg,imsize,cell,phasecenter,stokes,niter,gain,thre
 ###Set weighting if mosweight
 		if(mosweight) :
 			for k in fieldindex :
-				imMos.selectvis(field=k, spw=spwindex,time=timerange)
+				imMos.selectvis(field=k, spw=spwindex,time=timerange, usescratch=True)
 				imMos.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=noise)
 
 ### Now do the data selection after its been weighted per field 
-		imMos.selectvis(field=field,spw=spw,time=timerange)
+		imMos.selectvis(field=field,spw=spw,time=timerange, usescratch=True)
 
 ####if it was not weighted per field then we can go and do it now on the
 ####selected data ...mosaic parameter in imMos.weight is deprecated...need to go

@@ -48,9 +48,11 @@ ori_sio_regression              ttsutsum@aoc.nrao.edu
 ori_sio_task_regression         ttsutsum@aoc.nrao.edu
 orionmosaic                     kgolap@aoc.nrao.edu
 plotxy_regression               hye@aoc.nrao.edu
-#pointing_regression             sbhatnag@aoc.nrao.edu
+pointing_regression             sbhatnag@aoc.nrao.edu
 polcal_20080224_cband           smyers@aoc.nrao.edu
-ppdisk_regression               remy@virginia.edu
+ppdisk_regression               rindebet@nrao.edu
+testcube_regression             rindebet@nrao.edu
+ghii_regression                 rindebet@nrao.edu
 pylabmem                        kgolap@aoc.nrao.edu
 secondNGC4826                   rreid@nrao.edu
 third4826                       smyers@aoc.nrao.edu

@@ -168,7 +168,7 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colFlagRow.reference(other.colFlagRow);
   colScan.reference(other.colScan);
   colUVW.reference(other.colUVW);
-
+  imwgt_p=other.imwgt_p;
   return *this;
 }
 
@@ -177,6 +177,9 @@ void ROVisibilityIterator::setRowBlocking(Int nRow)
   nRowBlocking_p=nRow;
 }
 
+void ROVisibilityIterator::useImagingWeight(const VisImagingWeight& imWgt){
+    imwgt_p=imWgt;
+}
 void ROVisibilityIterator::origin()
 {
   if (!initialized_p) {
@@ -1025,7 +1028,10 @@ Cube<Float>& ROVisibilityIterator::weightSpectrum(Cube<Float>& wtsp) const
 
 Matrix<Float>& ROVisibilityIterator::imagingWeight(Matrix<Float>& wt) const
 {
-  if (!colImagingWeight.isNull()) {
+
+
+  
+  if ((!colImagingWeight.isNull()) && (imwgt_p.getType()=="none")) {
     if (velSelection_p) {
       if (!weightSpOK_p) {
 	getInterpolatedVisFlagWeight(Corrected);
@@ -1036,6 +1042,45 @@ Matrix<Float>& ROVisibilityIterator::imagingWeight(Matrix<Float>& wt) const
       if (useSlicer_p) colImagingWeight.getColumn(weightSlicer_p,wt,True);
       else colImagingWeight.getColumn(wt,True);
     }
+  }
+  else{
+
+      if(imwgt_p.getType() == "none")
+          throw(AipsError("Programmer Error...no scratch column with imaging weight object"));
+      Vector<Float> weightvec;
+      weight(weightvec);
+      Matrix<Bool> flagmat;
+      flag(flagmat);
+      wt.resize(flagmat.shape());
+      if(imwgt_p.getType()=="uniform"){
+          Vector<Double> fvec;
+          frequency(fvec);
+          Matrix<Double> uvwmat;
+          uvwMat(uvwmat);
+          imwgt_p.weightUniform(wt, flagmat, uvwmat, fvec, weightvec);
+	  if(imwgt_p.doFilter())
+	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
+      }
+      else if(imwgt_p.getType()=="radial"){
+          Vector<Double> fvec;
+          frequency(fvec);
+          Matrix<Double> uvwmat;
+          uvwMat(uvwmat);
+          imwgt_p.weightRadial(wt, flagmat, uvwmat, fvec, weightvec);
+	  if(imwgt_p.doFilter())
+	    imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
+      }
+      else{
+	imwgt_p.weightNatural(wt, flagmat, weightvec);
+	if(imwgt_p.doFilter()){
+	  Matrix<Double> uvwmat;
+          uvwMat(uvwmat);
+	  Vector<Double> fvec;
+          frequency(fvec);
+	  imwgt_p.filter(wt, flagmat, uvwmat, fvec, weightvec);
+
+	}
+      }
   }
   return wt;
 }

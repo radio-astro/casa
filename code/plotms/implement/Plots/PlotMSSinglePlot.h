@@ -62,11 +62,20 @@ public:
     // Implements PlotMSPlot::generateCanvases().
     vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages);
     
+    // Implements PlotMSPlot::setupPlotSubtabs().
+    void setupPlotSubtabs(PlotMSPlotTab& tab) const;
+    
     // Implements PlotMSPlot::parameters().
     // <group>
     const PlotMSPlotParameters& parameters() const;
     PlotMSPlotParameters& parameters();
     // </group>
+    
+    // Implements PlotMSPlot::selectedRegions().
+    PlotMSRegions selectedRegions() const;
+    
+    // Implements PlotMSPlot::visibleSelectedRegions().
+    PlotMSRegions visibleSelectedRegions() const;
     
     
     // Returns a reference to the plot's single parameters.

@@ -720,12 +720,13 @@ def smooth_test():
         # Now that we know something has been done lets check the results!
         #      1. Check that the sum of the values under the curve is 100
         #      2. Check that the max is at 212, 220, 0 , 20
-        allowedError = 0.0005
+        allowedError = 0.009
         
         ia.open( 'smooth_test1')
         stats = ia.statistics()
-        if ( stats['sum'][0] < (100-allowedError) \
-             or stats['sum'][0] > (100+allowedError) ):
+        sum = stats['sum'][0]
+        if ( ( sum < 100 and sum < ( 100-allowedError ) )
+             or ( sum > 100 and sum > ( 100+allowedError) ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Sum under Gaussian is "+str(stats['sum'][0])\
@@ -763,8 +764,8 @@ def smooth_test():
         #        2. That the points in the box are 0.125=(100/((10+10)*(20+20))
         ia.open( 'smooth_test2')
         stats = ia.statistics()
-        if ( stats['sum'][0] < (100-allowedError) \
-             or stats['sum'][0] > (100+allowedError) ):
+        if ( ( sum < 100 and sum < ( 100-allowedError ) )
+             or ( sum > 100 and sum > ( 100+allowedError) ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Sum under Gaussian is "+str(stats['sum'][0])\
@@ -776,7 +777,7 @@ def smooth_test():
         val4 = ia.pixelvalue( [ 222,201,0,20] )        
         midVal = ia.pixelvalue( [212,220,0,20] )
         for value in [val1, val2, val3, val4, midVal ]:
-            if ( value < (0.125-allowedError) or value > (0.125+allowedError)):
+            if ( value>(0.125-allowedError) and value<(0.125+allowedError)):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: Values in the smoothed box are not all 0.125"\
@@ -831,9 +832,9 @@ def region_test():
         #
         # Note that 
         inputArray = numpy.zeros( (shape[0], shape[1], shape[2], shape[3]), 'float' )
-        
+
         inputArray[49,71,0,14] = 100     # For rgn file
-        inputArray[12,12,0,20] = 100     # For rgn in image
+        inputArray[233,276,0,20] = 100     # For rgn in image
 
         
         # Now make the image!
@@ -858,7 +859,7 @@ def region_test():
     try:
         results=imsmooth( 'rgn.pointsrc.image', kernel='gauss', \
                           major=50, minor=25, outfile='rgn_test1', \
-                          box='250,250,275,290')
+                          box='350,350,375,390')
     except Exception, err:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -916,7 +917,7 @@ def region_test():
     # Select a region that contains the point source
     #   1. using imsmooth parameters
     #   2. region defined in an image
-    #        g192_a.image:testregion (blc=10,10,0,0  trc=25,25,0,39)
+    #        g192_a.image:testregion (blc=166,222,0,0  trc=296,328,0,39)
     #   3. region file.
     #        g192_1.image.rgn      (blc=0,0,0,0 trc=511,511,0,14)
     #
@@ -949,20 +950,24 @@ def region_test():
                 +str(stats['sum'][0]) +" expected value is 100."
         ia.done()
 
+        # Note that since we've selected a single plane then our
+        # output image has a single plane, 0, only!  Thus, unlike
+        # our original image the max point should be found on the
+        # 0th channel and NOT the 14th channel.
         maxpos=stats['maxpos'].tolist()
         if ( maxpos[0]!=49 or maxpos[1]!=71 or \
-             maxpos[2]!=0 or maxpos[3]!=14 ):
+             maxpos[2]!=0 or maxpos[3]!=0 ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Max position found at "+str(maxpos)\
-                +" expected it to be at 49,71,0,14."            
+                +" expected it to be at 49,71,0,0."            
 
 
     results = None
     try:
         results=imsmooth( 'rgn.pointsrc.image', kernel='gauss', \
                           major=12, minor=7, outfile='rgn_test5', \
-                          region='g192_a.image:testregion')
+                          region='g192_a2.image:testregion')
     except Exception, err:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -980,21 +985,25 @@ def region_test():
         ia.open( 'rgn_test5')
         stats = ia.statistics()
         ia.done()
-
-        if ( stats['sum'][0] < ( 100-allowedError) \
-             or stats['sum'][0] > ( 100+allowedError) ):
+        
+        sum = stats['sum'][0]
+        allowedError=0.00075
+        if ( ( sum < 100 and sum < ( 100-allowedError ) )
+             or ( sum > 100 and sum > ( 100+allowedError) ) ):
+             
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Sum on smoothed file rgn_test4 is "\
                 +str(stats['sum'][0]) +" expected value is 100."
 
+        # Max position = point src position - minx, miny of region    
         maxpos=stats['maxpos'].tolist()
-        if ( maxpos[0]!=12 or maxpos[1]!=12 or \
+        if ( maxpos[0]!=233-166 or maxpos[1]!=276-222 or \
              maxpos[2]!=0 or maxpos[3]!=20 ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Max position found at "+str(maxpos)\
-                +" expected it to be at 12,12,0,20."            
+                +" expected it to be at 212,220,0,20."            
 
     return retValue
 
@@ -1057,5 +1066,6 @@ def run():
     print "PASSED: ", passed
     if ( not passed ):
         casalog.post( error_msgs, 'EXCEPTION' )
+        raise Exception, 'imval test has failed!\n'+error_msgs
     
     return []

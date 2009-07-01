@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="uvcontsub2">
+<task type="function" name="uvcontsub2" category="modelling" visibility="experimental">
 <shortdescription>Continuum fitting and subtraction in the uv plane CALIBRATION VERSION</shortdescription>
 <description>
 With this task, the continuum emission is estimated from the 

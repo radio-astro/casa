@@ -32,11 +32,11 @@ colormania = True    #
 
 SOURCE_DIR = os.environ["CASAPATH"].split()[0]
 known_releases = ["CASA Version 2.3.0 (build #6654)",
-                  "CASA Version 2.3.1 (build #6826)"]
+                  "CASA Version 2.3.1 (build #6826)",
+                  "CASA Version 2.4.0 (build #8115)"]
 
-#exclude_host = ['pc011896.hq.eso.org']
-#exclude_test = ['fits-import-export']
 exclude_host = []
+#exclude_test = ['pointing_regression']  #temporarily!
 exclude_test = []
 same_version_per_host = False  # if False the latest run for each test is reported
 
@@ -219,7 +219,7 @@ class report:
                 self.subtests[test].add(('', log['type']))
             else:
                 self.subtests[test].add((log['image'],log['type']))
-            
+           
         #
         # Identify also hosts from entries in ./Log but no ./Result logfile exist
         if False:
@@ -374,7 +374,7 @@ class report:
                 raise Exception, "Could not parse revision number '%s'" \
                       % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, stable only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, stable branch only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -638,32 +638,20 @@ class report:
         fd.write('<TD><b>Stable summary</b></TD>')
         fd.write('</TR>\n')    
 
-        # identify subtests for each test
-        subtests = {}
-        for test in self.tests:
-            subtests[test] = sets.Set()
         subtests_list = {}
-            
-        for log in data:
-            test = log['testid']
-
-            if log['type'] == 'exec':
-                subtests[test].add(('', log['type']))
-            else:
-                subtests[test].add((log['image'],log['type']))
 
         for test in self.tests:
 
             # loop through the subtests so that the 'exec' subtest
             # is always processed first
-            subtests_list[test] = [s for s in subtests[test]]
+            subtests_list[test] = [s for s in self.subtests[test]]
             subtests_list[test].sort(cmp=cmp_exec)
             
             print "Subtests for", test, "=", subtests_list[test]
 
             summary_filename = report_dir+"/summary_"+test+".html"
             fd.write('<TR>')
-            fd.write('<TD rowspan='+str(1+len(subtests[test]))+' align=center><big><b>')
+            fd.write('<TD rowspan='+str(1+len(self.subtests[test]))+' align=center><big><b>')
             if extended:
                 fd.write('<a href="summary_'+test+'.html">'+shorten(test)+'</a>')
 
@@ -804,7 +792,7 @@ class report:
         fd.write('</TABLE>\n')
 
     def dump_legend(self, fd):
-        fd.write('Legend: <br>Released versions in <b>bold</b> <table border="1" cellpadding=0 cellspacing=0><tr>')
+        fd.write('Legend: <br>Releases in <b>bold</b> <table border="1" cellpadding=0 cellspacing=0><tr>')
         self.dump_td_start(fd, 1, 0, 0, " align=center")
         fd.write('All tests passed')
         self.dump_td_end(fd)
@@ -1014,7 +1002,7 @@ class report:
                             if log.has_key('image_'+pol+'_ra'):
                                 f.write('<pre>')
                                 for i in [0, 1]:
-                                    f.write('Pol %s: %s:\nra %s  dec %s \nbmax %s bmin %s \nbpa %s flux %s' %
+                                    f.write('Pol %s: %s:\nra %s  dec %s \nbmaj %s bmin %s \nbpa %s flux %s' %
                                              (pol, \
                                               ['Component found', 'Template'][i],
                                               log[['image_', 'ref_'][i]+pol+'_ra'],
@@ -1025,17 +1013,19 @@ class report:
                                               log[['image_', 'ref_'][i]+pol+'_flux']))
                                     f.write('<br>')
                                 f.write('</pre>')
+                                f.write('<br>')
                             if log.has_key('image_'+pol+'_min'):
                                 f.write('<pre>')                        
-                                f.write('Image    min: %g\nmax: %g\nrms: %g \n' %
+                                f.write('Image '+pol+'\n    min: %g\n    max: %g\n    rms: %g\n' %
                                          (float(log['image_'+pol+'_min']),
                                           float(log['image_'+pol+'_max']),
                                           float(log['image_'+pol+'_rms'])))
-                                f.write('Template min: %g\nmax: %g\nrms: %g \n' %
+                                f.write('Template '+pol+'\n    min: %g\n    max: %g\n    rms: %g\n' %
                                          (float(log['ref_'+pol+'_min']),
                                           float(log['ref_'+pol+'_max']),
                                           float(log['ref_'+pol+'_rms'])))
                                 f.write('</pre>')
+                                f.write('<br>')
                     else:
                         raise Exception, 'Unknown test type '+log['type']
                     
@@ -1049,9 +1039,9 @@ class report:
             fd.write('<td align=center '+coords+'>')
             if extended:
                 if subtest[1] == 'exec':
-                    fd.write('Test not run')
+                    fd.write('Test not run (yet)')
                 else:
-                    fd.write('Test not done')
+                    fd.write('Test not done (yet)')
             summary_host[host]['undet'] += 1
             if host.find('tst') >= 0 or \
                    host.find('ma014655') >= 0:
@@ -1178,6 +1168,16 @@ class report:
             data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
             while line:
                 #print line
+
+                # workarounds for casapyinfo not returning
+                # non-zero on error
+                line = re.sub(" rcasapyinfo.*", "' # changed by report", line)
+                if re.compile("^ ").search(line):
+                    line = fd.readline().rstrip()
+                    lineno += 1
+                    continue
+                           
+
                 try:
                     k, v, c = re.compile(r"""
                     ^(\w+)              # key
@@ -1197,6 +1197,7 @@ class report:
                 #print k, "=", v, "=", c
                 #data_file[k] = (v, c)  # include comments
                 data_file[k] = v
+                
                 # next line
                 line = fd.readline().rstrip()
                 lineno += 1
@@ -1480,7 +1481,7 @@ class report:
         pl.xlabel('time (sec)')
         pl.ylabel('CPU usage (percent)')
         font=FontProperties(size='small')
-        pl.legend(('user', 'idle', 'wait', 'system'),
+        pl.legend(('user', 'idle', 'iowait', 'system'),
                   loc=[0.7,0.85], prop=font)
 
         pl.title('Machine CPU usage for '+testname+' on '+host)

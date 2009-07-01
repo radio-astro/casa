@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-				   const String& scan) {
+                                   const String& scan, const Bool useModel) {
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);  
 
 
@@ -103,6 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataspectralwindowids_p=spectralwindowids;
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
+    useModelCol_p=useModel;
     
 
 
@@ -296,7 +297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       noChanSel.resize(numMS_p);
       Block<Int> sort(0);
       if(vs_p) delete vs_p; vs_p=0;
-      vs_p= new VisSet(blockMSSel_p, sort, noChanSel);
+      vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
       selectDataChannel();
       dataSet_p=True;
       

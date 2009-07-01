@@ -11,9 +11,9 @@ Available tasks:
    blcal         ft             listvis      sdscale   
    browsetable   gaincal        makemask     sdsmooth  
    clean         hanningsmooth  mosaic       sdstat    
-   clearcal      imcontsub                   setjy     
-   clearplot     imhead         plotants     smoothcal 
-   clearstat     immoments      plotcal      specfit   
+   clearcal      imcontsub      plotants     setjy     
+   clearplot     imhead         plotcal      smoothcal 
+   clearstat     immoments      plotms       specfit   
    concat        importfits     plotxy       split     
    deconvolve    importuvfits   sdaverage    tget      
    exportfits    importvla      sdbaseline   uvcontsub 
@@ -34,7 +34,7 @@ Available tools:
    ia (image analysis)   im (imager)      me (measures)
    mp (MS plot)          ms (MS)          qa (quanta)
    sm (simulation)       tb (table)       tp (table plot)
-   vp (voltage patterns)                  at (atmosphere)
+   vp (voltage patterns) pm (plotms)      at (atmosphere)
 
    pl (pylab functions)
    sd (ASAP functions - run asap_init() to import into CASA)
@@ -83,6 +83,7 @@ def toolhelp():
       print ' me : Measures utilities'
       print ' ms : MeasurementSet (MS) utilties'
       print ' mp : MS plotting (data (amp/phase) versus other quantities)'
+      print ' pm : PlotMS utilities'
       print ' tb : Table utilities (selection, extraction, etc)'
       print ' tp : Table plotting utilities'
       print ' qa : Quanta utilities'
@@ -101,9 +102,9 @@ def tasklist():
       print 'importvla        listcal      (fixvis)      clearplot'
       print '(importasdm)     listhistory  flagautocorr  plotants '
       print 'importfits       listobs      flagdata      plotcal'    
-      print 'importuvfits     listvis      flagmanager   plotxy'
-      print 'exportfits       imhead       plotxy        viewer'
-      print 'exportuvfits     imstat'
+      print 'importuvfits     listvis      flagmanager   plotms'
+      print 'exportfits       imhead       plotms        plotxy'
+      print 'exportuvfits     imstat       plotxy        viewer'
       print '                 vishead'
       print ''
       print 'Calibration      Imaging      Modelling     Utility'

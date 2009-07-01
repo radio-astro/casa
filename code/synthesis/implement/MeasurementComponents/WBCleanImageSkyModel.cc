@@ -654,7 +654,7 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
   
    if(length < originallength) // Clean up extra arrays
    {
-     for(uInt i=length;i<originallength;i++)
+     for(Int i = length; i < originallength; ++i)
      {
 	if(psf_p[i]){delete psf_p[i]; psf_p[i]=0;}
 	if(image_p[i]){delete image_p[i]; image_p[i]=0;}
@@ -676,7 +676,7 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
    
    if(length > originallength) // Add extra arrays
    {
-     for(uInt i=originallength;i<length;i++)
+     for(Int i = originallength; i < length; ++i)
      {
        psf_p[i]=0;gS_p[i]=0;ggS_p[i]=0;cimage_p[i]=0;work_p[i]=0;fluxScale_p[i]=0;
 

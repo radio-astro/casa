@@ -207,7 +207,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   VisSet::VisSet(Block<MeasurementSet>& mss,const Block<Int>& columns, 
-		 const Block< Matrix<Int> >& chanSelection, 
+                 const Block< Matrix<Int> >& chanSelection, Bool addScratch,
 		 Double timeInterval,
 		 Bool compress)
   {
@@ -267,9 +267,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     iter_p->selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
 			  blockSpw);
 
-
-    for (Int k=0; k < numMS ; ++k){
-      addScratchCols(mss[k], compress);
+    if(addScratch){
+        for (Int k=0; k < numMS ; ++k){
+            addScratchCols(mss[k], compress);
+        }
     }
     
     

@@ -1,70 +1,70 @@
 // The Private declarations of the PlotMS component.
 
-// Friend class declarations.
-friend class plotms_watcher;
+// Static //
 
+// Constants for how long to wait for the casapy application to launch, in
+// microseconds.
+// <group>
+static const unsigned int LAUNCH_WAIT_INTERVAL_US;
+static const unsigned int LAUNCH_TOTAL_WAIT_US;
+// </group>
 
-// Simple helper class to implement PlotMSParametersWatcher and
-// PlotMSPlotManagerWatcher and redirect the calls to plotms class.
-class plotms_watcher : public PlotMSParametersWatcher,
-                       public PlotMSPlotManagerWatcher {
+// Implementation of casapy_watcher for use with plotms component.
+class plotms_watcher : public CasapyWatcher {
 public:
-    // Constructor which takes the plotms parent object.
-    plotms_watcher(plotms* parent) : itsParent_(parent) { }
+    // Constructor which takes parent.
+    plotms_watcher(plotms& pl) : p(pl) { CasapyWatcher::registerWatcher(this); }
     
     // Destructor.
     ~plotms_watcher() { }
     
-    // Implements PlotMSParametersWatcher::parametersHaveChanged().
-    void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) {
-        itsParent_->parametersHaveChanged(params, updateFlag, redrawRequired);}
+    // Overrides casapy_watcher::logChanged().
+    // <group>
+    void logChanged(const String& sinkLocation) {
+        p.setLogFilename(sinkLocation); }
+    void logChanged(LogMessage::Priority filterPriority) {
+        p.setLogFilter(LogMessage::toString(filterPriority).c_str()); }
+    // </group>
     
-    // Implements PlotMSPlotManagerWatcher::plotsChanged().
-    void plotsChanged(const PlotMSPlotManager& manager) {
-        itsParent_->plotsChanged(manager); }
+    // Overrides casapy_watcher::casapyClosing().
+    void casapyClosing() { p.closeApp(); }
     
 private:
-    // Parent plotms object.
-    plotms* itsParent_;
+    // Plotms parent.
+    plotms& p;
 };
 
 
-// Currently running PlotMS, or NULL for none.
-PlotMS* itsCurrentPlotMS_;
+// Non-Static //
 
-// PlotMS watcher object.
+// Casapy watcher.
 plotms_watcher itsWatcher_;
 
-// Set PlotMS parameters that haven't yet been transferred to the current
-// PlotMS.
-PlotMSParameters itsParameters_;
+// DBus name of the plotms application we're communicating with.
+String itsDBusName_;
 
-// Set PlotMSSinglePlot parameters that haven't yet been transfered to the
-// current PlotMS.
-vector<PlotMSSinglePlotParameters> itsPlotParameters_;
+// Log parameters that are set before the application is launched.
+// <group>
+String itsLogFilename_, itsLogFilter_;
+// </group>
 
 
-// Called by plotms_watcher whenever any watched plot parameters changed.
-void parametersHaveChanged(const PlotMSWatchedParameters& params,
-        int updateFlag, bool redrawRequired);
+// Launches the dbus plotms application IF it is not already launched.
+void launchApp();
 
-// Called by plotms_watcher whenever any watched plots changed.
-void plotsChanged(const PlotMSPlotManager& manager);
+// Closes the launched dbus plotms application if needed.
+void closeApp();
 
-// Adjusts the given plot index to be an acceptable, and returns whether
-// the parameters were resized or not.
-bool plotParameters(int& plotIndex) const;
+// Helper method for calling an async method.
+void callAsync(const String& methodName);
 
-// Helper for setting MS selection.
-void setPlotMSSelection(const PlotMSSelection& selection,
-        bool updateImmediately, int plotIndex);
+// Helper method for setting the MS selection.
+void setPlotMSSelection_(const PlotMSSelection& selection,
+        const bool updateImmediately, const int plotIndex);
 
-// Helper for setting MS averaging.
-void setPlotMSAveraging(const PlotMSAveraging& averaging,
-        bool updateImmediately, int plotIndex);
+// Helper method for setting the MS averaging.
+void setPlotMSAveraging_(const PlotMSAveraging& averaging,
+        const bool updateImmediately, const int plotIndex);
 
-// Helper for setting plot axes.
-void setPlotAxes(PMS::Axis xAxis, PMS::Axis yAxis, PMS::DataColumn xDataColumn,
-        PMS::DataColumn yDataColumn, bool useX, bool useY,
-        bool updateImmediately, int plotIndex);
+// Helper method for setting the flag extension.
+void setFlagging_(const PlotMSFlagging& flagging);

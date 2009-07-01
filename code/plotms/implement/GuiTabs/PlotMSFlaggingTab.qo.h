@@ -55,9 +55,6 @@ public:
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Flagging"; }
     
-    // Implements PlotMSTab::toolButtons().
-    QList<QToolButton*> toolButtons() const;
-    
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Currently
     // does nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
@@ -66,6 +63,9 @@ public:
     
     // See PlotMSFlaggingWidget::getValue().
     PlotMSFlagging getValue(PlotMSPlot* plot = NULL) const;
+    
+    // See PlotMSFlaggingWidget::setValue().
+    void setValue(const PlotMSFlagging& value);
 };
 
 }

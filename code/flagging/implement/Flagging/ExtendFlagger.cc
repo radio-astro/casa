@@ -223,7 +223,8 @@ Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr) {
 }
 
 Bool ExtendFlagger::run(Bool trial, Bool reset) {
-   return flagger.run(trial, reset);
+  flagger.run(trial, reset);
+  return True;
 }
 
 Bool ExtendFlagger::extend2(const Vector<FlagID>& flagids) {
@@ -609,4 +610,3 @@ String ExtendFlagger::ableSpw(const Int spw) {
 
 
 } //# NAMESPACE CASA - END 
-

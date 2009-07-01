@@ -77,18 +77,19 @@
 #include <casa/sstream.h>
 #include <fstream.h>
 #include <strstream>
-#include <images/Images/SubImage.h>
-#include <images/Images/ImageSummary.h>
 #include <images/Regions/WCBox.h>
+#include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
+#include <images/Images/ImageSummary.h>
 #include <casa/BasicMath/Random.h>
 
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 //#include <synthesis/MeasurementComponents/GlobalFTMachineCallbacks.h>
 #include <casa/System/ProgressMeter.h>
 
-#define CONVSIZE (1024*2)
-#define USETABLES 1           // If equal to 1, use tabulated exp() and
+#define CONVSIZE (1024*4)
+#define OVERSAMPLING 20
+#define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
 // determine the resolution of the
@@ -109,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 Bool usezero)
     ////: nPBWProjectFT(ms,nWPlanes,icachesize,cfCacheDirName,applyPointingOffset,doPBCorr,itilesize,paSteps,pbLimit,usezero),
     : nPBWProjectFT(nWPlanes,icachesize,cfCacheDirName,applyPointingOffset,doPBCorr,itilesize,paSteps,pbLimit,usezero),
-      fieldIds_p(0), avgPBReady(False)
+      fieldIds_p(0)
   {
     //
     // Set the function pointer for FORTRAN call for GCF services.  
@@ -137,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     cfCache.setCacheDir(cfCacheDirName.data());
     cfCache.initCache();
-    convSampling=10;
+    convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
     Long hostRAM = (HostInfo::memoryTotal()*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
@@ -155,7 +156,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   PBMosaicFT::PBMosaicFT(const RecordInterface& stateRec)
-    : nPBWProjectFT(stateRec), avgPBReady(False)
+    : nPBWProjectFT(stateRec)
   {
     // Construct from the input state record
     String error;
@@ -166,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    bandID_p = getVisParams();
     PAIndex = -1;
     maxConvSupport=-1;
-    convSampling=10;
+    convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
     nApertures = 0;
   }
@@ -233,33 +234,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Add field offsets to the pointing errors.
     //
-    Float dayHr=2*3.141592653589793116;
-    MVDirection ref(directionCoord.referenceValue()(0),
-		    directionCoord.referenceValue()(1)),
-      vbDir(vb.direction1()(0).getAngle().getValue()(0),
-	    vb.direction1()(0).getAngle().getValue()(1));
-    
-    Quantity sep=ref.separation(vbDir);
-    //    cerr << "Seperation = " << sep << endl;
-    if (0)
-      {
-	l_off = l_off - (Float)(directionCoord.referenceValue()(0) -
-				dayHr-vb.direction1()(0).getAngle().getValue()(0));
-	m_off = m_off - (Float)(directionCoord.referenceValue()(1) -
-				vb.direction1()(0).getAngle().getValue()(1));
-      }
 
-    static int ttt=0;
-    static int fieldID=-1;
+//     Float dayHr=2*3.141592653589793116;
+//     MVDirection ref(directionCoord.referenceValue()(0),
+// 		    directionCoord.referenceValue()(1)),
+//       vbDir(vb.direction1()(0).getAngle().getValue()(0),
+// 	    vb.direction1()(0).getAngle().getValue()(1));
+    
+//     if (0)
+//       {
+// 	l_off = l_off - (Float)(directionCoord.referenceValue()(0) -
+// 				dayHr-vb.direction1()(0).getAngle().getValue()(0));
+// 	m_off = m_off - (Float)(directionCoord.referenceValue()(1) -
+// 				vb.direction1()(0).getAngle().getValue()(1));
+//       }
+
+    //
+    // Convert the direction from image co-ordinate system and the VB
+    // to MDirection.  Then convert the MDirection to Quantity so that
+    // arithematic operation (subtraction) can be done.  Then use the
+    // subtracted Quantity to construct another MDirection and use
+    // *it's* getAngle().getValue() to extract the difference in the
+    // sky direction (from image co-ordinate system) and the phase
+    // center direction of the VB in radians!  
+    //
+    // If only VisBuffer, and DirectionCoordinate class could return
+    // MDirection, and MDirection class had operator-(), the code
+    // below could look more readable as:
+    //  MDirection diff=vb.mDirection()-directionCoord.mDirection();
+    // 
+    MDirection vbMDir(vb.direction1()(0)),skyMDir, diff;
+    directionCoord.toWorld(skyMDir, directionCoord.referencePixel());
+    diff = MDirection(skyMDir.getAngle()-vbMDir.getAngle());
+    l_off = l_off - (Float)diff.getAngle().getValue()(0);
+    m_off = m_off - (Float)diff.getAngle().getValue()(1);
+
+    static int firstPass=0;
+    //    static int fieldID=-1;
     static Vector<Float> offsets0,offsets1;
-    if (ttt==0)
+    if (firstPass==0)
       {
-	MLCG mlcg((Int)(vb.time()(0)));
-	Normal nrand(&mlcg,0.0,10.0);
 	offsets0.resize(NAnt);
 	offsets1.resize(NAnt);
-	for(Int i=0;i<NAnt;i++) offsets0(i) = (Float)(nrand());
-	for(Int i=0;i<NAnt;i++) offsets1(i) = (Float)(nrand());
+// 	MLCG mlcg((Int)(vb.time()(0)));
+// 	Normal nrand(&mlcg,0.0,10.0);
+// 	for(Int i=0;i<NAnt;i++) offsets0(i) = (Float)(nrand());
+// 	for(Int i=0;i<NAnt;i++) offsets1(i) = (Float)(nrand());
 	offsets0 = offsets1 = 0.0;
       }
     for(Int i=0;i<NAnt;i++)
@@ -275,16 +295,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 	cout << l_off*2.062642e5 << endl;
 // 	cout << m_off*2.062642e5 << endl;
 //       }
-     if (ttt==0) 
+    if (firstPass==0) 
       {
 // 	 cout << (Float)(directionCoord.referenceValue()(0)) << " "
 // 	      << (Float)(directionCoord.referenceValue()(1)) << endl;
 // 	 cout << vb.direction1()(0).getAngle().getValue()(0) << " "
 // 	      << vb.direction1()(0).getAngle().getValue()(1) << endl;
-	cout << l_off << endl;
-	cout << m_off << endl;
+//  	cout << l_off << endl;
+//  	cout << m_off << endl;
        }
-     ttt++;
+     firstPass++;
     return NAnt;
   }
   //
@@ -374,7 +394,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	LatticeFFT::cfft2d(*lattice,False);
 
-	Float peakAvgPB;
 	if (!avgPBReady)
 	  {
 	    avgPBReady=True;
@@ -385,13 +404,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 	     << nApertures
 // 	     << endl;
 
-// 	{
-// 	  String name("griddedWeights.im");
-// 	  storeImg(name,griddedWeights);
-// 	}
+//  	{
+//  	  String name("griddedWeights.im");
+//  	  storeImg(name,griddedWeights);
+//  	}
 	//	Complex maxPB=(Complex)sum(griddedWeights.get());
 	//	pbNorm = (Float)abs(sum(griddedWeights.get()));
 	    LatticeFFT::cfft2d(griddedWeights);
+//  	{
+//  	  String name("cpb.im");
+//  	  storeImg(name,griddedWeights);
+//  	}
 
 	/*
 	Complex maxPB=Complex(1,0);
@@ -407,7 +430,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	*/
 
 	//	avgPB.copyData(LatticeExpr<Float>(abs((griddedWeights/pbNorm))));
-	    avgPB.copyData(LatticeExpr<Float>(abs((griddedWeights))));
+	    avgPB.copyData(LatticeExpr<Float>(sqrt(abs(griddedWeights))));
 	//	peakAvgPB = max(avgPB.get());
 	// 	cout << "max(avgPB) = " << peakAvgPB << endl;
 	    pbNormalized=False;
@@ -454,53 +477,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    {
 	      Int pol=lix.position()(2);
 	      Int chan=lix.position()(3);
-	      if(weights(pol, chan)>0.0) 
-		{
-		  Int iy=lix.position()(1);
-		  gridder->correctX1D(correction,iy);
+	      //	      if(weights(pol, chan)>0.0) 
+	      {
+		Int iy=lix.position()(1);
+		gridder->correctX1D(correction,iy);
 		  
-		  Vector<Float> PBCorrection(liavgpb.rwVectorCursor().shape()),
-		    avgPBVec(liavgpb.rwVectorCursor().shape());
+		Vector<Float> PBCorrection(liavgpb.rwVectorCursor().shape()),
+		  avgPBVec(liavgpb.rwVectorCursor().shape());
 		  
-		  PBCorrection = liavgpb.rwVectorCursor();
-		  avgPBVec = liavgpb.rwVectorCursor();
+		PBCorrection = liavgpb.rwVectorCursor();
+		avgPBVec = liavgpb.rwVectorCursor();
 		  
-		  if (!doPBCorrection) 		  avgPBVec=1.0;
-		  for(int i=0;i<PBCorrection.shape();i++)
-		    {
-		      //
-		      // This with PS functions
-		      //
-// 		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
-// 		      //		      PBCorrection(i)=(avgPBVec(i))*sincConv(i)*sincConv(iy);
-// 		      if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
-// 			lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i); //*pbNorm
-// 		      else 
-// 			lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);//pbNorm;
-		      //
-		      // This without the PS functions
-		      //
- 		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
- 		      if ((abs(PBCorrection(i))) >= pbLimit_p)
-			lix.rwVectorCursor()(i) /= PBCorrection(i);
-	 	      else if (!makingPSF)
- 			lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
-		    }
+		sincConv=1.0;
+		if (!doPBCorrection) 		  avgPBVec=1.0;
+		for(int i=0;i<PBCorrection.shape();i++)
+		  {
+		    //
+		    // This with PS functions
+		    //
+		    // 		      PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		    // 		      //		      PBCorrection(i)=(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		    // 		      if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
+		    // 			lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i); //*pbNorm
+		    // 		      else 
+		    // 			lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);//pbNorm;
+		    //
+		    // This without the PS functions
+		    //
+		    PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		    if ((abs(PBCorrection(i))) >= pbLimit_p)
+		      lix.rwVectorCursor()(i) /= PBCorrection(i);
+		    else if (!makingPSF)
+		      lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+		  }
 
-		  if(normalize) 
-		    {
-		      Complex rnorm(Float(inx)*Float(iny)/(weights(pol,chan)));
-		      //		      Complex rnorm(Float(inx)*Float(iny)/peakAvgPB/nApertures);
-		      lix.rwCursor()*=rnorm;
-		    }
-		  else 
-		    {
-		      Complex rnorm(Float(inx)*Float(iny));
-		      lix.rwCursor()*=rnorm;
-		    }
-		}
-	      else 
-		lix.woCursor()=0.0;
+		if(normalize) 
+		  {
+		    if(weights(pol, chan)>0.0) 
+		      {
+			Complex rnorm(Float(inx)*Float(iny)/(weights(pol,chan)));
+			//		      Complex rnorm(Float(inx)*Float(iny)/peakAvgPB/nApertures);
+			lix.rwCursor()*=rnorm;
+		      }
+		    else 
+		      lix.woCursor()=0.0;
+		  }
+		else 
+		  {
+		    Complex rnorm(Float(inx)*Float(iny));
+		    lix.rwCursor()*=rnorm;
+		  }
+	      }
 	    }
 	}
 
@@ -556,6 +583,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const Double *c,
 		Int *support,
 		Int *convsize,
+		Int *convwtsize,
 		Int *sampling,
 		Int *wconvsize,
 		Complex *convfunc,
@@ -579,7 +607,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int *ConjCFMap,
 		Double *currentCFPA, Double *actualPA,
 		Int *avgPBReady,
-		Complex *avgPB, Double *cfRefFreq_p);
+		Complex *avgPB, Double *cfRefFreq_p,
+		Complex *convWeights,
+		Int *convWtSupport);
     void dpbmos(Double *uvw,
 		Double *dphase,
 		Complex *values,
@@ -703,6 +733,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFMap = polMap; ConjCFMap = polMap;
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
+    Array<Complex> rotatedConvFunc;
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+// 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+				       rotatedConvFunc,0.0);
 
     ConjCFMap = polMap;
     makeCFPolMap(vb,CFMap);
@@ -722,7 +757,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
     vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
@@ -739,7 +775,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualConvSize = convFunc.shape()(0);
     
     IPosition shp=convSupport.shape();
-    Int alwaysDoPointing=1;
+    Int alwaysDoPointing=0;
     dpbmos(uvw_p,
 	   dphase_p,
 	   visdata_p,
@@ -844,6 +880,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
+    Array<Complex> rotatedConvFunc;
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+// 				       rotatedConvFunc,(currentCFPA-actualPA));
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+				       rotatedConvFunc,0.0);
+
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
     
@@ -859,7 +901,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
     vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
@@ -943,13 +986,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
-			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,WEIGHT,
-			  SUMWEIGHT,CONJCFMAP,CFMAP,AVGPBPTR};
-    Vector<Bool> deleteThem(24);
+			  CONVSUPPORT,CONVWTSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,WEIGHT,
+			  SUMWEIGHT,CONJCFMAP,CFMAP,AVGPBPTR,CONVWTS};
+    Vector<Bool> deleteThem(25);
     
     Double *uvw_p, *dphase_p, *actualOffset_p, *vb_freq_p, *uvScale_p;
-    Complex *dataPtr_p, *f_convFunc_p, *avgPBPtr;
-    Int *flags_p, *rowFlags_p, *chanMap_p, *polMap_p, *convSupport_p, *vb_ant1_p, *vb_ant2_p,
+    Complex *dataPtr_p, *f_convFunc_p, *f_convWts_p,*avgPBPtr;
+    Int *flags_p, *rowFlags_p, *chanMap_p, *polMap_p, *convSupport_p, *convWtSupport_p,
+      *vb_ant1_p, *vb_ant2_p,
       *ConjCFMap_p, *CFMap_p;
     Float *l_off_p, *m_off_p;
     Float *weight_p;Double *sumwt_p,*isumwt_p;
@@ -964,6 +1008,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
+    Array<Complex> rotatedConvFunc;
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+// 				       rotatedConvFunc,(currentCFPA-actualPA));
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+				       rotatedConvFunc,0.0);
+
+
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
     
@@ -976,7 +1027,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataPtr_p       = dataPtr.getStorage(deleteThem(DATAPTR));
     vb_freq_p       = (Double *)(vb.frequency().getStorage(deleteThem(VBFREQ)));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    convWtSupport_p = convWtSupport.getStorage(deleteThem(CONVWTSUPPORT));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
+    f_convWts_p     = convWeights.getStorage(deleteThem(CONVWTS));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = (Int *)(vb.antenna1().getStorage(deleteThem(VBANT1)));
@@ -993,11 +1047,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     avgPB_p=Complex(0,0);
     avgPBPtr        = avgPB_p.getStorage(deleteThem(AVGPBPTR));
     
-    Int npa=convSupport.shape()(2),actualConvSize;
+    Int npa=convSupport.shape()(2),actualConvSize, actualConvWtSize;
     Int paIndex_Fortran = paIndex; 
     Int iavgPBReady=(avgPBReady==False);
     actualConvSize = convFunc.shape()(0);
-    
+    actualConvWtSize = convWeights.shape()(0);
+
     IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
     gpbmos(uvw_p,
@@ -1022,6 +1077,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   &C::c,
 	   convSupport_p,
 	   &actualConvSize,
+	   &actualConvWtSize,
 	   &convSampling,
 	   &wConvSize,
 	   f_convFunc_p,
@@ -1045,9 +1101,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   ConjCFMap_p,
 	   &currentCFPA,&actualPA,
 	   &iavgPBReady,
-	   avgPBPtr,&cfRefFreq_p
+	   avgPBPtr,&cfRefFreq_p,
+	   f_convWts_p,convWtSupport_p
 	   );
-    
+
     ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
     CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
     
@@ -1063,6 +1120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     convSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
     convFunc.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
+    convWeights.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVWTS));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
     polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
     vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
@@ -1070,28 +1128,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     weight.freeStorage((const Float*&)weight_p,deleteThem(WEIGHT));
     sumWeight.putStorage(sumwt_p,deleteThem(SUMWEIGHT));
     //    avgPB_p.putStorage(avgPBPtr, deleteThem(AVGPBPTR));
-
     iSumWt.putStorage(isumwt_p,tmp);
     //    avgPB_p /= iSumWt(0,0);
     sumWeight += iSumWt;
-    //    nApertures+=((sum(avgPB_p)/iSumWt(0,0)));
-    nApertures+=Complex(1.0,0.0);
-    Complex iarea = sum(avgPB_p);
-    griddedWeights.put(griddedWeights.get()+avgPB_p);
-    //    nApertures += iarea;
-    //    griddedWeights.put(griddedWeights.get()+avgPB_p*iarea/(Complex(iSumWt(0,0),0)));
-//     cout << "Area under griddedWeights_i = " << iarea 
-// 	 << " " << vb.spectralWindow() << " " << vb.fieldId() 
-// 	 << nApertures
-// 	 << endl;
-//     if (max(avgPB_p) > 0)
-//       {
-// 	String name("ttt.im");
-// 	storeImg(name,griddedWeights);
-// 	exit(0);
-//       }
+
+    if (!avgPBReady)
+      {
+	//    nApertures+=((sum(avgPB_p)/iSumWt(0,0)));
+	nApertures+=Complex(1.0,0.0);
+	Complex iarea = sum(avgPB_p);
+	griddedWeights.put(griddedWeights.get()+avgPB_p);
+	//    nApertures += iarea;
+	//    griddedWeights.put(griddedWeights.get()+avgPB_p*iarea/(Complex(iSumWt(0,0),0)));
+	//     cout << "Area under griddedWeights_i = " << iarea 
+	// 	 << " " << vb.spectralWindow() << " " << vb.fieldId() 
+	// 	 << nApertures
+	// 	 << endl;
+// 	static int iii=0;
+// 	if (fabs(currentCFPA-actualPA) == 0)
+// 	  {
+// 	    TempImage<Complex> junk(avgPB_p.shape(),griddedWeights.coordinates());
+// 	    ostringstream os;
+// 	    os << "ttt.im" << iii << "_" << fabs(currentCFPA-actualPA);
+// 	    String name(os.str());
+// 	    junk.put(avgPB_p);
+// 	    storeImg(name,junk);
+// 	    iii++;
+// 	    exit(0);
+// 	  }
 //     cout << max(avgPB_p) << " " << min(avgPB_p) << endl;
 //     cout << max(griddedWeights.get()) << " " << min(griddedWeights.get()) << endl;
+      }
   }
   //
   //---------------------------------------------------------------

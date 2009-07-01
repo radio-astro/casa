@@ -65,24 +65,39 @@ void PlotMSAveraging::fromRecord(const RecordInterface& record) {
     String sf; Field f;
     for(unsigned int i = 0; i < fields.size(); i++) {
         sf = fields[i]; f = field(sf);
-        if(record.isDefined(sf) && record.dataType(sf) == TpBool)
+        if(!record.isDefined(sf)) continue;
+        
+        // Set as bool/double.
+        if(record.dataType(sf) == TpBool) {
             setFlag(f, record.asBool(sf));
-        if(fieldHasValue(f)) {
-            sf += RKEY_VALUE;
-            if(record.isDefined(sf) && record.dataType(sf) == TpDouble)
-                setValue(f, record.asDouble(sf));
+            if(fieldHasValue(f)) {
+                sf += RKEY_VALUE;
+                if(record.isDefined(sf) && record.dataType(sf) == TpDouble)
+                    setValue(f, record.asDouble(sf));
+            }
+            
+        // Set as String.
+        } else if(record.dataType(sf) == TpString) {
+            setValue(f, record.asString(sf));
         }
     }
 }
 
-Record PlotMSAveraging::toRecord() const {
+Record PlotMSAveraging::toRecord(bool useStrings) const {
     Record rec(Record::Variable);
     
     const vector<Field>& f = fields();
     for(unsigned int i = 0; i < f.size(); i++) {
-        rec.define(field(f[i]), getFlag(f[i]));
-        if(fieldHasValue(f[i]))
-            rec.define(field(f[i]) + RKEY_VALUE, getValue(f[i]));
+        // Set as String.
+        if(useStrings && fieldHasValue(f[i])) {
+            rec.define(field(f[i]), getValueStr(f[i]));
+            
+        // Set as bool/double.
+        } else {
+            rec.define(field(f[i]), getFlag(f[i]));
+            if(fieldHasValue(f[i]))
+                rec.define(field(f[i]) + RKEY_VALUE, getValue(f[i]));
+        }
     }
     
     return rec;
@@ -108,6 +123,19 @@ double PlotMSAveraging::getValue(Field f) const {
 }
 void PlotMSAveraging::setValue(Field f, double value) {
     if(fieldHasValue(f)) itsValues_[f] = value; }
+
+String PlotMSAveraging::getValueStr(Field f) const {
+    if(!getFlag(f) || !fieldHasValue(f)) return "";
+    else return String::toString(getValue(f));
+}
+void PlotMSAveraging::setValue(Field f, const String& value) {
+    setFlag(f, !value.empty());
+    if(fieldHasValue(f)) {
+        double d;
+        if(sscanf(value.c_str(), "%lf", &d) >= 1)
+            setValue(f, d);
+    }
+}
 
 
 bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {

@@ -117,8 +117,8 @@ RPFITSROOT := $(THIRDPARTY)
 QT4ROOT := $(THIRDPARTY)
 QT4LIBD := $(THIRDPARTY)/lib
 QT4DEFS := -headerpad_max_install_names -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
-QT4INCD := $(QT4ROOT)/mkspecs/macx-g++ $(QT4ROOT)/include/QtCore $(QT4ROOT)/include/QtGui $(QT4ROOT)/include/QtXml $(QT4ROOT)/include
-QT4LIB  :=  -F$(QT4LIBD) -framework QtGui -framework Carbon -framework QtCore -framework QtXml -lqwt
+QT4INCD := $(QT4ROOT)/mkspecs/macx-g++ $(QT4ROOT)/include/QtCore $(QT4ROOT)/include/QtDBus $(QT4ROOT)/include/QtGui $(QT4ROOT)/include/QtXml $(THIRDPARTY)/include
+QT4LIB  :=  -F$(QT4LIBD) -framework QtGui -framework Carbon -framework QtCore -framework QtDBus -framework QtXml -lqwt
 MOC4 :=$(QT4ROOT)/bin/moc -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED -DAIPS_HAS_QWT
 UIC4 :=$(QT4ROOT)/bin/uic
 

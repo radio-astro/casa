@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on ngc5921_regression.py"
+    return "NGC 5921, VLA D-array, import, export, flagging, calibration, imaging, image statistics"
 
 def run():
     lepath=locatescript('ngc5921_regression.py')

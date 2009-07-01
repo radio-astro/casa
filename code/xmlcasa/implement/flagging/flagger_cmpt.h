@@ -37,7 +37,6 @@ class flagger
 	
 
   public:
-
     flagger();
     virtual ~flagger();
 
@@ -57,14 +56,16 @@ class flagger
 
     bool setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
 
-    bool setshadowflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation)
+    bool setshadowflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation,
+                        double diameter = -1.0)
 	;
 
     bool setqueryflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const std::string& what = "fieldid", const double fractionthreshold = 0.0, const int nflagsthreshold = 0, const bool morethan = true);
 
     bool setextendflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const std::string& along = "allbaselines", const int width = 0);
 
-    bool run(const bool trial = false, const bool reset = false);
+    ::casac::record*
+        run(const bool trial = false, const bool reset = false);
 
     bool writeflagstodisk();
 
@@ -81,8 +82,7 @@ class flagger
     bool getflagversionlist();
 
     private:
-
-	#include <xmlcasa/flagging/flagger_private.h>
+        #include <xmlcasa/flagging/flagger_private.h>
 
 };
 

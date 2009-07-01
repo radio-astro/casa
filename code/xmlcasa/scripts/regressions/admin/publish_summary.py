@@ -394,9 +394,13 @@ class runTest:
         print "Created ", self.resultsubdir
 
     def polImageTest(self, imageName, templateImage, testName, WORKING_DIR, RESULT_DIR, numPol=2):
-        a=ImageTest(imageName,write=True,resultDir=self.resultdir,imDir=self.imdir)
-        b=ImageTest(templateImage,write=False,resultDir=self.resultdir,imDir=self.imdir)
-        status=1
+        a = ImageTest(imageName, write=True,
+                      resultDir = self.resultdir,
+                      imDir=self.imdir)
+        b = ImageTest(templateImage, write=False,
+                      resultDir = self.resultdir,
+                      imDir=self.imdir)
+        status = 1
         pol=['I', 'V']
         if(numPol==4):
             pol=['I','Q','U','V']
@@ -404,8 +408,8 @@ class runTest:
         ##do only the 'I' subtraction
         for k in range(1):
             print 'POL TEST ', k, 'numpol ', numPol
-            out1,rms1=a.bmodel(plane=k)
-            out2,rms2=b.bmodel(plane=k)
+            out1, rms1 = a.bmodel(plane=k)
+            out2, rms2 = b.bmodel(plane=k)
  #           rms1=a.subtract(plane=k)
  #           rms2=b.subtract(plane=k)
         
@@ -422,18 +426,18 @@ class runTest:
 
                 self.result['image_'+pol[k]+'_ra']   = "'"+out1[0][0]+"'", pol[k]+" component RA"
                 self.result['image_'+pol[k]+'_dec']  = "'"+out1[0][1]+"'", pol[k]+" component DEC"
-                self.result['image_'+pol[k]+'_bmax'] = "'"+out1[0][2]+"'", ""
-                self.result['image_'+pol[k]+'_bmin'] = "'"+out1[0][3]+"'", ""
-                self.result['image_'+pol[k]+'_bpa']  = "'"+out1[0][4]+"'", ""
-                self.result['image_'+pol[k]+'_flux'] = "'"+out1[0][5]+"'", ""
+                self.result['image_'+pol[k]+'_bmax'] = "'"+out1[0][2]+"'", "major axis"
+                self.result['image_'+pol[k]+'_bmin'] = "'"+out1[0][3]+"'", "minor axis"
+                self.result['image_'+pol[k]+'_bpa']  = "'"+out1[0][4]+"'", "position angle"
+                self.result['image_'+pol[k]+'_flux'] = "'"+out1[0][5]+"'", "flux"
 
                 # Duplicate of above
                 self.result['ref_'+pol[k]+'_ra']   = "'"+out2[0][0]+"'", pol[k]+" component RA"
                 self.result['ref_'+pol[k]+'_dec']  = "'"+out2[0][1]+"'", pol[k]+" component DEC"
-                self.result['ref_'+pol[k]+'_bmax'] = "'"+out2[0][2]+"'", ""
-                self.result['ref_'+pol[k]+'_bmin'] = "'"+out2[0][3]+"'", ""
-                self.result['ref_'+pol[k]+'_bpa']  = "'"+out2[0][4]+"'", ""
-                self.result['ref_'+pol[k]+'_flux'] = "'"+out2[0][5]+"'", ""
+                self.result['ref_'+pol[k]+'_bmax'] = "'"+out2[0][2]+"'", "major axis"
+                self.result['ref_'+pol[k]+'_bmin'] = "'"+out2[0][3]+"'", "minor axis"
+                self.result['ref_'+pol[k]+'_bpa']  = "'"+out2[0][4]+"'", "position angle"
+                self.result['ref_'+pol[k]+'_flux'] = "'"+out2[0][5]+"'", "flux"
 
 
                 if(abs(rms2-rms1) > rms2/2.0):
@@ -511,9 +515,13 @@ class runTest:
         status=1
 #        XY1,fwhm1=a.auto_fitCube(a.b,verbose=0)
         XY1,fwhm1=a.auto_fitCube2()
+        
         a.changeImage(templateImage)
+        
 #        XY2,fwhm2=a.auto_fitCube(a.b,verbose=0)
+
         XY2,fwhm2=a.auto_fitCube2()
+        
         if(abs((XY1[0][0]-XY2[0][0])/XY2[0][0]) > 0.1):
             status=0
         if(abs((fwhm1[0]-fwhm2[0])/fwhm2[0]) > 0.1):
@@ -550,7 +558,19 @@ class runTest:
             if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel=k     
         myf=sys._getframe(stacklevel).f_globals
-        return myf['casalog'].version()
+
+        (errorcode, svnversion) = commands.getstatusoutput( \
+            'casapyinfo --svnversion')
+        if errorcode != 0 or \
+               svnversion.find('casa') > 0:  # or if an error happened but it didn't return non-zero
+            (errorcode, svnversion) = commands.getstatusoutput( \
+            'casapyinfo-test --svnversion')
+            if errorcode != 0 or \
+                   svnversion.find('casa') > 0:
+                return myf['casalog'].version()
+
+        return myf['casalog'].version() + \
+               ' r' + svnversion
 
     def create_log(self, product_file):
         filename = "%s/result-%s-%s.txt" % \
@@ -620,7 +640,6 @@ class runTest:
             #return "%s %s %s (%s)" % (OS, DIST, REV, PSUEDONAME)
         else:
             return "??? ??? ??-bit", "???"
-
 
 
 class logger:

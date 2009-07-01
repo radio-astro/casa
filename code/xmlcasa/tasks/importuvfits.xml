@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="importuvfits">
+      <task type="function" name="importuvfits" category="import/export">
 	<shortdescription>Convert a UVFITS file to a CASA visibility data set</shortdescription>
 	<description>Convert a UVITS file to a CASA visiblity data set.
 		Don\'t forget to flag autocorrelations using taskname flagdata, autocorr = true

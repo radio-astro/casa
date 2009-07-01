@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="viewer">
+<task type="function" name="viewer" category="utility">
 	<shortdescription>View an image or visibility data set:</shortdescription>
 	<description>
         The viewer will display images in raster, contour, vector or

@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the param set for sdscale -->
 
-<task type="function" name="sdscale" startup="false">
+<task type="function" name="sdscale" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: scale the sd spectra</shortdescription>
 

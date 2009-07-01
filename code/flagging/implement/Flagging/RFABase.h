@@ -114,7 +114,7 @@ public:
 // Called after a dry pass is complete
   virtual IterMode endDry    () { return STOP; };
 // Called after a flag pass is complete
-  virtual void endFlag        () {};
+  virtual void endFlag () {};
   
 // Iteration methods for a data pass. Either or both may be implemented.
 // iterTime() is called once for each new VisBuffer (= new time slot)
@@ -150,6 +150,8 @@ public:
 
 // static method for setting the indexing base for agent arguments
   static void setIndexingBase ( uInt base );
+
+  virtual Record getResult( ) { return Record(); };
 
   virtual void finalize() {};
   virtual void initialize() {};

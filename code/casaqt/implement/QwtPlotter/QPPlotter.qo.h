@@ -189,13 +189,6 @@ public:
     // Implements Plotter::fileChooserDialog().
     String fileChooserDialog(const String& title = "File Chooser",
                              const String& directory = "");
-    
-    
-    // Implements Plotter::logEventFlags().
-    int logEventFlags() const;
-    
-    // Implements Plotter::setLogEventFlags().
-    void setLogEventFlags(int flags);
 
     
     // Implements Plotter::registerResizeHandler().
@@ -247,12 +240,6 @@ private:
     
     // Flag for whether a resize event should be emitted.
     bool m_emitResize;
-    
-    // Logger.
-    PlotLoggerPtr m_logger;
-    
-    // Log event flags.
-    int m_logEvents;
     
     // Date formats.
     // <group>

@@ -15,7 +15,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--       Add support for user defined kernels                             -->
 <!--       Add support for altering the position angle for the kernel       -->
 
-<task type="function" name="imsmooth">
+<task type="function" name="imsmooth" category="image analysis">
 <shortdescription>Smooth an image or portion of an image</shortdescription>
 
 <description>

@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
 namespace casa {
@@ -100,9 +101,34 @@ vector<PlotCanvasPtr> PlotMSSinglePlot::generateCanvases(PlotMSPages& pages) {
     return vector<PlotCanvasPtr>(1, page.canvas(row, col));
 }
 
+void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
+    tab.insertMSSubtab(0);
+    tab.insertAxesSubtab(1);
+    tab.insertCacheSubtab(2);
+    tab.insertDisplaySubtab(3);
+    tab.insertCanvasSubtab(4);
+    tab.insertExportSubtab(5);
+}
+
 const PlotMSPlotParameters& PlotMSSinglePlot::parameters() const {
     return itsParameters_; }
 PlotMSPlotParameters& PlotMSSinglePlot::parameters() { return itsParameters_; }
+
+PlotMSRegions PlotMSSinglePlot::selectedRegions() const {
+    PlotMSRegions r;
+    vector<PlotCanvasPtr> canv = canvases();
+    for(unsigned int i = 0; i < canv.size(); i++)
+        r.addRegions(itsParameters_.xAxis(), itsParameters_.yAxis(), canv[i]);
+    return r;
+}
+
+PlotMSRegions PlotMSSinglePlot::visibleSelectedRegions() const {
+    PlotMSRegions r;
+    vector<PlotCanvasPtr> canv = visibleCanvases();
+    for(unsigned int i = 0; i < canv.size(); i++)
+        r.addRegions(itsParameters_.xAxis(), itsParameters_.yAxis(), canv[i]);
+    return r;
+}
 
 const PlotMSSinglePlotParameters& PlotMSSinglePlot::singleParameters() const {
     return itsParameters_; }

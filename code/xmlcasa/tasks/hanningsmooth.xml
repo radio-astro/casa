@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hanningsmooth">
+<task type="function" name="hanningsmooth" category="calibration">
 	<shortdescription>Hanning smooth frequency channel data to remove Gibbs ringing</shortdescription>
 	<description>This function Hanning smooths the frequency channels with
         a weighted running average of smoothedData[i] =

@@ -84,7 +84,9 @@ namespace casa{
 
     return FTCoords;
   }
-
+  //----------------------------------------------------------------------
+  // Write PB to the pbImage
+  //
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
 					    const VisBuffer& vb, const Vector<Float>& paList, 
 					    Int bandID)
@@ -97,7 +99,6 @@ namespace casa{
 
     fillPB(*(ap.aperture),pbImage);
   }
-
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
 					    const VisBuffer& vb, Int bandID)
   {
@@ -109,7 +110,6 @@ namespace casa{
     regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
     fillPB(*(ap.aperture),pbImage);
   }
-
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Complex>& pbImage, 
 					    const VisBuffer& vb, Int bandID)
   {
@@ -119,9 +119,52 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
+{
+  String name("pb.im");
+  storeImg(name,*(ap.aperture));
+}
     fillPB(*(ap.aperture),pbImage);
   }
+  //--------------------------------------------------------------------------
+  // Write PB^2 to the pbImage
+  //
+  void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
+					      const VisBuffer& vb, const Vector<Float>& paList, 
+					      Int bandID)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
 
+    fillPB(*(ap.aperture),pbImage, True);
+  }
+  void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
+					      const VisBuffer& vb, Int bandID)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+    regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
+    fillPB(*(ap.aperture),pbImage,True);
+  }
+  void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Complex>& pbImage, 
+					      const VisBuffer& vb, Int bandID)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
+    fillPB(*(ap.aperture),pbImage, True);
+  }
+  //
+  //--------------------------------------------------------------------------
+  //
   void VLACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						   IPosition& skyShape,
 						   TempImage<Complex>& uvGrid,
@@ -152,7 +195,7 @@ namespace casa{
 	ROScalarColumn<Double> reffreq = spwCol.refFrequency();
 	
 	//	Freq = sum(chanFreq)/chanFreq.nelements();
-	Freq = max(chanFreq);
+	Freq = max(chanfreq.getColumn());
 	ap.freq = Freq/1E9;
 	
 	IPosition imsize(skyShape);
@@ -280,7 +323,7 @@ namespace casa{
     ROScalarColumn<Double> reffreq = spwCol.refFrequency();
     //    Freq = sum(chanFreq)/chanFreq.nelements();
 
-    Freq = max(chanFreq);
+    Freq = max(chanfreq.getColumn());
     IPosition imsize(skyShape);
     CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize);
 	
@@ -386,7 +429,8 @@ namespace casa{
   
   
   void VLACalcIlluminationConvFunc::fillPB(ImageInterface<Complex>& inImg,
-					   ImageInterface<Complex>& outImg)
+					   ImageInterface<Complex>& outImg,
+					   Bool Square)
   {
     IPosition imsize(outImg.shape());
     IPosition ndx(outImg.shape());
@@ -415,13 +459,15 @@ namespace casa{
 	      Complex cval;
 	      inNdx = ndx; inNdx(2)=s;
 	      cval = inImg.getAt(inNdx);
+	      if (Square) cval = cval*conj(cval);
 	      outImg.putAt(cval*outImg.getAt(ndx),ndx);
 	    }
       }
   }
   
   void VLACalcIlluminationConvFunc::fillPB(ImageInterface<Complex>& inImg,
-					   ImageInterface<Float>& outImg)
+					   ImageInterface<Float>& outImg,
+					   Bool Square)
   {
     IPosition imsize(outImg.shape());
     IPosition ndx(outImg.shape());
@@ -451,6 +497,8 @@ namespace casa{
 		  inNdx(2)=3; cval += inImg.getAt(inNdx);
 		  cval/2;
 		  
+		  if (Square) cval = cval*conj(cval);
+		  
 		  outImg.putAt(abs(cval*outImg.getAt(ndx)),ndx);
 		}
 	  }
@@ -467,6 +515,7 @@ namespace casa{
 		  Complex cval;
 		  inNdx = ndx; inNdx(2)=s;
 		  cval = inImg.getAt(inNdx);
+		  if (Square) cval = cval*conj(cval);
 		  outImg.putAt(abs(cval*outImg.getAt(ndx)),ndx);
 		}
 	  }

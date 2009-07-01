@@ -3,7 +3,7 @@ from taskinit import *
 from cleanhelper import *
 
 
-def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, scan, mode,interpolation,niter,gain,threshold, psfmode, imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,interactive,mask, nchan,start,width,imsize,cell, phasecenter, restfreq, stokes,weighting,robust, uvtaper,outertaper,innertaper, modelimage,restoringbeam,pbcor, minpb,  noise, npixels, npercycle, cyclefactor, cyclespeedup):
+def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, scan, mode,interpolation,niter,gain,threshold, psfmode, imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,interactive,mask, nchan,start,width,imsize,cell, phasecenter, restfreq, stokes,weighting,robust, uvtaper,outertaper,innertaper, modelimage,restoringbeam,pbcor, minpb,  calready, noise, npixels, npercycle, cyclefactor, cyclespeedup):
 
 	#Python script
 
@@ -38,7 +38,8 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 					 noise=noise, npixels=npixels,
 					 mosweight=mosweight,
 					 innertaper=innertaper,
-					 outertaper=outertaper)
+					 outertaper=outertaper,
+					 calready=calready)
 		if(maskimage==''):
 			maskimage=imagename+'.mask'
 		imset.makemaskimage(outputmask=maskimage,imagename=imagename,

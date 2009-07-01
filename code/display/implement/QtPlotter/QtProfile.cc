@@ -76,7 +76,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
         const char *name, QWidget *parent)
         :QWidget(parent), //MWCCrosshairTool(),
          pc(0), te(0), analysis(0), 
-         coordinate("world"), coordinateType("velocity"),
+         coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), xpos(""), ypos(""),
 	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()) 
 {
@@ -194,10 +194,29 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     QLabel *label = new QLabel(this);
     label->setText("<font color=\"blue\">Coordinate:</font>");
     label->setAlignment((Qt::Alignment)(Qt::AlignBottom | Qt::AlignRight));
+ 
     ctype = new QComboBox(this);
-    ctype->addItem("velocity");
-    ctype->addItem("frequency");
+
+    // get reference frame info for freq axis label
+    MFrequency::Types freqtype;
+    {
+      CoordinateSystem cSys=img->coordinates();
+      Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+      SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
+      MEpoch myepoch; 
+      MPosition myposition;
+      MDirection mydirection;
+      specCoor.getReferenceConversion(freqtype, myepoch, myposition, mydirection);
+    }
+    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
+    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
+    ctype->addItem("frequency ("+nativeRefFrameName+")");
     ctype->addItem("pixel");
+
+    coordinateType = String(ctype->itemText(0).toStdString());
+
     connect(ctype, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinateType(const QString &)));
     displayLayout->addWidget(label);
@@ -231,10 +250,14 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
     
-    yUnit = QString(img->units().getName().chars());
+    QString lbl = coordinateType.chars();
+    if (lbl.contains("freq")) lbl.append(" (GHz)");
+    if (lbl.contains("velo")) lbl.append(" (km/s)");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
-    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
-    pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
+    yUnit = QString(img->units().getName().chars());
+    pc->setYLabel("("+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
     pc->setAutoScale(autoScale->checkState());
        
 }
@@ -458,10 +481,12 @@ void QtProfile::changeCoordinateType(const QString &text) {
     position = QString("");
     te->setText(position);
     pc->clearCurve(0);
+
     QString lbl = text;
     if (text.contains("freq")) lbl.append(" (GHz)");
     if (text.contains("velo")) lbl.append(" (km/s)");
-    pc->setXLabel(lbl, 10, 0.5, "Helvetica [Cronyx]");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+
     pc->setPlotSettings(QtPlotSettings());
     zoomInButton->setVisible(0);
     zoomOutButton->setVisible(0);
@@ -525,11 +550,36 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     analysis = new ImageAnalysis(img);
     setWindowTitle(QString("Image Profile - ").append(name));
 
-    yUnit = QString(img->units().getName().chars());
+    // reset the combo box for selecting the coordinate type
+    ctype->clear();
+    // get reference frame info for freq axis label
+    MFrequency::Types freqtype;
+    {
+      CoordinateSystem cSys=img->coordinates();
+      Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+      SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
+      MEpoch myepoch; 
+      MPosition myposition;
+      MDirection mydirection;
+      specCoor.getReferenceConversion(freqtype, myepoch, myposition, mydirection);
+    }
+    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
+    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
+    ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("pixel");    
 
-    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
-    pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
-       
+    coordinateType = String(ctype->itemText(0).toStdString());
+
+    QString lbl = coordinateType.chars();
+    if (lbl.contains("freq")) lbl.append(" (GHz)");
+    if (lbl.contains("velo")) lbl.append(" (km/s)");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+
+    yUnit = QString(img->units().getName().chars());
+    pc->setYLabel("("+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
     xpos = "";
     ypos = "";
     lastX.resize(0);
@@ -559,7 +609,8 @@ void QtProfile::wcChanged(const String c,
        
     Int ns;
     x.shape(ns);
-    //cout << "ns=" << ns << endl;  
+    //cout << "ns =" << ns << endl;  
+    //cout << "cube =" << cube << endl;  
   
     Vector<Double> xv(ns);
     Vector<Double> yv(ns);
@@ -587,8 +638,8 @@ void QtProfile::wcChanged(const String c,
     pc->setWelcome("");
 
     //xpos, ypos and position only used for display
-    xpos = QString::number(xv[0]);
-    ypos = QString::number(yv[0]);
+    xpos = QString::number(floor(xv[0]+0.5));
+    ypos = QString::number(floor(yv[0]+0.5));
     //qDebug() << c.chars() << "xpos:" 
     //           << xpos << "ypos:" << ypos;
 
@@ -620,7 +671,7 @@ void QtProfile::wcChanged(const String c,
     //cout << "z_xval=" << z_xval 
     //     << " z_yval=" << z_yval << endl;
     //QMessageBox::warning(this, "QtProfile",
-    //                "pauss to check the values\n");
+    //                "pause to check the values\n");
 
 }
 

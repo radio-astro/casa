@@ -4,8 +4,10 @@
 #include <casa/Quanta/Quantum.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSRange.h>
+#include <images/Images/ImageInterface.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Array.h>
+#include <casa/Logging/LogIO.h>
 
 #ifndef SYNTHESIS_UTILS_H
 #define SYNTHESIS_UTILS_H
@@ -25,6 +27,14 @@ namespace casa
   void storeImg(String& fileName,ImageInterface<Complex>& theImg);
   void storeImg(String& fileName,ImageInterface<Float>& theImg);
   Bool isVBNaN(const VisBuffer& vb, String& mesg);
+  namespace SynthesisUtils
+  {
+    void rotateComplexArray(LogIO& logIO, Array<Complex>& inArray, 
+			    CoordinateSystem& inCS,
+			    Array<Complex>& outArray, 
+			    Double dAngleRad, 
+			    String interpMathod=String("CUBIC"));
+  }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);
   /////////////////////////////////////////////////////////////////////////////

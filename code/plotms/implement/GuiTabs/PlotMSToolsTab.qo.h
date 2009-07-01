@@ -54,7 +54,7 @@ public:
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Tools"; }
     
-    // Implements PlotMSTab::toolButtons().
+    // Overrides PlotMSTab::toolButtons().
     QList<QToolButton*> toolButtons() const;
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged.  Currently

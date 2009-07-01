@@ -407,11 +407,8 @@ protected:
     // needed.
     void setQPPlotter(QPPlotter* parent);
     
-    // Returns a PlotLogger to be used for the given measurement event.  If the
-    // return value is NULL, then the event should NOT be logged, otherwise it
-    // should.  Should be used by QPPlotItems attached to the canvas and friend
-    // classes.
-    PlotLoggerPtr loggerForEvent(PlotLogger::Event event) const;
+    // Returns the parent's logger.
+    PlotLoggerPtr logger() const;
     
     // See QPPlotter::logObject().  If called before setQPPlotter() is called,
     // creates a queue that is then posted when setQPPlotter() is called.

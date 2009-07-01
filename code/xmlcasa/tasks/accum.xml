@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="accum">
+<task type="function" name="accum" category="calibration">
 	<shortdescription>Accumulate incremental calibration solutions into a calibration table</shortdescription>
 	<description>
 

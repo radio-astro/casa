@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for (new) sdcal -->
 
-<task type="function" name="sdcal" startup="false">
+<task type="function" name="sdcal" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do sdaverage, sdsmooth, and sdbaseline in one task</shortdescription>
 

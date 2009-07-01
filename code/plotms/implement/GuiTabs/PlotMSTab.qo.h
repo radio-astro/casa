@@ -61,7 +61,11 @@ public:
     virtual QString tabName() const = 0;
     
     // Returns all tool buttons on this tab.
-    virtual QList<QToolButton*> toolButtons() const = 0;
+    virtual QList<QToolButton*> toolButtons() const {
+        return QList<QToolButton*>(); }
+    
+    // Sets up the tab for the given maximum width.
+    virtual void setupForMaxWidth(int maxWidth) { }
     
 protected:
     // Parent.

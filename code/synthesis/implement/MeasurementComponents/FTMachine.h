@@ -228,6 +228,13 @@ public:
   //set frequency interpolation type
   virtual void setFreqInterpolation(const String& method);
 
+  //tell ftmachine which Pointing table column to use for Direction
+  //Mosaic or Single dish ft use this for example
+  virtual void setPointingDirColumn(const String& column="DIRECTION");
+
+  virtual String getPointingDirColumnInUse();
+
+
 protected:
 
   LogIO logIO_p;
@@ -324,6 +331,7 @@ protected:
   Vector<Float> imageFreq_p;
   Vector<Double> interpVisFreq_p;
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
+  String pointingDirCol_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

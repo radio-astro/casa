@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on ngc7538_regression.py"
+    return "VLA, NGC 7538, import, flagging, calibration, imaging"
 
 def run():
     lepath=locatescript('ngc7538_regression.py')

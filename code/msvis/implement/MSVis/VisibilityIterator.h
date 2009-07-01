@@ -47,6 +47,7 @@
 
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 #include <ms/MeasurementSets/MSIter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -470,6 +471,9 @@ public:
   // Returns True in convert if given spw was not observed 
   // in the LSRK frame
   void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
+  //assign a VisImagingWeight object to this iterator...necessary if no scracth
+  //imaging_weight column exists
+  void useImagingWeight(const VisImagingWeight& imWgt);
 
 protected:
   // advance the iteration
@@ -571,6 +575,8 @@ protected:
   ROScalarColumn<Bool> colFlagRow;
   ROScalarColumn<Int> colScan;
   ROArrayColumn<Double> colUVW;
+  //object to calculate imaging weight in case of no imaging_weight column
+  VisImagingWeight imwgt_p;
 
 };
 
@@ -753,6 +759,8 @@ protected:
   ArrayColumn<Float> RWcolImagingWeight;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
+
+
 
 };
 

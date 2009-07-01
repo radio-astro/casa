@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- - look at integraging ia.maxfit() to task                -->
 <!--                                                          -->
 
-<task type="function" name="imfit">
+<task type="function" name="imfit" category="image analysis">
 
 <shortdescription>Fit One Elliptical Gaussian Component on an image region(s)</shortdescription>
 

@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
 
+#include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMS.h>
 
 namespace casa {
@@ -36,14 +37,8 @@ namespace casa {
 
 PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
         itsParameters_(parent->getParent()->getParameters()),
-        itsChangeFlag_(true) {
+        itsChangeFlag_(true), itsLoggerWidget_(NULL) {
     setupUi(this);
-    
-    // Log levels
-    const vector<String>& levels = PlotMSLogger::levelStrings();
-    for(unsigned int i = 0; i < levels.size(); i++)
-        logLevel->addItem(levels[i].c_str());
-    setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));
     
     // Add self as watcher to plotms parameters.
     itsParameters_.addWatcher(this);
@@ -54,9 +49,6 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
     // Connect widgets
     connect(buttonStyle, SIGNAL(currentIndexChanged(int)),
             SLOT(toolButtonStyleChanged(int)));
-    connect(logLevel, SIGNAL(currentIndexChanged(const QString&)),
-            SLOT(logLevelChanged(const QString&)));
-    connect(logDebug, SIGNAL(toggled(bool)), SLOT(logDebugChanged(bool)));
     connect(clearSelection, SIGNAL(toggled(bool)),
             SLOT(clearSelectionChanged(bool)));
     connect(cacheSize, SIGNAL(toggled(bool)), SLOT(cachedImageSizeChanged()));
@@ -70,18 +62,17 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
 
 PlotMSOptionsTab::~PlotMSOptionsTab() { }
 
-QList<QToolButton*> PlotMSOptionsTab::toolButtons() const {
-    return QList<QToolButton*>();
-}
-
 void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag, bool redrawRequired) {
     if(&p == &itsParameters_) {
         bool oldChange = itsChangeFlag_;
         itsChangeFlag_ = false;
         
-        setChooser(logLevel, PlotMSLogger::level(itsParameters_.logLevel()));        
-        logDebug->setChecked(itsParameters_.logDebug());
+        if(itsLoggerWidget_ != NULL) {
+            itsLoggerWidget_->setFilename(itsParameters_.logFilename());
+            itsLoggerWidget_->setEvents(itsParameters_.logEvents());
+            itsLoggerWidget_->setPriority(itsParameters_.logPriority());
+        }
 
         clearSelection->setChecked(
                 itsParameters_.clearSelectionsOnAxesChange());
@@ -95,6 +86,19 @@ void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
     }
 }
 
+void PlotMSOptionsTab::setupForMaxWidth(int maxWidth) {
+    if(itsLoggerWidget_ != NULL) return;
+    
+    itsLoggerWidget_ = new PlotMSLoggerWidget(itsParameters_.logFilename(),
+            itsParameters_.logEvents(), itsParameters_.logPriority(), maxWidth,
+            false, false);
+    QtUtilities::putInFrame(logFrame, itsLoggerWidget_);
+    connect(itsLoggerWidget_, SIGNAL(changed()), SLOT(logChanged()));
+    
+    // Update GUI.
+    parametersHaveChanged(itsParameters_, 0, false);
+}
+
 
 void PlotMSOptionsTab::toolButtonStyleChanged(int newIndex) {
     Qt::ToolButtonStyle style = Qt::ToolButtonIconOnly;
@@ -104,23 +108,13 @@ void PlotMSOptionsTab::toolButtonStyleChanged(int newIndex) {
     itsPlotter_->setToolButtonStyle(style);
 }
 
-void PlotMSOptionsTab::logLevelChanged(const QString& newLevel) {
-    if(!itsChangeFlag_) return;
-    
-    bool ok;
-    PlotMSLogger::Level l = PlotMSLogger::level(newLevel.toStdString(), &ok);
-    if(ok) {
-        itsParameters_.holdNotification(this);
-        itsParameters_.setLogLevel(l, itsParameters_.logDebug());
-        itsParameters_.releaseNotification();
-    }
-}
-
-void PlotMSOptionsTab::logDebugChanged(bool value) {
-    if(!itsChangeFlag_) return;
+void PlotMSOptionsTab::logChanged() {
+    if(!itsChangeFlag_ || itsLoggerWidget_ == NULL) return;
     
     itsParameters_.holdNotification(this);
-    itsParameters_.setLogLevel(itsParameters_.logLevel(), value);
+    itsParameters_.setLogFilename(itsLoggerWidget_->filename());
+    itsParameters_.setLogFilter(itsLoggerWidget_->events(),
+                                itsLoggerWidget_->priority());
     itsParameters_.releaseNotification();
 }
 

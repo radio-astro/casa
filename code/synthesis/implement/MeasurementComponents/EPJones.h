@@ -121,6 +121,7 @@ public:
   virtual Cube<Float>& solveRPar() {return pointPar_;}
   virtual void setRPar(Cube<Float>& val) {pointPar_.resize(val.shape());pointPar_=val;}
   virtual void setRPar(Double val) {pointPar_=val;}
+  
   //  virtual void keep(const Int& slot);
 
   virtual Bool normalizable() { return False; };
@@ -141,9 +142,11 @@ public:
   virtual void postSolveMassage(const VisBuffer&);
   virtual void selfSolve(VisSet& vs,VisEquation& ve);
   virtual Bool standardSolve() {return False;};
+  virtual Float printFraction(const Int& nSlots) {return 0.1;};
   Array<Float> getOffsets(const Int& spw) {return rcs().par(spw);}
   Array<Double> getTime(const Int& spw) {return rcs().time(spw);}
   Array<Float> nearest(const Double time);
+  void printRPar();  
 
 protected:
 
@@ -158,9 +161,7 @@ protected:
   virtual void makeComplexGrid(TempImage<Complex>& Grid, 
 					PagedImage<Float>& ModelImage,
 					VisBuffer& vb);
-  void printActivity(const Int nSlots, const Int slotNo, 
-		     const Int fieldId, const Int spw, 
-		     const Int nSolutions);
+  void printActivity(const Int slotNo, const Int fieldId, const Int spw, const Int nSolutions);
   //  inline virtual CalSet<Float> rcs() {return *cs_;}
 
 private:
@@ -173,11 +174,11 @@ private:
   //  Array<Float> azOff, elOff;
   TempImage<Complex> targetVisModel_;
   CalSet<Float> *rcs_;
+  Double maxTimePerSolution, minTimePerSolution, avgTimePerSolution;
+  Timer timer;
   Vector<Int> polMap_p;
   Float tolerance_p, gain_p;
   Int niter_p;
-  Double maxTimePerSolution, minTimePerSolution, avgTimePerSolution;
-  Timer timer;
 };
 
 

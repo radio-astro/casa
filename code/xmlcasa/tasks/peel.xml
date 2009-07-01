@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- Documentation here.                                                -->
 
-<task type="function" name="peel">
+<task type="function" name="peel" category="imaging" visibility="hidden">
 
 <shortdescription>Do direction dependent selfcal(s) and optionally remove annoying sources.</shortdescription>
 <description>

@@ -20,7 +20,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--   - In general bring data selection to the full level    -->
 <!--     proposed.                                            -->
 
-<task type="function" name="immath">
+<task type="function" name="immath" category="image analysis">
 
 <shortdescription>Perform math operations on images</shortdescription>
 

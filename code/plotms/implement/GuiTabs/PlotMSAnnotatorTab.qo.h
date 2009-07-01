@@ -52,9 +52,6 @@ public:
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Annotator"; }
     
-    // Implements PlotMSTab::toolButtons().
-    QList<QToolButton*> toolButtons() const { return QList<QToolButton*>(); }
-    
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Does
     // nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,

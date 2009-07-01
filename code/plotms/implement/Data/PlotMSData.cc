@@ -34,7 +34,7 @@ namespace casa {
 // PLOTMSDATA DEFINITIONS //
 ////////////////////////////
 
-PlotMSData::PlotMSData() : itsCache_(new PlotMSCache()) { }
+PlotMSData::PlotMSData(PlotMS* parent) : itsCache_(new PlotMSCache(parent)) { }
 
 PlotMSData::PlotMSData(const PlotMSData& copy) { operator=(copy); }
 
@@ -69,6 +69,16 @@ bool PlotMSData::minsMaxes(double& xMin, double& xMax, double& yMin,
 }
 
 
+bool PlotMSData::maskedAt(unsigned int index) const {
+    return itsCache_->getFlagMask((int)index); }
+
+void PlotMSData::xyAndMaskAt(unsigned int index, double& x, double& y,
+        bool& mask) const {
+  mask = itsCache_->getFlagMask((int)index);
+  xAndYAt(index, x, y);
+}
+
+
 double PlotMSData::cacheReferenceTime() const { return itsCache_->refTime(); }
 
 bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
@@ -88,19 +98,19 @@ void PlotMSData::loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
 void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
     itsCache_->setUpPlot(xAxis, yAxis); }
 
-PlotLogMessage* PlotMSData::locateRange(double xMin, double xMax, double yMin,
-        double yMax) {
-    return itsCache_->locateRange(xMin, xMax, yMin, yMax); }
+PlotLogMessage* PlotMSData::locateRange(const Vector<PlotRegion>& regions) {
+    return itsCache_->locateRange(regions); }
 
 PlotLogMessage* PlotMSData::flagRange(const PlotMSFlagging& flagging,
-        double xMin, double xMax, double yMin, double yMax, bool flag) {
-    return itsCache_->flagRange(flagging, xMin, xMax, yMin, yMax, flag); }
+        const Vector<PlotRegion>& regions, bool flag) {
+    return itsCache_->flagRange(flagging, regions, flag); }
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSData::loadedAxes() const {
     return itsCache_->loadedAxes(); }
 
 
 PlotMSData& PlotMSData::operator=(const PlotMSData& copy) {
+    itsPlotms_ = copy.itsPlotms_;
     itsCache_ = copy.itsCache_;
     return *this;
 }

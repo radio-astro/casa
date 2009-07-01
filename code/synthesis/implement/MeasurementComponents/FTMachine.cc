@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
-			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour)
+			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), pointingDirCol_p("DIRECTION")
 {
 }
 
@@ -1014,6 +1014,24 @@ void FTMachine::setFreqInterpolation(const String& method){
   out.putStorage(pout,deleteOut);
   in.freeStorage(pin,deleteIn);
 }
+
+  void FTMachine::setPointingDirColumn(const String& column){
+    pointingDirCol_p=column;
+    pointingDirCol_p.upcase();
+    if( (pointingDirCol_p != "DIRECTION") &&(pointingDirCol_p != "TARGET") && (pointingDirCol_p != "ENCODER") && (pointingDirCol_p != "POINTING_OFFSET") && (pointingDirCol_p != "SOURCE_OFFSET")){
+
+      //basically at this stage you don't know what you're doing...so you get the default
+
+      pointingDirCol_p="DIRECTION";
+
+    }    
+  }
+
+  String FTMachine::getPointingDirColumnInUse(){
+
+    return pointingDirCol_p;
+
+  }
 
 
 } //# NAMESPACE CASA - END

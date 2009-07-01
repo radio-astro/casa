@@ -419,6 +419,11 @@
     <string>Annotate Rectangle</string>
    </property>
   </action>
+  <action name="actionPlot" >
+   <property name="text" >
+    <string>Plot</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="PlotMSPlotter.qrc" />

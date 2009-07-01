@@ -58,9 +58,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-//
-//
-//
+// The order of operations (as in ms::split()) is:
+//      ctor
+//      setmsselect
+//      selectTime
+//      makeSubMS
 // </synopsis>
 
 // These forward declarations are so the corresponding .h files don't have to
@@ -81,6 +83,7 @@ class ROMSColumns;
   typedef std::map<const uInt, uivector, uIntCmp> ui2vmap;
 
 template<class T> class ROArrayColumn;
+  Bool isAllColumns(const Vector<String>& colNames);
 
 class SubMS
 {
@@ -117,7 +120,7 @@ class SubMS
 		   const Vector<Int>& nchan=Vector<Int> (1,-1),
 		   const Vector<Int>& start=Vector<Int> (1,0),
 		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const Bool averchan=True);
+		   const Bool averchan=True, const String& subarray="");
 
   // Select source or field
   void selectSource(Vector<Int> fieldid);
@@ -154,14 +157,24 @@ class SubMS
 				 String telescop, String colName="DATA",
 				 Int obstype=0);
   
-  void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
+  // Add optional columns to outTab if present in inTab and possColNames.
+  // M must be derived from a Table.
+  // beLazy should only be true if outTab is in its default state.
+  // Returns the number of added columns.
+  template<class M>
+  static uInt addOptionalColumns(const M& inTab, M& outTab,
+				 const Vector<String>& possColNames,
+				 const Bool beLazy=false);
   
+  // Declared static because it's used in setupMS().  Therefore it can't use
+  // any member variables.  It is also used in MSFixvis.cc.
+  static const Vector<String>& parseColumnNames(const String colNameList);
+
+  void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
+  Bool doWriteImagingWeight(const MSColumns& msc, const Vector<String>& colNames);
+
  private:
   // *** Private member functions ***
-
-  // Declared static because it's used in setupMS().  Therefore it can't use
-  // any member variables.
-  static const Vector<String>& parseColumnNames(const String colNameList);
 
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
 		     const String& colName, const Bool writeToDataCol=False);
@@ -206,6 +219,11 @@ class SubMS
   // same, AND whether all the elements of nchan_p are the same.
   Bool checkSpwShape();
 
+  // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
+  // ones.  Must be called after fieldid_p is set and before calling
+  // fillFieldTable() or copySource().
+  void relabelSources();
+
   void relabelIDs();
   void remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol);
   void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
@@ -224,12 +242,13 @@ class SubMS
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
   //  * not necessarily to anything useful.
   MeasurementSet ms_p, mssel_p;
-  MSColumns * msc_p;
+  MSColumns * msc_p;		// columns of msOut_p
   MSColumns * mscIn_p;
   Bool doChanAver_p, antennaSel_p, sameShape_p;
   Double timeBin_p;
   uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
+  String timeRange_p, arrayExpr_p;
   uInt nant_p;
 
   // Uninitialized by ctors.
@@ -237,15 +256,16 @@ class SubMS
   Vector<Int> spw_p, nchan_p, chanStart_p, chanStep_p, npol_p, inNumChan_p;
   Vector<Int> fieldid_p;
   Bool averageChannel_p;
-  Vector<Int> spwRelabel_p, fieldRelabel_p;
+  Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
   Vector<Int> oldDDSpwMatch_p;
   Vector<String> antennaSelStr_p;
   Vector<Int> antennaId_p;
   Vector<Int> antIndexer_p;
-  String timeRange_p;
-  Vector<Double> newTimeVal_p;
   Vector<Int> antNewIndex_p;
   Vector<Int> feedNewIndex_p;
+  Vector<Int> arrayId_p;
+  Vector<Int> arrayIndexer_p;
+  Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex
 
   Vector<Int> scanRemapper_p, stateRemapper_p; 
@@ -258,6 +278,10 @@ class SubMS
 
 
 } //# NAMESPACE CASA - END
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <msvis/MSVis/SubMS.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
 

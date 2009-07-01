@@ -43,8 +43,8 @@ namespace casa {
 // classes.
 class PlotMSData : public PlotMaskedPointData {
 public:
-    // Constructor.
-    PlotMSData();
+    // Constructor which takes the parent PlotMS.
+    PlotMSData(PlotMS* plotms);
     
     // Copy constructor.  See operator=().
     PlotMSData(const PlotMSData& copy);
@@ -69,21 +69,21 @@ public:
     bool minsMaxes(double& xMin, double& xMax, double& yMin, double& yMax);
     // </group>
     
-    // Implemented PlotMaskedPointData methods.  Not implemented for now until
-    // flagging is ready in the cache.
+    // Implemented PlotMaskedPointData methods.
+    // <group>
+    bool maskedAt(unsigned int index) const;
+    void xyAndMaskAt(unsigned int index, double& x, double& y,
+            bool& mask) const;
+    // </group>
+    
+    // Unimplemented PlotMaskedPointData methods.
     // <group>
     unsigned int sizeMasked() const { return 0; }
     unsigned int sizeUnmasked() const { return size(); }
-    bool maskedAt(unsigned int index) const { return itsCache_->getFlagMask((int)index); }
     bool maskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
     bool unmaskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
-    void xyAndMaskAt(unsigned int index, double& x, double& y,
-            bool& mask) const {
-      mask = itsCache_->getFlagMask((int)index);
-      xAndYAt(index, x, y);
-    }
     // </group>
     
     
@@ -113,12 +113,11 @@ public:
     void setupCache(PMS::Axis xAxis, PMS::Axis yAxis);
     
     // See PlotMSCache::locateRange().
-    PlotLogMessage* locateRange(double xMin, double xMax, double yMin,
-            double yMax);
+    PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
     
     // See PlotMSCache::flagRange().
-    PlotLogMessage* flagRange(const PlotMSFlagging& flagging, double xMin,
-            double xMax, double yMin, double yMax, bool flag = true);
+    PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
+            const Vector<PlotRegion>& regions, bool flag = true);
     
     // See PlotMSCache::loadedAxes().
     vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
@@ -127,7 +126,10 @@ public:
     // Copy operator.
     PlotMSData& operator=(const PlotMSData& copy);
     
-private:    
+private:
+    // Parent.
+    PlotMS* itsPlotms_;
+    
     // Cache.
     PlotMSCachePtr itsCache_;
 };

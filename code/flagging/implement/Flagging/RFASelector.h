@@ -105,6 +105,9 @@ protected:
   void addClipInfoDesc ( const Block<ClipInfo> &clip );
 
   // shadow mode
+  Double diameter;   /* diameter to use. If negative use 
+                        the diameters array (true antenna diameters)
+                     */
   Vector< Double > diameters;
   ROMSAntennaColumns *ac;
 

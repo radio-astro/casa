@@ -207,9 +207,9 @@ void QPPlotItem::detach() {
     }
 }
 
-PlotLoggerPtr QPPlotItem::loggerForEvent(PlotLogger::Event event) const {
+PlotLoggerPtr QPPlotItem::logger() const {
     if(m_canvas == NULL) return PlotLoggerPtr();
-    else return const_cast<QPCanvas*>(m_canvas)->loggerForEvent(event);
+    else                 return m_canvas->logger();
 }
 
 void QPPlotItem::logDestruction() {
@@ -377,7 +377,7 @@ void QPDrawThread::run() {
         painters.insert(layer, m_images.value(layer)->painter());
 
     // Set up log and operation.
-    PlotLoggerPtr log= m_items[0]->loggerForEvent(PlotLogger::DRAW_INDIVIDUAL);
+    PlotLoggerPtr log = m_items[0]->logger();
     PlotOperationPtr op = m_items[0]->drawOperation();
     
     // Temp variables.
@@ -412,7 +412,8 @@ void QPDrawThread::run() {
         
         // Start logging.
         if(!log.null())
-            log->markMeasurement(item->className(), QPPlotItem::DRAW_NAME);
+            log->markMeasurement(item->className(), QPPlotItem::DRAW_NAME,
+                                 PlotLogger::DRAW_INDIVIDUAL);
         
         // Set up maps.
         m_axesMaps[QwtPlot::xBottom].setPaintInterval(0, drawRect.width());
