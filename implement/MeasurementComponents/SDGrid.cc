@@ -323,7 +323,6 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     MEpoch epoch(Quantity(vb.time()(row), "s"));
     if(!pointingToImage) {
       mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
-      cerr<<"directionMeas is called"<<endl;
       worldPosMeas=directionMeas(act_mspc, pointIndex);
       // Make a machine to convert from the worldPosMeas to the output
       // Direction Measure type for the relevant frame
@@ -338,7 +337,6 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
       mFrame_p.resetEpoch(epoch);
       mFrame_p.resetPosition(FTMachine::mLocation_p);
     }
-    cerr<<"directionMeas is called 2"<<endl;
     worldPosMeas=(*pointingToImage)(directionMeas(act_mspc,pointIndex));
     delete pointingToImage;
     pointingToImage=0;
@@ -1078,7 +1076,6 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     MPosition nullPos;
     mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
     if(dointerp) {
-       //cerr<<"call interpdirectionMeas"<<endl;
        worldPosMeas=directionMeas(act_mspc, pointIndex, vb.time()(row));
     }
     else {
@@ -1100,7 +1097,6 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     mFrame_p.resetPosition(FTMachine::mLocation_p);
   }
   if(dointerp) {
-    //cerr<<"call interpdirectionMeas 2"<<endl;
     worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex, vb.time()(row)));
     MDirection newdir = directionMeas(act_mspc, pointIndex, vb.time()(row));
     Vector<Double> newdirv = newdir.getAngle("rad").getValue();
@@ -1110,7 +1106,6 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     //printf("%lf %lf \n", newdirv(0), newdirv(1));
   }
   else {
-    cerr<<"call directionMeas 4"<<endl;
     worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
   }
   Bool result=directionCoord.toPixel(xyPos, worldPosMeas);
@@ -1259,13 +1254,12 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     dLat=dir2(1)-dir1(1);
     ftime=floor(mspc.time()(indx1));
     ftime2=mspc.time()(indx2)-ftime;
-    ftime1=mspc.time()(indx1) - ftime;
+    ftime1=mspc.time()(indx1)-ftime;
     dtime=ftime2-ftime1;
     scanRate(0) = dLon/dtime;
     scanRate(1) = dLat/dtime;
     //scanRate(0) = dir2(0)/dtime-dir1(0)/dtime;
     //scanRate(1) = dir2(1)/dtime-dir1(1)/dtime;
-    //cerr<<"scanRate1="<<scanRate(1)*1000.0<<endl;
     //Double delT = mspc.time()(index)-time;
     //cerr<<"index="<<index<<" dLat="<<dLat<<" dtime="<<dtime<<" delT="<< delT<<endl;
     //cerr<<"deldirlat="<<scanRate(1)*fabs(delT)<<endl;
