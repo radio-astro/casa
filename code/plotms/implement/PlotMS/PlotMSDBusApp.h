@@ -28,6 +28,7 @@
 #define PLOTMSDBUSAPP_H_
 
 #include <casaqt/QtUtilities/QtDBusApp.qo.h>
+#include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
 #include <casa/namespace.h>
@@ -182,7 +183,7 @@ public:
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag);
     
     // Implements PlotMSPlotManagerWatcher::plotsChanged().
     void plotsChanged(const PlotMSPlotManager& manager);
@@ -206,7 +207,7 @@ private:
     
     // Set PlotMSSinglePlot parameters that haven't yet been transfered to the
     // current PlotMS.
-    vector<PlotMSSinglePlotParameters> itsPlotParams_;
+    vector<PlotMSPlotParameters> itsPlotParams_;
     
     // Flag for whether to call update() during show() or not.  This will be
     // true if the user updates something while the GUI is hidden.
@@ -227,7 +228,7 @@ private:
     // Static //
     
     // Implementation factory.
-    static PlotFactoryPtr IMPL_FACTORY;
+    //static PlotFactoryPtr IMPL_FACTORY;
 };
 
 }

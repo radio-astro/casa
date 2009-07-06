@@ -27,7 +27,11 @@
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
+#include <plotms/Actions/PlotMSAction.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -81,7 +85,7 @@ String PlotMSDBusApp::dbusName(pid_t pid) {
     return "plotms_" + String::toString(pid); }
 
 
-PlotFactoryPtr PlotMSDBusApp::IMPL_FACTORY = plotterImplementation();
+//PlotFactoryPtr PlotMSDBusApp::IMPL_FACTORY = plotterImplementation();
 
 
 // Constructors/Destructors //
@@ -109,7 +113,7 @@ bool PlotMSDBusApp::connectToDBus() {
 }
 
 void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) {
+        int updateFlag) {
     if(&p == &itsPlotms_.getParameters()) {
         itsParams_ = dynamic_cast<const PlotMSParameters&>(p);
 
@@ -119,18 +123,15 @@ void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
         unsigned int index = 0;
         for(; index < params.size(); index++) if(&p == params[index]) break;
         if(index >= itsPlotParams_.size()) return; // shouldn't happen
-        itsPlotParams_[index] =
-            *dynamic_cast<const PlotMSSinglePlotParameters*>(params[index]);
+        itsPlotParams_[index] = *params[index];
     }
 }
 
 void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
     const vector<PlotMSPlotParameters*>& p = manager.plotParameters();
-    itsPlotParams_.resize(p.size(), PlotMSSinglePlotParameters(
-            IMPL_FACTORY));
-    for(unsigned int i = 0; i < p.size(); i++)
-        itsPlotParams_[i] =
-            *dynamic_cast<const PlotMSSinglePlotParameters*>(p[i]);
+    itsPlotParams_.resize(p.size(),
+            PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
+    for(unsigned int i = 0; i < p.size(); i++) itsPlotParams_[i] = *p[i];
 }
 
 
@@ -222,70 +223,93 @@ void PlotMSDBusApp::dbusRunMethod(const String& methodName,
         
     } else if(methodName == METHOD_GETPLOTPARAMS) {
         if(indexValid) {
-            const PlotMSSinglePlotParameters& p = itsPlotParams_[index];
+            const PlotMSPlotParameters& p = itsPlotParams_[index];
+            
+            const PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
+            const PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
+            
             Record ret;
-            ret.define(PARAM_FILENAME, p.filename());
-            ret.define(PARAM_AXIS_X, PMS::axis(p.xAxis()));
-            ret.define(PARAM_DATACOLUMN_X, PMS::dataColumn(p.xDataColumn()));
-            ret.define(PARAM_AXIS_Y, PMS::axis(p.yAxis()));
-            ret.define(PARAM_DATACOLUMN_Y, PMS::dataColumn(p.yDataColumn()));
-            ret.defineRecord(PARAM_AVERAGING, p.averaging().toRecord(true));
-            ret.defineRecord(PARAM_SELECTION, p.selection().toRecord());
-            retValue.defineRecord(0, ret);
+            if(d != NULL) {
+                ret.define(PARAM_FILENAME, d->filename());
+                ret.defineRecord(PARAM_AVERAGING,
+                        d->averaging().toRecord(true));
+                ret.defineRecord(PARAM_SELECTION, d->selection().toRecord());
+            }
+            
+            if(c != NULL) {
+                ret.define(PARAM_AXIS_X, PMS::axis(c->xAxis()));
+                ret.define(PARAM_DATACOLUMN_X,
+                        PMS::dataColumn(c->xDataColumn()));
+                ret.define(PARAM_AXIS_Y, PMS::axis(c->yAxis()));
+                ret.define(PARAM_DATACOLUMN_Y,
+                        PMS::dataColumn(c->yDataColumn()));
+            }
+            
+            if(ret.nfields() != 0) retValue.defineRecord(0, ret);
         } else callError = true;
         
     } else if(methodName == METHOD_SETPLOTPARAMS) {
         bool resized = plotParameters(index);
-        PlotMSSinglePlotParameters& p = itsPlotParams_[index];
+        PlotMSPlotParameters& p = itsPlotParams_[index];
+        PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
+        if(d == NULL) {
+            p.setGroup<PMS_PP_MSData>();
+            d = p.typedGroup<PMS_PP_MSData>();
+        }
+        PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
+        if(c == NULL) {
+            p.setGroup<PMS_PP_Cache>();
+            c = p.typedGroup<PMS_PP_Cache>();
+        }
         
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString)
-            p.setFilename(parameters.asString(PARAM_FILENAME));
+            d->setFilename(parameters.asString(PARAM_FILENAME));
+        
+        if(parameters.isDefined(PARAM_SELECTION) &&
+           parameters.dataType(PARAM_SELECTION) == TpRecord) {
+            PlotMSSelection sel = d->selection();
+            sel.fromRecord(parameters.asRecord(PARAM_SELECTION));
+            d->setSelection(sel);
+        }
+        
+        if(parameters.isDefined(PARAM_AVERAGING) &&
+           parameters.dataType(PARAM_AVERAGING) == TpRecord) {
+            PlotMSAveraging avg = d->averaging();
+            avg.fromRecord(parameters.asRecord(PARAM_AVERAGING));
+            d->setAveraging(avg);
+        }
         
         bool ok;
         PMS::Axis a;
         if(parameters.isDefined(PARAM_AXIS_X) &&
            parameters.dataType(PARAM_AXIS_X) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_X), &ok);
-            if(ok) p.setXAxis(a);
+            if(ok) c->setXAxis(a);
         }
         if(parameters.isDefined(PARAM_AXIS_Y) &&
            parameters.dataType(PARAM_AXIS_Y) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_Y), &ok);
-            if(ok) p.setYAxis(a);
+            if(ok) c->setYAxis(a);
         }
         
-        PMS::DataColumn d;
+        PMS::DataColumn dc;
         if(parameters.isDefined(PARAM_DATACOLUMN_X) &&
            parameters.dataType(PARAM_DATACOLUMN_X) == TpString) {
-            d = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_X), &ok);
-            if(ok) p.setXDataColumn(d);
+            dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_X), &ok);
+            if(ok) c->setXDataColumn(dc);
         }
         if(parameters.isDefined(PARAM_DATACOLUMN_Y) &&
            parameters.dataType(PARAM_DATACOLUMN_Y) == TpString) {
-            d = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_Y), &ok);
-            if(ok) p.setYDataColumn(d);
-        }
-        
-        if(parameters.isDefined(PARAM_SELECTION) &&
-           parameters.dataType(PARAM_SELECTION) == TpRecord) {
-            PlotMSSelection sel = p.selection();
-            sel.fromRecord(parameters.asRecord(PARAM_SELECTION));
-            p.setSelection(sel);
-        }
-        
-        if(parameters.isDefined(PARAM_AVERAGING) &&
-           parameters.dataType(PARAM_AVERAGING) == TpRecord) {
-            PlotMSAveraging avg = p.averaging();
-            avg.fromRecord(parameters.asRecord(PARAM_AVERAGING));
-            p.setAveraging(avg);
+            dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_Y), &ok);
+            if(ok) c->setYDataColumn(dc);
         }
         
         if(updateImmediately && itsPlotms_.guiShown()) {
             if(resized) itsPlotms_.addSinglePlot(&p);
             else {
-                PlotMSSinglePlotParameters* sp =
-                    itsPlotms_.getPlotManager().singlePlotParameters(index);
+                PlotMSPlotParameters* sp =
+                    itsPlotms_.getPlotManager().plotParameters(index);
                 sp->holdNotification(this);
                 *sp = p;
                 sp->releaseNotification();
@@ -359,9 +383,8 @@ bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     bool resized = false;
     if((unsigned int)plotIndex >= itsPlotParams_.size()) {
         resized = true;
-        const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(
-                plotIndex + 1,
-                PlotMSSinglePlotParameters(IMPL_FACTORY));
+        const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
+                PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
     }
 
     return resized;
@@ -373,9 +396,9 @@ void PlotMSDBusApp::update() {
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
     
     // update plot parameters
-    PlotMSSinglePlotParameters* p;
+    PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
-        p = itsPlotms_.getPlotManager().singlePlotParameters(i);
+        p = itsPlotms_.getPlotManager().plotParameters(i);
         if(p == NULL) continue;
         if(*p != itsPlotParams_[i]) {
             p->holdNotification(this);
@@ -386,8 +409,8 @@ void PlotMSDBusApp::update() {
     
     // check for added plots
     if(itsPlotParams_.size() > n) {
-        vector<PlotMSSinglePlotParameters> v(itsPlotParams_.size() - n,
-                PlotMSSinglePlotParameters(IMPL_FACTORY));
+        vector<PlotMSPlotParameters> v(itsPlotParams_.size() - n,
+                PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
         for(unsigned int i = 0; i < v.size(); i++)
             v[i] = itsPlotParams_[i + n];
         for(unsigned int i = 0; i < v.size(); i++)
