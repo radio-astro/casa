@@ -432,6 +432,8 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
   }
 
   //lets return original selection back to iterator
+
+  
   if(changedVI)
     vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
 		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
@@ -1010,7 +1012,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 				     Int slice, Int nslice){
 
     //bypass this for now
-    return False;
+    //    return False;
 
     // Only one slice lets keep what the user selected
     if(nslice==1)
@@ -1035,6 +1037,9 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
     if(spwb.nelements()==0)
       return False;
+
+    
+
     //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
     vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
 
