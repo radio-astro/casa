@@ -760,6 +760,10 @@ void FTMachine::makeImage(FTMachine::Type type,
   }
   
   initializeToSky(theImage,weight,vb);
+  Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+  if((type==FTMachine::CORRECTED) && (!useCorrected))
+    type=FTMachine::OBSERVED;
+   
 
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
