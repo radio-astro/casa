@@ -3865,7 +3865,7 @@ Bool Imager::makeimage(const String& type, const String& image)
 // be retained if a name is given. This does not use
 // the SkyEquation.
 Bool Imager::makeimage(const String& type, const String& image,
-		   const String& compleximage)
+                       const String& compleximage)
 {
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::makeimage",23);
@@ -4009,7 +4009,7 @@ Bool Imager::makeimage(const String& type, const String& image,
       return False;
     }
 
-    if(doSD&&(ftmachine_p=="ft")) {
+    if(doSD && (ftmachine_p == "ft")){
       os << "To make single dish images, ftmachine in setoptions must be set to either sd or both"
 	 << LogIO::EXCEPTION;
     }
