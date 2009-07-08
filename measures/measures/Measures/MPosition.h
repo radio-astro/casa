@@ -69,6 +69,16 @@ template <class M> class ROScalarMeasColumn;
 // </synopsis>
 //
 // <example>
+//   // inRec is a RecordInterface (see GridFT::fromRecord()).
+//   Vector<Double> dirValue(3);
+//   String dirUnit;
+//   inRec.get("dirvalue", dirValue);
+//   inRec.get("dirunit", dirUnit);
+//   MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
+//   MPosition mLocation(dummyMVPos, MPosition::ITRF);
+//   ...
+//   dirValue = mLocation.get("m").getValue();
+//   dirUnit = mLocation.get("m").getUnit();
 // </example>
 //
 // <motivation>
