@@ -192,8 +192,15 @@ public:
                  const Float& opacity);
 
   // Apply antenna-based gain errors
-  Bool setgain(const String& mode, const String& table,
-	       const Quantity& interval, const Vector<Double>& amplitude);
+  Bool setgain(const String& mode, 
+	       const String& table,
+	       const Float timescale,
+	       const Float rms);
+
+  Bool settrop(const String& mode, 
+	       const String& table,
+	       const Float timescale,
+	       const Float rms);
 
   // Apply antenna pointing and squint errors
   Bool setpointingerror(const String& epJTableName,
@@ -214,6 +221,8 @@ public:
 
   // Simulate quasi-realistic thermal noise, which can depend upon
   // elevation, bandwidth, antenna diameter, as expected
+  // RI TODO this will turn into something that makes an additive Mueller
+  // RI TODO and setSimulates with it.
   Bool setnoise(const String& mode, 
 		const Quantity& simplenoise,
 		const String& table,
@@ -229,6 +238,9 @@ public:
 		// const Quantity& tcmb);
 
   // calculate errors and apply them to the data in our MS
+  // RI TODO once the SimACohs are gone this won't actually 
+  // RI TODO calculate anymore, it'll just apply the VisCals that have 
+  // RI TODO been setSimulated
   Bool corrupt();
 
   // Set limits
@@ -271,6 +283,13 @@ public:
 private:
 
   
+  // Arrange to corrupt with simulated calibration
+  //   (cf Calibrater setapply)
+  VisCal *createcorrupt(const Record& simpar);
+
+  // calculate the corruption terms and save in a caltable
+  Bool calc_corrupt(VisCal *vc, const Record& simpar);
+
   // Prints an error message if the newsimulator DO is detached and returns True.
   Bool detached() const;
 

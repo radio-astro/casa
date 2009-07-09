@@ -245,6 +245,8 @@ void SolvableVisCal::setApply() {
   ci().setSpwMap(spwMap());
 }
 
+
+
 // Setapply from a Cal Table, etc.
 void SolvableVisCal::setApply(const Record& apply) {
   //  Inputs:
@@ -401,6 +403,61 @@ void SolvableVisCal::setApply(const Record& apply) {
 
 }
 
+
+
+
+// ===================================================
+
+void SolvableVisCal::setSimulate(const Record& simpar) {
+
+  if (prtlev()>2) cout << "SVC::setSimulate(simpar)" << endl;
+
+  // Call VisCal version for generic stuff (simint, etc)
+  VisCal::setSimulate(simpar);
+
+  // check if want to write a table:
+  if (simpar.isDefined("caltable")) {
+    calTableName()=simpar.asString("caltable");
+    // RI TODO deal with over-writing existing caltables
+    // verifyCalTable(calTableName());
+    append()=False;
+  } else {
+    calTableName()="<none>";
+  }
+  if (calTableName().length()==0)
+    calTableName()="<none>";
+   
+  setSolved(False);
+  setApplied(False); // RI TODO this may have to be true
+  setSimulated(True);
+
+  // Create a pristine CalSet
+  //  TBD: move this to inflate()?
+  switch (parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw());
+	cs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw());
+	rcs().initCalTableDesc(typeName(),parType_);
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
+    }
+  
+  // RI TODO specializations probably have to deal with channelization
+
+}
+
+
+
+
 String SolvableVisCal::applyinfo() {
 
   ostringstream o;
@@ -417,6 +474,22 @@ String SolvableVisCal::applyinfo() {
 
 }
 
+
+String SolvableVisCal::siminfo() {
+  // RI TODO SolvableVisCal::siminfo calls VisCal's - TBD change?
+  VisCal::siminfo();
+
+  ostringstream o;
+  o << boolalpha
+    << typeName()
+    << ": output table="      << calTableName()
+    << " simint="     << simint()
+    << " t="          << interval();
+  return String(o);
+}
+
+
+
 void SolvableVisCal::setSolve() {
 
   if (prtlev()>2) cout << "SVC::setSolve()" << endl;
@@ -431,6 +504,7 @@ void SolvableVisCal::setSolve() {
   // This is the solve context
   setSolved(True);
   setApplied(False);
+  setSimulated(False);
 
   // Create a pristine CalSet
   //  TBD: move this to inflate()?
@@ -696,6 +770,7 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 }
 
 
+
 Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
   // New version that counts solutions (which may overlap in 
@@ -865,9 +940,11 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     logSink() << "Combining fields." << LogIO::POST;
   
 
-  logSink() << "For solint = " << solint() << ", found "
-	    <<  nSol << " solution intervals."
-	    << LogIO::POST;
+  if (!isSimulated()) {
+    logSink() << "For solint = " << solint() << ", found "
+	      <<  nSol << " solution intervals."
+	      << LogIO::POST;
+  }
 
   // Inflate the CalSet
   inflate(nChanParList(),startChanList(),nChunkPerSpw);

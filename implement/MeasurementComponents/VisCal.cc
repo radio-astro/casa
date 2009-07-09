@@ -38,6 +38,8 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
 
@@ -81,7 +83,8 @@ VisCal::VisCal(VisSet& vs) :
   PValid_(vs.numberSpw(),False),
   calWt_(False),
   currWtScale_(vs.numberSpw(),NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  corruptor_p(NULL)
 {
   if (prtlev()>2) cout << "VC::VC(vs)" << endl;
 
@@ -114,7 +117,8 @@ VisCal::VisCal(const Int& nAnt) :
   PValid_(1,False),
   calWt_(False),
   currWtScale_(1,NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  corruptor_p(NULL)
 {
   if (prtlev()>2) cout << "VC::VC(i,j,k)" << endl;
 
@@ -177,10 +181,87 @@ void VisCal::setApply(const Record& apply) {
 
 }
 
+
+
+
+void VisCal::setSimulate(const Record& simpar) {
+
+  if (prtlev()>2) cout << "VC::setSimulate(simpar)" << endl;
+  
+  // Extract calWt
+  if (simpar.isDefined("calwt"))
+    calWt()=simpar.asBool("calwt");
+
+  
+  setSimulated(True);
+  setApplied(False); // RI TODO this may have to be true
+
+  // RI TODO interpolation params have to get sent to SolvableVisCal::setApply or setSolve.
+
+  // deal with general parameters ( this general setSimulate will be 
+  // called by any derived classes before dealing with their specific parms )
+
+  // (copied from SolvableVisCal::setSolve)
+
+  if (simpar.isDefined("simint"))
+    simint()=simpar.asString("simint");
+  
+  if (upcase(simint()).contains("INF") || simint()=="") {
+    simint()="inf";
+    interval()=-1.0;
+  }
+  else if (upcase(simint()).contains("INT"))
+    interval()=0.0;
+  else {
+    QuantumHolder qhsimint;
+    String error;
+    Quantity qsimint;
+    qhsimint.fromString(error,simint());
+    if (error.length()!=0)
+      throw(AipsError("Unrecognized units for simint."));
+    qsimint=qhsimint.asQuantumDouble();
+
+    if (qsimint.isConform("s"))
+      interval()=qsimint.get("s").getValue();
+    else {
+      // assume seconds
+      interval()=qsimint.getValue();
+      simint()=simint()+"s";
+    }
+  }
+
+}
+
+#define PRTLEV 0
+
+CalCorruptor::CalCorruptor(const Int nSim) : 
+  nSim_(nSim),
+  initialized_(False),
+  prtlev_(PRTLEV),
+  curr_slot_(-1)
+{
+}
+
+CalCorruptor::~CalCorruptor() {}
+
+
 String VisCal::applyinfo() {
 
   ostringstream o;
   o << typeName() << " <pre-computed>";
+
+  return String(o);
+
+}
+
+String VisCal::siminfo() {
+
+  // RI TODO this seems kind of anemic but I suppose its intended to be 
+  // RI TODO overriden - probably want to make it more detailed in derived 
+  // RI TODO classes, either call this first or replace this
+  ostringstream o;
+  o << typeName() << " <simulated>"
+    << " simulation inverval = " << simint();
 
   return String(o);
 
@@ -261,6 +342,7 @@ void VisCal::state() {
        << "; nElem= " << nElem()
        << "; nCalMat= " << nCalMat() << endl;
   cout << "  isApplied= " << isApplied()
+       << ";  isSimulated= " << isSimulated() 
        << ";  isSolvable= " << isSolvable() << endl;
   cout << "  freqDepPar= " << freqDepPar()
        << ";  freqDepMat= " << freqDepMat()
@@ -530,6 +612,35 @@ void VisCal::calcPar() {
   invalidateCalMat();
 
 }
+
+
+// Set up simulated params
+void VisCal::setupSim(const Int& nSim, VisSet& vs, const Record& simpar) {
+
+  if (prtlev()>4) cout << "      VC::setupSim()" << endl;
+
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // Every VC needs to have its own version of this!
+  throw(AipsError("This VisCal doesn't yet support simulation"));
+ 
+}
+
+
+
+void VisCal::simPar(VisBuffGroupAcc& vbga) {
+  
+  if (prtlev()>4) cout << "      VC::simPar()" << endl;
+
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // Every VC needs to have its own version of this!
+  throw(AipsError("This VisCal doesn't yet support simulation"));
+ 
+}
+
 
 
 // VisCal PRIVATE method implementations........................... 

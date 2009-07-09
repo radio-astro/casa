@@ -139,6 +139,11 @@ public:
   // Report solve info/params, e.g., for logging
   virtual String solveinfo();
 
+  // set general simulation information e.g. table name
+  virtual void setSimulate(const Record& simpar);
+
+  virtual String siminfo();
+
   // Arrange for accumulation
   virtual void setAccumulate(VisSet& vs,
 			     const String& table,
@@ -149,6 +154,13 @@ public:
   // Size up the solving arrays, etc.  (supports combine)
   Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
+  // Size up the simulate arrays, etc.  
+  // this may have to be specializable, but the general case of 
+  // just calling sizeUpSolve is a good place to start:
+  // I'm going to keep nSol around for use without sizing again.
+  inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
+    return sizeUpSolve(vs,nChunkPerSol) ; }
+ 
   // Initialize internal shapes for solving
   void initSolve(VisSet& vs);
 

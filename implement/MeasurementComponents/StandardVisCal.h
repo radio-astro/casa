@@ -34,6 +34,7 @@
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declaration
@@ -91,9 +92,39 @@ private:
   
 };
 
+
+
+
+
+
+
+
+
+
+
 // **********************************************************
 //  TJones
 //
+
+class TJonesCorruptor : public CalCorruptor {
+
+ public:
+   TJonesCorruptor(const Int nSim);
+   virtual ~TJonesCorruptor();
+   inline Vector<Double>& delay() { return delay_; };
+   inline Float& rms() { return rms_; };
+   virtual void initialize();
+   virtual Complex thisgain(const Double& freq);
+   // virtual Complex thisgain(const Int slot, const Vector<Double> freq);     
+
+ protected:
+
+ private:   
+   Vector<Double> delay_;
+   Float rms_;
+};
+
+
 
 class TJones : public SolvableVisJones {
 public:
@@ -123,6 +154,12 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
+  // Set up simulated params
+  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
+
+  // Simulate/calculate parameters for given sim interval
+  virtual void simPar(VisBuffGroupAcc& vbga);
+
 protected:
 
   // T has one trivial complex parameter
@@ -139,9 +176,30 @@ protected:
 
 private:
 
-  // <nothing>
-  
+  // object that can simulate the corruption terms - internal to T, its
+  // a TJCorruptor, but public access is only to the CalCorruptor parts
+  TJonesCorruptor *tcorruptor_p;
+
 };
+
+
+
+
+#ifdef FBM_REMY
+// this generates fractional brownian motion aka generalized 1/f noise
+ class fBM : public Array<Double> {
+ public:
+  fBM(const Vector<Int>& dimensions);
+  virtual ~fBM();
+  inline Bool& initialized() { return initialized_; };
+ private:
+  Bool initialized_;
+}
+#endif
+
+
+
+
 
 // **********************************************************
 //  GJones
