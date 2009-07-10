@@ -387,7 +387,7 @@ static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
 }
 #endif
 
-NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT || PyArray_TYPE(obj) == NPY_LONG),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
+NUMPY2VECTOR(int,int,npy_int,(PyArray_TYPE(obj) == NPY_INT || PyArray_TYPE(obj) == NPY_LONG),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE(obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(bool,bool,npy_bool,(PyArray_TYPE(obj) == NPY_BOOL),? 1 : 0,COPY_BUILTIN,stringtobool,CPXNONZERO,NODOCOMPLEX,,,,,*to = (bool) *from,1)
 
@@ -779,7 +779,7 @@ inline PyObject *map_vector( const std::vector<TYPE> &vec ) {					\
     return map_vector_numpy( vec );								\
 }
 
-MAP_ARRAY_NUMPY(int, npy_int32, NPY_INT,*to = (npy_int32) *from)
+MAP_ARRAY_NUMPY(int, npy_int, NPY_INT,*to = (npy_int) *from)
 MAP_ARRAY_NUMPY(double, npy_double,NPY_DOUBLE,*to = (npy_double) *from)
 MAP_ARRAY_NUMPY(std::complex<double>, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).real(); (*to).imag = (*from).imag())
 MAP_ARRAY_NUMPY(casac::complex, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).re; (*to).imag = (*from).im)

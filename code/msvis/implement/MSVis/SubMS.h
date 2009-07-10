@@ -184,6 +184,46 @@ class SubMS
   void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
   Bool doWriteImagingWeight(const ROMSColumns& msc, const Vector<String>& colNames);
 
+  // Transform spectral data to different reference frame,
+  // optionally regrid the frequency channels 
+  // return values: -1 = MS not modified, 1 = MS modified and OK, 
+  // 0 = MS modified but not OK (i.e. MS is probably damaged) 
+  Int cvel(const String& field="", // default = "all" 
+	   const String& outframe="", // default = "keep the same"
+	   const String& regridQuant="freq",
+	   const Double regridVeloRestfrq=-9E99, // default = "not set" 
+	   const String& regridInterpMeth="NEAR",
+	   const Double regridCenter=-9E99, // default = "not set" 
+	   const Double regridBandwidth=-1., // default = "not set" 
+	   const Double regridChanWidth=-1. // default = "not set" 
+	   );
+
+  // the following inline convenience methods for cvel bypass the whole CASA measure system
+  // because when they are used, they can assume that the frame stays the same and the units are OK
+  Double vrad(const Double freq, const Double rest){ return (C::c * (1. - freq/rest)); };
+  Double vopt(const Double freq, const Double rest){ return (C::c *(rest/freq - 1.)); };
+  Double lambda(const Double freq){ return (C::c/freq); };
+  Double freq_from_vrad(const Double vrad, const Double rest){ return (rest * (1. - vrad/C::c)); };
+  Double freq_from_vopt(const Double vopt, const Double rest){ return (rest / (1. + vopt/C::c)); };
+  Double freq_from_lambda(const Double lambda){ return (C::c/lambda); };
+  
+  // Support method for cvel():
+  // calculate the final new channel boundaries from the regridding parameters
+  // and the old channel boundaries (already transformed to the desired reference frame);
+  // returns False if input paramters were invalid and no useful boundaries could be created
+  Bool regridChanBounds(Vector<Double>& newChanLoBound, 
+			Vector<Double>& newChanHiBound,
+			const Double regridCenter, 
+			const Double regridBandwidth,
+			const Double regridChanWidth,
+			const Double regridVeloRestfrq, 
+			const String regridQuant,
+			const Vector<Double>& transNewXin, 
+			const Vector<Double>& transCHAN_WIDTH,
+			string& message // message to the user, epsecially in case of error 
+			);
+
+
  private:
   // *** Private member functions ***
 

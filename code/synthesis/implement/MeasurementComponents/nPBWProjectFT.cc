@@ -2418,10 +2418,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
-				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
-// 				       rotatedConvFunc,0.0,"LINEAR");
+//    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+ 				       rotatedConvFunc,0.0,"LINEAR");
 
     /*
     CFMap = polMap; ConjCFMap = polMap;

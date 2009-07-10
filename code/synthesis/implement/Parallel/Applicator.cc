@@ -42,8 +42,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Applicator::Applicator() : comm(0), algorithmIds(0),
-  knownAlgorithms((Algorithm*)0), usedAllThreads(False), serial(True),
-  nProcs(0), procStatus(0), LastID(101)
+  knownAlgorithms((Algorithm*)0), LastID(101), usedAllThreads(False),
+  serial(True), nProcs(0), procStatus(0)
 {
 // Default constructor; requires later init().
 }

@@ -107,6 +107,15 @@ else
 endif
 
 
+# OS Specific Setup Discovery
+#--------------------------------
+ifeq "$(shell echo -e)" "-e"
+   ECHOESC := ""
+else
+   ECHOESC := "-e"
+endif
+
+
 #=============================================================================
 #                        START OF DEFAULT DEFINITIONS
 #=============================================================================
@@ -480,8 +489,8 @@ CPP       = $(C++) -E
 #
 #Seems we have an unknown issue with the unlock, so commented out for now
 #
-#CPPSTD   := -DAIPS_NEEDS_RETHROW -DCASACORE_UNLOCK_TABLE_ON_DESTRUCT
-CPPSTD   := -DAIPS_NEEDS_RETHROW  -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB  -DAIPS_HAS_QWT
+#CPPSTD   := -DCASACORE_NEEDS_RETHROW -DCASACORE_UNLOCK_TABLE_ON_DESTRUCT
+CPPSTD   := -DCASACORE_NEEDS_RETHROW  -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB  -DAIPS_HAS_QWT
 CPPDBG    = $(CPPSTD) -DAIPS_DEBUG -DAIPS_ARRAY_INDEX_CHECK
 CPPOPT    = $(CPPSTD)
 

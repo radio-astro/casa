@@ -186,6 +186,8 @@ void SDGrid::init() {
 
   logIO() << LogOrigin("SDGrid", "init")  << LogIO::NORMAL;
 
+  pfile = fopen("ptdata.txt","w");
+
   ok();
 
   if((image->shape().product())>cachesize) {
@@ -272,6 +274,7 @@ void SDGrid::init() {
 
 // This is nasty, we should use CountedPointers here.
 SDGrid::~SDGrid() {
+  fclose(pfile);
   if(imageCache) delete imageCache; imageCache=0;
   if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(wImage) delete wImage; wImage=0;
@@ -320,7 +323,6 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     MEpoch epoch(Quantity(vb.time()(row), "s"));
     if(!pointingToImage) {
       mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
-
       worldPosMeas=directionMeas(act_mspc, pointIndex);
       // Make a machine to convert from the worldPosMeas to the output
       // Direction Measure type for the relevant frame
@@ -639,7 +641,6 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   gridOk(convSupport);
 
-
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS()){
     matchAllSpwChans(vb);
@@ -806,6 +807,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
   LogIO os(LogOrigin("SDGrid", "get"));
 
   gridOk(convSupport);
+
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
@@ -1052,7 +1054,7 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
 
 Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
-
+  Bool dointerp;
   const ROMSPointingColumns& act_mspc=vb.msColumns().pointing();
   uInt pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
   if((pointIndex<0)||(pointIndex>=act_mspc.time().nrow())) {
@@ -1064,13 +1066,23 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     return False;
   }
 
+  dointerp = False;
+  if (vb.timeInterval()(row)<act_mspc.interval()(pointIndex)) {
+     dointerp=True;
+  }
   MEpoch epoch(Quantity(vb.time()(row), "s"));
   if(!pointingToImage) {
     // Set the frame 
     MPosition nullPos;
     mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
+    if(dointerp) {
+       worldPosMeas=directionMeas(act_mspc, pointIndex, vb.time()(row));
+    }
+    else {
+       worldPosMeas=directionMeas(act_mspc, pointIndex);
+    }
 
-    worldPosMeas=directionMeas(act_mspc, pointIndex);
+    //worldPosMeas=directionMeas(act_mspc, pointIndex);
     // Make a machine to convert from the worldPosMeas to the output
     // Direction Measure type for the relevant frame
     MDirection::Ref outRef(directionCoord.directionType(), mFrame_p);
@@ -1084,8 +1096,18 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     mFrame_p.resetEpoch(epoch);
     mFrame_p.resetPosition(FTMachine::mLocation_p);
   }
-  
-  worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
+  if(dointerp) {
+    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex, vb.time()(row)));
+    MDirection newdir = directionMeas(act_mspc, pointIndex, vb.time()(row));
+    Vector<Double> newdirv = newdir.getAngle("rad").getValue();
+    //cerr<<"dir0="<<newdirv(0)<<endl;
+   
+    fprintf(pfile,"%.8f %.8f \n", newdirv(0), newdirv(1));
+    //printf("%lf %lf \n", newdirv(0), newdirv(1));
+  }
+  else {
+    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
+  }
   Bool result=directionCoord.toPixel(xyPos, worldPosMeas);
   
 
@@ -1150,5 +1172,114 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
   }
 
+  // for the cases, interpolation of the pointing direction requires 
+  // when data sampling rate higher than the pointing data recording 
+  // (e.g. fast OTF)
+  MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time){
+    Int index1, index2;
+    if(time < mspc.time()(index)) {
+      if(index > 0) {
+         index1 = index-1;
+         index2 = index;
+      }
+      else if(index==0){
+         index1 = index;
+         index2 = index+1;
+      }
+    }
+    else {
+      if(index < (mspc.nrow()-1)) {
+        index1 = index;
+        index2 = index+1;
+      }
+      else if(index == (mspc.nrow()-1) || (mspc.time()(index)-mspc.time()(index+1))>2*mspc.interval()(index)) {
+        index1 = index-1;
+        index2 = index;
+      }
+    }
+    return interpolateDirectionMeas(mspc, time, index, index1, index2);
+  }
+
+  MDirection SDGrid::interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time, const Int& index, const Int& indx1, const Int& indx2){
+    Vector<Double> dir1,dir2; 
+    Vector<Double> newdir(2),scanRate(2);
+    Double dLon, dLat;
+    Double ftime,ftime2,ftime1,dtime;
+    MDirection newDirMeas;
+    MDirection::Ref rf;
+    Bool isfirstRefPt;
+
+    if (indx1 == index) {
+      isfirstRefPt = True;
+    }
+    else {
+      isfirstRefPt = False;
+    }
+    if(pointingDirCol_p=="TARGET"){
+      dir1 = mspc.targetMeas(indx1).getAngle("rad").getValue();
+      dir2 = mspc.targetMeas(indx2).getAngle("rad").getValue();
+    }
+    else if(pointingDirCol_p=="POINTING_OFFSET"){
+      if(!mspc.pointingOffsetMeasCol().isNull()){
+        dir1 = mspc.pointingOffsetMeas(indx1).getAngle("rad").getValue();
+        dir2 = mspc.pointingOffsetMeas(indx2).getAngle("rad").getValue();
+      }
+      else { 
+        cerr << "No PONTING_OFFSET column in POINTING table" << endl;
+      }
+    }
+    else if(pointingDirCol_p=="SOURCE_OFFSET"){
+      if(!mspc.sourceOffsetMeasCol().isNull()){
+        dir1 = mspc.sourceOffsetMeas(indx1).getAngle("rad").getValue();
+        dir2 = mspc.sourceOffsetMeas(indx2).getAngle("rad").getValue();
+      }
+      else {
+        cerr << "No SOURCE_OFFSET column in POINTING table" << endl;
+      }
+    }
+    else if(pointingDirCol_p=="ENCODER"){
+      if(!mspc.encoderMeas().isNull()){
+        dir1 = mspc.encoderMeas()(indx1).getAngle("rad").getValue();
+        dir2 = mspc.encoderMeas()(indx2).getAngle("rad").getValue();
+      }
+      else {
+        cerr << "No ENCODER column in POINTING table" << endl;
+      }
+    }
+    else {
+      dir1 = mspc.directionMeas(indx1).getAngle("rad").getValue();
+      dir2 = mspc.directionMeas(indx2).getAngle("rad").getValue();
+    }
+    dLon=dir2(0)-dir1(0);
+    dLat=dir2(1)-dir1(1);
+    ftime=floor(mspc.time()(indx1));
+    ftime2=mspc.time()(indx2)-ftime;
+    ftime1=mspc.time()(indx1)-ftime;
+    dtime=ftime2-ftime1;
+    scanRate(0) = dLon/dtime;
+    scanRate(1) = dLat/dtime;
+    //scanRate(0) = dir2(0)/dtime-dir1(0)/dtime;
+    //scanRate(1) = dir2(1)/dtime-dir1(1)/dtime;
+    //Double delT = mspc.time()(index)-time;
+    //cerr<<"index="<<index<<" dLat="<<dLat<<" dtime="<<dtime<<" delT="<< delT<<endl;
+    //cerr<<"deldirlat="<<scanRate(1)*fabs(delT)<<endl;
+    if (isfirstRefPt) {
+      newdir(0) = dir1(0)+scanRate(0)*fabs(mspc.time()(index)-time);
+      newdir(1) = dir1(1)+scanRate(1)*fabs(mspc.time()(index)-time);
+      rf = mspc.directionMeas(indx1).getRef();
+    }
+    else {
+      newdir(0) = dir2(0)-scanRate(0)*fabs(mspc.time()(index)-time);
+      newdir(1) = dir2(1)-scanRate(1)*fabs(mspc.time()(index)-time);
+      rf = mspc.directionMeas(indx2).getRef();
+    }
+    //default  return this
+    Quantity rDirLon(newdir(0),"rad");
+    Quantity rDirLat(newdir(1),"rad");
+    newDirMeas = MDirection(rDirLon, rDirLat, rf);
+    //cerr<<"newDirMeas rf="<<newDirMeas.getRefString()<<endl;
+    //return mspc.directionMeas(index);
+    return newDirMeas;
+  }
 
 } //#End casa namespace

@@ -161,14 +161,16 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
 TJones::TJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  SolvableVisJones(vs)    // immediate parent
+  SolvableVisJones(vs),    // immediate parent
+  tcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "T::T(vs)" << endl;
 }
 TJones::TJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  SolvableVisJones(nAnt)
+  SolvableVisJones(nAnt),
+  tcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "T::T(nAnt)" << endl;
 }
@@ -306,6 +308,139 @@ void TJones::initTrivDJ() {
   diffJElem()=Complex(1.0);
 
 }
+
+  
+
+
+
+
+
+//============================================================
+
+
+
+void TJones::setupSim(const Int& nSim, VisSet& vs, const Record& simpar) {
+
+  if (prtlev()>2) cout << "   T::setupSim()" << endl;
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // we can use the private access directly the corruptor
+  tcorruptor_p = new TJonesCorruptor(nSim);
+  // but set the public one 
+  corruptor_p = tcorruptor_p;
+
+  if (simpar.isDefined("rms")) {    
+    tcorruptor_p->rms()=simpar.asFloat("rms");
+  } else {
+      throw(AipsError("No RMS specified for TJones corruptor."));
+  }
+
+  tcorruptor_p->initialize();
+
+  if (prtlev()>2) cout << "     corruptor_p_->curr_slot()=" << 
+    corruptor_p->curr_slot() << endl;
+}
+
+
+void TJones::simPar(VisBuffGroupAcc& vbga) {
+
+  if (prtlev()>4) cout << "   T::simPar()" << endl;
+
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+  
+  // sizeUpSolve did this (Mueller):
+  // solveCPar().resize(nPar(),nChanPar(),nBln());
+  // or this (Jones):
+  // solveCPar().resize(nPar(),1,nAnt());
+
+  // loop through correlations or use corridx ?
+
+  for (Int ivb=0;ivb<vbga.nBuf();++ivb) {
+    CalVisBuffer& cvb(vbga(ivb));   // why the cast to a CalVisBuffer different from regular VB?
+    Vector<Int>& a1(cvb.antenna1());
+    Vector<Int>& a2(cvb.antenna2());
+    for (Int irow=0;irow<cvb.nRow();++irow) {
+      if ( !cvb.flagRow()(irow) &&
+	   cvb.antenna1()(irow)!=cvb.antenna2()(irow) &&
+	   nfalse(cvb.flag().column(irow))> 0 ) {
+	
+	  // uses vc->currField() and vc->refTime() as set by syncSolvemeta()	  
+	  solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->thisgain(cvb.frequency()(focusChan()));
+      }
+    }
+  }
+  
+  //  cout << "Guess:" << endl
+  //       << "amp = " << amplitude(solveCPar())
+  //       << "phase = " << phase(solveCPar())
+  //       << endl;
+  
+  // solveParOK()=True;
+  // keep(slotidx(thisSpw));
+  
+}
+
+
+#define PRTLEV 0
+
+TJonesCorruptor::TJonesCorruptor(const Int nSim) : 
+  CalCorruptor(nSim),  // parent
+  delay_(0),
+  rms_(0.)
+{
+  //initialize();
+}
+
+TJonesCorruptor::~TJonesCorruptor() {
+  if (prtlev()>2) cout << "TCorruptor::~TCorruptor()" << endl;
+}
+
+void TJonesCorruptor::initialize() {
+  delay().resize(nSim());
+  for (Int i=0;i<nSim();++i) {
+    // shwag for testing
+    delay()(i) = Float(i)/Float(nSim())/1.e9*rms(); // 0-rms nanosecond
+  } 
+  curr_slot()=0;
+  initialized()=True;
+  if (prtlev()>2) cout << "TCorruptor::init" << endl;
+}
+
+
+// for phase screen we'll need to pass a mean time from the vb to 
+// thisgain, as well as a direction.  initialize will just set up 
+// the screen.  we won't need to pass the slot index.
+// similarly, we may not need to construct that corruptor with nsim - 
+// it could have a parameterless constructor, and then 
+// initialize would need to know the total scan length and wind 
+// speed to make the screen long enough to blow over the array for the 
+// entire scan
+
+Complex TJonesCorruptor::thisgain(const Double& freq) {
+  // if (prtlev()>2) cout << "TCorruptor::thisgain" << endl;
+  if (curr_slot()>=0 and curr_slot()<nSim()) {
+    Double phase=freq*delay()[curr_slot()];
+    return Complex(cos(phase),sin(phase));
+  } else {
+    cout << "TCorruptor::thisgain: slot " << curr_slot() << "out of range!" << endl;
+    return Complex(1.);
+  }
+}
+
+
+
+#ifdef FBM_REMY
+  fBM::fBM(const Vector<Int>& dimensions) :
+    Array<Double>(dimensions),
+    initialized_(False),
+  {};
+#endif
+
+
+
+
 
 // **********************************************************
 //  GJones Implementations

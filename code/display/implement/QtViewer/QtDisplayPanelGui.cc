@@ -741,6 +741,7 @@ void QtDisplayPanelGui::showImageProfile() {
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
          QtDisplayData* pdd = qdds.getRight();
          if(pdd != 0 && pdd->dataType() == "image") {
+            
             ImageInterface<float>* img = pdd->imageInterface();
             PanelDisplay* ppd = qdp_->panelDisplay();
             if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
@@ -748,7 +749,6 @@ void QtDisplayPanelGui::showImageProfile() {
 	      // pdd is a suitable QDD for profiling.
               
 	      if (!profile_) {
-	      
 	        // Set up profiler for first time.
 	        
                 profile_ = new QtProfile(img, pdd->name().chars());

@@ -23,7 +23,7 @@
    <item row="0" column="0" >
     <widget class="QGroupBox" name="groupBox" >
      <property name="title" >
-      <string>Region Name</string>
+      <string>Display Region</string>
      </property>
      <widget class="QComboBox" name="regName" >
       <property name="geometry" >
@@ -128,7 +128,7 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QCheckBox" name="chanExt" >
+     <widget class="QLabel" name="chanExt" >
       <property name="geometry" >
        <rect>
         <x>10</x>
@@ -138,13 +138,13 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>If checked region apply to all channels listed on the right</string>
+       <string>the channels this region applys to</string>
       </property>
       <property name="text" >
        <string>Channels:</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="polExt" >
+     <widget class="QLabel" name="polExt" >
       <property name="geometry" >
        <rect>
         <x>10</x>
@@ -154,10 +154,23 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>if checked region apply to all polarizations listed on the right</string>
+       <string>the polarizations this region applys to</string>
       </property>
       <property name="text" >
        <string>Polarizations:</string>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="helpButton" >
+      <property name="geometry" >
+       <rect>
+        <x>450</x>
+        <y>10</y>
+        <width>46</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text" >
+       <string>Help</string>
       </property>
      </widget>
     </widget>
@@ -257,7 +270,7 @@
      <widget class="QLineEdit" name="savedName" >
       <property name="geometry" >
        <rect>
-        <x>10</x>
+        <x>120</x>
         <y>60</y>
         <width>361</width>
         <height>23</height>
@@ -265,6 +278,22 @@
       </property>
       <property name="toolTip" >
        <string>the name of the image region (to be saved or loaded)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="polExt_2" >
+      <property name="geometry" >
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>111</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>the polarizations this region applys to</string>
+      </property>
+      <property name="text" >
+       <string>Region Name:</string>
       </property>
      </widget>
     </widget>

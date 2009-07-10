@@ -25,6 +25,7 @@
 //#
 //# $Id$
 
+
 #include <casa/aips.h>
 #include <casa/iostream.h>
 #include <casa/Inputs/Input.h>
@@ -35,16 +36,26 @@
 #include <display/Display/StandAloneDisplayApp.h>
 	// (Configures pgplot for stand-alone Display Library apps).
 
-#include <display/QtViewer/QtDisplayData.qo.h>
-#include <display/QtViewer/QtDisplayPanelGui.qo.h>
-#include <display/QtViewer/QtViewer.qo.h>
-#include <display/QtViewer/QtApp.h>
-
 /*
 #include <graphics/X11/X_enter.h>
 #include   <QApplication>
 #include <graphics/X11/X_exit.h>
 */
+#undef  qdoc 
+#include <qmacdefines_mac.h>
+/*
+#include <QtAlgorithms>
+#include <QtContainerFwd>
+#include <QtConcurrentMap>
+#include <QtConcurrentRun>
+#include <QtConcurrentFilter>
+#include <QtCore>
+#include <QApplication>
+*/
+#include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/QtViewer/QtViewer.qo.h>
+#include <display/QtViewer/QtApp.h>
 
 
 #include <casa/namespace.h>

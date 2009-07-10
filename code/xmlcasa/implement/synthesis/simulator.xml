@@ -1157,6 +1157,17 @@ zero, with the variances as specified.
      <choice>''</choice>
      </param>
 
+     <param type="double" name="timescale">
+     <description>timescale for gain variations</description>
+     <value>10.0</value>
+     </param>
+
+     <param type="double" name="rms">
+     <description>amplitude scale for gain variations</description>
+     <value>1.0</value>
+     </param>
+
+<!--
      <param type="any" name="interval" >
      <description>Coherence interval e.g. '10s'</description>
      <any type="variant" />
@@ -1167,9 +1178,47 @@ zero, with the variances as specified.
      <description>Variances of errors in amplitude and phase</description>
      <value>0</value>
      </param>
+-->
 </input>
 <returns type='bool'>Bool</returns>
 </method>
+
+
+   <method type="function" name="settrop">
+   <shortdescription>Set tropospheric gain corruptions</shortdescription>
+   
+<description>
+Set the atmosphere. 
+</description>
+<input>
+
+     <param type="string" name="mode">
+     <description>Mode of operation. String: 'generate'</description>
+     <value>generate</value>
+     <choice>'generate'</choice>
+     </param>
+
+     <param type="string" name="table">
+     <description>Name of cal table</description>
+     <value></value>
+     <choice>''</choice>
+     </param>
+
+     <param type="double" name="timescale">
+     <description>timescale for atmospheric variations</description>
+     <value>10.0</value>
+     </param>
+
+     <param type="double" name="rms">
+     <description>amplitude scale for atmospheric variations</description>
+     <value>1.0</value>
+     </param>
+
+</input>
+<returns type='bool'>Bool</returns>
+</method>
+
+
 
 
 <method type="function" name="setpointingerror">

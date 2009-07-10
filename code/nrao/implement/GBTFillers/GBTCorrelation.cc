@@ -266,6 +266,6 @@ Bool GBTCorrelation::operator==(const GBTCorrelation &other) const
 // These must be defined here because templates need things to be in the casa namespace!
 
 #include <casa/Utilities/Copy.tcc>
-template void objcopy<GBTCorrelation *>(GBTCorrelation **, GBTCorrelation * const *, uInt);
-template void objset<GBTCorrelation *>(GBTCorrelation **, GBTCorrelation *, uInt);
+//template void objcopy<GBTCorrelation *>(GBTCorrelation **, GBTCorrelation * const *, uInt);
+//template void objset<GBTCorrelation *>(GBTCorrelation **, GBTCorrelation *, uInt);
 

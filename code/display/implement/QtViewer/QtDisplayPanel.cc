@@ -338,6 +338,14 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
       //   rgnSaved = True;  }
+     resetRTRegion();
+
+
+     //this reset is necessary but cannot do
+     //because the bug that polygon tool prematurely
+     //emit 'reagion ready'.
+     //enable this after that bug cas-1393 fix
+     //resetPTRegion();
     
     
     delete imReg;  }  }  

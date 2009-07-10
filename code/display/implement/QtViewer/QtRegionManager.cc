@@ -36,6 +36,7 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCUnion.h>
 #include <display/Display/DParameterChoice.h>
+#include <display/Display/Attribute.h>
 #include <casa/IO/AipsIO.h>
 #include <images/Images/PagedImage.h>
 
@@ -81,6 +82,8 @@ QtRegionManager::QtRegionManager(
                 SLOT(newRegion_(String)));
   connect(this, SIGNAL(extendRegion(String, String)),
           qdp_, SLOT(extendRegion(String, String)));
+  connect(qdp_, SIGNAL(animatorChange()),  
+                SLOT(zPlaneChanged()) );
   connect(chan_sel, SIGNAL(editingFinished()), 
                     SLOT(resetRegionExtension()));
   connect(pol_sel, SIGNAL(editingFinished()), 
@@ -95,10 +98,12 @@ QtRegionManager::QtRegionManager(
                      SLOT(removeRegion()));
   //connect(planeOnlyCB, SIGNAL(stateChanged(int)), 
   //                   SLOT(singlePlane()));
-  connect(chanExt, SIGNAL(clicked()), 
-                   SLOT(extendChan()));
-  connect(polExt, SIGNAL(clicked()), 
-                  SLOT(extendPol()));  
+  //connect(chanExt, SIGNAL(clicked()), 
+  //                 SLOT(extendChan()));
+  //connect(polExt, SIGNAL(clicked()), 
+  //                SLOT(extendPol()));  
+  connect(helpButton, SIGNAL(clicked()),
+                      SLOT(showHelp()));
   connect(resetregions, SIGNAL(clicked()), 
                         SLOT(cleanup()));
   connect(loadFile, SIGNAL(clicked()), 
@@ -109,8 +114,11 @@ QtRegionManager::QtRegionManager(
           SIGNAL(currentIndexChanged(const QString &)), 
           SLOT(currentRegionChanged(const QString &)));
 
+  planeOnlyCB->setChecked(True); 
   planeOnlyCB->setChecked(False); 
   planeOnlyCB->hide();
+  chanExt->setEnabled(True);
+  polExt->setEnabled(True);
 }
   void QtRegionManager::displaySelectedRegion(){
 
@@ -131,6 +139,8 @@ QtRegionManager::QtRegionManager(
       {
 	List<QtDisplayData*> DDs = qdp_->registeredDDs();
 	ListIter<QtDisplayData*> qdds(DDs);
+        if (qdds.len() == 0)
+           return;
 	qdds.toEnd();
 	qdds--;
 	QtDisplayData* qdd = qdds.getRight();
@@ -152,6 +162,8 @@ QtRegionManager::QtRegionManager(
   }
 
   void QtRegionManager::addRegionsToShape(RSComposite*& theShapes, const WCRegion*& wcreg){
+    //cout << "WCRegion->comment=" 
+    //     << wcreg->comment() << endl; 
     if((wcreg->type()) == "WCBox"){
       TableRecord boxrec=wcreg->toRecord("");
       const RecordInterface& blcrec=boxrec.asRecord("blc");
@@ -238,7 +250,16 @@ QtRegionManager::QtRegionManager(
       }
 
     }
-
+    String rest = wcreg->comment();
+    String chan = rest.before("polExt:");
+    chan = chan.after("chanExt:");
+    String pola = rest.after("polExt:");
+    //cout << "chanExt=" << chan << endl;
+    //cout << "polExt=" << pola << endl;
+    Attribute oldState("chan", chan);
+    Attribute newState("pola", pola);
+    theShapes->setRestriction(oldState);
+    theShapes->setRestriction(newState);
 
   }
   void QtRegionManager::drawRegion(
@@ -249,6 +270,8 @@ QtRegionManager::QtRegionManager(
       String type=mousereg.asString("type");
       List<QtDisplayData*> DDs = qdp_->registeredDDs();
       ListIter<QtDisplayData*> qdds(DDs);
+      if (qdds.len() == 0)
+         return;
       qdds.toEnd();
       qdds--;
       ListIter<RegionShape*> rgiter(regShapes_p);
@@ -314,6 +337,8 @@ QtRegionManager::QtRegionManager(
 
           List<QtDisplayData*> DDs = qdp_->registeredDDs();
           ListIter<QtDisplayData*> qdds(DDs);
+          if (qdds.len() == 0)
+             return;
           qdds.toEnd();
           qdds--;
           QtDisplayData* qdd = qdds.getRight();
@@ -379,11 +404,16 @@ QtRegionManager::QtRegionManager(
 
        List<QtDisplayData*> DDs = qdp_->registeredDDs();
        ListIter<QtDisplayData*> qdds(DDs);
+       if (qdds.len() == 0)
+          return;
        qdds.toEnd();
        qdds--;
        QtDisplayData* qdd = qdds.getRight();
 
        regName->addItem(sName);
+
+       //cout << "------imageRegion\n" 
+       //     << reg->toRecord("ab") << endl;
        regData[sName] = regionToShape(qdd, reg);
        regState[sName] = false;
        currentRegionChanged(sName);
@@ -408,11 +438,101 @@ QtRegionManager::QtRegionManager(
     }
   }
 
+  void QtRegionManager::zPlaneChanged(){
+
+    //DisplayData *dd = getImageData(regName->currentText());
+    //DisplayData *dd = getBoundingBoxData(
+    //                  regName->currentText());
+   
+    int zIndex = 0;
+    List<QtDisplayData*> DDs = qdp_->registeredDDs();
+    ListIter<QtDisplayData*> qdds(DDs);
+    if (qdds.len() > 0) {
+       qdds.toEnd();
+       qdds--;
+       QtDisplayData* qdd = qdds.getRight();
+       zIndex = qdd->dd()->activeZIndex();
+    }
+    //cout << "zIndex=" << zIndex << endl;
+
+    //cout << "regData count=" << regData.count() << endl;
+    QList<QString> kys = regData.keys();
+    for (int i = 0; i < kys.size(); ++i) {
+
+    QString sName = kys.at(i);
+    //cout << "toggle region=" << sName.toStdString() 
+    //     << endl;
+    if (sName == "")
+       continue;
+
+    DisplayData *dd = regData[sName];
+    //cout << "DisplayData dd=" << dd 
+    //     << "\n"  
+    //     << ((RegionShape*)dd)->toRecord() << endl;
+  
+    if (!dd) 
+       continue;
+
+    String chan;
+    String pola;
+    AttributeBuffer* buf = dd->restrictionBuffer();
+    if (!(buf && buf->getValue("chan", chan)))
+       chan = "";
+    if (!(buf && buf->getValue("pola", pola)))
+       pola = "";
+    //cout << "chan=" << chan << " pola=" << pola << endl;
+
+    bool allow = planeAllowed(zIndex, chan, pola);
+    //cout << "allow=" << allow << endl;
+
+    if (!allow) {
+       qdp_->hold();
+       qdp_->panelDisplay()->removeDisplayData(*dd);
+       qdp_->release();
+       if (sName==regName->currentText())
+          showOrHide->setEnabled(false);
+       continue;
+    }
+       
+    if (sName==regName->currentText())
+       showOrHide->setEnabled(true);
+
+    if (regState[sName] == false) {
+       //qdp_->registerRegionShape((RegionShape*)dd);
+       qdp_->hold();
+       qdp_->panelDisplay()->removeDisplayData(*dd);
+       qdp_->release();
+       //cout << sName.toStdString() 
+       //     << " was not shown, is shown now" << endl;
+    } 
+    else {
+       //qdp_->registerRegionShape((RegionShape*)dd);
+       qdp_->hold();
+       qdp_->panelDisplay()->addDisplayData(*dd);
+       qdp_->release();
+       //cout << sName.toStdString() 
+       //     << " was shown, is still shown" << endl;
+    }
+
+    }
+
+  }
   void QtRegionManager::toggleImageRegion(){
 
     //DisplayData *dd = getImageData(regName->currentText());
     //DisplayData *dd = getBoundingBoxData(
     //                  regName->currentText());
+   
+    int zIndex = 0;
+    List<QtDisplayData*> DDs = qdp_->registeredDDs();
+    ListIter<QtDisplayData*> qdds(DDs);
+    if (qdds.len() > 0) {
+       qdds.toEnd();
+       qdds--;
+       QtDisplayData* qdd = qdds.getRight();
+       zIndex = qdd->dd()->activeZIndex();
+    }
+    //cout << "zIndex=" << zIndex << endl;
 
     QString sName = regName->currentText();
     //cout << "toggle region=" << sName.toStdString() 
@@ -420,14 +540,39 @@ QtRegionManager::QtRegionManager(
     if (sName == "")
        return;
 
+    //cout << "regData count=" << regData.count() << endl;
     DisplayData *dd = regData[regName->currentText()];
     //cout << "DisplayData dd=" << dd 
     //     << "\n"  
     //     << ((RegionShape*)dd)->toRecord() << endl;
+  
     if (!dd) 
        return;
+
+    String chan;
+    String pola;
+    AttributeBuffer* buf = dd->restrictionBuffer();
+    if (!(buf && buf->getValue("chan", chan)))
+       chan = "";
+    if (!(buf && buf->getValue("pola", pola)))
+       pola = "";
+    //cout << "chan=" << chan << " pola=" << pola << endl;
+
        
-    //cout << "regData count=" << regData.count() << endl;
+    bool allow = planeAllowed(zIndex, chan, pola);
+    //cout << "allow=" << allow << endl;
+
+    if (!allow) {
+       showOrHide->setEnabled(false);
+       qdp_->hold();
+       qdp_->panelDisplay()->removeDisplayData(*dd);
+       qdp_->release();
+       regState[sName] = false;
+       showOrHide->setEnabled(false);
+       return;
+    }
+
+    showOrHide->setEnabled(true);
     if (showOrHide->text()=="Show") {
        //qdp_->registerRegionShape((RegionShape*)dd);
        qdp_->hold();
@@ -460,37 +605,19 @@ QtRegionManager::QtRegionManager(
       pol_sel->setText("");
       chan_sel->setEnabled(False);
       pol_sel->setEnabled(False);
-      chanExt->setChecked(False);
-      polExt->setChecked(False);
     }
   }
   
   void QtRegionManager::extendChan(){
-    //cout << "extendChan checked=" 
-    //     << chanExt->isChecked() << endl;
-    if(chanExt->isChecked()){
       chan_sel->setEnabled(True);
       chan_sel->setText("");
       //planeOnlyCB->setChecked(False);
-    }
-    else {
-      chan_sel->setEnabled(False);
-      chan_sel->setText("");
-    }
   }
 
   void QtRegionManager::extendPol(){
-    //cout << "extendPol checked=" 
-    //     << polExt->isChecked() << endl;
-    if(polExt->isChecked()){
       pol_sel->setEnabled(True);
       pol_sel->setText("");
       //planeOnlyCB->setChecked(False);
-    }
-    else {
-      pol_sel->setEnabled(False);
-      pol_sel->setText("");
-    }
   }
 
 void QtRegionManager::loadRegionFromImage() {
@@ -510,6 +637,8 @@ void QtRegionManager::loadRegionFromImage() {
 
     List<QtDisplayData*> DDs = qdp_->registeredDDs();
     ListIter<QtDisplayData*> qdds(DDs);
+    if (qdds.len() == 0)
+       return;
     qdds.toEnd();
     qdds--;
     QtDisplayData* qdd = qdds.getRight();
@@ -526,6 +655,8 @@ void QtRegionManager::loadRegionFromImage() {
           ImageRegion* reg = (qdd->imageInterface())
                     ->getImageRegionPtr(regionNames[kk]);
        
+          //cout << "======imageRegion\n" 
+          //     << reg->toRecord("ab") << endl;
           QString sName = regionNames(kk).c_str();
           regName->addItem(sName);
           regData[sName] = regionToShape(qdd, reg);
@@ -604,8 +735,21 @@ void QtRegionManager::newRegion_(String imgFilename) {
         //     << endl;
 
       }
+
+      /*
+      ListIter<RegionShape*> rgiter(regShapes_p);
+      rgiter.toEnd();
+      while(!rgiter.atStart()) {
+          rgiter--;
+          if(qdp_->isRegistered(rgiter.getRight())){
+            qdp_->unregisterRegionShape(rgiter.getRight());
+          }
+          rgiter.removeRight();
+      }
+      */
     }
   }
+  
   //for (uInt i = 0; i < unionRegions_p.nelements(); i++) {
   //   if (unionRegions_p[i] != 0){
   //       cout << "to be save ImageRegion: " << i << "\n" 
@@ -629,6 +773,10 @@ void QtRegionManager::saveRegionInFile() {
     String regname(sName.toStdString());
     if(unionRegions_p.nelements() > 0){
       WCUnion leUnion(unionRegions_p);
+      leUnion.setComment("chanExt:" + 
+                   chan_sel->text().toStdString() +
+                   "polExt:" +
+                   pol_sel->text().toStdString());
       ImageRegion* reg = new ImageRegion(leUnion);
 
       try{
@@ -659,6 +807,8 @@ void QtRegionManager::saveRegionInImage() {
 
   List<QtDisplayData*> DDs = qdp_->registeredDDs();
   ListIter<QtDisplayData*> qdds(DDs);
+  if (qdds.len() == 0)
+     return;
   qdds.toEnd();
   qdds--;
   QtDisplayData* qdd = qdds.getRight();
@@ -685,6 +835,10 @@ void QtRegionManager::saveRegionInImage() {
 
   if (unionRegions_p.nelements() > 0){
      WCUnion leUnion(unionRegions_p);
+     leUnion.setComment("chanExt:" + 
+                  chan_sel->text().toStdString() +
+                  "polExt:" +
+                  pol_sel->text().toStdString());
      ImageRegion* reg = new ImageRegion(leUnion);
      //cout << "to be save ImageRegion:\n"  
      //     << reg->toRecord("arbitrary") << endl;
@@ -714,24 +868,53 @@ void QtRegionManager::currentRegionChanged(const QString &i) {
   int id = max(regName->findText(i), 0);
   regName->setCurrentIndex(id);
 
-  if (regState[i] == true) {
-     showOrHide->setText("Hide");
-     showOrHide->setEnabled(true);
+  List<QtDisplayData*> DDs = qdp_->registeredDDs();
+  ListIter<QtDisplayData*> qdds(DDs);
+  if (qdds.len() == 0)
      return;
-  }
-     
-  //this activates the selected image region 
-  //if the region is not in the region list
-  //create the dd and add (name, dd) to the hash
-  //show it by put it on pd directly
+
+  qdds.toEnd();
+  qdds--;
+  QtDisplayData* qdd = qdds.getRight();
+
+  int zIdx = qdd->dd()->activeZIndex();
+  //cout << "zIndex=" << zIdx << endl;
+
 
   //DisplayData *dd = getImageData(i);
   //DisplayData *dd = getBoundingBoxData(i);
   DisplayData *dd = regData[i];
-  if (dd) {
-     //cout << "add DisplayData " << dd 
-     //     << "\n"
-     //     << ((RegionShape*)dd)->toRecord() << endl;
+
+  if (!dd) 
+     return;
+
+  //cout << "add DisplayData " << dd 
+  //     << "\n"
+  //     << ((RegionShape*)dd)->toRecord() << endl;
+
+  String chan;
+  String pola;
+  AttributeBuffer* buf = dd->restrictionBuffer();
+  if (!(buf && buf->getValue("chan", chan)))
+     chan = "";
+  if (!(buf && buf->getValue("pola", pola)))
+     pola = "";
+  //cout << "chan=" << chan << " pola=" << pola << endl;
+  chan_sel->setText(chan.c_str());
+  pol_sel->setText(pola.c_str());
+
+  if (planeAllowed(zIdx, chan, pola)) {
+
+     if (regState[i] == true) {
+        showOrHide->setText("Hide");
+        showOrHide->setEnabled(true);
+        return;
+     }
+     
+     //this activates the selected image region 
+     //if the region is not in the region list
+     //create the dd and add (name, dd) to the hash
+     //show it by put it on pd directly
 
      //qdp_->registerRegionShape((RegionShape*)dd);
      qdp_->hold();
@@ -741,8 +924,16 @@ void QtRegionManager::currentRegionChanged(const QString &i) {
      showOrHide->setText("Hide");
      showOrHide->setEnabled(true);
      regState[i] = true;
-     //QMessageBox::warning(this, "wait",
-     // 		    "wait---------\n");
+  }
+  else {
+     //qdp_->unregisterRegionShape((RegionShape*)dd);
+     qdp_->hold();
+     qdp_->panelDisplay()->removeDisplayData(*dd);
+     qdp_->release();
+
+     showOrHide->setText("Show");
+     showOrHide->setEnabled(false);
+     regState[i] = false;
   }
 }
 
@@ -768,6 +959,8 @@ DisplayData* QtRegionManager::getImageData(QString regName){
 
   List<QtDisplayData*> DDs = qdp_->registeredDDs();
   ListIter<QtDisplayData*> qdds(DDs);
+  if (qdds.len() == 0)
+     return 0;
   qdds.toEnd();
   qdds--;
   QtDisplayData* qdd = qdds.getRight();
@@ -825,6 +1018,8 @@ QtRegionManager::getBoundingBoxData(QString regName){
 
   List<QtDisplayData*> DDs = qdp_->registeredDDs();
   ListIter<QtDisplayData*> qdds(DDs);
+  if (qdds.len() == 0)
+     return 0;
   qdds.toEnd();
   qdds--;
   QtDisplayData* qdd = qdds.getRight();
@@ -879,7 +1074,6 @@ RSComposite* QtRegionManager::regionToShape(
         MDirection::Types dirType = csys.
            directionCoordinate(dirInd).directionType(True);
         RSComposite *theShapes= new RSComposite(dirType);
-        //cout << "calling add" <<endl;
         addRegionsToShape(theShapes, wcreg);
         theShapes->setLineColor("cyan");
         theShapes->setLineWidth(1);
@@ -895,6 +1089,48 @@ RSComposite* QtRegionManager::regionToShape(
 void QtRegionManager::resetRegionExtension() {
       emit extendRegion(chan_sel->text().toStdString(),
                         pol_sel->text().toStdString());
+}
+
+bool QtRegionManager::planeAllowed(
+         int idx, String& xa, String& ya) {
+   xa.gsub(" ", "");
+   ya.gsub(" ", "");
+   if (xa.length() == 0)
+      return true;
+   String w[10];
+   Int nw = split(xa, w, 10, ',');
+   for (Int k = 0; k < nw; k++) {
+      String x[2];
+      Int nx = split(w[k], x, 2, '~');
+      if (nx == 2 && 
+          idx >= atoi(x[0].c_str()) && 
+          idx <= atoi(x[1].c_str())) {
+         return true;
+      }
+      if (nx == 1 && atoi(x[0].c_str()) == idx) {
+         return true;
+      }
+   }
+   return false;
+}
+
+void QtRegionManager::showHelp() {
+    QMessageBox::information(this, "QtRegionManager",
+      "Steps to create an image region:\n"
+      "  1. display the image;\n"
+      "  2. assign a region tool (rectangle or polygon) "
+            "to a mouse button;\n"
+      "  3. draw a region on the displayed image;\n"
+      "  4. adjust the size or shape by dragging "
+            "the corner handle;\n"
+      "  5. ajust the position by dragging the inside;\n"
+      "  6. record the region by double clicking inside;\n"
+      "  7. repeat 3~6 as needed;\n"
+      "  8. set the region extend channels and "
+            "polarizations, example:1,5~10;\n"
+      "  9. set the region name to be saved;\n"
+      " 10. save the region in the image or to a file.");
+
 }
 
 void QtRegionManager::changeAxis(

@@ -117,14 +117,13 @@ LAPACKLIBD  := $(LAPACKROOT)/lib64
 XERCESLIBD := $(XERCESROOT)/lib64
 READLINELIBD = $(READLINEROOT)/lib
 CFITSIOLIBD := $(CFITSIOROOT)/lib64
-QT4LIBD := $(QT4ROOT)/lib64
 JNIROOT := /usr/lib/jvm/java-1.5.0-sun.x86_64
 JNIINCD += $(JNIROOT)/include/linux
 JNILIBD := $(JNIROOT)/jre/lib/amd64
 
 
 QT4ROOT := /usr
-QT4LIBD  := $(QTROOT)/lib64
+QT4LIBD := $(QT4ROOT)/lib64
 MOC4     = $(QT4ROOT)/bin/moc-qt4 $(CPPSTD) $(QT4DEFS)
 UIC4     = $(QT4ROOT)/bin/uic-qt4
 

@@ -76,6 +76,8 @@ class ms
 
     bool selectpolarization(const std::vector<std::string>& wantedpol);
 
+    bool cvel(const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& outframe = "", const std::string& regrid_quantity = "freq", const double regrid_velo_restfrq = -9E99 , const std::string& regrid_interp_meth = "NEAR", const double regrid_center = -9E99, const double regrid_bandwidth = -1., const double regrid_chan_width = -1.);
+
     ::casac::record* getdata(const std::vector<std::string>& items, const bool ifraxis = false, const int ifraxisgap = 0, const int increment = 1, const bool average = false);
 
     bool putdata(const ::casac::record& items);

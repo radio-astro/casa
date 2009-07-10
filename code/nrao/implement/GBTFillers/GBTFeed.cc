@@ -243,5 +243,5 @@ Int GBTFeed::addUniqueIF(const GBTIF &newIF, Bool mergeCorr, Bool bankCheck)
 
 #include <casa/Utilities/Copy.tcc>
 // Needed to avoid namespace conflicts
-template void objcopy<GBTFeed *>(GBTFeed **, GBTFeed * const *, uInt);
-template void objset<GBTFeed *>(GBTFeed **, GBTFeed *, uInt);
+//template void objcopy<GBTFeed *>(GBTFeed **, GBTFeed * const *, uInt);
+//template void objset<GBTFeed *>(GBTFeed **, GBTFeed *, uInt);

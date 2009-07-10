@@ -62,9 +62,6 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
  
  public:
   
-  // This gui receives signals from, and sends commands to qdp;
-  // qdp must be valid.   parent is usually 0 though; QtRegionManager
-  // is a stand-alone auxiliary window to QtDisplayPanelGui.
   QtRegionManager(QtDisplayPanel* qdp, QWidget* parent=0);
   
   ~QtRegionManager() {  }
@@ -91,7 +88,9 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
   void removeRegion();
 
   void toggleImageRegion();
+  void zPlaneChanged();
   void currentRegionChanged(const QString &);
+  void showHelp();
 
   //convert region to shape
   RSComposite *regionToShape(
@@ -110,6 +109,9 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
   void loadRegionsImageFromFile();
   DisplayData* getImageData(QString);
   DisplayData* getBoundingBoxData(QString);
+
+ public:
+  bool planeAllowed(int, String&, String&);
 
  protected:
   void addRegionsToShape(RSComposite*& theShapes, 

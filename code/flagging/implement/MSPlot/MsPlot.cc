@@ -5522,7 +5522,7 @@ MsPlot::validateCorrAndStokes( Vector<Vector<String> >& names )
 
        
        //do this to avoid crash by correlation='rr lr ll rl rl rr ll'
-       Int len = max(itsCorrelationIds[polId].nelements(),
+       Int len = std::max(itsCorrelationIds[polId].nelements(),
                      names[polId].nelements());
        Vector<String> validNames(len);
        Vector<Int> validIds(len);

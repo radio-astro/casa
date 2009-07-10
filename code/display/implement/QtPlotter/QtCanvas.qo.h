@@ -39,19 +39,20 @@
 #include <display/QtPlotter/QtPlotSettings.h>
 
 #include <graphics/X11/X_enter.h>
-#include <QDir>
-#include <QColor>
-#include <QHash>
+//#include <QDir>
 #include <QWidget>
-#include <QMouseEvent>
-#include <QToolButton>
-#include <QDialog>
-#include <QPixmap>
-#include <QVBoxLayout>
 #include <QLabel>
+#include <QColor>
+#include <QMouseEvent>
+#include <QPixmap>
+//#include <QHash>
+//#include <QToolButton>
+//#include <QDialog>
+//#include <QVBoxLayout>
+#include <graphics/X11/X_exit.h>
+
 #include <map>
 #include <vector>
-#include <graphics/X11/X_exit.h>
 
 namespace casa { 
 

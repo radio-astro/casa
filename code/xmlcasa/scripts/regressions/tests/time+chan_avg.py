@@ -33,6 +33,9 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
     tms = troot + ".ms"
     try:
         split(vis=inms, outputvis=tms, timebin=tbin)
+        ms.open(tms)
+        nrows_after_tavg = ms.nrow()
+        ms.close()
     except Exception, e:
         print "Error", e, "from split(vis=%s, outputvis=%s, timebin=%s)." % (inms, tms, tbin)
         if os.path.isdir(tms):
@@ -43,6 +46,9 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
         outms = "%s_width%d.ms" % (troot, chanbin)
     try:
         split(vis=tms, outputvis=outms, datacolumn='data', width=chanbin)
+        ms.open(outms)
+        nrows_after_cavg = ms.nrow()
+        ms.close()
     except Exception, e:
         print "Error", e, "from split(vis=%s, outputvis=%s, datacolumn='data', width=%s)." % (tms, outms, chanbin)
         raise e
@@ -51,6 +57,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
     if zaporig:
         print "Warning!  Following your instruction to rm -rf", inms
         shutil.rmtree(inms)
+    return nrows_after_tavg, nrows_after_cavg
 
 def disk_usage(pat):
     """
@@ -71,15 +78,38 @@ def disk_usage(pat):
 def run():
     input_mses = data()
     for input_ms in input_mses:
-        time_then_chan_avg(input_ms, '20s', 4) # The actual run.
+        # The actual run.
+        try:
+            nrows_after_tavg, nrows_after_cavg = time_then_chan_avg(input_ms,
+                                                                    '20s', 4)
+        except Exception, e:
+            raise Exception, "Error (%s) running time_then_chan_avg()." % e
+
+        ###### Test # of rows.
+        exp_nrows_after_tavg = 1260
+        if nrows_after_tavg != exp_nrows_after_tavg:
+            raise Exception, """
+            The number of rows after time averaging (%d) does not match
+            the expected number (%d)
+            """ % (nrows_after_tavg, exp_nrows_after_tavg)
+
+        # Channel averaging should not change the # of rows.
+        exp_nrows_after_cavg = nrows_after_tavg
+        if nrows_after_cavg != exp_nrows_after_cavg:
+            raise Exception, """
+            The number of rows after channel averaging (%d) does not match
+            the expected number (%d)
+            """ % (nrows_after_cavg, exp_nrows_after_cavg)
 
         ###### Test disk usage.
         ###### In 32 bit Linux, phoenix_test.ms shrinks from 4880 kB to 1192kB.
         ########## 7/8/2009:                                10640!
-        dudict = disk_usage(ms_root + '*.ms')
-        print "Disk usage:", dudict
+        ###### Probably input_ms has a SORTED_TABLE and outms does not.  Don't
+        ###### worry about it.
 
         try:
+            dudict = disk_usage(ms_root + '*.ms')
+            print "Disk usage:", dudict
             squash_factor = dudict[input_ms] / dudict[ms_root + '_timebin20s_width4.ms']
             if squash_factor not in range(3, 16):
                 errmsg = "The compression factor, %d, is far outside the expected range.\n" % squash_factor

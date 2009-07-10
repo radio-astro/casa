@@ -12,6 +12,7 @@ import signal
 import pdb
 import traceback
 import re
+import cProfile
 imager = casac.homefinder.find_home_by_name('imagerHome')
 image = casac.homefinder.find_home_by_name('imageHome')
 quantity=casac.Quantity
@@ -155,8 +156,14 @@ class runTest:
                           short_description
                     short_description = short_description.replace("'", "")
 
+                prof = cProfile.Profile()
+                
                 try:
-                    (leResult, leImages)=self.tester.runtests(testName, k, dry)
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
+                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
+                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+
                     # returns absolute_paths, relative_paths
                     exec_success = True
                 except:
@@ -166,6 +173,11 @@ class runTest:
                     traceback.print_exc() # print and swallow exception
                     self.resultRow.append([self.tester.testname(k), 'Failed with exception', 0, '', ''])
 
+                try:
+                    print "now in ", os.getcwd()
+                    prof.dump_stats(self.resultsubdir+'/cProfile.profile')
+                except:
+                    print >> sys.stderr, "Failed to write profiling data!"
                 time2=time.time()
                 time2=(time2-time1)/60.0
                 
@@ -562,11 +574,11 @@ class runTest:
         (errorcode, svnversion) = commands.getstatusoutput( \
             'casapyinfo --svnversion')
         if errorcode != 0 or \
-               svnversion.find('casa') > 0:  # or if an error happened but it didn't return non-zero
+               svnversion.find('casa') >= 0:  # or if an error happened but it didn't return non-zero
             (errorcode, svnversion) = commands.getstatusoutput( \
             'casapyinfo-test --svnversion')
             if errorcode != 0 or \
-                   svnversion.find('casa') > 0:
+                   svnversion.find('casa') >= 0:
                 return myf['casalog'].version()
 
         return myf['casalog'].version() + \
@@ -683,6 +695,10 @@ class logger:
         fb = inspect.currentframe().f_back
         for l in lines:
             self.wwrite(l, fb)
+
+    def flush(self):
+        for s in self.streams:
+            s.flush()
 
     # fake remaining methods to make this class behave like a file
     #def __getattr__(self, name):

@@ -76,7 +76,7 @@ $(BINOPTD)/% : $(CODEDIR)/%.cc $(AIPSINST) \
       $(addprefix $(CODEDIR)/,$(AIPSIMPS)) $(OPTLIBS2)
 	-@ echo ""
 	-@ $(TIMER)
-	-@ echo -e "\e[32;1mRemaking $* (opt) because of $(?F)\e[0m"
+	-@ echo $(ECHOESC) "\e[32;1mRemaking $* (opt) because of $(?F)\e[0m"
 	-@ if [ -h $@ ]; then $(RM) $@; fi
 	 @ cd $(TMPPCKGD) && \
 	   $(C++) $(CPPOPT) -I$(TMPPCKGD) -I$(CODEDIR) $(AIPSINCL) $(C++OPT) \

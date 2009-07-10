@@ -1053,8 +1053,22 @@ class report:
             if log.has_key('data_version'):
                 fd.write('<br>Data: '+log['data_version'])
 
+            if log['type'] == 'exec':
+                from_dir = os.path.dirname('%s/%s' % (result_dir, log['logfile']))
+                
+                prof_file = from_dir + "/cProfile.profile"
+                plot_file = "python_profile-"+test+"-"+host+".png"
+                if os.path.isfile(prof_file):
+                    print "Creating python callgraph..."
+                    # This might fail with a "... marshal blah, blah ..." error
+                    # if there's a mismatch between this python and
+                    # CASA's python which created the binary cProfile.profile
+                    os.system("python /tmp/gprof2dot.py -f pstats " +\
+                              prof_file + " | dot -Tpng -o " +\
+                              report_dir + '/' + plot_file)
+                fd.write('<br><a href="'+plot_file+'">Python profile</a>')
 
-        if extended and subtest[1] == 'exec':
+        if extended and subtest[1] == 'exec':          
             framework_log = 'run-'+test+'-'+host+'.log'
             if os.path.isfile(reg_dir + '/Log/' + framework_log):
                 shutil.copyfile(reg_dir + '/Log/' + framework_log, \

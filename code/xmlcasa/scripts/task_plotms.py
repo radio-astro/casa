@@ -137,6 +137,11 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
     """
 
     try:
+        # Check if DISPLAY environment variable is set.
+        if os.getenv('DISPLAY') == None:
+            print 'ERROR: DISPLAY environment variable is not set!  Cannot open plotms.'
+            return
+        
         # Check plotxy compliance parameters
         if plotxycomp:
             xdatacolumn = datacolumn

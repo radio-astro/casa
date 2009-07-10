@@ -49,6 +49,10 @@ String itsLogFilename_, itsLogFilter_;
 // </group>
 
 
+// Returns true if the DISPLAY environment variable is set, false otherwise.
+// If not set, an error message is printed.
+bool displaySet();
+
 // Launches the dbus plotms application IF it is not already launched.
 void launchApp();
 

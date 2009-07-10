@@ -872,7 +872,7 @@ int main(int argc, char *argv[]) {
       cout << "the resulting MS will contain compressed columns" << endl;
     }
   }
-  catch (exception& e) {
+  catch (std::exception& e) {
     cout << e.what() << "\n";
   }
   
@@ -900,7 +900,7 @@ int main(int argc, char *argv[]) {
     cout << e.getMessage() << endl;
     exit(-1);
   }
-  catch (exception e) {
+  catch (std::exception e) {
     cout << e.what() << endl;
     exit(-1);
   }
@@ -1786,7 +1786,7 @@ int main(int argc, char *argv[]) {
       cout << e.getMessage() << endl;
       exit (-1);
     }
-    catch ( exception & e) {
+    catch ( std::exception & e) {
       cout << e.what() << endl;
       exit (-1);
     }

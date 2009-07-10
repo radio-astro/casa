@@ -39,7 +39,37 @@
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <msvis/MSVis/VisSet.h>
 
+#include <msvis/MSVis/VisBuffGroupAcc.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+
+  // for simulating corruptions
+class CalCorruptor {
+  
+ public:
+  
+  CalCorruptor(const Int nSim);
+  virtual ~CalCorruptor();
+  inline Int& nSim() { return nSim_; };
+  inline Bool& initialized() { return initialized_; };
+  inline Int& prtlev() { return prtlev_; };
+  inline Int& curr_slot() { return curr_slot_; };
+  virtual void initialize()=0;
+     
+ protected:
+   
+   Int nSim_;
+   Bool initialized_;
+   Int prtlev_;
+   Int curr_slot_;
+
+ private:
+
+};
+
+
+
 
 // **********************************************************
 //  VisCal
@@ -131,10 +161,47 @@ public:
   // Set the print level
   inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
 
+  // Set the simulation parameters
+  // RI TODO move everything down to Solvable - don't sim a P?
+  virtual void setSimulate(const Record& simpar);
+
+  // Set up simulated params wrt visset
+  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
+
+  // Calculate simulated parameters by some means 
+  virtual void simPar(VisBuffGroupAcc& vbga);
+
+  // access to simulation variables that are general to all VisCals
+  inline String& simint() { return simint_; };
+
+  // Simulation info/params, suitable for logging
+  virtual String siminfo();
+
+  // Is this calibration simulated?
+  inline Bool isSimulated() {return simulated_;};
+
+  // object that can simulate the corruption terms
+  // RI TODO make this a reference function instead of direct pointer access
+  CalCorruptor *corruptor_p;
+
+  // RI no-ops; simulation needs Solve things i.e. I can't simulate a P
+  inline virtual void store() {};
+  inline virtual String& combine() {};
+  inline virtual Bool syncSolveMeta(VisBuffGroupAcc& vbga) {};
+  inline virtual String& calTableName() {};
+  inline virtual Vector<Int>& spwMap() {};
+  inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {};
+  inline Int&         focusChan()      { return focusChan_; };
+  virtual void keep(const Int& slot) {};
+
+
 protected:
 
   // Set applied state flag
   inline void setApplied(const Bool& flag) {applied_=flag;};
+
+  // Set state flag to simulate cal terms
+  inline void setSimulated(const Bool& flag) {simulated_=flag;};
 
   inline String& msName() { return msName_; };
 
@@ -230,6 +297,7 @@ protected:
   // Return print (cout) level
   inline Int& prtlev() { return prtlev_; };
 
+
 private:
 
   // Defalt ctor is private
@@ -277,6 +345,15 @@ private:
   // Application flag
   Bool applied_;
 
+  // Simulation flag
+  Bool simulated_;
+
+  // In-focus channel for single-chan solves on multi-chan data
+  Int focusChan_;
+
+  // simulation variables that are general to all VisCals
+  String simint_;
+
   // VisVector wrapper (per Spw)
   PtrBlock<VisVector*> V_;
 
@@ -296,6 +373,8 @@ private:
 
   // Print level
   Int prtlev_;
+
+  String calTableName_;
 
 };
 

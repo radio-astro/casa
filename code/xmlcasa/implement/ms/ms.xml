@@ -1729,6 +1729,146 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+<method type="function" name="cvel">
+   <shortdescription>transform spectral data to different reference frame, optionally regrid the frequency channels
+   </shortdescription>
+   
+  <keyword>cvel</keyword>
+  <input>
+    
+     <param type="any" direction="in" name="field">
+     <description>Names or IDs (0-based) of the fields for which to perform the transformation, 
+      default = all fields
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="outframe">
+     <description>Name of the reference frame to transform to (LSRK, LSRD, BARY, GEO, GALACTO, 
+      LGROUP, or CMB). If no reference frame is given, the present reference frame given by the 
+      data is used, i.e. the reference frame is not changed. Transformation to TOPO is presently 
+      not offerred. If the data already is in TOPO, it can be kept that way by not setting this 
+      parameter.</description>
+     </param>
+
+     <param type="string" direction="in" name="regrid_quantity">
+     <description> The quantity (radio velocity (m/s), optical velocity (m/s), frequency (Hz), 
+      wavelength (m), or original channels) in which the user would like to give the regridding 
+      parameters below ("regrid_center", "regrid_chan_width", "regrid_bandwidth"): vrad, vopt, 
+      freq, wave, or chan.   
+     </description>
+     <value>freq</value>
+     </param>
+
+     <param type="double" direction="in" name="regrid_velo_restfrq">
+     <description>Required in case the value of regrid_quantity is "vrad" or "vopt": 
+      Rest frequency (Hz) for the conversion of the regrid parameters "regrid_center", 
+      "regrid_chan_width", and "regrid_quantity" to frequencies.
+     </description>
+     </param>
+
+     <param type="string" direction="in" name="regrid_interp_meth">
+     <description>
+      Name of the interpolation method (NEAR, SPLINE, etc.) used in the regridding. 
+      Flagging information is combined using "inclusive or". 
+     </description>
+     <value>NEAR</value>
+     </param>
+
+     <param type="double" direction="in" name="regrid_center">
+     <description>Desired  center of the spectral window after regridding in the units 
+      given by "regrid_quantity" and in the reference frame given by "outframe". If no 
+      value is given, the center is kept as is.
+     </description>
+     </param>
+
+     <param type="double" direction="in" name="regrid_bandwidth">
+     <description>Desired width of the entire spectral window after regridding in the 
+      units given by "regrid_quantity" and in the reference frame given by "outframe". 
+      If no value is given or the given width is larger than the bandwidth of the data, 
+      the width will be truncated to the maximum width possible symmetrically around the 
+      value given by "regrid_center".
+     </description>
+     </param>
+
+     <param type="double" direction="in" name="regrid_chan_width">
+     <description>Desired width of the channels in the units given by "regrid_quantity" 
+      and in the reference frame given by "outframe". This implies that channels will be 
+      equidistant in the unit given by "regrid_quantity". If no value is given and 
+      "regrid_quantity" is vrad or freq, the function will keep the resolution as it is. 
+      If "regrid_quantity" is vopt or wave, the total number of channels will be kept as is.   
+     </description>
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+  This function permits you to transform the spectral data of your measurement set to a 
+  given reference frame. The present reference frame information in the MS is examined and 
+  the transformation performed accordingly. Since all such transformations are linear in 
+  frequency, a pure change of reference frame only affects the channel boundary definitions.
+
+  In addition, the function permits you to permanently regrid the data, i.e. reduce the 
+  channel number and/or move the boundaries using several interpolation methods (selected 
+  using parameter "regrid_interp_meth"). The new channels are equidistant in frequency 
+  (if parameter "regrid_quantity" is chosen to be vrad or freq, or equidistant in
+  wavelength if  parameter "regrid_quantity" is chosen to be vopt or wave).
+  If "regrid_quantity" is chosen to be "chan", the regridding is performed by combining
+  the existing channels, i.e. not moving but just eliminating channel boundaries where
+  necessary.
+
+  The regridding is applied to the channel definition and all data of the MS, i.e. all 
+  columns which contain arrays whose dimensions depend on the number of channels. 
+
+  The target reference frame can be set by providing the name of a standard reference 
+  frame (LSRK, LSRD, BARY, GEO, GALACTO, LGROUP, or CMB, default = no change of frame)
+  in parameter "outframe".
+  For each field given by the list of field names in the parameter "fields" (default = 
+  all fields), the channel frequencies are transformed from their present reference 
+  frame to the one given by parameter "outframe".
+
+  If the regridding parameters are set, they are interpreted in the "outframe" reference
+  frame. The regridding is applied to the data after the reference frame transformation.
+
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.fromfits("NGC5921.MS", "/usr/lib/casapy/data/demo/NGC5921.fits")
+      ms.cvel(outframe="LSRK")
+    \end{verbatim}
+    This example reads a measurement set and transforms its spectral axis to
+    the LSRK reference frame.
+    \begin{verbatim}
+      ms.cvel(fields=[0,3,4], outframe="BARY", regrid_quantity="vrad", 
+      regrid_center=73961800., regrid_chan_width=50., regrid_bandwidth=1000.,
+      regrid_velo_restfrq=1420405750e6)
+    \end{verbatim}
+    In this example assuming a multi-field MS with rows 0, 3, and 4 present
+    in the FIELD table, all spectral windows of these fields will be transformed 
+    to the BARY reference frame and then be regridded such that the center of the 
+    new spectral window is at radio velocity = 73961800. m/s (BARY). If the bandwidth 
+    of the observation is large enough the total width of the spectral window will
+    be 1000 m/s, i.e. 20 channels of width 50 m/s, 10 on each side of the given
+    center.
+    \begin{verbatim}
+      ms.cvel(regrid_quantity="vopt")
+    \end{verbatim}
+    In this example the channels are regridded such that they are
+    equidistant in optical velocity. The reference frame and number of channels 
+    is kept as is.
+    \begin{verbatim}
+      ms.cvel(regrid_quantity="chan", regrid_center=64, regrid_chan_width=2,
+      regrid_bandwidth=102)
+    \end{verbatim}
+    In this example, the channels are regridded such that the new bandwidth is
+    102 of the original channels centered on the original channel 64, and the new
+    channels are twice as wide as the original channels. 
+  </example>
+</method>
+
+
  
    <method type="function" name="getdata">
    <shortdescription>Read values from the measurement set.</shortdescription>

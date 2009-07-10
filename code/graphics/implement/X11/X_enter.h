@@ -49,6 +49,8 @@
 //
 // <group name="Definitions for Enter X Namespace">
 
+/*
+
 #ifndef X_NameSpace
 #define X_NameSpace
 
@@ -81,4 +83,5 @@
 #define XFalse 0
 #define XTrue 1
 #endif
+*/
 // </group>

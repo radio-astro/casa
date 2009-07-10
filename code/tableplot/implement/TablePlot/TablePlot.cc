@@ -1788,7 +1788,7 @@ Bool TablePlot::updateFlagHistory(PtrBlock<Record*> &flaghist)
             flaghist[histcount]->define("numpoints",numflags);
 
             /* Number of marked regions */
-            flaghist[histcount]->define("numregions",flagmarks.nelements());
+            flaghist[histcount]->define("numregions",(Int)flagmarks.nelements());
             
             /* Marked regions */
             for(Int j=0;j<(Int)flagmarks.nelements();j++)
@@ -2057,7 +2057,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
             /* If regions have been marked, record these regions. */
             if(regmarks.nelements()>0)
             {
-               (*INFO[reccount]).define("numregions",regmarks.nelements());
+	      (*INFO[reccount]).define("numregions",(Int)regmarks.nelements());
                for(Int j=0;j<(Int)regmarks.nelements();j++)
                   (*INFO[reccount]).define(
                      String("box.")+String::toString(j+1),regmarks[j]);
@@ -2157,7 +2157,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
             /* If regions have been marked, record these regions. */
             if(regmarks.nelements()>0)
             {
-               (*INFO[reccount]).define("numregions",regmarks.nelements());
+	      (*INFO[reccount]).define("numregions",(Int)regmarks.nelements());
                for(Int j=0;j<(Int)regmarks.nelements();j++)
                   (*INFO[reccount]).define(
                      String("box.")+String::toString(j+1),regmarks[j]);

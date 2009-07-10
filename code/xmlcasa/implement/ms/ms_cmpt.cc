@@ -628,6 +628,87 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
    return retval;
 }
 
+bool
+ms::cvel(const ::casac::variant& field, 
+	 const std::string& outframe, 
+	 const std::string& regrid_quantity, 
+	 const double regrid_velo_restfrq, 
+	 const std::string& regrid_interp_meth,
+	 const double regrid_center, 
+	 const double regrid_bandwidth, 
+	 const double regrid_chan_width 
+	 )
+{
+  Bool rstat(False);
+  try {
+     *itsLog << LogOrigin("ms", "cvel");
+     if(!ready2write_()){
+       *itsLog << LogIO::SEVERE
+            << "Please open ms with parameter nomodify=false. Write access to ms is needed."
+            << LogIO::POST;
+
+       return False;
+     }
+
+     SubMS *subms = new SubMS(*itsMS);
+     *itsLog << LogIO::NORMAL << "Starting spectral frame transformation / regridding ..." << LogIO::POST;
+     String t_field(m1toBlankCStr_(field));
+     String t_outframe=toCasaString(outframe);
+     String t_regridQuantity=toCasaString(regrid_quantity);
+     String t_regridInterpMeth=toCasaString(regrid_interp_meth);
+     Int rval;
+     if((rval = subms->cvel(t_field, t_outframe,
+			    t_regridQuantity,
+			    Double(regrid_velo_restfrq),
+			    t_regridInterpMeth,
+			    Double(regrid_center), 
+			    Double(regrid_bandwidth),
+			    Double(regrid_chan_width)
+			    )
+	 )==1){ // successful modification of the MS took place
+       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+   
+       // Update HISTORY table of modfied MS
+       String message= "Frame transformed to " + t_outframe;
+       ostringstream param;
+       param << "fieldids=" << t_field << " regrid_quantity= " <<  t_regridQuantity
+	     << " regrid_center= " << regrid_center << " regrid_bandwidth=" << regrid_bandwidth
+	     << " regrid_chan_width= " << regrid_chan_width << " regrid_velo_restfrq= " << regrid_velo_restfrq 
+	     << " regrid_interp_meth= " << t_regridInterpMeth;
+       String paramstr=param.str();
+       writehistory(message,paramstr,"ms::cvel()", "", "ms"); // empty name writes to itsMS
+       rstat = True;
+     }
+     else if(rval==0) { // an unsuccessful modification of the MS took place
+       String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
+       *itsLog << LogIO::WARN << message << LogIO::POST;
+       // Update HISTORY table of the unsuccessfully modfied MS
+       ostringstream param;
+       param << "fieldids=" << t_field << " regrid_quantity= " <<  t_regridQuantity
+	     << " regrid_center= " << regrid_center << " regrid_bandwidth=" << regrid_bandwidth
+	     << " regrid_chan_width= " << regrid_chan_width << " regrid_velo_restfrq= " << regrid_velo_restfrq 
+	     << " regrid_interp_meth= " << t_regridInterpMeth;
+       String paramstr=param.str();
+       writehistory(message,paramstr,"ms::cvel()", "", "ms"); // empty name writes to itsMS
+     }
+     else {
+       *itsLog << LogIO::NORMAL << "MS not modified." << LogIO::POST;
+       rstat = True;
+     }       
+
+     delete subms;
+
+  } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks();
+       RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
+
+
+
 ::casac::record*
 ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
 {

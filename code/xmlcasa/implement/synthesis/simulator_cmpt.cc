@@ -692,18 +692,53 @@ simulator::setapply(const std::string& type,
 
 }
 
+
+
+// RI TODO make timescale and rms variants here and quantities in Simulator.cc
+// RI TODO add output table name - settrop writes table out, corrupt changes ms
+bool
+simulator::settrop(const std::string& mode, const std::string& table, 
+		   const double timescale, const double rms)
+{
+  Bool rstat(False);
+  try {
+    
+    if(itsSim !=0){  
+      //      casa::Quantity qinter(casaQuantity(interval));
+      rstat=itsSim->settrop(mode, table, timescale, rms);
+    }
+    // RI TODO interpolation params have to get to SolvableVisCal::setApply.
+    // RI TODO do we make the user call sm.setapply to deal with that, 
+    // RI TODO or do we have it pass through here to VC::setApply? 
+      
+ } catch  (AipsError x) {
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;  
+}
+
+
+
+
+
+// RI TODO make timescale and rms variants here and quantities in Simulator.cc
+//simulator::setgain(const std::string& mode, const std::string& table, 
+//		   const ::casac::variant& interval, 
+//		   const std::vector<double>& amplitude)
+
 bool
 simulator::setgain(const std::string& mode, const std::string& table, 
-		   const ::casac::variant& interval, 
-		   const std::vector<double>& amplitude)
+		   const double timescale, const double rms)
 {
   Bool rstat(False);
   try {
     
     if(itsSim !=0){
       
-      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setgain(mode, table, qinter, amplitude);
+      //      casa::Quantity qinter(casaQuantity(interval));
+      rstat=itsSim->setgain(mode, table, timescale, rms);
     }
     
     
@@ -715,10 +750,9 @@ simulator::setgain(const std::string& mode, const std::string& table,
   
  return rstat;
    
-
-
-
 }
+
+
 
 
 bool 

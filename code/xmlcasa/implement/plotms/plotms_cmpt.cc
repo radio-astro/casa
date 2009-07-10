@@ -331,8 +331,18 @@ void plotms::hide()   { callAsync(PlotMSDBusApp::METHOD_HIDE);   }
 
 // Private Methods //
 
+bool plotms::displaySet() {
+    bool set = getenv("DISPLAY") != NULL;
+    if(!set) {
+        itsDBusName_ = "";
+        cerr << "ERROR: DISPLAY environment variable is not set!  Cannot open"
+                " plotms." << endl;
+    }
+    return set;
+}
+
 void plotms::launchApp() {
-    if(!itsDBusName_.empty()) return;
+    if(!itsDBusName_.empty() || !displaySet()) return;
     
     // Launch PlotMS application with the DBus switch.
     pid_t pid = fork();

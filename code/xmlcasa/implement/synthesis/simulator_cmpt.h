@@ -92,7 +92,9 @@ class simulator
 
     bool setapply(const std::string& type = "", const double t = 0.0, const std::string& table = "", const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& interp = "linear", const std::string& select = "", const bool calwt = false, const std::vector<int>& spwmap = std::vector<int> (1, -1), const double opacity = 0.0);
 
-    bool setgain(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("10s"), const std::vector<double>& amplitude = std::vector<double> (1, 0));
+    bool setgain(const std::string& mode = "calculate", const std::string& table = "", const double timescale = 10.0, const double rms = 1.0);
+
+    bool settrop(const std::string& mode = "calculate", const std::string& table = "", const double timescale = 10.0, const double rms = 1.0);
 
     bool setpointingerror(const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbcorrection = false);
 
