@@ -424,6 +424,11 @@
     <string>Plot</string>
    </property>
   </action>
+  <action name="actionMSSummary" >
+   <property name="text" >
+    <string>MS Summary</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="PlotMSPlotter.qrc" />

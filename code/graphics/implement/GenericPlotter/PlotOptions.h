@@ -32,12 +32,18 @@
 #include <vector>
 
 #include <casa/Utilities/CountedPtr.h>
-#include <casa/BasicSL/String.h>
+#include <casa/Containers/Record.h>
 
 #include <casa/namespace.h>
 using namespace std;
 
 namespace casa {
+
+// Typedef for range, which is two doubles (min and max).
+typedef pair<double, double> prange_t;
+
+// Typedef for size, which is two doubles (width and height).
+typedef pair<double, double> psize_t;
 
 ///////////
 // ENUMS //
@@ -131,6 +137,15 @@ public:
     virtual void setAsName(const String& name);
     
     
+    // RECORD METHODS //
+    
+    // Gets/Sets the color as a Record.
+    // <group>
+    virtual Record toRecord() const;
+    virtual void fromRecord(const Record& record);
+    // </group>
+    
+    
     // OPERATORS //
     
     // Assigns the value of the given PlotColor to this one.
@@ -142,6 +157,13 @@ public:
     // Returns true if this PlotColor is NOT equal to the given; false
     // otherwise.
     virtual bool operator!=(const PlotColor& rh) const;
+    
+protected:
+    // Record key names.
+    // <group>
+    static const String REC_HEXADECIMAL; // String
+    static const String REC_ALPHA;       // double
+    // </group>
 };
 typedef CountedPtr<PlotColor> PlotColorPtr;
 
@@ -206,6 +228,15 @@ public:
     // </group>
     
     
+    // RECORD METHODS //
+    
+    // Gets/Sets the color as a Record.
+    // <group>
+    virtual Record toRecord() const;
+    virtual void fromRecord(const Record& record);
+    // </group>
+    
+    
     // OPERATORS //
     
     // Assigns the value of the given PlotFont to this one.
@@ -217,6 +248,18 @@ public:
     // Returns true if this PlotFont is NOT equal to the given; false
     // otherwise.
     virtual bool operator!=(const PlotFont& rh) const;
+    
+protected:
+    // Record key names.
+    // <group>
+    static const String REC_POINTSIZE; // double
+    static const String REC_PIXELSIZE; // int
+    static const String REC_FAMILY;    // String
+    static const String REC_COLOR;     // Record
+    static const String REC_ITALICS;   // bool
+    static const String REC_BOLD;      // bool
+    static const String REC_UNDERLINE; // bool
+    // </group>
 };
 typedef CountedPtr<PlotFont> PlotFontPtr;
 
@@ -262,6 +305,15 @@ public:
     // </group>
     
     
+    // RECORD METHODS //
+    
+    // Gets/Sets the color as a Record.
+    // <group>
+    virtual Record toRecord() const;
+    virtual void fromRecord(const Record& record);
+    // </group>
+    
+    
     // OPERATORS //
     
     // Assigns the value of the given PlotAreaFill to this one.
@@ -274,6 +326,13 @@ public:
     // Returns true if this PlotAreaFill is NOT equal to the given; false
     // otherwise.
     virtual bool operator!=(const PlotAreaFill& rh) const;
+    
+protected:
+    // Record key names.
+    // <group>
+    static const String REC_COLOR;   // Record
+    static const String REC_PATTERN; // int
+    // </group>
 };
 typedef CountedPtr<PlotAreaFill> PlotAreaFillPtr;
 
@@ -328,6 +387,15 @@ public:
     // </group>
     
     
+    // RECORD METHODS //
+    
+    // Gets/Sets the color as a Record.
+    // <group>
+    virtual Record toRecord() const;
+    virtual void fromRecord(const Record& record);
+    // </group>
+    
+    
     // OPERATORS //
     
     // Assigns the value of the given PlotLine to this one.
@@ -339,6 +407,14 @@ public:
     // Returns true if this PlotLine is NOT equal to the given; false
     // otherwise.
     virtual bool operator!=(const PlotLine& rh) const;
+    
+protected:
+    // Record key names.
+    // <group>
+    static const String REC_WIDTH; // double
+    static const String REC_STYLE; // int
+    static const String REC_COLOR; // Record
+    // </group>
 };
 typedef CountedPtr<PlotLine> PlotLinePtr;
 
@@ -372,7 +448,7 @@ public:
     // Returns the size, in pixels, of this symbol.  If this symbol is a
     // character, the height corresponds to the font size (in either pixels or
     // points, see heightIsPixel()).
-    virtual pair<double, double> size() const = 0;
+    virtual psize_t size() const = 0;
     
     // Sets the size of the symbol in pixels.  The heightIsPixel parameter is
     // used for character symbols and indicates whether the given height is in
@@ -428,7 +504,7 @@ public:
     // CONVENIENCE METHODS //
     
     // Convenience method for setting size.
-    virtual void setSize(pair<double, double> size);
+    virtual void setSize(psize_t size);
     
     // Returns true if this symbol is set to a character or not.
     virtual bool isCharacter() const;
@@ -456,6 +532,15 @@ public:
     // </group>
     
     
+    // RECORD METHODS //
+    
+    // Gets/Sets the color as a Record.
+    // <group>
+    virtual Record toRecord() const;
+    virtual void fromRecord(const Record& record);
+    // </group>
+    
+    
     // OPERATORS //
     
     // Assigns the value of the given PlotSymbol to this one.
@@ -467,6 +552,18 @@ public:
     // Returns true if this PlotSymbol is NOT equal to the given; false
     // otherwise.
     virtual bool operator!=(const PlotSymbol& rh) const;
+    
+protected:
+    // Record key names.
+    // <group>
+    static const String REC_WIDTH;         // double
+    static const String REC_HEIGHT;        // double
+    static const String REC_HEIGHTISPIXEL; // bool
+    static const String REC_SYMBOL;        // int
+    static const String REC_UCHAR;         // int (no ushort in Records)
+    static const String REC_LINE;          // Record
+    static const String REC_AREAFILL;      // Record
+    // </group>
 };
 typedef CountedPtr<PlotSymbol> PlotSymbolPtr;
 

@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
 
+#include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>

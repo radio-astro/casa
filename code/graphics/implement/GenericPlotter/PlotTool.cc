@@ -350,8 +350,8 @@ void PlotZoomTool::handleMouseEvent(const PlotEvent& event) {
             m_lastEventHandled = true;
             
         } else if(c->button() == PlotClickEvent::DOUBLE) {
-            pair<double, double> xRange = m_canvas->axisRange(m_xAxis),
-                                 yRange = m_canvas->axisRange(m_yAxis);
+            prange_t xRange = m_canvas->axisRange(m_xAxis),
+                     yRange = m_canvas->axisRange(m_yAxis);
             double xDelta = (xRange.second - xRange.first) / 4,
                    yDelta = (yRange.second - yRange.first) / 4;
             PlotCoordinate coord = c->where();

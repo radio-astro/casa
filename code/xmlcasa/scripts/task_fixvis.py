@@ -51,7 +51,7 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
     
     try:
         # Get field IDs before opening the ms so that tb doesn't interfere with
-        # ms.
+        # im.
         allflds = getput_keyw('get', vis, ['FIELD', 'NAME'], '')[0]
 
         # getput_keyw('get', vis, ['FIELD', 'PHASE_DIR'], '')   
@@ -89,9 +89,9 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
                     fldids[i] = i
 
         casalog.post("fldid vector: " + str(fldids), 'DEBUG1' )
-        ms.open(vis, nomodify=False)
-        ms.calcuvw(fldids, refcode)
-        ms.close()        
+        im.open(vis)
+        im.calcuvw(fldids, refcode)
+        im.close()        
     except Exception, instance:
         casalog.post('*** Error *** ' + str(instance), 'SEVERE')
     return

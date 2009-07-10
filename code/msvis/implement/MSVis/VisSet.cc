@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     multims_p=False;
     // sort out the channel selection
     Int nSpw=ms_p.spectralWindow().nrow();
-    MSSpWindowColumns msSpW(ms_p.spectralWindow());
+    ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
     if(nSpw==0)
       throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
     selection_p.resize(2,nSpw);
@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     multims_p=False;
     // sort out the channel selection
     Int nSpw=ms_p.spectralWindow().nrow();
-    MSSpWindowColumns msSpW(ms_p.spectralWindow());
+    ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
     if(nSpw==0)
       throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
     selection_p.resize(2,nSpw);
@@ -240,7 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blockStart[k]=chanSelection[k].row(0);
 	blockWidth[k]=chanSelection[k].row(1);
       }
-      MSSpWindowColumns msSpW(mss[k].spectralWindow());
+      ROMSSpWindowColumns msSpW(mss[k].spectralWindow());
       selection_p.resize(2,nSpw);
       //Drat...need to figure this one out....
       // fill in default selection
@@ -296,7 +296,7 @@ VisSet::VisSet(MeasurementSet& ms, const Matrix<Int>& chanSelection,
     Int nSpw=ms_p.spectralWindow().nrow();
     if(nSpw==0)
       throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
-    MSSpWindowColumns msSpW(ms_p.spectralWindow());
+    ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
     selection_p.resize(2,nSpw);
     // fill in default selection
     selection_p.row(0)=0; //start
@@ -572,9 +572,13 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   const ColumnDesc& cdesc = td[data->columnDesc().name()];
   String dataManType = cdesc.dataManagerType();
   String dataManGroup = cdesc.dataManagerGroup();
+  cout << "VISSET: dataManType " << dataManType << endl;
+
   IPosition dataTileShape;
   Bool tiled = (dataManType.contains("Tiled"));
   Bool simpleTiling = False;
+
+  
 
   if (tiled) {
     ROTiledStManAccessor tsm(ms, dataManGroup);
@@ -595,6 +599,9 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
     simpleTiling = (dataTileShape.nelements() == 3);
   };
 
+
+  cout << "Tiled " << tiled << " " << simpleTiling << " compress " << compress <<endl;
+
   if (!tiled || !simpleTiling) {
     // Untiled, or tiled at a higher than expected dimensionality
     // Use a canonical tile shape of 128 kB size
@@ -612,6 +619,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   String colModel=MS::columnName(MS::MODEL_DATA);
 
   tdModel.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+  td.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
   IPosition modelTileShape = dataTileShape;
   if (compress) {
     tdModelComp.addColumn(ArrayColumnDesc<Int>(colModel+"_COMPRESSED",
@@ -623,15 +631,26 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
     StandardStMan modelScaleStMan("ModelScaleOffset");
     ms.addColumn(tdModelScale, modelScaleStMan);
+   
 
     TiledShapeStMan modelCompStMan("", modelTileShape);
     ms.addColumn(tdModelComp, modelCompStMan);
     ms.addColumn(tdModel, *ccModel);
 
   } else {
-    TiledShapeStMan modelStMan("", modelTileShape);
+    cout << "model tshape " << modelTileShape << endl;
+    MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
+    //MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
+    TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
+    //String hcolName=String("Tiled")+String("MODEL_DATA");
+    //tdModel.defineHypercolumn(hcolName,3,
+    //			     stringToVector(colModel));
+    //td.defineHypercolumn(hcolName,3,
+    //		     stringToVector(colModel));
     ms.addColumn(tdModel, modelStMan);
   };
+
+ 
 
   // Add the CORRECTED_DATA column
   TableDesc tdCorr, tdCorrComp, tdCorrScale;
@@ -659,7 +678,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
     TiledShapeStMan corrStMan("", corrTileShape);
     ms.addColumn(tdCorr, corrStMan);
   };
-
+  MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
   // Add the IMAGING_WEIGHT column
   TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
   CompressFloat* ccImWgt=NULL;
@@ -687,7 +706,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
     TiledShapeStMan imwgtStMan("", imwgtTileShape);
     ms.addColumn(tdImWgt, imwgtStMan);
   };
-
+  MeasurementSet::addColumnToDesc(td, MeasurementSet::IMAGING_WEIGHT, 1);
   if (ccModel) delete ccModel;
   if (ccCorr) delete ccCorr;
   if (ccImWgt) delete ccImWgt;

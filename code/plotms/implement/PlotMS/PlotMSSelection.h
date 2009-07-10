@@ -28,7 +28,6 @@
 #define PLOTMSSELECTION_H_
 
 #include <casa/Containers/Record.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>
@@ -37,6 +36,10 @@
 using namespace std;
 
 namespace casa {
+
+//# Forward declarations
+class MeasurementSet;
+
 
 // Specifies an MS selection.  See the mssSetData method in
 // ms/MeasurementSets/MSSelectionTools.h for details.

@@ -47,18 +47,7 @@ class PlotMS;
 
 class PlotMSCache {
   
-public:
-    // Convenient access to class name.
-    static const String CLASS_NAME;
-    
-    // Log method name constants.
-    // <group>
-    static const String LOG_COMPUTERANGES;
-    static const String LOG_COUNTCHUNKS;
-    static const String LOG_FLAG;
-    static const String LOG_LOAD;
-    // </group>
-    
+public:    
     static const PMS::Axis METADATA[];
     static const unsigned int N_METADATA;
     
@@ -261,6 +250,11 @@ private:
       log(method, message, PlotLogger::MSG_WARN); }
   void logError(const String& method, const String& message) {
       log(method, message, PlotLogger::MSG_ERROR); }
+  
+  void logLoad(const String& message) {
+      log(PMS::LOG_ORIGIN_LOAD_CACHE, message, PMS::LOG_EVENT_LOAD_CACHE); }
+  void logFlag(const String& message) {
+      log(PMS::LOG_ORIGIN_FLAG, message, PMS::LOG_EVENT_FLAG); }
   // </group>
   
   // Logs the given message from the given method name as the given event type

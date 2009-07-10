@@ -25,6 +25,8 @@
 //# $Id:  $
 #include <plotms/PlotMS/PlotMSParameters.h>
 
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
+
 #include <QApplication>
 #include <QDesktopWidget>
 
@@ -34,21 +36,33 @@ namespace casa {
 // PLOTMSPARAMETERS DEFINITIONS //
 //////////////////////////////////
 
+// Static //
+
+const int PlotMSParameters::UPDATE_LOG =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("LOG");
+const int PlotMSParameters::UPDATE_PLOTMS_OPTIONS =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("PLOTMS_OPTIONS");
+
+
+int PlotMSParameters::chooserHistoryLimit() {
+    return QtFileDialog::historyLimit(); }
+void PlotMSParameters::setChooserListoryLimit(int histLimit) {
+    QtFileDialog::setHistoryLimit(histLimit); }
+
+
 // Constructors/Destructors //
 
 PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
-        LogMessage::Priority logPriority, bool clearSelection,
+        LogMessage::Priority logPriority, bool clearSelections,
         int cachedImageWidth, int cachedImageHeight) :
         itsLogFilename_(logFilename), itsLogEvents_(logEvents),
         itsLogPriority_(logPriority),
-        itsClearSelectionsOnAxesChange_(clearSelection),
+        itsClearSelectionsOnAxesChange_(clearSelections),
         itsCachedImageWidth_(cachedImageWidth),
         itsCachedImageHeight_(cachedImageHeight) { }
 
-PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) :
-        PlotMSWatchedParameters(copy) {
-    operator=(copy);
-}
+PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) {
+    operator=(copy); }
 
 PlotMSParameters::~PlotMSParameters() { }
 
@@ -59,7 +73,7 @@ String PlotMSParameters::logFilename() const { return itsLogFilename_; }
 void PlotMSParameters::setLogFilename(const String& filename) {
     if(filename != itsLogFilename_) {
         itsLogFilename_ = filename;
-        updateFlag(LOG, true, false);
+        updateFlag(UPDATE_LOG);
     }
 }
 
@@ -71,7 +85,7 @@ void PlotMSParameters::setLogFilter(int e, LogMessage::Priority p) {
     if(e != itsLogEvents_ || p != itsLogPriority_) {
         itsLogEvents_ = e;
         itsLogPriority_ = p;
-        updateFlag(LOG, true, false);
+        updateFlag(UPDATE_LOG);
     }
 }
 
@@ -81,7 +95,7 @@ void PlotMSParameters::setClearSelectionsOnAxesChange(bool flag) {
     if(flag != itsClearSelectionsOnAxesChange_) {
         itsClearSelectionsOnAxesChange_ = flag;
         // it's not actually a change to LOG, but use that for now..
-        updateFlag(LOG, true, false);
+        updateFlag(UPDATE_PLOTMS_OPTIONS);
     }
 }
 
@@ -92,7 +106,7 @@ void PlotMSParameters::setCachedImageSize(int width, int height) {
         itsCachedImageWidth_ = width;
         itsCachedImageHeight_ = height;
         // it's not actually a change to LOG, but use that for now..
-        updateFlag(LOG, true, false);
+        updateFlag(UPDATE_PLOTMS_OPTIONS);
     }
 }
 
@@ -101,32 +115,43 @@ void PlotMSParameters::setCachedImageSizeToResolution() {
     setCachedImageSize(res.width(), res.height());
 }
 
+PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
+    int update = currentUpdateFlag();
+    
+    if(!equals(copy, UPDATE_LOG)) {
+        itsLogFilename_ = copy.itsLogFilename_;
+        itsLogEvents_ = copy.itsLogEvents_;
+        itsLogPriority_ = copy.itsLogPriority_;
+        update |= UPDATE_LOG;
+    }
+    
+    if(!equals(copy, UPDATE_PLOTMS_OPTIONS)) {
+        itsClearSelectionsOnAxesChange_ = copy.itsClearSelectionsOnAxesChange_;
+        itsCachedImageWidth_ = copy.itsCachedImageWidth_;
+        itsCachedImageHeight_ = copy.itsCachedImageHeight_;
+        update |= UPDATE_PLOTMS_OPTIONS;
+    }
+    
+    updateFlags(update);
+    return *this;
+}
 
 bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
         int updateFlags) const {
     const PlotMSParameters* o = dynamic_cast<const PlotMSParameters*>(&other);
     if(o == NULL) return false;
     
-    if(updateFlags & LOG) return itsLogFilename_ == o->itsLogFilename_ &&
-                                 itsLogEvents_ == o->itsLogEvents_ &&
-                                 itsLogPriority_ == o->itsLogPriority_ &&
-                                 itsClearSelectionsOnAxesChange_ ==
-                                     o->itsClearSelectionsOnAxesChange_ &&
-                                 itsCachedImageWidth_ ==
-                                     o->itsCachedImageWidth_ &&
-                                 itsCachedImageHeight_ ==
-                                     o->itsCachedImageHeight_;
-    else                  return false;
-}
+    if(updateFlags & UPDATE_LOG)
+        if(itsLogFilename_ != o->itsLogFilename_ ||
+           itsLogEvents_ != o->itsLogEvents_ ||
+           itsLogPriority_ != o->itsLogPriority_) return false;
+    
+    if(updateFlags & UPDATE_PLOTMS_OPTIONS)
+        if(itsClearSelectionsOnAxesChange_!= o->itsClearSelectionsOnAxesChange_
+           || itsCachedImageWidth_ != o->itsCachedImageWidth_ ||
+           itsCachedImageHeight_ != o->itsCachedImageHeight_) return false;
 
-PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
-    PlotMSWatchedParameters::operator=(copy);
-    setLogFilename(copy.logFilename());
-    setLogFilter(copy.logEvents(), copy.logPriority());
-    setClearSelectionsOnAxesChange(copy.clearSelectionsOnAxesChange());
-    pair<int, int> size = copy.cachedImageSize();
-    setCachedImageSize(size.first, size.second);
-    return *this;
+    return true;
 }
 
 }

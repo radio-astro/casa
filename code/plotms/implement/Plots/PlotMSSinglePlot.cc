@@ -26,8 +26,10 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -35,12 +37,42 @@ namespace casa {
 // PLOTMSSINGLEPLOT DEFINITIONS //
 //////////////////////////////////
 
+// Static //
+
+PlotMSPlotParameters PlotMSSinglePlot::makeParameters(PlotMS* plotms) {
+    PlotMSPlotParameters p = PlotMSPlot::makeParameters(plotms);
+    makeParameters(p, plotms);
+    return p;
+}
+
+void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
+        PlotMS* plotms) {
+    PlotMSPlot::makeParameters(params, plotms);
+    
+    // Add cache parameters if needed.
+    if(params.typedGroup<PMS_PP_Cache>() == NULL)
+        params.setGroup<PMS_PP_Cache>();
+    
+    // Add canvas parameters if needed.
+    PlotFactoryPtr f;
+    if(plotms != NULL) f = plotms->getPlotter()->getFactory();
+    if(params.typedGroup<PMS_PP_Canvas>() == NULL) {
+        PMS_PP_Canvas c(f);
+        c.setGridMajorLine(PMS::DEFAULT_GRID_LINE(f));
+        c.setGridMinorLine(PMS::DEFAULT_GRID_LINE(f));
+        params.setGroup(c);
+    }
+    
+    // Add display parameters if needed.
+    if(params.typedGroup<PMS_PP_Display>() == NULL)
+        params.setGroup<PMS_PP_Display>();
+}
+
+
 // Constructors/Destructors //
 
-PlotMSSinglePlot::PlotMSSinglePlot(PlotMS* parent) : PlotMSPlot(parent),
-        itsParameters_(itsFactory_) {
-    constructorSetup();
-}
+PlotMSSinglePlot::PlotMSSinglePlot(PlotMS* parent) : PlotMSPlot(parent) {
+    constructorSetup(); }
 
 PlotMSSinglePlot::~PlotMSSinglePlot() { }
 
@@ -48,9 +80,12 @@ PlotMSSinglePlot::~PlotMSSinglePlot() { }
 // Public Methods //
 
 String PlotMSSinglePlot::name() const {
-    String title = itsParameters_.plotTitle();
-    if(!itsParameters_.isSet() || title.empty()) return "Single Plot";
-    else                                         return title;
+    const PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
+    const PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
+    const PMS_PP_Display* dp = itsParams_.typedGroup<PMS_PP_Display>();
+    if(d == NULL || c == NULL || dp == NULL) return "";
+    else if(!d->isSet()) return "Single Plot";
+    else return dp->titleFormat().getLabel(c->xAxis(), c->yAxis());
 }
 
 unsigned int PlotMSSinglePlot::layoutNumCanvases() const { return 1; }
@@ -102,7 +137,7 @@ vector<PlotCanvasPtr> PlotMSSinglePlot::generateCanvases(PlotMSPages& pages) {
 }
 
 void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
-    tab.insertMSSubtab(0);
+    tab.insertDataSubtab(0);
     tab.insertAxesSubtab(1);
     tab.insertCacheSubtab(2);
     tab.insertDisplaySubtab(3);
@@ -110,30 +145,25 @@ void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertExportSubtab(5);
 }
 
-const PlotMSPlotParameters& PlotMSSinglePlot::parameters() const {
-    return itsParameters_; }
-PlotMSPlotParameters& PlotMSSinglePlot::parameters() { return itsParameters_; }
-
 PlotMSRegions PlotMSSinglePlot::selectedRegions() const {
     PlotMSRegions r;
     vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        r.addRegions(itsParameters_.xAxis(), itsParameters_.yAxis(), canv[i]);
+    PMS::Axis x = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0),
+              y = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0);
+    if(x == 0 || y == 0) return r; // shouldn't happen
+    for(unsigned int i = 0; i < canv.size(); i++) r.addRegions(x, y, canv[i]);
     return r;
 }
 
 PlotMSRegions PlotMSSinglePlot::visibleSelectedRegions() const {
     PlotMSRegions r;
     vector<PlotCanvasPtr> canv = visibleCanvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        r.addRegions(itsParameters_.xAxis(), itsParameters_.yAxis(), canv[i]);
+    PMS::Axis x = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0),
+              y = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0);
+    if(x == 0 || y == 0) return r; // shouldn't happen
+    for(unsigned int i = 0; i < canv.size(); i++) r.addRegions(x, y, canv[i]);
     return r;
 }
-
-const PlotMSSinglePlotParameters& PlotMSSinglePlot::singleParameters() const {
-    return itsParameters_; }
-PlotMSSinglePlotParameters& PlotMSSinglePlot::singleParameters() {
-    return itsParameters_; }
 
 
 // Protected Methods //
@@ -158,105 +188,166 @@ bool PlotMSSinglePlot::assignCanvases() {
     return false;
 }
 
-bool PlotMSSinglePlot::updateCache() {
-    vector<PMS::Axis> axes(2);
-    axes[0] = itsParameters_.xAxis();
-    axes[1] = itsParameters_.yAxis();
-    vector<PMS::DataColumn> data(2);
-    data[0] = itsParameters_.xDataColumn();
-    data[1] = itsParameters_.yDataColumn();
+bool PlotMSSinglePlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
+        int updateFlag, bool releaseWhenDone) {
+    if(&p != &itsParams_) return true; // shouldn't happen
     
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, axes, data,
-            itsParameters_.averaging(), true, &PlotMSPlot::cacheLoaded, this);
-    itsParent_->getPlotter()->doThreadedOperation(ct);
-    return true;
+    const PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
+    if(d == NULL) return true;
+    
+    // Update TCL params.
+    itsTCLParams_.releaseWhenDone = releaseWhenDone;
+    itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_MSDATA) ||
+            (updateFlag & PMS_PP::UPDATE_CACHE) ||
+            (updateFlag & PMS_PP::UPDATE_CANVAS) || !d->isSet();
+    itsTCLParams_.updateDisplay = updateFlag & PMS_PP::UPDATE_DISPLAY;
+    itsTCLParams_.endCacheLog = false;
+    
+    // Update cache if needed.
+    if(d->isSet() && (updateFlag & PMS_PP::UPDATE_MSDATA ||
+       updateFlag & PMS_PP::UPDATE_CACHE)) {
+        return !updateCache();
+        
+    } else {
+        itsTCLParams_.releaseWhenDone = false;
+        cacheLoaded_(false);
+        return true;
+    }
     
     /*
-    try {
-        // VisSet will be null on an error.
-        if(itsParameters_.isSet() && itsVisSet_ != NULL) {
-            PMS::Axis x = itsParameters_.xAxis(), y = itsParameters_.yAxis();
-            itsData_.loadCache(*itsVisSet_, x, y, itsParameters_.xDataColumn(),
-                               itsParameters_.yDataColumn(),
-                               itsParameters_.averaging());
-            itsData_.setupCache(x, y);
-        }
-        return true;
-        
-    } catch(AipsError& err) {
-        itsParent_->showError("Could not load cache: " + err.getMesg());
-        return false;
-    } catch(...) {
-        itsParent_->showError("Could not load cache, for unknown reasons!");
-        return false;
-    }
+    itsTCLendLog_ = itsTCLlogNumPoints_ = itsTCLplotDataChanged_ = false;
+    
+    // Update MS/cache as needed.
+    bool msSuccess = true, callCacheLoaded = true;
+    if(params.isSet()) {
+        if(msUpdated || cacheUpdated) {            
+            itsTCLlogNumPoints_ = true;
+            
+            startLogCache();
+            itsTCLendLog_ = true;
+            
+            if(msUpdated) msSuccess = updateMS();
+            itsTCLupdateCanvas_ |= !msSuccess;
+            itsTCLplotDataChanged_ |= msSuccess;
+            
+            // Only update cache if MS opening succeeded.
+            if(msSuccess) {
+                callCacheLoaded = !hasThreadedCaching();
+                updateCache();
+            } else itsData_.clearCache();
+        }        
+    } else itsData_.clearCache();
+    
+    // Do the rest immediately if 1) cache not updated, or 2) cache not
+    // threaded.  Otherwise wait for the thread to call cacheLoaded_().
+    if(callCacheLoaded) cacheLoaded_(false);
     */
+}
+
+void PlotMSSinglePlot::constructorSetup() {
+    PlotMSPlot::constructorSetup();
+    makeParameters(itsParams_, itsParent_);
+}
+
+
+// Private Methods //
+
+bool PlotMSSinglePlot::updateCache() {
+    PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
+    PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
+    if(d == NULL || c == NULL) return false; // shouldn't happen
+    
+    // Don't load if data isn't set or there was an error during data opening.
+    if(!d->isSet() || itsVisSet_ == NULL) return false;
+    
+    // Let the plot know that the data (will) change.
+    itsPlot_->dataChanged();
+    
+    // Set up cache loading parameters.
+    vector<PMS::Axis> axes(2);
+    axes[0] = c->xAxis();
+    axes[1] = c->yAxis();
+    vector<PMS::DataColumn> data(2);
+    data[0] = c->xDataColumn();
+    data[1] = c->yDataColumn();
+    
+    // Log the cache loading.
+    itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
+            PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
+    itsTCLParams_.endCacheLog = true;
+    
+    PlotMSCacheThread* ct = new PlotMSCacheThread(this, axes, data,
+            d->averaging(), true, &PlotMSSinglePlot::cacheLoaded, this);
+    itsParent_->getPlotter()->doThreadedOperation(ct);
+    
+    return true;
 }
 
 bool PlotMSSinglePlot::updateCanvas() {
     try {
         // VisSet will be null on an error.
-        bool set = itsParameters_.isSet() && itsVisSet_ != NULL;
+        bool set = PMS_PP_RETCALL(itsParams_, PMS_PP_MSData, isSet, false) &&
+                   itsVisSet_ != NULL;
         
-        PlotAxis x = itsParameters_.canvasXAxis(),
-                 y = itsParameters_.canvasYAxis();
+        PMS_PP_Cache* d = itsParams_.typedGroup<PMS_PP_Cache>();
+        PMS_PP_Canvas* c = itsParams_.typedGroup<PMS_PP_Canvas>();
+        if(d == NULL || c == NULL) return false; // shouldn't happen
+        
+        PlotAxis cx = c->xAxis(), cy = c->yAxis();
+        PMS::Axis x = d->xAxis(), y = d->yAxis();
         
         // Set axes scales
-        itsCanvas_->setAxisScale(x, PMS::axisScale(itsParameters_.xAxis()));
-        itsCanvas_->setAxisScale(y, PMS::axisScale(itsParameters_.yAxis()));
+        itsCanvas_->setAxisScale(cx, PMS::axisScale(x));
+        itsCanvas_->setAxisScale(cy, PMS::axisScale(y));
         
-        // Check for special case: reference date for TIME.
-        itsParameters_.holdNotification(this);
-        bool timeref = itsParameters_.xAxis() == PMS::TIME;
-        double timeval = timeref ? itsData_.cacheReferenceTime() : 0;
-        itsParameters_.setXReferenceValue(timeref, timeval);
-        itsCanvas_->setAxisReferenceValue(x, timeref, timeval);
-        timeref = itsParameters_.yAxis() == PMS::TIME;
-        timeval = timeref ? itsData_.cacheReferenceTime() : 0;
-        itsParameters_.setYReferenceValue(timeref, timeval);
-        itsCanvas_->setAxisReferenceValue(y, timeref, timeval);
-        itsParameters_.releaseNotification();
+        // Set reference values.
+        bool xref = itsData_.hasReferenceValue(x),
+             yref = itsData_.hasReferenceValue(y);
+        double xrefval = itsData_.referenceValue(x),
+               yrefval = itsData_.referenceValue(y);
+        itsCanvas_->setAxisReferenceValue(cx, xref, xrefval);
+        itsCanvas_->setAxisReferenceValue(cy, yref, yrefval);
+        
+        // Set axes labels.
+        itsCanvas_->clearAxesLabels();
+        if(set) {
+            itsCanvas_->setAxisLabel(cx, c->xLabelFormat().getLabel(
+                    x, xref, xrefval));
+            itsCanvas_->setAxisLabel(cy, c->yLabelFormat().getLabel(
+                    y, yref, yrefval));
+        }
         
         // Custom ranges
         itsCanvas_->setAxesAutoRescale(true);
-        if(set && itsParameters_.xRangeSet() && itsParameters_.yRangeSet())
-            itsCanvas_->setAxesRanges(x, itsParameters_.xRange(),
-                                      y, itsParameters_.yRange());
-        else if(set && itsParameters_.xRangeSet())
-            itsCanvas_->setAxisRange(x, itsParameters_.xRange());
-        else if(set && itsParameters_.yRangeSet())
-            itsCanvas_->setAxisRange(y, itsParameters_.yRange());
-        
-        // Axes labels
-        itsCanvas_->clearAxesLabels();
-        if(set) {
-            itsCanvas_->setAxisLabel(x, itsParameters_.canvasXAxisLabel());
-            itsCanvas_->setAxisLabel(y, itsParameters_.canvasYAxisLabel());
-        }
+        if(set && c->xRangeSet() && c->yRangeSet())
+            itsCanvas_->setAxesRanges(cx, c->xRange(), cy, c->yRange());
+        else if(set && c->xRangeSet())
+            itsCanvas_->setAxisRange(cx, c->xRange());
+        else if(set && c->yRangeSet())
+            itsCanvas_->setAxisRange(cy, c->yRange());
         
         // Show/hide axes
         itsCanvas_->showAxes(false);
-        itsCanvas_->showAxis(x, set && itsParameters_.showXAxis());
-        itsCanvas_->showAxis(y, set && itsParameters_.showYAxis());
+        itsCanvas_->showAxis(cx, set && c->xAxisShown());
+        itsCanvas_->showAxis(cy, set && c->yAxisShown());
         
         // Legend
-        itsCanvas_->showLegend(set && itsParameters_.showLegend(),
-                               itsParameters_.legendPosition());
+        itsCanvas_->showLegend(set && c->legendShown(), c->legendPosition());
         
         // Canvas title
-        itsCanvas_->setTitle(set ? itsParameters_.canvasTitle() : "");
+        itsCanvas_->setTitle(set ? c->titleFormat().getLabel(x, y,
+                xref, xrefval, yref, yrefval) : "");
         
         // Grids
-        itsCanvas_->showGrid(itsParameters_.showGridMajor(),
-                itsParameters_.showGridMinor(), itsParameters_.showGridMajor(),
-                itsParameters_.showGridMinor());
+        itsCanvas_->showGrid(c->gridMajorShown(), c->gridMinorShown(),
+                c->gridMajorShown(), c->gridMinorShown());
         
-        PlotLinePtr line = itsFactory_->line(itsParameters_.gridMajorLine());
-        if(!itsParameters_.showGridMajor()) line->setStyle(PlotLine::NOLINE);
+        PlotLinePtr line = itsFactory_->line(c->gridMajorLine());
+        if(!c->gridMajorShown()) line->setStyle(PlotLine::NOLINE);
         itsCanvas_->setGridMajorLine(line);
         
-        line = itsFactory_->line(itsParameters_.gridMinorLine());
-        if(!itsParameters_.showGridMinor()) line->setStyle(PlotLine::NOLINE);
+        line = itsFactory_->line(c->gridMinorLine());
+        if(!c->gridMinorShown()) line->setStyle(PlotLine::NOLINE);
         itsCanvas_->setGridMinorLine(line);
         
         return true;
@@ -270,18 +361,27 @@ bool PlotMSSinglePlot::updateCanvas() {
     }
 }
 
-bool PlotMSSinglePlot::updatePlot() {
+bool PlotMSSinglePlot::updateDisplay() {
     try {
+        PMS_PP_Cache* h = itsParams_.typedGroup<PMS_PP_Cache>();
+        PMS_PP_Canvas* c = itsParams_.typedGroup<PMS_PP_Canvas>();
+        PMS_PP_Display* d = itsParams_.typedGroup<PMS_PP_Display>();
+        
+        // shouldn't happen
+        if(h == NULL || c == NULL || d == NULL) return false;
+        
         // Set symbols.
-        itsPlot_->setSymbol(itsParameters_.symbol());
-        itsPlot_->setMaskedSymbol(itsParameters_.maskedSymbol());    
+        itsPlot_->setSymbol(d->unflaggedSymbol());
+        itsPlot_->setMaskedSymbol(d->flaggedSymbol());
         
         // Set item axes.
-        itsPlot_->setAxes(itsParameters_.canvasXAxis(),
-                          itsParameters_.canvasYAxis());
+        itsPlot_->setAxes(c->xAxis(), c->yAxis());
         
         // Set plot title.
-        itsPlot_->setTitle(itsParameters_.plotTitle());
+        PMS::Axis x = h->xAxis(), y = h->yAxis();
+        itsPlot_->setTitle(d->titleFormat().getLabel(x,y,
+                itsData_.hasReferenceValue(x), itsData_.referenceValue(x),
+                itsData_.hasReferenceValue(y), itsData_.referenceValue(y)));
         return true;
     } catch(AipsError& err) {
         itsParent_->showError("Could not update plot: " + err.getMesg());
@@ -289,6 +389,35 @@ bool PlotMSSinglePlot::updatePlot() {
     } catch(...) {
         itsParent_->showError("Could not update plot, for unknown reasons!");
         return false;
+    }
+}
+
+void PlotMSSinglePlot::cacheLoaded_(bool wasCanceled) {
+    // Let the plot know that the data has been changed as needed, unless the
+    // thread was canceled.
+    if(wasCanceled) itsPlot_->dataChanged();
+    
+    // End cache log as needed.
+    if(itsTCLParams_.endCacheLog)
+        itsParent_->getLogger()->releaseMeasurement();
+    
+    // Update canvas as needed.
+    if(!wasCanceled && itsTCLParams_.updateCanvas) updateCanvas();
+    
+    // Update display as needed.
+    if(!wasCanceled && itsTCLParams_.updateDisplay) updateDisplay();
+    
+    // Release drawing if needed.
+    if(itsTCLParams_.releaseWhenDone) releaseDrawing();
+    
+    // Log number of points as needed.
+    if(!wasCanceled && itsTCLParams_.endCacheLog) {
+        stringstream ss;
+        ss << "Plotted " << itsData_.size() << " points ("
+           << itsData_.sizeUnmasked() << " unflagged, "<< itsData_.sizeMasked()
+           << " flagged).";
+        itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+                PMS::LOG_ORIGIN_PLOT, ss.str(), PMS::LOG_EVENT_PLOT);
     }
 }
 

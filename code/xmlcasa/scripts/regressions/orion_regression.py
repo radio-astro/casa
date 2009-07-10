@@ -114,7 +114,17 @@ print '--Single Dish as Model (MEM)--'
 ###    VLA calibrated visibilities: orion.ms
 ###    GBT OTF cube: orion.gbt.im
 default('mosaic')
-mosaic('orion.ms','orion_tsdmem','mfs','entropy',niter=3,sigma='4mJy',targetflux='240Jy',mask=datapath+'orion.mask6',field=[2,3,4,5,6,7,8,9,10],spw=[0,1],stokes='I',cell=[2,2],imsize=[300,300],weighting='briggs',mosweight=True,rmode='norm',robust=-1,cyclefactor=4,cyclespeedup=500,phasecenter=6,modelimage='orion_tsdmem',sdimage=datapath+'orion.gbt.im',ftmachine='ft',prior='orion_tsdmem',minpb=0.1, scaletype='PBCOR')
+mosaic('orion.ms', 'orion_tsdmem', 'mfs', 'entropy', niter=3, sigma='4mJy',
+       targetflux='240Jy', mask=datapath+'orion.mask6',
+       field=[2, 3, 4, 5, 6, 7, 8, 9, 10], spw=[0, 1], stokes='I',
+       cell=[2, 2], imsize=[300, 300],
+       weighting='briggs', mosweight=True, rmode='norm', robust=-1,
+       cyclefactor=4, cyclespeedup=500,
+       phasecenter=6,
+       modelimage='orion_tsdmem', sdimage=datapath+'orion.gbt.im',
+       ftmachine='ft',
+       prior='orion_tsdmem',
+       minpb=0.1, scaletype='PBCOR')
 sdmodelmemtime=time.time()
 ###GBT:   Max:5.129806e+01        Flux:2.425065e+02 Jy    rms:1.277546e+01
 ###VLA:   Max:8.340111e-01        Flux:1.891523e+02 Jy    rms:1.099514e-01
@@ -159,6 +169,9 @@ def joint_deconvolve(datapath):
 	im.setscales(scalemethod='uservector',uservector=[0,3,10,30, 70])
 	###if clean component for large scale goes negative continue to use
 	##that scale
+
+	## NEW as of 6/12/2009
+	im.setoptions(ftmachine='mosaic')
 	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=5, cyclespeedup=100)
 	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
 	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',

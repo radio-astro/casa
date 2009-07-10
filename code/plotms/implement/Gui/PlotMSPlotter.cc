@@ -28,14 +28,21 @@
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <casaqt/QtUtilities/QtActionGroup.qo.h>
-#include <casaqt/QtUtilities/QtLayeredLayout.h>
+#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <plotms/Actions/PlotMSDrawThread.qo.h>
+#include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
+#include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
-#include <fstream>
-#include <limits>
-
-#include <casa/iomanip.h>
+#include <QCloseEvent>
+#include <QDockWidget>
+#include <QMessageBox>
+#include <QProcess>
+#include <QSet>
+#include <QSplitter>
 
 namespace casa {
 
@@ -193,6 +200,11 @@ void PlotMSPlotter::setToolButtonStyle(Qt::ToolButtonStyle style) {
 const QMap<PlotMSAction::Type, QAction*>& PlotMSPlotter::plotActionMap() const{
     return itsActionMap_; }
 
+void PlotMSPlotter::synchronizeAction(PlotMSAction::Type action,
+        QAbstractButton* button) {
+    itsActionSynchronizer_.synchronize(itsActionMap_.value(action), button);
+}
+
 String PlotMSPlotter::actionText(PlotMSAction::Type type) {
     QAction* action = itsActionMap_.value(type);
     if(action != NULL) return action->text().toStdString();
@@ -320,6 +332,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::CACHE_LOAD, actionCacheLoad);
     itsActionMap_.insert(PlotMSAction::CACHE_RELEASE, actionCacheRelease);
     
+    itsActionMap_.insert(PlotMSAction::MS_SUMMARY, actionMSSummary);
     itsActionMap_.insert(PlotMSAction::PLOT, actionPlot);
     itsActionMap_.insert(PlotMSAction::PLOT_EXPORT, actionPlotExport);
     
@@ -402,8 +415,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
             << actionIterLast << actionAnnotate << actionTrackerHover
             << actionTrackerDisplay << actionStackBack << actionStackBase
             << actionStackForward << actionCacheLoad << actionCacheRelease
-            << actionPlotExport << actionHoldRelease << actionClearPlots
-            << actionQuit;
+            << actionMSSummary << actionPlot << actionPlotExport
+            << actionHoldRelease << actionClearPlots << actionQuit;
     foreach(QAction* a, actions)
         connect(a, SIGNAL(triggered()), SLOT(action_()));
     

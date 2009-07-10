@@ -40,6 +40,9 @@ using namespace std;
 
 namespace casa {
 
+// Typedef for a point, which is two doubles (x and y).
+typedef pair<double, double> ppoint_t;
+
 //////////////////////
 // ABSTRACT CLASSES //
 //////////////////////
@@ -241,10 +244,10 @@ public:
     virtual void setOrigin(Origin o) = 0;
     
     // Returns the range of x.
-    virtual pair<double, double> xRange() const = 0;
+    virtual prange_t xRange() const = 0;
     
     // Returns the range of y.
-    virtual pair<double, double> yRange() const = 0;    
+    virtual prange_t yRange() const = 0;    
     
     // Sets the range of x.
     virtual void setXRange(double from, double to) = 0;
@@ -253,7 +256,7 @@ public:
     virtual void setYRange(double from, double to) = 0;
     
     // Returns the range of the data values.
-    virtual pair<double, double> valueRange() const = 0;
+    virtual prange_t valueRange() const = 0;
     
     // Returns the data value at the given (x,y) coordinate.
     virtual double valueAt(double x, double y) const = 0;
@@ -511,13 +514,13 @@ public:
     virtual unsigned int numBins() const;
     
     // Returns the range at the given index.
-    virtual pair<double, double> rangeAt(unsigned int i) const;
+    virtual prange_t rangeAt(unsigned int i) const;
     
 private:
-    PlotSingleDataPtr m_data;               // Data.
-    vector<unsigned int> m_bins;            // Bins with count.
-    vector<pair<double, double> > m_ranges; // Cached bin ranges.
-    unsigned int m_max;                     // Highest bin count.
+    PlotSingleDataPtr m_data;    // Data.
+    vector<unsigned int> m_bins; // Bins with count.
+    vector<prange_t> m_ranges;   // Cached bin ranges.
+    unsigned int m_max;          // Highest bin count.
 };
 
 
@@ -908,15 +911,15 @@ public:
     }
     
     // Implements PlotRasterData::xRange().
-    pair<double, double> xRange() const {
-        if(m_indexing == X_Y) return pair<double, double>(m_0From, m_0To);
-        else return pair<double, double>(m_1From, m_1To);
+    prange_t xRange() const {
+        if(m_indexing == X_Y) return prange_t(m_0From, m_0To);
+        else return prange_t(m_1From, m_1To);
     }
     
     // Implements PlotRasterData::yRange().
-    pair<double, double> yRange() const {
-        if(m_indexing == X_Y) return pair<double, double>(m_1From, m_1To);
-        else return pair<double, double>(m_0From, m_0To);
+    prange_t yRange() const {
+        if(m_indexing == X_Y) return prange_t(m_1From, m_1To);
+        else return prange_t(m_0From, m_0To);
     }
      
     // Implements PlotRasterData::setXRange().
@@ -960,8 +963,7 @@ public:
     }
     
     // Implements PlotRasterData::valueRange().
-    pair<double, double> valueRange() const {
-        return pair<double, double>(m_valFrom, m_valTo); }
+    prange_t valueRange() const { return prange_t(m_valFrom, m_valTo); }
     
     // Implements PlotRasterData::valueAt().
     double valueAt(double x, double y) const {

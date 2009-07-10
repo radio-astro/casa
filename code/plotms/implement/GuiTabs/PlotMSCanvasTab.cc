@@ -26,8 +26,11 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSCanvasTab.qo.h>
 
+#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -91,79 +94,75 @@ PlotMSCanvasTab::~PlotMSCanvasTab() { }
 
 
 void PlotMSCanvasTab::getValue(PlotMSPlotParameters& params) const {
-    PlotMSSinglePlotParameters* sp =
-        dynamic_cast<PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    PMS_PP_Canvas* c = params.typedGroup<PMS_PP_Canvas>();
+    PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+    if(c == NULL) {
+        params.setGroup<PMS_PP_Canvas>();
+        c = params.typedGroup<PMS_PP_Canvas>();
+    }
+    if(d == NULL) {
+        params.setGroup<PMS_PP_Display>();
+        d = params.typedGroup<PMS_PP_Display>();
+    }
     
-    if(titleSameAsPlot->isChecked())
-        sp->setCanvasTitleFormat(sp->plotTitleFormat());
-    else sp->setCanvasTitleFormat(itsTitleWidget_->getValue());
-    sp->setLegend(legend->isChecked(), PlotCanvas::legendPosition(
+    if(titleSameAsPlot->isChecked()) c->setTitleFormat(d->titleFormat());
+    else c->setTitleFormat(itsTitleWidget_->getValue());
+    c->showLegend(legend->isChecked(), PlotCanvas::legendPosition(
                   legendChooser->currentText().toStdString()));
-    sp->setShowAxes(xAxis->isChecked(), yAxis->isChecked());
-    sp->setCanvasXAxisLabelFormat(itsXLabelWidget_->getValue());
-    sp->setCanvasYAxisLabelFormat(itsYLabelWidget_->getValue());
-    sp->setShowGrid(gridMajor->isChecked(), gridMinor->isChecked());
-    PlotLinePtr major = sp->showGridMajor() ?
-            itsGridMajorLineWidget_->getLine() : sp->gridMajorLine();
-    PlotLinePtr minor = sp->showGridMinor() ?
-            itsGridMinorLineWidget_->getLine() : sp->gridMinorLine();
-    sp->setGridLines(major, minor);
+    c->showXAxis(xAxis->isChecked()); c->showYAxis(yAxis->isChecked());
+    c->setXLabelFormat(itsXLabelWidget_->getValue());
+    c->setYLabelFormat(itsYLabelWidget_->getValue());
+    c->showGrid(gridMajor->isChecked(), gridMinor->isChecked(),
+            itsGridMajorLineWidget_->getLine(),
+            itsGridMinorLineWidget_->getLine());
 }
 
 void PlotMSCanvasTab::setValue(const PlotMSPlotParameters& params) {
-    const PlotMSSinglePlotParameters* sp =
-        dynamic_cast<const PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    const PMS_PP_Canvas* c = params.typedGroup<PMS_PP_Canvas>();
+    const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+    if(c == NULL || d == NULL) return; // shouldn't happen
     
-    if(sp->plotTitleFormat().format == sp->canvasTitleFormat().format)
+    if(c->titleFormat() == d->titleFormat())
         titleSameAsPlot->setChecked(true);
-    else
-        itsTitleWidget_->setValue(sp->canvasTitleFormat().format);
+    else itsTitleWidget_->setValue(c->titleFormat().format);
     
-    legend->setChecked(sp->showLegend());
-    setChooser(legendChooser,PlotCanvas::legendPosition(sp->legendPosition()));
+    legend->setChecked(c->legendShown());
+    setChooser(legendChooser, PlotCanvas::legendPosition(c->legendPosition()));
     
-    xAxis->setChecked(sp->showXAxis());
-    itsXLabelWidget_->setValue(sp->canvasXAxisLabelFormat().format);
-    yAxis->setChecked(sp->showYAxis());
-    itsYLabelWidget_->setValue(sp->canvasYAxisLabelFormat().format);
+    xAxis->setChecked(c->xAxisShown());
+    itsXLabelWidget_->setValue(c->xLabelFormat().format);
+    yAxis->setChecked(c->yAxisShown());
+    itsYLabelWidget_->setValue(c->yLabelFormat().format);
 
-    gridMajor->setChecked(sp->showGridMajor());
-    itsGridMajorLineWidget_->setLine(sp->gridMajorLine());
-    gridMinor->setChecked(sp->showGridMinor());
-    itsGridMinorLineWidget_->setLine(sp->gridMinorLine());
+    gridMajor->setChecked(c->gridMajorShown());
+    itsGridMajorLineWidget_->setLine(c->gridMajorLine());
+    gridMinor->setChecked(c->gridMinorShown());
+    itsGridMinorLineWidget_->setLine(c->gridMinorLine());
 }
 
 void PlotMSCanvasTab::update(const PlotMSPlot& plot) {
-    const PlotMSSinglePlot* p = dynamic_cast<const PlotMSSinglePlot*>(&plot);
-    if(p == NULL) return;
-    
-    const PlotMSSinglePlotParameters& params = p->singleParameters();
-    PlotMSSinglePlotParameters newParams(params);
+    const PlotMSPlotParameters& params = plot.parameters();
+    PlotMSPlotParameters newParams(params);
     getValue(newParams);
     
-    changedText(titleLabel, params.canvasTitleFormat() !=
-                newParams.canvasTitleFormat());
-    changedText(legendLabel,
-                params.showLegend() != newParams.showLegend() ||
-                (params.showLegend() &&
-                 params.legendPosition() != newParams.legendPosition()));
+    const PMS_PP_Canvas* c = params.typedGroup<PMS_PP_Canvas>(),
+                       *c2 = newParams.typedGroup<PMS_PP_Canvas>();
     
-    changedText(xAxisLabel,
-                params.showXAxis() != newParams.showXAxis());
-    changedText(xLabelLabel, params.canvasXAxisLabelFormat() !=
-                newParams.canvasXAxisLabelFormat());
-    changedText(yAxisLabel,
-                params.showYAxis() != newParams.showYAxis());
-    changedText(yLabelLabel, params.canvasYAxisLabelFormat() !=
-                newParams.canvasYAxisLabelFormat());
+    changedText(titleLabel, c->titleFormat() != c2->titleFormat());
+    changedText(legendLabel, c->legendShown() != c2->legendShown() ||
+                (c->legendShown()&&c->legendPosition()!=c2->legendPosition()));
     
-    changedText(gridLabel, params.showGridMajor() !=
-                newParams.showGridMajor() || params.showGridMinor() !=
-                newParams.showGridMinor() || *params.gridMajorLine() !=
-                *newParams.gridMajorLine() || *params.gridMinorLine() !=
-                *newParams.gridMinorLine());
+    changedText(xAxisLabel, c->xAxisShown() != c2->xAxisShown());
+    changedText(xLabelLabel, c->xLabelFormat() != c2->xLabelFormat());
+    changedText(yAxisLabel, c->yAxisShown() != c2->yAxisShown());
+    changedText(yLabelLabel, c->yLabelFormat() != c2->yLabelFormat());
+    
+    changedText(gridLabel, c->gridMajorShown() != c2->gridMajorShown() ||
+                c->gridMinorShown() != c2->gridMinorShown() ||
+                (c->gridMajorShown() &&
+                 *c->gridMajorLine() != *c2->gridMajorLine()) ||
+                (c->gridMinorShown() &&
+                 *c->gridMinorLine() != *c2->gridMinorLine()));
 }
 
 }

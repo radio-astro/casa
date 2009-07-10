@@ -29,13 +29,16 @@
 
 #include <plotms/GuiTabs/PlotMSOptionsTab.ui.h>
 
-#include <plotms/Gui/PlotMSLoggerWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
-#include <plotms/PlotMS/PlotMSParameters.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations.
+class PlotMSLoggerWidget;
+class PlotMSParameters;
+
 
 // Subclass of PlotMSTab that handles options for PlotMSPlotter.   Watches
 // PlotMS's PlotMSParameters for changes to update the GUI as needed.
@@ -57,7 +60,7 @@ public:
     // the GUI as needed if the given parameters are the PlotMS parent's
     // parameters.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag);
     
     // Overrides PlotMSTab::setupForMaxWidth().  MUST be called before being
     // used, as it sets up the logging widget with it.
@@ -88,6 +91,9 @@ private slots:
     
     // When the user sets the cached image size to screen resolution.
     void cachedImageSizeScreenResolution();
+    
+    // When the user changes the file chooser history limit.
+    void historyLimitChanged();
 };
 
 }

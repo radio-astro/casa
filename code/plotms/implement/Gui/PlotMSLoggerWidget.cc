@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/Gui/PlotMSLoggerWidget.qo.h>
 
+#include <casaqt/QtUtilities/QtComboCheckBox.qo.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 
 #include <QLabel>

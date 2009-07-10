@@ -27,7 +27,6 @@
 #ifndef PLOTMSCACHETHREAD_QO_H_
 #define PLOTMSCACHETHREAD_QO_H_
 
-#include <msvis/MSVis/VisSet.h>
 #include <plotms/Actions/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
@@ -43,22 +42,30 @@ namespace casa {
 //# Forward Declarations
 class PlotMSData;
 class PlotMSPlot;
+class VisSet;
 
 
 // Subclass of PlotMSThread for loading axes in a PlotMSCache.
 class PlotMSCacheThread : public PlotMSThread {
     Q_OBJECT
     
+    //# Friend class declarations.
     friend class PlotMSCache;
     friend class PlotMSCacheThreadHelper;
     
 public:
-    // Constructor which takes the PlotMSData, the axes and data columns, the
-    // averaging, a flag for whether to call setupPlot after the loading, and
-    // optional post-thread method parameters.
+    // LOADING constructor which takes the PlotMSPlot, the axes and data
+    // columns, the averaging, a flag for whether to call setupPlot after the
+    // loading, and optional post-thread method parameters.
     PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
             const vector<PMS::DataColumn>& data,
             const PlotMSAveraging& averaging, bool setupPlot = false,
+            PMSPTMethod postThreadMethod = NULL,
+            PMSPTObject postThreadObject = NULL);
+    
+    // RELEASING constructor which takes the PlotMSPlot, the axes, and optional
+    // post-thread method parameters.
+    PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
             PMSPTMethod postThreadMethod = NULL,
             PMSPTObject postThreadObject = NULL);
     
@@ -106,6 +113,9 @@ private:
     
     // VisSet.
     VisSet* itsVisSet_;
+    
+    // Load (true) or release (false) axes.
+    bool itsLoad_;
     
     // Axes.
     vector<PMS::Axis> itsAxes_;

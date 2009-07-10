@@ -27,9 +27,11 @@
 #ifndef PLOTMSWATCHEDPARAMETERS_H_
 #define PLOTMSWATCHEDPARAMETERS_H_
 
+#include <casa/BasicSL/String.h>
+
 #include <vector>
 
-//#include <casa/namespace.h>
+#include <casa/namespace.h>
 using namespace std;
 
 namespace casa {
@@ -57,50 +59,65 @@ public:
     // notification is released via
     // PlotMSWatchedParameters::releaseNotification.  If this watcher is the
     // watcher that was holding notifications, this method is NOT called.
-    // The updateFlag and redrawRequired parameters let the watcher know which
-    // categories the changes were in and whether a redraw is required,
-    // respectively.
+    // The updateFlag parameter lets the watcher know which categories the
+    // changes were in.
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) = 0;
+            int updateFlag) = 0;
 };
 
 
 // Abstract class for parameters that may be watched by one or more interested
 // classes.  Any subclass is assumed to have different properties in one or
-// more of the update categories defined by the UpdateFlag enum.  Using this
-// system, any classes watching the parameters for changes can be notified
-// which categories the changes occurred in.
+// more of the update categories defined different update flag values which
+// must be registered with the public static methods in
+// PlotMSWatchedParameters.  Using this system, any classes watching the
+// parameters for changes can be notified which categories the changes occurred
+// in.
 class PlotMSWatchedParameters {
 public:
     // Static //
     
-    // Enum holding the different update "categories."  Each category can be
-    // updated separately from the others, which can be used to avoid
-    // unnecessary work.  The enum values can be or-ed together to indicate
-    // that multiple categories have been changed.
-    enum UpdateFlag {
-        MS     = 1,  // The MS (filename, selection, ...).  Both the MS and the
-                     //  cache need to be updated.
-        CACHE  = 2,  // The plot axes.  The cache needs to be updated.
-        CANVAS = 4,  // The canvas display options (grid, legend, title, ...).
-                     //  The canvas needs to be updated.
-        PLOT   = 8,  // The plot options (symbol, title, ...).  The plot needs
-                     //  to be updated.
-        LOG    = 16, // The log (level, debug messages, ...).
-        
-        NONE = 0,                    // Nothing changed.
-        ALL  = MS | CACHE | CANVAS | // Everything changed.
-               PLOT | LOG
-    };
+    // "Base", or no updates, flag.
+    static const int NO_UPDATES;
+    
+    
+    // Registers an update flag with the given name (if it is not already
+    // registered) and returns its flag value.
+    static int REGISTER_UPDATE_FLAG(const String& name);
+    
+    // Unregisters the given update flag, if it is registered.
+    // <group>
+    static void UNREGISTER_UPDATE_FLAG(const String& name);
+    static void UNREGISTER_UPDATE_FLAG(int flag);
+    // </group>
+    
+    // Converts between an update flag's name and value, if valid.
+    // <group>
+    static int UPDATE_FLAG(const String& name);
+    static String UPDATE_FLAG(int flag);
+    // </group>
+    
+    // Returns all registered update flags.
+    // <group>
+    static vector<int> UPDATE_FLAGS();
+    static vector<String> UPDATE_FLAG_NAMES();
+    // </group>
+    
+    // Returns all registered update flags as one or-ed value.
+    static int ALL_UPDATE_FLAGS();
+    
+    // Returns all registered update flags that were turned on in the given
+    // flags value.
+    // <group>
+    static vector<int> UPDATE_FLAGS(int value);
+    static vector<String> UPDATE_FLAG_NAMES(int value);
+    // </group>
     
     
     // Non-Static //
     
     // Constructor.
     PlotMSWatchedParameters();
-    
-    // Copy constructor.  See operator=().
-    PlotMSWatchedParameters(const PlotMSWatchedParameters& copy);
     
     // Destructor.
     virtual ~PlotMSWatchedParameters();
@@ -112,53 +129,29 @@ public:
     void removeWatcher(PlotMSParametersWatcher* watcher);
     // </group>
     
-    // Holds update notification because the given watcher will be updating
-    // multiple fields.
-    void holdNotification(PlotMSParametersWatcher* updater);
+    // Holds update notifications for any registered watchers.  Notifications
+    // will not be sent out until releaseNotification() is called.  If a
+    // non-NULL watcher is given, it will be excluded from notifications when
+    // releaseNotification() is called.
+    void holdNotification(PlotMSParametersWatcher* updater = NULL);
     
     // Releases update notification; notifies all watchers of an update except
-    // for the one that called holdNotification.
+    // for the one (if any) that called holdNotification.
     void releaseNotification();
-    
-    // Notifies any watchers that the parameters have been updated with the
-    // given flags.  If an updater is given, it is NOT notified.
-    void notifyWatchers(int updateFlags = ALL, bool redrawRequired = true,
-            PlotMSParametersWatcher* updater = NULL);
-    
-    // Returns true if this PlotMSParameters equals the other, in the different
-    // update categories.
-    // <group>
-    bool equalsMS(PlotMSWatchedParameters& other) const {
-        return equals(other, MS); }
-    bool equalsCache(PlotMSWatchedParameters& other) const {
-        return equals(other, CACHE); }
-    bool equalsCanvas(PlotMSWatchedParameters& other) const {
-        return equals(other, CANVAS); }
-    bool equalsPlot(PlotMSWatchedParameters& other) const {
-        return equals(other, PLOT); }
-    bool equalsLog(PlotMSWatchedParameters& other) const {
-        return equals(other, LOG); }
-    // </group>
     
     // Equality operators.
     // <group>
     virtual bool operator==(const PlotMSWatchedParameters& other) const {
-        return equals(other, ALL); }
+        return equals(other, ALL_UPDATE_FLAGS()); }
     virtual bool operator!=(const PlotMSWatchedParameters& other) const {
         return !(operator==(other)); }
     // </group>
-    
-    // Copy operator.  Does NOT copy the current update state or watchers as
-    // these are assumed to be unique to each parameters object.  Should be
-    // overridden by children.
-    virtual PlotMSWatchedParameters& operator=(
-            const PlotMSWatchedParameters& copy);
     
     
     // ABSTRACT METHODS //
     
     // Returns true if this PlotMSParameters equals the other, in the given
-    // update categories (bit-wise or of UpdateFlags).
+    // update categories flag.
     virtual bool equals(const PlotMSWatchedParameters& other,
                         int updateFlags) const = 0;    
 
@@ -166,34 +159,41 @@ protected:
     // Returns the current update flag.
     int currentUpdateFlag() const;
     
-    // Returns the current redraw required flag.
-    bool currentRedrawRequired() const;
-    
     // Provides access to children to indicate whether the given update flag
-    // should be turned on or off, and the redraw required flag should be
-    // updated as given.  This should be used by setter functions to classify
-    // the changes appropriately.  If update notifications are NOT being held,
-    // any watchers will immediately be notified of the change.
-    void updateFlag(UpdateFlag update, bool on = true,
-            bool redrawRequired = true);
+    // should be turned on or off.  This should be used by setter functions to
+    // classify the changes appropriately.  If update notifications are NOT
+    // being held, any watchers will immediately be notified of the change.
+    // <group>
+    void updateFlag(int updateFlag, bool on = true);
+    void updateFlag(const String& updateFlagName, bool on = true);
+    // </group>
     
     // Provides access to children to indicate which update flags are on.
     // The given value should be a bit-wise or of one or more UpdateFlag
-    // enum values.  The redraw required flag is also updated to the given.
-    void updateFlags(int updateFlags, bool redrawRequired = true);
+    // enum values.
+    void updateFlags(int updateFlags);
     
 private:
-    // Update flags.
-    // <group>
+    // Current update flags.
     int itsUpdateFlags_;
-    bool itsRedrawFlag_;
-    // </group>
     
     // Watchers.
     vector<PlotMSParametersWatcher*> itsWatchers_;
     
+    // Flag for whether notifications are currently being held or not.
+    bool isHolding_;
+    
     // Watcher that is currently holding notifications, or NULL for none.
     PlotMSParametersWatcher* itsUpdater_;
+    
+    
+    // Static //
+    
+    // Registered flags.
+    static vector<int> FLAGS;
+    
+    // Registered flag names.
+    static vector<String> NAMES;
 };
 
 }

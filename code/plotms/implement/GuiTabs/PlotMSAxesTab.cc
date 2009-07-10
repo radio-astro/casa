@@ -27,6 +27,9 @@
 #include <plotms/GuiTabs/PlotMSAxesTab.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
+#include <plotms/Gui/PlotRangeWidget.qo.h>
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -96,82 +99,90 @@ PlotMSAxesTab::~PlotMSAxesTab() { }
 
 
 void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
-    PlotMSSinglePlotParameters* sp =
-        dynamic_cast<PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
+    PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>();
+    if(c == NULL) {
+        params.setGroup<PMS_PP_Cache>();
+        c = params.typedGroup<PMS_PP_Cache>();
+    }
+    if(cv == NULL) {
+        params.setGroup<PMS_PP_Canvas>();
+        cv = params.typedGroup<PMS_PP_Canvas>();
+    }
     
-    sp->setXAxis(PMS::axis(xChooser->currentText().toStdString()));
-    sp->setXDataColumn(PMS::dataColumn(
-                       xDataChooser->currentText().toStdString()));
-    sp->setCanvasXAxis(xAttachBottom->isChecked() ? X_BOTTOM : X_TOP);
-    sp->setXRange(itsXRangeWidget_->isCustom(), itsXRangeWidget_->getRange());
+    c->setXAxis(PMS::axis(xChooser->currentText().toStdString()),
+                PMS::dataColumn(xDataChooser->currentText().toStdString()));
+    cv->setXAxis(xAttachBottom->isChecked() ? X_BOTTOM : X_TOP);
+    cv->setXRange(itsXRangeWidget_->isCustom(), itsXRangeWidget_->getRange());
     
-    sp->setYAxis(PMS::axis(yChooser->currentText().toStdString()));
-    sp->setYDataColumn(PMS::dataColumn(
-                       yDataChooser->currentText().toStdString()));
-    sp->setCanvasYAxis(yAttachLeft->isChecked() ? Y_LEFT : Y_RIGHT);
-    sp->setYRange(itsYRangeWidget_->isCustom(), itsYRangeWidget_->getRange());
+    c->setYAxis(PMS::axis(yChooser->currentText().toStdString()),
+                PMS::dataColumn(yDataChooser->currentText().toStdString()));
+    cv->setYAxis(yAttachLeft->isChecked() ? Y_LEFT : Y_RIGHT);
+    cv->setYRange(itsYRangeWidget_->isCustom(), itsYRangeWidget_->getRange());
 }
 
 void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
-    const PlotMSSinglePlotParameters* sp =
-        dynamic_cast<const PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    const PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
+    const PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>();
+    if(c == NULL || cv == NULL) return; // shouldn't happen
     
-    PMS::Axis xAxis = sp->xAxis(), yAxis = sp->yAxis();
+    PMS::Axis xAxis = c->xAxis(), yAxis = c->yAxis();
     setChooser(xChooser, PMS::axis(xAxis));
-    setChooser(xDataChooser, PMS::dataColumn(sp->xDataColumn()));
-    if(sp->canvasXAxis() == X_BOTTOM) xAttachBottom->setChecked(true);
-    else                              xAttachTop->setChecked(true);
+    setChooser(xDataChooser, PMS::dataColumn(c->xDataColumn()));
+    if(cv->xAxis() == X_BOTTOM) xAttachBottom->setChecked(true);
+    else                        xAttachTop->setChecked(true);
+    itsXRangeWidget_->setRange(PMS::axisType(xAxis) == PMS::TTIME,
+            cv->xRangeSet(), cv->xRange().first, cv->xRange().second);
     
     setChooser(yChooser, PMS::axis(yAxis));
-    setChooser(yDataChooser, PMS::dataColumn(sp->yDataColumn()));
-    if(sp->canvasYAxis() == Y_LEFT) yAttachLeft->setChecked(true);
-    else                            yAttachRight->setChecked(true);
+    setChooser(yDataChooser, PMS::dataColumn(c->yDataColumn()));
+    if(cv->yAxis() == Y_LEFT) yAttachLeft->setChecked(true);
+    else                      yAttachRight->setChecked(true);
+    itsYRangeWidget_->setRange(PMS::axisType(yAxis) == PMS::TTIME,
+            cv->yRangeSet(), cv->yRange().first, cv->yRange().second);
 }
 
 void PlotMSAxesTab::update(const PlotMSPlot& plot) {
-    const PlotMSSinglePlot* p = dynamic_cast<const PlotMSSinglePlot*>(&plot);
-    if(p == NULL) return;
-    const PlotMSSinglePlotParameters& sp = p->singleParameters();
-    
-    PlotMSSinglePlotParameters newParams(sp);
+    const PlotMSPlotParameters& params = plot.parameters();
+    PlotMSPlotParameters newParams(params);
     getValue(newParams);
+    
+    const PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
+                      *c2 = newParams.typedGroup<PMS_PP_Cache>();
+    const PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>(),
+                       *cv2 = newParams.typedGroup<PMS_PP_Canvas>();
+    
+    // shouldn't happen
+    if(c == NULL || c2 == NULL || cv == NULL || cv2 == NULL) return;
     
     // Update widgets.
     vector<pair<PMS::Axis,unsigned int> > laxes = plot.data().loadedAxes();
     bool found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++)
-        if(laxes[i].first == newParams.xAxis()) found = true;
+        if(laxes[i].first == c2->xAxis()) found = true;
     xInCache->setChecked(found);
-    xDataFrame->setVisible(PMS::axisIsData(newParams.xAxis()));
-    itsXRangeWidget_->setIsDate(
-            PMS::axisType(newParams.xAxis()) == PMS::TTIME);
+    xDataFrame->setVisible(PMS::axisIsData(c2->xAxis()));
     
     found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++)
-        if(laxes[i].first == newParams.yAxis()) found = true;
+        if(laxes[i].first == c2->yAxis()) found = true;
     yInCache->setChecked(found);
-    yDataFrame->setVisible(PMS::axisIsData(newParams.yAxis()));
-    itsYRangeWidget_->setIsDate(
-            PMS::axisType(newParams.yAxis()) == PMS::TTIME);
+    yDataFrame->setVisible(PMS::axisIsData(c2->yAxis()));
     
     // Update labels.
-    changedText(xLabel, sp.xAxis() != newParams.xAxis() ||
-                (xDataFrame->isVisible() &&
-                 sp.xDataColumn() != newParams.xDataColumn()));
-    changedText(xDataLabel, sp.xDataColumn() != newParams.xDataColumn());
-    changedText(xAttachLabel, sp.canvasXAxis() != newParams.canvasXAxis());
-    changedText(xRangeLabel, sp.xRangeSet() != newParams.xRangeSet() ||
-                (sp.xRangeSet() && sp.xRange() != newParams.xRange()));
+    changedText(xLabel, c->xAxis() != c2->xAxis() || (xDataFrame->isVisible()&&
+                c->xDataColumn() != c2->xDataColumn()));
+    changedText(xDataLabel, c->xDataColumn() != c2->xDataColumn());
+    changedText(xAttachLabel, cv->xAxis() != cv2->xAxis());
+    changedText(xRangeLabel, cv->xRangeSet() != cv2->xRangeSet() ||
+                (cv->xRangeSet() && cv->xRange() != cv2->xRange()));
     
-    changedText(yLabel, sp.yAxis() != newParams.yAxis() ||
-                (yDataFrame->isVisible() &&
-                 sp.yDataColumn() != newParams.yDataColumn()));
-    changedText(yDataLabel, sp.yDataColumn() != newParams.yDataColumn());
-    changedText(yAttachLabel, sp.canvasYAxis() != newParams.canvasYAxis());
-    changedText(yRangeLabel, sp.yRangeSet() != newParams.yRangeSet() ||
-                (sp.yRangeSet() && sp.yRange() != newParams.yRange()));
+    changedText(yLabel, c->yAxis() != c2->yAxis() || (yDataFrame->isVisible()&&
+                c->yDataColumn() != c2->yDataColumn()));
+    changedText(yDataLabel, c->yDataColumn() != c2->yDataColumn());
+    changedText(yAttachLabel, cv->yAxis() != cv2->yAxis());
+    changedText(yRangeLabel, cv->yRangeSet() != cv2->yRangeSet() ||
+                (cv->yRangeSet() && cv->yRange() != cv2->yRange()));
 }
 
 }

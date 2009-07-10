@@ -26,15 +26,16 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
-#include <casaqt/QtUtilities/QtUtilities.h>
-#include <plotms/Actions/PlotMSExportThread.qo.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSAxesTab.qo.h>
 #include <plotms/GuiTabs/PlotMSCacheTab.qo.h>
 #include <plotms/GuiTabs/PlotMSCanvasTab.qo.h>
+#include <plotms/GuiTabs/PlotMSDataTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
-#include <plotms/GuiTabs/PlotMSMSTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
 
 namespace casa {
 
@@ -49,24 +50,23 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     setupUi(this);
     
     // Add as watcher.
-    itsPlotManager_.addWatcher(this);
-    
+    itsPlotManager_.addWatcher(this);    
     
     // Setup go.
     plotsChanged(itsPlotManager_);
     
     // Setup tab widget.
-    tabWidget->removeTab(0);
-        
+    tabWidget->removeTab(0);        
     
     // Initialize to no plot (empty).
-    setupForPlot(NULL);
-    
+    setupForPlot(NULL);    
     
     // Connect widgets.
     connect(goChooser, SIGNAL(currentIndexChanged(int)), SLOT(goChanged(int)));
     connect(goButton, SIGNAL(clicked()), SLOT(goClicked()));
-    connect(plotButton, SIGNAL(clicked()), SLOT(plot()));
+    
+    // Synchronize plot button.
+    itsPlotter_->synchronizeAction(PlotMSAction::PLOT, plotButton);
 }
 
 PlotMSPlotTab::~PlotMSPlotTab() { }
@@ -78,7 +78,7 @@ QList<QToolButton*> PlotMSPlotTab::toolButtons() const {
 }
 
 void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) {
+        int updateFlag) {
     if(&p == itsCurrentParameters_ && itsCurrentPlot_ != NULL)
         setupForPlot(itsCurrentPlot_);
 }
@@ -121,8 +121,9 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
 
 PlotMSPlot* PlotMSPlotTab::currentPlot() const { return itsCurrentPlot_; }
 
-PlotMSSinglePlotParameters PlotMSPlotTab::currentlySetParameters() const {
-    PlotMSSinglePlotParameters params(itsParent_);
+PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
+    PlotMSPlotParameters params(itsPlotter_->getFactory());
+    if(itsCurrentParameters_ != NULL) params = *itsCurrentParameters_;
     
     foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->getValue(params);
     
@@ -138,12 +139,34 @@ PlotExportFormat PlotMSPlotTab::currentlySetExportFormat() const {
     return PlotExportFormat(PlotExportFormat::PNG, "");
 }
 
+bool PlotMSPlotTab::msSummaryVerbose() const {
+    const PlotMSDataTab* tab;
+    foreach(const PlotMSPlotSubtab* t, itsSubtabs_) {
+        if((tab = dynamic_cast<const PlotMSDataTab*>(t)) != NULL)
+            return tab->summaryVerbose();
+    }
+    return false;
+}
+
+PMS::SummaryType PlotMSPlotTab::msSummaryType() const {
+    const PlotMSDataTab* tab;
+    foreach(const PlotMSPlotSubtab* t, itsSubtabs_) {
+        if((tab = dynamic_cast<const PlotMSDataTab*>(t)) != NULL)
+            return tab->summaryType();
+    }
+    return PMS::S_ALL;
+}
+
 
 // Public Slots //
 
 void PlotMSPlotTab::plot() {
     if(itsCurrentParameters_ != NULL) {
-        PlotMSSinglePlotParameters params = currentlySetParameters();
+        PlotMSPlotParameters params = currentlySetParameters();
+        PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
+                     *cd = itsCurrentParameters_->typedGroup<PMS_PP_MSData>();
+        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
+                    *cc = itsCurrentParameters_->typedGroup<PMS_PP_Cache>();
         
         // Plot if 1) parameters have changed, 2) cache loading was canceled
         // previously.
@@ -151,10 +174,10 @@ void PlotMSPlotTab::plot() {
              cload = !itsCurrentPlot_->data().cacheReady();
         if(pchanged || cload) {
             if(pchanged) {
-                if((itsParent_->getParameters().clearSelectionsOnAxesChange() &&
-                   (params.xAxis() != itsCurrentParameters_->xAxis() ||
-                    params.yAxis() != itsCurrentParameters_->yAxis())) ||
-                   params.filename() != itsCurrentParameters_->filename()) {
+                if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
+                   ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
+                     c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&
+                     d->filename() != cd->filename()))) {
                     vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
                     for(unsigned int i = 0; i < canv.size(); i++)
                         canv[i]->standardMouseTools()->selectTool()
@@ -166,8 +189,9 @@ void PlotMSPlotTab::plot() {
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
             } else if(cload) {
+                // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
-                        PlotMSWatchedParameters::CACHE, true);
+                        PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
             }
             plotsChanged(itsPlotManager_);
         }
@@ -213,16 +237,14 @@ PlotMS##TYPE##Tab* PlotMSPlotTab::insert##TYPE##Subtab(int index) {           \
 PT_ST(Axes)
 PT_ST(Cache)
 PT_ST(Canvas)
+PT_ST(Data)
 PT_ST(Display)
 PT_ST(Export)
-PT_ST(MS)
 
 
 // Private //
 
-void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
-    // for now, only deal with single plots
-    PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(p);
+void PlotMSPlotTab::setupForPlot(PlotMSPlot* plot) {
     itsCurrentPlot_ = plot;
     tabWidget->setEnabled(plot != NULL);
     
@@ -235,12 +257,12 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* p) {
     bool oldupdate = itsUpdateFlag_;
     itsUpdateFlag_ = false;
     
-    plot->setupPlotSubtabs(*this);
-    // TODO update tool buttons
-    
-    PlotMSSinglePlotParameters& params = plot->singleParameters();
+    PlotMSPlotParameters& params = plot->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
+    
+    plot->setupPlotSubtabs(*this);
+    // TODO update tool buttons
     
     foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->setValue(params);
     
@@ -312,11 +334,8 @@ void PlotMSPlotTab::tabChanged() {
     if(itsUpdateFlag_ && itsCurrentPlot_ != NULL) {
         itsUpdateFlag_ = false;
         
-        // for now, only deal with single plots
-        PlotMSSinglePlot* plot = dynamic_cast<PlotMSSinglePlot*>(
-                                 itsCurrentPlot_);
-        
-        foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->update(*plot);
+        foreach(PlotMSPlotSubtab* tab, itsSubtabs_)
+            tab->update(*itsCurrentPlot_);
         
         itsUpdateFlag_ = true;
     }

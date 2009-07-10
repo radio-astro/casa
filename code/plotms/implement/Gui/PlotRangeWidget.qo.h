@@ -30,6 +30,7 @@
 #include <plotms/Gui/PlotRangeWidget.ui.h>
 
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 
 #include <utility>
 
@@ -64,9 +65,9 @@ public:
     bool isCustom() const;
     
     // Gets/Sets the currently set range.
-    pair<double, double> getRange() const;
+    prange_t getRange() const;
     void getRange(double& from, double& to) {
-        pair<double, double> r = getRange();
+        prange_t r = getRange();
         from = r.first;
         to = r.second;
     }

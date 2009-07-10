@@ -122,16 +122,6 @@ private:
   // antennas (nant_p), and timeRes_p.
   void fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref);
   
-  // Calculate ref_positions using ant_positions and ant_offsets, returning
-  // whether or not ref_positions needs to be updated whenever pointingdir
-  // changes (i.e. |ant_offsets| != 0).
-  //
-  // @todo: Currently it only uses the z component of ant_offsets.  Work out
-  //        and apply the full effect of x and y components, mount type
-  //        (possibly heterogeneous for VLBI), and parallactic angle.
-  //
-  Bool calc_ref_positions(const MDirection& pointingdir);
-
   // Determine antUVW_p for every member of the sequence of antennas
   // defining a (sub)array.
   //     @param  timeCentroid An epoch, the 'when' characterization.
@@ -204,7 +194,6 @@ private:
 
   // The position of the first antenna.
   MPosition refpos_p;
-  MeasRef<MPosition> refposref_p;
   
   // Ditto for feed.
   //const ROMSFeedColumns *feedColumns_;
@@ -214,6 +203,8 @@ private:
   //  ant_positions_p(ant) + [rotation matrix](pointing) (ant_offsets_p[ant] +
   //							feed_offsets_p[ant])
   const ROScalarMeasColumn<MPosition>& feedOffset_p;
+
+  MBaseline::Types refposref_p;  
 
   // The antenna positions - refpos_p.getValue().
   Vector<MVBaseline> bl_an_p;

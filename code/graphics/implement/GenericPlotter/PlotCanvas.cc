@@ -218,12 +218,12 @@ void PlotCanvas::setAxisFont(PlotAxis axis, const PlotFontPtr font) {
 
 
 PlotRegion PlotCanvas::axesRanges(PlotAxis xAxis, PlotAxis yAxis) const {
-    pair<double, double> x = axisRange(xAxis), y = axisRange(yAxis);
+    prange_t x = axisRange(xAxis), y = axisRange(yAxis);
     return PlotRegion(PlotCoordinate(x.first, y.second),
                       PlotCoordinate(x.second, y.first));
 }
 
-void PlotCanvas::setAxisRange(PlotAxis axis, const pair<double,double>& range){
+void PlotCanvas::setAxisRange(PlotAxis axis, const prange_t& range){
     setAxisRange(axis, range.first, range.second); }
 
 void PlotCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
@@ -232,9 +232,8 @@ void PlotCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
     setAxisRange(yAxis, yFrom, yTo);
 }
 
-void PlotCanvas::setAxesRanges(PlotAxis xAxis,
-        const pair<double, double>& xRange, PlotAxis yAxis,
-        const pair<double, double>& yRange) {
+void PlotCanvas::setAxesRanges(PlotAxis xAxis, const prange_t& xRange,
+        PlotAxis yAxis, const prange_t& yRange) {
     setAxesRanges(xAxis, xRange.first, xRange.second, yAxis, yRange.first,
                   yRange.second);
 }
@@ -250,14 +249,14 @@ void PlotCanvas::setAxesRegion(PlotAxis xAxis, PlotAxis yAxis,
 }
 
 void PlotCanvas::moveAxisRange(PlotAxis axis, double delta) {
-    pair<double, double> r = axisRange(axis);
+    prange_t r = axisRange(axis);
     r.first += delta; r.second += delta;
     setAxisRange(axis, r.first, r.second);
 }
 
 void PlotCanvas::moveAxesRanges(PlotAxis xAxis, double xDelta,
         PlotAxis yAxis, double yDelta) {
-    pair<double, double> x = axisRange(xAxis), y = axisRange(yAxis);
+    prange_t x = axisRange(xAxis), y = axisRange(yAxis);
     x.first += xDelta; x.second += xDelta;
     y.first += yDelta; y.second += yDelta;
     setAxesRanges(xAxis, x.first, x.second, yAxis, y.first, y.second);

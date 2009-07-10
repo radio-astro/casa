@@ -451,12 +451,44 @@ void PlotLogger::SET_EVENT_PRIORITY(int event, LogMessage::Priority priority) {
     EVENT_PRIORITIES[event] = priority; }
 
 
+// Subclass of LogFilterInterface that refuses all messages.  Used to disable
+// the global log sink temporarily.
+// <group>
+class NullLogFilter : public LogFilterInterface {
+public:
+    NullLogFilter() { }
+    NullLogFilter(const NullLogFilter& copy) { }
+    ~NullLogFilter() { }
+    LogFilterInterface* clone() const { return new NullLogFilter(); }
+    Bool pass(const LogMessage& message) const { return false; }
+};
+// </group>
+
+
+void PlotLogger::disableGlobalSink() {
+    if(DISABLED_GLOBAL_FILTER == NULL) {
+        DISABLED_GLOBAL_FILTER = LogSink::globalSink().filter().clone();
+        LogSink::globalSink().filter(NullLogFilter());
+    }
+}
+
+void PlotLogger::enableGlobalSink() {
+    if(DISABLED_GLOBAL_FILTER != NULL) {
+        LogSink::globalSink().filter(*DISABLED_GLOBAL_FILTER);
+        delete DISABLED_GLOBAL_FILTER;
+        DISABLED_GLOBAL_FILTER = NULL;
+    }
+}
+
+
 vector<int> PlotLogger::EXTENDED_TYPES = vector<int>();
 
 vector<String> PlotLogger::EXTENDED_NAMES = vector<String>();
 
 map<int, LogMessage::Priority> PlotLogger::EVENT_PRIORITIES =
     map<int, LogMessage::Priority>();
+
+LogFilterInterface* PlotLogger::DISABLED_GLOBAL_FILTER = NULL;
 
 
 // Non-Static //
@@ -474,6 +506,16 @@ CountedPtr<LogSinkInterface> PlotLogger::sink() { return m_logger; }
 const CountedPtr<LogSinkInterface> PlotLogger::sink() const {
     return m_logger; }
 
+LogSinkInterface* PlotLogger::localSinkCopy() const {
+    if(m_loggerLocation.empty()) return &LogSink::globalSink();
+    else if(m_logger.null()) return NULL;
+    else {
+        const StreamLogSink* s= dynamic_cast<const StreamLogSink*>(&*m_logger);
+        if(s == NULL) return const_cast<LogSinkInterface*>(&*m_logger);
+        else return new StreamLogSink(*s);
+    }
+}
+
 const String& PlotLogger::sinkLocation() const { return m_loggerLocation; }
 void PlotLogger::setSinkLocation(const String& logFile) {
     CountedPtr<LogSinkInterface> oldSink = m_logger;
@@ -490,6 +532,7 @@ void PlotLogger::setSinkLocation(const String& logFile) {
         m_logger = oldSink;
     }
 }
+
 
 LogMessage::Priority PlotLogger::filterMinPriority() const {
     return m_filter.minimumPriority(); }

@@ -27,7 +27,7 @@
 #ifndef PLOTMSPAGE_H_
 #define PLOTMSPAGE_H_
 
-#include <graphics/GenericPlotter/PlotFactory.h>
+#include <graphics/GenericPlotter/PlotCanvas.h>
 
 #include <casa/namespace.h>
 

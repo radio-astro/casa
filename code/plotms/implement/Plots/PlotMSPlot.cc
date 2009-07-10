@@ -26,7 +26,10 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
 
+#include <msvis/MSVis/VisSet.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -36,16 +39,24 @@ namespace casa {
 
 // Static //
 
-const String PlotMSPlot::CLASS_NAME = "PlotMSPlot";
+PlotMSPlotParameters PlotMSPlot::makeParameters(PlotMS* plotms) {
+    PlotMSPlotParameters p(plotms->getPlotter()->getFactory());
+    makeParameters(p, plotms);
+    return p;    
+}
 
-const String PlotMSPlot::LOG_PARAMSCHANGED = "parametersChanged";
+void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
+    // Add data parameters if needed.
+    if(params.typedGroup<PMS_PP_MSData>() == NULL)
+        params.setGroup<PMS_PP_MSData>();
+}
 
 
 // Constructors/Destructors //
 
 PlotMSPlot::PlotMSPlot(PlotMS* parent) : itsParent_(parent),
-        itsFactory_(parent->getPlotter()->getFactory()), itsVisSet_(NULL),
-        itsData_(parent) { }
+        itsFactory_(parent->getPlotter()->getFactory()),
+        itsParams_(itsFactory_), itsVisSet_(NULL), itsData_(parent) { }
 
 PlotMSPlot::~PlotMSPlot() {
     // Clean up MS
@@ -57,6 +68,9 @@ PlotMSPlot::~PlotMSPlot() {
 
 
 // Public Methods //
+
+const PlotMSPlotParameters& PlotMSPlot::parameters() const{ return itsParams_;}
+PlotMSPlotParameters& PlotMSPlot::parameters() { return itsParams_; }
 
 vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
 
@@ -90,7 +104,8 @@ bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
     
     // Update objects with set parameters.
     parameters().releaseNotification();
-    parametersHaveChanged(parameters(), PlotMSWatchedParameters::ALL, false);
+    parametersHaveChanged(parameters(),
+            PlotMSWatchedParameters::ALL_UPDATE_FLAGS());
     
     // Draw if necessary.
     if(!hold) releaseDrawing();
@@ -121,63 +136,46 @@ const MeasurementSet& PlotMSPlot::selectedMS() const { return itsSelectedMS_; }
 PlotMS* PlotMSPlot::parent() { return itsParent_; }
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) {   
+        int updateFlag) {    
     // Make sure it's this plot's parameters.
-    PlotMSPlotParameters& params = parameters();
-    if(&p != &params) return;
-
-    bool msUpdated = updateFlag & PlotMSWatchedParameters::MS,
-         cacheUpdated = updateFlag & PlotMSWatchedParameters::CACHE,
-         canvasUpdated = updateFlag & PlotMSWatchedParameters::CANVAS,
-         plotUpdated = updateFlag & PlotMSWatchedParameters::PLOT;
+    if(&p != &parameters()) return;
+    
+    vector<String> updates =
+        PlotMSWatchedParameters::UPDATE_FLAG_NAMES(updateFlag);
+    if(updates.size() == 0) return;
     
     // Log what we're going to be updating.
     stringstream ss;
     ss << "Updating: ";
-    if(msUpdated) ss << "MS, ";
-    if(cacheUpdated) ss << "cache, ";
-    if(canvasUpdated) ss << "canvas, ";
-    if(plotUpdated) ss << "plot, ";
-    ss << "redraw is ";
-    if(!redrawRequired) ss << "not ";
-    ss << "required.";    
-    itsParent_->getLogger()->postMessage(CLASS_NAME, LOG_PARAMSCHANGED,
-            ss.str());
+    for(unsigned int i = 0; i < updates.size(); i++) {
+        if(i > 0) ss << ", ";
+        ss << updates[i];
+    }
+    ss << ".";
+    itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+            PMS::LOG_ORIGIN_PARAMS_CHANGED, ss.str(),
+            PMS::LOG_EVENT_PARAMS_CHANGED);
     
-    if(!msUpdated && !cacheUpdated && !canvasUpdated && !plotUpdated) return;
+    bool releaseWhenDone = !allDrawingHeld() &&
+                           (updateFlag & PMS_PP::UPDATE_REDRAW);
+    if(releaseWhenDone) holdDrawing();
     
-    bool hold = allDrawingHeld();
-    if(!hold && redrawRequired) holdDrawing();
+    // Update MS as needed.
+    const PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
+    bool dataSuccess = d->isSet();
+    if(dataSuccess && (updateFlag & PMS_PP::UPDATE_MSDATA))
+        dataSuccess = updateData();
+
+    // If something went wrong, clear the cache and plots.
+    if(!dataSuccess) {
+        itsData_.clearCache();
+        plotDataChanged();
+    }
     
-    itsTCLendLog_ = itsTCLlogNumPoints_ = itsTCLplotDataChanged_ = false;
-    itsTCLupdateCanvas_ = msUpdated || canvasUpdated || !params.isSet();
-    itsTCLupdatePlot_ = plotUpdated;
-    itsTCLrelease_ = !hold && redrawRequired;
-    
-    // Update MS/cache as needed.
-    bool msSuccess = true, callCacheLoaded = true;
-    if(params.isSet()) {
-        if(msUpdated || cacheUpdated) {            
-            itsTCLlogNumPoints_ = true;
-            
-            startLogCache();
-            itsTCLendLog_ = true;
-            
-            if(msUpdated) msSuccess = updateMS();
-            itsTCLupdateCanvas_ |= !msSuccess;
-            itsTCLplotDataChanged_ |= msSuccess;
-            
-            // Only update cache if MS opening succeeded.
-            if(msSuccess) {
-                callCacheLoaded = !hasThreadedCaching();
-                updateCache();
-            } else itsData_.clearCache();
-        }        
-    } else itsData_.clearCache();
-    
-    // Do the rest immediately if 1) cache not updated, or 2) cache not
-    // threaded.  Otherwise wait for the thread to call cacheLoaded_().
-    if(callCacheLoaded) cacheLoaded_(false);
+    // Let the child handle the rest of the parameter changes, and release
+    // drawing if needed.
+    if(parametersHaveChanged_(p,updateFlag,releaseWhenDone) && releaseWhenDone)
+        releaseDrawing();
 }
 
 void PlotMSPlot::plotDataChanged() {
@@ -223,25 +221,30 @@ void PlotMSPlot::constructorSetup() {
     
     // hold notification until initializePlot is called
     params.holdNotification(this);
+    
+    makeParameters(params, itsParent_);
 }
 
-bool PlotMSPlot::updateMS() {
+bool PlotMSPlot::updateData() {
     if(itsVisSet_ != NULL) {
         delete itsVisSet_;
         itsVisSet_ = NULL;
     }
+    
+    PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
+    if(d == NULL) return false; // shouldn't happen
     
     try {
         // Clear cache.
         itsData_.clearCache();
         
         // Open MS and lock until we're done.
-        itsMS_ = MeasurementSet(parameters().filename(),
-                 TableLock(TableLock::AutoLocking), Table::Update);
+        itsMS_ = MeasurementSet(d->filename(),
+                TableLock(TableLock::AutoLocking), Table::Update);
 
         // Apply the MS selection.
         Matrix<Int> chansel;
-        parameters().selection().apply(itsMS_, itsSelectedMS_, chansel);
+        d->selection().apply(itsMS_, itsSelectedMS_, chansel);
         
         // Sort appropriately.
         double solint(DBL_MAX);
@@ -282,55 +285,8 @@ void PlotMSPlot::holdDrawing() {
 }
 
 void PlotMSPlot::releaseDrawing() {
-    //itsParent_->getPlotter()->doThreadedRedraw(this);
     for(unsigned int i = 0; i < itsCanvases_.size(); i++)
         itsCanvases_[i]->releaseDrawing();
-}
-
-void PlotMSPlot::startLogCache() {
-    itsParent_->getLogger()->markMeasurement(PlotMS::CLASS_NAME,
-            PlotMS::LOG_LOAD_CACHE, PMS::LOG_LOAD_CACHE);
-}
-void PlotMSPlot::endLogCache() {
-    itsParent_->getLogger()->releaseMeasurement(); }
-
-void PlotMSPlot::logNumPoints() {
-    PlotMaskedPointDataPtr data;
-    unsigned int total = 0, flagged = 0, unflagged = 0;
-    for(unsigned int i = 0; i < itsPlots_.size(); i++) {
-        data = itsPlots_[i]->maskedData();
-        total += data->size();
-        flagged += data->sizeMasked();
-        unflagged += data->sizeUnmasked();
-    }
-        
-    stringstream ss;
-    ss << "Plotted " << total << " points (" << unflagged << " unflagged, "
-        << flagged << " flagged).";
-    itsParent_->getLogger()->postMessage(PlotMS::CLASS_NAME, "plot", ss.str());
-}
-
-void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
-    // Let the plot(s) know that the data has been changed as needed, unless
-    // the thread was canceled.
-    if(itsTCLplotDataChanged_ && !wasCanceled)
-        for(unsigned int i = 0; i < itsPlots_.size(); i++)
-            itsPlots_[i]->dataChanged();
-    
-    // End log as needed.
-    if(itsTCLendLog_) endLogCache();
-    
-    // Update canvas as needed, unless the thread was canceled.
-    if(!wasCanceled && itsTCLupdateCanvas_) updateCanvas();
-    
-    // Update plot as needed, unless the thread was canceled.
-    if(!wasCanceled && itsTCLupdatePlot_) updatePlot();
-    
-    // Release drawing if needed.
-    if(itsTCLrelease_) releaseDrawing();
-    
-    // Log number of points plotted as needed, unless the thread was canceled.
-    if(!wasCanceled && itsTCLlogNumPoints_) logNumPoints();
 }
 
 }

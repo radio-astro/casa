@@ -449,5 +449,54 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>legend</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>legendChooser</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>15</x>
+     <y>59</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>89</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gridMajor</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gridMajorFrame</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>11</x>
+     <y>205</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>67</x>
+     <y>201</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gridMinor</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gridMinorFrame</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>10</x>
+     <y>229</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>65</x>
+     <y>223</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

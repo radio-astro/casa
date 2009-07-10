@@ -26,7 +26,9 @@
 //# $Id: $
 #include <plotms/Actions/PlotMSExportThread.qo.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 namespace casa {
 
@@ -49,7 +51,7 @@ PlotMSExportThread::PlotMSExportThread(PlotMSPlot* plot,
         }
     }
     
-    // TODO
+    // TODO !export fix
     // Quick hack for screen resolution images.  Taking a screenshot without
     // drawing the items is basically impossible in the non-main (GUI) thread,
     // so for now just turn on high resolution so that it has to draw each

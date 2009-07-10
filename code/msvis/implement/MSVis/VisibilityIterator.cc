@@ -206,12 +206,26 @@ void ROVisibilityIterator::originChunks()
   if (!msIterAtOrigin_p) {
     msIter_p.origin();
     msIterAtOrigin_p=True;
+    
+    while((!isInSelectedSPW(msIter_p.spectralWindowId())) 
+	  && (msIter_p.more()))
+      msIter_p++;
+    
     stateOk_p=False;
     msCounter_p=msId();
+    
   }
   setState();
   origin();
   setTileCache();
+}
+
+Bool ROVisibilityIterator::isInSelectedSPW(const Int& spw){
+  for (uInt k=0; k < blockSpw_p[msId()].nelements() ; ++k){
+    if(spw==blockSpw_p[msId()][k])
+      return True;
+  }
+  return False;
 }
 
 void ROVisibilityIterator::advance()
@@ -243,6 +257,13 @@ ROVisibilityIterator& ROVisibilityIterator::nextChunk()
 
   if (msIter_p.more()) {
     msIter_p++;
+    if((!isInSelectedSPW(msIter_p.spectralWindowId()))){
+      while( (!isInSelectedSPW(msIter_p.spectralWindowId()))
+	     && (msIter_p.more()))
+	msIter_p++;
+      stateOk_p=False;
+    }
+      
     if(msIter_p.newMS()){
       msCounter_p=msId();
       doChannelSelection();
@@ -338,10 +359,10 @@ void ROVisibilityIterator::setState()
     This->azel_p.resize(nAnt_p);
 
   }	
-  if (msIter_p.newField()) { 
+  if (msIter_p.newField() || msIterAtOrigin_p) { 
     msd_p.setFieldCenter(msIter_p.phaseCenter());
   }
-  if ( msIter_p.newSpectralWindow()) {
+  if ( msIter_p.newSpectralWindow() || msIterAtOrigin_p) {
     Int spw=msIter_p.spectralWindowId();
     if (floatDataFound_p) {
       nChan_p = colFloatVis.shape(0)(1);
@@ -1216,13 +1237,27 @@ ROVisibilityIterator::selectChannel(Int nGroup, Int start, Int width,
   }
   chanStart_p[spw] = start;
   chanWidth_p[spw] = width;
-  channelGroupSize_p = width;
+
   chanInc_p[spw] = increment;
   numChanGroup_p[spw] = nGroup;
-  curNumChanGroup_p = nGroup;
   // have to reset the iterator so all caches get filled & slicer sizes
   // get updated
   //  originChunks();
+  /*
+  if(msIterAtOrigin_p){
+    if(!isInSelectedSPW(msIter_p.spectralWindowId())){
+      while((!isInSelectedSPW(msIter_p.spectralWindowId())) 
+	    && (msIter_p.more()))
+	msIter_p++;
+      stateOk_p=False;
+      setState();
+    }
+  }
+  */
+  //leave the state where msiter is pointing
+  channelGroupSize_p = chanWidth_p[msIter_p.spectralWindowId()];
+  curNumChanGroup_p = numChanGroup_p[msIter_p.spectralWindowId()];
+
   return *this;
 }
 
@@ -1268,7 +1303,18 @@ ROVisibilityIterator::selectChannel(Block<Vector<Int> >& blockNGroup,
   doChannelSelection();
   // have to reset the iterator so all caches get filled & slicer sizes
   // get updated
-  //  originChunks();
+  
+  if(msIterAtOrigin_p){
+    if(!isInSelectedSPW(msIter_p.spectralWindowId())){
+      while((!isInSelectedSPW(msIter_p.spectralWindowId())) 
+	    && (msIter_p.more()))
+	msIter_p++;
+      stateOk_p=False;
+    }
+    
+  }
+  
+  originChunks();
   return *this;
 }
 

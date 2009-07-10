@@ -265,10 +265,10 @@ void QPScatterPlot::setErrorCapSize(unsigned int capSize) {
 void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& brect,
         unsigned int drawIndex, unsigned int drawCount) const {
-    logMethod("draw_", true);
+    //logMethod("draw_", true);
     unsigned int n = m_data->size();
     if(!isValid() || n == 0 || drawIndex >= n) {
-        logMethod("draw_", false);
+        //logMethod("draw_", false);
         return;
     }
         
@@ -479,7 +479,7 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
     }
 
     p->restore();
-    logMethod("draw_", false);
+    //logMethod("draw_", false);
 }
 
 }

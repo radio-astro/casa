@@ -36,13 +36,6 @@
 
 namespace casa {
 
-const String PlotMSCache::CLASS_NAME = "PlotMSCache";
-
-const String PlotMSCache::LOG_COMPUTERANGES = "computeRanges";
-const String PlotMSCache::LOG_COUNTCHUNKS = "countChunks";
-const String PlotMSCache::LOG_FLAG = "flag";
-const String PlotMSCache::LOG_LOAD = "load";
-
 const PMS::Axis PlotMSCache::METADATA[] =
     { PMS::TIME, PMS::TIME_INTERVAL, PMS::FIELD, PMS::SPW, PMS::SCAN,
       PMS::ANTENNA1, PMS::ANTENNA2, PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
@@ -258,7 +251,7 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
   
   if(!anyAveraging) ss << " none";
   ss << ".";
-  logInfo(LOG_LOAD, ss.str());
+  logLoad(ss.str());
   
   
   // Calculate which axes need to be loaded; those that have already been
@@ -346,7 +339,7 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
         
     dataLoaded_ = true;
 
-    logInfo(LOG_LOAD, "Finished loading.");
+    logLoad("Finished loading.");
 }
 
 void PlotMSCache::loadChunks(VisSet& vs,
@@ -355,7 +348,7 @@ void PlotMSCache::loadChunks(VisSet& vs,
 			     const PlotMSAveraging& averaging,
 			     PlotMSCacheThread* thread) {
     
-  logInfo(LOG_LOAD, "Loading chunks...");
+  logLoad("Loading chunks...");
 
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -415,7 +408,7 @@ void PlotMSCache::loadChunks(VisSet& vs,
 			     const vector<PMS::DataColumn> loadData,
 			     PlotMSCacheThread* thread) {
   
-  logInfo(LOG_LOAD, "Loading chunks with averaging...");
+  logLoad("Loading chunks with averaging...");
 
   Bool verby(False);
 
@@ -491,7 +484,7 @@ void PlotMSCache::loadChunks(VisSet& vs,
       if (verby) ss << "\n";
     }
     
-    logInfo(LOG_LOAD, ss.str());
+    logLoad(ss.str());
 
 
     // Finalize the averaging
@@ -766,7 +759,7 @@ void PlotMSCache::countChunks(VisSet& vs, Vector<Int>& nIterPerAve,
   nIterPerAve.resize(nAve,True);
   
   if (verby)  ss << "nIterPerAve = " << nIterPerAve;
-  logInfo(LOG_COUNTCHUNKS, ss.str());
+  logInfo("count_chunks", ss.str());
 
 
   if (nChunk_ != nAve) increaseChunks(nAve);
@@ -1234,7 +1227,7 @@ PlotLogMessage* PlotMSCache::locateRange(const Vector<PlotRegion>& regions) {
     ss << "Found " << nFound << " points among " << n << " in "
        << locatetimer.all_usec()/1.0e6 << "s.";
     
-    return new PlotLogMessage(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+    return new PlotLogMessage(PMS::LOG_ORIGIN,PMS::LOG_ORIGIN_LOCATE,ss.str(),PMS::LOG_EVENT_LOCATE);
 }
 
 /*
@@ -1370,8 +1363,9 @@ PlotLogMessage* PlotMSCache::flagRange(const PlotMSFlagging& flagging,
        << " points among " << n << " in "
        << flagtimer.all_usec()/1.0e6 << "s.";
 
-    return new PlotLogMessage(PlotMS::CLASS_NAME,
-            flag ? PlotMS::LOG_FLAG : PlotMS::LOG_UNFLAG, ss.str());
+    return new PlotLogMessage(PMS::LOG_ORIGIN,
+            flag ? PMS::LOG_ORIGIN_FLAG : PMS::LOG_ORIGIN_UNFLAG, ss.str(),
+            flag ? PMS::LOG_EVENT_FLAG : PMS::LOG_EVENT_UNFLAG);
 }
 
 
@@ -1639,7 +1633,7 @@ void PlotMSCache::flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& flchu
     
   } // ichk
 
-  logInfo(LOG_FLAG, ss.str());
+  logFlag(ss.str());
 }
 
 vector<pair<PMS::Axis, unsigned int> > PlotMSCache::loadedAxes() const {    
@@ -2412,11 +2406,11 @@ void PlotMSCache::computeRanges() {
 
     ss << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << "\n";
     ss << "Npoints = " << totalN;
-    logInfo(LOG_COMPUTERANGES, ss.str());
+    logInfo("compute_ranges", ss.str());
 }
 
 void PlotMSCache::log(const String& method, const String& message,
         int eventType) {
-    plotms_->getLogger()->postMessage(CLASS_NAME, method, message, eventType);}
+    plotms_->getLogger()->postMessage(PMS::LOG_ORIGIN,method,message,eventType);}
 
 }

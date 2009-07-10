@@ -26,8 +26,11 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
 
+#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -43,9 +46,9 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotter* parent) :
     itsTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
     PlotFactoryPtr factory = parent->getFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
-            PMS::DEFAULT_SYMBOL(factory), false, false, false, false);
+            PMS::DEFAULT_UNFLAGGED_SYMBOL(factory), false, false, false,false);
     itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory,
-            PMS::DEFAULT_MASKED_SYMBOL(factory), false, false, false, false);
+            PMS::DEFAULT_FLAGGED_SYMBOL(factory), false, false, false, false);
     QtUtilities::putInFrame(titleFrame, itsTitleWidget_);
     QtUtilities::putInFrame(unflaggedFrame, itsSymbolWidget_);
     QtUtilities::putInFrame(flaggedFrame, itsMaskedSymbolWidget_);
@@ -68,38 +71,38 @@ PlotMSDisplayTab::~PlotMSDisplayTab() { }
 
 
 void PlotMSDisplayTab::getValue(PlotMSPlotParameters& params) const {
-    PlotMSSinglePlotParameters* sp =
-        dynamic_cast<PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+    if(d == NULL) {
+        params.setGroup<PMS_PP_Display>();
+        d = params.typedGroup<PMS_PP_Display>();
+    }
     
-    sp->setPlotTitleFormat(itsTitleWidget_->getValue());
-    sp->setSymbol(itsSymbolWidget_->getSymbol());
-    sp->setMaskedSymbol(itsMaskedSymbolWidget_->getSymbol());
+    d->setTitleFormat(itsTitleWidget_->getValue());
+    d->setUnflaggedSymbol(itsSymbolWidget_->getSymbol());
+    d->setFlaggedSymbol(itsMaskedSymbolWidget_->getSymbol());
 }
 
 void PlotMSDisplayTab::setValue(const PlotMSPlotParameters& params) {
-    const PlotMSSinglePlotParameters* sp =
-        dynamic_cast<const PlotMSSinglePlotParameters*>(&params);
-    if(sp == NULL) return;
+    const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+    if(d == NULL) return; // shouldn't happen
     
-    itsTitleWidget_->setValue(sp->plotTitleFormat().format);
-    itsSymbolWidget_->setSymbol(sp->symbol());
-    itsMaskedSymbolWidget_->setSymbol(sp->maskedSymbol());
+    itsTitleWidget_->setValue(d->titleFormat().format);
+    itsSymbolWidget_->setSymbol(d->unflaggedSymbol());
+    itsMaskedSymbolWidget_->setSymbol(d->flaggedSymbol());
 }
 
-void PlotMSDisplayTab::update(const PlotMSPlot& plot) {
-    const PlotMSSinglePlot* p = dynamic_cast<const PlotMSSinglePlot*>(&plot);
-    if(p == NULL) return;
-    
-    const PlotMSSinglePlotParameters& params = p->singleParameters();
-    PlotMSSinglePlotParameters newParams(params);
+void PlotMSDisplayTab::update(const PlotMSPlot& plot) {    
+    const PlotMSPlotParameters& params = plot.parameters();
+    PlotMSPlotParameters newParams(params);
     getValue(newParams);
     
-    changedText(titleLabel,
-                params.plotTitleFormat() != newParams.plotTitleFormat());
-    changedText(unflaggedLabel, *params.symbol() != *newParams.symbol());
-    changedText(flaggedLabel,
-                *params.maskedSymbol() != *newParams.maskedSymbol());
+    const PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>(),
+                        *d2 = newParams.typedGroup<PMS_PP_Display>();
+    if(d == NULL || d2 == NULL) return; // shouldn't happen
+    
+    changedText(titleLabel, d->titleFormat() != d2->titleFormat());
+    changedText(unflaggedLabel, *d->unflaggedSymbol()!=*d2->unflaggedSymbol());
+    changedText(flaggedLabel, *d->flaggedSymbol() != *d2->flaggedSymbol());
 }
 
 }

@@ -2172,6 +2172,19 @@ for i in range(len(tcoord)):
      <value>DATA</value>
      </param>
 
+     <param type="any" name="tileshape">
+       <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
+       [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
+       [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
+       <any type="variant"/>
+       <value></value>
+     </param>
+
+     <param type="any" name="subarray">
+     <description>Limit data to specific (sub)array numbers.</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
   </input>
   <returns type="bool"/>
 
@@ -2981,90 +2994,6 @@ in spectral window 1.
     \end{verbatim}
   </example>
 </method>
-
-   <method type="function" name="calcuvw">
-   <shortdescription>Calculates (u, v, w) coordinates for the ms.</shortdescription>
-   
-   <keyword>calcuvw</keyword>
-   <description>
-     This calculates (u, v, w) positions for the visibilities using the antenna
-     and feed positions and offsets, the time, and the phase tracking center(s).
-   </description>
-   <input>
-     <param type="intArray" direction="in" name="fields">
-       <description>
-	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
-       </description>
-       <value>-1</value>
-     </param>
-     <param type="string" name="uvtype">
-       <description>
-	 Reference code for the type of (u, v, w) coordinates to use in the output.
-	 '' = use the type in the input ms.
-       </description>
-       <value></value>
-     </param>
-   </input>  
-   <returns type="bool"/>
-   <example>
-     \begin{verbatim}
-     ms.open("3C273XC1.MS")
-     ms.calcuvw()
-     ms.done()
-     \end{verbatim}
-   </example>
-   </method>
-
-   <method type="function" name="fixvis">
-   <shortdescription>Performs visibility adjustments.</shortdescription>
-   
-   <keyword>fixvis</keyword>
-   <description>
-     This corrects visibilities, and/or their (u, v, w) positions, for various
-     effects that can be calculated without fitting a model to the data.
-
-     The effects include:
-     \begin{itemize}
-       \item changing the phase tracking center(s),
-       \item correcting for differential aberration,
-       \item changing the equinox (i.e. B1950 to J2000 or 2006.78),
-       \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-       \item refocusing.
-     \end{itemize}
-   </description>
-   <input>
-     <param type="intArray" direction="in" name="fields">
-       <description>
-	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
-       </description>
-       <value>-1</value>
-     </param>	
-     <!-- <param type="any" direction="in" name="phasedirs"> -->
-     <!--  <any type="record"/>  -->
-     <param type="any" name="phasedirs">
-       <any type="variant"/>
-       <description>
-	 Phase tracking centers for each field in fields, in the same order.
-       </description>
-       <value>-1</value>
-     </param>
-     <param type="string" direction="in" name="uvtype">
-       <description>
-	 Reference code for the type of (u, v, w) coordinates to use in the output.
-	 '' = use the type in the input ms.
-       </description>
-       <value></value>
-     </param>
-   </input>  
-   <returns type="bool"/>
-   <example>
-     \begin{verbatim}
-     ms.open("3C273XC1.MS")
-     ms.fixvis()
-     ms.done()
-     \end{verbatim}
-   </example>
-   </method>
 
    <method type="function" name="msseltoindex">
    <shortdescription>Returns ids of the selection used</shortdescription>

@@ -28,7 +28,6 @@
 #define PLOTMSPLOT_H_
 
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <msvis/MSVis/VisSet.h>
 #include <plotms/Data/PlotMSData.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
@@ -41,6 +40,7 @@ namespace casa {
 class PlotMS;
 class PlotMSPages;
 class PlotMSPlotTab;
+class VisSet;
 
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
@@ -48,21 +48,23 @@ class PlotMSPlotTab;
 // canvases, separated by whatever criteria the subclasses decide on.  The base
 // class PlotMSPlot handles interfacing with the rest of PlotMS and MS file and
 // selection, and provides some useful members and methods for subclasses.
-class PlotMSPlot: public PlotMSParametersWatcher {
+class PlotMSPlot : public PlotMSParametersWatcher {
 public:
-    // Static //
+    // Static //    
     
-    // Convenient access to class name.
-    static const String CLASS_NAME;
+    // Returns a new instance of PlotMSPlotParameters suitable for use with
+    // this class, using the given PlotMS parent.
+    static PlotMSPlotParameters makeParameters(PlotMS* plotms);
     
-    // Constants for logging.
-    static const String LOG_PARAMSCHANGED;
+    // Updates the given PlotMSPlotParameters to be suitable for use with this
+    // class, using the given PlotMS parent.
+    static void makeParameters(PlotMSPlotParameters& params, PlotMS* plotms);
     
     
     // Non-Static //
     
     // Constructor which takes the parent PlotMS object.  Starts out with
-    // default parameters.
+    // default data parameters.
     PlotMSPlot(PlotMS* parent);
     
     // Destructor.
@@ -89,12 +91,6 @@ public:
     // methods.
     virtual void setupPlotSubtabs(PlotMSPlotTab& tab) const = 0;
     
-    // Returns a reference to the plot's parameters.
-    // <group>
-    virtual const PlotMSPlotParameters& parameters() const = 0;
-    virtual PlotMSPlotParameters& parameters() = 0;
-    // </group>
-    
     // Returns all selected regions on all canvases associated with this plot.
     virtual PlotMSRegions selectedRegions() const = 0;
     
@@ -104,6 +100,12 @@ public:
     
     
     // IMPLEMENTED METHODS //
+    
+    // Returns a reference to the plot's parameters.
+    // <group>
+    virtual const PlotMSPlotParameters& parameters() const;
+    virtual PlotMSPlotParameters& parameters();
+    // </group>
     
     // Returns the canvases that have been assigned to this plot.
     virtual vector<PlotCanvasPtr> canvases() const;
@@ -150,10 +152,10 @@ public:
     // Gets the plot's parent.
     virtual PlotMS* parent();
     
-    // Implements PlotMSParametersWatcher::parametersHaveChanged().  Calls the
-    // protected updated methods as needed.
+    // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
+    // the data parameters and then calls parametersHaveChanged_().
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag);
     
     // Calls the dataChanged() method on the MaskedScatterPlots.  This WILL
     // cause a redraw of the affected canvases.
@@ -183,24 +185,11 @@ protected:
     // false for failure.
     virtual bool assignCanvases() = 0;
     
-    // Returns true if the plot subclass has threaded caching, false otherwise.
-    // IMPORTANT: if a plot subclass has threaded caching, it MUST hook up the
-    // cacheLoaded method as a post-thread method, OR reimplement the
-    // parametersHaveChanged() method to handle it itself.
-    virtual bool hasThreadedCaching() const = 0;
-    
-    // Helper method that updates the cache axes with the current parameters.
-    // Should update the cache's loaded axes, and return true for success or
-    // false for failure.
-    virtual bool updateCache() = 0;
-    
-    // Helper method that updates the cache axes with the current parameters.
-    // Should update the canvas display.
-    virtual bool updateCanvas() = 0;
-    
-    // Helper method that updates the cache axes with the current parameters.
-    // Should update the plot settings.
-    virtual bool updatePlot() = 0;
+    // Updates plot members for parameters specific to the child plot type.
+    // Returns true if the drawing should be released right away; if false is
+    // returned, the child class is expect to release drawing when finished.
+    virtual bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
+            int updateFlag, bool releaseWhenDone) = 0;
     
     
     // IMPLEMENTED METHODS //
@@ -209,9 +198,9 @@ protected:
     // classes.
     virtual void constructorSetup();
     
-    // Helper method that updates the MS with the current parameters.  Updates
-    // the MS, selected MS, and VisSet with the current parameters.
-    virtual bool updateMS();    
+    // Helper method that updates the data with the current parameters.
+    // Updates the MS, selected MS, and VisSet with the current parameters.
+    virtual bool updateData();    
     
     // Returns true if drawing is currently being held on all plot canvases,
     // false otherwise.
@@ -223,17 +212,6 @@ protected:
     // Releases drawing on all plot canvases, which will also cause a redraw.
     virtual void releaseDrawing();
     
-    // Convenience methods for starting/stopping a log measurement event for
-    // loading the cache, if the event flag has been set in PlotMS.
-    // <group>
-    virtual void startLogCache();    
-    virtual void endLogCache();
-    // </group>
-    
-    // Convenience methods for logging the number of points drawn for all
-    // associated plots.
-    virtual void logNumPoints();
-    
 
     // MEMBERS //
     
@@ -242,6 +220,9 @@ protected:
     
     // Plot factory for generating plot objects as needed.
     PlotFactoryPtr itsFactory_;
+    
+    // Parameters.
+    PlotMSPlotParameters itsParams_;
     
     // MS objects.
     // <group>
@@ -262,19 +243,12 @@ protected:
     // Mapping of which plot objects are on which canvas.
     map<MaskedScatterPlot*, PlotCanvasPtr> itsCanvasMap_;
     
-    // Flags for threaded cache loading.
-    bool itsTCLendLog_, itsTCLupdateCanvas_, itsTCLupdatePlot_, itsTCLrelease_,
-         itsTCLlogNumPoints_, itsTCLplotDataChanged_;
-    
 private:
     // Disable copy constructor and operator for now.
     // <group>
     PlotMSPlot(const PlotMSPlot& copy);
     PlotMSPlot& operator=(const PlotMSPlot& copy);
     // </group>
-    
-    // Use macro for define post-thread methods for loading the cache.
-    PMS_POST_THREAD_METHOD(PlotMSPlot, cacheLoaded)
 };
 
 }

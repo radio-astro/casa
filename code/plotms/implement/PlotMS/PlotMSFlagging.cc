@@ -26,6 +26,8 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
+#include <msvis/MSVis/VisSet.h>
+
 namespace casa {
 
 ////////////////////////////////

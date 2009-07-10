@@ -501,7 +501,8 @@ protected:
   //Set the tile cache size....when using slice access if tile cache size is 
   // not set memory usuage can go wild
   void setTileCache();
-
+  //Check if spw is in selected SPW for actual ms
+  Bool isInSelectedSPW(const Int& spw);
 
 
   ROVisibilityIterator* This;

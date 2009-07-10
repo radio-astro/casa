@@ -27,84 +27,145 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
+
+/////////////////////////////////////////////
+// PLOTMSPLOTPARAMETERS::GROUP DEFINITIONS //
+/////////////////////////////////////////////
+
+PlotMSPlotParameters::Group::Group(PlotFactoryPtr factory) : itsParent_(NULL),
+        itsFactory_(factory) { }
+
+PlotMSPlotParameters::Group::Group(const Group& copy) : itsParent_(NULL),
+        itsFactory_(copy.itsFactory_) { }
+
+PlotMSPlotParameters::Group::~Group() { }
+
+PlotMSPlotParameters::Group&
+PlotMSPlotParameters::Group::operator=(const Group& other) {
+    if(name() == other.name() && *this != other) fromRecord(other.toRecord());
+    return *this;
+}
+
+bool PlotMSPlotParameters::Group::operator==(const Group& other) const {
+    return name() == other.name() && PMS::recEq(toRecord(), other.toRecord());}
+
+void PlotMSPlotParameters::Group::updated(bool requiresRedraw) {
+    if(itsParent_ != NULL) itsParent_->groupUpdated(this, requiresRedraw); }
+
+
+void PlotMSPlotParameters::Group::notifyWatchers_(bool wasCanceled) {
+    if(itsParent_ != NULL) itsParent_->notifyWatchers(name()); }
+
 
 //////////////////////////////////////
 // PLOTMSPLOTPARAMETERS DEFINITIONS //
 //////////////////////////////////////
 
-PlotMSPlotParameters::PlotMSPlotParameters(const String& filename) :
-        itsMSFilename_(filename), updateFlag_(true) { }
+// Constructors/Destructors //
+
+PlotMSPlotParameters::PlotMSPlotParameters(PlotFactoryPtr factory) :
+        itsFactory_(factory) { }
 
 PlotMSPlotParameters::PlotMSPlotParameters(const PlotMSPlotParameters& copy) :
-        PlotMSWatchedParameters(copy), updateFlag_(true) {
-    operator=(copy);
+        itsFactory_(copy.itsFactory_) {
+    operator=(copy); }
+
+PlotMSPlotParameters::~PlotMSPlotParameters() {
+    for(unsigned int i = 0; i < itsGroups_.size(); i++)
+        delete itsGroups_[i];
 }
 
-PlotMSPlotParameters::~PlotMSPlotParameters() { }
 
+// Public Methods //
 
 bool PlotMSPlotParameters::equals(const PlotMSWatchedParameters& other,
         int updateFlags) const {
-    const PlotMSPlotParameters* o = dynamic_cast<const PlotMSPlotParameters*>(
-                                    &other);
-    if(o == NULL) return false;
+    const PlotMSPlotParameters* p =
+        dynamic_cast<const PlotMSPlotParameters*>(&other);
+    if(p == NULL) return false;
     
-    if(updateFlags & MS) {
-        if(itsMSFilename_ != o->itsMSFilename_ ||
-           itsMSSelection_ != o->itsMSSelection_ ||
-           itsMSAveraging_ != o->itsMSAveraging_)
-            return false;
+    const Group* g;
+    for(unsigned int i = 0; i < itsGroups_.size(); i++) {
+        // Only check equality if that flag is included.
+        if(!(updateFlags & UPDATE_FLAG(itsGroups_[i]->name()))) continue;
+        
+        g = p->group(itsGroups_[i]->name());
+        if(g != NULL && *itsGroups_[i] != *g) return false;
     }
     
     return true;
 }
 
-bool PlotMSPlotParameters::isSet() const { return !itsMSFilename_.empty(); }
-
-const String& PlotMSPlotParameters::filename() const { return itsMSFilename_; }
-void PlotMSPlotParameters::setFilename(const String& filename) {
-    if(filename != itsMSFilename_) {
-        itsMSFilename_ = filename;
-        if(updateFlag_) updateFlag(MS);
-    }
+const PlotMSPlotParameters::Group*
+PlotMSPlotParameters::group(const String& name) const {
+    for(unsigned int i = 0; i < itsGroups_.size(); i++)
+        if(itsGroups_[i]->name() == name) return itsGroups_[i];
+    return NULL;
 }
 
-const PlotMSSelection& PlotMSPlotParameters::selection() const {
-    return itsMSSelection_; }
-void PlotMSPlotParameters::setSelection(const PlotMSSelection& sel) {
-    if(sel != itsMSSelection_) {
-        itsMSSelection_ = sel;
-        if(updateFlag_) updateFlag(MS);
-    }
+PlotMSPlotParameters::Group* PlotMSPlotParameters::group(const String& name) {
+    for(unsigned int i = 0; i < itsGroups_.size(); i++)
+        if(itsGroups_[i]->name() == name) return itsGroups_[i];
+    return NULL;
 }
 
-const PlotMSAveraging& PlotMSPlotParameters::averaging() const {
-    return itsMSAveraging_; }
-void PlotMSPlotParameters::setAveraging(const PlotMSAveraging& avg) {
-    if(avg != itsMSAveraging_) {
-        itsMSAveraging_ = avg;
-        if(updateFlag_) updateFlag(MS);
+void PlotMSPlotParameters::setGroup(const Group& group) {
+    Group* g = PlotMSPlotParameters::group(group.name());
+    if(g == NULL) {
+        REGISTER_UPDATE_FLAG(group.name());
+        g = group.clone();
+        g->itsParent_ = this;
+        itsGroups_.push_back(g);
+        groupUpdated(g, g->requiresRedrawOnChange());
+    } else {
+        *g = group;
     }
 }
 
 PlotMSPlotParameters&
 PlotMSPlotParameters::operator=(const PlotMSPlotParameters& copy) {
-    PlotMSWatchedParameters::operator=(copy);
-    
-    if(!equals(copy, MS)) {
-        bool oldupdate = updateFlag_;
-        updateFlag_ = false;
-                
-        setFilename(copy.filename());
-        setSelection(copy.selection());
-        setAveraging(copy.averaging());
-        if(oldupdate) updateFlag(MS);
-        
-        updateFlag_ = oldupdate;
+    // Remove groups that aren't in the copy.
+    bool found = false;
+    int n = (int)itsGroups_.size();
+    for(int i = 0; i < n; i++) {
+        found = false;
+        for(unsigned int j = 0; !found && j < copy.itsGroups_.size(); j++)
+            if(itsGroups_[i]->name() == copy.itsGroups_[j]->name())
+                found = true;
+        if(!found) {
+            delete itsGroups_[i];
+            itsGroups_.erase(itsGroups_.begin() + i);
+            i--;
+        }
     }
+    
+    for(unsigned int i = 0; i < copy.itsGroups_.size(); i++)
+        setGroup(*copy.itsGroups_[i]);
+    
     return *this;
+}
+
+
+// Protected Methods //
+
+void PlotMSPlotParameters::notifyWatchers(int updates,
+        PlotMSParametersWatcher* updater) {
+    holdNotification(updater);
+    updateFlags(currentUpdateFlag() & updates);
+    releaseNotification();
+}
+
+
+// Private Methods //
+
+void PlotMSPlotParameters::groupUpdated(Group* group, bool requiresRedraw) {
+    int flags = currentUpdateFlag();
+    flags |= UPDATE_FLAG(group->name());
+    if(requiresRedraw) flags |= PMS_PP::UPDATE_REDRAW;
+    updateFlags(flags);
 }
 
 }

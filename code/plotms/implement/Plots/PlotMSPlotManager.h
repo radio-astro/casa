@@ -27,15 +27,19 @@
 #ifndef PLOTMSPLOTMANAGER_H_
 #define PLOTMSPLOTMANAGER_H_
 
+#include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Plots/PlotMSPage.h>
-#include <plotms/Plots/PlotMSSinglePlot.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward Declararations
+class PlotMS;
+class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
+class PlotMSPlotParameters;
+class PlotMSSinglePlot;
 
 
 // Class which manages PlotMSPlots for plotms.  Mainly handles adding new plots
@@ -82,7 +86,6 @@ public:
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
     PlotMSPlotParameters* plotParameters(unsigned int index);
-    PlotMSSinglePlotParameters* singlePlotParameters(unsigned int index);
     // </group>
     
     
@@ -90,7 +93,7 @@ public:
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
     PlotMSSinglePlot* addSinglePlot(PlotMS* parent,
-            const PlotMSSinglePlotParameters* p = NULL);
+            const PlotMSPlotParameters* p = NULL);
     
     
     // Clears out all plots and canvases.

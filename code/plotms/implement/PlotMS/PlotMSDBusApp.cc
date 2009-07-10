@@ -26,7 +26,6 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 
-#include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
@@ -83,9 +82,6 @@ const String PlotMSDBusApp::METHOD_QUIT   = "quit";
 
 String PlotMSDBusApp::dbusName(pid_t pid) {
     return "plotms_" + String::toString(pid); }
-
-
-//PlotFactoryPtr PlotMSDBusApp::IMPL_FACTORY = plotterImplementation();
 
 
 // Constructors/Destructors //
@@ -371,8 +367,8 @@ bool plotms::exportPlot(const string& filename, const bool highResolution,
 // Private Methods //
 
 void PlotMSDBusApp::log(const String& m) {
-    itsPlotms_.getLogger()->postMessage(PlotMS::CLASS_NAME, PlotMS::LOG_DBUS,
-            m, PMS::LOG_DBUS);
+    itsPlotms_.getLogger()->postMessage(PMS::LOG_ORIGIN, PMS::LOG_ORIGIN_DBUS,
+            m, PMS::LOG_EVENT_DBUS);
 }
 
 bool PlotMSDBusApp::plotParameters(int& plotIndex) const {

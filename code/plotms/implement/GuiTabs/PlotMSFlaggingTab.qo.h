@@ -58,7 +58,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Currently
     // does nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) { }
+            int updateFlag) { }
     
     
     // See PlotMSFlaggingWidget::getValue().

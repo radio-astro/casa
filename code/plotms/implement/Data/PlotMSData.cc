@@ -26,8 +26,6 @@
 //# $Id: $
 #include <plotms/Data/PlotMSData.h>
 
-#include <plotms/PlotMS/PlotMS.h>
-
 namespace casa {
 
 ////////////////////////////
@@ -79,7 +77,14 @@ void PlotMSData::xyAndMaskAt(unsigned int index, double& x, double& y,
 }
 
 
-double PlotMSData::cacheReferenceTime() const { return itsCache_->refTime(); }
+bool PlotMSData::hasReferenceValue(PMS::Axis axis) {
+    return axis == PMS::TIME && cacheReady(); }
+
+double PlotMSData::referenceValue(PMS::Axis axis) {
+    if(!cacheReady()) return 0;
+    else if(axis == PMS::TIME) return itsCache_->refTime();
+    else return 0;
+}
 
 bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
 
@@ -97,6 +102,9 @@ void PlotMSData::loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
 
 void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
     itsCache_->setUpPlot(xAxis, yAxis); }
+
+void PlotMSData::releaseCache(const vector<PMS::Axis>& axes) {
+    itsCache_->release(axes); }
 
 PlotLogMessage* PlotMSData::locateRange(const Vector<PlotRegion>& regions) {
     return itsCache_->locateRange(regions); }

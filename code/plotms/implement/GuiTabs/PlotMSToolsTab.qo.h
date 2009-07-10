@@ -60,7 +60,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged.  Currently
     // does nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag) { }
     
     
     // Show/hide the iteration buttons on this tab.

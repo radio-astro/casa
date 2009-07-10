@@ -552,6 +552,7 @@ public:
     static const String VIEW_DOCUMENT;
     static const String VIEW_VIEW;
     static const String VIEW_LASTDIR;
+    static const String VIEW_HISTLIMIT;
     static const String VIEW_TABLE;
     static const String VIEW_LOCATION;
     static const String VIEW_SELECTED;

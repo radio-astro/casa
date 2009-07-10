@@ -41,7 +41,7 @@
 #include <casaqt/QtBrowser/TBOptions.qo.h>
 #include <casaqt/QtBrowser/TBTaQL.qo.h>
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
-#include <casaqt/QtBrowser/TBFileDialog.qo.h>
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 namespace casa {
 
@@ -61,7 +61,9 @@ TBMain::TBMain() : QMainWindow(), browser(), waiting(false),
     // Try loading the last saved view
     TBView* view = TBView::loadFromDefaultFile();
     if(view != NULL) {
-        lastDirectory = view->getLastOpenedDirectory();
+        QtFileDialog::setNextDirectory(view->getLastOpenedDirectory().c_str());
+        QtFileDialog::setHistoryLimit(view->chooserHistoryLimit());
+        
         browser.showView(view);
         delete view;
 
@@ -90,12 +92,9 @@ TBMain::~TBMain() {
 void TBMain::openTable(String filename, DriverParams* dp, int start, int num) {
     if(filename.empty()) return;
 
-    lastDirectory = TBConstants::dirFromPath(filename);
     QCoreApplication::processEvents();
     browser.openTable(filename, dp, start, num);
 }
-
-String TBMain::getLastOpenedDirectory() { return lastDirectory; }
 
 // Protected Methods //
 
@@ -114,7 +113,9 @@ void TBMain::closeEvent(QCloseEvent* event) {
             TBConstants::dprint(TBConstants::DEBUG_HIGH,
                                 "Saving current view to default location.");
             TBView* view = browser.view();
-            view->setLastOpenedDirectory(lastDirectory);
+            view->setLastOpenedDirectory(
+                    QtFileDialog::lastDirectory().toStdString());
+            view->setChooserHistoryLimit(QtFileDialog::historyLimit());
             view->saveToDefaultFile();
             delete view;
         }
@@ -330,8 +331,7 @@ void TBMain::editTable(TBTableTabs* ttabs, bool edit) {
 void TBMain::openTable() {
     if(waiting) return;
 
-    QString f = TBFileDialog::getExistingTable(this, tr("Find Data"),
-            lastDirectory.c_str());
+    QString f = QtFileDialog::qgetExistingDir(this, tr("Find Data"));
     
     if(!f.isEmpty()) {
         openTable(qPrintable(f));
@@ -857,6 +857,7 @@ void TBMain::options() {
     TBOptions* options = new TBOptions();
     options->setSaveView(saveView);
     options->setDebugLevel(TBConstants::debugThreshold);
+    options->setChooserHistoryLimit(QtFileDialog::historyLimit());
     connect(options, SIGNAL(saveOptions(TBOptions*)),
             this, SLOT(saveOptions(TBOptions*)));
     options->setWindowModality(Qt::WindowModal);
@@ -868,6 +869,7 @@ void TBMain::saveOptions(TBOptions* opt) {
 
     TBConstants::debugThreshold = opt->debugLevel();
     saveView = opt->saveView();
+    QtFileDialog::setHistoryLimit(opt->chooserHistoryLimit());
     if(!saveView) {
         // if a view file exists, delete it
         String viewLoc = TBView::defaultFile();

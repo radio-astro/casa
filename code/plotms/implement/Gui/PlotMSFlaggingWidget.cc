@@ -27,6 +27,7 @@
 #include <plotms/Gui/PlotMSFlaggingWidget.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
+#include <plotms/Gui/PlotMSSelectionWidget.qo.h>
 #include <plotms/Plots/PlotMSPlot.h>
 
 #include <QDoubleValidator>

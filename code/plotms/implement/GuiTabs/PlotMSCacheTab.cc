@@ -26,8 +26,8 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSCacheTab.qo.h>
 
-#include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 #include <QHeaderView>
 
@@ -47,11 +47,8 @@ PlotMSCacheTab::PlotMSCacheTab(PlotMSPlotter* parent) :
     availableTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     
     // Connect widgets.
-    const QMap<PlotMSAction::Type, QAction*>& actMap = parent->plotActionMap();
-    connect(releaseButton, SIGNAL(clicked()),
-            actMap[PlotMSAction::CACHE_RELEASE], SLOT(trigger()));
-    connect(loadButton, SIGNAL(clicked()),
-            actMap[PlotMSAction::CACHE_LOAD], SLOT(trigger()));
+    parent->synchronizeAction(PlotMSAction::CACHE_RELEASE, releaseButton);
+    parent->synchronizeAction(PlotMSAction::CACHE_LOAD, loadButton);
 }
 
 PlotMSCacheTab::~PlotMSCacheTab() { }

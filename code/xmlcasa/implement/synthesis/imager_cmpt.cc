@@ -16,6 +16,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Exceptions/Error.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
+#include <synthesis/Utilities/FixVis.h>
 #include<casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
 #include<casa/Utilities/Assert.h>
@@ -1065,7 +1066,8 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
                   const ::casac::variant& spw, const ::casac::variant& field,
                   const ::casac::variant& baseline,
 		  const ::casac::variant& time,const ::casac::variant& scan,
-                  const ::casac::variant& uvrange, const std::string& taql, const bool useScratch)
+                  const ::casac::variant& uvrange, const std::string& taql,
+                  const bool useScratch)
 {
     Bool rstat(False);
     if(itsMS || (vis != "")){
@@ -1592,7 +1594,80 @@ bool imager::mrvFromString(casa::MRadialVelocity &theRadialVelocity, const casa:
    return rstat; 
 }
 
+bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
+{
+  Bool rstat(false);
+  try {
+    *itsLog << LogOrigin("im", "calcuvw");
+    if(!itsMS->isWritable()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << LogIO::POST;
+      return false;
+    }
 
+    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
+      
+    FixVis visfixer(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
+    //visfixer.setField(m1toBlankCStr_(fields));
+    visfixer.setFields(fields);
+    rstat = visfixer.calc_uvw(String(refcode));
+    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
 
+bool imager::fixvis(const std::vector<int>& fields,
+                    const std::vector<std::string>& phaseDirs,
+                    const std::string& refcode,
+                    const std::vector<double>& distances,
+                    const std::string& dataCol)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("im", "fixvis");
+    if(!itsMS->isWritable()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << LogIO::POST;
+      return false;
+    }
+    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
+      
+    casa::FixVis visfixer(*itsMS);
+    casa::Vector<casa::Int> cFields(fields);
+    int nFields = cFields.nelements();
+	
+    visfixer.setFields(cFields);
+
+    casa::Vector<casa::MDirection> phaseCenters;
+    phaseCenters.resize(nFields);
+    for(int i = 0; i < nFields; ++i){
+      if(!casaMDirection(phaseDirs[i], phaseCenters[i]))
+        throw(AipsError("Could not interpret phaseDirs parameter"));
+    }
+    visfixer.setPhaseDirs(phaseCenters, cFields);
+
+    visfixer.setDistances(Vector<Double>(distances));
+    rstat = visfixer.fixvis(refcode, dataCol);
+    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
 
 } // casac namespace

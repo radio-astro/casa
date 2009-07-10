@@ -28,7 +28,6 @@
 #define PLOTMSLOGGERWIDGET_QO_H_
 
 #include <casa/Logging/LogMessage.h>
-#include <casaqt/QtUtilities/QtComboCheckBox.qo.h>
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 
 #include <QComboBox>
@@ -37,6 +36,10 @@
 using namespace std;
 
 namespace casa {
+
+//# Forward declarations.
+class QtComboCheckBox;
+
 
 // Widget to set log events and priority filter.
 class PlotMSLoggerWidget : public QtEditingWidget {

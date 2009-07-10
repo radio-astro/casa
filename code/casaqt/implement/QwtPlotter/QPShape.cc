@@ -1117,7 +1117,7 @@ QwtDoubleRect QPPoint::boundingRect() const {
         int x = xMap.transform(c.x());
         int y = yMap.transform(c.y());
         
-        pair<double, double> size = m_symbol.size();
+        psize_t size = m_symbol.size();
         double width = size.first, height = size.second;
         int x1 = x - (int)((width/2) + 0.5), x2 = x + (int)((width/2) + 0.5);
         int y1 = y - (int)((height/2) + 0.5), y2 = y + (int)((height/2) + 0.5);

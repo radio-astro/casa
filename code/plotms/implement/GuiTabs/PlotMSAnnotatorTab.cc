@@ -26,7 +26,9 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
 
+#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
+#include <plotms/Gui/PlotMSAnnotator.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
 namespace casa {

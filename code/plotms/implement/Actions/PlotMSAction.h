@@ -172,6 +172,10 @@ public:
 
         // Plot actions //
         
+        // Display MS summary info for the current plot.
+        // Required parameters: P_PLOT.
+        MS_SUMMARY,
+        
         // Updates any set parameters, which updates the plots.
         // No required parameters.
         PLOT,

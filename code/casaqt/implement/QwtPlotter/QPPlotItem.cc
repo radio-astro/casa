@@ -155,8 +155,19 @@ String QPPlotItem::title() const {
     return QwtPlotItem::title().text().toStdString(); }
 
 void QPPlotItem::setTitle(const String& newTitle) {
-    QwtPlotItem::setTitle(newTitle.c_str());
-    setItemAttribute(QwtPlotItem::Legend, !newTitle.empty());
+    if(newTitle != title()) {
+        // Quick hack because we don't need to redraw the whole plot if only
+        // the title changes..
+        QPCanvas* c = m_canvas;
+        m_canvas = NULL;
+        
+        QwtPlotItem::setTitle(newTitle.c_str());
+        setItemAttribute(QwtPlotItem::Legend, !newTitle.empty());
+        
+        // Update the legend.
+        m_canvas = c;
+        if(m_canvas != NULL) updateLegend(m_canvas->asQwtPlot().legend());
+    }
 }
 
 PlotAxis QPPlotItem::xAxis() const {
@@ -165,20 +176,14 @@ PlotAxis QPPlotItem::yAxis() const {
     return QPOptions::axis(QwtPlot::Axis(QwtPlotItem::yAxis())); }
 
 void QPPlotItem::setXAxis(PlotAxis x) {
-    QwtPlotItem::setXAxis(QPOptions::axis(x)); }
+    if(x != xAxis()) QwtPlotItem::setXAxis(QPOptions::axis(x)); }
 void QPPlotItem::setYAxis(PlotAxis y) {
-    QwtPlotItem::setYAxis(QPOptions::axis(y)); }
+    if(y != yAxis()) QwtPlotItem::setYAxis(QPOptions::axis(y)); }
 
 void QPPlotItem::itemChanged() {
     if(m_canvas != NULL) {
-        QPLayeredCanvas& c = m_canvas->asQwtPlot();
-        /*
-        bool oldMain = c.drawMain(), oldAnnotation = c.drawAnnotation();
-        c.setDrawLayers(m_layer == MAIN, m_layer == ANNOTATION);
-        */
-        c.setLayerChanged(m_layer);
+        m_canvas->asQwtPlot().setLayerChanged(m_layer);
         QwtPlotItem::itemChanged();
-        //c.setDrawLayers(oldMain, oldAnnotation);
     }
 }
 

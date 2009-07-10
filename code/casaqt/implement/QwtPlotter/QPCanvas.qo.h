@@ -200,7 +200,7 @@ public:
 
     
     // Implements PlotCanvas::axisRange().
-    pair<double, double> axisRange(PlotAxis axis) const;
+    prange_t axisRange(PlotAxis axis) const;
 
     // Implements PlotCanvas::setAxisRange().
     void setAxisRange(PlotAxis axis, double from, double to);

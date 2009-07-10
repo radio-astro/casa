@@ -325,7 +325,7 @@ public:
     // Axes Range Methods //
     
     // Returns the displayed range of the given axis, in world coordinates.
-    virtual pair<double, double> axisRange(PlotAxis axis) const = 0;
+    virtual prange_t axisRange(PlotAxis axis) const = 0;
     
     // Returns the displayed ranges of the given axes, in world coordinates.
     // DEFAULT IMPLEMENTATION.
@@ -338,7 +338,7 @@ public:
     
     // See setAxisRange(PlotAxis, double, double).
     // DEFAULT IMPLEMTNATION.
-    virtual void setAxisRange(PlotAxis axis, const pair<double,double>& range);
+    virtual void setAxisRange(PlotAxis axis, const prange_t& range);
     
     // Sets the displayed ranges of the given axes, in world coordinates.
     // Implies setAxesAutoRescale(false), and does NOT reset tool stacks since
@@ -348,9 +348,8 @@ public:
     // <group>
     virtual void setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
                                PlotAxis yAxis, double yFrom, double yTo);    
-    virtual void setAxesRanges(PlotAxis xAxis,
-            const pair<double, double>& xRange, PlotAxis yAxis,
-            const pair<double, double>& yRange);
+    virtual void setAxesRanges(PlotAxis xAxis, const prange_t& xRange,
+            PlotAxis yAxis, const prange_t& yRange);
     // </group>
     
     // Sets the displayed range of the given axes. Implies

@@ -27,17 +27,18 @@
 #ifndef PLOTMSDATA_H_
 #define PLOTMSDATA_H_
 
-#include <plotms/Data/PlotMSCache.h>
-#include <plotms/PlotMS/PlotMSParameters.h>
-
-#include <casa/Arrays/Vector.h>
 #include <graphics/GenericPlotter/PlotData.h>
-#include <msvis/MSVis/VisSet.h>
+
+#include <plotms/Data/PlotMSCache.h>
 
 #include <casa/namespace.h>
 using namespace std;
 
 namespace casa {
+
+//# Forward declarations.
+class PlotMS;
+
 
 // Layer between plot cache and the rest of PlotMS and the GenericPlotter
 // classes.
@@ -87,8 +88,11 @@ public:
     // </group>
     
     
-    // See PlotMSCache::refTime().
-    double cacheReferenceTime() const;
+    // Returns the reference value for the given axis, if applicable.
+    // <group>
+    bool hasReferenceValue(PMS::Axis axis);
+    double referenceValue(PMS::Axis axis);
+    // </group>
     
     // See PlotMSCache::readyForPlotting().
     bool cacheReady() const;
@@ -111,6 +115,9 @@ public:
     
     // See PlotMSCache::setUpPlot().
     void setupCache(PMS::Axis xAxis, PMS::Axis yAxis);
+    
+    // See PlotMSCache::release().
+    void releaseCache(const vector<PMS::Axis>& axes);
     
     // See PlotMSCache::locateRange().
     PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);

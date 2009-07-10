@@ -126,6 +126,8 @@ namespace casa {
 			Vector<Int> step, const Bool averchan) {
     
     
+
+
     spw_p.resize();
     spw_p=spw;
     
@@ -140,20 +142,20 @@ namespace casa {
       
       if (nchan.nelements() != spw_p.nelements()){
 	nchan.resize(spw_p.nelements(), True);
-	for(uInt k=1; k < spw_p.nelements(); ++k){
-	  nchan[k]=nchan[0];
+	for(uInt k = 1; k < spw_p.nelements(); ++k){
+	  nchan[k] = nchan[0];
 	}
       }
       if (start.nelements() != spw_p.nelements()){
 	start.resize(spw_p.nelements(), True);
-	for(uInt k=1; k < spw_p.nelements(); ++k){
-	  start[k]=start[0];
+	for(uInt k = 1; k < spw_p.nelements(); ++k){
+	  start[k] = start[0];
 	}
       }
       if (step.nelements() != spw_p.nelements()){
 	step.resize(spw_p.nelements(), True);
-	for(uInt k=1; k < spw_p.nelements(); ++k){
-	  step[k]=step[0];
+	for(uInt k = 1; k < spw_p.nelements(); ++k){
+	  step[k] = step[0];
 	}
       }
     }
@@ -193,6 +195,7 @@ namespace casa {
       
       
     }
+
     
     
   }
@@ -202,20 +205,22 @@ namespace casa {
 			  const String& scan, const String& uvrange, 
 			  const String& taql, const Vector<Int>& nchan, 
 			  const Vector<Int>& start, const Vector<Int>& step,
-			  const Bool averchan, const String& subarray){
-    Vector<Int> inchan(1,-1);
-    Vector<Int> istart(1,0);
-    Vector<Int> istep(1,1);
-    Record selrec=ms_p.msseltoindex(spw, field);
+			  const Bool averchan, const String& subarray)
+  {
+    Vector<Int> inchan(1, -1);
+    Vector<Int> istart(1, 0);
+    Vector<Int> istep(1, 1);
+    Record      selrec = ms_p.msseltoindex(spw, field);
+    Vector<Int> spwids = selrec.asArrayInt("spw");
+
     Vector<Int>fldids=selrec.asArrayInt("field");
-    Vector<Int>spwids=selrec.asArrayInt("spw");
-    if(fldids.nelements() < 1){
+    if(fldids.nelements() < 1)
       fldids=Vector<Int>(1,-1);
-    }
+
     selectSource(fldids);
-    if(spwids.nelements() < 1){
-      spwids=Vector<Int>(1,-1);
-    }
+    if(spwids.nelements() < 1)
+      spwids=Vector<Int>(1, -1);
+
     //use nchan f defined else use caret-column syntax of  msselection 
     if((nchan.nelements()>0) && nchan[0] > 0){
       inchan.resize(); inchan=nchan;
@@ -234,22 +239,22 @@ namespace casa {
 	  stepused=True;
 	for (uInt k =0 ; k < chansel.nrow(); ++k){
 	  if(stepused){
-	    if(step.nelements()==1)
-	      istep[k]=step[0];
-	    else if(step.nelements()==istep.nelements())
-	      istep[k]=step[k];
+	    if(step.nelements() == 1)
+	      istep[k] = step[0];
+	    else if(step.nelements() == istep.nelements())
+	      istep[k] = step[k];
 	    else //confused at this stage
-	      istep[k]=1;
+	      istep[k] = 1;
 	  }
 	  else{
-	    istep[k]=chansel.row(k)(3);
+	    istep[k] = chansel.row(k)(3);
 	    if(istep[k] < 1)
-	      istep[k]=1;
+	      istep[k] = 1;
 	  }
-	  istart[k]=chansel.row(k)(1);
-	  inchan[k]=(chansel.row(k)(2)-istart[k]+1)/istep[k];
-	  if(inchan[k]<1)
-	    inchan[k]=1;	  
+	  istart[k] = chansel.row(k)(1);
+	  inchan[k] = (chansel.row(k)(2) - istart[k] + 1) / istep[k];
+	  if(inchan[k] < 1)
+	    inchan[k] = 1;
 	}
       } 
     }
@@ -260,10 +265,12 @@ namespace casa {
       Vector<String> antstr(1,baseline);
       selectAntenna(antid, antstr);
     }
-    scanString_p=scan;
-    uvrangeString_p=uvrange;
-    taqlString_p=taql;
-    
+    scanString_p    = scan;
+    uvrangeString_p = uvrange;
+    taqlString_p    = taql;
+
+    if(subarray != "")
+      selectArray(subarray);
   }
   
   void SubMS::selectSource(Vector<Int> fieldid)
@@ -289,18 +296,28 @@ namespace casa {
       antennaId_p.resize();
     else
       antennaId_p=antennaids;
-    antennaSelStr_p=antennaSel;
-    
+    antennaSelStr_p=antennaSel; 
   }
   
-  void SubMS::selectTime(Double timeBin, String timerng){
-    
-    timeBin_p=timeBin;
-    timeRange_p=timerng;
+  void SubMS::selectArray(const String& subarray)
+  {
+    arrayExpr_p = subarray;
+    if(arrayExpr_p == ""){      // Zap any old ones.
+      arrayId_p.resize();
+      arrayRemapper_p.resize();
+    }
+    // else arrayId_p will get set in makeSelection().
+
+  }
+  
+  void SubMS::selectTime(Double timeBin, String timerng)
+  {  
+    timeBin_p   = timeBin;
+    timeRange_p = timerng;
   }
   
   
-  Bool SubMS::makeSubMS(String& msname, String& colname){
+  Bool SubMS::makeSubMS(String& msname, String& colname, const Vector<Int>& tileShape){
     
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     try{
@@ -337,12 +354,25 @@ namespace casa {
 	ms_p=MeasurementSet();
 	return False;
       }
-      mscIn_p=new MSColumns(mssel_p);
+      mscIn_p=new ROMSColumns(mssel_p);
       // Note again the verifyColumns() a few lines back that stops setupMS()
       // from being called if the MS doesn't have the requested columns.
-      MeasurementSet* outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
-					 mscIn_p->observation().telescopeName()(0),
-					 String(colname));
+      MeasurementSet* outpointer=0;
+
+      if(tileShape.nelements() == 3){
+	outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
+			   String(colname), tileShape);
+      }
+      else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
+	outpointer=setupMS(msname, nchan_p[0], npol_p[0],mscIn_p->observation().telescopeName()(0),  
+			   String(colname), tileShape[0]);
+      }
+      else{
+	//Sweep all other cases of bad tileshape to a default one.
+	outpointer=setupMS(msname, nchan_p[0], npol_p[0],mscIn_p->observation().telescopeName()(0),  
+		   String(colname), 0);
+
+      }
       
       msOut_p= *outpointer;
       msc_p=new MSColumns(msOut_p);
@@ -424,12 +454,13 @@ namespace casa {
       ms_p=MeasurementSet();
       return 0;
     }
-    mscIn_p=new MSColumns(mssel_p);
+    mscIn_p=new ROMSColumns(mssel_p);
     Double sizeInMB= 1.5 * n_bytes() / (1024.0 * 1024.0);
     String msname=AppInfo::workFileName(uInt(sizeInMB), "TempSubMS");
     
     MeasurementSet* outpointer=setupMS(msname, nchan_p[0], npol_p[0],  
-				       mscIn_p->observation().telescopeName()(0));
+				       mscIn_p->observation().telescopeName()(0),
+				       "DATA");
     
     outpointer->markForDelete();
     //Hmmmmmm....memory...... 
@@ -514,10 +545,20 @@ namespace casa {
     //and resort if necessary
     {
       Matrix<Int> noselection;
-      VisSet vs(ms_p,noselection);
+      VisSet vs(ms_p, noselection);
     }
-    const MeasurementSet sorted=ms_p.keywordSet().asTable("SORTED_TABLE");
     
+   
+    const MeasurementSet *elms;
+    elms=&ms_p;
+    MeasurementSet sorted;
+    if (ms_p.keywordSet().isDefined("SORTED_TABLE")) {
+      sorted=ms_p.keywordSet().asTable("SORTED_TABLE");
+      //If ms is not writable and sort is a subselection...use original ms
+      if( ms_p.nrow() == sorted.nrow())
+	elms=&sorted;
+    }
+ 
     MSSelection thisSelection;
     if(fieldid_p.nelements() > 0)
       thisSelection.setFieldExpr(MSSelection::indexExprStr(fieldid_p));
@@ -525,7 +566,7 @@ namespace casa {
       thisSelection.setSpwExpr(MSSelection::indexExprStr(spw_p));
     if(antennaSel_p){
       if(antennaId_p.nelements() > 0){
-	thisSelection.setAntennaExpr( MSSelection::indexExprStr( antennaId_p ));
+	thisSelection.setAntennaExpr(MSSelection::indexExprStr( antennaId_p ));
       }
       if(antennaSelStr_p[0] != "")
         thisSelection.setAntennaExpr(MSSelection::nameExprStr( antennaSelStr_p));
@@ -539,35 +580,33 @@ namespace casa {
       thisSelection.setArrayExpr(arrayExpr_p);
     thisSelection.setTaQLExpr(taqlString_p);
     
-    TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+    TableExprNode exprNode=thisSelection.toTableExprNode(elms);
     
-    {
-      
-      MSDataDescription ddtable=ms_p.dataDescription();
+    {      
+      const MSDataDescription ddtable = ms_p.dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
 				MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
-      MSPolarization poltable= ms_p.polarization();
+      const MSPolarization poltable = ms_p.polarization();
       ROArrayColumn<Int> pols(poltable, 
 			      MSPolarization::columnName(MSPolarization::CORR_TYPE));
       
       npol_p.resize(spw_p.shape()); 
-      for (uInt k=0; k < npol_p.nelements(); ++k){  
-	npol_p[k]=pols(polId(spw_p[k])).nelements();
-      }
+      for (uInt k = 0; k < npol_p.nelements(); ++k) 
+	npol_p[k] = pols(polId(spw_p[k])).nelements();
     }
     
     // Now remake the selected ms
     if(!(exprNode.isNull())){
-      mssel_p =  MeasurementSet(sorted(exprNode));
+      mssel_p = MeasurementSet((*elms)(exprNode));
     }
     else{
       // Null take all the ms ...setdata() blank means that
-      mssel_p = MeasurementSet(sorted);
+      mssel_p = MeasurementSet((*elms));
     }
     //mssel_p.rename(ms_p.tableName()+"/SELECTED_TABLE", Table::Scratch);
-    if(mssel_p.nrow()==0){
+    if(mssel_p.nrow() == 0)
       return False;
-    }
+
     if(mssel_p.nrow() < ms_p.nrow()){
       os << LogIO::NORMAL
 	 << mssel_p.nrow() << " out of " << ms_p.nrow() << " rows are going to be" 
@@ -578,10 +617,22 @@ namespace casa {
     
   }
   
+
   MeasurementSet* SubMS::setupMS(String MSFileName, Int nchan, Int nCorr, 
-				 String telescop, String colName,Int obsType){
+				 String telescop, String colName, Int obstype){
+
+    //Choose an appropriate tileshape
+    IPosition dataShape(2,nCorr,nchan);
+    IPosition tileShape = MSTileLayout::tileShape(dataShape,obstype, telescop);
+    return setupMS(MSFileName, nchan, nCorr, colName, tileShape.asVector());
+  }
+  MeasurementSet* SubMS::setupMS(String MSFileName, Int nchan, Int nCorr, 
+				 String colName, const Vector<Int>& tshape){
     
     
+    
+    if(tshape.nelements() != 3)
+      throw(AipsError("TileShape has to have 3 elememts ") );
     const Vector<String> colNamesTok=SubMS::parseColumnNames(colName);
     // Make the MS table
     TableDesc td = MS::requiredTableDesc();
@@ -655,8 +706,14 @@ namespace casa {
     newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan);
     
     // Choose an appropriate tileshape
-    IPosition dataShape(2,nCorr,nchan);
-    IPosition tileShape = MSTileLayout::tileShape(dataShape,obsType, telescop);
+    //IPosition dataShape(2,nCorr,nchan);
+    //IPosition tileShape = MSTileLayout::tileShape(dataShape,obsType, telescop);
+    //////////////////
+    
+    IPosition tileShape(tshape);
+
+
+      ///////////////////
     //    itsLog << LogOrigin("MSFitsInput", "setupMeasurementSet");
     //itsLog << LogIO::NORMAL << "Using tile shape "<<tileShape <<" for "<<
     //  array_p<<" with obstype="<< obsType<<LogIO::POST;
@@ -751,7 +808,7 @@ namespace casa {
     
     
     //DD table
-    MSDataDescription ddtable= mssel_p.dataDescription();
+    const MSDataDescription ddtable= mssel_p.dataDescription();
     ROScalarColumn<Int> polId(ddtable, 
 			      MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
     
@@ -763,7 +820,7 @@ namespace casa {
     //POLARIZATION table 
     
     
-    MSPolarization poltable= mssel_p.polarization();
+    const MSPolarization poltable= mssel_p.polarization();
     ROScalarColumn<Int> numCorr (poltable, 
 				 MSPolarization::columnName(MSPolarization::NUM_CORR));
     ROArrayColumn<Int> corrType(poltable, 
@@ -772,7 +829,7 @@ namespace casa {
     ROScalarColumn<Bool> polFlagRow(poltable, MSPolarization::columnName(MSPolarization::FLAG_ROW));
     
     //SPECTRAL_WINDOW table
-    MSSpectralWindow spwtable=mssel_p.spectralWindow();
+    const MSSpectralWindow spwtable=mssel_p.spectralWindow();
     spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
     spwRelabel_p.set(-1);
     
@@ -899,7 +956,7 @@ namespace casa {
     MSFieldColumns& msField(msc_p->field());
     
     //MSField fieldtable= mssel_p.field();
-    ROMSFieldColumns & fieldIn= mscIn_p->field(); 
+    const ROMSFieldColumns & fieldIn= mscIn_p->field(); 
     
     String dirref;
     // Need to define the direction measures right
@@ -998,7 +1055,7 @@ namespace casa {
 	}
   }
 
-  Bool SubMS::doWriteImagingWeight(const MSColumns& inMsc, const Vector<String>& columnName)
+  Bool SubMS::doWriteImagingWeight(const ROMSColumns& inMsc, const Vector<String>& columnName)
   {
     Bool allCols=isAllColumns(columnName);
     Bool inputImgWtsExist=(!inMsc.imagingWeight().isNull() &&
@@ -1099,7 +1156,8 @@ namespace casa {
     // Whether or not the MS has the columns is checked by verifyColumns().
     // Unfortunately it cannot be done here because this is a static method.
 
-    os << LogIO::NORMAL << "Splitting ";
+    os << LogIO::NORMAL
+       << "Using ";     // Don't say "Splitting"; this is used elsewhere.
     for(uInt i=0;i<my_colNameVect.nelements();i++)
       os << my_colNameVect[i] << " ";
     os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".")
@@ -1133,7 +1191,7 @@ namespace casa {
     return True;
   }
   
-  Bool SubMS::getDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data,
+  Bool SubMS::getDataColumn(ROArrayColumn<Complex>& data,
 			    const String& colName)
   {
     if(colName == MS::columnName(MS::DATA))
@@ -1158,23 +1216,23 @@ namespace casa {
       msc_p->feed2().putColumn(mscIn_p->feed2());
     }
     else{
-      Vector<Int> ant1=mscIn_p->antenna1().getColumn();
-      Vector<Int> ant2=mscIn_p->antenna2().getColumn();
-      Vector<Int> feed1=mscIn_p->feed1().getColumn();
-      Vector<Int> feed2=mscIn_p->feed2().getColumn();
+      Vector<Int> ant1  = mscIn_p->antenna1().getColumn();
+      Vector<Int> ant2  = mscIn_p->antenna2().getColumn();
+      Vector<Int> feed1 = mscIn_p->feed1().getColumn();
+      Vector<Int> feed2 = mscIn_p->feed2().getColumn();
       
-      for (uInt k=0; k < ant1.nelements(); ++k){
-	ant1[k]=antNewIndex_p[ant1[k]];
-	ant2[k]=antNewIndex_p[ant2[k]];
-	feed1[k]=feedNewIndex_p[feed1[k]];
-	feed2[k]=feedNewIndex_p[feed2[k]];
+      for(uInt k = 0; k < ant1.nelements(); ++k){
+	ant1[k]  = antNewIndex_p[ant1[k]];
+	ant2[k]  = antNewIndex_p[ant2[k]];
+	feed1[k] = feedNewIndex_p[feed1[k]];
+	feed2[k] = feedNewIndex_p[feed2[k]];
       }
       msc_p->antenna1().putColumn(ant1);
       msc_p->antenna2().putColumn(ant2);
       msc_p->feed1().putColumn(feed1);
       msc_p->feed2().putColumn(feed2);
     }
-    msc_p->arrayId().putColumn(mscIn_p->arrayId());
+
     msc_p->exposure().putColumn(mscIn_p->exposure());
     //  msc_p->flag().putColumn(mscIn_p->flag());
     // if(!(mscIn_p->flagCategory().isNull()))
@@ -1200,7 +1258,7 @@ namespace casa {
     if(!doChanAver_p){
       ROArrayColumn<Complex> data;
       for(uInt ni = 0;ni < columnName.nelements(); ++ni){
-	getDataColumn(*mscIn_p, data, columnName[ni]);
+	getDataColumn(data, columnName[ni]);
 	putDataColumn(*msc_p, data, columnName[ni], (columnName.nelements() == 1));
       }
       if (doWriteImagingWeight(*mscIn_p,columnName))
@@ -1269,6 +1327,7 @@ void SubMS::relabelIDs()
     fieldId[k] = fieldRelabel_p[fieldId[k]];
   msc_p->fieldId().putColumn(fieldId);
 
+  remapColumn(mscIn_p->arrayId(), msc_p->arrayId());
   remapColumn(mscIn_p->stateId(), msc_p->stateId());
   remapColumn(mscIn_p->processorId(), msc_p->processorId());
   remapColumn(mscIn_p->observationId(), msc_p->observationId());
@@ -1864,17 +1923,17 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
   return True;
 }
 
-const ROArrayColumn<Complex>& SubMS::right_column(const MSColumns *ms_p,
+const ROArrayColumn<Complex>& SubMS::right_column(const ROMSColumns *msclala,
 						  const String& colName)
 {
   const String myColName(upcase(colName));
   
   if(myColName == MS::columnName(MS::DATA))
-    return ms_p->data();
+    return msclala->data();
   else if(myColName == MS::columnName(MS::MODEL_DATA))
-    return ms_p->modelData();
+    return msclala->modelData();
   else
-    return ms_p->correctedData();
+    return msclala->correctedData();
 }
 
 //   Int SubMS::numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, 
@@ -1911,7 +1970,7 @@ void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
 
   mapper.resize(valSet.size());
 
-  Int remaval = 0;
+  uInt remaval = 0;
   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
       vs_iter != valSet.end(); ++vs_iter){
     mapper[remaval] = *vs_iter;
@@ -1996,29 +2055,35 @@ uInt SubMS::remapped(const Int ov, const Vector<Int>& mapper, uInt i=0)
 //	obs, array			antenna, spw, field
 //       processor                       Should I care?
 //
-// The mapping also assumes that each property ranges from 0 to max - 1,
-// i.e. has been relabeled (= remapped).  This is not appropriate for array_ID,
-// and possibly some others.
+// The mapping also remaps (if necessary) each property to a range from 0 to max - 1,
+// assuming that the corresponding remapper vectors have already been set up!
 uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
 			     const Int dd,   const Int field,
-			     const Int scan, const Int state)
+			     const Int scan, const Int state,
+                             const uInt array)
 {
-  Int slotKey = state;  // Fastest slotnum (farthest apart), but slowest index.
+  // Fastest slotnum (farthest apart), but slowest index.
+  uInt slotKey = remapped(array, arrayRemapper_p, array);
+  
+  slotKey *= stateRemapper_p.nelements();
+  slotKey += remapped(state, stateRemapper_p, state);
 
-  slotKey *= scanRemapper_p.nelements();   // Must be set before calling rowProps2slotKey().
-  slotKey += remapped(scan, scanRemapper_p, abs(scan));
+  slotKey *= scanRemapper_p.nelements();                // Must be set before calling
+  slotKey += remapped(scan, scanRemapper_p, abs(scan)); // rowProps2slotKey().
 
   slotKey *= fieldid_p.nelements();
-  slotKey += field;
+  slotKey += fieldRelabel_p[field];
 
   slotKey *= spw_p.nelements();  // ndds;
-  slotKey += dd;
+  slotKey += spwRelabel_p[oldDDSpwMatch_p[dd]];
+
+  slotKey *= nant_p;            // Must be set before calling rowProps2slotKey().
+  slotKey += antIndexer_p[ant1];
 
   slotKey *= nant_p;   // Must be set before calling rowProps2slotKey().
-  slotKey += ant1;
 
-  slotKey *= nant_p;   // Must be set before calling rowProps2slotKey().
-  slotKey += ant2;     // Slowest slotnum (closest together), but fastest index.
+  // Slowest slotnum (closest together), but fastest index.
+  slotKey += antIndexer_p[ant2];
 
   return slotKey;
 }
@@ -2033,6 +2098,7 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       const Vector<Double>& intervalRows = mscIn_p->interval().getColumn();
       const Vector<Int>&    datDesc      = mscIn_p->dataDescId().getColumn();
       const Vector<Int>&    fieldId      = mscIn_p->fieldId().getColumn();
+      const Vector<Int>&    arrayIDs     = mscIn_p->arrayId().getColumn();
       const Vector<Int>&    scan         = mscIn_p->scanNumber().getColumn();
       const Vector<Int>&    state        = mscIn_p->stateId().getColumn();
       const Vector<Bool>&   rowFlag      = mscIn_p->flagRow().getColumn();
@@ -2044,10 +2110,11 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       newTimeVal_p.resize(numrows);
       bin_slots_p.resize(numrows);
 
-      make_map(scan,  scanRemapper_p);  // This map is only implicitly used.
-      make_map(state, stateRemapper_p);
+      make_map(arrayIDs, arrayRemapper_p);
+      make_map(scan,     scanRemapper_p);  // This map is only implicitly used.
+      make_map(state,    stateRemapper_p);
 
-      Int    numBin    = 0;
+      Int numBin = 0;
 
       // A (potentially large) batch of flagged rows at the start is an
       // annoyingly common case that must be dealt with.
@@ -2080,13 +2147,11 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
 	      ++numBin;
 	    }
 	  }
-	  bin_slots_p[numBin][rowProps2slotKey(antIndexer_p[ant1[toik]],
-					       antIndexer_p[ant2[toik]],
-					       spwRelabel_p[oldDDSpwMatch_p[datDesc[toik]]],
-					       fieldRelabel_p[fieldId[toik]],
+	  bin_slots_p[numBin][rowProps2slotKey(ant1[toik], ant2[toik],
+					       datDesc[toik], fieldId[toik],
 					       scan[toik],	// Don't remap!
-					       remapped(state[toik], stateRemapper_p,
-							abs(state[toik])))].push_back(toik);
+					       state[toik],
+                                               arrayIDs[toik])].push_back(toik);
 	  oldtoik = toik;
 	}
       }
@@ -2106,7 +2171,7 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
     return -1;
   }
 
-uInt SubMS::fillAntIndexer(const MSColumns *msc, Vector<Int>& antIndexer)
+uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
 {
   const Vector<Int>& ant1 = msc->antenna1().getColumn();
   const Vector<Int>& ant2 = msc->antenna2().getColumn();

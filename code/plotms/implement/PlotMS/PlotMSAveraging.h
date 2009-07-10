@@ -27,7 +27,6 @@
 #ifndef PLOTMSAVERAGING_H_
 #define PLOTMSAVERAGING_H_
 
-#include <casa/Containers/Record.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>

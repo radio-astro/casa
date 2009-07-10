@@ -56,8 +56,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="restfreq">
             <description>rest frequency (float value or string with unit)</description>
-            <any type='variant' limittype='string double'/>
-            <value type='string'/>
+            <any type="variant" limittype="string double"/>
+            <value type="string"/>
     </param>
 
     <param type="string" name="frame">

@@ -30,7 +30,7 @@
 #include <casaqt/QtBrowser/TBMain.ui.h>
 #include <casaqt/QtBrowser/TBBrowser.qo.h>
 
-#include <QtGui>
+//#include <QtGui>
 
 #include <casa/BasicSL/String.h>
 
@@ -70,9 +70,6 @@ public:
     // the default number of rows are loaded.
     void openTable(String filename, DriverParams* dp = NULL, int start = 0,
                    int num = TBConstants::DEFAULT_SELECT_NUM);
-
-    // Returns the last directory that was opened.
-    String getLastOpenedDirectory();
 
 signals:
     // This signal is emitted when a close menu command is given with
@@ -126,9 +123,6 @@ private:
 
     // Toolbar holding "tool"-related menu commands.
     QToolBar* toolBar;
-
-    // Holds the last opened directory.
-    String lastDirectory;
 
     // Indicates whether the TBMain should save the current view on close or
     // not.

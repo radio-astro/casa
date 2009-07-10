@@ -29,12 +29,16 @@
 
 #include <plotms/GuiTabs/PlotMSDisplayTab.ui.h>
 
-#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations.
+class PlotSymbolWidget;
+class QtLabelWidget;
+
 
 // Subclass of PlotMSPlotSubtab to manage plot display parameters.
 class PlotMSDisplayTab : public PlotMSPlotSubtab, Ui::DisplayTab {

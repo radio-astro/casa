@@ -29,13 +29,18 @@
 
 #include <plotms/GuiTabs/PlotMSAnnotatorTab.ui.h>
 
-#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
-#include <plotms/Gui/PlotMSAnnotator.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations
+class PlotFillWidget;
+class PlotFontWidget;
+class PlotLineWidget;
+class PlotMSAnnotator;
+
 
 // Subclass of PlotMSTab that handles interaction with the PlotMSAnnotator.
 class PlotMSAnnotatorTab : public PlotMSTab, Ui::AnnotatorTab {
@@ -55,7 +60,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Does
     // nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) { }
+            int updateFlag) { }
     
 private:
     // Reference to annotator.

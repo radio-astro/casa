@@ -25,10 +25,12 @@
 //#
 //#
 //# $Id$
+#include <display/QtViewer/QtApp.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-
-#include <display/QtViewer/QtApp.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
 
 #include <signal.h>
 
@@ -219,15 +221,18 @@ int main(int argc, char* argv[]) {
     if(!casapy) plotms.showGUI(true); // don't automatically show for casapy
     
     // Set up parameters for single plot.
-    PlotMSSinglePlotParameters plotparams(&plotms, ms);
-    plotparams.setAxes(PMS::axis(xaxis), PMS::axis(yaxis));
-    plotparams.setSelection(select);
-    plotparams.setAveraging(averaging);
+    PlotMSPlotParameters plotparams= PlotMSSinglePlot::makeParameters(&plotms);
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setAveraging, averaging)
+    PMS_PP_CALL(plotparams, PMS_PP_Cache, setXAxis, PMS::axis(xaxis))
+    PMS_PP_CALL(plotparams, PMS_PP_Cache, setYAxis, PMS::axis(yaxis))
     
     if(usePixels) {
-        PlotSymbolPtr sym = plotparams.symbol();
+        PlotSymbolPtr sym = PMS_PP_RETCALL(plotparams, PMS_PP_Display,
+                unflaggedSymbol, NULL);
         sym->setSymbol(PlotSymbol::PIXEL);
-        plotparams.setSymbol(sym);
+        PMS_PP_CALL(plotparams, PMS_PP_Display, setUnflaggedSymbol, sym)
     }
     
     // If single plot is set, add the plot to plotms.

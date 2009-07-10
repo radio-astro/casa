@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSSelection.h>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 
 namespace casa {

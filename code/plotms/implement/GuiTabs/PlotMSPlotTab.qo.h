@@ -30,6 +30,7 @@
 #include <plotms/GuiTabs/PlotMSPlotTab.ui.h>
 
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
+#include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
 #include <casa/namespace.h>
@@ -40,9 +41,9 @@ namespace casa {
 class PlotMSAxesTab;
 class PlotMSCacheTab;
 class PlotMSCanvasTab;
+class PlotMSDataTab;
 class PlotMSDisplayTab;
 class PlotMSExportTab;
-class PlotMSMSTab;
 
 
 // Subclass of PlotMSTab for tabs that are meant to be used as subtabs in a
@@ -73,7 +74,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged() to do
     // nothing unless overridden in the child class.
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) { }
+            int updateFlag) { }
     
 signals:
     // This signal should be emitted whenever the value of the widget changes
@@ -82,10 +83,9 @@ signals:
 };
 
 
-// Subclass of PlotMSTab that manages PlotMSPlots in the GUI.  WARNING:
-// currently can only handle PlotMSSinglePlots.  Watches the current
-// PlotMSPlot's parameters for changes to update the GUI as needed and watches
-// the PlotMSPlotManager for changes to the plots.
+// Subclass of PlotMSTab that manages PlotMSPlots in the GUI.  Watches the
+// current PlotMSPlot's parameters for changes to update the GUI as needed and
+// watches the PlotMSPlotManager for changes to the plots.
 class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
                       public PlotMSPlotManagerWatcher {
     Q_OBJECT
@@ -114,19 +114,18 @@ public:
     // the GUI as needed if the given parameters are the current PlotMSPlot's
     // parameters.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag);
     
     // Implements PlotMSPlotManagerWatcher::plotsChanged().
     void plotsChanged(const PlotMSPlotManager& manager);
     
     
-    // Returns the currently selected plot.  WARNING: currently can only handle
-    // PlotMSSinglePlots.
+    // Returns the currently selected plot.
     PlotMSPlot* currentPlot() const;
     
     // Returns the parameters currently set by the user on the GUI (but NOT
     // necessarily set on the underlying plot parameters).
-    PlotMSSinglePlotParameters currentlySetParameters() const;
+    PlotMSPlotParameters currentlySetParameters() const;
     
     // Returns the PlotExportFormat currently set by the user on the GUI.
     PlotExportFormat currentlySetExportFormat() const;
@@ -138,6 +137,12 @@ public:
     // Returns the axes that the user has selected to release from the cache.
     vector<PMS::Axis> selectedReleaseAxes() const {
         return selectedLoadOrReleaseAxes(false); }
+    
+    // Returns the MS summary type the user has selected.
+    // <group>
+    bool msSummaryVerbose() const;
+    PMS::SummaryType msSummaryType() const;
+    // </group>
     
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
@@ -160,12 +165,12 @@ protected:
     PlotMSCacheTab* insertCacheSubtab(int index);
     PlotMSCanvasTab* addCanvasSubtab();
     PlotMSCanvasTab* insertCanvasSubtab(int index);
+    PlotMSDataTab* addDataSubtab();
+    PlotMSDataTab* insertDataSubtab(int index);
     PlotMSDisplayTab* addDisplaySubtab();
     PlotMSDisplayTab* insertDisplaySubtab(int index);
     PlotMSExportTab* addExportSubtab();
     PlotMSExportTab* insertExportSubtab(int index);
-    PlotMSMSTab* addMSSubtab();
-    PlotMSMSTab* insertMSSubtab(int index);
     // </group>
     
 private:    
@@ -176,10 +181,10 @@ private:
     PlotMSPlotManager& itsPlotManager_;
     
     // Currently selected plot.
-    PlotMSSinglePlot* itsCurrentPlot_;
+    PlotMSPlot* itsCurrentPlot_;
     
     // Parameters for the currently selected plot.
-    PlotMSSinglePlotParameters* itsCurrentParameters_;
+    PlotMSPlotParameters* itsCurrentParameters_;
     
     // Whether or not to check for changed parameters and update the GUI
     // accordingly.

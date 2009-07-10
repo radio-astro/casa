@@ -1,4 +1,4 @@
-//# TBFileDialog.cc: Subclass of QFileDialog with additional functionality.
+//# QtFileDialog.cc: Subclass of QFileDialog with additional functionality.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,24 +24,47 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <casaqt/QtBrowser/TBFileDialog.qo.h>
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 #include <QLayout>
 
 namespace casa {
 
 //////////////////////////////
-// TBFILEDIALOG DEFINITIONS //
+// QTFILEDIALOG DEFINITIONS //
 //////////////////////////////
 
-// Static //
+// Public Static //
 
-QString TBFileDialog::getExistingTable(QWidget* parent, const QString& caption,
-        const QString& directory) {
-    TBFileDialog chooser(parent, caption, directory);
+const QString& QtFileDialog::lastDirectory() { return lastDirectory_; }
+void QtFileDialog::setNextDirectory(const QString& directory) {
+    lastDirectory_ = directory; }
+
+int QtFileDialog::historyLimit() { return historyLimit_; }
+void QtFileDialog::setHistoryLimit(int limit) { historyLimit_ = limit; }
+
+
+// Private Static //
+
+QString QtFileDialog::lastDirectory_ = "";
+int QtFileDialog::historyLimit_ = -1;
+
+
+QString QtFileDialog::qgetHelper(AcceptMode acceptMode, FileMode fileMode,
+        QWidget* parent, const QString& caption, const QString& directory,
+        const QString& filter, int histLimit) {
+    QtFileDialog chooser(parent, caption, directory, filter);
     chooser.setModal(true);
-    chooser.setAcceptMode(AcceptOpen);
-    chooser.setFileMode(DirectoryOnly);
+    chooser.setAcceptMode(acceptMode);
+    chooser.setFileMode(fileMode);
+    
+    if(histLimit >= 0) {
+        QStringList hist = chooser.history();
+        if(histLimit < hist.size()) {
+            while(histLimit < hist.size()) hist.removeFirst();
+            chooser.setHistory(hist);
+        }
+    }
     
     if(chooser.exec()) {    
         QStringList files = chooser.selectedFiles();
@@ -54,20 +77,20 @@ QString TBFileDialog::getExistingTable(QWidget* parent, const QString& caption,
 
 // Non-Static //
 
-TBFileDialog::TBFileDialog(QWidget* parent, Qt::WindowFlags flags) :
+QtFileDialog::QtFileDialog(QWidget* parent, Qt::WindowFlags flags) :
         QFileDialog(parent, flags) {
     initialize();
 }
 
-TBFileDialog::TBFileDialog(QWidget* parent, const QString& caption,
+QtFileDialog::QtFileDialog(QWidget* parent, const QString& caption,
         const QString& directory, const QString& filter) : QFileDialog(parent,
         caption, directory, filter) {
     initialize();
 }
 
-TBFileDialog::~TBFileDialog() { }
+QtFileDialog::~QtFileDialog() { }
 
-void TBFileDialog::initialize() {
+void QtFileDialog::initialize() {
     // NOTICE: This is only valid as long as QFileDialog continues to use a
     // QGridLayout.  I don't really like adding the label this way, but think
     // it's the best of the current options unless I've missed something..    
@@ -85,7 +108,17 @@ void TBFileDialog::initialize() {
     timer->start(250);
 }
 
-void TBFileDialog::timeout() {
+void QtFileDialog::accept() {
+    QFileDialog::accept();
+    
+    // Update last directory.
+    QStringList files = selectedFiles();
+    if(files.size() > 0)
+        lastDirectory_ = QFileInfo(files[0]).dir().absolutePath();
+}
+
+
+void QtFileDialog::timeout() {
     chosenLabel->setText(selectedFiles().join(", ").replace("/", "/ "));
 }
 

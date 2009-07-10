@@ -22,9 +22,12 @@ namespace casa {
   antPositions_p(antColumns_p.positionMeas()),
   antOffset_p(antColumns_p.offsetMeas()),
   refpos_p(antPositions_p(0)),  // We use the first antenna for the reference
-  refposref_p(refpos_p.getRef()),
   feedOffset_p(msc_p.feed().positionMeas())
 {
+  // It seems that using a String is the only safe way to go from say,
+  // MPosition::ITRF to MBaseline::ITRF.
+  MBaseline::getType(refposref_p, MPosition::showType(refpos_p.getRef().getType()));
+
   fill_bl_an(bl_an_p, ms_ref);		
 }
 
@@ -66,11 +69,22 @@ void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref)
     }
   }
 
-  // Setting timeRes_p to 0.05 * the time for a 1 radian phase change on the
+  // Setting timeRes_p to 0.0025 * the time for a 1 radian phase change on the
   // longest baseline at 2x the primary beamwidth should be sufficiently short
   // for Earth based observations.  Space-based baselines will move faster, but
-  // probably don't have the data rate to support full beam imaging.
-  timeRes_p = 0.05 * 24.0 * 3600.0 / (6.283 * 2.44) *
+  // probably don't have the data rate to support full beam imaging.  An
+  // alternative limit could come from |d(uvw)/dt|/|uvw|, but that is
+  // guaranteed to be at least somewhat larger than this limit (replace the
+  // 2.44 with 2, and remove the dish diameters and max_baseline).
+  //
+  // Do not raise the 0.0025 coefficient by too much, since the times used for
+  // UVW calculation could be biased by as much as -0.5 * timeRes_p if more
+  // than one integration fits into timeRes_p.  timeRes_p is not intended so
+  // much for skipping calculations as it is for preventing antUVW_p from being
+  // calculated for each row in the same integration.  The integration interval
+  // may change within an MS, but ideally antUVW_p is calculated once per
+  // integration (timeRes_p <~ integration) and there is no bias.
+  timeRes_p = 0.0025 * 24.0 * 3600.0 / (6.283 * 2.44) *
     sqrt(smallestDiam * secondSmallestDiam) / max_baseline;
 }  
 
@@ -87,9 +101,7 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
     //<< "\nphasedir: " << phasedir
 	    << LogIO::POST;
 
-  // at ref ant, at timeCentroid, for the phaseDir
-  //  MBaseline::Ref basref(refposref_p, measFrame);
-  MBaseline::Ref basref(MBaseline::ITRF, measFrame);
+  MBaseline::Ref basref(refposref_p);
   basMeas.set(mvbl, basref);
   basMeas.getRefPtr()->set(measFrame);
 
@@ -148,36 +160,36 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   
   logSink() << LogIO::DEBUG1 << "timeRes_p: " << timeRes_p << LogIO::POST;
 
-  // Ensure a call to uvw_an on the 1st iteration.
-  const Unit sec("s");
-  Double oldTime = timeCentMeas(tOI[0]).get(sec).getValue() - 2.0 * timeRes_p;
-  Int    oldFld  = -2;
-  for(uInt row = 0; row < msc_p.nrow(); ++row){
-    uInt toir = tOI[row];
-    Double currTime = timeCentMeas(toir).get(sec).getValue();
-    Int    currFld  = fieldID(toir);
+  try{
+    // Ensure a call to uvw_an on the 1st iteration.
+    const Unit sec("s");
+    Double oldTime = timeCentMeas(tOI[0]).get(sec).getValue() - 2.0 * timeRes_p;
+    Int    oldFld  = -2;
+    for(uInt row = 0; row < msc_p.nrow(); ++row){
+      uInt toir = tOI[row];
+      Double currTime = timeCentMeas(toir).get(sec).getValue();
+      Int    currFld  = fieldID(toir);
 
-    if(currTime - oldTime > timeRes_p || currFld != oldFld){
-      oldTime = currTime;
-      oldFld  = currFld;
-      logSink() << LogIO::DEBUG1 << "currTime: " << currTime
-		<< "\ncurrFld: " << currFld << LogIO::POST;
-      uvw_an(timeCentMeas(toir), currFld);
-    }
+      if(currTime - oldTime > timeRes_p || currFld != oldFld){
+        oldTime = currTime;
+        oldFld  = currFld;
+        logSink() << LogIO::DEBUG1 << "currTime: " << currTime
+                  << "\ncurrFld: " << currFld << LogIO::POST;
+        uvw_an(timeCentMeas(toir), currFld);
+      }
     
-    try{
       if(flds[fieldID(toir)] > -1){
 	//      uvw_bl(ant1(toir), ant2(toir),
 	//     feed1(toir), feed2(toir), UVWcol(toir));
 	UVWcol.put(toir, antUVW_p[ant2(toir)] - antUVW_p[ant1(toir)]);
       }
     }
-    catch(AipsError x){
-      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
-		<< LogIO::POST;
-      throw(AipsError("Error in MSUVWGenerator::make_uvws."));
-      return false;
-    }
+  }
+  catch(AipsError x){
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+              << LogIO::POST;
+    throw(AipsError("Error in MSUVWGenerator::make_uvws."));
+    return false;
   }
   return true;
 }
@@ -221,15 +233,5 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
 //   ignore_offsets = true;
 //   return ignore_offsets;
 // }
-
-Bool MSUVWGenerator::calc_ref_positions(const MDirection& pointingdir)
-{    
-  // ref_positions.resize(nant_p);
-  //for(uInt n = 0; n < nant_p; ++n)
-  //  ref_positions[n] = antPositions_p.convert(n, pointingdir);
-
-  return false;  // TODO: Determine when the positions need to be updated, or
-		 // if uvw_an supercedes this function.
-}
 
 } // Ends namespace casa.

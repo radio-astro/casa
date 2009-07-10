@@ -223,12 +223,6 @@ private:
     
     // Helper for updating.
     void update();
-    
-    
-    // Static //
-    
-    // Implementation factory.
-    //static PlotFactoryPtr IMPL_FACTORY;
 };
 
 }

@@ -30,7 +30,8 @@
 #include <casaqt/QtBrowser/TBBrowser.ui.h>
 #include <casaqt/QtBrowser/TBAction.h>
 
-#include <QtGui>
+//#include <QtGui>
+#include <QErrorMessage>
 
 #include <casa/BasicSL/String.h>
 

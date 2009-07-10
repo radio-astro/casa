@@ -28,7 +28,8 @@
 #define PLOTMSEXPORTTHREAD_QO_H_
 
 #include <plotms/Actions/PlotMSThread.qo.h>
-#include <plotms/Plots/PlotMSPlot.h>
+
+#include <graphics/GenericPlotter/PlotOptions.h>
 
 #include <QThread>
 
@@ -40,12 +41,14 @@ namespace casa {
 
 //# Forward Declarations
 class PlotMSExportThreadHelper;
+class PlotMSPlot;
 
 
 // Subclass of PlotMSThread for exporting a plot.
 class PlotMSExportThread : public PlotMSThread, public PlotOperationWatcher {
     Q_OBJECT
     
+    //# Friend class declarations.
     friend class PlotMSExportThreadHelper;
     
 public:
@@ -109,6 +112,7 @@ private slots:
 class PlotMSExportThreadHelper : public QThread {
     Q_OBJECT
     
+    //# Friend class declarations.
     friend class PlotMSExportThread;
     
 public:

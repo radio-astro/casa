@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms/Actions/PlotMSThread.qo.h>
 
-#include <plotms/PlotMS/PlotMS.h>
+#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 
 namespace casa {
 

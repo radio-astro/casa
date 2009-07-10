@@ -74,7 +74,8 @@ def run():
         time_then_chan_avg(input_ms, '20s', 4) # The actual run.
 
         ###### Test disk usage.
-        ###### In 32 bit Linux, phoenix_test.ms shrinks from 4880 kB to 1192 kB.
+        ###### In 32 bit Linux, phoenix_test.ms shrinks from 4880 kB to 1192kB.
+        ########## 7/8/2009:                                10640!
         dudict = disk_usage(ms_root + '*.ms')
         print "Disk usage:", dudict
 

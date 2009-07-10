@@ -43,7 +43,6 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/MSFixVis.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Logging/LogOrigin.h>
@@ -204,7 +203,7 @@ try {
 	*itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
        String namescheme(antnamescheme);
        namescheme.downcase();
-       MSFitsInput msfitsin(msfile, fitsfile, (namescheme=="new"));
+       MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
        msfitsin.readFitsFile(obstype);
       *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
        /*
@@ -807,42 +806,49 @@ ms::timesort(const std::string& msname)
 }
 
 bool
-ms::split(const std::string& outputms, const ::casac::variant& field, 
-	  const ::casac::variant& spw, const std::vector<int>& nchan, 
-	  const std::vector<int>& start, const std::vector<int>& step, 
-	  const ::casac::variant& antenna, const ::casac::variant& timebin, 
-	  const std::string& timerange, const ::casac::variant& scan, 
-	  const ::casac::variant& uvrange, const std::string& taql, 
-	  const std::string& whichcol)
+ms::split(const std::string&      outputms,  const ::casac::variant& field, 
+	  const ::casac::variant& spw,       const std::vector<int>& nchan, 
+	  const std::vector<int>& start,     const std::vector<int>& step, 
+	  const ::casac::variant& antenna,   const ::casac::variant& timebin, 
+	  const std::string&      timerange, const ::casac::variant& scan, 
+	  const ::casac::variant& uvrange,   const std::string&      taql, 
+	  const std::string&      whichcol,  const ::casac::variant& tileShape,
+          const ::casac::variant& subarray)
 {
   Bool rstat(False);
   try {
      *itsLog << LogOrigin("ms", "split");
-     if(!ready2write_()){
+     /*if(!ready2write_()){
        *itsLog << LogIO::SEVERE
-            << "Please open ms with parameter nomodify=false. Write access to ms is needed by split to store some temporary selection information. "
+            << "Please open ms with parameter nomodify=false.  Write access to ms is needed by split to store some temporary selection information. "
             << LogIO::POST;
 
        return False;
      }
-
+     */
      SubMS *splitter = new SubMS(*itsMS);
      *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
      String t_field(m1toBlankCStr_(field));
      String t_spw(m1toBlankCStr_(spw));
-     String t_antenna=toCasaString(antenna);
-     String t_scan=toCasaString(scan);
-     String t_uvrange=toCasaString(uvrange);
+     String t_antenna = toCasaString(antenna);
+     String t_scan    = toCasaString(scan);
+     String t_uvrange = toCasaString(uvrange);
      String t_taql(taql);
+     const String t_subarray = toCasaString(subarray);
      splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
 			   t_taql, 
 			   Vector<Int>(nchan), Vector<Int>(start), 
-			   Vector<Int>(step), True);
+			   Vector<Int>(step), True, t_subarray);
      Double timeInSec=casaQuantity(timebin).get("s").getValue();
      splitter->selectTime(timeInSec, String(timerange));
      String t_outputms(outputms);
      String t_whichcol(whichcol);
-     splitter->makeSubMS(t_outputms, t_whichcol);
+     Vector<Int> t_tileshape(1,0);
+     if(toCasaString(tileShape) != String("")){
+       t_tileshape.resize();
+       t_tileshape=tileShape.toIntVec();
+     }
+     splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape);
      *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
      delete splitter;
    
@@ -850,33 +856,36 @@ ms::split(const std::string& outputms, const ::casac::variant& field,
        String message= toCasaString(outputms) + " split from " + itsMS->tableName();
        ostringstream param;
        param << "fieldids=" << t_field << " spwids=" << t_spw
-             << " nchan=" << Vector<Int>(nchan) << " start=" << Vector<Int>(start) << " step=" << Vector<Int>(step)
-             << " which='" << whichcol <<"'";
+             << " nchan=" << Vector<Int>(nchan) << " start=" << Vector<Int>(start)
+             << " step=" << Vector<Int>(step) << " which='" << whichcol << "'";
        String paramstr=param.str();
-       writehistory(message,paramstr,"ms::split()",outputms, "ms");
+       writehistory(message, paramstr, "ms::split()", outputms, "ms");
      }
 
      rstat = True;
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks();
-       RETHROW(x);
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
   }
   Table::relinquishAutoLocks();
   return rstat;
 }
 
 bool
-ms::iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns)
+ms::iterinit(const std::vector<std::string>& columns, const double interval,
+             const int maxrows, const bool adddefaultsortcolumns)
 {
    Bool rstat(False);
    try {
       if(!detached())
-         rstat = itsSel->iterInit(toVectorString(columns), interval, maxrows, adddefaultsortcolumns);
+         rstat = itsSel->iterInit(toVectorString(columns), interval, maxrows,
+                                  adddefaultsortcolumns);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks();
-       RETHROW(x);
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+             << LogIO::POST;
+     Table::relinquishAutoLocks();
+     RETHROW(x);
    }
    Table::relinquishAutoLocks();
    return rstat; 
@@ -1159,66 +1168,6 @@ bool ms::continuumsub(const ::casac::variant& field,
  }
  Table::relinquishAutoLocks();
  return rstat;
-}
-
-bool ms::calcuvw(const std::vector<int>& fields, const std::string& refcode)
-{
-  Bool rstat(false);
-  try {
-    *itsLog << LogOrigin("ms", "calcuvw");
-    if(!ready2write_()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open ms with parameter nomodify=false so the UVW column can be changed."
-	      << LogIO::POST;
-      return false;
-    }
-
-    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
-      
-    MSFixVis visfixer(*itsMS);
-    *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
-    //visfixer.setField(m1toBlankCStr_(fields));
-    visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw(String(refcode));
-    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
-}
-
-bool ms::fixvis(const std::vector<int>& fields,
-		const ::casac::variant& phaseDirs, const std::string& refcode)
-{
-  Bool rstat(False);
-  try {
-    *itsLog << LogOrigin("ms", "fixvis");
-    if(!ready2write_()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open ms with parameter nomodify=false."
-	      << LogIO::POST;
-      return false;
-    }
-    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
-      
-    MSFixVis visfixer(*itsMS);
-    visfixer.setFields(Vector<Int>(fields));
-    //rstat = visfixer.fixvis();
-    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
 }
 
 /*

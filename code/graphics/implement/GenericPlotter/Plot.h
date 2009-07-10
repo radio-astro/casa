@@ -127,10 +127,10 @@ public:
     
     // Returns the data value at the given index.  Just a thin layer over the
     // PlotPointData functionality.
-    virtual pair<double, double> pointAt(unsigned int i) const {
+    virtual ppoint_t pointAt(unsigned int i) const {
         PlotPointDataPtr data = pointData();
-        if(!data.null()) return pair<double,double>(data->xAt(i),data->yAt(i));
-        else             return pair<double,double>(0, 0);
+        if(!data.null()) return ppoint_t(data->xAt(i), data->yAt(i));
+        else             return ppoint_t(0, 0);
     }
     
     // Implements PlotItem::drawCount().  Provides default implementation that
@@ -449,10 +449,10 @@ public:
     
     // Returns the data value at the given index.  Just a thin layer over the
     // PlotPointData functionality.
-    virtual pair<double, double> pointAt(unsigned int i) const {
+    virtual ppoint_t pointAt(unsigned int i) const {
         PlotPointDataPtr data = pointData();
-        if(!data.null()) return pair<double,double>(data->xAt(i),data->yAt(i));
-        else             return pair<double,double>(0, 0);
+        if(!data.null()) return ppoint_t(data->xAt(i), data->yAt(i));
+        else             return ppoint_t(0, 0);
     }
     
     // Implements PlotItem::drawCount().  Provides default implementation that

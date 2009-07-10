@@ -78,11 +78,16 @@ void TBOptions::setDebugLevel(int newLevel) {
 		debugChooser->setCurrentIndex(0);
 }
 
+int TBOptions::chooserHistoryLimit() const { return historyLimit->value(); }
+void TBOptions::setChooserHistoryLimit(int limit) {
+    historyLimit->setValue(limit); }
+
 // Private Slots //
 
 void TBOptions::restoreDefaults() {
     viewBox->setChecked(true);
     debugChooser->setCurrentIndex(0);
+    historyLimit->setValue(-1);
 }
 
 void TBOptions::save() {

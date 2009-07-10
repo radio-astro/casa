@@ -265,6 +265,38 @@ mask.
 
 </method>
 
+   <method type="function" name="calcuvw">
+   <shortdescription>Calculates (u, v, w) coordinates for the ms.</shortdescription>
+   
+   <keyword>calcuvw</keyword>
+   <description>
+     This calculates (u, v, w) positions for the visibilities using the antenna
+     and feed positions and offsets, the time, and the phase tracking center(s).
+   </description>
+   <input>
+     <param type="intArray" direction="in" name="fields">
+       <description>
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
+       </description>
+       <value>-1</value>
+     </param>
+     <param type="string" name="uvtype">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
+     </param>
+   </input>  
+   <returns type="bool"/>
+   <example>
+     \begin{verbatim}
+     im.open("3C273XC1.MS")
+     im.calcuvw()
+     im.done()
+     \end{verbatim}
+   </example>
+   </method>
  
    <method type="function" name="clean">
    <shortdescription>Calculate a deconvolved image with selected clean algorithm</shortdescription>
@@ -1281,6 +1313,68 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
 </example>
 </method>
 
+   <method type="function" name="fixvis">
+   <shortdescription>Performs visibility adjustments.</shortdescription>
+   
+   <keyword>fixvis</keyword>
+   <description>
+     This corrects visibilities, and/or their (u, v, w) positions, for various
+     effects that can be calculated without fitting a model to the data.
+
+     The effects include:
+     \begin{itemize}
+       \item changing the phase tracking center(s),
+       \item correcting for differential aberration,
+       \item changing the equinox (i.e. B1950 to J2000 or 2006.78),
+       \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
+       \item refocusing.
+     \end{itemize}
+   </description>
+   <input>
+     <param type="intArray" direction="in" name="fields">
+       <description>
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
+       </description>
+       <value>-1</value>
+     </param>	
+     <!-- <param type="any" direction="in" name="phasedirs"> -->
+     <!--  <any type="record"/>  -->
+     <param type="stringArray" direction="in" name="phasedirs">
+       <description>
+	 Phase tracking centers for each field in fields, in the same order.
+       </description>
+       <value></value>
+     </param>
+     <param type="string" direction="in" name="refcode">
+       <description>
+	 Reference code for the type of (u, v, w) coordinates to use in the output.
+	 '' = use the type in the input ms.
+       </description>
+       <value></value>
+     </param>
+     <param type="doubleArray" direction="in" name="distances">
+       <description>
+	 A list of distances (in m) for the fields listed in fields.  0 = infinity.
+       </description>
+       <value>0.0</value>
+     </param>	
+     <param type="string" direction="in" name="datacolumn">
+       <description>
+         Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to operate on.
+         Default: "all".
+       </description>
+       <value>all</value>
+     </param>
+   </input>  
+   <returns type="bool"/>
+   <example>
+     \begin{verbatim}
+     im.open("3C273XC1.MS")
+     im.fixvis()
+     im.done()
+     \end{verbatim}
+   </example>
+   </method>
  
    <method type="function" name="ft">
    <shortdescription>Fourier transform the specified model and componentlist</shortdescription>
@@ -2927,7 +3021,7 @@ im.setdata(nchan=512,start=1,step=1, msselect='SCAN_NUMBER &gt; 10 &amp;&amp; FI
 
  
    <method type="function" name="selectvis">
-   <shortdescription>Select visibility selection for subsequent processing</shortdescription>
+   <shortdescription>Select visibilities for subsequent processing</shortdescription>
    
 <description>
 This setup tool function selects which data are to be used 
@@ -2937,7 +3031,7 @@ data are gridded into an image, and in plotting, only the
 selected data are plotted.
 
 Data can be selected by field and spectral window ids. Note that
-all data thus selected are passed to the imaging, and may or
+all data thus selected are passed to imaging, and may or
 may not be imaged, depending on how the image was constructed
 using <link anchor="imager:imager.defineimage.function">defineimage</link>. For example,
 in mosaicing, use fieldid in setimage to control what pointing
@@ -3066,7 +3160,6 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <value>1</value>
      </param>
 
-
      <param type="any" name="spw">
      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
      <any type="variant"/>
@@ -3074,7 +3167,6 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      </param>
 
      <param type="any" name="field">
-     <any type="variant"/>
      <description>Field Ids (0 relative) or Field names (msselection syntax and wilcards are used) to select</description>
      <any type="variant"/>
      <value>-1</value>

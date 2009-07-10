@@ -129,6 +129,8 @@ class SubMS
   // Select Antennas to split out  
   void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel);
 
+  // Select array IDs to use.
+  void selectArray(const String& subarray);
 
   //select time parameters
   void selectTime(Double timeBin=-1.0, String timerng="");
@@ -141,7 +143,10 @@ class SubMS
 
   //Method to make the subMS
 
-  Bool makeSubMS(String& submsname, String& whichDataCol);
+  //TileShape of size 1 can have 2 values [0], and [1] ...these are used in to determine the tileshape
+  //by using MSTileLayout 
+  //Otherwise it has to be a vector size 3  e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351 rows.
+  Bool makeSubMS(String& submsname, String& whichDataCol, const Vector<Int>& tileShape = Vector<Int> (1, 0));
 
   //Method to make a scratch  subMS and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
@@ -156,6 +161,12 @@ class SubMS
   static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
 				 String telescop, String colName="DATA",
 				 Int obstype=0);
+
+  // Same as above except allowing manual tileshapes
+  static MeasurementSet* setupMS(String msname, Int nchan, Int npol, 
+				 String colName="DATA",
+				 const Vector<Int>& tileShape=Vector<Int>(1,0));
+
   
   // Add optional columns to outTab if present in inTab and possColNames.
   // M must be derived from a Table.
@@ -171,7 +182,7 @@ class SubMS
   static const Vector<String>& parseColumnNames(const String colNameList);
 
   void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
-  Bool doWriteImagingWeight(const MSColumns& msc, const Vector<String>& colNames);
+  Bool doWriteImagingWeight(const ROMSColumns& msc, const Vector<String>& colNames);
 
  private:
   // *** Private member functions ***
@@ -180,7 +191,7 @@ class SubMS
 		     const String& colName, const Bool writeToDataCol=False);
   Bool putDataColumn(MSColumns& msc, Cube<Complex>& data, 
 		     const String& colName, const Bool writeToDataCol=False);
-  Bool getDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
+  Bool getDataColumn(ROArrayColumn<Complex>& data, 
 		     const String& colName);
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
@@ -207,10 +218,10 @@ class SubMS
                            sizeof(Complex);}
 
   // Picks a reference to DATA, MODEL_DATA, or CORRECTED_DATA out of ms_p.
-  const ROArrayColumn<Complex>& right_column(const MSColumns *ms_p, const String& colName);
+  const ROArrayColumn<Complex>& right_column(const ROMSColumns *ms_p, const String& colName);
 
   // Figures out the number, maximum, and index of the selected antennas.
-  uInt fillAntIndexer(const MSColumns *msc, Vector<Int>& antIndexer);
+  uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
   //Bool fillAverAntTime();
   Bool fillTimeAverData(const String& ColumnName);
@@ -230,12 +241,12 @@ class SubMS
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
   // A "Slot" is a subBin, i.e. rows within the same time bin that have
-  // different Data Descriptors, Field_IDs, Array_IDs, or States should not be
-  // averaged together.  This function returns the Slot number corresponding to
-  // the Data Descriptor (dd), Field_ID, Array_ID, and State, all of which have
-  // *remapped* values.
+  // different Data Descriptors, Field_IDs, Array_IDs, or States, and so should
+  // not be averaged together.  This function returns the Slot number
+  // corresponding to the Data Descriptor (dd), Field_ID, Array_ID, and State.
   uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
-			const Int field, const Int scan, const Int state);
+			const Int field, const Int scan, const Int state,
+                        const uInt array);
 
   // *** Member variables ***
 
@@ -243,7 +254,7 @@ class SubMS
   //  * not necessarily to anything useful.
   MeasurementSet ms_p, mssel_p;
   MSColumns * msc_p;		// columns of msOut_p
-  MSColumns * mscIn_p;
+  ROMSColumns * mscIn_p;
   Bool doChanAver_p, antennaSel_p, sameShape_p;
   Double timeBin_p;
   uInt numOutRows_p;
@@ -264,11 +275,10 @@ class SubMS
   Vector<Int> antNewIndex_p;
   Vector<Int> feedNewIndex_p;
   Vector<Int> arrayId_p;
-  Vector<Int> arrayIndexer_p;
   Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex
 
-  Vector<Int> scanRemapper_p, stateRemapper_p; 
+  Vector<Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
 
   // Each bin gets a map which maps its set of slot keys from
   // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to

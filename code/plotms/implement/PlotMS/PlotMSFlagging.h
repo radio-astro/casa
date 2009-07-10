@@ -27,13 +27,17 @@
 #ifndef PLOTMSFLAGGING_H_
 #define PLOTMSFLAGGING_H_
 
-#include <msvis/MSVis/VisSet.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations
+class MeasurementSet;
+class VisSet;
+
 
 // Specifies flagging parameters (including possibly flag extension) for an MS.
 class PlotMSFlagging {    

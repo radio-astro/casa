@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMS.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 
 namespace casa {
@@ -49,17 +50,6 @@ namespace casa {
 // PLOTMS DEFINITIONS //
 ////////////////////////
 
-// Static //
-
-const String PlotMS::CLASS_NAME = "PlotMS";
-
-const String PlotMS::LOG_LOAD_CACHE = "load_cache";
-const String PlotMS::LOG_LOCATE     = "locate";
-const String PlotMS::LOG_FLAG       = "flag";
-const String PlotMS::LOG_UNFLAG     = "unflag";
-const String PlotMS::LOG_DBUS       = "dbus";
-
-
 // Constructors/Destructors //
 
 PlotMS::PlotMS(bool connectToDBus) : itsDBus_(NULL) {
@@ -76,8 +66,26 @@ PlotMS::~PlotMS() {
 
 // Public Methods //
 
+PlotMSPlotter* PlotMS::getPlotter() { return itsPlotter_; }
+void PlotMS::showGUI(bool show) { itsPlotter_->showGUI(show); }
+bool PlotMS::guiShown() const { return itsPlotter_->guiShown(); }
+int PlotMS::execLoop() { return itsPlotter_->execLoop(); }
+int PlotMS::showAndExec(bool show) { return itsPlotter_->showAndExec(show); }
+void PlotMS::close() { itsPlotter_->close(); }
+
+void PlotMS::showError(const String& message, const String& title,
+        bool isWarning) { itsPlotter_->showError(message, title, isWarning); }
+void PlotMS::showWarning(const String& message, const String& title) {
+    itsPlotter_->showError(message, title, true); }
+void PlotMS::showMessage(const String& message, const String& title) {
+    itsPlotter_->showMessage(message, title); }
+
+PlotMSParameters& PlotMS::getParameters() { return itsParameters_; }
+void PlotMS::setParameters(const PlotMSParameters& params) {
+    itsParameters_ = params; }
+
 void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) {
+            int updateFlag) {
     // We only care about PlotMS's parameters.
     if(&params == &itsParameters_) {
         itsLogger_->setSinkLocation(itsParameters_.logFilename());
@@ -96,6 +104,12 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
     }
 }
 
+PlotLoggerPtr PlotMS::getLogger() { return itsLogger_; }
+PlotMSPlotManager& PlotMS::getPlotManager() { return itsPlotManager_; }
+
+PlotMSSinglePlot* PlotMS::addSinglePlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addSinglePlot(this, p); }
+
 
 // Private Methods //
 
@@ -109,7 +123,8 @@ void PlotMS::initialize(bool connectToDBus) {
     itsPlotManager_.setParent(this);
     
     // Update internal state to reflect parameters.
-    parametersHaveChanged(itsParameters_, PlotMSWatchedParameters::ALL, false);
+    parametersHaveChanged(itsParameters_,
+            PlotMSWatchedParameters::ALL_UPDATE_FLAGS());
     
     if(connectToDBus) {
         itsDBus_ = new PlotMSDBusApp(*this);

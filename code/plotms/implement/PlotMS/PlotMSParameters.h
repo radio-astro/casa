@@ -35,25 +35,45 @@ namespace casa {
 
 // Subclass of PlotMSWatchedParameters that hold parameters for the whole
 // plotter.  These parameters include:
-// * log level.
+// * log file name
+// * log events flag
+// * log minimum priority filter
+// * whether to clear any selections when axes are changed or not
+// * width and height for the cached image
 class PlotMSParameters : public PlotMSWatchedParameters {
 public:
-    // Constructor, with default parameter values.
-    PlotMSParameters(const String& logFilename = "",
-            int logEvents = PlotLogger::NO_EVENTS,
-            LogMessage::Priority logPriority = LogMessage::DEBUGGING,
-            bool clearSelection = true, int cachedImageWidth = -1,
-            int cachedImageHeight = -1);
+    // Static //
+    
+    // Update flags.
+    // <group>
+    static const int UPDATE_LOG;
+    static const int UPDATE_PLOTMS_OPTIONS;
+    // </group>
+    
+    
+    // Gets/Sets the file chooser history limit.  (See QtFileDialog.)  Static
+    // parameter.
+    // <group>
+    static int chooserHistoryLimit();
+    static void setChooserListoryLimit(int histLimit);
+    // </group>
+    
+    
+    // Non-Static //
+    
+    // Constructor, with default values for parameters.
+    PlotMSParameters(const String& logFilename = PMS::DEFAULT_LOG_FILENAME,
+            int logEvents = PMS::DEFAULT_LOG_EVENTS,
+            LogMessage::Priority logPriority = PMS::DEFAULT_LOG_PRIORITY,
+            bool clearSelections = PMS::DEFAULT_CLEAR_SELECTIONS,
+            int cachedImageWidth = PMS::DEFAULT_CACHED_IMAGE_WIDTH,
+            int cachedImageHeight = PMS::DEFAULT_CACHED_IMAGE_HEIGHT);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
     
     // Destructor.
     ~PlotMSParameters();
-
-    
-    // Include overloaded methods.
-    using PlotMSWatchedParameters::operator=;
 
     
     // Gets/Sets the log sink location/filename.
@@ -88,14 +108,13 @@ public:
     // Sets the cached image size to the current screen resolution.
     void setCachedImageSizeToResolution();
     
+    // Copy operator.
+    PlotMSParameters& operator=(const PlotMSParameters& copy);
+    
     
     // Implements PlotMSWatchedParameters::equals().  Will return false if the
     // other parameters are not of type PlotMSParameters.
-    bool equals(const PlotMSWatchedParameters& other,
-                            int updateFlags) const;
-    
-    // Copy operator.  See PlotMSWatchedParameters::operator=().
-    PlotMSParameters& operator=(const PlotMSParameters& copy);
+    bool equals(const PlotMSWatchedParameters& other, int updateFlags) const;
     
 private:
     // Log filename.

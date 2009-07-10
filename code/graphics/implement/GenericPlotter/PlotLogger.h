@@ -410,6 +410,14 @@ public:
     // </group>
     
     
+    // Disables the global sink until enableGlobalSink() is called.  Can be
+    // used when something posts undesirably to both the local and global logs.
+    static void disableGlobalSink();
+    
+    // Re-enables the global sink.  See disableGlobalSink().
+    static void enableGlobalSink();
+    
+    
     // Non-Static //
     
     // Constructor which takes the Plotter this logger is associated with.  The
@@ -429,12 +437,19 @@ public:
     const CountedPtr<LogSinkInterface> sink() const;
     // </group>
     
+    // Gets a copy of the log sink interface, IF it is not the global.
+    LogSinkInterface* localSinkCopy() const;
+    
     // Gets/Sets the log sink file location.  If the filename is empty, it
     // means the global sink.
     // <group>
     const String& sinkLocation() const;
     void setSinkLocation(const String& logFile);
     // </group>
+    
+    // Returns true if the logger is currently using the global sink, false
+    // otherwise.
+    bool usingGlobalSink() const { return sinkLocation().empty(); }
     
     
     // Filtering Methods //
@@ -518,6 +533,9 @@ private:
     
     // Map from log event to priority.
     static map<int, LogMessage::Priority> EVENT_PRIORITIES;
+    
+    // Disabled old global filter, or null.
+    static LogFilterInterface* DISABLED_GLOBAL_FILTER;
 };
 typedef CountedPtr<PlotLogger> PlotLoggerPtr;
 

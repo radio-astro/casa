@@ -143,9 +143,6 @@
      </item>
      <item>
       <widget class="QPushButton" name="releaseButton" >
-       <property name="enabled" >
-        <bool>false</bool>
-       </property>
        <property name="text" >
         <string>Release</string>
        </property>

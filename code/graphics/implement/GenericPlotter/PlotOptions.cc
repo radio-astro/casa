@@ -32,9 +32,31 @@ namespace casa {
 // PLOTCOLOR DEFINITIONS //
 ///////////////////////////
 
-PlotColor::PlotColor() { }
+const String PlotColor::REC_HEXADECIMAL = "hexadecimal";
+const String PlotColor::REC_ALPHA = "alpha";
 
+PlotColor::PlotColor() { }
 PlotColor::~PlotColor() { }
+
+void PlotColor::setAsHexadecimal(const String& hex) {
+    setAsHexadecimalOrName(hex); }
+void PlotColor::setAsName(const String& name) { setAsHexadecimalOrName(name); }
+
+Record PlotColor::toRecord() const {
+    Record rec;
+    rec.define(REC_HEXADECIMAL, asHexadecimal());
+    rec.define(REC_ALPHA, alpha());
+    return rec;
+}
+
+void PlotColor::fromRecord(const Record& record) {
+    if(record.isDefined(REC_HEXADECIMAL) &&
+       record.dataType(REC_HEXADECIMAL) == TpString)
+        setAsHexadecimal(record.asString(REC_HEXADECIMAL));
+    
+    if(record.isDefined(REC_ALPHA) && record.dataType(REC_ALPHA) == TpDouble)
+        setAlpha(record.asDouble(REC_ALPHA));
+}
 
 PlotColor& PlotColor::operator=(const PlotColor& rh) {
     setAsHexadecimal(rh.asHexadecimal());
@@ -46,17 +68,20 @@ bool PlotColor::operator==(const PlotColor& rh) const {
     return asHexadecimal() == rh.asHexadecimal() && alpha() == rh.alpha(); }
 bool PlotColor::operator!=(const PlotColor& rh) const{ return !(*this == rh); }
 
-void PlotColor::setAsHexadecimal(const String& hex) {
-    setAsHexadecimalOrName(hex); }
-void PlotColor::setAsName(const String& name) { setAsHexadecimalOrName(name); }
-
 
 //////////////////////////
 // PLOTFONT DEFINITIONS //
 //////////////////////////
 
-PlotFont::PlotFont() { }
+const String PlotFont::REC_POINTSIZE = "pointSize";
+const String PlotFont::REC_PIXELSIZE = "pixelSize";
+const String PlotFont::REC_FAMILY = "family";
+const String PlotFont::REC_COLOR = "color";
+const String PlotFont::REC_ITALICS = "italics";
+const String PlotFont::REC_BOLD = "bold";
+const String PlotFont::REC_UNDERLINE = "underline";
 
+PlotFont::PlotFont() { }
 PlotFont::~PlotFont() { }
 
 void PlotFont::setColor(const PlotColorPtr c) { if(!c.null()) setColor(*c); }
@@ -64,6 +89,49 @@ void PlotFont::setColor(const String& col) {
     PlotColorPtr c = color();
     c->setAsHexadecimalOrName(col);
     setColor(*c);
+}
+
+Record PlotFont::toRecord() const {
+    Record rec;
+    rec.define(REC_POINTSIZE, pointSize());
+    rec.define(REC_PIXELSIZE, pixelSize());
+    rec.define(REC_FAMILY, fontFamily());
+    PlotColorPtr c = color();
+    if(!c.null()) rec.defineRecord(REC_COLOR, color()->toRecord());
+    rec.define(REC_ITALICS, italics());
+    rec.define(REC_BOLD, bold());
+    rec.define(REC_UNDERLINE, underline());
+    return rec;
+}
+
+void PlotFont::fromRecord(const Record& record) {
+    if(record.isDefined(REC_POINTSIZE) &&
+       record.dataType(REC_POINTSIZE) == TpDouble)
+        setPointSize(record.asDouble(REC_POINTSIZE));
+    
+    if(record.isDefined(REC_PIXELSIZE) &&
+       record.dataType(REC_PIXELSIZE) == TpInt)
+        setPixelSize(record.asInt(REC_PIXELSIZE));
+    
+    if(record.isDefined(REC_FAMILY) && record.dataType(REC_FAMILY) == TpString)
+        setFontFamily(record.asString(REC_FAMILY));
+    
+    if(record.isDefined(REC_COLOR) && record.dataType(REC_COLOR) == TpRecord) {
+        PlotColorPtr c = color();
+        if(!c.null()) {
+            c->fromRecord(record.asRecord(REC_COLOR));
+            setColor(c);
+        }
+    }
+    
+    if(record.isDefined(REC_ITALICS) && record.dataType(REC_ITALICS) == TpBool)
+        setItalics(record.asBool(REC_ITALICS));
+    
+    if(record.isDefined(REC_BOLD) && record.dataType(REC_BOLD) == TpBool)
+        setItalics(record.asBool(REC_BOLD));
+    
+    if(record.isDefined(REC_UNDERLINE)&&record.dataType(REC_UNDERLINE)==TpBool)
+        setUnderline(record.asBool(REC_UNDERLINE));
 }
 
 PlotFont& PlotFont::operator=(const PlotFont& rh) {
@@ -91,8 +159,10 @@ bool PlotFont::operator!=(const PlotFont& rh) const { return !(*this == rh); }
 // PLOTAREAFILL DEFINITIONS //
 //////////////////////////////
 
-PlotAreaFill::PlotAreaFill() { }
+const String PlotAreaFill::REC_COLOR   = "color";
+const String PlotAreaFill::REC_PATTERN = "pattern";
 
+PlotAreaFill::PlotAreaFill() { }
 PlotAreaFill::~PlotAreaFill() { }
 
 void PlotAreaFill::setColor(const PlotColorPtr c){ if(!c.null()) setColor(*c);}
@@ -100,6 +170,27 @@ void PlotAreaFill::setColor(const String& co) {
     PlotColorPtr c = color();
     c->setAsHexadecimalOrName(co);
     setColor(*c);
+}
+
+Record PlotAreaFill::toRecord() const {
+    Record rec;
+    PlotColorPtr c = color();
+    if(!c.null()) rec.defineRecord(REC_COLOR, c->toRecord());
+    rec.define(REC_PATTERN, (int)pattern());
+    return rec;
+}
+
+void PlotAreaFill::fromRecord(const Record& record) {
+    if(record.isDefined(REC_COLOR) && record.dataType(REC_COLOR) == TpRecord) {
+        PlotColorPtr c = color();
+        if(!c.null()) {
+            c->fromRecord(record.asRecord(REC_COLOR));
+            setColor(c);
+        }
+    }
+    
+    if(record.isDefined(REC_PATTERN) && record.dataType(REC_PATTERN) == TpInt)
+        setPattern((Pattern)record.asInt(REC_PATTERN));
 }
 
 PlotAreaFill& PlotAreaFill::operator=(const PlotAreaFill& rh) {
@@ -119,8 +210,11 @@ bool PlotAreaFill::operator!=(const PlotAreaFill& rh) const {
 // PLOTLINE DEFINITIONS //
 //////////////////////////
 
-PlotLine::PlotLine() { }
+const String PlotLine::REC_WIDTH = "width";
+const String PlotLine::REC_STYLE = "style";
+const String PlotLine::REC_COLOR = "color";
 
+PlotLine::PlotLine() { }
 PlotLine::~PlotLine() { }
 
 void PlotLine::setColor(const PlotColorPtr c) { if(!c.null()) setColor(*c); }
@@ -128,6 +222,31 @@ void PlotLine::setColor(const String& col) {
     PlotColorPtr c = color();
     c->setAsHexadecimalOrName(col);
     setColor(*c);
+}
+
+Record PlotLine::toRecord() const {
+    Record rec;
+    rec.define(REC_WIDTH, width());
+    rec.define(REC_STYLE, (int)style());
+    PlotColorPtr c = color();
+    if(!c.null()) rec.defineRecord(REC_COLOR, c->toRecord());
+    return rec;
+}
+
+void PlotLine::fromRecord(const Record& record) {
+    if(record.isDefined(REC_WIDTH) && record.dataType(REC_WIDTH) == TpDouble)
+        setWidth(record.asDouble(REC_WIDTH));
+    
+    if(record.isDefined(REC_STYLE) && record.dataType(REC_STYLE) == TpInt)
+        setStyle((Style)record.asInt(REC_STYLE));
+    
+    if(record.isDefined(REC_COLOR) && record.dataType(REC_COLOR) == TpRecord) {
+        PlotColorPtr c = color();
+        if(!c.null()) {
+            c->fromRecord(record.asRecord(REC_COLOR));
+            setColor(c);
+        }
+    }
 }
 
 PlotLine& PlotLine::operator=(const PlotLine& rh) {
@@ -138,7 +257,7 @@ PlotLine& PlotLine::operator=(const PlotLine& rh) {
 }
 
 bool PlotLine::operator==(const PlotLine& rh) const {
-    if(style() == rh.style() == style() == NOLINE) return true;
+    if(style() == rh.style() && style() == NOLINE) return true;
     if(width() == rh.width() && width() == 0) return true;
     return width() == rh.width() && style() == rh.style() &&
            *color() == *rh.color();
@@ -151,11 +270,18 @@ bool PlotLine::operator!=(const PlotLine& rh) const { return !(*this == rh); }
 // PLOTSYMBOL DEFINITIONS //
 ////////////////////////////
 
-PlotSymbol::PlotSymbol() { }
+const String PlotSymbol::REC_WIDTH         = "width";
+const String PlotSymbol::REC_HEIGHT        = "height";
+const String PlotSymbol::REC_HEIGHTISPIXEL = "heightIsPixel";
+const String PlotSymbol::REC_SYMBOL        = "symbol";
+const String PlotSymbol::REC_UCHAR         = "symbolUChar";
+const String PlotSymbol::REC_LINE          = "line";
+const String PlotSymbol::REC_AREAFILL      = "areaFill";
 
+PlotSymbol::PlotSymbol() { }
 PlotSymbol::~PlotSymbol() { }
 
-void PlotSymbol::setSize(pair<double, double> size) {
+void PlotSymbol::setSize(psize_t size) {
     setSize(size.first, size.second); }
 
 bool PlotSymbol::isCharacter() const { return symbol() == CHARACTER; }
@@ -209,6 +335,62 @@ void PlotSymbol::setColor(const String& color) {
     setAreaFill(*a);
 }
 
+Record PlotSymbol::toRecord() const {
+    Record rec;
+    
+    psize_t s = size();
+    rec.define(REC_WIDTH, s.first);
+    rec.define(REC_HEIGHT, s.second);
+    
+    rec.define(REC_HEIGHTISPIXEL, heightIsPixel());
+    rec.define(REC_SYMBOL, (int)symbol());
+    rec.define(REC_UCHAR, (int)symbolUChar());
+    
+    PlotLinePtr l = line();
+    if(!l.null()) rec.defineRecord(REC_LINE, l->toRecord());
+    
+    PlotAreaFillPtr a = areaFill();
+    if(!a.null()) rec.defineRecord(REC_AREAFILL, a->toRecord());
+
+    return rec;
+}
+
+void PlotSymbol::fromRecord(const Record& record) {
+    psize_t s = size();
+    if(record.isDefined(REC_WIDTH) && record.dataType(REC_WIDTH) == TpDouble)
+        s.first = record.asDouble(REC_WIDTH);
+    if(record.isDefined(REC_HEIGHT) && record.dataType(REC_HEIGHT) == TpDouble)
+        s.second = record.asDouble(REC_HEIGHT);
+    setSize(s);
+    
+    if(record.isDefined(REC_HEIGHTISPIXEL) &&
+       record.dataType(REC_HEIGHTISPIXEL) == TpBool)
+        setHeightIsPixel(record.asBool(REC_HEIGHTISPIXEL));
+    
+    if(record.isDefined(REC_UCHAR) && record.dataType(REC_UCHAR) == TpInt)
+        setUSymbol((unsigned short)record.asInt(REC_UCHAR));
+    
+    if(record.isDefined(REC_SYMBOL) && record.dataType(REC_SYMBOL) == TpInt)
+        setSymbol((Symbol)record.asInt(REC_SYMBOL));
+    
+    if(record.isDefined(REC_LINE) && record.dataType(REC_LINE) == TpRecord) {
+        PlotLinePtr l = line();
+        if(!l.null()) {
+            l->fromRecord(record.asRecord(REC_LINE));
+            setLine(l);
+        }
+    }
+    
+    if(record.isDefined(REC_AREAFILL) &&
+       record.dataType(REC_AREAFILL) == TpRecord) {
+        PlotAreaFillPtr a = areaFill();
+        if(!a.null()) {
+            a->fromRecord(record.asRecord(REC_AREAFILL));
+            setAreaFill(a);
+        }
+    }
+}
+
 PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
     setSize(rh.size());
     setHeightIsPixel(rh.heightIsPixel());
@@ -221,7 +403,7 @@ PlotSymbol& PlotSymbol::operator=(const PlotSymbol& rh) {
 
 bool PlotSymbol::operator==(const PlotSymbol& rh) const {
     if(symbol() == rh.symbol() && symbol() == NOSYMBOL) return true;
-    if(size()== rh.size() && size()== pair<double, double>(0, 0)) return true;
+    if(size() == rh.size() && size() == psize_t(0, 0)) return true;
     return size() == rh.size() && symbol() == rh.symbol() &&
            (isCharacter() ? symbolChar() == rh.symbolChar() : true) &&
            (isCharacter() ? heightIsPixel() == rh.heightIsPixel() : true) &&

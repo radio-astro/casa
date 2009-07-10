@@ -34,13 +34,15 @@ namespace casac {
 class ms
 {
   private:
-  
+
+	
+
   public:
 
     ms();
     virtual ~ms();
 
-    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamesceme="old");
+    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamescheme = "old");
 
     int nrow(const bool selected = false);
 
@@ -82,7 +84,21 @@ class ms
 
     bool timesort(const std::string& newmsname = "");
 
-    bool split(const std::string& outputms = "", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const std::vector<int>& nchan = std::vector<int> (1, -1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& timebin = ::casac::initialize_variant("-1s"), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const std::string& whichcol = "DATA");
+    bool split(const std::string&      outputms = "",
+               const ::casac::variant& field = ::casac::initialize_variant(""),
+               const ::casac::variant& spw = ::casac::initialize_variant(""),
+               const std::vector<int>& nchan = std::vector<int> (1, -1),
+               const std::vector<int>& start = std::vector<int> (1, 0),
+               const std::vector<int>& step = std::vector<int> (1, 1),
+               const ::casac::variant& baseline = ::casac::initialize_variant(""),
+               const ::casac::variant& timebin = ::casac::initialize_variant("-1s"),
+               const std::string&      time = "",
+               const ::casac::variant& scan = ::casac::initialize_variant(""),
+               const ::casac::variant& uvrange = ::casac::initialize_variant(""),
+               const std::string&      taql = "",
+               const std::string&      whichcol = "DATA",
+               const ::casac::variant& tileshape = ::casac::initialize_variant(""),
+               const ::casac::variant& subarray = ::casac::initialize_variant(""));
 
     bool iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns = true);
 
@@ -110,21 +126,7 @@ class ms
 
     bool done();
 
-  bool calcuvw(const std::vector<int>& fields=std::vector<int>(),
-	       const std::string& refcode="");
-
-  bool fixvis(const std::vector<int>& fields=std::vector<int>(),
-	      const ::casac::variant& phaseDirs=::casac::initialize_variant(""),
-	      const std::string& refcode="");
-
-  ::casac::record* msseltoindex(const std::string& vis = "",
-				const ::casac::variant& spw = ::casac::initialize_variant(""),
-				const ::casac::variant& field = ::casac::initialize_variant(""),
-				const ::casac::variant& baseline = ::casac::initialize_variant(""),
-				const ::casac::variant& time = ::casac::initialize_variant(""),
-				const ::casac::variant& scan = ::casac::initialize_variant(""),
-				const ::casac::variant& uvrange = ::casac::initialize_variant(""),
-				const std::string& taql = "");
+    ::casac::record* msseltoindex(const std::string& vis = "", const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "");
 
     bool hanningsmooth();
 

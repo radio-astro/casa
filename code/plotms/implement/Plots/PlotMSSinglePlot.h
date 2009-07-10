@@ -28,7 +28,6 @@
 #define PLOTMSSINGLEPLOT_H_
 
 #include <plotms/Plots/PlotMSPlot.h>
-#include <plotms/Plots/PlotMSSinglePlotParameters.h>
 
 #include <casa/namespace.h>
 
@@ -37,7 +36,18 @@ namespace casa {
 // Implementation of PlotMSPlot for a single plot on a single canvas.  Uses
 // PlotMSSinglePlotParameters in addition to PlotMSPlotParameters.
 class PlotMSSinglePlot : public PlotMSPlot {
-public:    
+public:
+    // Static //    
+    
+    // See PlotMSPlot::makeParameters().
+    // <group>
+    static PlotMSPlotParameters makeParameters(PlotMS* plotms);
+    static void makeParameters(PlotMSPlotParameters& params, PlotMS* plotms);
+    // </group>
+    
+    
+    // Non-Static //
+    
     // Constructor which takes the PlotMS parent.  Starts out with default
     // parameters.
     PlotMSSinglePlot(PlotMS* parent);
@@ -65,24 +75,14 @@ public:
     // Implements PlotMSPlot::setupPlotSubtabs().
     void setupPlotSubtabs(PlotMSPlotTab& tab) const;
     
-    // Implements PlotMSPlot::parameters().
-    // <group>
-    const PlotMSPlotParameters& parameters() const;
-    PlotMSPlotParameters& parameters();
-    // </group>
+    // Implements PlotMSPlot::parametersHaveChanged().
+    void parametersHaveChanged(const PlotMSPlotParameters::Group& group);
     
     // Implements PlotMSPlot::selectedRegions().
     PlotMSRegions selectedRegions() const;
     
     // Implements PlotMSPlot::visibleSelectedRegions().
     PlotMSRegions visibleSelectedRegions() const;
-    
-    
-    // Returns a reference to the plot's single parameters.
-    // <group>
-    const PlotMSSinglePlotParameters& singleParameters() const;
-    PlotMSSinglePlotParameters& singleParameters();
-    // </group>
     
 protected:
     // Implements PlotMSPlot::initializePlot().
@@ -91,27 +91,42 @@ protected:
     // Implements PlotMSPlot::assignCanvases().
     bool assignCanvases();
     
-    // Implements PlotMSPlot::hasThreadedCaching().
-    bool hasThreadedCaching() const { return true; }
+    // Implements PlotMSPlot::parametersHaveChanged_().
+    bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
+                int updateFlag, bool releaseWhenDone);
     
-    // Implements PlotMSPlot::updateCache().
-    bool updateCache();
-    
-    // Implements PlotMSPlot::updateCanvas().
-    bool updateCanvas();
-    
-    // Implements PlotMSPlot::updatePlot().
-    bool updatePlot();
+    // Overrides PlotMSPlot::constructorSetup().
+    void constructorSetup();
     
 private:
+    // Simple class to hold parameter to resume updating after a threaded
+    // cache loading.
+    class TCLParams {
+    public:
+        // Constructor.
+        TCLParams() : releaseWhenDone(false), updateCanvas(false),
+                updateDisplay(false), endCacheLog(false) { }
+        
+        // Destructor.
+        ~TCLParams() { }
+        
+        // Parameters.
+        // <group>
+        bool releaseWhenDone;
+        bool updateCanvas;
+        bool updateDisplay;
+        bool endCacheLog;
+        // </group>
+    };
+    
     // Convenient access to single plot.
     MaskedScatterPlotPtr itsPlot_;
     
     // Convenient access to single canvas.
     PlotCanvasPtr itsCanvas_;
     
-    // Plot parameters.
-    PlotMSSinglePlotParameters itsParameters_;
+    // See TCLParams class documentation
+    TCLParams itsTCLParams_;
     
     
     // Disable copy constructor and operator for now.
@@ -119,6 +134,16 @@ private:
     PlotMSSinglePlot(const PlotMSSinglePlot& copy);
     PlotMSSinglePlot& operator=(const PlotMSSinglePlot& copy);
     // </group>
+    
+    // Updates helper methods.
+    // <group>
+    bool updateCache();
+    bool updateCanvas();
+    bool updateDisplay();
+    // </group>
+    
+    // Use macro for define post-thread methods for loading the cache.
+    PMS_POST_THREAD_METHOD(PlotMSSinglePlot, cacheLoaded)
 };
 
 }

@@ -29,12 +29,16 @@
 
 #include <plotms/GuiTabs/PlotMSCanvasTab.ui.h>
 
-#include <casaqt/QtUtilities/QtPlotWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations
+class PlotLineWidget;
+class QtLabelWidget;
+
 
 // Subclass of PlotMSPlotSubtab to manage canvas parameters.
 class PlotMSCanvasTab : public PlotMSPlotSubtab, Ui::CanvasTab {

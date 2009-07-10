@@ -21,11 +21,9 @@ sources which need additional flagging, imaging and self-calibration.  The data
 can be averaged over specified frequency channels of the input data set and time
 averaging is also available.  
 
-Note: It is not yet possible to simultaneously average a data set in time and frequency
-in one execution:  they must be done separately
+Note: It is not yet possible to simultaneously average a data set in time and
+frequency in one execution: they must be done separately.
 </description>
-
-
 
 <input>
 	<param type="string" name="vis" mustexist="true">
@@ -90,11 +88,14 @@ in one execution:  they must be done separately
 		<description>select data based on scan numbers</description>
 		<value></value>
 	</param>
+        <param type="string" name="array">
+                <description>Select (sub)array by array ID number(s)</description>
+                <value></value>
+        </param>
 	<param type="string" name="uvrange" >
 		<description>select data based on uv distance range</description>
 		<value></value>
 	</param>
-
 </input>
 <example>
 
@@ -175,6 +176,8 @@ in one execution:  they must be done separately
                timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
                timerange='09:44:00' data within one integration of time
                timerange='&gt;10:24:00' data after this time
+        array  -- (Sub)array number range
+            default: ''=all
 	uvrange -- Select data within uvrange (default units meters)
             default: ''=all; example:
             uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda

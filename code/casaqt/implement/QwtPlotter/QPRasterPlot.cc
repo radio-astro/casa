@@ -169,7 +169,7 @@ PlotRasterDataPtr QPRasterPlot::rasterData() const { return m_data.data(); }
 void QPRasterPlot::setXRange(double from, double to) {
     if(m_data.data().null()) return;
     
-    pair<double, double> r = m_data.data()->xRange();
+    prange_t r = m_data.data()->xRange();
     m_data.data()->setXRange(from, to);
     if(from != r.first || to != r.second) itemChanged();
 }
@@ -177,7 +177,7 @@ void QPRasterPlot::setXRange(double from, double to) {
 void QPRasterPlot::setYRange(double from, double to) {
     if(m_data.data().null()) return;
     
-    pair<double, double> r = m_data.data()->yRange();
+    prange_t r = m_data.data()->yRange();
     m_data.data()->setYRange(from, to);
     if(from != r.first || to != r.second) itemChanged();
 }

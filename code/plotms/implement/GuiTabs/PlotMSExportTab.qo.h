@@ -29,12 +29,15 @@
 
 #include <plotms/GuiTabs/PlotMSExportTab.ui.h>
 
-#include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations
+class QtFileWidget;
+
 
 // Subclass of PlotMSPlotSubtab to manage exporting plots.
 class PlotMSExportTab : public PlotMSPlotSubtab, Ui::ExportTab {

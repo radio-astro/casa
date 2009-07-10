@@ -3865,7 +3865,7 @@ Bool Imager::makeimage(const String& type, const String& image)
 // be retained if a name is given. This does not use
 // the SkyEquation.
 Bool Imager::makeimage(const String& type, const String& image,
-		   const String& compleximage)
+                       const String& compleximage)
 {
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::makeimage",23);
@@ -3905,6 +3905,9 @@ Bool Imager::makeimage(const String& type, const String& image,
 	 << LogIO::POST;
     }
     else if (type=="model") {
+      if(vs_p->iter().msColumns().modelData().isNull())
+	os << "Cannot make model image without scratch model-data column "
+	   << LogIO::EXCEPTION;
       seType=FTMachine::MODEL;
       os << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
@@ -3916,10 +3919,16 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
     else if (type=="psf") {
       seType=FTMachine::PSF;
+      if(vs_p->iter().msColumns().modelData().isNull())
+	os << "Cannot make psf image without scratch model-data column for now"
+	   << LogIO::EXCEPTION;
       os << "Making point spread function "
 	 << LogIO::POST;
     }
     else if (type=="residual") {
+      if(vs_p->iter().msColumns().modelData().isNull())
+	os << "Cannot make residual image without scratch model-data column "
+	   << LogIO::EXCEPTION;
       seType=FTMachine::RESIDUAL;
       os << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
@@ -4000,7 +4009,7 @@ Bool Imager::makeimage(const String& type, const String& image,
       return False;
     }
 
-    if(doSD&&(ftmachine_p=="ft")) {
+    if(doSD && (ftmachine_p == "ft")){
       os << "To make single dish images, ftmachine in setoptions must be set to either sd or both"
 	 << LogIO::EXCEPTION;
     }

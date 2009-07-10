@@ -26,7 +26,9 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
 
 namespace casa {
 
@@ -96,17 +98,10 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSSinglePlotParameters*
-PlotMSPlotManager::singlePlotParameters(unsigned int index) {
-    if(index >= itsPlotParameters_.size()) return NULL;
-    else return dynamic_cast<PlotMSSinglePlotParameters*>(
-                itsPlotParameters_[index]);
-}
-
 PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
-        const PlotMSSinglePlotParameters* params) {
+        const PlotMSPlotParameters* params) {
     PlotMSSinglePlot* plot = new PlotMSSinglePlot(parent);
-    if(params != NULL) plot->singleParameters() = *params;
+    if(params != NULL) plot->parameters() = *params;
     itsPlots_.push_back(plot);
     itsPlotParameters_.push_back(&plot->parameters());
     addPlotToPlotter(plot);
