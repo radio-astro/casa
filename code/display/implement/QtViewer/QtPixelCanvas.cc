@@ -165,7 +165,6 @@ q_text::q_text(const QPoint &pt, const String& txt, const QFont& fnt, double ang
         Display::TextAlign align, const QPen &p) : q_draw(p), point(pt), text(txt),
         font(fnt), angle(ang), alignment(align) { }
 
-}
 
 
 
@@ -1570,6 +1569,7 @@ Bool QtPixelCanvas::resizeColorTable(uInt newSize) {
 Bool QtPixelCanvas::resizeColorTable(uInt nReds, uInt nGreens, uInt nBlues) {
   return False;  }
   
+}
 
 
 /*	//  other trials...
