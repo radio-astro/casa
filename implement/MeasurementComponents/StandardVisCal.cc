@@ -47,6 +47,8 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+// math.h ?
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -406,6 +408,18 @@ void TJonesCorruptor::initialize() {
   curr_slot()=0;
   initialized()=True;
   if (prtlev()>2) cout << "TCorruptor::init" << endl;
+
+
+#ifdef FBM_REMY
+
+  fBM* myfbm = new fBM(nSim(),3);
+  //  cout << fBM(2,1) << " - ";
+  cout << myfbm->data(2,1) << " - ";
+  myfbm->initialize(100,0.3);
+  //  cout << fBM(2,1) << " FOOBAR " << endl;    
+  cout << myfbm->data(2,1) << " FOOBAR " << endl;  
+
+#endif
 }
 
 
@@ -432,10 +446,104 @@ Complex TJonesCorruptor::thisgain(const Double& freq) {
 
 
 #ifdef FBM_REMY
-  fBM::fBM(const Vector<Int>& dimensions) :
-    Array<Double>(dimensions),
-    initialized_(False),
-  {};
+
+  fBM::fBM(uInt i1) :    
+    initialized_(False)
+  { data_ = new Vector<Double>(i1); };
+
+  fBM::fBM(uInt i1, uInt i2) :
+    initialized_(False)
+  { data_ = new Matrix<Double>(i1,i2); };
+
+  fBM::fBM(uInt i1, uInt i2, uInt i3) :
+    initialized_(False)
+  { data_ = new Cube<Double>(i1,i2,i3); };
+
+  void fBM::initialize(const Int seed, const Double beta) {
+
+    MLCG  rndGen_p(seed);
+    Normal noiseDist_p(&rndGen_p, 0.0, 1.0); // sigma=1.
+    IPosition s = data_->shape();
+    uInt ndim = s.nelements();
+    Double amp,phase,pi=3.14159265;    
+    uInt i0,j0;
+    FFTServer<Complex,Complex> server; // could do C,R but then the output 
+    // first axis is reduced in size.
+    // FFTServer C,R does assume that the input is hermitian and only has 
+    // half of the elements in each direction, so 
+    // RI TODO use C,R fft and don't bother with setting other half of 
+    // freq-domain array F.
+
+    switch(ndim) {
+    case 1:
+      // beta = 1+2H = 5-2D
+      Vector<Complex> F(s(0)),G(s(0));
+      for (uInt i=0; i<s(0)/2-1; i++) {
+	// data_->operator()(IPosition(1,i))=5.;
+	phase = 2.*pi*rndGen_p(); 
+	// RI TODO is this assuming the origin is at 0,0 in which case 
+	// we should be using FFTServer::fft0 ? 
+	amp = Power(Double(i+1), -0.5*beta) * noiseDist_p();
+	F(i)=Complex(amp*cos(phase),amp*sim(phase));
+	F(s(0)-i)=Complex(amp*cos(phase),-amp*sim(phase));
+      }
+      server.fft(F,G);
+      data_->operator()=G.real(); 
+      cout << G.real() << endl;
+      break;
+    case 2:
+      // beta = 1+2H = 7-2D
+      Matrix<Complex> F(s(0),s(1));
+      for (uInt i=0; i<s(0)/2; i++)
+	for (uInt j=0; j<s(1)/2; j++) {
+	  phase = 2.*pi*rndGen_p(); 	  
+	  // ok to draw from the MLCG directly as well as through the Normal ?
+	  // RI TODO is this assuming the origin is at 0,0 in which case 
+	  // we should be using FFTServer::fft0 ? 
+	  if (i!=0 or j!=0) {
+	    amp = pow(Double(i)^2 + Double(j)^2, -0.25*(beta+1)) * noiseDist_p();
+	  } else {
+	    amp = 0.;
+	  }
+	  F(i,j)=Complex(amp*cos(phase),amp*sim(phase));
+	  if (i==0) {
+	    i0=0;
+	  } else {
+	    i0=s(0)-i;
+	  }
+	  if (j==0) {
+	    j0=0;
+	  } else {
+	    j0=s(1)-j;
+	  }
+	  F(i0,j0)=Complex(amp*cos(phase),-amp*sim(phase));
+	}
+      // FFTServer
+      // The complex to real transform does not check that the
+      // imaginary component of the values where u=0 are zero
+      F(s(0)/2,0).imag()=0.;
+      F(0,s(1)/2).imag()=0.;
+      F(s(0)/2,s(1)/2).imag()=0.;
+      for (uInt i=0; i<s(0)/2; i++)
+	for (uInt j=0; j<s(1)/2; j++) {
+	  phase = 2.*pi*rndGen_p();
+	  amp = pow(Double(i)^2 + Double(j)^2, -0.25*(beta+1)) * noiseDist_p();
+	  F(i,s(1)-j) = Complex(amp*cos(phase),amp*sin(phase));
+	  F(s(0)-i,j) = Complex(amp*cos(phase),-amp*sin(phase));
+	}
+      //data_->operator()(IPosition(2,i,j))=5.;
+      //data_->operator()=InvFFT(F); //complex to real
+      break;
+    case 3:
+      // beta = 1+2H = 9-2D
+      throw(AipsError("no 3d fractional Brownian motion yet."));
+      for (uInt i=0; i<s(0); i++)
+	for (uInt j=0; j<s(1); j++)
+	  for (uInt k=0; j<s(3); k++)
+	    data_->operator()(IPosition(3,i,j,k))=5.;     
+    }
+  };
+
 #endif
 
 

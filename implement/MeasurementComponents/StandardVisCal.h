@@ -40,6 +40,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declaration
 class VisEquation;
 
+
+
+
 // **********************************************************
 //  PJones
 //
@@ -184,17 +187,34 @@ private:
 
 
 
+//#define FBM_REMY
 
 #ifdef FBM_REMY
+
 // this generates fractional brownian motion aka generalized 1/f noise
- class fBM : public Array<Double> {
+// class fBM : public Array<Double> {
+class fBM {
+
  public:
-  fBM(const Vector<Int>& dimensions);
-  virtual ~fBM();
+
+  fBM(uInt i1);
+  fBM(uInt i1, uInt i2);
+  fBM(uInt i1, uInt i2, uInt i3);
+  // virtual ~fBM(); // not ness if we don't derive from this
   inline Bool& initialized() { return initialized_; };
+  void initialize(const uInt& seed, const Double& beta);
+
+  inline Double data(uInt i1) { return data_->operator()(IPosition(1,i1)); };
+  inline Double data(uInt i1, uInt i2) { return data_->operator()(IPosition(2,i1,i2)); };
+  inline Double data(uInt i1, uInt i2, uInt i3) { return data_->operator()(IPosition(3,i1,i2,i3)); };
+
+
  private:
   Bool initialized_;
-}
+  Array<Double>* data_;
+
+};
+
 #endif
 
 

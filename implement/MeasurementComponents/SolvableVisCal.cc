@@ -77,6 +77,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
+  simint_("inf"),
+  simulated_(False),
   solnorm_(False),
   minSNR_(0.0f),
   combine_(""),
@@ -90,7 +92,8 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solveParErr_(vs.numberSpw(),NULL),
   solveParSNR_(vs.numberSpw(),NULL),
   srcPolPar_(),
-  chanmask_(NULL)
+  chanmask_(NULL),
+  corruptor_p(NULL)
 {
 
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
@@ -128,6 +131,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
+  simint_("inf"),
+  simulated_(False),
   solnorm_(False),
   minSNR_(0.0),
   combine_(""),
@@ -141,7 +146,8 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solveParErr_(1,NULL),
   solveParSNR_(1,NULL),
   srcPolPar_(),
-  chanmask_(NULL)
+  chanmask_(NULL),
+  corruptor_p(NULL)
 {  
 
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
@@ -408,12 +414,61 @@ void SolvableVisCal::setApply(const Record& apply) {
 
 // ===================================================
 
+#define PRTLEV 0
+
+CalCorruptor::CalCorruptor(const Int nSim) : 
+  nSim_(nSim),
+  initialized_(False),
+  prtlev_(PRTLEV),
+  curr_slot_(-1)
+{
+}
+
+CalCorruptor::~CalCorruptor() {}
+
+
+
 void SolvableVisCal::setSimulate(const Record& simpar) {
 
   if (prtlev()>2) cout << "SVC::setSimulate(simpar)" << endl;
 
-  // Call VisCal version for generic stuff (simint, etc)
-  VisCal::setSimulate(simpar);
+  // RI TODO interpolation params have to get sent to SolvableVisCal::setApply or setSolve.
+
+  // deal with general parameters ( this general setSimulate will be 
+  // called by any derived classes before dealing with their specific parms )
+
+  // Extract calWt
+  if (simpar.isDefined("calwt"))
+    calWt()=simpar.asBool("calwt");
+  
+  // (copied from SolvableVisCal::setSolve)
+
+  if (simpar.isDefined("simint"))
+    simint()=simpar.asString("simint");
+  
+  if (upcase(simint()).contains("INF") || simint()=="") {
+    simint()="inf";
+    interval()=-1.0;
+  }
+  else if (upcase(simint()).contains("INT"))
+    interval()=0.0;
+  else {
+    QuantumHolder qhsimint;
+    String error;
+    Quantity qsimint;
+    qhsimint.fromString(error,simint());
+    if (error.length()!=0)
+      throw(AipsError("Unrecognized units for simint."));
+    qsimint=qhsimint.asQuantumDouble();
+
+    if (qsimint.isConform("s"))
+      interval()=qsimint.get("s").getValue();
+    else {
+      // assume seconds
+      interval()=qsimint.getValue();
+      simint()=simint()+"s";
+    }
+  }
 
   // check if want to write a table:
   if (simpar.isDefined("caltable")) {
@@ -451,9 +506,54 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
       throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
     }
   
-  // RI TODO specializations probably have to deal with channelization
+  // RI TODO specializations probably have to deal with channelization?
 
 }
+
+
+
+// Set up simulated params
+void SolvableVisCal::setupSim(const Int& nSim, VisSet& vs, const Record& simpar) {
+
+  if (prtlev()>2) cout << "      SVC::setupSim()" << endl;
+
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // Every VC needs to have its own version of this!
+  throw(AipsError("This VisCal doesn't yet support simulation"));
+ 
+}
+
+
+
+void SolvableVisCal::simPar(VisBuffGroupAcc& vbga) {
+  
+  if (prtlev()>2) cout << "      SVC::simPar()" << endl;
+
+  // This method only called in simulate context!
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // Every VC needs to have its own version of this!
+  throw(AipsError("This VisCal doesn't yet support simulation"));
+ 
+}
+
+
+String SolvableVisCal::siminfo() {
+
+  ostringstream o;
+  o << boolalpha
+    << typeName() << " <simulated>"
+    << ": output table="      << calTableName()
+    << " simint="     << simint()
+    << " t="          << interval();
+  return String(o);
+}
+
+// ===================================================
+
+
 
 
 
@@ -473,21 +573,6 @@ String SolvableVisCal::applyinfo() {
   return String(o);
 
 }
-
-
-String SolvableVisCal::siminfo() {
-  // RI TODO SolvableVisCal::siminfo calls VisCal's - TBD change?
-  VisCal::siminfo();
-
-  ostringstream o;
-  o << boolalpha
-    << typeName()
-    << ": output table="      << calTableName()
-    << " simint="     << simint()
-    << " t="          << interval();
-  return String(o);
-}
-
 
 
 void SolvableVisCal::setSolve() {
