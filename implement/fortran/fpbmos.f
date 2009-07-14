@@ -77,7 +77,7 @@
       integer ixr,iyr
       logical opbmos,mreindex
       external gcppeij
-      double precision ts,tc
+      double precision ts,tc,tmpnorm
 
       origin(1)=gridorigin(1)
       origin(2)=gridorigin(2)
@@ -89,19 +89,8 @@
          do ix=-rsupport,rsupport
             iloc(1)=(ix*sampling+off(1)) * cfscale
             iu = iloc(1)
-            
-c$$$            ixr = ix*sampling*cfscale
-c$$$            iyr = iy*sampling*cfscale
-c$$$            iu = nint(cDPA*ixr + sDPA*iyr)
-c$$$            iv = nint(-sDPA*ixr + cDPA*iyr)
-c$$$            iu = ixr
-c$$$            iv = iyr
-c$$$            iu=iu+off(1)*cfscale
-c$$$            iv=iv+off(2)*cfscale
             ts=sDPA
             tc=cDPA
-c$$$            ts=0.0
-c$$$            tc=1.0
             if (mreindex(iu,iv,iloc(1),iloc(2),
      $           ts,tc,convOrigin,convSize)) then
                if (dopointingcorrection .eq. 1) then
@@ -126,20 +115,22 @@ c$$$     $                 dograd,pcwt,pdcwt1,pdcwt2,currentCFPA)
                   cwt=(func(iloc(1),iloc(2), iloc(3),
      $                 PolnPlane))
                end if
+               cwt=(func(iloc(1),iloc(2), iloc(3),
+     $              PolnPlane))
 
+c$$$               if (doavgpb .gt. 0) then
+c$$$                  write(*,*) apol, PolnPlane, iloc(1),iloc(2),
+c$$$     $                 real(cwt), imag(cwt),ix,iy
+c$$$               endif
+               tcnorm = tcnorm + (cwt/cnorm)
+               tmpnorm = cnorm
                if (doavgpb .gt. 0) then
-                  grid(origin(1)+ix,origin(2)+iy,apol,achan)=
-     $                 grid(origin(1)+ix,origin(2)+iy,apol,achan)+
-     $                 nvalue*abs(cwt)*conjg(pcwt)/cnorm
-C     $                 nvalue*abs(cwt)*pcwt
-c/cnorm
-               else
-                  grid(origin(1)+ix,origin(2)+iy,apol,achan)=
-     $                 grid(origin(1)+ix,origin(2)+iy,apol,achan)+
-     $                 nvalue*cwt*conjg(pcwt)/cnorm
+                  cwt = real(cwt)
+                  tmpnorm=real(tmpnorm)
                endif
-
-               tcnorm=tcnorm+(cwt/cnorm)
+               grid(origin(1)+ix,origin(2)+iy,apol,achan)=
+     $              grid(origin(1)+ix,origin(2)+iy,apol,achan)+
+     $              nvalue*cwt*conjg(pcwt)/tmpnorm
             endif
          end do
       end do
@@ -221,6 +212,7 @@ c                  pcwt=conjg(pcwt)
                else
                   cwt=(func(iloc(1),iloc(2),iloc(3),PolnPlane))
                end if
+               cwt=(func(iloc(1),iloc(2),iloc(3),PolnPlane))
 C !$OMP MASTER
                cnorm=cnorm+cwt
 c$$$               write(*,*)ix,iy,iloc(1),iloc(2),iloc(3),cnorm,cwt,
@@ -265,7 +257,7 @@ C
       integer rownum
       integer support(wconvsize,polused,npa), rsupport
       integer chanmap(nchan), polmap(npol),cfmap(npol),conjcfmap(npol)
-      integer dopsf, doavgpb
+      integer dopsf, doavgpb,nodoavgpb
       integer wtsupport, convWtOrigin, convwtsize
       complex nvalue
       
@@ -295,10 +287,12 @@ C
       integer nant, scanno, ant1(nrow), ant2(nrow)
       integer convOrigin
       real raoff(nant), decoff(nant)
-      integer accumPB
+      integer accumPB, chanPolPB
       complex tmpvalue
       integer OMP_GET_THREAD_NUM,TID
-      
+      logical chansDone(nvischan), polsDone(npol)
+
+      chanPolPB=0
       irow=rownum
 
       if(irow.ge.0) then
@@ -314,8 +308,14 @@ c      dPA = 0
       cDPA = cos(dPA)
       sDPA = sin(dPA)
       
-      
-      convOrigin = (convsize+1)/2
+      do ichan=1,nvischan
+         chansDone(ichan) = .false.
+      enddo
+      do ichan=1,npol
+         polsDone(ichan) = .false.
+      enddo
+
+      convOrigin = (convsize-1)/2
 c      convwtsize=2*wtsupport*10+1
       convWtOrigin = (convwtsize-1)/2
       accumPB=1
@@ -372,12 +372,17 @@ c$$$                           write(*,*) TID,nvalue,apol,ipol,ichan,irow
 
                            if ((doavgpb .gt. 0) .and. (cfwtOK) .and.
      $                          (accumPB .eq. 1)) then
-                              lloc(1)=(nx-1)/2
-                              lloc(2)=(ny-1)/2
+C
+C This is the center of the WT image is 
+C
+                              lloc(1)=(nx)/2+1
+                              lloc(2)=(ny)/2+1
                               pboff(1)=0
                               pbOff(2)=0
                               pboff(3)=off(3)
                               tmpvalue=cmplx(weight(ichan,irow))
+                              tmpvalue=cmplx(1,0)
+
                               cnorm2 = getarea(convWts,area,wtsupport,
      $                             sampling,iloc,loc,pboff, offset, 
      $                             cfscale,scale,lambda, sDPA, cDPA,
@@ -397,6 +402,8 @@ c$$$                           write(*,*) TID,nvalue,apol,ipol,ichan,irow
      $                             raoff,decoff,ConjPlane,PolnPlane,
      $                             nx,ny,npol,nchan,apol,achan, 
      $                             ant1,ant2,uvw,nrow,irow)
+                              chansDone(ichan)=.true.
+                              polsDone(PolnPlane) = .true.
                            endif
                            if (cfOK) then
                               convOrigin = (convSize-1)/2
@@ -410,7 +417,8 @@ c$$$                           write(*,*) TID,nvalue,apol,ipol,ichan,irow
      $                             dograd, nant,raoff,decoff,
      $                             ConjPlane,PolnPlane,ant1,ant2,
      $                             uvw,nrow,irow)
-                              tcnorm=accumulate(doavgpb,area,grid,loc,
+                              nodoavgpb=0
+                              tcnorm=accumulate(nodoavgpb,area,grid,loc,
      $                             convfunc,nvalue,
      $                             cnorm,rsupport,
      $                             sampling,iloc,loc,off,offset,cfscale,
@@ -432,6 +440,7 @@ c$$$  sumwt(apol,achan)=sumwt(apol,achan)+
 c$$$  $                          weight(ichan,irow)
                         end if
                      end do
+c                     stop
 C!$OMP ENDDO
 C!$OMP END PARALLEL
                              
@@ -439,7 +448,20 @@ c     else
                   end if
                end if
             end do
-            accumPB=0
+            chanPolPB=0
+            do ichan=1,nvischan
+               if (chansDone(ichan) .eqv. .true.) chanPolPB=chanPolPB+1
+            enddo
+            do ichan=1,npol
+               if (polsDone(ichan) .eqv. .true.) chanPolPB=chanPolPB+1
+            enddo
+c            write(*,*)npol,nvischan,chanPolPB,accumPB
+            if (chanPolPB .lt. nvischan+npol) then
+               accumPB=1
+            else 
+               accumPB=0
+            endif
+c            accumPB=1
          end if
       end do
 cccc  write(*,*) sumwt(1,1),norm,cnorm
@@ -884,7 +906,7 @@ c     external nwcppEij
 C     
       
       dPA = -(currentCFPA - actualPA)
-c      dPA = 0
+C      dPA = 0
       cDPA = cos(dPA)
       sDPA = sin(dPA)
       convOrigin = (convsize-1)/2
@@ -972,9 +994,11 @@ c$$$     $                                      currentCFPA)
                                     cwt=(convfunc(iloc(1),
      $                                   iloc(2), iloc(3),PolnPlane))
 
-                                    nvalue=nvalue+(cwt)*conjg(pcwt)*
-     $                                   grid(loc(1)+ix,loc(2)+iy,
+                                    nvalue=nvalue+(cwt)*conjg(pcwt)
+     $                                   *grid(loc(1)+ix,loc(2)+iy,
      $                                   apol,achan)
+
+
 c                                    norm(apol)=norm(apol)+(pcwt*cwt)
                                     norm(apol)=norm(apol)+cwt
 c$$$                                    junk=exp(cmplx(0,3.1415926*
@@ -998,8 +1022,14 @@ c     norm(apol) = norm(apol)/abs(norm(apol))
                            values(ipol,ichan,irow)=
      $                          nvalue*conjg(phasor)
      $                          /norm(apol)
-c$$$  write (*,*) ipol,ichan,irow,values(ipol,ichan,
-c$$$  $                       irow),nvalue,norm(apol)
+c$$$                           if ((ant1(irow)+1 .eq. 1) .and.
+c$$$     $                          (ant2(irow)+1 .eq. 2)) then
+c$$$                              write (*,*) ant1(irow)+1, ant2(irow)+1,
+c$$$     $                             ipol,ichan,irow,
+c$$$     $                             values(ipol,ichan,irow),
+c$$$     $                             real(nvalue),imag(nvalue),
+c$$$     $                             real(norm(apol)),imag(norm(apol))
+c$$$                           endif
 c                           stop
                         end if
                      end do
