@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLSQFit.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLSQFit.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -1443,6 +1443,7 @@ int main() {
       }
       Float sol[3] = {10, 20, 2};
       Float muf, mef;
+      mef = lnl.getWeightedSD();
       Double una[3];
       Double *un = una;
       Double kn[1];

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSSpwGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSSpwGram; grammar for field command lines
 
@@ -122,7 +122,7 @@ const TableExprNode* msSpwGramParseNode()
   return MSSpwParse::node();
 }
 
-const void msSpwGramParseDeleteNode()
+void msSpwGramParseDeleteNode()
 {
   MSSpwParse::cleanup();
 }
@@ -146,7 +146,7 @@ int msSpwGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSSpwGramerror (char*)
+void MSSpwGramerror (const char*)
 {
   throw (MSSelectionSpwParseError("Spw Expression: Parse error at or near '" +
 				  String(MSSpwGramtext) + "'"));

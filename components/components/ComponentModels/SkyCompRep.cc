@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SkyCompRep.cc 19247 2006-02-07 23:27:23Z tcornwel $
+//# $Id: SkyCompRep.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/ComponentType.h>
@@ -101,7 +101,8 @@ SkyCompRep::SkyCompRep(const Flux<Double>& flux,
 }
 
 SkyCompRep::SkyCompRep(const SkyCompRep& other) 
-  :itsShapePtr(other.itsShapePtr->clone()),
+  :SkyCompBase(),
+   itsShapePtr(other.itsShapePtr->clone()),
    itsSpectrumPtr(other.itsSpectrumPtr->clone()),
    itsFlux(other.itsFlux.copy()),
    itsLabel(other.itsLabel)

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PGPlotter.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: PGPlotter.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/System/PGPlotter.h>
 #include <casa/System/PGPlotterNull.h>
@@ -59,7 +59,8 @@ PGPlotter::PGPlotter (const String &device,
 }
 
 PGPlotter::PGPlotter(const PGPlotter &other)
-  : worker_p(other.worker_p)
+  : PGPlotterInterface(),
+    worker_p(other.worker_p)
 {
     // Nothing
 }

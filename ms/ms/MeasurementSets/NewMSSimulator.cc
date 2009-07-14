@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.cc 19944 2007-02-27 11:14:34Z Malte.Marquarding $
+//# $Id: NewMSSimulator.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 //# Includes
 #include <ms/MeasurementSets/NewMSSimulator.h>
@@ -388,7 +388,7 @@ void NewMSSimulator::initAnt(const String& telescope,
 			     const Vector<Double>& y, 
 			     const Vector<Double>& z,
 			     const Vector<Double>& dishDiameter,
-			     const Vector<Double>& offset,
+			     const Vector<Double>&,
 			     const Vector<String>& mount,
 			     const Vector<String>& name,
 			     const String& coordsystem,
@@ -494,13 +494,13 @@ void NewMSSimulator::local2global(Vector<Double>& xGeo,
   
 };
 
-void NewMSSimulator::longlat2global(Vector<Double>& xReturned,
-				    Vector<Double>& yReturned,
-				    Vector<Double>& zReturned,
-				    const MPosition& mRefLocation,
-				    const Vector<Double>& xIn,
-				    const Vector<Double>& yIn,
-				    const Vector<Double>& zIn)
+void NewMSSimulator::longlat2global(Vector<Double>&,
+				    Vector<Double>&,
+				    Vector<Double>&,
+				    const MPosition&,
+				    const Vector<Double>&,
+				    const Vector<Double>&,
+				    const Vector<Double>&)
 {
   LogIO os(LogOrigin("NewMSSimulator", "longlat2global()", WHERE));
   os <<  LogIO::SEVERE << "NewMSSimulator::longlat2global not yet implemented" << LogIO::POST;
@@ -538,7 +538,7 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
 				   const Int& nChan,
 				   const Quantity& startFreq,
 				   const Quantity& freqInc,
-				   const Quantity& freqRes,
+				   const Quantity&,
 				   const String& stokesString)
 {
   

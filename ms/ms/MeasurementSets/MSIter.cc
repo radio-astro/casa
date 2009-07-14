@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSIter.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <ms/MeasurementSets/MSIter.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -97,7 +97,7 @@ Bool MSIter::isSubSet (const Vector<uInt>& r1, const Vector<uInt>& r2) {
   const uInt* p2=r2.getStorage(freeR2);
   Int i,j;
   for (i=0,j=0; i<n1 && j<n2; i++) {
-    while (p1[i]!=p2[j++] && j<n2);
+    while (p1[i]!=p2[j++] && j<n2) {}
   }
   Bool ok=(j<n2 || (i==n1 && p1[n1-1]==p2[n2-1]));
   r1.freeStorage(p1,freeR1);

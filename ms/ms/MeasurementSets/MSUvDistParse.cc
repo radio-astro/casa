@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSUvDistParse.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <ms/MeasurementSets/MSUvDistParse.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -225,7 +225,7 @@ const TableExprNode* MSUvDistParse::node()
 
 void MSUvDistParse::accumulateUVList(const Double r0, const Double r1,
 				     const Bool wavelengthUnit, 
-				     const Bool distanceUnit)
+				     const Bool)
 {
   Int n0=selectedUV_p.shape()(1);
   IPosition newShape(selectedUV_p.shape());

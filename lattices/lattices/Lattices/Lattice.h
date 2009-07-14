@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lattice.h 20286 2008-03-13 13:02:22Z gervandiepen $
+//# $Id: Lattice.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef LATTICES_LATTICE_H
 #define LATTICES_LATTICE_H
@@ -415,7 +415,8 @@ protected:
 
   // Copy constructor and assignment can only be used by derived classes.
   // <group>
-  Lattice (const Lattice<T>&) {};
+  Lattice (const Lattice<T>&)
+    : LatticeBase() {}
   Lattice<T>& operator= (const Lattice<T>&)
     { return *this; }
   // </group>
@@ -423,7 +424,7 @@ protected:
 
 
 template<> inline
-void Lattice<Bool>::handleMathTo (Lattice<Bool>& to, int oper) const
+void Lattice<Bool>::handleMathTo (Lattice<Bool>&, int) const
   { throwBoolMath(); }
 
 

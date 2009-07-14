@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.cc 19292 2006-02-28 14:10:26Z gvandiep $
+//# $Id: PlainTable.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/PlainTable.h>
@@ -231,7 +231,7 @@ PlainTable::PlainTable (AipsIO&, uInt version, const String& tabname,
     //# Create a Table object to be used internally by the data managers.
     //# Do not count it, otherwise a mutual dependency exists.
     Table tab(this, False);
-    colSetPtr_p->getFile (ios, tab, nrrow_p, bigEndian_p);
+    nrrow_p = colSetPtr_p->getFile (ios, tab, nrrow_p, bigEndian_p);
     //# Read the TableInfo object.
     getTableInfo();
     //# Release the read lock if UserLocking is used.
@@ -248,6 +248,25 @@ PlainTable::PlainTable (AipsIO&, uInt version, const String& tabname,
 
 
 PlainTable::~PlainTable()
+{
+  // If destructed during an exception, catch possible other exceptions to
+  // avoid termination.
+  if (std::uncaught_exception() ) {
+    try {
+      closeObject();
+    } catch (std::exception& x) {
+      try {
+        cerr << "Exception in ~PlainTable during exception unwind:" << endl
+             << "  " << x.what() << endl;
+      } catch (...) {
+      }
+    }
+  } else {
+    closeObject();
+  }
+}
+
+void PlainTable::closeObject()
 {
     //# When needed, write and sync the table files if not marked for delete
     if (!isMarkedForDelete()) {
@@ -368,7 +387,8 @@ Bool PlainTable::lock (FileLocker::LockType type, uInt nattempts)
 	    // Older readonly table files may have empty locksync data.
 	    // Skip the sync-ing in that case.
 	    uInt ncolumn;
-	    if (! lockSync_p.read (nrrow_p, ncolumn, tableChanged,
+            uInt nrrow;
+	    if (! lockSync_p.read (nrrow, ncolumn, tableChanged,
 				   colSetPtr_p->dataManChanged())) {
 		tableChanged = False;
 	    } else {
@@ -376,7 +396,7 @@ Bool PlainTable::lock (FileLocker::LockType type, uInt nattempts)
 		    throw (TableError ("Table::lock cannot sync; another "
 				     "process changed the number of columns"));
 		}
-		colSetPtr_p->resync (nrrow_p);
+		nrrow_p = colSetPtr_p->resync (nrrow, False);
 		if (tableChanged  &&  ncolumn > 0) {
 		    syncTable();
 		}
@@ -449,7 +469,8 @@ void PlainTable::resync()
     // Older readonly table files may have empty locksync data.
     // Skip the sync-ing in that case.
     uInt ncolumn;
-    if (! lockSync_p.read (nrrow_p, ncolumn, tableChanged,
+    uInt nrrow;
+    if (! lockSync_p.read (nrrow, ncolumn, tableChanged,
 			   colSetPtr_p->dataManChanged())) {
         tableChanged = False;
     } else {
@@ -457,7 +478,7 @@ void PlainTable::resync()
 	    throw (TableError ("Table::resync cannot sync; another "
 			       "process changed the number of columns"));
 	}
-	colSetPtr_p->resync (nrrow_p);
+	nrrow_p = colSetPtr_p->resync (nrrow, True);
 	if (tableChanged  &&  ncolumn > 0) {
 	    syncTable();
 	}

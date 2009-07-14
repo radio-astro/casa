@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMeasColumn.tcc 20019 2007-03-13 21:40:09Z gervandiepen $
+//# $Id: ArrayMeasColumn.tcc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ArrayMeasColumn.h>
@@ -117,7 +117,8 @@ ROArrayMeasColumn<M>::ROArrayMeasColumn (const Table& tab,
 
 template<class M>
 ROArrayMeasColumn<M>::ROArrayMeasColumn (const ROArrayMeasColumn<M>& that)
-: itsDataCol     (0),
+: ROTableMeasColumn(),
+  itsDataCol     (0),
   itsRefIntCol   (0),
   itsArrRefIntCol(0),
   itsRefStrCol   (0),
@@ -234,8 +235,8 @@ void ROArrayMeasColumn<M>::get (uInt rownr, Array<M>& meas,
   Bool strRefs = (itsArrRefStrCol != 0);
   Array<Int> intRefArr;
   Array<String> strRefArr;
-  const Int* r_p;
-  const String* sr_p;
+  const Int* r_p=0;
+  const String* sr_p=0;
   Bool deleteRef;
   if (refPerElem) {
     if (strRefs) {
@@ -258,7 +259,7 @@ void ROArrayMeasColumn<M>::get (uInt rownr, Array<M>& meas,
   // Setup for offset component of MeasRef.
   Bool offsetPerElem = (itsArrOffsetCol != 0);
   Array<M> offsetArr;
-  const M* os_p;
+  const M* os_p=0;
   Bool deleteOffset;
   if (offsetPerElem) {
     itsArrOffsetCol->get (rownr, offsetArr, True);

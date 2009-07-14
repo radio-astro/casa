@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDFieldHandler.cc 18702 2005-05-23 08:54:53Z gvandiep $
+//# $Id: SDFieldHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <msfits/MSFits/SDFieldHandler.h>
@@ -107,7 +107,7 @@ void SDFieldHandler::resetRow(const Record &row)
     initRow(dummyCols, row);
 }
 
-void SDFieldHandler::fill(const Record &row, const String &name, Int directionRefType,
+void SDFieldHandler::fill(const Record &, const String &name, Int directionRefType,
 			  const Matrix<Double> &directionPoly, Double time, Int sourceId)
 {
     // don't bother unless there is something there

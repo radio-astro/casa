@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: cregex.h 20438 2008-11-21 07:44:08Z gervandiepen $
+    $Id: cregex.h 20606 2009-05-19 08:05:56Z gervandiepen $
 */
 
 #ifndef CASA_CREGEX_H
@@ -129,8 +129,8 @@ extern int obscure_syntax;
    If not set, it does.  */
 #define RE_HAT_NOT_NEWLINE (1 << 11)
 
-/* If this bit is set, back references are recognized.
-   If not set, they aren't.  */
+/* If this bit is not set, back references are recognized.
+   If set, they aren't.  */
 #define RE_NO_BK_REFS (1 << 12)
 
 /* If this bit is set, back references must refer to a preceding

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegularFile.cc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: RegularFile.cc 20619 2009-06-11 09:54:58Z gervandiepen $
 
 
 #include <casa/Exceptions.h>
@@ -151,8 +151,9 @@ void RegularFile::copy (const Path& target, Bool overwrite,
     manualCopy (itsFile.path().expandedName(), targetName.expandedName());
 #else
     // This function uses the system function cp.	    
-    String call("cp ");
-    call += itsFile.path().expandedName() + " " + targetName.expandedName();
+    String call("cp '");
+    call += itsFile.path().expandedName() + "' '" +
+            targetName.expandedName() + "'";
     system (call.chars());
     if (setUserWritePermission) {
 	File result(targetName.expandedName());

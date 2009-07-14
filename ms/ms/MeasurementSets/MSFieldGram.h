@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFieldGram.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSFieldGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef MS_MSFIELDGRAM_H
 #define MS_MSFIELDGRAM_H
@@ -75,11 +75,11 @@ class TableExprNode;
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void MSFieldGramerror (char*);
+void MSFieldGramerror (const char*);
 
 // Give the table expression node.
 const TableExprNode *msFieldGramParseNode();
-  const void msFieldGramParseDeleteNode() ;
+void msFieldGramParseDeleteNode() ;
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

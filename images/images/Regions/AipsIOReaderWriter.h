@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-#ifndef AIPSIOREADERWRITIER_H_
-#define AIPSIOREADERWRITIER_H_
+//# $Id: AipsIOReaderWriter.h 20621 2009-06-11 13:50:56Z gervandiepen $
+
+#ifndef IMAGES_AIPSIOREADERWRITER_H
+#define IMAGES_AIPSIOREADERWRITER_H
 
 //# Includes
 #include <images/Regions/RFReaderWriter.h>
@@ -42,14 +43,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="">
 // </reviewed>
 //
-// <author>
-// <ul>    
-// <li>Shannon Jaeger, original author
-// </ul>
-// </author>    
-//
 // <prerequisite>
-//   <li> <linkto class=RSFileReaderWriter</linkto>
+//   <li> <linkto class=RFReaderWriter>RFReaderWriter</linkto>
 // </prerequisite>
 //
 // <synopsis> 
@@ -65,18 +60,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // have been stored into an AipsIO file.
 // </motivation>
 //
-// #<note>
-// #</note>
-//
-// <todo asof="1998/05/20">
-// </todo>
-class AipsIOReaderWriter : public RFReader, public RFWriter {
+//# <todo asof="1998/05/20">
+//# </todo>
+
+class AipsIOReaderWriter : public RFReader, public RFWriter
+{
 public:
-    // Static Members //
-    
-    
-    // Non-Static Members //    
-    
     // Constructor.
     AipsIOReaderWriter();
     
@@ -92,9 +81,6 @@ public:
     //</group>
 
 
-    // Implements RSFileWriter::options
-    Record* options() const;
-    
     // RSFileWriter methods //
     
     // Implements RSFileWriter::setOptions.
@@ -105,9 +91,8 @@ public:
     bool write(const Record& region) const;
     bool write(const ImageRegion& region) const;
     //</group>
+};
 
-  };
+} //# end namespace
 
-}
-
-#endif /* AIPSIOREADERWRITIER_H_ */
+#endif

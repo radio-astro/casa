@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Image.cc 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: tHDF5Image.cc 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #include <images/Images/HDF5Image.h>
 #include <images/Images/ImageInfo.h>
@@ -54,15 +54,7 @@
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
 
-#include <casa/namespace.h>
-
-
-#ifndef HAVE_LIBHDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
+using namespace casa;
 
 
 // Remove the dirname from the file name in an error message.
@@ -86,6 +78,10 @@ Float func(Float val)
 
 int main()
 {
+  // Exit with untested if no HDF5 support.
+  if (! HDF5Object::hasHDF5Support()) {
+    return 3;
+  }
   try {
 
     // Build things to make a HDF5Image
@@ -348,5 +344,3 @@ int main()
 
   return 0;
 }
-
-#endif

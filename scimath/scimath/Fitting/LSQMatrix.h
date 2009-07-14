@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQMatrix.h 19815 2006-12-22 02:59:04Z gvandiep $
+//# $Id: LSQMatrix.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef SCIMATH_LSQMATRIX_H
 #define SCIMATH_LSQMATRIX_H
@@ -138,7 +138,7 @@ class LSQMatrix : public RecordTransformable {
   // Index an element in the triangularised matrix
   // <group>
   Double &operator[](uInt index) { return (trian_p[index]); };
-  const Double operator[](uInt index) const { return (trian_p[index]); };
+  Double operator[](uInt index) const { return (trian_p[index]); };
   // </group>
 
   //# General Member Functions

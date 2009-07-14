@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImagePolProxy.cc 20264 2008-02-25 23:40:27Z gervandiepen $
+//# $Id: ImagePolProxy.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 #include <images/Images/ImagePolProxy.h>
 #include <casa/aips.h>
 #include <casa/iostream.h>

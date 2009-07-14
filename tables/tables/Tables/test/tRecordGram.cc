@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRecordGram.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tRecordGram.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ExprNode.h>
@@ -47,7 +47,7 @@ void doIt()
   // Check if it handles a normal record field.
   TableRecord rec;
   rec.define ("fld1", Int(1));
-  TableExprNode expr (RecordGram::parse(rec, "fld1 == 1"));
+  TableExprNode expr (RecordGram::parse(rec, "fld1 == 1."));
   Bool result;
   expr.get (rec, result);
   AlwaysAssertExit (result);

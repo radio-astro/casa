@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIO.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: AipsIO.h 20586 2009-05-06 11:53:12Z gervandiepen $
 
 #ifndef CASA_AIPSIO_H
 #define CASA_AIPSIO_H
@@ -169,7 +169,7 @@ public:
     AipsIO();
 
     // Construct and open/create a file with the given name.
-    // The actual IO is done via a TypeIO object using a filebuf
+    // The actual IO is done via a CanonicalIO object using a filebuf
     // with a buffer of the given size.
     explicit AipsIO (const String& fileName,
 		     ByteIO::OpenOption = ByteIO::Old,

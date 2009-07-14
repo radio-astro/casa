@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 20557 2009-04-02 14:11:08Z gervandiepen $
+//# $Id: IPosition.h 20666 2009-07-07 07:46:38Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -450,21 +450,6 @@ inline IPosition::IPosition()
 : size_p (0),
   data_p (buffer_p)
 {}
-inline IPosition::IPosition (uInt length)
-: size_p (length),
-  data_p (buffer_p)
-{
-    if (length > BufferLength) {
-	allocateBuffer();
-    }
-}
-
-inline IPosition::~IPosition()
-{
-    if (data_p != &buffer_p[0]) {
-        delete [] data_p;
-    }
-}
 
 inline IPosition IPosition::makeAxisPath (uInt nrdim)
 {

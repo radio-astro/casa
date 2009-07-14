@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeNavigator.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeNavigator.cc 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #include <lattices/Lattices/LatticeNavigator.h>
 #include <casa/Arrays/IPosition.h>
@@ -106,12 +106,6 @@ IPosition LatticeNavigator::increment() const
 Bool LatticeNavigator::ok() const
 {
   return True;
-}
-
-uInt LatticeNavigator::calcCacheSize (const ROTiledStManAccessor* accessor,
-				      Int rowNumber) const
-{
-    return (accessor == 0  ?  0 : calcCacheSize (*accessor, rowNumber));
 }
 
 } //# NAMESPACE CASA - END

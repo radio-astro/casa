@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogFilterExpr.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LogFilterExpr.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/LogTables/LogFilterExpr.h>
 #include <casa/Logging/LogMessage.h>
@@ -50,7 +50,8 @@ LogFilterExpr::LogFilterExpr (const String& expr)
 }
 
 LogFilterExpr::LogFilterExpr (const LogFilterExpr& that)
-: itsExpr (0)
+: TableExprData(),
+  itsExpr (0)
 {
   if (that.itsExpr != 0) {
     itsExpr = new TableExprNode (*that.itsExpr);

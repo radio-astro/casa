@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeUtilities.cc 20256 2008-02-23 20:28:24Z gervandiepen $
+//# $Id: tLatticeUtilities.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
@@ -289,7 +289,7 @@ void doBin ()
 //
    MaskedArray<Float> mArrOut;
    uInt axis = 0;
-   uInt bin = 4;
+   Int bin = 4;
    LatticeUtilities::bin(mArrOut, mArrIn, axis, bin);
    IPosition shapeOut = mArrOut.shape();
    for (uInt i=0; i<shape.nelements(); i++) {

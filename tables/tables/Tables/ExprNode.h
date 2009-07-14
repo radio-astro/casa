@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.h 20575 2009-04-23 05:37:59Z gervandiepen $
+//# $Id: ExprNode.h 20591 2009-05-06 12:16:05Z gervandiepen $
 
 #ifndef TABLES_EXPRNODE_H
 #define TABLES_EXPRNODE_H
@@ -194,6 +194,7 @@ class TableExprNode;
   // Transcendental functions applied to to nodes containing scalars or
   // arrays with double values.
   // They are invalid for Complex nodes.
+  // <group>
     TableExprNode asin  (const TableExprNode& node);
     TableExprNode acos  (const TableExprNode& node);
     TableExprNode atan  (const TableExprNode& node);

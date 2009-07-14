@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageUtilities.cc 18462 2005-03-16 15:02:18Z gvandiep $
+//# $Id: ImageUtilities.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 //
 
 #include <images/Images/ImageUtilities.h>
@@ -214,7 +214,7 @@ String ImageUtilities::shortAxisName (const String& axisName)
 }
 
 
-SkyComponent ImageUtilities::encodeSkyComponent(LogIO& os, Double& facToJy,
+SkyComponent ImageUtilities::encodeSkyComponent(LogIO&, Double& facToJy,
                                                 const ImageInfo& ii,
                                                 const CoordinateSystem& cSys,
                                                 const Unit& brightnessUnit,

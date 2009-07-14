@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageUtilities.cc 19964 2007-02-28 03:46:48Z gervandiepen $
+//# $Id: tImageUtilities.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -68,10 +68,9 @@ void doOpens()
                               name1);
       String error;
       String name2("tImageUtilities_tmp/fits.img");
-      Bool ok = ImageFITSConverter::ImageToFITS(error, img, name2,
-                                                64, True, True, -32, 1, -1,
-                                                True, False, True, True);
-      if (ok);			// Satisfy compiler
+      ImageFITSConverter::ImageToFITS(error, img, name2,
+				      64, True, True, -32, 1, -1,
+				      True);
 //
       {
          PtrHolder<ImageInterface<Float> > im;
@@ -348,7 +347,6 @@ void doFits()
    }
 //
    if (pResid) {
-      Float zero(0.0);
       Float one(1.0);
       for (uInt j=0; j<ny; j++) {
          pos2(1) = j;

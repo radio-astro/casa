@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Mathematics.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: Mathematics.h 20642 2009-06-25 11:24:00Z gervandiepen $
 
 #ifndef SCIMATH_MATHEMATICS_H
 #define SCIMATH_MATHEMATICS_H
@@ -35,7 +35,6 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/BasicMath/Math.h>
 #include <scimath/Mathematics/NumericTraits.h>
-#include <scimath/Mathematics/Primes.h>
 #include <casa/BasicMath/Random.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -88,7 +87,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      (both linear and circular) of multi-dimensional Arrays.
 // <li> <linkto file="Random.h">Random</linkto> numbers in a wide 
 //      variety of distributions. 
-// <li> <linkto class="Primes">Prime</linkto> numbers
 // <li> Interpolation in one dimension is performed by the 
 //      <linkto class="Interpolate1D">Interpolate1D</linkto> class in 
 //      the <linkto module="Functionals">Functionals</linkto> module

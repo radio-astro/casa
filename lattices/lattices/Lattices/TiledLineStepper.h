@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledLineStepper.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: TiledLineStepper.h 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #ifndef LATTICES_TILEDLINESTEPPER_H
 #define LATTICES_TILEDLINESTEPPER_H
@@ -319,11 +319,11 @@ public:
   // Returns True if everything is fine otherwise returns False
   virtual Bool ok() const;
 
-protected:
   // Calculate the cache size (in tiles) for this type of access to a lattice
   // in the given row of the tiled hypercube.
-  virtual uInt calcCacheSize (const ROTiledStManAccessor&,
-			      uInt rowNumber) const;
+  virtual uInt calcCacheSize (const IPosition& cubeShape,
+                              const IPosition& tileShape,
+                              uInt maxCacheSize, uInt bucketSize) const;
 
 private:
   // Prevent the default constructor from being used.

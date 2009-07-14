@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SymLink.cc 19776 2006-12-11 05:43:51Z gvandiep $
+//# $Id: SymLink.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <casa/OS/SymLink.h>
@@ -139,7 +139,6 @@ void SymLink::move (const Path& target, Bool overwrite)
 {
     Path targetName(target);
     checkTarget (targetName, overwrite);
-    // This function uses the system function mv.	    
     File targetFile(targetName);
     if (targetFile.isRegular (False)) {
 	RegularFile(targetFile).remove();

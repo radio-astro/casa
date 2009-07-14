@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayLogical.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tArrayLogical.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 //# If AIPS_DEBUG is not set, the Assert's won't be called.
 #if !defined(AIPS_DEBUG)
@@ -71,6 +71,9 @@ int main()
             cout << x << endl;
             cout << endl << "y= " << endl;
             cout << y << endl;
+
+            AlwaysAssertExit (allSame(x));
+            AlwaysAssertExit (!allSame(y));
 
             b = (x <= y);
             cout << endl << "b= (x <= y) = " << endl;

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ObsInfo.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ObsInfo.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <measures/Measures/MeasureHolder.h>
@@ -89,6 +89,7 @@ void ObsInfo::copy_other(const ObsInfo &other)
 }
 
 ObsInfo::ObsInfo(const ObsInfo &other)
+  : RecordTransformable()
 {
     copy_other(other);
 }

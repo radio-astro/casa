@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStManAccessor.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TiledStManAccessor.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/TiledStManAccessor.h>
@@ -57,7 +57,8 @@ ROTiledStManAccessor::~ROTiledStManAccessor()
 
 ROTiledStManAccessor::ROTiledStManAccessor
                                (const ROTiledStManAccessor& that)
-: dataManPtr_p (that.dataManPtr_p)
+: RODataManAccessor(that),
+  dataManPtr_p (that.dataManPtr_p)
 {}
 
 ROTiledStManAccessor& ROTiledStManAccessor::operator=

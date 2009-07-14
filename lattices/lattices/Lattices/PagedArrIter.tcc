@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedArrIter.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: PagedArrIter.tcc 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #include <lattices/Lattices/PagedArrIter.h>
 #include <lattices/Lattices/LatticeStepper.h>
@@ -82,8 +82,12 @@ LatticeIterInterface<T>* PagedArrIter<T>::clone() const
 template<class T>
 void PagedArrIter<T>::setupTileCache()
 {
-  uInt cacheSize = itsNavPtr->calcCacheSize (&(itsData.accessor()),
-					     itsData.rowNumber());
+  const ROTiledStManAccessor& acc = itsData.accessor();
+  uInt rownr = itsData.rowNumber();
+  uInt cacheSize = itsNavPtr->calcCacheSize (acc.hypercubeShape(rownr),
+                                             acc.tileShape(rownr),
+                                             acc.maximumCacheSize(),
+                                             acc.bucketSize(rownr));
   itsData.setCacheSizeInTiles (cacheSize);
 }
 

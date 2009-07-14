@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprParse.h 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: ImageExprParse.h 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #ifndef IMAGES_IMAGEEXPRPARSE_H
 #define IMAGES_IMAGEEXPRPARSE_H
@@ -310,10 +310,8 @@ private:
     // Callback function for RegionHandlerTable to get the table to be used.
     static Table& getRegionTable (void*, Bool);
 
-#ifdef HAVE_LIBHDF5
     // Callback function for RegionHandlerHDF5 to get the file to be used.
     static const CountedPtr<HDF5File>& getRegionHDF5 (void*);
-#endif
 
     //# A 'global' node object to hold the resulting expression.
     static LatticeExprNode theirNode;

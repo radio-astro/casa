@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ByteSinkSource.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ByteSinkSource.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/ByteSinkSource.h>
@@ -35,11 +35,13 @@ ByteSinkSource::ByteSinkSource ()
 {}
 
 ByteSinkSource::ByteSinkSource (TypeIO* typeIO, Bool takeOver)
-: BaseSinkSource (typeIO, takeOver)
+  : BaseSinkSource (typeIO, takeOver)
 {}
 
 ByteSinkSource::ByteSinkSource (const ByteSinkSource& sinkSource)
-: BaseSinkSource (sinkSource)
+  : BaseSinkSource (sinkSource),
+    ByteSink       (),
+    ByteSource     ()
 {}
 
 ByteSinkSource& ByteSinkSource::operator= (const ByteSinkSource& sinkSource)

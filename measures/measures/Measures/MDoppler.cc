@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MDoppler.cc 19918 2007-02-23 03:29:05Z Malte.Marquarding $
+//# $Id: MDoppler.cc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MDoppler.h>
@@ -112,8 +112,8 @@ const String &MDoppler::showType(uInt tp) {
   return MDoppler::showType(MDoppler::castType(tp));
 }
 
-const String *const MDoppler::allMyTypes(Int &nall, Int &nextra,
-					  const uInt *&typ) {
+const String* MDoppler::allMyTypes(Int &nall, Int &nextra,
+                                   const uInt *&typ) {
   static const Int N_name  = 8;
   static const Int N_extra = 0;
   static const String tname[N_name] = {
@@ -143,8 +143,8 @@ const String *const MDoppler::allMyTypes(Int &nall, Int &nextra,
   return tname;
 }
 
-const String *const MDoppler::allTypes(Int &nall, Int &nextra,
-					const uInt *&typ) const {
+const String* MDoppler::allTypes(Int &nall, Int &nextra,
+                                 const uInt *&typ) const {
   return MDoppler::allMyTypes(nall, nextra, typ);
 }
 

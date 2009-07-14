@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMColumn.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SSMColumn.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/SSMColumn.h>
 #include <tables/Tables/SSMBase.h>
@@ -91,7 +91,7 @@ void SSMColumn::getFile(uInt)
 {
 }
 
-void SSMColumn::addRow (uInt aNewNrRows, uInt anOldNrRows, Bool doInit)
+void SSMColumn::addRow (uInt aNewNrRows, uInt, Bool doInit)
 {
   if (doInit  &&  dataType() == TpString) {
     uInt aRowNr=0;

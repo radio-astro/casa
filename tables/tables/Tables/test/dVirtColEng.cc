@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dVirtColEng.cc 20500 2009-01-19 08:11:03Z gervandiepen $
+//# $Id: dVirtColEng.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Define a main program to allow compalition and linking by the make system.
 //# The variable is set in tVirtColEng.cc to skip it.
@@ -134,7 +134,8 @@ DummyVirtualScalar::DummyVirtualScalar (DummyVirtualEngine* dve, double scale)
 //# when writable_p and the column_p variables are not filled yet.
 //# Check if that is indeed the case.
 DummyVirtualScalar::DummyVirtualScalar (const DummyVirtualScalar& that)
-: enginePtr_p(that.enginePtr_p),
+: VirtualScalarColumn<Double>(),
+  enginePtr_p(that.enginePtr_p),
   scale_p    (that.scale_p),
   writable_p (0),
   roColumn_p (0),
@@ -230,7 +231,8 @@ DummyVirtualArray::DummyVirtualArray (DummyVirtualEngine* dve, double scale)
 //# when writable_p and the column_p variables are not filled yet.
 //# Check if that is indeed the case.
 DummyVirtualArray::DummyVirtualArray (const DummyVirtualArray& that)
-: enginePtr_p(that.enginePtr_p),
+: VirtualArrayColumn<Double>(),
+  enginePtr_p(that.enginePtr_p),
   scale_p    (that.scale_p),
   writable_p (0),
   roColumn_p (0),

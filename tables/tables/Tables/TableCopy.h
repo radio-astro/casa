@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.h 19292 2006-02-28 14:10:26Z gvandiep $
+//# $Id: TableCopy.h 20665 2009-07-07 07:34:46Z gervandiepen $
 
 #ifndef TABLES_TABLECOPY_H
 #define TABLES_TABLECOPY_H
@@ -31,7 +31,7 @@
 
 //# Includes
 #include <tables/Tables/Table.h>
-
+#include <casa/Arrays/Vector.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -138,6 +138,28 @@ public:
   // Since TiledShapeStMan does not support ID columns, they are
   // adjusted as well in tabDesc and dminfo.
   static void adjustTSM (TableDesc& tabDesc, Record& dminfo);
+
+  // Replace non-writable storage managers by StandardStMan. This is needed
+  // for special storage managers like LofarStMan.
+  static Record adjustStMan (const Record& dminfo);
+
+  // Set the data managers of the given column(s) to the given tiled storage
+  // manager (normally TiledShapeStMan or TiledColumnStMan).
+  // The columns are combined in a single storage manager, so the function
+  // has to be called multiple times if, say, one per column is needed.
+  // The columns already having a tiled storage manager are not changed.
+  static void setTiledStMan (Record& dminfo, const Vector<String>& columns,
+                             const String& dmType, const String& dmName,
+                             const IPosition& defaultTileShape);
+
+  // Remove the columns from the dminfo record and return a vector with the
+  // names of the columns actually removed.
+  // The columns having a data manager matching <src>keepType</src> are not
+  // removed. Matching means that the beginning of the data manager name
+  // have to match, so "Tiled" matches all tiled storagemanagers.
+  static Vector<String> removeDminfoColumns (Record& dminfo,
+                                             const Vector<String>& columns,
+                                             const String& keepType= String());
 
   // Adjust the data manager types and groups and the
   // hypercolumn definitions to the actual data manager info.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.h 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: HDF5DataType.h 20635 2009-06-16 05:35:21Z gervandiepen $
 
 #ifndef CASA_HDF5DATATYPE_H
 #define CASA_HDF5DATATYPE_H
@@ -104,6 +104,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     hid_t getHidFile() const
       { return itsHidFile; }
 
+    // Get the size in bytes of the data type.
+    // Note that the size of a string is variable, thus 0.
+    uInt size() const
+      { return itsSize; }
+
   private:
     // Copy constructor cannot be used.
     HDF5DataType (const HDF5DataType& that);
@@ -114,6 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     hid_t itsHidMem;
     hid_t itsHidFile;
+    uInt  itsSize;
   };
 
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TapeIO.cc 19799 2006-12-20 00:19:50Z gvandiep $
+//# $Id: TapeIO.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/IO/TapeIO.h>
 #include <casa/OS/Path.h>
@@ -198,8 +198,8 @@ void TapeIO::setVariableBlockSize() {
 #endif
 }
 
-void TapeIO::setBlockSize(uInt sizeInBytes) {
 #if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(AIPS_CRAY_PGI)
+void TapeIO::setBlockSize(uInt sizeInBytes) {
   struct mtop tapeCommand;
 #if defined(AIPS_LINUX) 
   tapeCommand.mt_op = MTSETBLK;
@@ -213,6 +213,8 @@ void TapeIO::setBlockSize(uInt sizeInBytes) {
 		    String("error returned by ioctl: ") 
 		    + strerror(errno)));
   }
+#else
+void TapeIO::setBlockSize(uInt) {
 #endif
 }
 

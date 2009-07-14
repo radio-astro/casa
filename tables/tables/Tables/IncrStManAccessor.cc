@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IncrStManAccessor.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: IncrStManAccessor.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/IncrStManAccessor.h>
@@ -55,7 +55,8 @@ ROIncrementalStManAccessor::~ROIncrementalStManAccessor()
 
 ROIncrementalStManAccessor::ROIncrementalStManAccessor
                                (const ROIncrementalStManAccessor& that)
-: dataManPtr_p (that.dataManPtr_p)
+: RODataManAccessor(that),
+  dataManPtr_p (that.dataManPtr_p)
 {}
 
 ROIncrementalStManAccessor& ROIncrementalStManAccessor::operator=

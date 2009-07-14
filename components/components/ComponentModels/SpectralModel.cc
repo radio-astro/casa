@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SpectralModel.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SpectralModel.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/ComponentModels/SpectralModel.h>
 #include <casa/Containers/Record.h>
@@ -60,7 +60,8 @@ SpectralModel::SpectralModel(const MFrequency& refFreq, const Unit& freqUnit)
 }
 
 SpectralModel::SpectralModel(const SpectralModel& other) 
-  :itsRefFreq(other.itsRefFreq),
+  :RecordTransformable(),
+   itsRefFreq(other.itsRefFreq),
    itsFreqUnit(other.itsFreqUnit),
    itsFreqErr(other.itsFreqErr)
 {

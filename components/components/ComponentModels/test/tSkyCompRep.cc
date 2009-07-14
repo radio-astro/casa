@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSkyCompRep.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tSkyCompRep.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -230,6 +230,7 @@ int main() {
          GaussianShape gc(dir, majorAxis, minorAxis, pa);
          SkyCompRep sky(flux, gc, cs);
          Bool ok = pixelReflection(sky, cSys, beam, unit, 1.0e-3);
+         AlwaysAssert(ok, AipsError);
       }
 //
       {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeTwoPtCorr.tcc 20114 2007-08-28 11:13:41Z gervandiepen $
+//# $Id: LatticeTwoPtCorr.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/LatticeTwoPtCorr.h>
 
@@ -47,28 +47,6 @@
 */
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-template <class T>
-LatticeTwoPtCorr<T>::LatticeTwoPtCorr()
-{}
-   
-  
-template <class T>
-LatticeTwoPtCorr<T>::LatticeTwoPtCorr (const LatticeTwoPtCorr<T>& other)
-{}
- 
-template <class T>
-LatticeTwoPtCorr<T>& LatticeTwoPtCorr<T>::operator=(const LatticeTwoPtCorr<T>& other)
-{
-   if (this != &other) {
-   }
-   return *this;
-}
-
-template <class T>     
-LatticeTwoPtCorr<T>::~LatticeTwoPtCorr()
-{}
- 
 
 template <class T> 
 void LatticeTwoPtCorr<T>::autoCorrelation (MaskedLattice<T>& latOut, 

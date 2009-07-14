@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeParse.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: MSTimeParse.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <ms/MeasurementSets/MSTimeParse.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
@@ -161,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
-  const TableExprNode *MSTimeParse::selectTime(const MEpoch& time,bool daytime)
+  const TableExprNode *MSTimeParse::selectTime(const MEpoch& time, bool)
   {
 
     Double timeInSec= toTAIInSec(time);
@@ -176,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------
   //  
   const TableExprNode *MSTimeParse::selectTimeGT(const MEpoch& lowboundTime,
-						 bool daytime)
+						 bool)
   {
     Double timeInSec = toTAIInSec(lowboundTime);
     TableExprNode condition = (ms()->col(colName) >= timeInSec);
@@ -188,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------
   //  
   const TableExprNode *MSTimeParse::selectTimeLT(const MEpoch& upboundTime,
-						 bool daytime)
+						 bool)
   {
     Double timeInSec = toTAIInSec(upboundTime);
     TableExprNode condition = (ms()->col(colName) <= timeInSec);
@@ -202,7 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   const TableExprNode *MSTimeParse::selectTimeRange(const MEpoch& lowboundTime,
 						    const MEpoch& upboundTime,
-						    bool Add)
+						    bool)
   {
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
@@ -280,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
-  const Double MSTimeParse::toTAIInSec(const MEpoch& whatEver)
+  Double MSTimeParse::toTAIInSec(const MEpoch& whatEver)
   {
     //    MEpoch tai=MEpoch::Convert(whatEver,MEpoch::Ref(MEpoch::TAI))();
     MEpoch tai=whatEver;
@@ -329,7 +329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
-  const void MSTimeParse::validate(const TimeFields& tf)
+  void MSTimeParse::validate(const TimeFields& tf)
   {
     if (tf.year < 1858) // This is not precise (should be < Wed Nov 17 00:00:00 1858)
       {                                       

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeNavigator.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: LatticeNavigator.h 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #ifndef LATTICES_LATTICENAVIGATOR_H
 #define LATTICES_LATTICENAVIGATOR_H
@@ -333,9 +333,11 @@ public:
 
   // Calculate the cache size (in tiles) for this type of access to a lattice
   // in the given row of the tiled hypercube.
-  // A zero pointer indicates there is no hypercube, but that the data
-  // is in memory instead. Then a cache size of 0 is returned.
-  uInt calcCacheSize (const ROTiledStManAccessor*, Int rowNumber) const;
+  // A zero bucket size indicates that the data are not tiled, but in memory.
+  // Then a cache size of 0 is returned.
+  virtual uInt calcCacheSize (const IPosition& cubeShape,
+                              const IPosition& tileShape,
+                              uInt maxCacheSize, uInt bucketSize) const = 0;
 
   // Function which returns a pointer to dynamic memory of an exact copy 
   // of this LatticeNavigator. It is the responsibility of the caller to
@@ -346,12 +348,6 @@ public:
   // Returns True if everything is fine otherwise returns False. The default
   // implementation always returns True.
   virtual Bool ok() const;
-
-protected:
-  // Calculate the cache size (in tiles) for this type of access to a lattice
-  // in the given row of the tiled hypercube.
-  virtual uInt calcCacheSize (const ROTiledStManAccessor&,
-			      uInt rowNumber) const = 0;
 };
 
 

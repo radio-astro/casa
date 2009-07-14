@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dFunction.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dFunction.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 //
 
 //# Includes
@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
   // Inputs
   cout << ">>>" << endl;
   Input inputs(1);
-  inputs.version("$Id: dFunction.cc 20329 2008-06-06 07:59:22Z gervandiepen $");
+  inputs.version("$Id: dFunction.cc 20622 2009-06-11 13:52:35Z gervandiepen $");
   inputs.create("n", "100000", "n"); 
   inputs.readArguments(argc, argv);
   Int N = inputs.getInt("n"); 
@@ -145,7 +145,6 @@ int main(int argc, const char* argv[])
   para(1) = AutoDiff<Double>(2, 3, 1);
   para(2) = AutoDiff<Double>(3, 3, 2);
   Vector<Double> va(3);
-  Double v;
 
   // Check results
   cout << "Values (g0: 1 line; g1: 2 lines; g2: RPN type):" << endl;

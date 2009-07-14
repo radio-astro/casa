@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordInterface.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: RecordInterface.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <casa/Containers/RecordInterface.h>
@@ -53,7 +53,8 @@ RecordInterface::RecordInterface (RecordType type,
 {}
 
 RecordInterface::RecordInterface (const RecordInterface& other)
-: checkFunction_p (other.checkFunction_p),
+: NoticeSource    (),
+  checkFunction_p (other.checkFunction_p),
   checkArgument_p (other.checkArgument_p),
   type_p          (other.type_p)
 {}

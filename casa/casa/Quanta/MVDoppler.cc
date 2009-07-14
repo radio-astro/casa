@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDoppler.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVDoppler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -44,7 +44,9 @@ MVDoppler::MVDoppler(Double d) :
   val(d){}
 
 MVDoppler::MVDoppler(const MVDoppler &other) :
-  val(other.val) {}
+  MeasValue(),
+  val(other.val)
+{}
 
 MVDoppler::MVDoppler(const Quantity &other) {
   val = makeD(other.getValue(), other.getFullUnit());

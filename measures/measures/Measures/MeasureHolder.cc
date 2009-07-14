@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasureHolder.cc 19918 2007-02-23 03:29:05Z Malte.Marquarding $
+//# $Id: MeasureHolder.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasureHolder.h>
@@ -61,7 +61,9 @@ MeasureHolder::MeasureHolder(const Measure &in)
   : hold_p(in.clone()), mvhold_p(0), convertmv_p(False) {}
 
 MeasureHolder::MeasureHolder(const MeasureHolder &other) 
-  : hold_p(), mvhold_p(0), convertmv_p(False) {
+  : RecordTransformable(),
+    hold_p(), mvhold_p(0), convertmv_p(False)
+{
   if (other.hold_p.ptr()) hold_p.set(other.hold_p.ptr()->clone());
   createMV(other.mvhold_p.nelements());
   for (uInt i=0; i<mvhold_p.nelements(); i++) {
@@ -423,7 +425,7 @@ MeasValue *MeasureHolder::getMV(uInt pos) const {
   else return static_cast<MeasValue *>(0);
 }
 
-Bool MeasureHolder::putType(String &error, RecordInterface &out) const {
+Bool MeasureHolder::putType(String &, RecordInterface &out) const {
   out.define(RecordFieldId("type"),
 	     downcase(String(hold_p.ptr()->tellMe())));
   return True;
@@ -457,7 +459,10 @@ Bool MeasureHolder::getType(String &error, const String &in) {
     hold_p.set(new Muvw());
   } else if (tp == downcase(MEarthMagnetic::showMe())) {
     hold_p.set(new MEarthMagnetic());
-  } else return False;
+  } else {
+    error = in + " is an unknown measure type";
+    return False;
+  }
   return True;
 }
 

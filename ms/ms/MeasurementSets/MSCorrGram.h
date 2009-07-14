@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCorrGram.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSCorrGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef MS_MSCORRGRAM_H
 #define MS_MSCORRGRAM_H
@@ -74,11 +74,11 @@ int msCorrGramParseCommand (const MeasurementSet *ms, const String& command);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void MSCorrGramerror (char*);
+void MSCorrGramerror (const char*);
 
 // Give the table expression node.
 const TableExprNode *msCorrGramParseNode();
-const void msCorrGramParseDeleteNode();
+void msCorrGramParseDeleteNode();
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

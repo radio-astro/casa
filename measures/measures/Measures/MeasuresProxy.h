@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasuresProxy.h 20086 2007-06-05 03:49:12Z Malte.Marquarding $
+//# $Id: MeasuresProxy.h 20651 2009-07-06 01:59:21Z Malte.Marquarding $
 
 #ifndef MEASURES_MEASURESPROXY_H
 #define MEASURES_MEASURESPROXY_H
@@ -56,8 +56,8 @@ public:
   String dirshow(const Record& rec);
   Record doptorv(const Record& rec, const String& str);
   Record doptofreq(const Record& rec, const String& str,
-		   const Quantum<Vector<Double> >& form);
-  Record todop(const Record& rec, const Quantum<Vector<Double> >& form);
+		   const Quantity& form);
+  Record todop(const Record& rec, const Quantity& form);
   Record torest(const Record& rec, const Record& form);
   Vector<String> obslist();
   Vector<String> srclist();

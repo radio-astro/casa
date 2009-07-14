@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLattice.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: ArrayLattice.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/ArrayLattice.h>
 //#include <casa/Lattices/ArrLatticeIter.h>
@@ -65,7 +65,8 @@ ArrayLattice<T>::ArrayLattice (const Array<T>& array)
 
 template<class T>
 ArrayLattice<T>::ArrayLattice (const ArrayLattice<T>&other) 
-: itsData     (other.itsData),
+: Lattice<T>(),
+  itsData     (other.itsData),
   itsWritable (other.itsWritable)
 {
 }

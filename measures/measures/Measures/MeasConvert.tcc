@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasConvert.tcc 19918 2007-02-23 03:29:05Z Malte.Marquarding $
+//# $Id: MeasConvert.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -45,6 +45,7 @@ MeasConvert<M>::MeasConvert() :
 
 template<class M>
 MeasConvert<M>::MeasConvert(const MeasConvert<M> &other) :
+  MConvertBase(other),
   model(0), unit(), outref(),
   offin(0), offout(0), crout(0), crtype(0), cvdat(0), lres(0), locres(0) {
   init();

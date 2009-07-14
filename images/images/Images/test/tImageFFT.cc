@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageFFT.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tImageFFT.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 // 
 //
 #include <casa/aips.h>
@@ -37,7 +37,7 @@
 #include <casa/BasicSL/String.h>
   
 #include <images/Images/ImageFFT.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LCPagedMask.h>
 
@@ -67,7 +67,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20567 $");
 
 
 // Get inputs

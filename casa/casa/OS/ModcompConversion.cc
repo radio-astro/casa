@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ModcompConversion.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ModcompConversion.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/OS/ModcompConversion.h>
 #include <casa/Utilities/Assert.h>
@@ -143,7 +143,7 @@ uInt ModcompConversion::toLocal (Float* to, const void* from, uInt nr) {
 	    if (prevMsbIsSet) asByte[i] |= 0x01;
 	    i--;
 	  }
-	  asByte[1] = ((asByte[1] & 0x3f) << 1) | asByte[1] & 0xc0;
+	  asByte[1] = ((asByte[1] & 0x3f) << 1) | (asByte[1] & 0xc0);
 	  if (msbIsSet) asByte[1] |= 0x01;
 	}
 	exponent--; // Because the exponent can go negative it must be signed
@@ -308,7 +308,7 @@ uInt ModcompConversion::toLocal (Double* to, const void* from, uInt nr) {
  	    if (prevMsbIsSet) asByte[i] |= 0x01;
  	    i--;
  	  }
- 	  asByte[1] = ((asByte[1] & 0x3f) << 1) | asByte[1] & 0xc0;
+ 	  asByte[1] = ((asByte[1] & 0x3f) << 1) | (asByte[1] & 0xc0);
  	  if (msbIsSet) asByte[1] |= 0x01;
  	}
  	exponent--; // Because the exponent can go negative it must be signed

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumn.tcc 20481 2009-01-08 07:40:44Z gervandiepen $
+//# $Id: ArrayColumn.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ArrayColumnFunc.h>
@@ -257,7 +257,7 @@ void ROArrayColumn<T>::handleSlices (const Vector<Vector<Slice> >& slices,
     uInt i;
     for (i=0; i<nrdim; ++i) {
       pos[i]++;
-      if (pos[i] < slices[i].size()) {
+      if (uInt(pos[i]) < slices[i].size()) {
         const Slice& slice = slices[i][pos[i]];
         colStart[i] = slice.start();
         colLen[i]   = slice.length();

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandler.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: RegionHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <images/Regions/RegionHandler.h>
@@ -54,7 +54,7 @@ Bool RegionHandler::canDefineRegion() const
   return False;
 }
 
-void RegionHandler::setDefaultMask (const String& regionName)
+void RegionHandler::setDefaultMask (const String&)
 {
   throw AipsError ("RegionHandler::setDefaultMask"
 		   " cannot be used for this image type");
@@ -106,8 +106,8 @@ Vector<String> RegionHandler::regionNames (RegionHandler::GroupType) const
   return Vector<String>();
 }
 
-ImageRegion* RegionHandler::getRegion (const String& name,
-				       RegionHandler::GroupType type,
+ImageRegion* RegionHandler::getRegion (const String&,
+				       RegionHandler::GroupType,
 				       Bool throwIfUnknown) const
 {
   if (throwIfUnknown) {

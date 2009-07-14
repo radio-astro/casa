@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5DataSet.cc 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: tHDF5DataSet.cc 20635 2009-06-16 05:35:21Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/HDF5/HDF5File.h>
@@ -65,6 +65,8 @@ int main()
       AlwaysAssertExit (dset.getName() == "array");
       AlwaysAssertExit (dset.shape() == shape);
       AlwaysAssertExit (dset.tileShape() == shape);
+      // Set the cache size in chunks.
+      dset.setCacheSize (10);
       Array<Int> ires(shape);
       dset.get (Slicer(IPosition(2,0), shape), ires.data());
       AlwaysAssertExit (allEQ(iarr, ires));

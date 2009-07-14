@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageUtilities2.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: ImageUtilities2.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 //
 
 #include <images/Images/ImageUtilities.h>
@@ -130,7 +130,7 @@ void ImageUtilities::bin (MaskedArray<T>& out, Coordinate& coordOut,
       const SpectralCoordinate& cIn = cSysOut.spectralCoordinate(axis);
       SpectralCoordinate& cOut = dynamic_cast<SpectralCoordinate&>(coordOut);
       cOut = cIn;
-   } else if (type=Coordinate::TABULAR) {
+   } else if (type==Coordinate::TABULAR) {
       const TabularCoordinate& cIn = cSysOut.tabularCoordinate(axis);
       TabularCoordinate& cOut = dynamic_cast<TabularCoordinate&>(coordOut);
       cOut = cIn;

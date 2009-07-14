@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MRBase.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MRBase.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MRBASE_H
 #define MEASURES_MRBASE_H
@@ -143,7 +143,7 @@ public:
   //						  const MRBase &ref2) = 0;
   // </srcblock>
   // Return the offset (or 0)
-  virtual const Measure *const offset() const = 0;
+  virtual const Measure* offset() const = 0;
   // Set the type
   // <thrown>
   //   <li> AipsError if wrong Measure

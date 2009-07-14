@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FitsIDItoMS.cc 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: FitsIDItoMS.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <msfits/MSFits/FitsIDItoMS.h> //
 #include <casa/Arrays/ArrayIO.h> //
@@ -1644,7 +1644,7 @@ void FITSIDItoMS1::getAxisInfo()
 
 
       //while((kw = kwl.next())&& setMAXIS == False) 
-      while(kw = kwl.next()) 
+      while((kw = kwl.next())) 
         {
           kwname = kw->name();
           //cout << "kwname1=" << kwname <<endl;

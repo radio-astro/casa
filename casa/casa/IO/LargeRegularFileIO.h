@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeRegularFileIO.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LargeRegularFileIO.h 20588 2009-05-06 11:55:42Z gervandiepen $
 
 #ifndef CASA_LARGEREGULARFILEIO_H
 #define CASA_LARGEREGULARFILEIO_H
@@ -102,6 +102,11 @@ public:
 
     // Get the file name of the file attached.
     virtual String fileName() const;
+
+    // Convenience function to open or create a file.
+    // Optionally it is checked if the file does not exist yet.
+    // It returns the file descriptor.
+    static int openCreate (const RegularFile& file, ByteIO::OpenOption);
 
 private:
     OpenOption  itsOption;

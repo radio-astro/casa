@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeGram.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSTimeGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef MS_MSTIMEGRAM_H
 #define MS_MSTIMEGRAM_H
@@ -75,11 +75,11 @@ int msTimeGramParseCommand (const MeasurementSet *ms, const String& command, con
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void MSTimeGramerror (char*);
+void MSTimeGramerror (const char*);
 
 // Give the table expression node.
 const TableExprNode *msTimeGramParseNode();
-const void msTimeGramParseDeleteNode();
+void msTimeGramParseDeleteNode();
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

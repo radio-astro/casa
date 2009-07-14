@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasFrame.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MeasFrame.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MEASFRAME_H
 #define MEASURES_MEASFRAME_H
@@ -232,15 +232,15 @@ class MeasFrame {
   // </group>
   
   // Get the epoch pointer (0 if not present)
-  const Measure *const epoch() const;
+  const Measure* epoch() const;
   // Get the position pointer (0 if not present)
-  const Measure *const position() const;
+  const Measure* position() const;
   // Get the direction pointer (0 if not present)
-  const Measure *const direction() const;
+  const Measure* direction() const;
   // Get the radial velocity pointer (0 if not present)
-  const Measure *const radialVelocity() const;
+  const Measure* radialVelocity() const;
   // Get the comet pointer (0 if not present)
-  const MeasComet *const comet() const;
+  const MeasComet* comet() const;
   // Get data from frame. Only available if appropriate measures are set,
   // and the frame is in a calculating state.
   // <group>

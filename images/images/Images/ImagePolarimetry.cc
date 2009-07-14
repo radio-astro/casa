@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImagePolarimetry.cc 19133 2005-12-06 20:18:51Z wyoung $
+//# $Id: ImagePolarimetry.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/OS/Timer.h>
 
@@ -959,7 +959,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
 }
 
 IPosition ImagePolarimetry::rotationMeasureShape(CoordinateSystem& cSys, Int& fAxis, 
-                                                 Int& sAxis, LogIO& os, Int spectralAxis) const
+                                                 Int& sAxis, LogIO&, Int spectralAxis) const
 {
 
 // Construction image CS
@@ -1006,7 +1006,7 @@ IPosition ImagePolarimetry::rotationMeasureShape(CoordinateSystem& cSys, Int& fA
 
 
 IPosition ImagePolarimetry::positionAngleShape(CoordinateSystem& cSys, 
-                                               Int& fAxis, Int& sAxis, LogIO& os, Int spectralAxis) const
+                                               Int& fAxis, Int& sAxis, LogIO&, Int spectralAxis) const
 {
 
 // Construction image CS

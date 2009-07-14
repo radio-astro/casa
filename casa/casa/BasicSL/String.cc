@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: String.cc 20654 2009-07-06 07:49:03Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 
@@ -271,6 +271,14 @@ String::size_type String::rfind(const RegexBase &r, size_type pos) const {
   return r.rfind(c_str(), length(), unused, pos-length());
 }
 
+Bool String::matches(const string &str, Int pos) const {
+  return ((pos < 0) ? index(str, pos) == 0 :
+	  length() != 0 && str.length() != 0 &&
+	  length() == pos+str.length() &&
+	  static_cast<size_type>(pos) < length() &&
+	  index(str, pos) == static_cast<size_type>(pos)) ;
+}
+
 Bool String::contains(const RegexBase &r) const {
   Int unused;
   return (r.find(c_str(), length(), unused, 0)) != npos;
@@ -380,7 +388,7 @@ String replicate(Char c, String::size_type n) {
 
 String replicate(const string &str, String::size_type n) {
   String t(str);
-  //t.resize(n*str.length());
+  t.reserve(n*str.length());
   while (--n > 0) t += str;
   return t;
 }

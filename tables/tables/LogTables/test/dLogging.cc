@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dLogging.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: dLogging.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //#!!
@@ -117,6 +117,9 @@ int main()
     square(dc);                                                    // 7
                                                                    // 8
     Float total = sum(dc);                                         // 9
-                                                                   // 10
-    return 0;                                                      // 11
+    if (total != 40) {                                             // 10
+      cout << "sum is incorrect" << endl;                          // 11
+      return 1;                                                    // 12
+    }                                                              // 13
+    return 0;                                                      // 14
 }

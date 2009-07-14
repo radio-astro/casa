@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.cc 20336 2008-06-18 07:33:38Z gervandiepen $
+//# $Id: IPosition.cc 20666 2009-07-07 07:46:38Z gervandiepen $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayError.h>
@@ -33,6 +33,22 @@
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+IPosition::IPosition (uInt length)
+: size_p (length),
+  data_p (buffer_p)
+{
+    if (length > BufferLength) {
+	allocateBuffer();
+    }
+}
+
+IPosition::~IPosition()
+{
+    if (data_p != &buffer_p[0]) {
+        delete [] data_p;
+    }
+}
 
 // <thrown>
 //    <item> AllocError

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 20529 2009-02-23 08:45:34Z gervandiepen $
+//# $Id: TableProxy.cc 20640 2009-06-25 10:20:49Z gervandiepen $
 
 
 #include <tables/Tables/TableProxy.h>
@@ -361,7 +361,7 @@ String TableProxy::toAscii (const String& asciiFile,
   // Write the data
   for (Int i=0; i<nrows(); i++) {
     for (Int j=0; j<ncols; j++) {
-      Int prec = (j < precision.size()  ?  precision[j] : 0);
+      Int prec = (j < Int(precision.size())  ?  precision[j] : 0);
       if (col_is_good[j]) {
         printValueHolder (getCell(colNames[j], i), ofs, theSep,
                           prec, useBrackets);
@@ -436,23 +436,23 @@ Bool TableProxy::getColInfo (const String& colName, Bool useBrackets,
     // Append the type with the array shape. Use [] if brackets are to be used.
     // If variable shape, use the shape of the first row.
     if (colDesc.isArray()) {
-      IPosition col_shape;
+      IPosition colShape;
       if (colDesc.isFixedShape()) {
-        col_shape = colDesc.shape();
+        colShape = colDesc.shape();
       }
       if (useBrackets) {
         oss << "[";
       } else {
         // Show non-fixed shape of first row if no brackets are used.
         if (!colDesc.isFixedShape()  &&  table_p.nrow() > 0) {
-          col_shape = ROTableColumn(table_p, colName).shape(0);
+          colShape = ROTableColumn(table_p, colName).shape(0);
         }
       }
-      for (Int i=0; i<col_shape.size(); ++i) {
+      for (uInt i=0; i<colShape.size(); ++i) {
         if (i > 0) {
           oss << ",";
         }
-        oss << col_shape[i];
+        oss << colShape[i];
       }
       if (useBrackets) {
         oss << "]";
@@ -1681,7 +1681,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   if (valtype == "boolean"  ||  valtype == "bool") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<Bool>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<Bool>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1689,7 +1689,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "byte"  ||  valtype == "uchar") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<uChar>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<uChar>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1697,7 +1697,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "short") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<Short>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<Short>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1705,7 +1705,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "integer"  ||  valtype == "int") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<Int>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<Int>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1713,7 +1713,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "uint") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<uInt>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<uInt>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1721,7 +1721,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "float") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<float>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<float>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1729,7 +1729,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "double") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<double>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<double>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1737,7 +1737,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "complex") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<Complex>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<Complex>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1745,7 +1745,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "dcomplex") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<DComplex>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<DComplex>
 			 (name, comment, dmtype, dmgrp, ndim, option));
@@ -1753,7 +1753,7 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
   } else if (valtype == "string") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<String>
-			 (name, comment, dmtype, dmgrp, shape, option));
+			 (name, comment, dmtype, dmgrp, shp, option));
     }else{
       tabdesc.addColumn (ArrayColumnDesc<String>
 			 (name, comment, dmtype, dmgrp, ndim, option));

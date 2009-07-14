@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELArray.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: LELArray.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/LELArray.h>
@@ -42,6 +42,7 @@ LELArray<T>::~LELArray()
 
 template <class T>
 LELArray<T>::LELArray (const LELArray<T>& other)
+: LELArrayBase()
 {
     operator= (other);
 }

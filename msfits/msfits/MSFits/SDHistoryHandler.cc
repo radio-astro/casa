@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDHistoryHandler.cc 18702 2005-05-23 08:54:53Z gvandiep $
+//# $Id: SDHistoryHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <msfits/MSFits/SDHistoryHandler.h>
@@ -80,7 +80,7 @@ void SDHistoryHandler::attach(MeasurementSet &ms, Vector<Bool> &handledCols,
     initAll(ms, handledCols, row);
 }
 
-void SDHistoryHandler::fill(const Record &row, Int observationId,
+void SDHistoryHandler::fill(const Record &, Int observationId,
 			    const String &message, const String &priority)
 {
     // this always just fills as is
@@ -139,7 +139,7 @@ void SDHistoryHandler::initAll(MeasurementSet &ms, const Vector<Bool> &handledCo
     initRow(handledCols, row);
 }
 
-void SDHistoryHandler::initRow(const Vector<Bool> &handledCols, const Record &row)
+void SDHistoryHandler::initRow(const Vector<Bool> &, const Record &row)
 {
     // look for a TIMESYS field in row
     if (row.fieldNumber("TIMESYS") >= 0) {

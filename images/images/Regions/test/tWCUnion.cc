@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tWCUnion.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tWCUnion.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCBox.h>

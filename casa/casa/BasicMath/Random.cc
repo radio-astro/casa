@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Random.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Random.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/BasicMath/Random.h>
 #include <casa/BasicSL/Constants.h>
@@ -259,7 +259,7 @@ ACG::ACG(uInt seed, Int size)
   Int l;
   for (l = 0; 
        randomStateTable[l][0] != -1 && randomStateTable[l][1] < size;
-       l++);
+       l++) {}
   
   if (randomStateTable[l][1] == -1) {
     l--;
@@ -668,7 +668,7 @@ Double Geometric::operator()() {
 
 uInt Geometric::asInt() {
   uInt samples;
-  for (samples = 0; itsRNG->asDouble() > itsProbability; samples++);
+  for (samples = 0; itsRNG->asDouble() > itsProbability; samples++) {}
   return samples;
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BasicMath.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: BasicMath.h 20644 2009-06-25 11:54:24Z gervandiepen $
 
 
 #ifndef CASA_BASICMATH_H
@@ -33,6 +33,7 @@
 #include <casa/BasicMath/Functional.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicMath/Random.h>
+#include <casa/BasicMath/Primes.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -65,6 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  <li> Class <linkto class=Random:description>
 //       Random</linkto>
 //       to offer random number generators.
+// <li> <linkto class="Primes">Prime</linkto> numbers
 // </ul>
 //
 // <note role=tip> You may want to look at the individual header files

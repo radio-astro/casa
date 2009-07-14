@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableKeyword.cc 19292 2006-02-28 14:10:26Z gvandiep $
+//# $Id: TableKeyword.cc 20655 2009-07-06 14:10:44Z gervandiepen $
 
 
 //# Includes
@@ -123,8 +123,7 @@ Bool TableKeyword::isMultiUsed (Bool checkSubTables) const
 void TableKeyword::renameTable (const String& newParentName,
 				const String& oldParentName)
 {
-    // When stripping off the parent table name changes the name,
-    // the table is part of the parent table.
+    // Remove common part of old name from subtable name.
     String old = tableName (oldParentName);
     if (old != attr_p.name()) {
 	attr_p.setName (Path::addDirectory (old, newParentName));

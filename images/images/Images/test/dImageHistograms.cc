@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dImageHistograms.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dImageHistograms.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 //
 // IMHIST iterates through an image and creates and displays histograms from
 //    data chunks specified by the axes keyword. 
@@ -104,7 +104,7 @@
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageHistograms.h>
 #include <lattices/Lattices/LCSlicer.h>
 #include <lattices/Lattices/LCBox.h>
@@ -122,7 +122,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20567 $");
 
 
 // Get inputs

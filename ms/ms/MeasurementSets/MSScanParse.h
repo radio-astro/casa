@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSScanParse.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef MS_MSSCANPARSE_H
 #define MS_MSSCANPARSE_H
@@ -114,7 +114,7 @@ private:
   static TableExprNode* node_p;
   static Vector<Int> idList;
   const String colName;
-  const void appendToIDList(const Vector<Int>& v);
+  void appendToIDList(const Vector<Int>& v);
   Int maxScans_p;
 };
 

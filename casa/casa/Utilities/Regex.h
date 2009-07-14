@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.h 19763 2006-11-24 04:07:49Z gvandiep $
+//# $Id: Regex.h 20606 2009-05-19 08:05:56Z gervandiepen $
 
 #ifndef CASA_REGEX_H
 #define CASA_REGEX_H
@@ -94,6 +94,8 @@ struct re_registers;
 //  <dd> grouping to change the normal operator precedence.
 //  <dt> |
 //  <dd> or operator. Matches left side or right side.
+//  <dt> \\1 till \\9. Backreference to a subexpression. Matches part of string
+//       equal to string part that matched the subexpression.
 // </dl>
 // Special characters have to be escaped with a backslash to use them
 // literally. Only inside the square brackets, escaping should not be done.
@@ -156,6 +158,10 @@ struct re_registers;
 // string to a regular expression. This function escapes characters in
 // the string which are special in a regular expression. In this way a
 // normal string can be passed to a function taking a regular expression.
+//
+// The static member function <src>makeCaseInsensitive</src> returns a
+// new regular expression string containing the case-insensitive version of
+// the given expression string.
 // </synopsis> 
 
 // <example>
@@ -239,6 +245,12 @@ public:
     // (which may contain special characters) to a function working
     // on regular expressions.
     static String fromString(const String &strng);
+
+    // Create a case-insensitive reular expression string from the given
+    // regular expression string.
+    // It does it by inserting the lowercase and uppercase version of
+    // characters in the input string into the output string.
+    static String makeCaseInsensitive (const String &strng);
 
     // Get the regular expression string.
     const String &regexp() const;

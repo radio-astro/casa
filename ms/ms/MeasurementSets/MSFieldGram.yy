@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id$
+    $Id: MSFieldGram.yy 20620 2009-06-11 10:00:28Z gervandiepen $
 */
 
 %{
@@ -80,7 +80,7 @@
 %{
 #include <ms/MeasurementSets/MSSelectionTools.h>
   int MSFieldGramlex (YYSTYPE*);
-  void checkFieldError(Vector<Int>& list, ostringstream& msg, Bool force=False, char *token=NULL)
+  void checkFieldError(Vector<Int>& list, ostringstream& msg, Bool force=False, char* = NULL)
   {
     if ((list.nelements() == 0) || force)
       {

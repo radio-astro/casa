@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDirectionCoordinate.cc 19930 2007-02-27 03:56:36Z Malte.Marquarding $
+//# $Id: tDirectionCoordinate.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 //#
 
  
@@ -1102,6 +1102,7 @@ void doit9 ()
    Vector<Double> pixel(2), world;
    pixel = 0.0;   
    Bool ok = dc.toWorld(world, pixel);
+   AlwaysAssert(ok, AipsError);
    cerr << "pixel, world = " << pixel << world << endl;
 }
 

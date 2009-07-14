@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnSet.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ColumnSet.cc 20605 2009-05-14 13:26:34Z gervandiepen $
 
 #include <tables/Tables/ColumnSet.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -164,20 +164,24 @@ void ColumnSet::prepareSomeDataManagers (uInt from)
 }
 
 
-void ColumnSet::resync (uInt nrrow)
+uInt ColumnSet::resync (uInt nrrow, Bool forceSync)
 {
     //# There may be no sync data (when new table locked for first time).
     if (dataManChanged_p.nelements() > 0) {
 	AlwaysAssert (dataManChanged_p.nelements() ==
 		                   blockDataMan_p.nelements(), AipsError);
 	for (uInt i=0; i<blockDataMan_p.nelements(); i++) {
-	    if (dataManChanged_p[i]  ||  nrrow != nrrow_p) {
-		BLOCKDATAMANVAL(i)->resync (nrrow);
+	    if (dataManChanged_p[i]  ||  nrrow != nrrow_p  ||  forceSync) {
+                uInt nrr = BLOCKDATAMANVAL(i)->resync1 (nrrow);
+                if (nrr > nrrow) {
+                    nrrow = nrr;
+                }
 		dataManChanged_p[i] = False;
 	    }
 	}
 	nrrow_p = nrrow;
     }
+    return nrrow_p;
 }
 
 
@@ -755,7 +759,7 @@ Bool ColumnSet::putFile (Bool writeTable, AipsIO& ios,
 }
 
 
-void ColumnSet::getFile (AipsIO& ios, Table& tab, uInt nrrow, Bool bigEndian)
+uInt ColumnSet::getFile (AipsIO& ios, Table& tab, uInt nrrow, Bool bigEndian)
 {
     //# When the first value is negative, it is the version.
     //# Otherwise it is nrrow_p.
@@ -810,10 +814,14 @@ void ColumnSet::getFile (AipsIO& ios, Table& tab, uInt nrrow, Bool bigEndian)
 	ios.getnew (leng, data);
 	MemoryIO memio (data, leng);
 	AipsIO aio(&memio);
-	BLOCKDATAMANVAL(i)->open (nrrow_p, aio);
+	uInt nrrow = BLOCKDATAMANVAL(i)->open1 (nrrow_p, aio);
+        if (nrrow > nrrow_p) {
+          nrrow_p = nrrow;
+        }
 	delete [] data;
     }
     prepareSomeDataManagers (0);
+    return nrrow_p;
 }
 
 

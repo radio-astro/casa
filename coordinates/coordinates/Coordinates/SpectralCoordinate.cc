@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralCoordinate.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: SpectralCoordinate.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 
@@ -103,7 +103,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   axisName_p("Frequency"),
   formatUnit_p("")
 {
-   AlwaysAssert(restFrequency>=0.0, AipsError);
+  ///   AlwaysAssert(restFrequency>=0.0, AipsError);
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency);
 //
@@ -955,7 +955,7 @@ void SpectralCoordinate::setRestFrequencies(const Vector<Double>& restFrequencie
       restfreqs_p = restFrequencies;
    }
 //
-   AlwaysAssert(which>=0 && which<restfreqs_p.nelements(), AipsError);
+   AlwaysAssert(which<restfreqs_p.nelements(), AipsError);
    selectRestFrequency(which);
 }
 
@@ -977,7 +977,7 @@ void SpectralCoordinate::selectRestFrequency(Double restFrequency)
 
 void SpectralCoordinate::selectRestFrequency(uInt which)
 {
-   AlwaysAssert(which>=0 && which<restfreqs_p.nelements(), AipsError)
+   AlwaysAssert(which<restfreqs_p.nelements(), AipsError)
 //
    restfreqIdx_p = which;
    Quantum<Double> rf(restfreqs_p(restfreqIdx_p), unit_p);

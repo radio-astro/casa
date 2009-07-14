@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSSummary.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMSSummary.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -47,7 +47,6 @@ int main(int argc, const char* argv[])
     cout << "--------------------------------------" << endl;
 
     LogIO os(LogOrigin("tMSSummary", "main()"));
-    Bool verbose=True;
 
     String MSName(argv[1]);
     MeasurementSet ms(MSName, Table::Old);

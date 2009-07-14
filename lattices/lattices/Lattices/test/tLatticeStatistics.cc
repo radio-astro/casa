@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeStatistics.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLatticeStatistics.cc 20650 2009-06-30 07:21:23Z gervandiepen $
 // 
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
@@ -61,7 +61,7 @@ void test2DFloat (LatticeStatistics<Float>& stats, const Vector<Float>& results,
                   const Vector<Bool>& hasResult, const IPosition& shape);
 
 
-int main (int argc, const char* argv[])
+int main()
 {
    try {
       LogOrigin lor("tLatticeStatistics", "main()", WHERE);
@@ -94,18 +94,19 @@ void doitFloat (LogIO& os)
    results(LatticeStatsBase::NPTS) = Float(shape(0));
    results(LatticeStatsBase::SUM) = sum(inArr);
    results(LatticeStatsBase::SUMSQ) = sum(square(inArr));
-   results(LatticeStatsBase::MEDIAN) = median(inArr);
+   Float med = median(inArr);
+   results(LatticeStatsBase::MEDIAN) = med;
+   results(LatticeStatsBase::MEDABSDEVMED) = median(abs(inArr-med));
    Float t1 = fractile(inArr, 0.25);
    Float t2 = fractile(inArr, 0.75);
-   results(LatticeStatsBase::QUARTILE) = (t2-t1)/2.0;
+   results(LatticeStatsBase::QUARTILE) = (t2-t1);
    results(LatticeStatsBase::MIN) = min(inArr);
    results(LatticeStatsBase::MAX) = max(inArr);
    results(LatticeStatsBase::MEAN) = mean(inArr);
    results(LatticeStatsBase::VARIANCE) = variance(inArr);
    results(LatticeStatsBase::SIGMA ) = stddev(inArr);
+   results(LatticeStatsBase::RMS ) = rms(inArr);
 //
-   hasResult(LatticeStatsBase::MEDABSDEVMED) = False;
-   hasResult(LatticeStatsBase::RMS) = False;
    hasResult(LatticeStatsBase::FLUX) = False;
 
 // Make 1D Lattice and test

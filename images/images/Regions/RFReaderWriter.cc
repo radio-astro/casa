@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: RFReaderWriter.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 #include <images/Regions/RFReaderWriter.h>
 #include <images/Regions/AipsIOReaderWriter.h>
     //#include <images/Regions/DS9ReaderWriter.h>

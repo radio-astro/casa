@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITSConverter.tcc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ImageFITSConverter.tcc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/PagedImage.h>

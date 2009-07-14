@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GenericL2Fit.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: GenericL2Fit.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <scimath/Fitting/GenericL2Fit.h>
@@ -539,7 +539,7 @@ void GenericL2Fit<T>::resetFunction() {
 template<class T>
 typename FunctionTraits<T>::BaseType GenericL2Fit<T>::
 getVal_p(const Array<typename FunctionTraits<T>::BaseType> &x,
-	 uInt j, uInt i) const {
+	 uInt, uInt i) const {
   if (ptr_derive_p) {
     if (x.ndim() == 1) {
       valder_p =

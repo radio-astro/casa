@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMathNaN.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMathNaN.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
@@ -39,8 +39,8 @@
 
 
 #include <casa/namespace.h>
-#define	isnanfmacro(x)	(((*(Int *)&(x) & 0x7f800000) == 0x7f800000) && \
-			    ((*(Int *)&(x) & 0x007fffff) != 0x00000000))
+#define	isnanfmacro(x)	(((*(Int *)(x) & 0x7f800000) == 0x7f800000) && \
+			    ((*(Int *)(x) & 0x007fffff) != 0x00000000))
 
 inline Bool isNaN_isnan(Float val) {
   return (isnan(Double(val)));
@@ -50,7 +50,7 @@ inline Bool isNaN_isnanf(const Float& val) {
 #if defined(AIPS_SOLARIS) || defined(AIPS_IRIX)
   return (isnanf(val));
 #else
-  return (isnanfmacro(val));
+  return (isnanfmacro(&val));
 #endif
 }
 
@@ -62,8 +62,9 @@ inline Bool isNaN_ref(const Float &x)
 
 inline Bool isNaN_val(Float x)
 {
-  return (((*(Int *)&(x) & 0x7f800000) == 0x7f800000) && \
-		((*(Int *)&(x) & 0x007fffff) != 0x00000000));
+  Float* xp=&x;
+  return (((*(Int *)xp & 0x7f800000) == 0x7f800000) && \
+		((*(Int *)xp & 0x007fffff) != 0x00000000));
 }
 
 
@@ -185,7 +186,7 @@ Bool doIt (Int n, Float x, Bool nan)
    t.mark();
    for (Int i=0; i<n; i++) {
      for (Int j=0; j<narr; j++) {
-       if (isnanfmacro(arr[j])) {
+       if (isnanfmacro(arr+j)) {
 	 nf++;
        }
       }
@@ -207,7 +208,7 @@ Bool doIt (Int n, Float x, Bool nan)
 int main (int argc, const char* argv[])
 {
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20632 $");
    inputs.create("n", "100", "Number of tries");
  
    inputs.readArguments(argc, argv);

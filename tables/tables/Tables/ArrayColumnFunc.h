@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumnFunc.h 20481 2009-01-08 07:40:44Z gervandiepen $
+//# $Id: ArrayColumnFunc.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_ARRAYCOLUMNFUNC_H
 #define TABLES_ARRAYCOLUMNFUNC_H
@@ -45,6 +45,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class BaseSlicesFunctor
   {
   public:
+    virtual ~BaseSlicesFunctor()
+    {}
     virtual void apply (const Slicer& slicer, Array<T>& arr) = 0;
   };
 

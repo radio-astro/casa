@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCorrGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSCorrGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSCorrGram; grammar for corr command lines
 
@@ -76,7 +76,7 @@ const TableExprNode* msCorrGramParseNode()
 {
     return MSCorrParse::node();
 }
-const void msCorrGramParseDeleteNode()
+void msCorrGramParseDeleteNode()
 {
     return MSCorrParse::cleanup();
 }
@@ -100,7 +100,7 @@ int msCorrGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSCorrGramerror (char*)
+void MSCorrGramerror (const char*)
 {
     throw (AipsError ("Corr Expression: Parse error at or near '" +
 		      String(MSCorrGramtext) + "'"));

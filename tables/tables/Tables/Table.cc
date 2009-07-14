@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.cc 20305 2008-04-21 10:01:24Z gervandiepen $
+//# $Id: Table.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -279,7 +279,7 @@ void Table::closeSubTables() const
 Bool Table::canDeleteTable (const String& tableName, Bool checkSubTables)
 {
     String message;
-    return canDeleteTable (message, tableName);
+    return canDeleteTable (message, tableName, checkSubTables);
 }
 Bool Table::canDeleteTable (String& message, const String& tableName,
 			    Bool checkSubTables)
@@ -591,6 +591,22 @@ void Table::relinquishAutoLocks (Bool all)
     }
 }
 
+Vector<String> Table::getLockedTables (FileLocker::LockType lockType,
+                                       int lockOption)
+{
+    vector<String> names;
+    TableCache& cache = PlainTable::tableCache;
+    uInt ntab = cache.ntable();
+    for (uInt i=0; i<ntab; i++) {
+	PlainTable& table = *(cache(i));
+	if (lockOption < 0  ||  table.lockOptions().option() == lockOption) {
+	    if (table.hasLock (lockType)) {
+                names.push_back (table.tableName());
+	    }
+	}
+    }
+    return Vector<String>(names);
+}
 
 
 TableRecord& Table::rwKeywordSet()

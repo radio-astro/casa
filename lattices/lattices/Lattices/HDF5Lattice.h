@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.h 20399 2008-09-11 13:18:38Z gervandiepen $
+//# $Id: HDF5Lattice.h 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #ifndef LATTICES_HDF5LATTICE_H
 #define LATTICES_HDF5LATTICE_H
@@ -35,9 +35,6 @@
 #include <casa/HDF5/HDF5Group.h>
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/BasicSL/String.h>
-
-#ifdef HAVE_LIBHDF5
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -198,6 +195,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Returns the current tile shape for this HDF5Lattice.
     IPosition tileShape() const;
 
+    // Set the actual cache size for this Array to be big enough for the
+    // indicated number of tiles. This cache is not shared with other
+    // HDF5Lattices,
+    // Tiles are cached using an LRU algorithm.
+    virtual void setCacheSizeInTiles (uInt howManyTiles);
+
+    // Set the cache size as to "fit" the indicated access pattern.
+    virtual void setCacheSizeFromPath (const IPosition& sliceShape,
+                                       const IPosition& windowStart,
+                                       const IPosition& windowLength,
+                                       const IPosition& axisPath);
+
     // Return the value of the single element located at the argument
     // IPosition.
     // Note that <src>Lattice::operator()</src> can also be used.
@@ -256,5 +265,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <lattices/Lattices/HDF5Lattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
-#endif
+
 #endif

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Coordinate.h 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id: Coordinate.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #ifndef COORDINATES_COORDINATE_H
@@ -517,8 +517,10 @@ protected:
    // and the native one. The default implementations do nothing.  They
    // should be over-ridden in the derived classes.
    // <group>
-   virtual void convertTo (Vector<Double>& world) const {;};
-   virtual void convertFrom (Vector<Double>& world) const {;};
+   virtual void convertTo (Vector<Double>&) const
+     {}
+   virtual void convertFrom (Vector<Double>&) const
+     {}
    // </group>
 
    // Functions for handling conversion between the current reference frame 

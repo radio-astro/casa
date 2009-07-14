@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: Projection.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <coordinates/Coordinates/Projection.h>
 #include <casa/BasicMath/Math.h>
@@ -316,7 +316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    case AZP: 
 	    case SIN: 
 	    case ZPN:
-	        for (int i=actualSize; i<requiredSize; i++){
+	        for (uInt i=actualSize; i<requiredSize; i++){
 		    parameters_p(i) = 0.; // all default to 0
 		}
 		break;
@@ -325,7 +325,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		break;
 	    case CYP: 
 	    case CEA: 
-	        for (int i=actualSize; i<requiredSize; i++){
+	        for (uInt i=actualSize; i<requiredSize; i++){
 		    parameters_p(i) = 1.; // all default to 1.
 		}
 		break;

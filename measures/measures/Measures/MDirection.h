@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MDirection.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MDirection.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MDIRECTION_H
 #define MEASURES_MDIRECTION_H
@@ -327,10 +327,10 @@ public:
   // nextra the number of specials (like planets) that should be at 
   // end of list). typ returns the list of corresponding types.
   // <group>
-  virtual const String *const allTypes(Int &nall, Int &nextra,
-				       const uInt *&typ) const;
-  static const String *const allMyTypes(Int &nall, Int &nextra,
-					const uInt *&typ);
+  virtual const String* allTypes(Int &nall, Int &nextra,
+                                 const uInt *&typ) const;
+  static const String* allMyTypes(Int &nall, Int &nextra,
+                                  const uInt *&typ);
   // </group>
   // Check if all internal tables of types (both enum and String) are 
   // complete and correct. This function is called automatically if and when

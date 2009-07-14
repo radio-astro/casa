@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTileLayout.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSTileLayout.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <casa/Arrays/IPosition.h>
@@ -33,7 +33,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 IPosition MSTileLayout::tileShape(const IPosition& dataShape,
-				  Int observationType, Int nIfr, Int nInt)
+				  Int observationType, Int nIfr, Int)
 {
   const Int ioBlockSize = 16384; // 16384 * sizeOf(Complex) = 128 kByte
   IPosition tileShape(3,0,0,0);

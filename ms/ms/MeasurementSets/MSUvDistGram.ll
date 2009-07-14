@@ -24,8 +24,12 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id$
+    $Id: MSUvDistGram.ll 20630 2009-06-12 04:14:37Z gervandiepen $
 */
+
+/* yy_unput is not used, so let flex not generate it, otherwise picky
+   compilers will issue warnings. */
+%option nounput
 
 %{
 #undef YY_INPUT

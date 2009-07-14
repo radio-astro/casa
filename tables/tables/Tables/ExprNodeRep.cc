@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprNodeRep.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <tables/Tables/ExprNodeRep.h>
 #include <tables/Tables/ExprNode.h>
@@ -707,8 +707,8 @@ TableExprNodeRep TableExprNodeBinary::getTypes (const TableExprNodeRep& left,
     ValueType leftVtype = left.valueType();
     ValueType rightVtype = right.valueType();
     // Check that the value type is VTScalar and/or VTArray.
-    if (leftVtype  != VTArray  &&  leftVtype  != VTScalar
-    ||  rightVtype != VTArray  &&  rightVtype != VTScalar) {
+    if ((leftVtype  != VTArray  &&  leftVtype  != VTScalar)
+    ||  (rightVtype != VTArray  &&  rightVtype != VTScalar)) {
 	throw (TableInvExpr ("Operand has to be a scalar or an array"));
     }
     // The resulting value type is Array if one of the operands is array.

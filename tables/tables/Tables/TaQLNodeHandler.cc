@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeHandler.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: TaQLNodeHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/TaQLNodeHandler.h>
 #include <tables/Tables/TableError.h>
@@ -119,6 +119,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     } else if (node.itsValue[0] == 'm') {
       str = ".*(" + str + ").*";
     }
+    if (node.itsCaseInsensitive) {
+      str = Regex::makeCaseInsensitive(str);
+    }
     return new TaQLNodeHRValue (TableExprNode(Regex(str)));
   }
 
@@ -193,12 +196,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       break;
     case TaQLBinaryNodeRep::B_EQREGEX:
       return new TaQLNodeHRValue (left == right);
-    case TaQLBinaryNodeRep::B_EQREGEXCI:
-      return new TaQLNodeHRValue (downcase(left) == right);
     case TaQLBinaryNodeRep::B_NEREGEX:
       return new TaQLNodeHRValue (left != right);
-    case TaQLBinaryNodeRep::B_NEREGEXCI:
-      return new TaQLNodeHRValue (downcase(left) != right);
     case TaQLBinaryNodeRep::B_BITAND:
       return new TaQLNodeHRValue (left & right);
     case TaQLBinaryNodeRep::B_BITXOR:
@@ -358,7 +357,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return TaQLNodeResult();
   }
 
-  TaQLNodeResult TaQLNodeHandler::visitJoinNode (const TaQLJoinNodeRep& node)
+  TaQLNodeResult TaQLNodeHandler::visitJoinNode (const TaQLJoinNodeRep&)
   {
     throw TableInvExpr ("join is not supported yet");
     return TaQLNodeResult();
@@ -577,7 +576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return TaQLNodeResult();
   }
 
-  TaQLNodeResult TaQLNodeHandler::visitRecFldNode (const TaQLRecFldNodeRep& node)
+  TaQLNodeResult TaQLNodeHandler::visitRecFldNode (const TaQLRecFldNodeRep&)
   {
     // This function cannot be called, because handleRecord processes
     // the fields.
@@ -669,7 +668,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // There is a vector of values.
     AlwaysAssert (nodeType == TaQLNode_Const, AipsError);
     // Check if all data types are equal or can be made equal.
-    int dtype;
+    int dtype=TpOther;
     for (uInt i=0; i<vals.size(); ++i) {
       TaQLConstNodeRep* val = (TaQLConstNodeRep*)(vals[i].getRep());
       if (i == 0) {

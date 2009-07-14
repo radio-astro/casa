@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCLELMask.cc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: WCLELMask.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <images/Regions/WCLELMask.h>
 #include <images/Images/ImageExprParse.h>
@@ -93,7 +93,8 @@ WCLELMask::WCLELMask (const LatticeExprNode& expr)
 }
 
 WCLELMask::WCLELMask (const WCLELMask& that)
-: itsImageExpr (0),
+: WCRegion     (),
+  itsImageExpr (0),
   itsLattExpr  (0),
   itsLattNode  (0)
 {
@@ -244,7 +245,7 @@ LCRegion* WCLELMask::toLCRegion (const CoordinateSystem& cSys,
   return new LCLELMask (*itsLattExpr);
 }
 
-LCRegion* WCLELMask::doToLCRegion (const CoordinateSystem& cSys,
+LCRegion* WCLELMask::doToLCRegion (const CoordinateSystem&,
 				   const IPosition& latticeShape,
 				   const IPosition& pixelAxesMap,
 				   const IPosition& outOrder) const

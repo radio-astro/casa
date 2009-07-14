@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeCleanProgress.cc 20256 2008-02-23 20:28:24Z gervandiepen $
+//# $Id: LatticeCleanProgress.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 //# Includes
@@ -73,8 +73,8 @@ Bool LatticeCleanProgress::info(const Bool lastcall,
 				     const Block<IPosition>& posMaximum,
 				     const Float strengthOptimum,
 				     const Int optimumScale,
-				     const IPosition& positionOptimum,
-				     const Float& totalFlux,
+				     const IPosition&,
+				     const Float&,
 				     const Vector<Float>& totalFluxScale,
 				     const Bool resetBase) 
 {

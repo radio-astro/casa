@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dImageStatistics.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dImageStatistics.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 // 
 //
 // dImageStatistics iterates through an image accumulating and displaying statistics
@@ -108,7 +108,7 @@
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <lattices/Lattices/LCSlicer.h>
 #include <lattices/Lattices/LCBox.h>
@@ -125,7 +125,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20567 $");
 
 
 // Get inputs

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasMath.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MeasMath.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MEASMATH_H
 #define MEASURES_MEASMATH_H
@@ -245,7 +245,7 @@ private:
 
   //# Typedefs
   // To get frame group
-  typedef const Measure *const (MeasFrame::*FRFCT)() const;
+  typedef const Measure* (MeasFrame::*FRFCT)() const;
   // To get frame info
   // <group>
   typedef Bool (MeasFrame::*FRDINFO)(Double &) const;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCExtension.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: WCExtension.h 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGES_WCEXTENSION_H
 #define IMAGES_WCEXTENSION_H

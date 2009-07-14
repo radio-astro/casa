@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LattStatsSpecialize.cc 18121 2004-12-06 17:59:16Z ddebonis $
+//# $Id: LattStatsSpecialize.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 //
 
 #include <lattices/Lattices/LattStatsSpecialize.h>
@@ -93,10 +93,10 @@ void LattStatsSpecialize::accumulate (Double& nPts, Double& sum,
 
 void LattStatsSpecialize::accumulate (DComplex& nPts, DComplex& sum,
                                       DComplex& sumSq, Complex& dataMin,
-                                      Complex& dataMax, Int& minPos,
-                                      Int& maxPos, Bool& minMaxInit,
+                                      Complex& dataMax, Int&,
+                                      Int&, Bool& minMaxInit,
                                       Bool fixedMinMax, Complex datum,
-                                      uInt& pos, Complex useIt)
+                                      uInt&, Complex useIt)
 //
 // minPos and maxPos currently useless for Complex.  Don't
 // try to access.
@@ -258,12 +258,12 @@ Complex LattStatsSpecialize::max(Complex v1, Complex v2)
    return Complex(std::max(real(v1),real(v2)),std::max(imag(v1),imag(v2)));
 }
 
-Float LattStatsSpecialize::getNodeScalarValue(const LatticeExprNode& node, Float dummy)
+Float LattStatsSpecialize::getNodeScalarValue(const LatticeExprNode& node, Float)
 {
    return node.getFloat();
 }
 
-Complex LattStatsSpecialize::getNodeScalarValue(const LatticeExprNode& node, Complex dummy)
+Complex LattStatsSpecialize::getNodeScalarValue(const LatticeExprNode& node, Complex)
 {
    return node.getComplex();
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Object.h 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: HDF5Object.h 20657 2009-07-07 04:49:56Z Malte.Marquarding $
 
 #ifndef CASA_HDF5OBJECT_H
 #define CASA_HDF5OBJECT_H
@@ -31,7 +31,6 @@
 //# Includes
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
-#include <casa/HDF5Config.h>
 
 //# Define hid_t and hsize_t if not defined (thus if HDF5 disabled).
 //# They should be the same as used by HDF5.

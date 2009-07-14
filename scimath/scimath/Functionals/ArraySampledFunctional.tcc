@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArraySampledFunctional.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: ArraySampledFunctional.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <scimath/Functionals/ArraySampledFunctional.h>
 
@@ -54,10 +54,11 @@ ArraySampledFunctional(const T & data)
 
 template<class T> ArraySampledFunctional<T>::
 ArraySampledFunctional(ArraySampledFunctional<T> & other)
-  :theRefData(other.theRefData),
-   theEnd(other.theEnd),
-   theLastAxis(other.theLastAxis),
-   theNelements(other.theNelements)
+  : SampledFunctional<T>(other),
+    theRefData(other.theRefData),
+    theEnd(other.theEnd),
+    theLastAxis(other.theLastAxis),
+    theNelements(other.theNelements)
 {
 }
 

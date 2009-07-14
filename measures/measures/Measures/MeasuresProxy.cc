@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasuresProxy.cc 20086 2007-06-05 03:49:12Z Malte.Marquarding $
+//# $Id: MeasuresProxy.cc 20651 2009-07-06 01:59:21Z Malte.Marquarding $
 
 #include <measures/Measures/MeasuresProxy.h>
 #include <measures/Measures.h>
@@ -510,7 +510,7 @@ Record MeasuresProxy::doptorv(const Record& rec, const String& str)
   return mh2rec(mhout);
 }
 Record MeasuresProxy::doptofreq(const Record& rec, const String& str,
-				const Quantum<Vector<Double> >& form)
+				const Quantity& form)
 {
   MeasureHolder mh = rec2mh(rec);
   MeasureHolder mhout;
@@ -541,7 +541,7 @@ Record MeasuresProxy::doptofreq(const Record& rec, const String& str,
 }
 
 Record MeasuresProxy::todop(const Record& rec, 
-			    const Quantum<Vector<Double> >& form)
+			    const Quantity& form)
 {
   MeasureHolder mh = rec2mh(rec);
   MeasureHolder mhout;

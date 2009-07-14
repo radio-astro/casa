@@ -31,7 +31,7 @@ env = Environment(
 		  ENV = { 'PATH' : os.environ[ 'PATH' ],
 			  'HOME' : os.environ[ 'HOME' ]			  
 			  },
-		  options=opts
+		  variables=opts
 		  )
 # keep a local sconsign database, rather than in very directory
 env.SConsignFile()
@@ -85,6 +85,9 @@ if not env.GetOption('clean'):
     if not conf.CheckLib('cfitsio', autoadd=0):
         Exit(1)
     conf.env.PrependUnique(LIBS=['cfitsio'])
+
+    if not conf.CheckLib("dl"): Exit(1)
+    conf.env.PrependUnique(LIBS=['dl'])
     env = conf.Finish()
 else:
     Execute(Delete("options.cfg"))
@@ -99,8 +102,6 @@ env.AppendUnique(LIBPATH=env["casalibdir"])
 for dep in DEPS:
     env.Prepend(LIBS=["casa_"+dep])
 
-# Replace some builder commands (lex,yacc) with custom versions
-env.CustomCasaCom()
 for bopt in env["build"]:
     # create an environment copy with the dbg/opt compiler flags
     buildenv = env.BuildEnv(bopt)
