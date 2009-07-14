@@ -34,6 +34,12 @@ namespace casa
 			    Array<Complex>& outArray, 
 			    Double dAngleRad, 
 			    String interpMathod=String("CUBIC"));
+    void findLatticeMax(const ImageInterface<Complex>& lattice,
+			Vector<Float>& maxAbs,
+			Vector<IPosition>& posMaxAbs) ;
+    void findLatticeMax(const ImageInterface<Float>& lattice,
+			Vector<Float>& maxAbs,
+			Vector<IPosition>& posMaxAbs) ;
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);
