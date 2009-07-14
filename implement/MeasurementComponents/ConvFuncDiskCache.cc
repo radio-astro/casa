@@ -503,6 +503,7 @@ namespace casa{
     // each w-plane image from the disk, and fills in the 3D
     // mem. cache for each computed PA.
     //
+    wConvSize = Nw;
     for(Int iw=0;iw<Nw;iw++)
       {
 	ostringstream name;
@@ -517,7 +518,6 @@ namespace casa{
 
 	    cfRefFreq=spCS.referenceValue()(0);
 	
-	    wConvSize = Nw;
 	    polInUse = tmp.shape()(2);
 	    IPosition ts=tmp.shape(),ndx(4,0,0,0,0),ts2(4,0,0,0,0);
 	    Array<Complex> buf=tmp.get();
