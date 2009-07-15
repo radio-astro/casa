@@ -138,14 +138,14 @@ template <class M> class ROScalarMeasColumn;
 // equation of equinoxes; the <em>AZEL</em> will include Earth tides and
 // refraction at a later stage.<br>
 // Note that conversion between B1950 and J2000 can only be approximate, and is
-// based on FK4 to FK% conversion. The best conversion is to convert first
+// based on FK4 to FK5 conversion. The best conversion is to convert first
 // to an apparent position at the time of observation, and convert from there
 // to the other standard (the correct route will be followed).<br>
 // Another problem can arise if the source has proper motion and/or radial
 // velocities. These should be taken into account. An
 // MCatalog class will maybe take care of that.
 // <note role=warning>
-// The offset that can be specified in the MDirection::Ref is an MDIrection
+// The offset that can be specified in the MDirection::Ref is an MDirection
 // offset, and can not be used for specifying angular offsets. shift()
 // methods are available for these cases.
 // </note>
