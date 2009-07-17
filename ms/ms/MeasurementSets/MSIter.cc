@@ -310,6 +310,18 @@ MSIter::operator=(const MSIter& other)
   return *this;
 }
 
+
+const MS& MSIter::ms(const uInt id) const {
+
+  if(id < bms_p.nelements()){
+    return bms_p[id];
+  }
+  else{
+    return bms_p[curMS_p];
+  }
+  
+}
+
 void MSIter::setInterval(Double timeInterval)
 {
   interval_p=timeInterval;
