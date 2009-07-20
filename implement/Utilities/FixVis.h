@@ -131,7 +131,8 @@ public:
   Bool calc_uvw(const String& refcode);
 
   // For things like rotation, differential aberration correction, etc., when
-  // there already is a UVW column, using FTMachine.
+  // there already is a UVW column, using FTMachine.  Returns true if _any_
+  // fields are modified.
   Bool fixvis(const String& refcode, const String& dataColName);
 
 private:
@@ -154,11 +155,11 @@ private:
   ImageInterface<Complex>& getImage(Matrix<float>&, Bool) {return *image;}
   void getWeightImage(ImageInterface<float>&, Matrix<float>&) {}
   void get(VisBuffer&, Int) {}
-  void put(const VisBuffer&, Int, Bool, FTMachine::Type, const Matrix<float>&){
-  }
 
   // Fixes the visses in vb for row (or all if row == -1).
-  void put(const VisBuffer& vb, Int row);
+  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
+           FTMachine::Type type=FTMachine::OBSERVED, 
+           const Matrix<Float>& imweight=Matrix<Float>(0,0));
 
   Bool getRestFreq(Vector<Double>& restFreq, const Int spw, const Int fldID);
   void setObsInfo(ObsInfo& obsinfo);
@@ -191,6 +192,14 @@ private:
   // DO THE FINAL TRANSFORM!
   void finalizeToSky() {}
 
+  // TODO?: trackDir.
+  Bool setImageField(const Int fieldid,
+                     const Bool dotrackDir=false //, const MDirection& trackDir
+                     );
+
+  Bool lock();
+  void unlock();
+
   // Log functions and variables
   LogIO sink_p;
   LogIO& logSink() {return sink_p;}
@@ -213,6 +222,9 @@ private:
                                         // field
   Vector<String>   dataColNames_p;
   uInt             nDataCols_p;
+  uInt             nchan_p;
+  Vector<Int>      spectralwindowids_p;
+  uInt             lockCounter_p;
   
   // Not initialized in ctor.
   MeasurementSet   mssel_p;             // The selected part of ms_p.
@@ -222,6 +234,8 @@ private:
   Vector<MDirection> phaseDirs_p;	// new phase centers for each selected field
   Int nSpw_p;				// Number of spws
   MPosition mLocation_p;
+  Bool doTrackSource_p;
+  Int fieldid_p;
 };
   
 } //# NAMESPACE CASA - END

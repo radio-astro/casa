@@ -7867,8 +7867,8 @@ Bool Imager::assertDefinedImageParameters() const
 {
   LogIO os(LogOrigin("imager", "if(!assertDefinedImageParameters()", WHERE));
   if(!setimaged_p) { 
-    os << LogIO::SEVERE << "Image parameters not yet set: use setimage "
-      "in Function Group <setup> " << LogIO::POST;
+    os << LogIO::SEVERE << "Image parameters not yet set: use im.defineimage."
+       << LogIO::POST;
     return False;
   }
   return True;

@@ -522,7 +522,8 @@ protected:
   Int wprojPlanes_p;
   Quantity mcellx_p, mcelly_p;
   String stokes_p;
-  String dataMode_p, imageMode_p;
+  String dataMode_p;
+  String imageMode_p;           // channel, (optical)velocity, mfs, or frequency
   Vector<Int> dataNchan_p;
   Int imageNchan_p;
   Vector<Int> dataStart_p, dataStep_p;
