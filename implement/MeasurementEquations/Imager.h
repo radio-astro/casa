@@ -93,7 +93,7 @@ class Imager
 
   // Utility function to do channel selection
 
-  Bool selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids, 
+  Bool selectDataChannel(Vector<Int>& spectralwindowids, 
 				 String& dataMode, 
 				 Vector<Int>& dataNchan, 
 				 Vector<Int>& dataStart, Vector<Int>& dataStep,
@@ -107,11 +107,11 @@ class Imager
   virtual void setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan); 
 
   //VisSet and resort 
-  virtual void makeVisSet(VisSet* & vs, MeasurementSet& ms, 
-			  Bool compress=False, Bool mosaicOrder=False);
-  //Just to create the SORTED_TABLE
   virtual void makeVisSet(MeasurementSet& ms, 
 			  Bool compress=False, Bool mosaicOrder=False);
+  //Just to create the SORTED_TABLE if one can
+  //virtual void makeVisSet(MeasurementSet& ms, 
+  //			  Bool compress=False, Bool mosaicOrder=False);
 
   virtual void writeHistory(LogIO& os);
 
@@ -479,7 +479,7 @@ class Imager
 protected:
 
   MeasurementSet* ms_p;
-  MSHistoryHandler *hist_p;
+  CountedPtr<MSHistoryHandler> hist_p;
   Table antab_p;
   Table datadesctab_p;
   Table feedtab_p;
@@ -507,6 +507,8 @@ protected:
   String msname_p;
   MeasurementSet *mssel_p;
   VisSet *vs_p;
+  ROVisibilityIterator* rvi_p;
+  VisibilityIterator* wvi_p;
   FTMachine *ft_p;
   ComponentFTMachine *cft_p;
   SkyEquation* se_p;

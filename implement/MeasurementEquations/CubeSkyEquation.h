@@ -38,11 +38,17 @@ template <class T> class ImageInterface;
 template <class T> class TempImage;
 template <class T> class SubImage;
 template <class T> class Block;
+class VisibilityIterator;
+class ROVisibilityIterator;
 
 class CubeSkyEquation : public SkyEquation {
 
  public:
   CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
+ 
+  //Read only iterator...hence no scratch col
+  CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
+
   virtual ~CubeSkyEquation();
   virtual void predict(Bool incremental=False);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
@@ -95,6 +101,8 @@ class CubeSkyEquation : public SkyEquation {
  private:
   // if skyjones changed in get or put we need to tell put or get respectively
   // about it
+  void init(FTMachine& ft);
+
   Bool internalChangesPut_p;
   Bool internalChangesGet_p;
   Bool firstOneChangesPut_p;

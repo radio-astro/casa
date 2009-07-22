@@ -125,6 +125,7 @@ class ComponentList;
 class ComponentFTMachine;
 class UVWMachine;
 class ROVisibilityIterator;
+class VisibilityIterator;
 
 template <class T> class ImageInterface;
 template <class T> class TempImage;
@@ -141,6 +142,11 @@ public:
   // a ComponentFTMachine for the component lists
   SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 	      ComponentFTMachine& cft,  Bool noModelcol=False);
+
+
+  //SkyEquation with ROVisIter
+  SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
+	      ComponentFTMachine& cft, Bool noModelCol);
 
   // Define a SkyEquation linking a VisSet vs with a SkyModel sm
   // using an FTMachine ft for Sky->Vis and ift for Vis->Sky
@@ -349,6 +355,10 @@ public:
 
   // VisSet
   VisSet* vs_;
+  //Visibilityiterators
+  VisibilityIterator* wvi_p;
+  ROVisibilityIterator* rvi_p;
+
 
   // FTMachine objects
   // <group>
