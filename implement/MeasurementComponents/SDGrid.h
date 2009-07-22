@@ -264,7 +264,7 @@ private:
                                   const Int& index, const Int& index1, const Int& index2);
 
   //for debugging
-  FILE *pfile;
+  //FILE *pfile;
 };
 
 } //# NAMESPACE CASA - END
