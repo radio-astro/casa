@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.cc 20142 2007-11-06 22:35:21Z Malte.Marquarding $
+//# $Id: Directory.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 // we NEED to include aips(env).h before using any AIPS_xyz defines
 #include <casa/OS/Directory.h>
@@ -276,17 +276,18 @@ void Directory::copy (const Path& target, Bool overwrite,
     // do it ourselves.
     copyRecursive (targetName.expandedName());
 #else
-    String command("cp -r ");
-    command += itsFile.path().expandedName() + " " + targetName.expandedName();
+    String command("cp -r '");
+    command += itsFile.path().expandedName() + "' '" +
+               targetName.expandedName() + "'";
     system (command.chars());
     // Give write permission to user if needed.
     if (setUserWritePermission) {
 #if defined(__hpux__) || defined(AIPS_IRIX)
-	command = "chmod -R u+w ";
+	command = "chmod -R u+w '";
 #else
-	command = "chmod -Rf u+w ";
+	command = "chmod -Rf u+w '";
 #endif
-	command += targetName.expandedName();
+	command += targetName.expandedName() + "'";
 	system (command.chars());
     }
 #endif

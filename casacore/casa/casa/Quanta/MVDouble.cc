@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDouble.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVDouble.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -42,7 +42,9 @@ MVDouble::MVDouble(Double d) :
   val(d){}
 
 MVDouble::MVDouble(const MVDouble &other) :
-  val(other.val) {}
+  MeasValue(),
+  val(other.val)
+{}
 
 MVDouble::MVDouble(const Quantity &other) {
   val = other.get().getValue();

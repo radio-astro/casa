@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: InterpolateArray1D.tcc 20499 2009-01-19 08:10:19Z gervandiepen $
+//# $Id: InterpolateArray1D.tcc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Arrays/Vector.h>

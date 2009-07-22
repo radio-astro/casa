@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarMeasColumn.tcc 20019 2007-03-13 21:40:09Z gervandiepen $
+//# $Id: ScalarMeasColumn.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ScalarMeasColumn.h>
@@ -103,7 +103,8 @@ ROScalarMeasColumn<M>::ROScalarMeasColumn (const Table& tab,
 
 template<class M>
 ROScalarMeasColumn<M>::ROScalarMeasColumn (const ROScalarMeasColumn<M>& that)
-: itsArrDataCol(0),
+: ROTableMeasColumn(),
+  itsArrDataCol(0),
   itsScaDataCol(0),
   itsRefIntCol (0),
   itsRefStrCol (0),

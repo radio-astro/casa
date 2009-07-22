@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tWCLELMask.cc 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: tWCLELMask.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #include <casa/aips.h>
 #include <images/Regions/WCLELMask.h>
-#include <images/Regions/PagedImage.h>
-#include <images/Regions/ImageExprParse.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/ImageExprParse.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/Lattices/LCLELMask.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSSpwIndex.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <measures/Measures/MDoppler.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -416,7 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      else
 		{
-		  Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
+		  //Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
 		  //
 		  // Now that I think about this, veloctiy based
 		  // selection in MSSelection does not make sense.

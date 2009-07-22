@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: malloc.cc 20142 2007-11-06 22:35:21Z Malte.Marquarding $
+//# $Id: malloc.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <casa/aips.h>
 
@@ -2326,10 +2326,6 @@ History:
 
 */
 
-
-#else
-/* Some binutils unhappy with a file with no symbols at all */
-    static const char *ptr = 0; 
 #endif
 /* AIPS_LINUX */
 

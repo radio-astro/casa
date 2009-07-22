@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprGram.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ImageExprGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef IMAGES_IMAGEEXPRGRAM_H
 #define IMAGES_IMAGEEXPRGRAM_H
@@ -74,7 +74,7 @@ int imageExprGramParseCommand (const String& command);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void ImageExprGramerror (char*);
+void ImageExprGramerror (const char*);
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

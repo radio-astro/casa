@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageDecomposer.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tImageDecomposer.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/iostream.h>
 #include <casa/stdlib.h>
@@ -55,7 +55,7 @@ Bool compareParameters(const Matrix<imagetype>& given,
 
 //////////////////////////////////////////
 
-int main(int argc, const char* argv[])
+int main()
 {  
     //Tests the ImageDecomposer class
 

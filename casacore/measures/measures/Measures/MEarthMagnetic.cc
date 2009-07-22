@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MEarthMagnetic.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MEarthMagnetic.cc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MEarthMagnetic.h>
@@ -153,8 +153,8 @@ const String &MEarthMagnetic::showType(uInt tp) {
   return MEarthMagnetic::showType(MEarthMagnetic::castType(tp));
 }
 
-const String *const MEarthMagnetic::allMyTypes(Int &nall, Int &nextra,
-					  const uInt *&typ) {
+const String* MEarthMagnetic::allMyTypes(Int &nall, Int &nextra,
+                                         const uInt *&typ) {
   static const Int N_name  = 24;
   static const Int N_extra = 0;
   static const String tname[N_name] = {
@@ -216,8 +216,8 @@ const String *const MEarthMagnetic::allMyTypes(Int &nall, Int &nextra,
   return tname;
 }
 
-const String *const MEarthMagnetic::allTypes(Int &nall, Int &nextra,
-					const uInt *&typ) const {
+const String* MEarthMagnetic::allTypes(Int &nall, Int &nextra,
+                                       const uInt *&typ) const {
   return MEarthMagnetic::allMyTypes(nall, nextra, typ);
 }
 

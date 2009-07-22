@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarSampledFunctional.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: ScalarSampledFunctional.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <scimath/Functionals/ScalarSampledFunctional.h>
 #include <casa/Containers/Block.h>
@@ -51,12 +51,14 @@ ScalarSampledFunctional(const Vector<T> & data)
 
 template<class T> ScalarSampledFunctional<T>::
 ScalarSampledFunctional(ScalarSampledFunctional<T> & other)
-  :refData(other.refData){
+  : SampledFunctional<T>(other),
+    refData(other.refData){
 }
 
 template<class T> ScalarSampledFunctional<T>::
 ScalarSampledFunctional(const ScalarSampledFunctional<T> & other)
-  :refData(other.refData.copy()){
+  : SampledFunctional<T>(other),
+    refData(other.refData.copy()){
 }
 
 template<class T> ScalarSampledFunctional<T> & ScalarSampledFunctional<T>::

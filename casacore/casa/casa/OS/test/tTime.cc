@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTime.cc 20173 2007-11-22 01:22:30Z Malte.Marquarding $
+//# $Id: tTime.cc 20625 2009-06-12 00:27:08Z gervandiepen $
 
 #include <casa/OS/Time.h>
 #include <casa/iostream.h>
@@ -78,7 +78,6 @@ int main() {
   cout<<t9.dayOfMonth()<<" "<<t9.month()<<" "<<t9.year()<<" "<<t9.hours()<<" "<<t9.minutes()<<" "<<t9.seconds()<<"\n";
   uInt m=2,y=1992;
   cout<<"how many days this month "<<t9.howManyDaysInMonth()<<"\n";
-  cout<<"how many days february "<<t9.howManyDaysInMonth(m)<<"\n";
   cout<<"how many days february of 1992 "<<t9.howManyDaysInMonth(m,y)<<"\n";
 
   if(t9.isLeapYear(y))

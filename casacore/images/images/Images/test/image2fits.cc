@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: image2fits.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: image2fits.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 //-----------------------------------------------------------------------------
 //# usage:  image2fits <image ename> <new FITS file name>
 //#
@@ -33,7 +33,7 @@
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <images/Images/RegionHandler.h>
+#include <images/Regions/RegionHandler.h>
 
 #include <casa/Arrays/Array.h>
 #include <casa/Containers/MapIO.h>
@@ -96,10 +96,11 @@ int main(int argc, const char *argv[])
         Int bits = -32;
         if (do16) bits = 16;
         Bool degLast = False;
-	Bool stokesLast = True;
+        Bool stokesLast = True;
 	Bool ok = ImageFITSConverter::ImageToFITS(error, image, out,
 						  64, True, True, bits, 1, -1,
-						  overwrite, degLast, verbose, stokesLast);
+						  overwrite, degLast, verbose,
+                                                  stokesLast);
 	if (!ok) {
 	    cout << "Error writing FITS file: " << error << endl;
 	    return 1;

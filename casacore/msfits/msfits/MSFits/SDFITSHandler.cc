@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDFITSHandler.cc 19980 2007-02-28 10:07:45Z Malte.Marquarding $
+//# $Id: SDFITSHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <msfits/MSFits/SDFITSHandler.h>
@@ -87,7 +87,7 @@ void SDFITSHandler::attach(MeasurementSet &ms, Vector<Bool> &handledCols, const 
     initAll(ms, handledCols, row);
 }
 
-void SDFITSHandler::fill(const Record &row, const MEpoch &time, const Double &interval)
+void SDFITSHandler::fill(const Record &, const MEpoch &time, const Double &interval)
 {
     // don't bother unless there is something there
     if (tab_p) {

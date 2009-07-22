@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Memory.cc 20142 2007-11-06 22:35:21Z Malte.Marquarding $
+//# $Id: Memory.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# MH 97/11/24 Stop attempt to use mallinfo from stdlib.h for HPUX
 #include <casa/aips.h>
@@ -140,12 +140,13 @@ void Memory::setMemoryOptions(){
    #endif
 }
 
-int Memory::setMemoryOption(int cmd, int value){
 #if defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI)
+int Memory::setMemoryOption(int, int) {
    return 0;
 #else
+int Memory::setMemoryOption(int cmd, int value) {
    return(mallopt(cmd, value));
 #endif
+}
 
 } //#End namespace casa
-}

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 20383 2008-08-12 14:07:43Z gervandiepen $
+//# $Id: BaseTable.cc 20655 2009-07-06 14:10:44Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
@@ -451,7 +451,7 @@ void BaseTable::copy (const String& newName, int tableOption) const
 		   ("BaseTable::copy: no input table files exist"));
 	}
 	//# Flush the data and subtables.
-	//# (cast is necesaary to bypass non-constness).
+	//# (cast is necessary to bypass non-constness).
 	((BaseTable*)this)->flush (True, True);
 	//# Copy the files (thus recursively the entire directory).
 	//# Set user write permission after the copy.
@@ -459,10 +459,8 @@ void BaseTable::copy (const String& newName, int tableOption) const
 	Directory fileOld(name_p);
 //#//	fileOld.copy (absNewName, True, True);
 	fileOld.copy (absNewName);
-	//# Okay, the table file have been copied.
-	//# Now rename the subtables in its keywords (where needed).
-	Table tab(absNewName, Table::Update);
-	tab.baseTablePtr()->renameSubTables (absNewName, name_p);
+        //# Renaming of subtables is not needed, because their names in
+        //# the table directory (the ones copiued) are all relative.
     }
 }
 

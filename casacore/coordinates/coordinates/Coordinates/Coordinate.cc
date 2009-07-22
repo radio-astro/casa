@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Coordinate.cc 19706 2006-10-19 05:30:44Z gvandiep $
+//# $Id: Coordinate.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <coordinates/Coordinates/Coordinate.h>
@@ -500,11 +500,12 @@ void Coordinate::set_error(const String &errorMsg) const
 
 
 
-Coordinate* Coordinate::makeFourierCoordinate (const Vector<Bool>& axes,
-                                               const Vector<Int>& shape)  const
+Coordinate* Coordinate::makeFourierCoordinate (const Vector<Bool>&,
+                                               const Vector<Int>&)  const
 {
-   String tmp = String("Coordinates of type ") + showType() + String(" cannot be Fourier Transformed");
-   throw(AipsError(tmp));
+   String tmp = String("Coordinates of type ") + showType() +
+                String(" cannot be Fourier Transformed");
+   throw AipsError(tmp);
 }
 
 

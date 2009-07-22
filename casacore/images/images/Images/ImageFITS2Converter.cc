@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ImageFITS2Converter.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 //#include <casa/version.h>
 
@@ -81,7 +81,6 @@ Bool ImageFITSConverter::FITSToImage(ImageInterface<Float> *&newImage,
 {
     newImage = 0;
     error = "";
-    AlwaysAssert(whichRep>=0,AipsError);
 
 // First make sure that imageName is writable and does not already
 // exist.  Optionally remove it if it does.  If imageName is empty,

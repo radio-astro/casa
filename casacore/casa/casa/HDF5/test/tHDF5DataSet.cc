@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5DataSet.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: tHDF5DataSet.cc 20635 2009-06-16 05:35:21Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/HDF5/HDF5File.h>
@@ -33,18 +33,15 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
-
-#ifndef HAVE_LIBHDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
-
+ 
 using namespace casa;
 
 int main()
 {
+  // Exit with untested if no HDF5 support.
+  if (! HDF5Object::hasHDF5Support()) {
+    return 3;
+  }
   try {
     IPosition shape(2,5,6);
     IPosition ts(shape);
@@ -68,6 +65,8 @@ int main()
       AlwaysAssertExit (dset.getName() == "array");
       AlwaysAssertExit (dset.shape() == shape);
       AlwaysAssertExit (dset.tileShape() == shape);
+      // Set the cache size in chunks.
+      dset.setCacheSize (10);
       Array<Int> ires(shape);
       dset.get (Slicer(IPosition(2,0), shape), ires.data());
       AlwaysAssertExit (allEQ(iarr, ires));
@@ -108,5 +107,3 @@ int main()
   cout << "OK" << endl;
   return 0;
 }
-
-#endif

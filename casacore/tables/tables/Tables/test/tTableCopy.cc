@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableCopy.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tTableCopy.cc 20665 2009-07-07 07:34:46Z gervandiepen $
 
 #include <tables/Tables.h>
 #include <stdexcept>
@@ -37,6 +37,30 @@ String removeDir (const String& msg)
   String s = msg;
   s.gsub (Regex("/.*/t"), "t");
   return s;
+}
+
+// Test modifying the dminfo record.
+void testDM()
+{
+    TableDesc td;
+    td.addColumn(ScalarColumnDesc<Int>("col1"));
+    td.addColumn(ScalarColumnDesc<Int>("col2"));
+    td.addColumn(ScalarColumnDesc<Int>("col3"));
+    td.addColumn(ArrayColumnDesc<Int>("col4"));
+    // Now create a new table from the description.
+    SetupNewTable aNewTab("tTableCopy_tmp.dm", td, Table::New);
+    Table tabl(aNewTab);
+    Record dminfo = tabl.dataManagerInfo();
+    cout << dminfo;
+    Vector<String> remCols1 =
+      TableCopy::removeDminfoColumns (dminfo, Vector<String>(1, "col1"), "Standard");
+    cout << dminfo << remCols1 << endl;
+    Vector<String> remCols2 =
+      TableCopy::removeDminfoColumns (dminfo, Vector<String>(1, "col1"));
+    cout << dminfo << remCols2 << endl;
+    TableCopy::setTiledStMan (dminfo, Vector<String>(1, "col3"),
+                              "TiledShapeStMan", "TSMData", IPosition(3,3,4,5));
+    cout << dminfo << endl;
 }
 
 int main (int argc, const char* argv[])
@@ -77,6 +101,10 @@ int main (int argc, const char* argv[])
 	 << t.nrow() << ' ' << t.keywordSet().asTable("SUBTABLE").nrow() << ' '
 	 << tabl.tableType() << ' ' << t.tableType()
 	 << endl;
+
+    if (argc <= 1) {
+      testDM();
+    }
   } catch (exception& x) {
     cout << x.what() << endl;
     return 1;

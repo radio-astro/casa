@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedImage2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: PagedImage2.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <images/Images/PagedImage.h>
 #include <tables/Tables/TableDesc.h>
@@ -39,11 +39,10 @@ DataType imagePixelType(const String &fileName)
     if (Table::isReadable(fileName)) {
 	try {
 	    TableDesc desc;
-	    uInt nrow = Table::getLayout(desc, fileName);
+	    Table::getLayout(desc, fileName);
 	    ColumnDesc cdesc = desc["map"];
 	    retval = cdesc.dataType();
-            nrow = 0;                   // Shut compiler up
-	} catch (AipsError x) {
+	} catch (AipsError& x) {
 	    // Nothing
 	} 
     }
@@ -51,4 +50,3 @@ DataType imagePixelType(const String &fileName)
 }
 
 } //# NAMESPACE CASA - END
-

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageProxy.h 20477 2008-12-29 11:02:15Z gervandiepen $
+//# $Id: ImageProxy.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef IMAGES_IMAGEPROXY_H
 #define IMAGES_IMAGEPROXY_H
@@ -348,7 +348,6 @@ namespace casa {
     ImageProxy doRegrid (const ImageInterface<T>& image,
                          const Vector<Int>& axes,
                          const String& outfile,
-                         Bool overwrite,
                          const IPosition& shape,
                          const Record& coordSys,
                          const String& method,

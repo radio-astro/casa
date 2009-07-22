@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 20558 2009-04-04 04:21:38Z gervandiepen $
+//# $Id: DataManager.cc 20633 2009-06-15 10:14:55Z gervandiepen $
 
 
 //# Includes
@@ -85,6 +85,18 @@ void DataManager::setProperties (const Record&)
 Bool DataManager::isStorageManager() const
     { return True; }
 
+
+uInt DataManager::open1 (uInt nrrow, AipsIO& ios)
+{
+    open (nrrow, ios);
+    return nrrow;
+}
+
+uInt DataManager::resync1 (uInt nrrow)
+{
+    resync (nrrow);
+    return nrrow;
+}
 
 void DataManager::reopenRW()
 {}
@@ -256,11 +268,11 @@ DataManagerCtor DataManager::getCtor (const String& type)
         tp = tp.substr (0, pos);
     }
     // Try to load the dynamic library and see if registered now.
-    DynLib dl(tp, "register_"+tp);
+    DynLib dl(tp, string("libcasa_"), "register_"+tp, False);
     if (dl.getHandle()) {
         fp = registerMap.isDefined (type);
         if (fp) {
-	    return *fp;
+            return *fp;
         }
     }
     return unknownDataManager;
@@ -268,7 +280,7 @@ DataManagerCtor DataManager::getCtor (const String& type)
 
 //# The default "ctor" function for unknown data manager type names.
 DataManager* DataManager::unknownDataManager (const String& type,
-					      const Record& spec)
+					      const Record&)
 {
     throw (DataManUnknownCtor ("Data Manager class " + type + 
 			       " is not registered"));

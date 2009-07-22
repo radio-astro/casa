@@ -23,13 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.h 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5File.h 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #ifndef CASA_HDF5FILE_H
 #define CASA_HDF5FILE_H
 
 //# Includes
-#include <casa/HDF5Config.h>
 #include <casa/HDF5/HDF5Object.h>
 #include <casa/BasicSL/String.h>
 #include <casa/IO/ByteIO.h>
@@ -68,13 +67,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class HDF5File : public HDF5Object
   {
   public:
-#ifndef HAVE_LIBHDF5
-    explicit HDF5File (const String&)
-      {}
-    static Bool isHDF5 (const String&)
-      { return False; }
-#else
-
     // Create an HDF5 file object with the given file name.
     // The ByteIO option determines if the file will be created,
     // opened for input and/or output, or possibly deleted by the destructor.
@@ -132,7 +124,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ByteIO::OpenOption itsOption;
     String             itsName;
     Bool               itsDelete;
-#endif
 
   private:
     // Copy constructor cannot be used.

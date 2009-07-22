@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSTimeGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSTimeGram; grammar for time command lines
 
@@ -121,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return MSTimeParse::node();
   }
-  const void msTimeGramParseDeleteNode()
+  void msTimeGramParseDeleteNode()
   {
     return MSTimeParse::cleanup();
   }
@@ -148,10 +148,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   //----------------------------------------------------------------------------
-  void MSTimeGramerror (char*)
+  void MSTimeGramerror (const char*)
   {
     throw(MSSelectionTimeParseError("MSSelection time error: Parse error at or near token '" +
-			       String((const casa::Char*) MSTimeGramtext) + "'"));
+			       String(MSTimeGramtext) + "'"));
   }
   
   String msTimeGramRemoveEscapes (const String& in)

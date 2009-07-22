@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageOpener.cc 20476 2008-12-29 11:01:15Z gervandiepen $
+//# $Id: ImageOpener.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 //
 
 #include <images/Images/ImageOpener.h>
@@ -45,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SimpleOrderedMap<ImageOpener::ImageTypes,ImageOpener::OpenImageFunction*>
      ImageOpener::theirOpenFuncMap(&ImageOpener::unknownImageOpen);
 
-LatticeBase* ImageOpener::unknownImageOpen (const String& name,
+LatticeBase* ImageOpener::unknownImageOpen (const String&,
 					    const MaskSpecifier&)
 {
   return 0;

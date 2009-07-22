@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedArray.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: PagedArray.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/PagedArray.h>
@@ -147,7 +147,8 @@ PagedArray<T>::PagedArray (Table& file, const String& columnName,
 
 template<class T>
 PagedArray<T>::PagedArray (const PagedArray<T>& other)
-: itsTable      (other.itsTable),
+: Lattice<T>(),
+  itsTable      (other.itsTable),
   itsColumnName (other.itsColumnName), 
   itsRowNumber  (other.itsRowNumber),
   itsIsClosed   (other.itsIsClosed),

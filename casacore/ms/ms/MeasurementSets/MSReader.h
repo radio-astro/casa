@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSReader.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSReader.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef MS_MSREADER_H
 #define MS_MSREADER_H
@@ -90,7 +90,7 @@ public:
     const Table &table(const String &name) const;
 
     // this isn't what we need, right now just return an empty record
-    const Record &units(const String &name) const { return emptyRecord;}
+    const Record &units(const String &) const { return emptyRecord;}
 private:
     MeasurementSet itsMS;
     ROMSColumns itsMSCols;

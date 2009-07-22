@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SkyComponent.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SkyComponent.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -71,7 +71,8 @@ SkyComponent::SkyComponent(const Flux<Double>& flux,
 }
 
 SkyComponent::SkyComponent(const SkyComponent& other) 
-  :itsCompPtr(other.itsCompPtr)
+  :SkyCompBase(other),
+   itsCompPtr (other.itsCompPtr)
 { 
   DebugAssert(ok(), AipsError);
 }

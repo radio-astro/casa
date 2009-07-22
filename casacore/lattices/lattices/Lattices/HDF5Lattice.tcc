@@ -23,11 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.tcc 20399 2008-09-11 13:18:38Z gervandiepen $
+//# $Id: HDF5Lattice.tcc 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #include <lattices/Lattices/HDF5Lattice.h>
+#include <lattices/Lattices/HDF5LattIter.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeNavigator.h>
+#include <tables/Tables/TSMCube.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -38,8 +40,6 @@
 #include <casa/OS/Path.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/iostream.h>
-
-#ifdef HAVE_LIBHDF5
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -100,7 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   template<typename T>
   HDF5Lattice<T>::HDF5Lattice (const HDF5Lattice<T>& other)
-  : itsFile    (other.itsFile),
+  : Lattice<T>(),
+    itsFile    (other.itsFile),
     itsGroup   (other.itsGroup),
     itsDataSet (other.itsDataSet)
   {
@@ -223,6 +224,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return retval;
   }
 
+  template<class T>
+  void HDF5Lattice<T>::setCacheSizeInTiles (uInt howManyTiles)
+  {
+    itsDataSet->setCacheSize (howManyTiles);
+  }
+
+  template<class T>
+  void HDF5Lattice<T>::setCacheSizeFromPath (const IPosition& sliceShape,
+                                             const IPosition& windowStart,
+                                             const IPosition& windowLength,
+                                             const IPosition& axisPath)
+  {
+    itsDataSet->setCacheSize (TSMCube::calcCacheSize (itsDataSet->shape(),
+                                                      itsDataSet->tileShape(),
+                                                      False,
+                                                      sliceShape, windowStart,
+                                                      windowLength, axisPath,
+                                                      0, 1));
+  }
+
   template<typename T>
   T HDF5Lattice<T>::getAt (const IPosition& where) const
   {
@@ -255,7 +276,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   LatticeIterInterface<T>* HDF5Lattice<T>::makeIter (const LatticeNavigator& nav,
 						     Bool useRef) const
   {
-    return new LatticeIterInterface<T>(*this, nav, useRef);
+    return new HDF5LattIter<T>(*this, nav, useRef);
   }
 
   template <typename T>
@@ -298,5 +319,3 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 } //# NAMESPACE CASA - END
-
-#endif

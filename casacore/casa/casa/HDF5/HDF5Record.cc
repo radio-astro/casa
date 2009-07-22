@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Record.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5Record.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/HDF5/HDF5Record.h>
 #include <casa/HDF5/HDF5DataSet.h>
@@ -32,9 +32,18 @@
 #include <casa/HDF5/HDF5Error.h>
 #include <casa/Utilities/Assert.h>
 
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 #ifdef HAVE_LIBHDF5
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+  herr_t readSubRecord (hid_t groupHid, const char* name,
+                        const H5L_info_t*, void* voidRec)
+  {
+    HDF5Group gid(groupHid, name, true);
+    Record& rec = *(static_cast<Record*>(voidRec));
+    rec.defineRecord (name, HDF5Record::doReadRecord(gid));
+    return 0;
+  }
 
   void HDF5Record::remove (const HDF5Object& parentHid,
 			   const String& recordName)
@@ -63,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (int index=0; index<nfields; ++index) {
       HDF5HidAttribute id(H5Aopen_idx(groupHid, index));
       AlwaysAssert (id.getHid()>=0, AipsError);
-      int namsz = H5Aget_name(id, sizeof(cname), cname);
+      unsigned int namsz = H5Aget_name(id, sizeof(cname), cname);
       AlwaysAssert (namsz<sizeof(cname), AipsError);
       String name(cname);
       // Get rank and shape from the dataspace info.
@@ -87,18 +96,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now read all subrecords.
     //# Use INDEX_NAME (using INDEX_CRT_ORDER results in a return of -1).
     hsize_t idx=0;
-    herr_t err = H5Literate (groupHid, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
+    H5Literate (groupHid, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
 		&readSubRecord, &rec);
     return rec;
-  }
-
-  herr_t HDF5Record::readSubRecord (hid_t groupHid, const char* name,
-				    const H5L_info_t*, void* voidRec)
-  {
-    HDF5Group gid(groupHid, name, true);
-    Record& rec = *(static_cast<Record*>(voidRec));
-    rec.defineRecord (name, doReadRecord(gid));
-    return 0;
   }
 
   void HDF5Record::readScalar (hid_t attrId, hid_t dtid,
@@ -490,6 +490,108 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  AipsError);
   }
 
-}
+#else
+
+  void HDF5Record::remove (const HDF5Object&,
+			   const String&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  Record HDF5Record::readRecord (const HDF5Object&,
+				 const String&)
+  {
+    HDF5Object::throwNoHDF5();
+    return Record();
+  }
+
+  Record HDF5Record::doReadRecord (hid_t)
+  {
+    HDF5Object::throwNoHDF5();
+    return Record();
+  }
+
+  void HDF5Record::readScalar (hid_t, hid_t,
+			       const String&, RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::readArray (hid_t, hid_t, const IPosition&,
+			      const String&, RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::readEmptyArray (hid_t,
+				   const String&, RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::read (hid_t, void*,
+			 const HDF5DataType&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::readScaString (hid_t, Int,
+				  const String&, RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::readArrString (hid_t, const IPosition&,
+				  const String&, RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeRecord (const HDF5Object&,
+				const String&,
+				const RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::doWriteRecord (const HDF5Object&,
+				  const RecordInterface&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeScalar (hid_t, const String&,
+				const void* ,
+				const HDF5DataType&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeScaString (hid_t, const String&,
+				   const String&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeArray (hid_t, const String&,
+			       const void*, const IPosition&,
+			       const HDF5DataType&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeEmptyArray (hid_t, const String&,
+				    Int, DataType)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  void HDF5Record::writeArrString (hid_t, const String&,
+				   const Array<String>&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
 
 #endif
+
+}

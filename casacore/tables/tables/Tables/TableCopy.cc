@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.cc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: TableCopy.cc 20665 2009-07-07 07:34:46Z gervandiepen $
 
 
 //# Includes
@@ -34,6 +34,7 @@
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/TableLocker.h>
 #include <tables/Tables/TableError.h>
+#include <tables/Tables/DataManager.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/SimOrdMap.h>
 #include <casa/Arrays/Vector.h>
@@ -65,7 +66,10 @@ Table TableCopy::makeEmptyTable (const String& newName,
     // Replace possible usage of TiledDataStMan by TiledShapeStMan.
     adjustTSM (tabDesc, dminfo);
   }
-  SetupNewTable newtab (newName, tabDesc, Table::New);
+  // Replace non-writable storage managers by StandardStMan.
+  // This is for instance needed for LofarStMan.
+  dminfo = adjustStMan (dminfo);
+  SetupNewTable newtab (newName, tabDesc, option);
   newtab.bindCreate (dminfo);
   return Table(newtab, (noRows ? 0 : tab.nrow()), False, endianFormat);
 }
@@ -219,6 +223,87 @@ void TableCopy::adjustTSM (TableDesc& tabDesc, Record& dminfo)
   }
 }
 
+Record TableCopy::adjustStMan (const Record& dminfo)
+{
+  Record newdm;
+  for (uInt j=0; j<dminfo.nfields(); j++) {
+    Record rec = dminfo.subRecord(j);
+    // Get the data manager name and create an object for it.
+    String dmName = rec.asString("NAME");
+    DataManager* dmptr = DataManager::getCtor(rec.asString("TYPE"))
+      (rec.asString("NAME"), Record());
+    if (dmptr->isStorageManager()  &&  !dmptr->canAddRow()) {
+      // A non-writable storage manager; use StandardStMan instead.
+      rec.define ("TYPE", "StandardStMan");
+    }
+    newdm.defineRecord (j, rec);
+  }
+  return newdm;
+}
+
+Vector<String> TableCopy::removeDminfoColumns (Record& dminfo,
+                                               const Vector<String>& columns,
+                                               const String& keepType)
+{
+  Record newdm;
+  // Find the given columns and remove them.
+  // Keep track which columns are removed.
+  Vector<String> remCols(columns.size());
+  uInt ncols = 0;
+  for (uInt j=0; j<dminfo.nfields(); j++) {
+    Record rec = dminfo.subRecord(j);
+    Vector<String> dmcols (rec.asArrayString("COLUMNS"));
+    uInt ndmcol = dmcols.size();
+    const String& dmtype = rec.asString ("TYPE");
+    if (keepType.empty()  ||  dmtype.substr(0,keepType.size()) != keepType) {
+      // dmtype does not need to be kept, so remove the column.
+      for (uInt i=0; i<columns.size(); ++i) {
+        const String& col = columns[i];
+        for (uInt j=0; j<dmcols.size(); ++j) {
+          if (col == dmcols[j]) {
+            // Column name matches, so remove it.
+            // Add it to the vectors of removed columns.
+            remCols[ncols++] = col;
+            --ndmcol;
+            for (j+=1; j<dmcols.size(); ++j) {
+              dmcols[j-1] = dmcols[j];
+            }
+          }
+        }
+      }
+    }
+    // Only use the dm if there are columns left.
+    if (ndmcol > 0) {
+      if (ndmcol != dmcols.size()) {
+        dmcols.resize (ndmcol, True);
+        rec.define ("COLUMNS", dmcols);
+      }
+      newdm.defineRecord (j, rec);
+    }
+  }
+  dminfo = newdm;
+  remCols.resize (ncols, True);
+  return remCols;
+}
+
+void TableCopy::setTiledStMan (Record& dminfo, const Vector<String>& columns,
+                               const String& dmType, const String& dmName,
+                               const IPosition& defaultTileShape)
+{
+  // Remove the columns.
+  Vector<String> remCols (removeDminfoColumns (dminfo, columns, "Tiled"));
+  // Add removed columns with a TiledStMan.
+  if (remCols.size() > 0) {
+    Record dm;
+    dm.define("TYPE", dmType);
+    dm.define("NAME", dmName);
+    dm.define ("COLUMNS", remCols);
+    Record spec;
+    spec.define("DEFAULTTILESHAPE", defaultTileShape.asVector());
+    dm.defineRecord ("SPEC", spec);
+    dminfo.defineRecord (dminfo.nfields(), dm);
+  }
+}
 
 void TableCopy::copyRows (Table& out, const Table& in, uInt startout,
 			  uInt startin, uInt nrrow)

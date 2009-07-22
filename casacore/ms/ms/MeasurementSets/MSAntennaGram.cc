@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSAntennaGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSAntennaGram; grammar for antenna command lines
 
@@ -98,7 +98,7 @@ const TableExprNode* msAntennaGramParseNode()
 {
     return MSAntennaParse::node();
 }
-const void msAntennaGramParseDeleteNode()
+void msAntennaGramParseDeleteNode()
 {
     return MSAntennaParse::cleanup();
 }
@@ -122,7 +122,7 @@ int msAntennaGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSAntennaGramerror (char*)
+void MSAntennaGramerror (const char*)
 {
     throw (MSSelectionAntennaParseError ("Antenna Expression: Parse error at or near '" +
 					 String(MSAntennaGramtext) + "'"));

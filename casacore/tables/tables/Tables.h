@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Tables.h 20558 2009-04-04 04:21:38Z gervandiepen $
+//# $Id: Tables.h 20591 2009-05-06 12:16:05Z gervandiepen $
 
 #ifndef TABLES_TABLES_H
 #define TABLES_TABLES_H
@@ -694,7 +694,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <ul>
 //  <li> Relational operators ==, !=, >, >=, < and <=.
 //  <li> Logical operators &&, || and !.
-//  <li> Arithmetic operators +, -, *, /, %, ^, and unary + and -.
+//  <li> Arithmetic operators +, -, *, /, %, and unary + and -.
+//  <li> Bit operators ^, &, |, and unary ~.
 //  <li> Operator() to take a subsection of an array.
 // </ul>
 // Many functions (like sin, max, conj) can be used in an expression.

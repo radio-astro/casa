@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MDirection.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MDirection.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MDIRECTION_H
 #define MEASURES_MDIRECTION_H
@@ -138,14 +138,14 @@ template <class M> class ROScalarMeasColumn;
 // equation of equinoxes; the <em>AZEL</em> will include Earth tides and
 // refraction at a later stage.<br>
 // Note that conversion between B1950 and J2000 can only be approximate, and is
-// based on FK4 to FK% conversion. The best conversion is to convert first
+// based on FK4 to FK5 conversion. The best conversion is to convert first
 // to an apparent position at the time of observation, and convert from there
 // to the other standard (the correct route will be followed).<br>
 // Another problem can arise if the source has proper motion and/or radial
 // velocities. These should be taken into account. An
 // MCatalog class will maybe take care of that.
 // <note role=warning>
-// The offset that can be specified in the MDirection::Ref is an MDIrection
+// The offset that can be specified in the MDirection::Ref is an MDirection
 // offset, and can not be used for specifying angular offsets. shift()
 // methods are available for these cases.
 // </note>
@@ -327,10 +327,10 @@ public:
   // nextra the number of specials (like planets) that should be at 
   // end of list). typ returns the list of corresponding types.
   // <group>
-  virtual const String *const allTypes(Int &nall, Int &nextra,
-				       const uInt *&typ) const;
-  static const String *const allMyTypes(Int &nall, Int &nextra,
-					const uInt *&typ);
+  virtual const String* allTypes(Int &nall, Int &nextra,
+                                 const uInt *&typ) const;
+  static const String* allMyTypes(Int &nall, Int &nextra,
+                                  const uInt *&typ);
   // </group>
   // Check if all internal tables of types (both enum and String) are 
   // complete and correct. This function is called automatically if and when

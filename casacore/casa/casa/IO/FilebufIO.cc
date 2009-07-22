@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FilebufIO.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FilebufIO.cc 20587 2009-05-06 11:53:37Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/FilebufIO.h>
@@ -378,7 +378,7 @@ Int64 FilebufIO::doSeek (Int64 offset, ByteIO::SeekOption dir)
   switch (dir) {
   case ByteIO::Begin:
     itsOffset = offset;
-    return itsOffset;
+    break;
   case ByteIO::End:
     itsSeekOffset = ::traceLSEEK (itsFile, offset, SEEK_END);
     itsOffset = itsSeekOffset;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSpectralFit.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tSpectralFit.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -42,7 +42,8 @@
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
-int main(int argc, const char* argv[])
+
+int main()
 {
       
   // RecordInterface

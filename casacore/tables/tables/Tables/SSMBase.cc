@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMBase.cc 19717 2006-11-01 01:19:49Z gvandiep $
+//# $Id: SSMBase.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/SSMBase.h>
 #include <tables/Tables/SSMColumn.h>
@@ -284,9 +284,9 @@ DataManagerColumn* SSMBase::makeScalarColumn (const String&,
   return aColumn;
 }
 
-DataManagerColumn* SSMBase::makeDirArrColumn (const String& aName,
+DataManagerColumn* SSMBase::makeDirArrColumn (const String&,
 					      int aDataType,
-					      const String& aDataTypeId)
+					      const String&)
 {
   //# Extend itsPtrColumn block if needed.
   if (ncolumn() >= itsPtrColumn.nelements()) {

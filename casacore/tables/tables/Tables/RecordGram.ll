@@ -24,8 +24,12 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: RecordGram.ll 20574 2009-04-21 15:41:47Z gervandiepen $
+    $Id: RecordGram.ll 20630 2009-06-12 04:14:37Z gervandiepen $
 */
+
+/* yy_unput is not used, so let flex not generate it, otherwise picky
+   compilers will issue warnings. */
+%option nounput
 
 %{
 #undef YY_INPUT
@@ -163,7 +167,7 @@ PATTREX   {OPERREX}{WHITE}({REGEX}|{FREGEX}|{PATT})i?
 {OR}      { recordGramPosition() += yyleng; return OR; }
 "!"       { recordGramPosition() += yyleng; return NOT; }
 {NOT}     { recordGramPosition() += yyleng; return NOT; }
- /* "^"       { recordGramPosition() += yyleng; return BITXOR; } /* was POWER */
+ /* "^"       { recordGramPosition() += yyleng; return BITXOR; } was POWER */
 "^"       { throw TableInvExpr ("^ is deprecated; will be XOR in next relese"); }
 "**"      { recordGramPosition() += yyleng; return POWER; }
 "*"       { recordGramPosition() += yyleng; return TIMES; }

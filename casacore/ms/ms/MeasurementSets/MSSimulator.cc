@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSimulator.cc 19944 2007-02-27 11:14:34Z Malte.Marquarding $
+//# $Id: MSSimulator.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <ms/MeasurementSets/MSSimulator.h>
@@ -175,13 +175,13 @@ void MSSimulator::local2global(Vector<Double>& xGeo,
 
 };
 
-void MSSimulator::longlat2global(Vector<Double>& xReturned,
-				 Vector<Double>& yReturned,
-				 Vector<Double>& zReturned,
-				 const MPosition& mRefLocation,
-				 const Vector<Double>& xIn,
-				 const Vector<Double>& yIn,
-				 const Vector<Double>& zIn)
+void MSSimulator::longlat2global(Vector<Double>&,
+				 Vector<Double>&,
+				 Vector<Double>&,
+				 const MPosition&,
+				 const Vector<Double>&,
+				 const Vector<Double>&,
+				 const Vector<Double>&)
 {
   LogIO os(LogOrigin("MSSimulator", "longlat2global()", WHERE));
   os <<  LogIO::SEVERE << "MSSimulator::longlat2global not yet implemented" << LogIO::POST;

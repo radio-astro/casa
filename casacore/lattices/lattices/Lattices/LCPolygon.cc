@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCPolygon.cc 20279 2008-02-29 16:52:56Z gervandiepen $
+//# $Id: LCPolygon.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 
 #include <lattices/Lattices/LCPolygon.h>
@@ -319,8 +319,8 @@ void LCPolygon::fillMask (Bool* mask, Int ny, Int nx,
 		Bool take = False;
 		// Calculate the crossing point for the interval around yf
 		// if that interval and the line segment overlap.
-		if (yfs < ptrY[i+1]  &&  yfe > ptrY[i]
-		|| (yfs < ptrY[i]  &&  yfe > ptrY[i+1])) {
+		if ((yfs < ptrY[i+1]  &&  yfe > ptrY[i])
+                ||  (yfs < ptrY[i]  &&  yfe > ptrY[i+1])) {
 		    crs = Int(a[i] * yfs + b[i] + 0.5) - blcx;
 		    cre = Int(a[i] * yfe + b[i] + 0.5) - blcx;
 		    take = True;

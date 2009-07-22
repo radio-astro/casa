@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSummary.cc 20337 2008-06-18 07:34:37Z gervandiepen $
+//# $Id: MSSummary.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 //#
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -122,7 +122,6 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 //
 void MSSummary::list (LogIO& os, Bool verbose) const
 {
-
   // List a title for the Summary
   listTitle (os);
 

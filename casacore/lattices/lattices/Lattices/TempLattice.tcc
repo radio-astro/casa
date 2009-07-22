@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TempLattice.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: TempLattice.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/TempLattice.h>
 #include <lattices/Lattices/PagedArray.h>
@@ -64,7 +64,8 @@ TempLattice<T>::TempLattice (const TiledShape& shape, Double maxMemoryInMB)
 
 template<class T>
 TempLattice<T>::TempLattice (const TempLattice<T>& other)
-: itsTablePtr (0),
+: Lattice<T>(),
+  itsTablePtr (0),
   itsIsClosed (False)
 {
   operator= (other);

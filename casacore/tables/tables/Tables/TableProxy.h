@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.h 20531 2009-02-23 13:22:31Z gervandiepen $
+//# $Id: TableProxy.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_TABLEPROXY_H
 #define TABLES_TABLEPROXY_H
@@ -589,7 +589,7 @@ private:
     {os << v;}
   void printArrayValue (ostream& os, Double v, const String&) const
     {os << v;}
-  void printArrayValue (ostream& os, const DComplex& v, const String& sep) const
+  void printArrayValue (ostream& os, const DComplex& v, const String&) const
     {os << v;}
   void printArrayValue (ostream& os, const String& v, const String&) const
     {os << '"' << v << '"';}

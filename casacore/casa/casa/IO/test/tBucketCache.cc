@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketCache.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tBucketCache.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/IO/BucketCache.h>
 #include <casa/IO/BucketFile.h>
@@ -98,7 +98,7 @@ void aDeleteBuffer (void*, char* buffer)
 char* aInitBuffer (void*)
 {
     char* ptr = new char[32768];
-    for (uInt i=0; i++; i<32768) {
+    for (uInt i=0; i<32768; i++) {
 	ptr[i] = 0;
     }
     *(Int*)ptr = ++counter;

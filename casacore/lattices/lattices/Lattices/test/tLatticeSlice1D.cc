@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeSlice1D.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLatticeSlice1D.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 
@@ -56,15 +56,13 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20622 $");
 
 // Get inputs
 
    inputs.create("shape", "-10", "shape");
-   inputs.create("npts", "0", "npts");
    inputs.readArguments(argc, argv);
    const Block<Int> shapeU(inputs.getIntArray("shape"));
-   const Int nPts(inputs.getInt("npts"));
 
 // Convert inputs
 
@@ -77,7 +75,6 @@ try {
          for (uInt i=0; i<shapeIn.nelements(); i++) shapeIn(i) = shapeU[i];
       }
    }
-   uInt nDim = shapeIn.nelements();
 
 // Test 
 

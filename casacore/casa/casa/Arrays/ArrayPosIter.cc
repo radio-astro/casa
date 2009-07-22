@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPosIter.cc 20310 2008-05-20 10:59:42Z gervandiepen $
+//# $Id: ArrayPosIter.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/Arrays/ArrayPosIter.h>
 #include <casa/Arrays/ArrayError.h>
@@ -147,7 +147,7 @@ void ArrayPositionIterator::set (const IPosition& cursorPos)
 	  axis = iterationAxes(i);
 	} else {
 	  for (uInt j=0; j<iterationAxes.nelements(); ++j) {
-	    if (i = iterationAxes[j]) {
+	    if (i == uInt(iterationAxes[j])) {
 	      axis = i;
 	      break;
 	    }

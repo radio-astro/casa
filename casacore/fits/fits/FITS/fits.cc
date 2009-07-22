@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: fits.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 //# Partial implementation of little endian code by Kris Huber
 //# (kris@helios.ece.usu.edu)
@@ -606,7 +606,7 @@ Bool ReservedFitsKeywordCollection::requires_value(int n) const {
 }
 
 int ReservedFitsKeywordCollection::rules(const ReservedFitsKeyword &res,
-	const char *s, 	int s_len, Bool n, FITS::ValueType t, const void *v,
+	const char *s, 	int s_len, Bool n, FITS::ValueType, const void *v,
 	int v_len, const char *&msg) const {
 	// Return: 0 = no errors, 1 = minor errors, -1 = major errors
 	static int month[13] = {0,31,28,31,30,31,30,31,31,30,31,30,31};

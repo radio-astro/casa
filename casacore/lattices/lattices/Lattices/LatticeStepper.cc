@@ -23,10 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeStepper.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeStepper.cc 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #include <lattices/Lattices/LatticeStepper.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/Tables/TSMCube.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
@@ -93,7 +93,8 @@ LatticeStepper::LatticeStepper (const IPosition& latticeShape,
 }
 
 LatticeStepper::LatticeStepper (const LatticeStepper& other)
-: itsIndexer     (other.itsIndexer),
+: LatticeNavigator(),
+  itsIndexer     (other.itsIndexer),
   itsCursorAxes  (other.itsCursorAxes),
   itsCursorShape (other.itsCursorShape),
   itsCursorPos   (other.itsCursorPos),
@@ -458,12 +459,16 @@ LatticeNavigator* LatticeStepper::clone() const
   return new LatticeStepper(*this);
 }
 
-uInt LatticeStepper::calcCacheSize (const ROTiledStManAccessor& accessor,
-				    uInt rowNumber) const
+uInt LatticeStepper::calcCacheSize (const IPosition& cubeShape,
+                                    const IPosition& tileShape,
+                                    uInt maxCacheSize, uInt bucketSize) const
 {
-  return accessor.calcCacheSize (rowNumber, itsCursorShape,
-				 blc(), trc() - blc() + 1,
-				 itsAxisPath);
+  return (bucketSize == 0  ?  0 :
+          TSMCube::calcCacheSize (cubeShape, tileShape, False,
+                                  itsCursorShape,
+                                  blc(), trc() - blc() + 1,
+                                  itsAxisPath,
+                                  maxCacheSize, bucketSize));
 }
 
 Bool LatticeStepper::ok() const

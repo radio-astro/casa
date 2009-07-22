@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerHDF5.cc 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: RegionHandlerHDF5.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <images/Regions/RegionHandlerHDF5.h>
 #include <images/Regions/ImageRegion.h>
@@ -34,21 +34,20 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
-#ifdef HAVE_LIBHDF5
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 RegionHandlerHDF5::RegionHandlerHDF5 (GetCallback* callback,
 				      void* objectPtr)
-: itsCallback  (callback),
-  itsObjectPtr (objectPtr),
-  itsChanged   (False)
+  : itsChanged   (False),
+    itsCallback  (callback),
+    itsObjectPtr (objectPtr)
 {}
 
 RegionHandlerHDF5::RegionHandlerHDF5 (const RegionHandlerHDF5& that)
-: itsCallback  (that.itsCallback),
-  itsObjectPtr (that.itsObjectPtr),
-  itsChanged   (that.itsChanged)
+  : RegionHandler(that),
+    itsChanged   (that.itsChanged),
+    itsCallback  (that.itsCallback),
+    itsObjectPtr (that.itsObjectPtr)
 {}
 
 RegionHandlerHDF5::~RegionHandlerHDF5()
@@ -58,9 +57,9 @@ RegionHandlerHDF5& RegionHandlerHDF5::operator=
                                        (const RegionHandlerHDF5& that)
 {
   if (this != &that) {
+    itsChanged   = that.itsChanged;
     itsCallback  = that.itsCallback;
     itsObjectPtr = that.itsObjectPtr;
-    itsChanged   = that.itsChanged;
   }
   return *this;
 }
@@ -336,5 +335,3 @@ void RegionHandlerHDF5::restore()
 }
 
 } //# NAMESPACE CASA - END
-
-#endif

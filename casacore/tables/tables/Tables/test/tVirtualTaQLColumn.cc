@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tVirtualTaQLColumn.cc 18812 2005-07-04 06:37:56Z gvandiep $
+//# $Id: tVirtualTaQLColumn.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <casa/stdio.h>
 #include <tables/Tables/TableDesc.h>
@@ -113,7 +113,7 @@ void a (const TableDesc& td)
     SetupNewTable newtab("tVirtualTaQLColumn_tmp.data0", td, Table::New);
     newtab.setShapeColumn("arr1",IPosition(3,2,3,4));
     newtab.setShapeColumn("arr3",IPosition(3,2,3,4));
-    VirtualTaQLColumn vtc("ab+10");
+    VirtualTaQLColumn vtc("ab+10.");
     VirtualTaQLColumn vtc2("ag+max(arr3)");
     VirtualTaQLColumn vtc3("ab*ac");
     VirtualTaQLColumn vtac("ab*arr3");

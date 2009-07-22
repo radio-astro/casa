@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeHistSpecialize.cc 20256 2008-02-23 20:28:24Z gervandiepen $
+//# $Id: LatticeHistSpecialize.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 //
 
 #include <lattices/Lattices/LatticeHistSpecialize.h>
@@ -346,7 +346,7 @@ void LatticeHistSpecialize::plot(PGPlotter& plotter, Bool doGauss, Bool doCumu, 
                                 Complex linearSum, Complex yMax,
                                 Complex binWidth, const Vector<Complex>& values, 
                                 const Vector<Complex>& counts, const Vector<Complex>& stats,
-                                uInt dum1, uInt dum2, Bool dum3)
+                                uInt, uInt, Bool)
 //
 // The histogram is already in its desired form - linear, log, cumu
 // yMax is in that form too.

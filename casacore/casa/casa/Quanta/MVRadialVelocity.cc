@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVRadialVelocity.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVRadialVelocity.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/MVRadialVelocity.h>
@@ -48,7 +48,9 @@ MVRadialVelocity::MVRadialVelocity(Double d) :
   val(d){}
 
 MVRadialVelocity::MVRadialVelocity(const MVRadialVelocity &other) :
-  val(other.val) {}
+  MeasValue(),
+  val(other.val)
+{}
 
 MVRadialVelocity::MVRadialVelocity(const Quantity &other) {
   val = other.getValue() * makeF(other.getFullUnit());

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageInfo.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ImageInfo.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <images/Images/ImageInfo.h>
 #include <casa/Exceptions/Error.h>
@@ -66,6 +66,7 @@ void ImageInfo::copy_other(const ImageInfo &other)
 }
 
 ImageInfo::ImageInfo(const ImageInfo &other)
+: RecordTransformable()
 {
     copy_other(other);
 }

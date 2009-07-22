@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDObservationHandler.cc 18702 2005-05-23 08:54:53Z gvandiep $
+//# $Id: SDObservationHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <msfits/MSFits/SDObservationHandler.h>
@@ -117,7 +117,7 @@ void SDObservationHandler::resetRow(const Record &row)
     initRow(dummyHandled, row);
 }
 
-void SDObservationHandler::fill(const Record &row, const String &telescopeName,
+void SDObservationHandler::fill(const Record &, const String &telescopeName,
 				const Vector<Double> &timeRange)
 {
     // don't bother unless there is something there

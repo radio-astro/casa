@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QuantumHolder.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: QuantumHolder.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/QuantumHolder.h>
@@ -48,7 +48,9 @@ QuantumHolder::QuantumHolder(const QBase &in)
   : hold_p(in.clone()) {}
 
 QuantumHolder::QuantumHolder(const QuantumHolder &other) 
-  : hold_p() {
+  : RecordTransformable(),
+    hold_p()
+{
   if (other.hold_p.ptr()) hold_p.set(other.hold_p.ptr()->clone());
 }
 
@@ -476,52 +478,49 @@ const Quantum<Array<DComplex> > &QuantumHolder::asQuantumArrayDComplex() {
 Bool QuantumHolder::fromRecord(String &error,
 			       const RecordInterface &in) {
   String un;
+  const DataType inValType(in.type(in.idToNumber(RecordFieldId("value"))));
+
   if (in.isDefined(String("value")) && in.isDefined(String("unit")) &&
       in.type(in.idToNumber(RecordFieldId("unit"))) == TpString) {
     String un;
     in.get(RecordFieldId("unit"), un);
-    if (in.type(in.idToNumber(RecordFieldId("value"))) == TpDouble) {
+    if (inValType == TpDouble) {
       Double vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Double>(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) == TpFloat) {
+    } else if (inValType == TpFloat) {
       Float vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Float>(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) == TpInt) {
+    } else if (inValType == TpInt) {
       Int vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Int>(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) == TpComplex) {
+    } else if (inValType == TpComplex) {
       Complex vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Complex>(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) == TpDComplex) {
+    } else if (inValType == TpDComplex) {
       DComplex vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<DComplex>(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) ==
-	       TpArrayDouble) {
+    } else if (inValType == TpArrayDouble) {
       Array<Double> vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Array<Double> >(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) ==
-	       TpArrayFloat) {
+    } else if (inValType == TpArrayFloat) {
       Array<Float> vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Array<Float> >(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) ==
-	       TpArrayInt) {
+    } else if (inValType == TpArrayInt) {
       Array<Int> vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Array<Int> >(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) ==
-	       TpArrayComplex) {
+    } else if (inValType == TpArrayComplex) {
       Array<Complex> vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Array<Complex> >(vl, un));
-    } else if (in.type(in.idToNumber(RecordFieldId("value"))) ==
-	       TpArrayDComplex) {
+    } else if (inValType == TpArrayDComplex) {
       Array<DComplex> vl;
       in.get(RecordFieldId("value"), vl);
       hold_p.set(new Quantum<Array<DComplex> >(vl, un));
@@ -606,7 +605,7 @@ Bool QuantumHolder::toRecord(String &error, RecordInterface &out) const {
 }
 
 void QuantumHolder::toReal(const uInt &tp) {
-  Double d1;
+  Double d1=0;
   if (isArray()) {
     IPosition stx(ndim(), 0);
     if (isQuantumArrayDouble()) {

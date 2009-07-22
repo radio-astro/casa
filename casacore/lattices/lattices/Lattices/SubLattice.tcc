@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubLattice.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: SubLattice.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LatticeIterInterface.h>
@@ -170,7 +170,8 @@ SubLattice<T>::SubLattice (MaskedLattice<T>& lattice,
 
 template<class T>
 SubLattice<T>::SubLattice (const SubLattice<T>& other)
-: itsLatticePtr   (0),
+: MaskedLattice<T>(),
+  itsLatticePtr   (0),
   itsMaskLatPtr   (0),
   itsPixelMask    (0),
   itsOwnPixelMask (0)

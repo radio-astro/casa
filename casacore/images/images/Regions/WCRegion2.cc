@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCRegion2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: WCRegion2.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #include <images/Regions/WCRegion.h>
 #include <images/Regions/WCBox.h>
-///#include <trial/Regions/WCEllipsoid.h>
+///#include <trial/Images/WCEllipsoid.h>
 #include <images/Regions/WCPolygon.h>
 #include <images/Regions/WCLELMask.h>
 #include <images/Regions/WCUnion.h>

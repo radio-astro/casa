@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Interpolate2D.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: Interpolate2D.cc 20620 2009-06-11 10:00:28Z gervandiepen $
  
 #include <scimath/Mathematics/Interpolate2D.h>
 
@@ -55,9 +55,9 @@ Interpolate2D::Interpolate2D(Interpolate2D::Method method) {
 }
 
 Interpolate2D::Interpolate2D(const Interpolate2D &other)
-: itsFuncPtrFloat(0),
-  itsFuncPtrDouble(0),
-  itsFuncPtrBool(0)
+: itsFuncPtrFloat (other.itsFuncPtrFloat),
+  itsFuncPtrDouble(other.itsFuncPtrDouble),
+  itsFuncPtrBool  (other.itsFuncPtrBool)
 {}
 
 Interpolate2D::~Interpolate2D()
@@ -65,9 +65,9 @@ Interpolate2D::~Interpolate2D()
 
 Interpolate2D &Interpolate2D::operator=(const Interpolate2D &other)
 {
-   itsFuncPtrFloat = other.itsFuncPtrFloat;
+   itsFuncPtrFloat  = other.itsFuncPtrFloat;
    itsFuncPtrDouble = other.itsFuncPtrDouble;
-   itsFuncPtrBool = other.itsFuncPtrBool;
+   itsFuncPtrBool   = other.itsFuncPtrBool;
    return *this;
 }
 

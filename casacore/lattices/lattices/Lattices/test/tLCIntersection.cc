@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLCIntersection.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLCIntersection.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <lattices/Lattices/LCIntersection.h>
 #include <lattices/Lattices/LCBox.h>
@@ -121,7 +121,6 @@ void doIt (const IPosition& latticeShape,
 
 int main()
 {
-    Bool ok = True;
     try {
 	doIt (IPosition (2,11,20),
 	      IPosition (2,3,4), IPosition (2,7,8),

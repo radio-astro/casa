@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayIO3.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tArrayIO3.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -42,7 +42,7 @@
 // It reads from stdin (the test version from tArraIO3.in) and prints
 // the result.
 
-int main (int argc, const char*[])
+int main()
 {
     try {
 	Array<Double> a;

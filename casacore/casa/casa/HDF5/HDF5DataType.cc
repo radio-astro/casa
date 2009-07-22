@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5DataType.cc 20635 2009-06-16 05:35:21Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataType.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
-#ifdef HAVE_LIBHDF5
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+#ifdef HAVE_LIBHDF5
+
   HDF5DataType::HDF5DataType (const Bool*)
+    : itsSize (sizeof(Bool))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_SCHAR);
     itsHidMem = H5Tcopy (itsHidFile);
@@ -41,12 +42,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const uChar*)
+    : itsSize (sizeof(uChar))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_UCHAR);
     itsHidMem = H5Tcopy (itsHidFile);
   }
 
   HDF5DataType::HDF5DataType (const Short*)
+    : itsSize (sizeof(Short))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_SHORT);
     H5Tset_size (itsHidFile, sizeof(Short));
@@ -54,6 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const uShort*)
+    : itsSize (sizeof(uShort))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_USHORT);
     H5Tset_size (itsHidFile, sizeof(uShort));
@@ -61,6 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const Int*)
+    : itsSize (sizeof(Int))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_INT);
     H5Tset_size (itsHidFile, sizeof(Int));
@@ -68,6 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const uInt*)
+    : itsSize (sizeof(uInt))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_UINT);
     H5Tset_size (itsHidFile, sizeof(uInt));
@@ -75,18 +81,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const Float*)
+    : itsSize (sizeof(Float))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_FLOAT);
     itsHidMem = H5Tcopy (itsHidFile);
   }
 
   HDF5DataType::HDF5DataType (const Double*)
+    : itsSize (sizeof(Double))
   {
     itsHidFile = H5Tcopy (H5T_NATIVE_DOUBLE);
     itsHidMem = H5Tcopy (itsHidFile);
   }
 
   HDF5DataType::HDF5DataType (const Complex*)
+    : itsSize (sizeof(Complex))
   {
     itsHidFile = H5Tcreate (H5T_COMPOUND, sizeof(Complex));
     H5Tinsert (itsHidFile, "re", 0, H5T_NATIVE_FLOAT);
@@ -95,6 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const DComplex*)
+    : itsSize (sizeof(DComplex))
   {
     itsHidFile = H5Tcreate (H5T_COMPOUND, sizeof(DComplex));
     H5Tinsert (itsHidFile, "re", 0, H5T_NATIVE_DOUBLE);
@@ -103,6 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const String& value)
+    : itsSize (0)
   {
     itsHidFile = H5Tcopy (H5T_C_S1);
     H5Tset_size (itsHidFile, value.size());
@@ -110,6 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   HDF5DataType::HDF5DataType (const String*)
+    : itsSize (0)
   {
     itsHidFile = H5Tcopy (H5T_C_S1);
     H5Tset_size (itsHidFile, H5T_VARIABLE);
@@ -127,6 +139,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     H5Tinsert (itsHidFile, "rank",       sizeof(Int), dtInt.getHidFile());
     H5Tinsert (itsHidFile, "casatype", 2*sizeof(Int), dtInt.getHidFile());
     itsHidMem = H5Tcopy (itsHidFile);
+  }
+
+  HDF5DataType::~HDF5DataType()
+  {
+    H5Tclose (itsHidMem);
+    H5Tclose(itsHidFile);
   }
 
   DataType HDF5DataType::getDataType (hid_t dtid)
@@ -187,6 +205,81 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return dtype;
   }
 
-}
+#else
+
+  HDF5DataType::HDF5DataType (const Bool*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const uChar*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Short*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const uShort*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Int*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const uInt*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Float*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Double*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const Complex*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const DComplex*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const String&)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (const String*)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::HDF5DataType (Int, Int)
+  {
+    HDF5Object::throwNoHDF5();
+  }
+
+  HDF5DataType::~HDF5DataType()
+  {}
+
+  DataType HDF5DataType::getDataType (hid_t)
+  {
+    return TpOther;
+  }
 
 #endif
+
+}

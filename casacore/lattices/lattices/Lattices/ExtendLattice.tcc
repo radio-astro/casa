@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExtendLattice.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: ExtendLattice.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/ExtendLattice.h>
 #include <lattices/Lattices/LatticeIterInterface.h>
@@ -64,7 +64,8 @@ ExtendLattice<T>::ExtendLattice (const MaskedLattice<T>& lattice,
 
 template<class T>
 ExtendLattice<T>::ExtendLattice (const ExtendLattice<T>& other)
-: itsLatticePtr (0),
+: MaskedLattice<T>(),
+  itsLatticePtr (0),
   itsMaskLatPtr (0),
   itsPixelMask  (0)
 {

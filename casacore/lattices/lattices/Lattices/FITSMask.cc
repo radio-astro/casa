@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSMask.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FITSMask.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/FITSMask.h>
@@ -80,7 +80,8 @@ FITSMask::FITSMask (TiledFileAccess* tiledFile, Float scale, Float offset,
 
 
 FITSMask::FITSMask (const FITSMask& other)
-: itsTiledFilePtr(other.itsTiledFilePtr),
+: Lattice<Bool>(other),
+  itsTiledFilePtr(other.itsTiledFilePtr),
   itsScale(other.itsScale),
   itsOffset(other.itsOffset),
   itsShortMagic(other.itsShortMagic),
@@ -160,9 +161,9 @@ Bool FITSMask::doGetSlice (Array<Bool>& mask, const Slicer& section)
    return False;            // Not a reference
 }
 
-void FITSMask::doPutSlice (const Array<Bool>& sourceBuffer,
-                           const IPosition& where, 	
-                           const IPosition& stride)
+void FITSMask::doPutSlice (const Array<Bool>&,
+                           const IPosition&, 	
+                           const IPosition&)
 {
    throw(AipsError("FITSMask object is not writable"));
 }

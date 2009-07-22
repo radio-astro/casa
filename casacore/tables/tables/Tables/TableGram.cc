@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: TableGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // TableGram; grammar for table command lines
 
@@ -95,7 +95,7 @@ int tableGramInput (char* buf, int max_size)
     return nr;
 }
 
-void TableGramerror (char*)
+void TableGramerror (const char*)
 {
     throw (TableError ("parse error at or near position " +
 		       String::toString(tableGramPosition()) + " '" +

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTable_2.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tTable_2.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/Table.h>
@@ -270,7 +270,7 @@ void doIt (const String& tableName)
     cout << exprab.getColumn() << endl;
 
     Table expr2tab = tab(tab.col("af") == "V3"  ||
-			      tab.col("ab") >= 5  &&  tab.col("ab") < 8);
+			 (tab.col("ab") >= 5  &&  tab.col("ab") < 8));
     if (expr2tab.nrow() != 4) {
 	cout << "expr2tab does not contain 4 rows" << endl;
     }

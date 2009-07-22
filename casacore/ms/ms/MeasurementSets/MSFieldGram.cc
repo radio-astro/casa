@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFieldGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSFieldGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSUvDistGram; grammar for field command lines
 
@@ -122,7 +122,7 @@ const TableExprNode* msFieldGramParseNode()
 {
   return MSFieldParse::node();
 }
-const void msFieldGramParseDeleteNode() {MSFieldParse::cleanup();}
+void msFieldGramParseDeleteNode() {MSFieldParse::cleanup();}
 //# Give the string position.
 Int& msFieldGramPosition()
 {
@@ -142,7 +142,7 @@ int msFieldGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSFieldGramerror (char* t)
+void MSFieldGramerror (const char*)
 {
     throw (MSSelectionFieldParseError ("Field Expression: Parse error at or near '" +
 		      String(MSFieldGramtext) + "'"));

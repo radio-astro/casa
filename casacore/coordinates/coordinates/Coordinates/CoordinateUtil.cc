@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CoordinateUtil.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: CoordinateUtil.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -688,7 +688,7 @@ Bool CoordinateUtil::makeDirectionMachine(LogIO& os, MDirection::Convert& machin
  
 
 Bool CoordinateUtil::makeFrequencyMachine(LogIO& os, MFrequency::Convert& machine,
-                                          Int coordinateTo, Int coordinateFrom,
+                                          Int, Int,
                                           const CoordinateSystem& coordsTo,
                                           const CoordinateSystem& coordsFrom, 
                                           const Unit& unit)
@@ -1293,7 +1293,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
      
 // Set format Unit
            
-      Bool ok = sCoord.setFormatUnit (unit);
+      sCoord.setFormatUnit (unit);
       
 // Velocity State
 

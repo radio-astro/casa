@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSError.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FITSError.h 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #ifndef FITS_FITSERROR_H
 #define FITS_FITSERROR_H

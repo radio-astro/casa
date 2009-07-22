@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerMemory.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: RegionHandlerMemory.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <images/Regions/RegionHandlerMemory.h>
 #include <images/Regions/ImageRegion.h>
@@ -43,6 +43,7 @@ RegionHandlerMemory::RegionHandlerMemory()
 }
 
 RegionHandlerMemory::RegionHandlerMemory (const RegionHandlerMemory& that)
+ : RegionHandler(that)
 {
   itsMaps[0] = 0;
   itsMaps[1] = 0;

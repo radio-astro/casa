@@ -23,13 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Record.h 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5Record.h 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #ifndef CASA_HDF5RECORD_H
 #define CASA_HDF5RECORD_H
-
-#include <casa/HDF5Config.h>
-#ifdef HAVE_LIBHDF5
 
 //# Includes
 #include <casa/HDF5/HDF5Object.h>
@@ -39,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   // <summary>
-  // A class representing an HDF5 file.
+  // A class to write/read a record into HDF5.
   // </summary>
 
   // <use visibility=export>
@@ -97,14 +94,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static void remove (const HDF5Object& parentHid,
 			const String& recordName);
 
-  private:
     // Read back a (nested) record.
     static Record doReadRecord (hid_t parentHid);
 
-    // Read a subrecord. This is a callback function for H5Literate.
-    static herr_t readSubRecord (hid_t gid, const char* name,
-				 const H5L_info_t*, void* voidRec);
-
+  private:
     // Read a scalar value and add it to the record.
     static void readScalar (hid_t attrId, hid_t dtid,
 			    const String& name, RecordInterface& rec);
@@ -208,5 +201,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 }
 
-#endif
 #endif

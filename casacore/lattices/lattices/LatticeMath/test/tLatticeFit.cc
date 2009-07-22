@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeFit.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tLatticeFit.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include<lattices/LatticeMath/LatticeFit.h>
 
@@ -40,9 +40,6 @@
 #include <casa/namespace.h>
 int main() {
 
-    MaskedLattice<Float>* pSigma = 0;
-    MaskedLattice<Float>* pOutFit = 0;
-//
     uInt nx = 10, ny = 20, nz = 30;
     Cube<Float> cube(10, 20, 30);
 

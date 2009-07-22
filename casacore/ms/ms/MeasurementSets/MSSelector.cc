@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelector.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelector.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <ms/MeasurementSets/MSSelector.h>
 
@@ -969,7 +969,7 @@ Record MSSelector::getData(const Vector<String>& items, Bool ifrAxis,
 	  Vector<Int> id(nSlot,-1);
 	  for (Int k=0; k<nSlot; k++) {
 	    Int i;
-	    for (i=0; i<nIfr && rowIndex_p(i,k)<0; i++);
+	    for (i=0; i<nIfr && rowIndex_p(i,k)<0; i++) {}
 	    if (i<nIfr) id(k)=col(rowIndex_p(i,k));
 	  }
 	  if (average) averageId(id);
@@ -992,7 +992,7 @@ Record MSSelector::getData(const Vector<String>& items, Bool ifrAxis,
 	  Vector<Int> id(nSlot,-1);
 	  for (Int k=0; k<nSlot; k++) {
 	    Int i;
-	    for (i=0; i<nIfr && rowIndex_p(i,k)<0; i++);
+	    for (i=0; i<nIfr && rowIndex_p(i,k)<0; i++) {}
 	    if (i<nIfr) id(k)=col(rowIndex_p(i,k));
 	  }
 	  if (average) averageId(id);

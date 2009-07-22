@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Measure.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Measure.cc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/Measure.h>
@@ -47,8 +47,8 @@ uInt Measure::giveMe(const String &in, Int N_name,
   return MUString::minimaxNC(in, N_name, tname);
 }
 
-const String *const Measure::allTypes(Int &nall, Int &nextra,
-				      const uInt *&typ) const {
+const String* Measure::allTypes(Int &nall, Int &nextra,
+                                const uInt *&typ) const {
   static const Int N_name  = 0;
   static const Int N_extra = 0;
   static const String *tname = 0;

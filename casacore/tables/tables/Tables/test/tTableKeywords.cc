@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableKeywords.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tTableKeywords.cc 20664 2009-07-07 07:34:04Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -100,6 +100,7 @@ void renameTables (const String& newName, const String& oldName)
 {
     Table tab(oldName, Table::Update);
     tab.rename (newName, Table::New);
+    tab.flush();
     // Try to open the table with the old name (should fail).
     Bool excp = False;
     try {

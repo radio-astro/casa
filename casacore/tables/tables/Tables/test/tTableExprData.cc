@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableExprData.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tTableExprData.cc 20574 2009-04-21 15:41:47Z gervandiepen $
 
 #include <tables/Tables/TableExprData.h>
 #include <tables/Tables/ExprNode.h>
@@ -57,9 +57,8 @@ public:
   void next()
     { itsEntry++; }
   // Note that only the get functions for the possible types are needed.
-  // Also note that all numeric types are handled by TaQL as Double.
   // The exception should never be thrown unless things are screwed up.
-  virtual Double getDouble (const Block<Int>& fieldNrs) const
+  virtual Int64 getInt (const Block<Int>& fieldNrs) const
     { switch (fieldNrs[0]) {
       case 0:
         return itsFld1(itsEntry);

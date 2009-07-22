@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image.h 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: HDF5Image.h 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #ifndef IMAGES_HDF5IMAGE_H
 #define IMAGES_HDF5IMAGE_H
@@ -170,7 +170,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // It returns 0 if no default pixelmask is used.
     virtual const LatticeRegion* getRegionPtr() const;
 
-#ifdef HAVE_LIBHDF5
     // An HDF5Image is always persistent.
     virtual Bool isPersistent() const;
 
@@ -293,7 +292,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //# Data members.
     HDF5Lattice<T> map_p;
     LatticeRegion* regionPtr_p;
-#endif
 
     //# Make members of parent class known.
   public:
@@ -315,13 +313,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Tell if HDF5 images can be used.
   inline Bool canUseHDF5Image()
-  {
-#ifdef HAVE_LIBHDF5
-    return True;
-#else
-    return False;
-#endif
-  }
+    { return HDF5Object::hasHDF5Support(); }
 
   // Determine the pixel type in the HDF5Image contained in
   // <src>fileName</src>.  If the file doesn't appear to be HDF5 or cannot

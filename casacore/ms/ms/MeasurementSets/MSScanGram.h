@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanGram.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSScanGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef MS_MSSCANGRAM_H
 #define MS_MSSCANGRAM_H
@@ -74,11 +74,11 @@ class TableExprNode;
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void MSScanGramerror (char*);
+void MSScanGramerror (const char*);
 
 // Give the table expression node.
 const TableExprNode *msScanGramParseNode();
-const void msScanGramParseDeleteNode();
+void msScanGramParseDeleteNode();
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

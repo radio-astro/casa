@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryLogSink.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MemoryLogSink.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/Logging/MemoryLogSink.h>
 #include <casa/Logging/LogFilter.h>
@@ -56,6 +56,7 @@ MemoryLogSink::MemoryLogSink (const LogFilterInterface& filter)
 {}
 
 MemoryLogSink::MemoryLogSink (const MemoryLogSink& other)
+: LogSinkInterface()
 {
   copy_other (other);
 }

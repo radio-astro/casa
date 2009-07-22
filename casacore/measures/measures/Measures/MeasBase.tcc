@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasBase.tcc 20112 2007-08-26 11:18:09Z Malte.Marquarding $
+//# $Id: MeasBase.tcc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -109,7 +109,7 @@ void MeasBase<Mv,Mr>::assured(const String &tp) const {
 }
 
 template <class Mv, class Mr>
-const MeasValue *const MeasBase<Mv,Mr>::getData() const {
+const MeasValue* MeasBase<Mv,Mr>::getData() const {
   return &data;
 }
 

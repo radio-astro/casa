@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasBase.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MeasBase.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MEASBASE_H
 #define MEASURES_MEASBASE_H
@@ -144,7 +144,7 @@ public:
   virtual MRBase *getRefPtr() const;
   
   // Get pointer to data
-  virtual const MeasValue * const getData() const;
+  virtual const MeasValue* getData() const;
   
   // Print a Measure
   virtual void print(std::ostream &os) const;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.h 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: String.h 20654 2009-07-06 07:49:03Z gervandiepen $
 
 #ifndef CASA_STRING_H
 #define CASA_STRING_H
@@ -964,12 +964,6 @@ inline Bool String::contains(const Char *s, Int pos) const {
 inline Bool String::contains(const RegexBase &r, Int pos) const {
   return (index(r, pos) != npos); }
 
-inline Bool String::matches(const string &str, Int pos) const {
-  return ((pos < 0) ? index(str, pos) == 0 :
-	  length() != 0 && str.length() != 0 &&
-	  length() == pos+str.length() &&
-	  static_cast<size_type>(pos) < length() &&
-	  index(str, pos) == static_cast<size_type>(pos)) ; }
 inline ostream &operator<<(ostream &s, const String &x) {
   s << x.c_str(); return s; }
 

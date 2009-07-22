@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcValue2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: AipsrcValue2.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 
@@ -37,9 +37,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template <> 
 Bool AipsrcValue<String>::find(String &value,
 			       const String &keyword,
-			       const Unit &defun, const Unit &resun) {
+			       const Unit &, const Unit &) {
   String res;
   Bool x = Aipsrc::find(res, keyword, 0);
+  value = res;
   return x;
 }
 

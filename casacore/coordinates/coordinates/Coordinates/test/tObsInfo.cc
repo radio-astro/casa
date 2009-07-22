@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tObsInfo.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: tObsInfo.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <coordinates/Coordinates/ObsInfo.h>
 
@@ -164,7 +164,7 @@ int main()
     {
        Record rec3;
        Record rec4;
-       Double x;
+       Double x(0);
        rec4.define("value", x);
        rec3.defineRecord("pointingcenter", rec4);
        AlwaysAssertExit(!oi3.fromRecord(error, rec3));

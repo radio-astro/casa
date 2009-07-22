@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSArrayParse.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSArrayParse.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <ms/MeasurementSets/MSArrayParse.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
@@ -50,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     idList.resize(0);
   }
   
-  const void MSArrayParse::appendToIDList(const Vector<Int>& v)
+  void MSArrayParse::appendToIDList(const Vector<Int>& v)
   {
     Int currentSize = idList.nelements();
     Int n = v.nelements() + currentSize;

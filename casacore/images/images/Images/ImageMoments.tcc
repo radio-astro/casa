@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageMoments.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: ImageMoments.tcc 20648 2009-06-29 07:22:00Z gervandiepen $
 //   
 
 #include <images/Images/ImageMoments.h>
@@ -303,7 +303,7 @@ Bool ImageMoments<T>::setMomentAxis(const Int& momentAxisU)
          return False;
       }
       if (pInImage_p->shape()(momentAxis_p) <= 0) {
-         error_p = "Illegal moment axis; it has only no pixels";
+         error_p = "Illegal moment axis; it has no pixels";
          goodParameterStatus_p = False;
          return False;
       }

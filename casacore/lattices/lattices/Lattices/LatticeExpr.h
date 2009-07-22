@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeExpr.h 20508 2009-01-20 11:09:47Z gervandiepen $
+//# $Id: LatticeExpr.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef LATTICES_LATTICEEXPR_H
 #define LATTICES_LATTICEEXPR_H
@@ -241,7 +241,7 @@ private:
 
 
 template<> inline
-void LatticeExpr<Bool>::handleMathTo (Lattice<Bool>& to, int oper) const
+void LatticeExpr<Bool>::handleMathTo (Lattice<Bool>&, int) const
   { throwBoolMath(); }
 
 

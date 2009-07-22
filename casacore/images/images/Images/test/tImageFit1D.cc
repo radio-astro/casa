@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageFit1D.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tImageFit1D.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 
 #include <casa/aips.h>
@@ -74,7 +74,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20622 $");
    inputs.create("fac", "1.0", "Increment factor");
    inputs.readArguments(argc, argv);
    const Double fac = inputs.getDouble("fac");
@@ -197,6 +197,7 @@ SpectralCoordinate makeSpectralCoordinate(Double fac)
    Vector<String> units(1);
    units = "GHz";
    Bool ok = c.setWorldAxisUnits(units);
+   AlwaysAssert(ok, AipsError);
 //
    Vector<Double> inc;
    inc = c.increment();

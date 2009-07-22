@@ -28,7 +28,7 @@ env = Environment(
 		  ENV = { 'PATH' : os.environ[ 'PATH' ],
 			  'HOME' : os.environ[ 'HOME' ]			  
 			  },
-		  options=opts
+		  variables=opts
 		  )
 # keep a local sconsign database, rather than in very directory
 env.SConsignFile()
@@ -75,6 +75,10 @@ if not env.GetOption('clean'):
     for l in lapackname:
         if not conf.CheckLib(l, autoadd=0): Exit(1)
         conf.env.PrependUnique(LIBS=l)
+
+    if not conf.CheckLib("dl"): Exit(1)
+    conf.env.PrependUnique(LIBS=['dl'])
+
     ddir = os.path.join(conf.env["casashrdir"][0], 'data')
     if conf.env.has_key("datadir"):
         dir = os.path.expanduser(os.path.expandvars(conf.env["datadir"]))
@@ -103,8 +107,6 @@ env.AppendUnique(LIBPATH=env["casalibdir"])
 for dep in DEPS:
     env.Prepend(LIBS=["casa_"+dep])
 
-# Replace some builder commands (lex,yacc) with custom versions
-env.CustomCasaCom()
 for bopt in env["build"]:
     # create an environment copy with teh dbg/opt compiler flags
     buildenv = env.BuildEnv(bopt)

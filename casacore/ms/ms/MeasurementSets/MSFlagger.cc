@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagger.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFlagger.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <ms/MeasurementSets/MSFlagger.h>
 
@@ -123,12 +123,11 @@ Bool MSFlagger::fillDataBuffer(const String& item, Bool ifrAxis)
       buffer_p.define("datafield",itm);
     }
     return True;
-    break;
   default:
     os << LogIO::WARN <<"No DATA derived item specified, buffer unchanged"
        << LogIO::POST;
-    return False;
   }
+  return False;
 }
 
 Record MSFlagger::diffDataBuffer(const String& direction, Int window,
@@ -265,7 +264,7 @@ void MSFlagger::applyRowFlags(Array<Bool>& flag, Array<Bool>& flagRow)
       for (Int j=0; j<nXY; j++) pflag[offset+j]=True;
     } else {
       Bool ok=False;
-      for (Int j=0; j<nXY && (ok=pflag[offset+j]); j++); 
+      for (Int j=0; j<nXY && (ok=pflag[offset+j]); j++) {}
       if (ok) pflagRow[i]=True;
     }
   }

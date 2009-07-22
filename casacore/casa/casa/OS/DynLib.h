@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynLib.h 20554 2009-03-31 03:22:03Z gervandiepen $
+//# $Id: DynLib.h 20644 2009-06-25 11:54:24Z gervandiepen $
 
 #ifndef CASA_DYNLIB_H
 #define CASA_DYNLIB_H
@@ -77,19 +77,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
 
-    // Load the dynamic library. It is tried with prefixes "lib" and "libcasa_"
+    // Load the dynamic library. It is tried with prefixes "lib" and <src>prefix</src>
     // and suffixes ".so" and ".dylib".
     // If not loaded successfully, the internal handle is NULL.
     // <br>If a non-empty funcName is given, that function is looked up and
     // executed. Its signature must be <src>void func()</src>. Note that the
     // function name should not be mangled, thus declared <src>extern "C"</src>.
     // An exception is thrown if the library is loaded successfully, but
-    // initFunc could not be found.
+    // <src>funcName</src> could not be found.
     // <br>If <src>closeOnDestruction=True</src>, the dynamic library is closed
     // on destruction of the DynLib object.
     DynLib (const std::string& library,
+            const std::string& prefix=std::string(),
             const std::string& funcName=std::string(),
-            Bool closeOnDestruction=True);
+            bool closeOnDestruction=True);
 
     // Load the dynamic library with the given name, prefix, and suffix.
     // If not loaded successfully, the internal handle is NULL.

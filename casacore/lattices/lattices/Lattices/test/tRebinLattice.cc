@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRebinLattice.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tRebinLattice.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 
@@ -58,7 +58,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20622 $");
 
 // Get inputs
 
@@ -375,8 +375,8 @@ void doit4 (RebinLattice<Float>& rb, const IPosition& shape,
 //
    AlwaysAssert(rb.getRegionPtr()==0, AipsError);
    AlwaysAssert(rb.shape()(0)==shape(0)/factors(0), AipsError);
-   String name = rb.name();
-   uInt nMaxPix = rb.advisedMaxPixels();
+   rb.name();
+   rb.advisedMaxPixels();
    AlwaysAssert(rb.ok(), AipsError);
 }
 

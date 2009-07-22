@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Queue.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Queue.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef CASA_QUEUE_H
 #define CASA_QUEUE_H
@@ -131,8 +131,8 @@ public:
     // How many elements are in the queue?
     uInt nelements() const {return next_p - first_p;}
 private:
-    Int next_p;
     Int first_p;
+    Int next_p;
     Block<T> data_p;
 };
 

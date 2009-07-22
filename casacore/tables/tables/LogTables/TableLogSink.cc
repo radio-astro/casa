@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLogSink.cc 20331 2008-06-06 10:25:29Z gervandiepen $
+//# $Id: TableLogSink.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <casa/Arrays/Vector.h>
 #include <tables/LogTables/TableLogSink.h>
@@ -89,7 +89,6 @@ void TableLogSink::init (const String& fileName)
         SetupNewTable setup (fileName, logTableDescription(), Table::New);
         makeTable (setup);
     }
-
     attachCols();
 }
 
@@ -108,16 +107,11 @@ TableLogSink::TableLogSink (const String& fileName)
 	  String("Opening readonly ") + fileName);
 	LogSink::postGlobally(logMessage);
     }
-
-    // Attach the columns
-    roTime_p.attach     (log_table_p, columnName(TIME));
-    roPriority_p.attach (log_table_p, columnName(PRIORITY));
-    roMessage_p.attach  (log_table_p, columnName(MESSAGE));
-    roLocation_p.attach (log_table_p, columnName(LOCATION));
-    roId_p.attach       (log_table_p, columnName(OBJECT_ID));
+    attachCols();
 }
 
 TableLogSink::TableLogSink (const TableLogSink& other)
+: LogSinkInterface()
 {
     copy_other (other);
 }
@@ -164,51 +158,52 @@ void TableLogSink::makeTable (SetupNewTable& setup)
 
 void TableLogSink::attachCols()
 {
-    // Attach the columns
-    time_p.attach     (log_table_p, columnName(TIME));
-    priority_p.attach (log_table_p, columnName(PRIORITY));
-    message_p.attach  (log_table_p, columnName(MESSAGE));
-    location_p.attach (log_table_p, columnName(LOCATION));
-    id_p.attach       (log_table_p, columnName(OBJECT_ID));
     roTime_p.attach     (log_table_p, columnName(TIME));
     roPriority_p.attach (log_table_p, columnName(PRIORITY));
     roMessage_p.attach  (log_table_p, columnName(MESSAGE));
     roLocation_p.attach (log_table_p, columnName(LOCATION));
     roId_p.attach       (log_table_p, columnName(OBJECT_ID));
-
-    // Define the time keywords when not defined yet.
-    // In this way the table browser can interpret the times.
+    // Attach the writable columns only if writable.
     if (log_table_p.isWritable()) {
+        time_p.attach     (log_table_p, columnName(TIME));
+        priority_p.attach (log_table_p, columnName(PRIORITY));
+        message_p.attach  (log_table_p, columnName(MESSAGE));
+        location_p.attach (log_table_p, columnName(LOCATION));
+        id_p.attach       (log_table_p, columnName(OBJECT_ID));
+        // Define the time keywords when not defined yet.
+        // In this way the table browser can interpret the times.
         TableRecord& keySet = time_p.rwKeywordSet();
-	if (! keySet.isDefined ("UNIT")) {
-	    keySet.define ("UNIT", "s");
-	    keySet.define ("MEASURE_TYPE", "EPOCH");
-	    keySet.define ("MEASURE_REFERENCE", "UTC");
-	}
+        if (! keySet.isDefined ("UNIT")) {
+          keySet.define ("UNIT", "s");
+          keySet.define ("MEASURE_TYPE", "EPOCH");
+          keySet.define ("MEASURE_REFERENCE", "UTC");
+        }
     }
 }
 
 void TableLogSink::reopenRW (const LogFilterInterface& aFilter)
 {
     log_table_p.reopenRW();
+    attachCols();
     filter (aFilter);
 }
 
 Bool TableLogSink::postLocally (const LogMessage& message)
 {
+    if (log_table_p.isWritable()) {
+        log_table_p.reopenRW();
+        attachCols();
+    }
     Bool posted = False;
     if (filter().pass(message)) {
-        posted = True;
-        // Adding a row at a time might be too inefficient?
-        uInt n = log_table_p.nrow();
-	log_table_p.addRow();
-	time_p.put(n, message.messageTime().modifiedJulianDay()*24.0*3600.0);
-	priority_p.put(n, LogMessage::toString(message.priority()));
-	message_p.put(n, message.message());
-	location_p.put(n, message.origin().location());
 	String tmp;
 	message.origin().objectID().toString(tmp);
-	id_p.put(n, tmp);
+        writeLocally (message.messageTime().modifiedJulianDay()*24.0*3600.0,
+                      message.message(),
+                      LogMessage::toString(message.priority()),
+                      message.origin().location(),
+                      tmp);
+        posted = True;
     }
     return posted;
 }
@@ -290,7 +285,8 @@ void TableLogSink::writeLocally (Double mtime,
 				 const String& mlocation,
 				 const String& mobjectID)
 {
-  const uInt offset = table().nrow();
+  uInt offset = table().nrow();
+  cout << "writing " << mmessage << " at row " << offset << endl;
   table().addRow(1);
   time().put     (offset, mtime);
   message().put  (offset, mmessage);

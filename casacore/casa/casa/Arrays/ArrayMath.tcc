@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 20598 2009-05-11 09:24:24Z gervandiepen $
+//# $Id: ArrayMath.tcc 20625 2009-06-12 00:27:08Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -216,7 +216,6 @@ void minMaxMasked(T &minVal, T &maxVal,
   }
   size_t minp = 0;
   size_t maxp = 0;
-  size_t i = 0;
   T minv = array.data()[0];
   T maxv = minv;
   if (array.contiguousStorage()  &&  weight.contiguousStorage()) {
@@ -280,9 +279,8 @@ void minMax(T &minVal, T &maxVal,
   }
   size_t minp;
   size_t maxp;
-  size_t i = 0;
-  T minv;
-  T maxv;
+  T minv = T();
+  T maxv = T();
   if (array.contiguousStorage()  &&  mask.contiguousStorage()) {
     typename Array<T>::const_contiter iter = array.cbegin();
     typename Array<Bool>::const_contiter miter = mask.cbegin();
@@ -1003,38 +1001,6 @@ template<class T> T variance(const Array<T> &a)
     return variance(a, mean(a));
 }
 
-template<class T> Bool allSame(const Array<T>& a)
-{
-  Bool ss = True;
-
-  if(a.nelements() > 1){
-    if(a.contiguousStorage()){  				// Faster
-      typename Array<T>::const_contiter oldpos  = a.cbegin();
-      typename Array<T>::const_contiter iter    = a.cbegin();
-      typename Array<T>::const_contiter iterEnd = a.cend();
-      
-      ++iter;
-      for(typename Array<T>::const_contiter newpos = iter; ss && iter != iterEnd;
-	  ++iter){
-	ss = (*newpos == *oldpos);
-	oldpos = newpos;
-      }
-    }
-    else {
-      typename Array<T>::const_iterator oldpos  = a.begin();      
-      typename Array<T>::const_iterator iter    = a.begin();
-      typename Array<T>::const_iterator iterEnd = a.end();
-
-      for(typename Array<T>::const_iterator newpos = iter;
-	  ss && iter != iterEnd; ++iter){
-	ss = (*newpos == *oldpos);
-	oldpos = newpos;
-      }
-    }
-  }
-  return ss;
-}
-
 // <thrown>
 //    </item> ArrayError
 // </thrown>
@@ -1107,7 +1073,7 @@ template<class T> T rms(const Array<T> &a)
 template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
 			   Bool takeEvenMean, Bool inPlace)
 {
-    T medval;
+    T medval=T();
     size_t nelem = a.nelements();
     if (nelem < 1) {
 	throw(ArrayError("::median(T*) - array needs at least 1 element"));

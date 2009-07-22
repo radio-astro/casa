@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: MSFitsOutput.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -1377,7 +1377,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
 
 Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
 			   const Block<Int>& fieldidMap, Int nrfield,
-			   const Block<Int>& spwidMap, Int nrspw)
+			   const Block<Int>& /*spwidMap*/, Int nrspw)
 {
   LogIO os(LogOrigin("MSFitsOutput", "writeSU"));
   // Basically we make the FIELD_ID the source ID.
@@ -1730,7 +1730,7 @@ Bool MSFitsOutput::writeTY(FitsOutput *output, const MeasurementSet &ms,
 }
 
 Bool MSFitsOutput::writeGC(FitsOutput *output, const MeasurementSet &ms,
-			   const Table& syscal, const Block<Int>& spwidMap,
+			   const Table& syscal, const Block<Int>& /*spwidMap*/,
 			   uInt nrif, Bool combineSpw, Double sensitivity,
 			   Int refPixelFreq, Double refFreq, Double chanbw)
 {

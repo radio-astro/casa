@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.h 20539 2009-03-20 08:54:16Z gervandiepen $
+//# $Id: DataManager.h 20605 2009-05-14 13:26:34Z gervandiepen $
 
 #ifndef TABLES_DATAMANAGER_H
 #define TABLES_DATAMANAGER_H
@@ -166,8 +166,17 @@ typedef DataManager* (*DataManagerCtor) (const String& dataManagerType,
 //   called makeObject). This requires that the type name and constructor
 //   for each possible data manager are registered before the table
 //   is opened. The DataManager function registerAllCtor (implemented
-//   in DataManReg.cc) is called before a table is opened, so registration
+//   in DataManager.cc) is called before a table is opened, so registration
 //   of data managers should, in principle, be done there.
+//   <br>However, for unknown data managers it is tried to load a shared
+//   library whose name is the lowercase version of the data manager without a
+//   possible template argument (e.g. <src>bitflagsengine</src> for
+//   data manager <src>BitFlagsEngine<Int></src>).
+//   It can be preceeded by lib or libcasa_ and followed by .so or .dylib.
+//   The shared library has to have a function with a name like
+//   <src>register_bitflagsengine</src> that must register the data manager(s).
+//   The function must be declared as <src>extern "C"</src>, otherwise its
+//   name gets mangled.
 //  <li>
 //   Each table column is bound to the correct data manager. The sequence
 //   number stored in the table file is used for that purpose.
@@ -432,10 +441,26 @@ private:
     // in the flush function.
     virtual void open (uInt nrrow, AipsIO& ios) = 0;
 
+    // Open as above.
+    // The data manager can return the number of rows it thinks there are.
+    // This is particularly useful for data managers like LofarStMan whose
+    // data are written outside the table system, thus for which no rows
+    // have been added.
+    // <br>By default it calls open and returns <src>nrrow</src>.
+    virtual uInt open1 (uInt nrrow, AipsIO& ios);
+
     // Resync the data by rereading cached data from the file.
     // This is called when a lock is acquired on the file and it appears 
     // that data in this data manager has been changed by another process.
     virtual void resync (uInt nrrow) = 0;
+
+    // Resync as above.
+    // The data manager can return the number of rows it thinks there are.
+    // This is particularly useful for data managers like LofarStMan whose
+    // data are written outside the table system, thus for which no rows
+    // have been added.
+    // <br>By default it calls resync and returns <src>nrrow</src>.
+    virtual uInt resync1 (uInt nrrow);
 
     // Let the data manager initialize itself further.
     // Prepare is called after create/open has been called for all

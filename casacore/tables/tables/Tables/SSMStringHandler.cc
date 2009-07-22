@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMStringHandler.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SSMStringHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
  
 
 #include <tables/Tables/SSMStringHandler.h>
@@ -519,7 +519,7 @@ void SSMStringHandler::putShape (Int& bucketNr, Int& offset, Int& length,
 }
 
 void SSMStringHandler::getShape (IPosition& aShape, Int bucket, Int& offset, 
-				 Int length)
+				 Int)
 {
   if (itsCurrentBucket != static_cast<Int>(bucket)) {
     getBucket(bucket);

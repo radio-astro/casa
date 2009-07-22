@@ -141,7 +141,7 @@ ifeq "$(FC)" ""
 allsys: 
 	@echo "error could not find fortran compiler; please set the 'FC', GNUmakefile variable"
 else
-allsys: images msfits
+allsys: cleandep_recurse_allsys images msfits
 endif
 
 ifneq "$(ARCH)" ""
@@ -433,7 +433,7 @@ endef
 ### header file dependencies in *.dep files which have been removed or renamed
 ###
 define orphan-deps
-  perl -e 'use File::Find; %headers = ( ); $$scrubre = ""; sub find_scrub { if ( -f $$_ && m/\.dep$$/ ) { my $$file = $$_; my @out = ( ); my $$dump = 0; open( DEP, "< $$file" ); while ( <DEP> ) { $$dump = 1 if s@(?:$$scrubre)@@g; push( @out, $$_ ); } close( DEP ); if ( $$dump ) { open( OUT, "> $$file" ); print OUT join("", @out); close( OUT ); } } } sub find_dep { if ( -f $$_ && m/\.dep$$/ ) { open( DEP, "< $$_ " ); while (<DEP>) { if ( m@(\S+\.h)@ ) { $$headers{$$1} = 1; } } close( DEP ); } } find( { wanted => \&find_dep }, "$1" ); @scrub = ( ); foreach ( keys %headers ) { if ( ! -f $$_ ) { push( @scrub, $$_ ); } } if ( scalar(@scrub) > 0 ) { print "removing out-of-date dependencies:\n"; print "\t" . join("\n\t",@scrub) . "\n"; $$scrubre = join("|",@scrub); find( { wanted => \&find_scrub }, "$1" ); }'
+  perl -e 'use File::Find; %headers = ( ); $$scrubre = ""; sub find_scrub { if ( -f $$_ && m/\.dep$$/ ) { my $$file = $$_; my @out = ( ); my $$dump = 0; open( DEP, "< $$file" ); while ( <DEP> ) { $$dump = 1 if s@(?:$$scrubre)@@g; push( @out, $$_ ); } close( DEP ); if ( $$dump ) { open( OUT, "> $$file" ); print OUT join("", @out); close( OUT ); } } } sub find_dep { if ( -f $$_ && m/\.dep$$/ ) { open( DEP, "< $$_ " ); while (<DEP>) { if ( m@(\S+\.h)@ ) { $$headers{$$1} = 1; } } close( DEP ); } } find( { wanted => \&find_dep }, "$1" ); @scrub = ( ); foreach ( keys %headers ) { if ( ! -f $$_ ) { push( @scrub, $$_ ); } } if ( scalar(@scrub) > 0 ) { print "removing out-of-date dependencies:\n"; print "\t" . join("\n\t",@scrub) . "\n"; $$scrubre = join("|",@scrub); find( { wanted => \&find_scrub }, "$1" ); exit $2; }'
 endef
 
 ###
@@ -573,7 +573,7 @@ t% : t%.cc
 ##
 ###  libcasacore
 ###
-libcasacore: $(CORELNK_PATH)
+libcasacore: cleandep_recurse_libcasacore $(CORELNK_PATH)
 
 $(CORELIB_PATH): $(LASTVERSION) $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) $(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) \
 			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(MSLIB) $(FITSLIB) $(MSFITSLIB) $(MIRLIB) \
@@ -806,10 +806,22 @@ endif
 
 
 cleandep:
-	@$(call orphan-deps,.)
+	@$(call orphan-deps,.,0)
 
 cleandeps:
-	@$(call orphan-deps,.)
+	@$(call orphan-deps,.,0)
+
+cleandep_recurse_allsys:
+	@if ! $(call orphan-deps,.,1); then			\
+	    echo "starting over after dependency update...";	\
+	    gmake allsys;					\
+	fi
+
+cleandep_recurse_libcasacore:
+	@if ! $(call orphan-deps,.,1); then			\
+	    echo "starting over after dependency update...";	\
+	    gmake libcasacore;					\
+	fi
 
 cleancasa:
 	@rm -f $(CASALIB_PATH)

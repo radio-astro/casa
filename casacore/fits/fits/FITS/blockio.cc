@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: blockio.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: blockio.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 //
 # include <casa/sstream.h>
 # include <fits/FITS/blockio.h>

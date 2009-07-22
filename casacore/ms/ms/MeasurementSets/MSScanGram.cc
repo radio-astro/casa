@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSScanGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSScanGram; grammar for scan command lines
 
@@ -91,7 +91,7 @@ const TableExprNode* msScanGramParseNode()
 {
     return MSScanParse::node();
 }
-const void msScanGramParseDeleteNode()
+void msScanGramParseDeleteNode()
 {
     return MSScanParse::cleanup();
 }
@@ -115,7 +115,7 @@ int msScanGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSScanGramerror (char* t)
+void MSScanGramerror (const char*)
 {
   throw (MSSelectionScanError ("Scan Expression: Parse error at or near '" +
 			       String(MSScanGramtext) + "'"));

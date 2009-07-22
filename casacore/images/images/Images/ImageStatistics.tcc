@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ImageStatistics.tcc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <images/Images/ImageStatistics.h>
 

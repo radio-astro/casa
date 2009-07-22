@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBoxedArrayMath.cc 20446 2008-11-28 11:01:33Z gervandiepen $
+//# $Id: tBoxedArrayMath.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -39,7 +39,7 @@
 using namespace casa;
 using namespace std;
 
-void doIt (Bool doTiming)
+void doIt (Bool /*doTiming*/)
 {
   {
     IPosition shape(2,5,5);

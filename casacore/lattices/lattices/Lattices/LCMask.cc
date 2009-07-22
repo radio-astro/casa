@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCMask.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LCMask.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/LCMask.h>
 #include <lattices/Lattices/TempLattice.h>
@@ -239,7 +239,7 @@ String LCMask::type() const
   return className();
 }
 
-TableRecord LCMask::toRecord (const String& tableName) const
+TableRecord LCMask::toRecord (const String&) const
 {
   throw AipsError ("LCMask::toRecord is not supported");
   return TableRecord();;

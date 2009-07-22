@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tString.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: tString.cc 20626 2009-06-12 00:37:54Z gervandiepen $
 
 //# Includes
 
@@ -41,7 +41,7 @@ String X = "Hello";
 String Y = "world";
 String N = "123";
 String c;
-Char*  s = ",";
+const Char*  s = ",";
 Regex  r = String("e[a-z]*o");
 
 void decltest() {

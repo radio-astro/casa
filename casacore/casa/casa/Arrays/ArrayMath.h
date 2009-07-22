@@ -615,11 +615,6 @@ template<class T> T variance(const Array<T> &a);
 template<class T> T variance(const Array<T> &a, T mean);
 
 // 
-// Whether or not all the entries of a are the same.  Faster than variance(a)
-// == 0.0.
-template<class T> Bool allSame(const Array<T> &a);
-
-// 
 // The standard deviation of "a" is the square root of its variance.
 template<class T> T stddev(const Array<T> &a);
 // 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Function.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: Function.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <scimath/Functionals/Function.h>
@@ -67,10 +67,10 @@ const String &Function<T,U>::name() const {
 }
 
 template<class T, class U>
-void Function<T,U>::setMode(const RecordInterface& mode) { }
+void Function<T,U>::setMode(const RecordInterface&) { }
 
 template<class T, class U>
-void Function<T,U>::getMode(RecordInterface& mode) const { }
+void Function<T,U>::getMode(RecordInterface&) const { }
 
 template<class T, class U>
 Bool Function<T,U>::hasMode() const { return False; }

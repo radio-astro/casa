@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CompiledParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: CompiledParam.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef SCIMATH_COMPILEDPARAM_H
 #define SCIMATH_COMPILEDPARAM_H
@@ -147,7 +147,7 @@ template <class T> class CompiledParam : public Function<T> {
   const String &getText() const { return text_p; };
 
   // Returns the function pointer (for debugging)
-  const FuncExpression *const getFunctionPtr() const {
+  const FuncExpression* getFunctionPtr() const {
     return functionPtr_p; };
 
 protected:

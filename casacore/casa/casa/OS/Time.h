@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: Time.h 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: Time.h 20625 2009-06-12 00:27:08Z gervandiepen $
 
 #ifndef CASA_TIME_H
 #define CASA_TIME_H
@@ -174,8 +174,6 @@ class Time {
    uInt dayOfYear ();
 
    static uInt howManyDaysInMonth ();
-
-   static uInt howManyDaysInMonth (uInt month);
 
    static uInt howManyDaysInMonth (uInt month,uInt year);
 

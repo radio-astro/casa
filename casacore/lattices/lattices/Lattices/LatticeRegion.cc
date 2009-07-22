@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeRegion.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeRegion.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/LatticeRegion.h>
@@ -67,7 +67,8 @@ LatticeRegion::LatticeRegion (const Slicer& slicer,
 }
   
 LatticeRegion::LatticeRegion (const LatticeRegion& other)
-: itsRegion (other.itsRegion->cloneRegion()),
+: Lattice<Bool>(),
+  itsRegion (other.itsRegion->cloneRegion()),
   itsSlicer (other.itsSlicer),
   itsHasRegionMask (other.itsHasRegionMask)
 {}

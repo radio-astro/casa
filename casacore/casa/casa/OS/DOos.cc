@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DOos.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: DOos.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 //# Includes
@@ -214,6 +214,9 @@ Vector<Double> DOos::fileTime (const Vector<String>& fileName,
     if (!file.exists()) {
       throw (AipsError ("DOos::fileTime - file " + fileName(i) +
 			" does not exist"));
+    }
+    if (follow && file.isSymLink()) {
+      file = File(SymLink(file).followSymLink());
     }
     // Note that MJD 40587 is 1-1-1970 which is the starting time of
     // the file times.

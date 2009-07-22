@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanParse.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: MSScanParse.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <ms/MeasurementSets/MSScanParse.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   //# Constructor
   MSScanParse::MSScanParse ()
-    : MSParse(), colName(MS::columnName(MS::SCAN_NUMBER)), 
+    : MSParse(), colName(MS::columnName(MS::SCAN_NUMBER)),
       //      maxScans_p(std::numeric_limits<Int>::max())
       maxScans_p(1000)
   {
@@ -46,17 +46,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   //# Constructor with given ms name.
   MSScanParse::MSScanParse (const MeasurementSet* ms)
-    : MSParse(ms, "Scan"), colName(MS::columnName(MS::SCAN_NUMBER)), 
+    : MSParse(ms, "Scan"), colName(MS::columnName(MS::SCAN_NUMBER)),
       //      maxScans_p(std::numeric_limits<Int>::max())
       maxScans_p(1000)
-      
   {
     if(node_p) delete node_p;
     node_p = new TableExprNode();
     idList.resize(0);
   }
   
-  const void MSScanParse::appendToIDList(const Vector<Int>& v)
+  void MSScanParse::appendToIDList(const Vector<Int>& v)
   {
     Int currentSize = idList.nelements();
     Int n = v.nelements() + currentSize;

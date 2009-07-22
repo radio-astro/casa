@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeSlice1D.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: LatticeSlice1D.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/LatticeSlice1D.h>
@@ -263,7 +263,7 @@ void LatticeSlice1D<T>::findPlane (const IPosition& blc,
 
 template<class T>
 void LatticeSlice1D<T>::doGetSlice (Vector<T>& data, Vector<Bool>& mask,
-                                    const PixelCurve1D& curve, 
+                                    const PixelCurve1D&, 
                                     const IPosition& blc, const IPosition& trc)
 {
 

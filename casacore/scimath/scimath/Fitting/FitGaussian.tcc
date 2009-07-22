@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FitGaussian.tcc 20337 2008-06-18 07:34:37Z gervandiepen $
+//# $Id: FitGaussian.tcc 20629 2009-06-12 03:41:09Z gervandiepen $
 
 #include <scimath/Fitting/FitGaussian.h>
 
@@ -407,12 +407,12 @@ Matrix<T> FitGaussian<T>::fit(const Matrix<T>& pos, const Vector<T>& f,
       else {
 
         for (uInt g = 0; g < itsNGaussians; g++) {    
-          if ((itsDimension == 1) &&  (solution(g*ngpars+2) < 0)   ||
-	      (itsDimension == 2) && ((solution(g*ngpars+3) < 0) || 
-				      (solution(g*ngpars+4) < 0))  ||
-              (itsDimension == 3) && ((solution(g*ngpars+4) < 0) || 
-	                              (solution(g*ngpars+5) < 0) ||
-                                      (solution(g*ngpars+6) < 0))) { 
+          if ((itsDimension == 1  &&  solution(g*ngpars+2) < 0)   ||
+	      (itsDimension == 2  && (solution(g*ngpars+3) < 0  || 
+				      solution(g*ngpars+4) < 0))  ||
+              (itsDimension == 3  && (solution(g*ngpars+4) < 0  || 
+	                              solution(g*ngpars+5) < 0  ||
+                                      solution(g*ngpars+6) < 0))) { 
             fitfailure = 4;
             cout << "Unsuccessful - Negative axis widths not permissible.";
             cout << endl;

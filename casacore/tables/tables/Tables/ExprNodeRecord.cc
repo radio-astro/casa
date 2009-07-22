@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRecord.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprNodeRecord.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <tables/Tables/ExprNodeRecord.h>
@@ -86,7 +86,7 @@ const IPosition& TableExprNodeRecordField::getShape (const TableExprId&)
 
 Bool TableExprNodeRecordField::isDefined (const TableExprId& id)
 {
-  DataType dtype;
+  DataType dtype=TpOther;
   if (id.byData()) {
     dtype = id.data().dataType (fieldNrs_p);
   } else {
@@ -227,7 +227,7 @@ const IPosition& TableExprNodeRecordFieldArray::getShape
 
 Bool TableExprNodeRecordFieldArray::isDefined (const TableExprId& id)
 {
-  DataType dtype;
+  DataType dtype=TpOther;
   if (id.byData()) {
     dtype = id.data().dataType (fieldNrs_p);
   } else {

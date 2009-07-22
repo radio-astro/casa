@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 20335 2008-06-12 07:37:36Z gervandiepen $
+//# $Id: Table.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -404,6 +404,14 @@ public:
     // If <src>all=False</src> only tables requested by another process
     // will be unlocked.
     static void relinquishAutoLocks (Bool all = False);
+
+    // Get the names of tables locked in this process.
+    // By default all locked tables are given (note that a write lock
+    // implies a read lock), but it is possible to select on lock type
+    // FileLocker::Write and on option (TableLock::AutoLocking,
+    // TableLock::ReadLocking, or TableLock::PermanentLocking).
+    static Vector<String> getLockedTables(FileLocker::LockType=FileLocker::Read,
+                                          int lockOption=-1);
 
     // Determine if column or keyword table data have changed
     // (or is being changed) since the last time this function was called.

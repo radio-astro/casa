@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Lattice.cc 20399 2008-09-11 13:18:38Z gervandiepen $
+//# $Id: tHDF5Lattice.cc 20600 2009-05-11 09:33:40Z gervandiepen $
 
 #include <lattices/Lattices/HDF5Lattice.h>
 #include <lattices/Lattices/LatticeStepper.h>
@@ -43,18 +43,14 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/iostream.h>
 
-#include <casa/namespace.h>
-
-
-#ifndef HAVE_LIBHDF5
-int main()
-{
-  return 3;     // skipped
-}
-#else
+using namespace casa;
 
 int main()
 {
+  // Exit with untested if no HDF5 support.
+  if (! HDF5Object::hasHDF5Support()) {
+    return 3;
+  }
   try {
     {
       HDF5Lattice<Float> pa(IPosition(2,12), "tHDF5Lattice_tmp.dat");
@@ -204,5 +200,3 @@ int main()
   cout<< "OK"<< endl;
   return 0;
 }
-
-#endif

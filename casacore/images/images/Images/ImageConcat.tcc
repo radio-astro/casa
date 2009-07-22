@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageConcat.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: ImageConcat.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <images/Images/ImageConcat.h>
@@ -771,7 +771,7 @@ void ImageConcat<T>::reopen()
 }
 
 template<class T>
-String ImageConcat<T>::name (Bool stripPath) const
+String ImageConcat<T>::name (Bool) const
 {
   return String("Concatenation :");
 }

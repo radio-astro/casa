@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-#ifndef RFREADERWRITER_H_
-#define RFREADERWRITER_H_
+//# $Id: RFReaderWriter.h 20621 2009-06-11 13:50:56Z gervandiepen $
+
+#ifndef IMAGES_RFREADERWRITER_H
+#define IMAGES_RFREADERWRITER_H
 
 //# Includes
 #include <casa/Logging/LogIO.h>
@@ -34,6 +35,7 @@
 
 namespace casa {//# NAMESPACE CASA - BEGIN 
 
+//# Forward declarations
 class RFReader;
 class RFWriter;
  
@@ -46,14 +48,8 @@ class RFWriter;
 // <reviewed reviewer="" date="" tests="">
 // </reviewed>
 //
-// <author>
-// <li> Laura Glendening, original author
-// <li> Shannon Jaeger, Relocated from display tool to image regions.
-// </author>
-// 
 // <prerequisite>
-// <li>
-// </prerequesite>
+// </prerequisite>
 //
 // <synopsis>
 // </synopsis>
@@ -61,25 +57,27 @@ class RFWriter;
 // <example>
 // <srcblock>
 // </srcblock>
+// </example>
 //
 //# <todo asof="2009/03/10">
 //# <li>
 //# </todo> 
-class RFError {
+
+class RFError
+{
 public:
     // Constructor, blank error.
     RFError();
-    
+
     // Constructor, error with the given text and isFatal flag.
     RFError(const String& error, bool isFatal = false);
-    
+
     // Destructor.
     ~RFError();
-    
-    
+
     // Returns whether this error was fatal or not.
     bool isFatal() const;
-    
+
     // Returns this error's text.
     const String& error() const;
 
@@ -102,14 +100,8 @@ private:
 // <reviewed reviewer="" date="" tests="">
 // </reviewed>
 //
-// <author>
-// <li> Laura Glendening, original author
-// <li> Shannon Jaeger, Relocated from display tool to image regions.
-// </author>
-// 
 // <prerequisite>
-// <li>
-// </prerequesite>
+// </prerequisite>
 //
 // <synopsis>
 // </synopsis>
@@ -117,14 +109,15 @@ private:
 // <example>
 // <srcblock>
 // </srcblock>
+// </example>
 //
 //# <todo asof="2009/03/10">
 //# <li>
 //# </todo> 
-class RFReaderWriter {
+
+class RFReaderWriter
+{
 public:
-    // Public Static Methods //
-    
     // An enum of all known subclasses/formats supported.
     enum SupportedType {
         AIPS_BOX, DS9, CASA_XML, AIPS_IO
@@ -158,8 +151,6 @@ public:
     static Record* optionsWidgetForType(SupportedType type);
     
     
-    // Non-Static Members //
-    
     // Constructor.
     RFReaderWriter() { }
     
@@ -169,10 +160,8 @@ public:
     // Sets the file to be read/written to the given.
     virtual void setFile(const String& filename);
 
-
     // Sets the region name associated withe the file to be read or written.
     virtual void setName(const String& regionName);
-    
     
     // Returns the last error set during read/write.
     virtual const RFError& lastError() const;
@@ -205,14 +194,8 @@ protected:
 // <reviewed reviewer="" date="" tests="">
 // </reviewed>
 //
-// <author>
-// <li> Laura Glendening, original author
-// <li> Shannon Jaeger, Relocated from display tool to image regions.
-// </author>
-// 
 // <prerequisite>
-// <li>
-// </prerequesite>
+// </prerequisite>
 //
 // <synopsis>
 // Provide a well defined set of operations for reading
@@ -221,7 +204,7 @@ protected:
 // Note that some file formats allow for plotting options
 // to be defined as well as the regions. These options are
 // read and stored in a record of ... , the contents
-// of this record is ill-definted (ie. there is no standard).
+// of this record is ill-defined (ie. there is no standard).
 // 
 // There may come a time where a standard is necessary.
 // </synopsis>
@@ -229,11 +212,14 @@ protected:
 // <example>
 // <srcblock>
 // </srcblock>
+// </example>
 //
 //# <todo asof="2009/03/10">
 //# <li>
 //# </todo> 
-class RFReader : public virtual RFReaderWriter {
+
+class RFReader : public virtual RFReaderWriter
+{
 public:
     // Constructor.
     RFReader() { }
@@ -271,14 +257,8 @@ public:
 // <reviewed reviewer="" date="" tests="">
 // </reviewed>
 //
-// <author>
-// <li> Laura Glendening, original author
-// <li> Shannon Jaeger, Relocated from display tool to image regions.
-// </author>
-//
 // <prerequisite>
-// <li>
-// </prerequesite>
+// </prerequisite>
 //
 // <synopsis>
 // Provide a well defined set of operations that all
@@ -293,11 +273,14 @@ public:
 // <example>
 // <srcblock>
 // </srcblock>
+// </example>
 //
 //# <todo asof="2009/03/10">
 //# <li>
 //# </todo> 
-class RFWriter : public virtual RFReaderWriter {
+
+class RFWriter : public virtual RFReaderWriter
+{
 public:
     // Constructor.
     RFWriter() { }
@@ -324,8 +307,8 @@ public:
         setFile(filename);
         return write(regions);
     }
+};
 
-   };
-}
+} //# end namespace
 
-#endif /*RFREADERWRITER_H_*/
+#endif

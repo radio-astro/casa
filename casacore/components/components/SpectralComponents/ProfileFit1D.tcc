@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//#   $Id: ProfileFit1D.tcc 19933 2007-02-27 05:04:51Z Malte.Marquarding $
+//#   $Id: ProfileFit1D.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/SpectralComponents/ProfileFit1D.h>
 
@@ -199,11 +199,11 @@ Bool ProfileFit1D<T>::setRangeMask (const Vector<uInt>& start,
          itsError = "The start index must be < the end index";
          return False;
       }
-      if (start[i]<0 || start[i]>=n) {
+      if (start[i]>=n) {
          itsError = "The start index must be in the range 0->nElements-1";
          return False;
       }
-      if (end[i]<0 || end[i]>=n) {
+      if (end[i]>=n) {
          itsError = "The end index must be in the range 0->nElements-1";
          return False;
       }
@@ -448,7 +448,7 @@ void ProfileFit1D<T>::copy(const ProfileFit1D& other)
 template <class T> 
 void ProfileFit1D<T>::checkType() const
 {
-   T* p;
+   T* p=0;
    AlwaysAssert(whatType(p)==TpDouble,AipsError);
 }
 

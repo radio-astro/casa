@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GenericL2Fit.h 20365 2008-06-30 06:35:22Z gervandiepen $
+//# $Id: GenericL2Fit.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef SCIMATH_GENERICL2FIT_H
 #define SCIMATH_GENERICL2FIT_H
@@ -299,8 +299,8 @@ template<class T> class GenericL2Fit : public LSQaips {
     typename FunctionTraits<T>::DiffType> *fittedFunction() {
     return ptr_derive_p; };
   const Function<typename FunctionTraits<T>::DiffType,
-    typename FunctionTraits<T>::DiffType>
-    *const fittedFunction() const { return ptr_derive_p; };
+                 typename FunctionTraits<T>::DiffType>*
+    fittedFunction() const { return ptr_derive_p; };
   // </group>
   // Return the number of fitted parameters
   uInt fittedNumber() const { return aCount_ai; };

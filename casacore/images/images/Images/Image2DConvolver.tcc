@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Image2DConvolver.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: Image2DConvolver.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 //   
 #include <images/Images/Image2DConvolver.h>
 //
@@ -225,7 +225,7 @@ void Image2DConvolver<T>::dealWithRestoringBeam (LogIO& os,
                                                  Vector<Quantum<Double> >& beamOut,
                                                  Array<T>& kernelArray, 
                                                  T kernelVolume,
-                                                 VectorKernel::KernelTypes kernelType,
+                                                 VectorKernel::KernelTypes,
                                                  const Vector<Quantum<Double> >& parameters,
                                                  const IPosition& pixelAxes,
                                                  const CoordinateSystem& cSys,
