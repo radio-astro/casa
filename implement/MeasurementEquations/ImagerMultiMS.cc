@@ -399,7 +399,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
     {
       //Fill default numChan for now
       
-      MSSpWindowColumns msSpW(ms_p->spectralWindow());
+      ROMSSpWindowColumns msSpW(ms_p->spectralWindow());
       Vector<Int> numChan=msSpW.numChan().getColumn(); 
       for (uInt k=0; k < dataspectralwindowids_p.nelements(); ++k){
 	blockNChan_p[numMS_p-1][k]=numChan[dataspectralwindowids_p[k]];

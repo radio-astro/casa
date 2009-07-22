@@ -520,7 +520,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     AlwaysAssert(rvi_p, AipsError);
     
     // Polarization
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     Vector<String> polType=msc.feed().polarizationType()(0);
     if (polType(0)!="X" && polType(0)!="Y" &&
 	polType(0)!="R" && polType(0)!="L") {
@@ -607,7 +607,7 @@ String Imager::imageName()
   try {
     lock();
     String name(msname_p);
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     if(datafieldids_p.shape() !=0) {
       name=msc.field().name()(datafieldids_p(0));
     }
@@ -660,7 +660,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   deltas(0)=-mcellx_p.get("rad").getValue();
   deltas(1)=mcelly_p.get("rad").getValue();
   
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   MFrequency::Types obsFreqRef=MFrequency::DEFAULT;
   ROScalarColumn<Int> measFreqRef(ms_p->spectralWindow(),
 				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
@@ -1230,7 +1230,7 @@ String Imager::state()
       os << "  Beam fit is not valid" << endl;
     }
     
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     MDirection mDesiredCenter;
     if(setimaged_p) {
       os << "Image definition settings: "
@@ -1928,7 +1928,7 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
 	}
       }
 
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     if(datafieldids_p.shape()!=0){
       //If setdata has been used prior to this
     phaseCenter=msc.field().phaseDirMeas(datafieldids_p(0));
@@ -3312,7 +3312,7 @@ Bool Imager::linearmosaic(const String& mosaic,
   numerator.set(0.0);
 
   ImageRegrid<Float> regridder;
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   for (uInt i=0; i < images.nelements(); ++i) {
     if(!Table::isReadable(images(i))) {   
       os << LogIO::SEVERE << "Image " << images(i) << 
@@ -3737,7 +3737,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
      MSSpectralWindow msspw(tableCommand(spwsel.str(), 
 					 mssel_p->spectralWindow()));
-     MSSpWindowColumns spwc(msspw);
+     ROMSSpWindowColumns spwc(msspw);
 
      // This averaging scheme will work even if the spectral windows are
      // of different sizes.  Note, however, that using an average wavelength
@@ -5652,7 +5652,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     String fluxScaleName;
     Bool matchedScale=False;
     Int spwid, fldid;
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
     for (uInt kk=0; kk<fldids.nelements(); ++kk) {
@@ -5904,7 +5904,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     String fluxScaleName;
     Bool matchedScale=False;
     Int spwid, fldid;
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
     for (uInt kk=0; kk<fldids.nelements(); ++kk) {
@@ -6592,7 +6592,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
     os << "Plotting Stokes I visibility for currently selected data"
        << LogIO::POST;
     
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     Bool twoPol=True;
     Vector<String> polType=msc.feed().polarizationType()(0);
     if (polType(0)!="X" && polType(0)!="Y" &&
@@ -7160,7 +7160,7 @@ Bool Imager::plotsummary()
       timeFloat(i)=Float(t(i)-tStart);
     }
     
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     PGPlotter plotter=getPGPlotter();
     plotter.subp(1, 2);
     plotter.page();
@@ -8692,7 +8692,7 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
   modelImage.table().markForDelete();
     
   // Fill in miscellaneous information needed by FITS
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   Record info;
   String object=msc.field().name()(fieldID)
 ;  //defining object name
