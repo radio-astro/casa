@@ -52,10 +52,27 @@ bool STHeader::conformant( const STHeader& other )
   bool conforms;
   conforms = (this->antennaname == other.antennaname
               && this->equinox == other.equinox
-              && this->obstype == other.obstype
               && this->fluxunit == other.fluxunit
               );
   return conforms;
+}
+
+String STHeader::diff( const STHeader& other )
+{
+  ostringstream thediff;
+  if ( this->equinox != other.equinox ) {
+    thediff  << "Equinox: "  << this->equinox << " <-> " 
+             << other.equinox << endl;
+  }
+  if ( this->obstype != other.obstype ) {
+    thediff << "Obs. Type: " << this->obstype << " <-> "
+            << other.obstype << endl;
+  }
+  if ( this->fluxunit != other.fluxunit ) {
+    thediff << "Flux unit: " << this->fluxunit << " <-> "
+            << other.fluxunit << endl;
+  }
+  return String(thediff);
 }
 
 void STHeader::print() const {

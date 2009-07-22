@@ -14,7 +14,12 @@ from matplotlib import rc, rcParams
 from asap import rcParams as asaprcParams
 from matplotlib.ticker import OldScalarFormatter
 from matplotlib.ticker import NullLocator
-from matplotlib.transforms import blend_xy_sep_transform
+
+# API change in mpl >= 0.98
+try:
+    from matplotlib.transforms import blended_transform_factory
+except ImportError:
+    from matplotlib.transforms import blend_xy_sep_transform  as blended_transform_factory
 
 if int(matplotlib.__version__.split(".")[1]) < 87:
     print "Warning: matplotlib version < 0.87. This might cause errors. Please upgrade."
@@ -160,10 +165,15 @@ class asaplotbase:
         y2 = range(12)
         y2 = range(l2)
         m2 = range(l2)
-        #ymsk = y.raw_mask()
-        #ydat = y.raw_data()
-        ymsk = y.mask
-        ydat = y.data
+        ymsk = None
+        ydat = None
+        if hasattr(y, "raw_mask"):
+            # numpy < 1.1
+            ymsk = y.raw_mask()
+            ydat = y.raw_data()
+        else:
+            ymsk = y.mask
+            ydat = y.data
         for i in range(l2):
             x2[i] = x[i/2]
             m2[i] = ymsk[i/2]
@@ -409,8 +419,8 @@ class asaplotbase:
             try:
                 if fname[-3:].lower() == ".ps":
                     from matplotlib import __version__ as mv
-                    w = self.figure.figwidth.get()
-                    h = self.figure.figheight.get()
+                    w = self.figure.get_figwidth()
+                    h = self.figure.get_figheight()
 
                     if orientation is None:
                         # oriented
@@ -427,10 +437,10 @@ class asaplotbase:
                         ds = min(pw/w, ph/h)
                     ow = ds * w
                     oh = ds * h
-                    self.figure.set_figsize_inches((ow, oh))
+                    self.figure.set_size_inches((ow, oh))
                     self.figure.savefig(fname, orientation=orientation,
                                         papertype=papertype.lower())
-                    self.figure.set_figsize_inches((w, h))
+                    self.figure.set_size_inches((w, h))
                     print 'Written file %s' % (fname)
                 else:
                     if dpi is None:
@@ -616,12 +626,15 @@ class asaplotbase:
                 if not ganged:
                     self.subplots[i]['axes'] = self.figure.add_subplot(rows,
                                                 cols, i+1)
-                    self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
+                    if asaprcParams['plotter.xaxisformatting'] == 'mpl':
+                        self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
                 else:
                     if i == 0:
                         self.subplots[i]['axes'] = self.figure.add_subplot(rows,
                                                 cols, i+1)
-                        self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
+                        if asaprcParams['plotter.xaxisformatting'] != 'mpl':
+                            
+                            self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
                     else:
                         self.subplots[i]['axes'] = self.figure.add_subplot(rows,
                                                 cols, i+1,
@@ -708,9 +721,9 @@ class asaplotbase:
             yts = fp.get_size_in_points() - (self.rows)/2
             for sp in self.subplots:
                 ax = sp['axes']
-                s = rcParams['axes.titlesize']
-                tsize = s-(self.cols+self.rows-1)
-                ax.title.set_size(max(tsize,9))
+                s = ax.title.get_size()
+                tsize = s-(self.cols+self.rows)
+                ax.title.set_size(tsize)
                 fp = FP(size=rcParams['axes.labelsize'])
                 setp(ax.get_xticklabels(), fontsize=xts)
                 setp(ax.get_yticklabels(), fontsize=yts)
@@ -769,9 +782,17 @@ class asaplotbase:
         # a rough estimate for the bb of the text
         if rotate > 0.0: lbloffset = 0.03*len(label)
         peakoffset = 0.01
-        xy0 = ax.transData.xy_tup((x,y))
-        # get relative coords
-        xy = ax.transAxes.inverse_xy_tup(xy0)
+        xy = None
+        xy0 = None
+        # matplotlib api change 0.98 is using transform now
+        if hasattr(ax.transData, "inverse_xy_tup"):
+            # get relative coords
+            xy0 = ax.transData.xy_tup((x,y))
+            xy = ax.transAxes.inverse_xy_tup(xy0)
+        else:
+            xy0 = ax.transData.transform((x,y))
+            # get relative coords
+            xy = ax.transAxes.inverted().transform(xy0)
         if location.lower() == 'top':
             ymax = 1.0-lbloffset
             ymin = xy[1]+peakoffset
@@ -782,7 +803,7 @@ class asaplotbase:
             ymax = xy[1]-peakoffset
             valign = 'top'
             ylbl = ymin-0.01
-        trans = blend_xy_sep_transform(ax.transData, ax.transAxes)
+        trans = blended_transform_factory(ax.transData, ax.transAxes)
         l = ax.axvline(x, ymin, ymax, color='black', **kwargs)
         t = ax.text(x, ylbl ,label, verticalalignment=valign,
                                     horizontalalignment='center',

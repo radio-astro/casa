@@ -110,6 +110,8 @@ private:
    */
   casa::Table setLimits(double lmin, double lmax, const std::string& colname);
 
+  double getDouble(const std::string& colname, uint row) const;
+
   // the table with seelection
   casa::Table table_;
   // the pristine table

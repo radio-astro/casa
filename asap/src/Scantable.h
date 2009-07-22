@@ -157,41 +157,40 @@ public:
 
   casa::MEpoch::Types getTimeReference() const;
 
+
+  casa::MEpoch getEpoch(int whichrow) const;
+
   /**
    * Get global antenna position
    * @return casa::MPosition
    */
   casa::MPosition getAntennaPosition() const;
 
-	/**
-	 * the @ref casa::MDirection for a specific row
-	 * @param[in] whichrow the row number
-	 * return casa::MDirection
-	 */
+  /**
+   * the @ref casa::MDirection for a specific row
+   * @param[in] whichrow the row number
+   * return casa::MDirection
+   */
   casa::MDirection getDirection( int whichrow ) const;
-
-	/**
-	 * get the direction as a string
-	 * @param[in] whichrow the row number
-	 * return the direction string
-	 */
+  
+  /**
+   * get the direction type as a string, e.g. "J2000"
+   * @param[in] whichrow the row number
+   * return the direction string
+   */
   std::string getDirectionString( int whichrow ) const;
 
-	/**
-	 * set the direction type as a string, e.g. "J2000"
-	 * @param[in] refstr the direction type
-	 */
+  /**
+   * set the direction type as a string, e.g. "J2000"
+   * @param[in] refstr the direction type
+   */
   void setDirectionRefString(const std::string& refstr="");
+
   /**
    * get the direction reference string
    * @return a string describing the direction reference
    */
-  std::string getDirectionRefString() const;	/**
-	 * get the direction type as a string, e.g. "J2000"
-	 * param[in] whichrow the row number
-	 * return the direction string
-	 */
-
+  std::string getDirectionRefString() const;	
 
   /**
    *  Return the Flux unit of the data, e.g. "Jy" or "K"

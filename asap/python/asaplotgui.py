@@ -4,11 +4,10 @@ ASAP plotting class based on matplotlib.
 
 from asap.asaplotbase import *
 import Tkinter as Tk
+import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, \
 	FigureManagerTkAgg
 # Force use of the newfangled toolbar.
-import matplotlib
-matplotlib.use("TkAgg")
 matplotlib.rcParams['toolbar'] = 'toolbar2'
 
 class asaplotgui(asaplotbase):

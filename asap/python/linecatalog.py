@@ -1,10 +1,10 @@
 """
-A representation of a spectra line catalog.
+A representation of a spectral line catalog.
 
 Author: Malte Marquarding
 
 """
-__revision__ = "$Revision: 1259 $"
+__revision__ = "$Revision: 1603 $"
 from asap._asap import linecatalog as lcbase
 from asap import rcParams
 import os
@@ -33,6 +33,9 @@ class linecatalog(lcbase):
                 return
             else:
                 raise IOError(msg)
+
+    def __repr__(self):
+        return lcbase.summary(self, -1)
 
     def summary(self):
         """

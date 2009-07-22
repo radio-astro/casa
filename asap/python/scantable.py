@@ -44,7 +44,9 @@ class scantable(Scantable):
         if isinstance(filename, Scantable):
             Scantable.__init__(self, filename)
         else:
-            if isinstance(filename, str):
+            if isinstance(filename, str):# or \
+#                (isinstance(filename, list) or isinstance(filename, tuple)) \
+#                  and isinstance(filename[-1], str):
                 import os.path
                 filename = os.path.expandvars(filename)
                 filename = os.path.expanduser(filename)
@@ -95,6 +97,9 @@ class scantable(Scantable):
                                        'ASCII' (saves as ascii text file)
                                        'MS2' (saves as an aips++
                                               MeasurementSet V2)
+                                       'FITS' (save as image FITS - not 
+                                               readable by class)
+                                       'CLASS' (save as FITS readable by CLASS)
             overwrite:   If the file should be overwritten if it exists.
                          The default False is to return with warning
                          without writing the output. USE WITH CARE.
@@ -278,6 +283,28 @@ class scantable(Scantable):
         else:
             return info
 
+    def get_spectrum(self, rowno):
+        """Return the spectrum for the current row in the scantable as a list.
+        Parameters:
+             rowno:   the row number to retrieve the spectrum from        
+        """
+        return self._getspectrum(rowno)
+
+    def get_mask(self, rowno):
+        """Return the mask for the current row in the scantable as a list.
+        Parameters:
+             rowno:   the row number to retrieve the mask from        
+        """
+        return self._getmask(rowno)
+
+    def set_spectrum(self, spec, rowno):
+        """Return the spectrum for the current row in the scantable as a list.
+        Parameters:
+             spec:   the spectrum
+             rowno:    the row number to set the spectrum for        
+        """
+        assert(len(spec) == self.nchan())
+        return self._setspectrum(spec, rowno)
 
     def get_selection(self):
         """
@@ -517,7 +544,7 @@ class scantable(Scantable):
         from datetime import datetime
         times = self._get_column(self._gettime, row)
         if not asdatetime:
-            return times 
+            return times
         format = "%Y/%m/%d/%H:%M:%S"
         if isinstance(times, list):
             return [datetime(*strptime(i, format)[:6]) for i in times]
@@ -754,7 +781,7 @@ class scantable(Scantable):
             frequency:    the frequency (really a period within the bandwidth) 
                           to remove
             width:        the width of the frequency to remove, to remove a 
-                          range of frequencies aroung the centre.
+                          range of frequencies around the centre.
             unit:         the frequency unit (default "GHz")
         Notes:
             It is recommended to flag edges of the band or strong 
@@ -963,7 +990,7 @@ class scantable(Scantable):
         E.g. 'freqs=[1e9, 2e9]'  would mean IF 0 gets restfreq 1e9 and
         IF 1 gets restfreq 2e9.
         ********NEED TO BE UPDATED end************
-        You can also specify the frequencies via a linecatalog/
+        You can also specify the frequencies via a linecatalog.
 
         Parameters:
             freqs:   list of rest frequency values or string idenitfiers
@@ -1686,6 +1713,42 @@ class scantable(Scantable):
         else:
             return s
 
+    def set_sourcetype(self, match, matchtype="pattern",
+                       sourcetype="reference"):
+        """
+        Set the type of the source to be an source or reference scan
+        using the provided pattern:
+        Parameters:
+            match:          a Unix style pattern, regular expression or selector
+            matchtype:      'pattern' (default) UNIX style pattern or
+                            'regex' regular expression
+            sourcetype:     the type of the source to use (source/reference)
+        """
+        varlist = vars()
+        basesel = self.get_selection()
+        stype = -1
+        if sourcetype.lower().startswith("r"):
+            stype = 1
+        elif sourcetype.lower().startswith("s"):
+            stype = 0
+        else:
+            raise ValueError("Illegal sourcetype use s(ource) or r(eference)")
+        if matchtype.lower().startswith("p"):
+            matchtype = "pattern"
+        elif matchtype.lower().startswith("r"):
+            matchtype = "regex"
+        else:
+            raise ValueError("Illegal matchtype, use p(attern) or r(egex)")
+        sel = selector()
+        if isinstance(match, selector):
+            sel = match
+        else:
+            sel.set_query("SRCNAME == %s('%s')" % (matchtype, match))
+        self.set_selection(basesel+sel)
+        self._setsourcetype(stype)
+        self.set_selection(basesel)
+        s._add_history("set_sourcetype", varlist)
+
     def auto_quotient(self, preserve=True, mode='paired'):
         """
         This function allows to build quotients automatically.
@@ -1702,8 +1765,8 @@ class scantable(Scantable):
                             trailing '_R' (Mopra/Parkes) or
                             '_e'/'_w' (Tid) and matches
                             on/off pairs from the observing pattern
-                'time'
-                   finds the closest off in time
+                            'time'
+                            finds the closest off in time
 
         """
         modes = ["time", "paired"]
@@ -1863,7 +1926,29 @@ class scantable(Scantable):
         else:
             return fit.as_dict()
 
+    def flag_nans(self):
+        """
+        Utility function to flag NaN values in the scantable.
+        """
+        import numpy
+        basesel = self.get_selection()
+        for i in range(self.nrow()):
+            sel = selector()+basesel
+            sel.set_scans(self.getscan(i))
+            sel.set_beams(self.getbeam(i))
+            sel.set_ifs(self.getif(i))
+            sel.set_polarisations(self.getpol(i))
+            self.set_selection(sel)
+            nans = numpy.isnan(self._getspectrum(0))
+        if numpy.any(nans):
+            bnans = [ bool(v) for v in nans]
+            self.flag(bnans)
+        self.set_selection(basesel)
+        
+
     def _add_history(self, funcname, parameters):
+        if not rcParams['scantable.history']:
+            return
         # create date
         sep = "##"
         from datetime import datetime
@@ -1953,18 +2038,17 @@ class scantable(Scantable):
         for name in fullnames:
             tbl = Scantable(stype)
             r = stfiller(tbl)
+            rx = rcParams['scantable.reference']
+            r._setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             print_log()
             r._open(name, -1, -1, getpt)
             r._read()
-            #tbl = r._getdata()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')
-                #tbl = tbl2
             if not first:
                 tbl = self._math._merge([self, tbl])
-                #tbl = tbl2
             Scantable.__init__(self, tbl)
             r._close()
             del r, tbl
@@ -1973,3 +2057,26 @@ class scantable(Scantable):
             self.set_fluxunit(unit)
         #self.set_freqframe(rcParams['scantable.freqframe'])
 
+    def __getitem__(self, key):
+        if key < 0:
+            key += self.nrow()
+        if key >= self.nrow():
+            raise IndexError("Row index out of range.")
+        return self._getspectrum(key)
+
+    def __setitem__(self, key, value):
+        if key < 0:
+            key += self.nrow()
+        if key >= self.nrow():
+            raise IndexError("Row index out of range.")
+        if not hasattr(value, "__len__") or \
+                len(value) > self.nchan(self.getif(key)):
+            raise ValueError("Spectrum length doesn't match.")
+        return self._setspectrum(value, key)
+
+    def __len__(self):
+        return self.nrow()
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]

@@ -85,10 +85,10 @@ class interactivemask:
                 self._plot_mask()
 
 		print ''
-		print 'Masked regions are shaded with yellow. (gray: projections)'
-		print 'Now you can modify mask regions.'
-		print 'Draw rectangles with Left-mouse to add Mask region,'
-		print 'or with Right-mouse to UNMask region.'
+		print 'Selected regions are shaded with yellow. (gray: projections)'
+		print 'Now you can modify the selection.'
+		print 'Draw rectangles with Left-mouse to add the regions,'
+		print 'or with Right-mouse to exclude the regions.'
 		
 		cid = None
 		cid = self._p.canvas.mpl_connect('button_press_event', self._region_start)

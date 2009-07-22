@@ -46,7 +46,9 @@ class selector(_selector):
             raise TypeError('Unknown pol type. Please use [0,1...] or ["XX","YY"...]')
     
     # for the americans
-    set_polarization = set_polarisations
+    set_polarizations = set_polarisations
+    # for the lazy
+    set_pols = set_polarisations
 
     def set_ifs(self, ifs=[]):
         """
@@ -162,6 +164,7 @@ class selector(_selector):
     def get_query(self):
 	prefix = "SELECT FROM $1 WHERE "
         return self._gettaql().replace(prefix, "")
+
     def get_name(self):
         print "NYI"
         s = self._gettaql()

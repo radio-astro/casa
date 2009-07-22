@@ -31,10 +31,20 @@ if not os.path.exists(userdir):
     print 'First time ASAP use. Setting up ~/.asap'
     os.mkdir(userdir)
     #shutil.copyfile(asapdata+"/data/ipythonrc-asap", userdir+"/ipythonrc-asap")
+    # commented out by TT on 2009.06.23 for casapy use
+    ##shutil.copyfile(asapdata+"/data/ipy_user_conf.py", 
+    ##                userdir+"/ipy_user_conf.py")
     f = file(userdir+"/asapuserfuncs.py", "w")
     f.close()
     f = file(userdir+"/ipythonrc", "w")
     f.close()
+# commented out by TT on 2009.06.23 for casapy use
+##else:
+    # upgrade to support later ipython versions
+    ##if not os.path.exists(userdir+"/ipy_user_conf.py"):
+    ##    shutil.copyfile(asapdata+"/data/ipy_user_conf.py", 
+    ##                    userdir+"/ipy_user_conf.py")
+
 # remove from namespace
 del asapdata, userdir, shutil, platform
 
@@ -98,13 +108,16 @@ defaultParams = {
     'plotter.ganged'      : [True, _validate_bool],
     'plotter.histogram'  : [False, _validate_bool],
     'plotter.papertype'  : ['A4', str],
+    'plotter.xaxisformatting' : ['asap', str],
 
     # scantable
     'scantable.save'      : ['ASAP', str],
     'scantable.autoaverage'      : [True, _validate_bool],
     'scantable.freqframe' : ['LSRK', str],  #default frequency frame
     'scantable.verbosesummary'   : [False, _validate_bool],
-    'scantable.storage'   : ['memory', str]
+    'scantable.storage'   : ['memory', str],
+    'scantable.history'   : [True, _validate_bool],
+    'scantable.reference'      : ['.*(e|w|_R)$', str]
     # fitter
     }
 
@@ -135,7 +148,7 @@ plotter.panelling          : scan
 # push panels together, to share axislabels
 plotter.ganged             : True
 
-# decimate the number of points plotted bya afactor of
+# decimate the number of points plotted by a factor of
 # nchan/1024
 plotter.decimate           : False
 
@@ -149,12 +162,20 @@ plotter.histogram          : False
 # ps paper type
 plotter.papertype          : A4
 
+# The formatting style of the xaxis
+plotter.xaxisformatting    : 'asap' or 'mpl'
+
 # scantable
 
 # default storage of scantable ('memory'/'disk')
 scantable.storage          : memory
+
+# write history of each call to scantable
+scantable.history          : True
+
 # default ouput format when saving
 scantable.save             : ASAP
+
 # auto averaging on read
 scantable.autoaverage      : True
 
@@ -165,6 +186,9 @@ scantable.freqframe        : LSRK
 # Control the level of information printed by summary
 scantable.verbosesummary   : False
 
+# Control the identification of reference (off) scans
+# This is has to be a regular expression
+scantable.reference         : .*(e|w|_R)$
 # Fitter
 """
 
@@ -241,7 +265,10 @@ def rc(group, **kwargs):
 
     for k,v in kwargs.items():
         name = aliases.get(k) or k
-        key = '%s.%s' % (group, name)
+        if len(group):
+            key = '%s.%s' % (group, name)
+        else:
+            key = name
         if not rcParams.has_key(key):
             raise KeyError('Unrecognized key "%s" for group "%s" and name "%s"' % (key, group, name))
 
@@ -351,17 +378,20 @@ from interactivemask import interactivemask
 
 if rcParams['useplotter']:
     try:
-	from  asapplotter import asapplotter
-	gui = os.environ.has_key('DISPLAY') and rcParams['plotter.gui']
-	if gui:
-	    import pylab as xyplotter
-	    plotter = asapplotter(gui)
-	    del gui
+        from asapplotter import asapplotter
+        gui = os.environ.has_key('DISPLAY') and rcParams['plotter.gui']
+        if gui:
+            import matplotlib
+            matplotlib.use("TkAgg")
+        import pylab
+        xyplotter = pylab
+        plotter = asapplotter(gui)
+        del gui
     except ImportError:
-	print "Matplotlib not installed. No plotting available"
+        print "Matplotlib not installed. No plotting available"
 
-__date__ = '$Date: 2009-02-02 09:50:25 -0700 (Mon, 02 Feb 2009) $'.split()[1]
-__version__  = '2.2.0 alma'
+__date__ = '$Date: 2009-07-17 15:58:28 -0600 (Fri, 17 Jul 2009) $'.split()[1]
+__version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '
 casapath=os.environ["CASAPATH"].split()
@@ -426,19 +456,23 @@ if is_ipython():
             set_feedtype    - set the feed type
             get_fluxunit    - get the brightness flux unit
             set_fluxunit    - set the brightness flux unit
+            set_sourcetype  - set the type of the source - source or reference
             create_mask     - return an mask in the current unit
                               for the given region. The specified regions
                               are NOT masked
             get_restfreqs   - get the current list of rest frequencies
             set_restfreqs   - set a list of rest frequencies
-	    shift_refpix    - shift the reference pixel of the IFs
+            shift_refpix    - shift the reference pixel of the IFs
+            set_spectrum    - overwrite the spectrum for a given row
+            get_spectrum    - retrieve the spectrum for a given
+            get_mask        - retrieve the mask for a given
             flag            - flag selected channels in the data
             lag_flag        - flag specified frequency in the data
             save            - save the scantable to disk as either 'ASAP',
                               'SDFITS' or 'ASCII'
             nbeam,nif,nchan,npol - the number of beams/IFs/Pols/Chans
             nscan           - the number of scans in the scantable
-            nrow            - te number of spectra in the scantable
+            nrow            - the number of spectra in the scantable
             history         - print the history of the scantable
             get_fit         - get a fit which has been stored witnh the data
             average_time    - return the (weighted) time average of a scan

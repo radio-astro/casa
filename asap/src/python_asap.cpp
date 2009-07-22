@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1126 2006-08-10 04:16:19Z mar637 $
+//# $Id: python_asap.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
@@ -38,12 +38,19 @@
 #include <casa/Exceptions/Error.h>
 #include "ScantableWrapper.h"
 
+#ifndef HAVE_LIBPYRAP
+  #include "pyconversions.h"
+#else
+  #include <pyrap/Converters/PycExcp.h>
+  #include <pyrap/Converters/PycBasicData.h>
+#endif
 
-#include "pyconversions.h"
 #include "python_asap.h"
 
+#ifndef HAVE_LIBPYRAP
 namespace asap {
   namespace python {
+
 void translate_ex(const casa::AipsError& e)
 {
   // Use the Python 'C' API to set up an exception object
@@ -52,6 +59,8 @@ void translate_ex(const casa::AipsError& e)
 
   }
 }
+#endif
+
 using namespace boost::python;
 
 BOOST_PYTHON_MODULE(_asap) {
@@ -64,14 +73,13 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STFitEntry();
   asap::python::python_STWriter();
   asap::python::python_LineCatalog();
-
   asap::python::python_Logger();
-  register_exception_translator<casa::AipsError>(&asap::python::translate_ex);
 
-  //std_vector_to_tuple <  > ();
+#ifndef HAVE_LIBPYRAP
+  // Use built-in pyconversions.h
+  register_exception_translator<casa::AipsError>(&asap::python::translate_ex);
   from_python_sequence < std::vector< asap::ScantableWrapper >,
     variable_capacity_policy > ();
-
   std_vector_to_tuple < int > ();
   from_python_sequence < std::vector < int >,
     variable_capacity_policy > ();
@@ -90,4 +98,9 @@ BOOST_PYTHON_MODULE(_asap) {
   std_vector_to_tuple < bool> ();
   from_python_sequence < std::vector < bool >,
     variable_capacity_policy > ();
+#else
+  casa::pyrap::register_convert_excp();
+  casa::pyrap::register_convert_basicdata();
+  casa::pyrap::register_convert_std_vector<asap::ScantableWrapper>();
+#endif
 }

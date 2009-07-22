@@ -212,7 +212,9 @@ void Scantable::setupMainTable()
 
   td.addColumn(ScalarColumnDesc<String>("SRCNAME"));
   // Type of source (on=0, off=1, other=-1)
-  td.addColumn(ScalarColumnDesc<Int>("SRCTYPE", Int(-1)));
+  ScalarColumnDesc<Int> stypeColumn("SRCTYPE");
+  stypeColumn.setDefault(Int(-1));
+  td.addColumn(stypeColumn);
   td.addColumn(ScalarColumnDesc<String>("FIELDNAME"));
 
   //The actual Data Vectors
@@ -534,7 +536,8 @@ int Scantable::nchan( int ifno ) const
     table_.keywordSet().get("nChan",n);
     return int(n);
   } else {
-    // take the first SCANNO,POLNO,BEAMNO,CYCLENO as nbeam shouldn't vary with these
+    // take the first SCANNO,POLNO,BEAMNO,CYCLENO as nbeam shouldn't
+    // vary with these
     Table t = table_(table_.col("IFNO") == ifno);
     if ( t.nrow() == 0 ) return 0;
     ROArrayColumn<Float> v(t, "SPECTRA");
@@ -884,6 +887,17 @@ std::string Scantable::getTime(int whichrow, bool showdate) const
   return formatTime(me, showdate);
 }
 
+MEpoch Scantable::getEpoch(int whichrow) const
+{
+  if (whichrow > -1) {
+    return timeCol_(uInt(whichrow));
+  } else {
+    Double tm;
+    table_.keywordSet().get("UTC",tm);
+    return MEpoch(MVEpoch(tm));  
+  }
+}
+
 std::string Scantable::getDirectionString(int whichrow) const
 {
   return formatDirection(getDirection(uInt(whichrow)));
@@ -891,7 +905,7 @@ std::string Scantable::getDirectionString(int whichrow) const
 
 std::vector< double > Scantable::getAbcissa( int whichrow ) const
 {
-  if ( whichrow > int(table_.nrow()) ) throw(AipsError("Illegal ro number"));
+  if ( whichrow > int(table_.nrow()) ) throw(AipsError("Illegal row number"));
   std::vector<double> stlout;
   int nchan = specCol_(whichrow).nelements();
   String us = freqTable_.getUnitString();

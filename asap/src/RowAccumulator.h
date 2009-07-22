@@ -102,7 +102,8 @@ private:
   casa::Bool initialized_;
   //these are Vectors
   casa::MaskedArray<casa::Float> spectrum_;
-  casa::MaskedArray<casa::Float> n_, weightSum_;
+  casa::MaskedArray<casa::Float> weightSum_;
+  casa::MaskedArray<casa::uInt> n_;
 
   casa::Vector<casa::Bool> userMask_;
 

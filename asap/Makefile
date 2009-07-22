@@ -2,8 +2,10 @@
 ###    This Makefile assumes CASA+CASACore enviroment. 
 ###    For who wants to build ASAP with older CASA without CASACore 
 ###    environment, replace $(CASAPATH) with $(AIPSPATH). 
-PREFIX := /opt/casa/darwin
-#PREFIX := /export/home/minor/casa/active/linux_gnu
+#for mac
+#PREFIX := /opt/casa/darwin
+#for linux
+PREFIX := $(word 1, $(CASAPATH))/$(word 2,$(CASAPATH))
 PYDIR := $(PREFIX)/python/2.5
 
 ifndef ASAPROOT
@@ -22,14 +24,15 @@ DISTDIR   := asap_$(PLATFORM)
 all: module #doc
 
 module:
-	@cd $(ASAPROOT)/src; make
 	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
+	@cd $(ASAPROOT)/src; make
 
 doc:
 	@cd $(ASAPROOT)/doc; make
 
 
 install:
+	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
 	@if ( test ! -d $(PYDIR)/asap ) ; then mkdir -p $(PYDIR)/asap ; fi
 	@if ( test ! -d $(PREFIX)/bin ) ; then mkdir -p $(PREFIX)/bin ; fi
 	@for file in $(LIBS) ; do cp -f $$file $(PYDIR)/asap ; done

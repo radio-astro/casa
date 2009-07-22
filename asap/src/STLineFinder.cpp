@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.cpp 1315 2007-01-30 09:59:42Z vor010 $
+//# $Id: STLineFinder.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
 //#---------------------------------------------------------------------------
 
 
@@ -869,18 +869,20 @@ std::vector<bool> STLineFinder::getMask(bool invert)
        std::vector<bool> res_mask(mask.nelements());
        // iterator through lines
        std::list<std::pair<int,int> >::const_iterator cli=lines.begin();
-       for (int ch=0;ch<int(res_mask.size());++ch)
+       for (int ch=0;ch<int(res_mask.size());++ch) {
             if (ch<edge.first || ch>=edge.second) res_mask[ch]=false;
             else if (!mask[ch]) res_mask[ch]=false;
             else {
                     res_mask[ch]=!invert; // no line by default
-                    if (cli==lines.end()) continue;
-                    if (ch>=cli->first && ch<cli->second)
-                        res_mask[ch]=invert; // this is a line
-                    if (ch>=cli->second)
-                        ++cli; // next line in the list
-                 }
-
+                    if (cli!=lines.end())
+                        if (ch>=cli->first && ch<cli->second)
+                             res_mask[ch]=invert; // this is a line
+            }
+            if (cli!=lines.end())
+                if (ch>=cli->second) {
+                    ++cli; // next line in the list
+                }
+       }
        return res_mask;
   }
   catch (const AipsError &ae) {

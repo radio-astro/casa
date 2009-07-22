@@ -13,40 +13,45 @@ CASAROOT  := $(word 1, $(CASAPATH))
 CASAARCH  := $(word 2, $(CASAPATH))
 CASAINC   := -I$(CASAROOT)/code/include -I$(CASAROOT)/$(CASAARCH)/include/casacore -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
-THIRDPARTY = /opt/casa/core2-apple-darwin8/3rd-party
 
 
 # the compiler
 ifndef CXX
-   CXX      := g++ 
+   CXX      := g++
 endif
 
 # compiler flags
-CXXFLAGS := -fPIC -O2 -g -DCASA_USECASAPATH
-CXXFLAGS += -ansi -Wall
+CXXFLAGS := -fPIC -O3 -g
+CXXFLAGS += -ansi -Wno-long-long -Wall
+#CXXOPTS := -DAIPS_NO_TEMPLATE_SRC
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
    CXXFLAGS +=-DAIPS_DARWIN
+   CXXFLAGS += -Wno-long-double
 endif
 
 # cfitsio
-CFITSIOROOT := $(THIRDPARTY)
+CFITSIOROOT := /usr
 CFITSIOINC := -I$(CFITSIOROOT)/include/cfitsio
 #CFITSIOLIB := -L$(CFITSIOROOT)/lib -lcfitsio
 CFITSIOLIB := -lcfitsio
 
 #rpfits
-RPFITSROOT := $(THIRDPARTY)
+RPFITSROOT := /usr
 #RPFITSLIB := $(RPFITSROOT)/lib/librpfits.a
 RPFITSLIB := -lrpfits
 
+#wcs
+WCSLIB := -lwcs
+
 G2CROOT := /usr
-G2CARCH := $(G2CROOT)/lib/gcc/i386-apple-darwin8.7.1/4.2.0/libgcc.a
-G2CARCH := $(G2CROOT)/lib/gcc/powerpc-apple-darwin8.7.0/4.2.0/libgcc.a
-G2CARCH := $(G2CROOT)/lib/gcc/i386-redhat-linux/4.1.0/libgcc.a
+#G2CARCH := $(G2CROOT)/lib/gcc/i386-apple-darwin8.7.1/4.2.0/libgcc.a
+#G2CARCH := $(G2CROOT)/lib/gcc/powerpc-apple-darwin8.7.0/4.2.0/libgcc.a
+G2CARCH := $(G2CROOT)/lib/gcc/i386-redhat-linux/4.1.2/libgcc.a
 #G2CLIB := $(G2CROOT)/lib/libgfortran.a
-G2CLIB := -lgfortran
+G2CLIB := $(G2CARCH)
+#G2CLIB := -lg2c
 
 # This assumes all casa libs are static only (*.a)
 # if not than there might by symbol resolution errors.
@@ -54,7 +59,7 @@ CASAPPLIB := -L$(CASALIB) \
              -latnf -lcasa_images -lcasa_ms -lcasa_components -lcasa_coordinates \
              -lcasa_lattices -lcasa_fits -lcasa_measures -lcasa_measures_f \
              -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa  \
-             $(CASALIB)/libwcs.a \
+             $(WCSLIB)  \
              $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
 
 # darwin specific CASA flags
@@ -73,9 +78,9 @@ PYTHONLIB := -L$(PYTHONROOT)/lib -lpython$(PYVERSION)
 # use python universal build
 ifeq "$(CASAARCH)" "darwin"
    PYVERSION := 2.5
-   PYTHONROOT := $(THIRDPARTY)/lib/Python.framework/Versions/$(PYVERSION)
+   PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
    PYTHONINC := -I$(PYTHONROOT)/include/python$(PYVERSION)
-   PYTHONLIB := -F$(THIRDPARTY)/lib -framework Python
+   PYTHONLIB := -L$(PYTHONROOT)/lib -framework Python
 endif
 
 # the linker
@@ -83,11 +88,11 @@ LD        := $(CXX)
 
 # has to be build with same g++ version as casa
 #BOOSTROOT := /home/casa/boost
-BOOSTROOT := $(THIRDPARTY)
+BOOSTROOT := /usr/lib/casapy
 #BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python-gcc34
-BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python-mt-1_35
-BOOSTINC  := -I$(BOOSTROOT)/include/boost-1_35
-#BOOSTINC  := -I$(BOOSTROOT)/include/boost
+BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python
+#BOOSTINC  := -I$(BOOSTROOT)/include/boost-1_35
+BOOSTINC  := -I$(BOOSTROOT)/include/boost
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
@@ -125,7 +130,9 @@ CCOBJECTS := MathUtils.o \
              STPolStokes.o \
              STWriter.o \
              STAsciiWriter.o \
-             Scantable.o
+             STFITSImageWriter.o \
+             Scantable.o \
+             Templates.o 
 PYOBJECTS := python_Scantable.o \
              python_STFiller.o \
              python_STSelector.o \
@@ -169,7 +176,8 @@ HEADERS   := MathUtils.h \
 	     STPolCircular.h \
 	     STPolLinear.h \
 	     STWriter.h \
-	     STAsciiWriter.h
+	     STAsciiWriter.h \
+             STFITSImageWriter.h
 
 STATICCCLIB := libasap.a
 MEMBERS := $(patsubst %,$(STATICCCLIB)(%),$(CCOBJECTS))

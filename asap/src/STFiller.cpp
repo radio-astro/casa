@@ -4,7 +4,7 @@
 // Description:
 //
 //
-// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2006
+// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2006-2007
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -27,11 +27,16 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSreader.h>
+#ifdef HAS_ALMA
+ #include <casa/System/ProgressMeter.h>
+#endif
 #include <casa/System/ProgressMeter.h>
 #include <atnf/PKSIO/NROReader.h>
 
 #include <time.h>
+
 
 #include "STDefs.h"
 #include "STAttr.h"
@@ -47,6 +52,7 @@ STFiller::STFiller() :
   reader_(0),
   header_(0),
   table_(0),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
 }
@@ -55,6 +61,7 @@ STFiller::STFiller( CountedPtr< Scantable > stbl ) :
   reader_(0),
   header_(0),
   table_(stbl),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
 }
@@ -63,6 +70,7 @@ STFiller::STFiller(const std::string& filename, int whichIF, int whichBeam ) :
   reader_(0),
   header_(0),
   table_(0),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
   open(filename, whichIF, whichBeam);
@@ -140,11 +148,12 @@ void STFiller::open( const std::string& filename, int whichIF, int whichBeam, ca
 
   Int status = reader_->getHeader(header_->observer, header_->project,
                                   header_->antennaname, header_->antennaposition,
-                                  header_->obstype,header_->equinox,
+                                  header_->obstype,
+                                  header_->fluxunit,
+                                  header_->equinox,
                                   header_->freqref,
                                   header_->utc, header_->reffreq,
-                                  header_->bandwidth,
-                                  header_->fluxunit);
+                                  header_->bandwidth);
 
   if (status) {
     delete reader_;
@@ -165,9 +174,14 @@ void STFiller::open( const std::string& filename, int whichIF, int whichBeam, ca
 
   Bool throwIt = False;
   Instrument inst = STAttr::convertInstrument(header_->antennaname, throwIt);
-  //header_->fluxunit = "Jy";
+
   if (inst==ATMOPRA || inst==TIDBINBILLA) {
-     header_->fluxunit = "K";
+    header_->fluxunit = "K";
+  } else {
+    // downcase for use with Quanta
+    if (header_->fluxunit == "JY") {
+      header_->fluxunit = "Jy";
+    }
   }
   STAttr stattr;
   header_->poltype = stattr.feedPolType(inst);
@@ -274,6 +288,7 @@ int asap::STFiller::read( )
   }
   //
 
+/**
   Int    beamNo, IFno, refBeam, scanNo, cycleNo;
   Float  azimuth, elevation, focusAxi, focusRot, focusTan,
     humidity, parAngle, pressure, temperature, windAz, windSpeed;
@@ -286,26 +301,24 @@ int asap::STFiller::read( )
   Matrix<uChar>   flagtra;
   Complex         xCalFctr;
   Vector<Complex> xPol;
+**/
+
   Double min = 0.0;
   Double max = nInDataRow;
+#ifdef HAS_ALMA
   ProgressMeter fillpm(min, max, "Data importing progress");
+#endif
+  PKSrecord pksrec;
   int n = 0;
   while ( status == 0 ) {
-    status = reader_->read(scanNo, cycleNo, mjd, interval, fieldName,
-                          srcName, srcDir, srcPM, srcVel, obsType, IFno,
-                          refFreq, bandwidth, freqInc, restFreq, tcal, tcalTime,
-                          azimuth, elevation, parAngle, focusAxi,
-                          focusTan, focusRot, temperature, pressure,
-                          humidity, windSpeed, windAz, refBeam,
-                          beamNo, direction, scanRate,
-                          tsys, sigma, calFctr, baseLin, baseSub,
-                          spectra, flagtra, xCalFctr, xPol);
+    status = reader_->read(pksrec);
     if ( status != 0 ) break;
     n += 1;
-    
+
     Regex filterrx(".*[SL|PA]$");
     Regex obsrx("^AT.+");
-    if ( header_->antennaname.matches(obsrx) && obsType.matches(filterrx)) {
+    if ( header_->antennaname.matches(obsrx) &&
+         pksrec.obsType.matches(filterrx)) {
         //cerr << "ignoring paddle scan" << endl;
         continue;
     }
@@ -313,77 +326,82 @@ int asap::STFiller::read( )
     TableRecord& rec = row.record();
     // fields that don't get used and are just passed through asap
     RecordFieldPtr<Array<Double> > srateCol(rec, "SCANRATE");
-    *srateCol = scanRate;
+    // MRC changed type from double to float
+    Vector<Double> sratedbl(pksrec.scanRate.nelements());
+    convertArray(sratedbl, pksrec.scanRate);
+    *srateCol = sratedbl;
     RecordFieldPtr<Array<Double> > spmCol(rec, "SRCPROPERMOTION");
-    *spmCol = srcPM;
+    *spmCol = pksrec.srcPM;
     RecordFieldPtr<Array<Double> > sdirCol(rec, "SRCDIRECTION");
-    *sdirCol = srcDir;
+    *sdirCol = pksrec.srcDir;
     RecordFieldPtr<Double> svelCol(rec, "SRCVELOCITY");
-    *svelCol = srcVel;
+    *svelCol = pksrec.srcVel;
     // the real stuff
     RecordFieldPtr<Int> fitCol(rec, "FIT_ID");
     *fitCol = -1;
     RecordFieldPtr<uInt> scanoCol(rec, "SCANNO");
-    *scanoCol = scanNo-1;
+    *scanoCol = pksrec.scanNo-1;
     RecordFieldPtr<uInt> cyclenoCol(rec, "CYCLENO");
-    *cyclenoCol = cycleNo-1;
+    *cyclenoCol = pksrec.cycleNo-1;
     RecordFieldPtr<Double> mjdCol(rec, "TIME");
-    *mjdCol = mjd;
+    *mjdCol = pksrec.mjd;
     RecordFieldPtr<Double> intCol(rec, "INTERVAL");
-    *intCol = interval;
+    *intCol = pksrec.interval;
     RecordFieldPtr<String> srcnCol(rec, "SRCNAME");
     RecordFieldPtr<Int> srctCol(rec, "SRCTYPE");
     RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME");
-    *fieldnCol = fieldName;
+    *fieldnCol = pksrec.fieldName;
     // try to auto-identify if it is on or off.
-    Regex rx(".*[e|w|_R]$");
+    Regex rx(refRx_);
     Regex rx2("_S$");
-    Int match = srcName.matches(rx);
+    Int match = pksrec.srcName.matches(rx);
     if (match) {
-      *srcnCol = srcName;
+      *srcnCol = pksrec.srcName;
     } else {
-      *srcnCol = srcName.before(rx2);
+      *srcnCol = pksrec.srcName.before(rx2);
     }
-    //*srcnCol = srcName;//.before(rx2);
+    //*srcnCol = pksrec.srcName;//.before(rx2);
     *srctCol = match;
     RecordFieldPtr<uInt> beamCol(rec, "BEAMNO");
-    *beamCol = beamNo-beamOffset_-1;
+    *beamCol = pksrec.beamNo-beamOffset_-1;
     RecordFieldPtr<Int> rbCol(rec, "REFBEAMNO");
     Int rb = -1;
-    if (nBeam_ > 1 ) rb = refBeam-1;
+    if (nBeam_ > 1 ) rb = pksrec.refBeam-1;
     *rbCol = rb;
     RecordFieldPtr<uInt> ifCol(rec, "IFNO");
-    *ifCol = IFno-ifOffset_- 1;
+    *ifCol = pksrec.IFno-ifOffset_- 1;
     uInt id;
     /// @todo this has to change when nchan isn't global anymore
     id = table_->frequencies().addEntry(Double(header_->nchan/2),
-                                            refFreq, freqInc);
+                                            pksrec.refFreq, pksrec.freqInc);
     RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID");
     *mfreqidCol = id;
 
-    id = table_->molecules().addEntry(restFreq);
+    id = table_->molecules().addEntry(pksrec.restFreq);
     RecordFieldPtr<uInt> molidCol(rec, "MOLECULE_ID");
     *molidCol = id;
 
-    id = table_->tcal().addEntry(tcalTime, tcal);
+    id = table_->tcal().addEntry(pksrec.tcalTime, pksrec.tcal);
     RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID");
     *mcalidCol = id;
-    id = table_->weather().addEntry(temperature, pressure, humidity,
-                                    windSpeed, windAz);
+    id = table_->weather().addEntry(pksrec.temperature, pksrec.pressure,
+                                    pksrec.humidity, pksrec.windSpeed,
+                                    pksrec.windAz);
     RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID");
     *mweatheridCol = id;
     RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID");
-    id = table_->focus().addEntry(focusAxi, focusTan, focusRot);
+    id = table_->focus().addEntry(pksrec.focusAxi, pksrec.focusTan,
+                                  pksrec.focusRot);
     *mfocusidCol = id;
     RecordFieldPtr<Array<Double> > dirCol(rec, "DIRECTION");
-    *dirCol = direction;
+    *dirCol = pksrec.direction;
     RecordFieldPtr<Float> azCol(rec, "AZIMUTH");
-    *azCol = azimuth;
+    *azCol = pksrec.azimuth;
     RecordFieldPtr<Float> elCol(rec, "ELEVATION");
-    *elCol = elevation;
+    *elCol = pksrec.elevation;
 
     RecordFieldPtr<Float> parCol(rec, "PARANGLE");
-    *parCol = parAngle;
+    *parCol = pksrec.parAngle;
 
     RecordFieldPtr< Array<Float> > specCol(rec, "SPECTRA");
     RecordFieldPtr< Array<uChar> > flagCol(rec, "FLAGTRA");
@@ -394,44 +412,48 @@ int asap::STFiller::read( )
     // into 2-4 rows in the scantable
     Vector<Float> tsysvec(1);
     // Why is spectra.ncolumn() == 3 for haveXPol_ == True
-    uInt npol = (spectra.ncolumn()==1 ? 1: 2);
+    uInt npol = (pksrec.spectra.ncolumn()==1 ? 1: 2);
     for ( uInt i=0; i< npol; ++i ) {
-      tsysvec = tsys(i);
+      tsysvec = pksrec.tsys(i);
       *tsysCol = tsysvec;
       *polnoCol = i;
 
-      *specCol = spectra.column(i);
-      *flagCol = flagtra.column(i);
+      *specCol = pksrec.spectra.column(i);
+      *flagCol = pksrec.flagged.column(i);
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
     }
     if ( haveXPol_[0] ) {
       // no tsys given for xpol, so emulate it
-      tsysvec = sqrt(tsys[0]*tsys[1]);
+      tsysvec = sqrt(pksrec.tsys[0]*pksrec.tsys[1]);
       *tsysCol = tsysvec;
       // add real part of cross pol
       *polnoCol = 2;
-      Vector<Float> r(real(xPol));
+      Vector<Float> r(real(pksrec.xPol));
       *specCol = r;
       // make up flags from linears
       /// @fixme this has to be a bitwise or of both pols
-      *flagCol = flagtra.column(0);// | flagtra.column(1);
+      *flagCol = pksrec.flagged.column(0);// | pksrec.flagged.column(1);
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
       // ad imaginary part of cross pol
       *polnoCol = 3;
-      Vector<Float> im(imag(xPol));
+      Vector<Float> im(imag(pksrec.xPol));
       *specCol = im;
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
     }
+#ifdef HAS_ALMA
     fillpm._update(n);
+#endif
   }
   if (status > 0) {
     close();
     throw(AipsError("Reading error occured, data possibly corrupted."));
   }
+#ifdef HAS_ALMA
   fillpm.done();
+#endif
   return status;
 }
 

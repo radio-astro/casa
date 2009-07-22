@@ -156,7 +156,6 @@ SpectralCoordinate STFrequencies::getSpectralCoordinate( uInt id ) const
   ROTableRow row(t);
   // get first row - there should only be one matching id
   const TableRecord& rec = row.get(0);
-
   return SpectralCoordinate( getFrame(true), rec.asDouble("REFVAL"),
                              rec.asDouble("INCREMENT"),
                              rec.asDouble("REFPIX"));
@@ -164,10 +163,10 @@ SpectralCoordinate STFrequencies::getSpectralCoordinate( uInt id ) const
 
 /**
 SpectralCoordinate
-  asap::STFrequencies::getSpectralCoordinate( const MDirection& md,
-                                              const MPosition& mp,
-                                              const MEpoch& me,
-                                              Double restfreq, uInt id ) const
+  STFrequencies::getSpectralCoordinate( const MDirection& md,
+					const MPosition& mp,
+					const MEpoch& me,
+					Double restfreq, uInt id ) const
 **/
 SpectralCoordinate
   asap::STFrequencies::getSpectralCoordinate( const MDirection& md,

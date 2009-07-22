@@ -64,7 +64,7 @@ public:
   /**
     * average a vector of Scantables
     * @param in the vector of Scantables to average
-    * @param an optional mask to apply on specific weights
+    * @param mask an optional mask to apply on specific weights
     * @param weight weighting scheme
     * @param avmode the mode ov averaging. Per "SCAN" or "ALL".
     * @return a casa::CountedPtr<Scantable> which either holds a new Scantable
@@ -313,6 +313,9 @@ private:
 
   casa::MaskedArray<casa::Float>
     maskedArray( const casa::Vector<casa::Float>& s,
+                 const casa::Vector<casa::uChar>& f );
+  casa::MaskedArray<casa::Double>
+    maskedArray( const casa::Vector<casa::Double>& s,
                  const casa::Vector<casa::uChar>& f );
   casa::Vector<casa::uChar>
     flagsFromMA(const casa::MaskedArray<casa::Float>& ma);

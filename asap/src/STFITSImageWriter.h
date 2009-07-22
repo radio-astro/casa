@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
-//# python_STFiller.cc: python exposure of c++ STFiller class
+//# STFITSImageWriter.h: ASAP class to write out single dish spectra as image FITS
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2008
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -26,30 +26,43 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STFiller.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: STFITSImageWriter.h 1106 2006-08-03 00:28:39Z mar637 $
 //#---------------------------------------------------------------------------
-#include <boost/python.hpp>
+#ifndef STFITSIMAGEWRITER_H
+#define STFITSIMAGEWRITER_H
 
-#include "ScantableWrapper.h"
-#include "STFillerWrapper.h"
+#include <casa/aips.h>
+#include <casa/BasicSL/String.h>
+#include <casa/ostream.h>
 
-using namespace boost::python;
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include "Scantable.h"
+#include "Logger.h"
 
 namespace asap {
-  namespace python {
+/**
+ * A class to export a Scantable to FITS file(s)
+ */
+class STFITSImageWriter : public Logger {
+public:
+// Constructor
+  STFITSImageWriter();
 
-    void python_STFiller() {
-      class_<STFillerWrapper>("stfiller")
-        .def( init < ScantableWrapper > () )
-        .def( init < std::string, int, int > () )
-        .def("_open", &STFillerWrapper::open)
-        .def("_read", &STFillerWrapper::read)
-        .def("_close", &STFillerWrapper::close)
-        .def("_getdata", &STFillerWrapper::getScantable)
-        .def("_setreferenceexpr", &STFillerWrapper::setReferenceExpr)
-      ;
-    };
+// Destructor
+  virtual ~STFITSImageWriter();
 
-  } //namespace python
-} // namespace asap
+// Write out ascii table
+  casa::Bool write(const Scantable& table, const casa::String& name);
 
+  void setClass(casa::Bool flag)  { isClass_ = flag; }
+
+private:
+  casa::DirectionCoordinate getDirectionCoordinate(const casa::String& reff,
+                                                   casa::Double lon, 
+                                                   casa::Double lat);
+
+  casa::Bool isClass_;
+};
+
+}// namespace
+#endif
