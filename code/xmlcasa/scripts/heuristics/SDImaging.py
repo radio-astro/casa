@@ -132,7 +132,9 @@ def MakeImage(sdMS, outImagename=None, ngridx=100, ngridy=100, cellx='1arcsec', 
     #im.setoptions(ftmachine='sd', cache=1000000000)
     # 2009/2/5 invalid keyword applypointingcorrections for casapy-23.1.6826
     #im.setoptions(ftmachine='sd', applypointingoffsets=False, applypointingcorrections=False)
-    im.setoptions(ftmachine='sd', applypointingoffsets=False)
+    # 2009/6/17 for BoxCar
+    #im.setoptions(ftmachine='sd', applypointingoffsets=False)
+    im.setoptions(ftmachine='sd', applypointingoffsets=False, gridfunction='BOX')
     #im.setoptions(ftmachine='sd')
     im.setsdoptions(convsupport=convsupport) # set convolution support to 5 pixels (default)
     im.makeimage(type='singledish',image=outImagename)

@@ -119,7 +119,7 @@ void PlotMSPlotParameters::setGroup(const Group& group) {
         g = group.clone();
         g->itsParent_ = this;
         itsGroups_.push_back(g);
-        groupUpdated(g, g->requiresRedrawOnChange());
+        groupUpdated(g, true);//g->requiresRedrawOnChange());
     } else {
         *g = group;
     }

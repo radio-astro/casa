@@ -66,7 +66,7 @@ imager.
 <returns type="imager"/>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS')      
+im = imager('3C273XC1.MS')      
 im.setimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
 im.image(type='corrected', image='3C273XC1.dirty')
 im.close()
@@ -138,7 +138,7 @@ for the beam size both in the plane of the sky and along the $w$ axis.
      <description>Number of pixels on a side</description>
      </param>
 
-     <param type="double" direction="out" name="cell" units="arcsec">
+     <param type="record" direction="out" name="cell">
      <description>Recommended maximum cellsize</description>
      </param>
 
@@ -739,14 +739,14 @@ the image is made is not going to be the same as to the one as the one
 used in gridding the visibility and can lead to image artifacts.  For
 {\tt mode='velocity'} and {\tt mode='frequency'} the {\tt step}
 parameter has to be a measure/quantity of velocity or frequency,
-otherwise for {\tt model='channel'} step is the number of data
+otherwise for {\tt mode='channel'} step is the number of data
 channels to be averaged to make one image channel( see examples
 below).
 
 
 The phase center of the image defaults to that of the specified
 phasecenter (the first fieldid in the ms is taken if none is
-specified), this parameter can be a fieldid or a measue string or the
+specified), this parameter can be a fieldid or a measure string or the
 record output from the direction function of the measures tool( <link
  anchor="measures:measures.direction.function">direction</link> ).  
 This is important if you have multiple pointings in the data. The user 
@@ -1270,15 +1270,15 @@ the weights. Use the function <link anchor="imager:imager.summary.function">summ
  
 </description>
 <output>
-     <param type="double" direction="out" name="bmaj" units="rad">
+     <param type="record" direction="out" name="bmaj">
      <description>Major axis of beam</description>
      </param>
 
-     <param type="double" direction="out" name="bmin" units="rad">
+     <param type="record" direction="out" name="bmin">
      <description>Minor axis of beam</description>
      </param>
 
-     <param type="double" direction="out" name="bpa" units="deg">
+     <param type="record" direction="out" name="bpa">
      <description>Position angle of beam</description>
      </param>
 </output>
@@ -1335,7 +1335,7 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
        <description>
 	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
        </description>
-       <value>-1</value>
+       <value>-1</value> <!-- <value></value> does not work! -->
      </param>	
      <!-- <param type="any" direction="in" name="phasedirs"> -->
      <!--  <any type="record"/>  -->
@@ -1595,7 +1595,7 @@ at some level. For example:
 
 ia.open('scanweight'); 
  ia.statistics(s);	
-threshold := s.max / 10.0;
+threshold = s.max / 10.0;
 #
 ia.imagecalc('sdimage',
 	      pixels=spaste('scanimage[scanweight&gt;', threshold,
@@ -2298,8 +2298,8 @@ versus time (after sorting).
 <returns type="bool"/>
 <example>
 \begin{verbatim}
-m:=fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
-im:=imager('3C273XC1.ms')
+m = fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
+im = imager('3C273XC1.ms')
 im.plotsummary()
 \end{verbatim}
 </example>
@@ -2487,9 +2487,9 @@ im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
 ia.open('dirty')
-cs:=ia.coordsys()
+cs = ia.coordsys()
 rg.setcoordinates(cs.record())
-r1:=dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
+r1 = dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
 im.regionmask(mask='bigmask',region=r1)
 
 Or using a dict of regions:
@@ -2530,7 +2530,7 @@ allow us to pick the one we want.
 
 myregionoftoday
 
-- myoldregion:=drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
+- myoldregion = drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
@@ -2602,9 +2602,9 @@ im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
 ia.open('dirty')
-cs:=ia.coordsys()
+cs = ia.coordsys()
 rg.setcoordinates(cs.record())
-r1:=dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
+r1 = dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
 im.regionmask(mask='bigmask',region=r1)
 
 Or using a dict of regions:
@@ -2645,7 +2645,7 @@ allow us to pick the one we want.
 
 myregionoftoday
 
-- myoldregion:=drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
+- myoldregion = drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
@@ -2756,7 +2756,7 @@ of <link anchor="imager:imager.weight.function">weight</link> and <link anchor="
 
 </description>
 <output>
-     <param type="double" direction="out" name="pointsource" units="Jy/beam">
+     <param type="record" direction="out" name="pointsource">
      <description>Calculated point source sensitivity (Jy/beam)</description>
      </param>
 
@@ -3011,7 +3011,7 @@ im.setimage(mode='velocity', nchan=200, mstart='20km/s',
 </input>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS');
+im = imager('3C273XC1.MS');
 im.setdata(nchan=512,start=1,step=1, msselect='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2)
 \end{verbatim}
 </example>
@@ -3210,7 +3210,7 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
 </input>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS');
+im = imager('3C273XC1.MS');
 im.selectvis(nchan=512,start=1,step=1, taql='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2')
 \end{verbatim}
 
@@ -3432,9 +3432,9 @@ myimager.clean(algorithm='mfclark', niter=1000, model='mosaic')
 
 ## Example 4
 
-dir1:=dm.direction('J2000', '20h00m00', '21d00m00')
-dir2:=dm.direction('J2000', '20h10m00', '21d00m00')
-dir3:=dm.direction('J2000', '20h00m00', '21d03m00')
+dir1 = dm.direction('J2000', '20h00m00', '21d00m00')
+dir2 = dm.direction('J2000', '20h10m00', '21d00m00')
+dir3 = dm.direction('J2000', '20h00m00', '21d03m00')
 im.setimage(nx=100, ny=100, cellx='0.1arcsec', celly='0.1arsec',
               doshift=T, phasecenter=dir1)
 im.make('box1')
@@ -3859,10 +3859,10 @@ an outlier field (or flanking) field is set on an interfering  source
 outside of the field of interest.
 
 \begin{verbatim}
-pim:=imager('coma.ms')
+pim = imager('coma.ms')
 
 pim.setdata(spwid=1, fieldid=1);
-mydir:=dm.direction('J2000', '12h30m48', '12d24m0')
+mydir = dm.direction('J2000', '12h30m48', '12d24m0')
 pim.setimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', doshift=T, phasecenter=mydir); 
 pim.make('outlier1');
 pim.setimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
@@ -4198,7 +4198,7 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 <returns type="bool"/>
 <example>
 \begin{verbatim}
-- im:=imager('3C273XC1.MS');
+- im = imager('3C273XC1.MS');
 - im.setimage(npix=[256,256])
 - im.summary()
 \end{verbatim}

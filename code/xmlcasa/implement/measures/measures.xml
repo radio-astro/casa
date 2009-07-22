@@ -60,12 +60,12 @@ Show direction measure as a string.
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>a direction measure value to be converted to string
      </description>
      </param>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 dirshow will convert a direction measure to a string
 </description>
@@ -76,13 +76,9 @@ dirshow will convert a direction measure to a string
 -->
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t dirshow Ex 1 \t----"
 print me.dirshow(me.direction('venus'))
 #[0, 90] deg  VENUS
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -101,7 +97,7 @@ print me.dirshow(me.direction('venus'))
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure value to be converted to string</description>
      </param>
 
@@ -110,7 +106,7 @@ print me.dirshow(me.direction('venus'))
      <value>true</value>
      </param>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 show will convert a measure to a string.
 <!--
@@ -124,15 +120,11 @@ radialvelocity, frequency, doppler, baseline, uvw, earthmagnetic} ).
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t show Ex 1 \t----"
 print me.show(me.frequency('lsrk', qa.constants('HI')))
 #1.42041e+09 Hz LSRK
 print me.show(me.frequency('lsrk', qa.constants('HI')), refcode=false)
 #1.42041e+09 Hz
-#
-"""
 \end{verbatim}
 </example>
 <!--
@@ -160,13 +152,13 @@ print me.show(me.frequency('lsrk', qa.constants('HI')), refcode=false)
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>epoch value</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset epoch measure</description>
      <value></value>
      </param>
@@ -174,7 +166,7 @@ print me.show(me.frequency('lsrk', qa.constants('HI')), refcode=false)
 </input>
 <returns type="any">
 <shortdescription>epoch measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 epoch defines an epoch measure from the CLI. It has to specify a
@@ -189,28 +181,21 @@ epoch. Allowable reference codes are:
 Note that additional ones may become available. Check in \casa\ with:
 
 \begin{verbatim}
-"""
-#
 print "\t----\t epoch Ex 1 \t----"
 print me.listcodes(me.epoch())
 #{'normal': ['LAST', 'LMST', 'GMST1', 'GAST', 'UT1', 'UT2', 'UTC', 'TAI',
 # 'TDT', 'TCG', 'TDB', 'TCB', 'IAT', 'GMST', 'TT', 'ET', 'UT'], 'extra': []}
 #
-"""
 \end{verbatim}
 See <link anchor="quanta">quantity</link> for possible time formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t epoch Ex 2 \t----"
 print me.epoch('utc','today') 
 #{'m0': {'value': 54048.861237743055, 'unit': 'd'},
 # 'refer': 'UTC',
 # 'type': 'epoch'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -230,25 +215,25 @@ print me.epoch('utc','today')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>longitude</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v1">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>latitude</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset direction measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
-<any type="record"/>
+<any type="record"></any>
 <shortdescription>direction measure</shortdescription>
 </returns>
 <description>
@@ -264,8 +249,6 @@ SUPERGAL ECLIPTIC MECLIPTIC TECLIPTIC MERCURY
 VENUS MARS JUPITER SATURN URANUS NEPTUNE PLUTO MOON SUN COMET}.\\
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}
-"""
-#
 print "\t----\t direction Ex 1 \t----"
 print me.listcodes(me.direction())
 #{'normal': ['J2000', 'JMEAN', 'JTRUE', 'APP', 'B1950', 'BMEAN',
@@ -274,8 +257,6 @@ print me.listcodes(me.direction())
 #'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO', 'ICRS'], 'extra': ['MERCURY',
 #'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO',
 #'SUN', 'MOON', 'COMET']}
-#
-"""
 \end{verbatim}  
 The direction quantity values should be longitude(angle) and
 latitude(angle) (none needed for planets: the frame epoch defines coordinates).
@@ -283,8 +264,6 @@ See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t direction Ex 2 \t----"
 print me.direction('j2000','30deg','40deg')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -297,8 +276,6 @@ print me.direction('mars')
 # 'm1': {'value': 1.5707963267948966, 'unit': 'rad'},
 # 'refer': 'MARS',
 # 'type': 'direction'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -309,11 +286,11 @@ print me.direction('mars')
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure (array of measures)</description>
      </param>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="any"><any type="record"></any>
 <shortdescription>array of quantities</shortdescription>
 </returns>
 <description>
@@ -321,15 +298,11 @@ getvalue gets the actual implementation value of the measure.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t getvalue Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
 #{'m0': {'value': 0.0, 'unit': 'rad'},
 # 'm1': {'value': 1.3962634015954634, 'unit': 'rad'}}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -340,18 +313,16 @@ print me.getvalue(b)
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure (array of measures)</description>
      </param>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 gettype gets the actual type of the measure.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t gettype Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -359,8 +330,6 @@ print me.getvalue(b)
 # 'm1': {'value': 1.3962634015954634, 'unit': 'rad'}}
 print me.gettype(b)
 #'Direction'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -371,18 +340,16 @@ print me.gettype(b)
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure (array of measures)</description>
      </param>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 gettype gets the actual reference code of the measure.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t getref Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -392,8 +359,6 @@ print me.gettype(b)
 #'Direction'
 print me.getref(b)
 #'J2000'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -404,13 +369,13 @@ print me.getref(b)
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure (array of measures)</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>measure or boolean</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 getoff gets the actual offset of the measure (as a measure) or F if no offset
@@ -418,8 +383,6 @@ given.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t getoffset Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -431,8 +394,6 @@ print me.getref(b)
 #'J2000'
 print me.getoffset(b)
 #{}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -442,21 +403,17 @@ print me.getoffset(b)
    
 <input>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 cometname gets the name of the current comet (if any).
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t cometname Ex 1 \t----"
 print me.cometname()
 #Thu Nov 9 21:27:25 2006      WARN :
 #Method cometname fails! No Comet table present
 #''
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -466,19 +423,15 @@ print me.cometname()
    
 <input>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 comettype gets the comet table type (apparent or topocentric)
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t comettype Ex 1 \t----"
 print me.comettype()
 # 'none'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -488,7 +441,7 @@ print me.comettype()
    
 <input>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="any"><any type="record"></any>
 <shortdescription>position measure or fail</shortdescription>
 </returns>
 <description>
@@ -496,15 +449,11 @@ comettopo gets the comet table's topographic coordinates used.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t comettopo Ex 1 \t----"
 print me.comettopo()
 #Thu Nov 9 21:45:40 2006      WARN :
 #Method comettopo fails!  No Topocentric Comet table present
 #{'value': [0.0], 'unit': ''}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -519,14 +468,12 @@ print me.comettopo()
      <value></value>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="bool"></returns>
 <description>
 framecomet will put the specified comet table in the frame.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t framecomet Ex 1 \t----"
 print me.framecomet('VGEO')
 #True
@@ -543,8 +490,6 @@ print me.measure(me.direction('comet'),'app')
 # 'm1': {'value': -0.34710256485894436, 'unit': 'rad'},
 # 'refer': 'APP',
 # 'type': 'direction'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -564,32 +509,32 @@ print me.measure(me.direction('comet'),'app')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>longitude or x</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v1">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>latitude or y</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v2">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>height or z</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset position measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>position measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 position defines a position measure from the CLI. It has to specify a 
@@ -603,13 +548,9 @@ offset, which in itself has to be a position. Allowable reference codes are:
 Reference Frame).\\               
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}            
-"""
-#
 print "\t----\t position Ex 1 \t----"
 print me.listcodes(me.position())
 #{'normal': ['ITRF', 'WGS84'], 'extra': []}
-#
-"""
 \end{verbatim}                                               
  The position quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
@@ -617,8 +558,6 @@ See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t position Ex 2 \t----"
 print me.position('wgs84','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -632,8 +571,6 @@ print me.observatory('ATCA')
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'},
 # 'refer': 'ITRF',
 # 'type': 'position'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -650,7 +587,7 @@ print me.observatory('ATCA')
 </input>
 <returns type="any">
 <shortdescription>position measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 observatory will give you the position of an observatory as given in the
@@ -662,8 +599,6 @@ me.obslist() tool function):
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t observatory Ex 1 \t----"
 print me.observatory('ATCA')
 #{'m0': {'value': 2.6101423190348916, 'unit': 'rad'},
@@ -671,8 +606,6 @@ print me.observatory('ATCA')
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'},
 # 'refer': 'ITRF',
 # 'type': 'position'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -691,15 +624,11 @@ observatories known in the Observatories table.
 anchor="measuresdata">measuresdata</link> module). -->
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t obslist Ex 1 \t----"
 print me.obslist()
 #'ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM
 # PDB IRAM_PDB JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO
 # SMA VLA VLBA WSRT'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -707,7 +636,7 @@ print me.obslist()
    <method type="function" name="linelist">
    <shortdescription>get a list of known spectral lines</shortdescription>
    
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 linelist will give you a string with a space separated list of spectral lines
 known in the Lines table.
@@ -719,14 +648,10 @@ the tens of thousands of lines.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t linelist Ex 1 \t----"
 print me.linelist()
 #'C109A CI CII166A DI H107A H110A H138B H166A H240A H272A
 # H2CO HE110A HE138B HI OH1612 OH1665 OH1667 OH1720'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -741,22 +666,18 @@ print me.linelist()
      <value>HI</value>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="any"><any type="record"></any></returns>
 <description>
 spectralline will give you the frequency of a spectral line. The known list
 can be obtained by <link anchor="measures:measures.linelist.function">me.linelist()</link>.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t spectralline Ex 1 \t----"
 print me.spectralline('HI')
 #{'m0': {'value': 1420405751.786, 'unit': 'Hz'},
 # 'refer': 'REST',
 # 'type': 'frequency'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -764,7 +685,7 @@ print me.spectralline('HI')
    <method type="function" name="sourcelist">
    <shortdescription>get a list of known sources</shortdescription>
    
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 sourcelist will give you a string with the space separated list of sources 
 known in the Sources table.
@@ -772,14 +693,10 @@ known in the Sources table.
 <!-- (see <link anchor="measuresdata">measuresdata</link> module). -->
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t sourcelist Ex 1 \t----"
 print me.sourcelist()[0:62]
 #'0002-478 0003+380 0003-066 0007+106 0007+171 0008-264 0008-421'
 #......
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -791,13 +708,13 @@ print me.sourcelist()[0:62]
 
      <param type="any" direction="in" name="name">
      <description>name</description>
-     <any type="variant"/>
+     <any type="variant"></any>
      <value>1934-638</value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>direction measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 source will give you the direction of a source. The known list
@@ -805,8 +722,6 @@ can be obtained by <link anchor="measures:measures.sourcelist.function">me.sourc
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t source Ex 1 \t----"
 print me.source()
 print me.source('1934-638')
@@ -815,8 +730,6 @@ print me.source('1934-638')
 # 'm1': {'value': -1.1119959323803881, 'unit': 'rad'},
 # 'refer': 'ICRS',
 # 'type': 'direction'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -836,20 +749,20 @@ print me.source('1934-638')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>frequency/wavelength/\ldots</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset frequency measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 frequency defines a frequency measure from the CLI. It has to specify a 
@@ -862,14 +775,10 @@ offset, which in itself has to be a frequency. Allowable reference codes are:
 {\em REST LSRK LSRD BARY GEO TOPO GALACTO LGROUP CMB}.\\
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}
-"""
-#
 print "\t----\t frequency Ex 1 \t----"
 print me.listcodes(me.frequency())
 #{'normal': ['REST', 'LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO',
 # 'GALACTO', 'LGROUP', 'CMB'], 'extra': []}
-#
-"""
 \end{verbatim}
 The frequency quantity values should be in one of the recognised units
 (examples all give same frequency):
@@ -885,8 +794,6 @@ The frequency quantity values should be in one of the recognised units
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t frequency Ex 2 \t----"
 print me.frequency('lsrk','5GHz')
 #{'m0': {'value': 5000000000.0, 'unit': 'Hz'},
@@ -896,8 +803,6 @@ print me.frequency('lsrk','21cm')
 #{'m0': {'value': 1427583133.3333333, 'unit': 'Hz'},
 # 'refer': 'LSRK',
 # 'type': 'frequency'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -917,20 +822,20 @@ print me.frequency('lsrk','21cm')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <value></value>
      <description>doppler ratio/velocity</description>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset doppler measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>doppler measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 doppler defines a doppler measure from the CLI. It has to specify a 
@@ -943,14 +848,11 @@ which in itself has to be a doppler. Allowable reference codes are:
 {\em RADIO Z RATIO BETA GAMMA OPTICAL TRUE RELATIVISTIC}.\\
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}   
-"""
-#
+
 print "\t----\t doppler Ex 1 \t----"
 print me.listcodes(me.doppler())
 #{'normal': ['RADIO', 'Z', 'RATIO', 'BETA', 'GAMMA', 'OPTICAL',
 # 'TRUE', 'RELATIVISTIC'], 'extra': []}
-#
-"""
 \end{verbatim}
 The doppler quantity values should be either non-dimensioned to specify a
 ratio of the light velocity, or in velocity.
@@ -958,8 +860,6 @@ ratio of the light velocity, or in velocity.
 <example>
 Examples both give same doppler:
 \begin{verbatim}
-"""
-#
 print "\t----\t doppler Ex 2 \t----"
 print me.doppler('radio','0.4')
 #{'m0': {'value': 119916983.2, 'unit': 'm/s'},
@@ -969,8 +869,6 @@ print me.doppler('radio',qa.mul(qa.quantity('0.4'),qa.constants('c')))
 #{'m0': {'value': 119916983.2, 'unit': 'm/s'},
 # 'refer': 'RADIO',
 # 'type': 'doppler'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -990,20 +888,20 @@ print me.doppler('radio',qa.mul(qa.quantity('0.4'),qa.constants('c')))
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>radial velocity</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset radialvelocity measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>radialvelocity measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 radialvelocity defines a radialvelocity measure from the CLI. It has to
@@ -1018,31 +916,24 @@ Allowable reference codes are:
 {\em LSRK LSRD BARY GEO TOPO GALACTO LGROUP CMB}.\\                          
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}                                                    
-"""
-#
+
 print "\t----\t radialvelocity Ex 1 \t----"
 print me.listcodes(me.radialvelocity())
 #  Out[17]:
 #{'extra': [],
 # 'normal': ['LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO', 'GALACTO',
 # 'LGROUP', 'CMB']}
-#
-"""
 \end{verbatim}
 The radialvelocity quantity values should be given as velocity.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t radialvelocity Ex 2 \t----"
 print me.radialvelocity('lsrk','20km/s')
 #  Out[18]:
 #{'m0': {'value': 20000.0, 'unit': 'm/s'},
 # 'refer': 'LSRK',
 # 'type': 'radialvelocity'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1061,32 +952,32 @@ print me.radialvelocity('lsrk','20km/s')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>longitude or x</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v1">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>latitude or y</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v2">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>height or z</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record" />
+     <any type="record"></any>
      <description>optional offset uvw measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>uvw measure</shortdescription>
-<any type="record" />
+<any type="record"></any>
 </returns>
 <description>
 uvw defines a uvw measure from the CLI. It has to specify a 
@@ -1097,8 +988,6 @@ offset, which in itself has to be a uvw. Allowable reference codes are
 ITRF and the direction ones.\\
 Note that additional ones may become available. Check in \casa\ with: 
 \begin{verbatim}
-"""
-#
 print "\t----\t uvw Ex 1 \t----"
 print me.listcodes(me.uvw())
 #{'normal': ['J2000', 'JMEAN', 'JTRUE', 'APP', 'B1950', 'BMEAN',
@@ -1106,8 +995,6 @@ print me.listcodes(me.uvw())
 # 'AZELGEO', 'AZELSWGEO', 'AZELNEGEO', 'JNAT', 'ECLIPTIC',
 # 'MECLIPTIC', 'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO',
 # 'ICRS'], 'extra': []}
-#
-"""
 \end{verbatim}
 The uvw quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
@@ -1115,8 +1002,6 @@ See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t uvw Ex 2 \t----"
 print me.uvw('itrf','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -1136,8 +1021,6 @@ print me.measure(me.uvw('itrf','30deg','40deg','10m'), 'j2000')
 # 'm2': {'value': 10.0, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'uvw'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1151,26 +1034,26 @@ print me.measure(me.uvw('itrf','30deg','40deg','10m'), 'j2000')
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>baseline measure</description>
      </param>
 
 </input>
 <output>
      <param type="any" direction="out" name="dot">
-     <any type="record"/>
+     <any type="record"></any>
      <description>uvw-dot (quantity array)</description>
      </param>
 
      <param type="any" direction="out" name="xyz">
-     <any type="record"/>
+     <any type="record"></any>
      <description>uvw (quantity array)</description>
      </param>
 
 </output>
 <returns type="any">
 <shortdescription>uvw measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 touvw calculates a uvw measure from a baseline. <!-- The baseline can
@@ -1200,8 +1083,6 @@ other, the time should be specified as well.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t touvw Ex 1 \t----"
 print me.doframe(me.observatory('atca'))
 #True
@@ -1230,8 +1111,6 @@ print me.getvalue(me.touvw(b))
 # 'm2': {'value': 37.416573867739416, 'unit': 'm'}}
 print me.getvalue(me.touvw(b))['m0']
 #{'value': -0.094777304811312649, 'unit': 'rad'}
-#
-"""
 \end{verbatim}
 <!--
 An example with more than one value:
@@ -1311,19 +1190,19 @@ print a
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure (baseline, position or uvw measure)</description>
      </param>
 </input>
 <output>
      <param type="any" direction="out" name="xyz">
-     <any type="record"/>
+     <any type="record"></any>
      <description>uvw (quantity array)</description>
      </param>
 </output>
 
 <returns type="any"><shortdescription>measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 expand calculates the differences between a series of given measure
@@ -1333,8 +1212,6 @@ variable {\em xyz} will be set to an array of values.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t expand Ex 1 \t----"
 b=me.baseline('itrf','10m','20m','30m')
 print me.expand(b)
@@ -1344,8 +1221,6 @@ print me.expand(b)
 #            'refer': 'J2000',
 #            'type': 'uvw'},
 # 'xyz': {'value': [10.000000000000004, 20.000000000000004, 30.0], 'unit': 'm'}}
-#
-"""
 \end{verbatim}
 <!--
 sb = me.baseline('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
@@ -1377,32 +1252,32 @@ print me.expand(sb,x); x
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <value></value>
      <description>Field strength</description>
      </param>
 
      <param type="any" direction="in" name="v1">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>longitude</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v2">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>latitude</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset earthmagnetic measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>earthmagnetic measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 earthmagnetic defines an earthmagnetic measure from the CLI. It needs
@@ -1424,8 +1299,6 @@ See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t earthmagnetic Ex 1 \t----"
 print me.earthmagnetic('igrf')
 #{'type': 'earthmagnetic', 'refer': 'IGRF', 'm1': {'value': 0.0, 'unit': 'nT'},
@@ -1439,8 +1312,6 @@ print me.measure(me.earthmagnetic('igrf'), 'j2000')
 # 'm1': {'value': -8664.8767628222304, 'unit': 'nT'},
 # 'm0': {'value': 50544.054410564473, 'unit': 'nT'},
 # 'm2': {'value': 1799.5131920958615, 'unit': 'nT'}}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1459,32 +1330,32 @@ print me.measure(me.earthmagnetic('igrf'), 'j2000')
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>longitude or x</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v1">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>latitude or y</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="v2">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>height or z</description>
      <value></value>
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional offset baseline measure</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>baseline measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 baseline defines a baseline measure from the CLI. It has to specify a 
@@ -1495,16 +1366,12 @@ offset, which in itself has to be a baseline. Allowable reference codes are
 ITRF and the direction ones.\\
 Note that additional ones may become available. Check in \casa\ with:
 \begin{verbatim}
-"""
-#
 print "\t----\t baseline Ex 1 \t----"
 print me.listcodes(me.baseline())
 #{'normal': ['J2000', 'JMEAN', 'JTRUE', 'APP', 'B1950', 'BMEAN', 'BTRUE',
 # 'GALACTIC', 'HADEC', 'AZEL', 'AZELSW', 'AZELNE', 'AZELGEO', 'AZELSWGEO',
 # 'AZELNEGEO', 'JNAT', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC', 'SUPERGAL',
 # 'ITRF', 'TOPO', 'ICRS'], 'extra': []}
-#
-"""
 \end{verbatim}
 The baseline quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
@@ -1512,8 +1379,6 @@ See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t Ex 2 \t----"
 print me.baseline('itrf','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -1530,8 +1395,6 @@ print me.measure(me.baseline('itrf','30deg','40deg','10m'), 'J2000')
 # 'm2': {'value': 9.9999999999999964, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'baseline'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1545,13 +1408,13 @@ print me.measure(me.baseline('itrf','30deg','40deg','10m'), 'J2000')
 <input>
 
      <param type="any" direction="in" name="pos">
-     <any type="record"/>
+     <any type="record"></any>
      <description>position measure</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>baseline measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 asbaseline converts a position measure into a baseline measure. No
@@ -1560,8 +1423,6 @@ positions, with subtractions to obtain baselines at a later stage.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t asbaseline Ex 1 \t----"
 b = me.position('itrf', '10m', '20m', '30m');
 print b
@@ -1576,8 +1437,6 @@ print me.asbaseline(b)
 # 'm2': {'value': 37.416573867739416, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'baseline'}
-#
-"""
 \end{verbatim}
 <!--
 sb = me.position('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
@@ -1615,13 +1474,13 @@ print b; print me.asbaseline(b); print sb; print me.asbaseline(sb)
 <input>
 
      <param type="any" direction="in" name="ms">
-     <any type="record"/>
+     <any type="record"></any>
      <description>the measure type for which to list</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>record with two string vectors</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 listcodes will produce the known reference codes for a specified measure
@@ -1631,8 +1490,6 @@ codes (like planets).
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t listcodes Ex 1 \t----"
 # Generate some direction
 # Note that an empty or non-specified reference code will produce the
@@ -1650,8 +1507,6 @@ print me.listcodes(a)
 #'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO', 'ICRS'],
 #'extra': ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS',
 #'NEPTUNE', 'PLUTO', 'SUN', 'MOON', 'COMET']}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1665,7 +1520,7 @@ print me.listcodes(a)
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measure to be converted</description>
      </param>
 
@@ -1674,7 +1529,7 @@ print me.listcodes(a)
      </param>
 
      <param type="any" direction="in" name="off">
-     <any type="record"/>
+     <any type="record"></any>
      <description>optional output offset measure</description>
      <value></value>
      </param>
@@ -1682,7 +1537,7 @@ print me.listcodes(a)
 </input>
 <returns type="any">
 <shortdescription>measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 measure converts measures (epoch, direction etc.) from one reference to
@@ -1713,8 +1568,6 @@ needed please ask an enhancement. -->
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t measure Ex 1 \t----"
 a = me.epoch('utc','today') 			        # a time
 print a
@@ -1745,14 +1598,10 @@ print qa.angle(me.getvalue(me.measure(b,'azel'))['m0'])     # show as angles
 #['+110.15.38']
 print qa.angle(me.getvalue(me.measure(b,'azel'))['m1'])
 #['+043.48.41']
-#
-"""
 \end{verbatim}
 <!-- In the following the {\em qv} argument is used.-->
 Another example:
 \begin{verbatim}
-"""
-#
 print "\t----\t measure Ex 2 \t----"
 # Fill the frame with necessary information
 print me.doframe(me.epoch('utc','today'))
@@ -1773,8 +1622,6 @@ print me.measure(m,'lsrd')
 #{'m0': {'value': 1000001766.3928765, 'unit': 'Hz'},
 # 'refer': 'LSRD',
 # 'type': 'frequency'}
-#
-"""
 \end{verbatim}
 <!--
 # Make a list of frequencies to be converted
@@ -1800,11 +1647,11 @@ print a
 <input>
 
      <param type="any" direction="in" name="v">
-     <any type="record" />
+     <any type="record"></any>
      <description>measure to be set in frame</description>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="bool"></returns>
 <description>
 doframe will set the measure specified as part of a frame. <!-- The
  {\em Frame it} button on the different measure GUI's has the same effect. -->
@@ -1885,8 +1732,6 @@ in the following lists.\\
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t doframe Ex 1 \t----"
 a = me.epoch('utc', 'today') 			# a time
 print a
@@ -1895,8 +1740,6 @@ print a
 # 'type': 'epoch'}
 print me.doframe(a)					# set time in frame
 #True
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -1906,7 +1749,7 @@ print me.doframe(a)					# set time in frame
    
 <input>
 </input>
-<returns type="bool"/>
+<returns type="bool"></returns>
 <description>
 framenow will fill the active frame time with the current date and time.
 The different frame values necessary are described in the
@@ -1914,15 +1757,11 @@ The different frame values necessary are described in the
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t framenow Ex 1 \t----"
 print me.framenow()			# specify now as frame reference
 #True
 print me.showframe()	        # and show the current frame
 #'Frame: Epoch: 54054::22:01:42.2880'
-#
-"""
 \end{verbatim}
 <!-- epoch: 2002/10/18/00:15:49 UTC
      T
@@ -1935,7 +1774,7 @@ print me.showframe()	        # and show the current frame
    
 <input>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 showframe will display the currently active reference frame values <!-- in
 either a separate screen (if working in GUI environment), or --> on the
@@ -1948,15 +1787,11 @@ displayed on the terminal using the formatting as done for the
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t showframe Ex 1 \t----"
 print me.doframe(me.epoch('utc','today'))		# specify now as frame reference
 #T 
 print me.showframe()				# and show the current frame
 #'Frame: Epoch: 54054::22:01:42.2880'
-#
-"""
 \end{verbatim}
 <!-- epoch: 2002/10/18/00:15:49 UTC
 T -->
@@ -1975,13 +1810,13 @@ radial velocity</shortdescription>
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="record"/>
+     <any type="record"></any>
      <description>doppler value measure</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>radialvelocity measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 toradialvelocity will convert a Doppler type value (e.g. in radio mode) to a
@@ -1989,8 +1824,6 @@ real radialvelocity. The type of velocity (e.g. LSRK) should be specified
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t toradialvelocity Ex 1 \t----"
 a = me.doppler('radio','0.4')
 print a
@@ -2002,8 +1835,6 @@ print me.toradialvelocity('topo',a)
 #{'m0': {'value': 141078803.7647059, 'unit': 'm/s'},
 # 'refer': 'TOPO',
 # 'type': 'radialvelocity'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2018,18 +1849,18 @@ print me.toradialvelocity('topo',a)
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="record"/>
+     <any type="record"></any>
      <description>doppler measure value</description>
      </param>
 
      <param type="any" direction="in" name="rfq">
-     <any type="record"/>
+     <any type="record"></any>
      <description>rest frequency (frequency measure or freuency quantity)</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 tofrequency will convert a Doppler type value (e.g. in radio mode) to a
@@ -2039,8 +1870,6 @@ me.frequency('rest','5100MHz')) should be specified
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t tofrequency Ex 1 \t----"
 a=me.doppler('radio','0.4')
 print a
@@ -2051,8 +1880,6 @@ print me.tofrequency('lsrk',a,qa.constants('HI'))
 #{'m0': {'value': 852243451.07159996, 'unit': 'Hz'},
 # 'refer': 'LSRK',
 # 'type': 'frequency'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2068,19 +1895,19 @@ to a doppler measure</shortdescription>
      </param>
 
      <param type="any" direction="in" name="v0">
-     <any type="record"/>
+     <any type="record"></any>
      <description>radial velocity or frequency measure</description>
      </param>
 
      <param type="any" direction="in" name="rfq">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>rest frequency (frequency measure or frequency quantity)</description>
      <value></value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 todoppler will convert a radialvelocity measure or a frequency measure to a
@@ -2089,8 +1916,6 @@ specified. The type of doppler wanted (e.g. RADIO) has to be specified.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t todoppler Ex 1 \t----"
 f = me.frequency('lsrk','1410MHz')     # specify a frequency
 print f
@@ -2101,8 +1926,6 @@ print me.todoppler('radio', f, qa.constants('HI')) # give doppler, using HI rest
 #{'m0': {'value': 2196249.8401180855, 'unit': 'm/s'},
 # 'refer': 'RADIO',
 # 'type': 'doppler'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2114,18 +1937,18 @@ to a rest frequency</shortdescription>
 <input>
 
      <param type="any" direction="in" name="v0">
-     <any type="record"/>
+     <any type="record"></any>
      <description>frequency reference type</description>
      </param>
 
      <param type="any" direction="in" name="d0">
-     <any type="record"/>
+     <any type="record"></any>
      <description>doppler measure value</description>
      </param>
 </input>
 <returns type="any">
 <shortdescription>frequency measure</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 torestfrequency will convert a frequency measure and a doppler measure
@@ -2134,8 +1957,6 @@ rest frequency.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t torestfrequency Ex 1 \t----"
 dp = me.doppler('radio', '2196.24984km/s')  # a measured doppler speed 
 print dp
@@ -2151,8 +1972,6 @@ print me.torestfrequency(f, dp)                   # the corresponding rest frequ
 #{'m0': {'value': 1420405751.7854364, 'unit': 'Hz'},
 # 'refer': 'REST',
 # 'type': 'frequency'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2163,20 +1982,20 @@ print me.torestfrequency(f, dp)                   # the corresponding rest frequ
 <input>
 
      <param type="any" direction="in" name="crd">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>direction of source (direction measure)</description>
      <value></value>
      </param>
      <param type="any" direction="in" name="ev">
      <description>elevation angle limit</description>
-     <any type="variant"/>
+     <any type="variant"></any>
      <value>0.0deg</value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>record with rise and set siodereal time quantities; or a 2 element 
 string with below or above</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 rise will give the rise/set hour-angles of a source. It needs the position
@@ -2202,19 +2021,19 @@ print qa.form.long(me.rise(me.direction('sun')).rise)
 <input>
 
      <param type="any" direction="in" name="crd">
-     <any type="variant"/>
+     <any type="variant"></any>
      <description>direction of source (direction measure)</description>
      </param>
 
      <param type="any" direction="in" name="ev">
      <description>elevation limit</description>
-     <any type="variant"/>
+     <any type="variant"></any>
      <value>0.0deg</value>
      </param>
 </input>
 <returns type="any">
 <shortdescription>record with rise and set epoch or strings</shortdescription>
-<any type="record"/>
+<any type="record"></any>
 </returns>
 <description>
 rise will give the rise/set times of a source. It needs the position
@@ -2251,16 +2070,16 @@ print qa.form.long(me.riseset(me.direction('sun')).rise.utc.m0)
 <input>
 
      <param type="any" direction="in" name="m1">
-     <any type="record"/>
+     <any type="record"></any>
      <description>direction of source (direction measure)</description>
      </param>
 
      <param type="any" direction="in" name="m2">
-     <any type="record"/>
+     <any type="record"></any>
      <description>direction of other source (direction measure)</description>
      </param>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="any"><any type="record"></any>
 <shortdescription>position angle as angle quantity</shortdescription>
 </returns>
 <description>
@@ -2270,8 +2089,6 @@ direction.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t posangle Ex 1 \t----"
 a=me.direction('j2000','0deg','70deg')
 b=me.direction('j2000','0deg','80deg')
@@ -2287,8 +2104,6 @@ print me.doframe(pos)
 #True
 print me.posangle(a,b)
 #{'value': -0.0, 'unit': 'deg'}
-#
-"""
 \end{verbatim}
 <!-- : me.posangle(a,b)
 [value=7.99647705, unit=deg] ??? -->
@@ -2301,16 +2116,16 @@ print me.posangle(a,b)
 <input>
 
      <param type="any" direction="in" name="m1">
-     <any type="record"/>
+     <any type="record"></any>
      <description>direction of source (direction measure)</description>
      </param>
 
      <param type="any" direction="in" name="m2">
-     <any type="record"/>
+     <any type="record"></any>
      <description>direction of other source (direction measure)</description>
      </param>
 </input>
-<returns type="any"><any type="record"/>
+<returns type="any"><any type="record"></any>
 <shortdescription>position angle as angle quantity</shortdescription>
 </returns>
 <description>
@@ -2318,8 +2133,6 @@ separation will give the separation of a direction from another as an angle.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t separation Ex 1 \t----"
 a=me.direction('j2000','0deg','70deg')
 b=me.direction('j2000','0deg','80deg')
@@ -2334,8 +2147,6 @@ print me.doframe(pos)
 c=me.measure(b,'azel')                     # try with different type
 print me.separation(a,c)
 #{'value': 10.000000000062277, 'unit': 'deg'}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2348,11 +2159,11 @@ print me.separation(a,c)
    
 <input>
      <param type="any" direction="in" name="a">
-     <any type="record"/>
+     <any type="record"></any>
      <description>measures for which extra information is to be gotten</description>
      </param>
 </input>
-<returns type="any"><any type="record"/></returns>
+<returns type="any"><any type="record"></any></returns>
 <description>
 addxvalue will give some additional information about some measures as a vector
 of quantities. It is used internally to get the rectangular coordinates of
@@ -2361,8 +2172,6 @@ general not interested in this function.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t addxvalue Ex 1 \t----"
 a=me.observatory('atca')
 print a
@@ -2375,8 +2184,6 @@ print me.addxvalue(a)
 #{'value': [-4750915.8370000012, 2792906.1819999996, -3200483.747], 'unit': 'm'}
 print me.addxvalue(me.epoch('utc','today'))
 #{}
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2388,19 +2195,15 @@ print me.addxvalue(me.epoch('utc','today'))
    
 <input>
 </input>
-<returns type="string"/>
+<returns type="string"></returns>
 <description>
 type will return the tool name.
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t type Ex 1 \t----"
 print me.type()
 #'measures'
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2414,7 +2217,7 @@ print me.type()
    
 <input>
 </input>
-<returns type="bool"/>
+<returns type="bool"></returns>
 <description>
 In general you will not want to call this method.  It removes and then
 recreates the default measures tool.
@@ -2424,13 +2227,9 @@ argument is true. -->
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t done Ex 1 \t----"
 print me.done()
 #True
-#
-"""
 \end{verbatim}
 </example>
 </method>
@@ -2442,18 +2241,16 @@ print me.done()
    
 <input>
      <param type="any" direction="in" name="v">
-     <any type="record"/>
+     <any type="record"></any>
      <description>value to be tested</description>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="bool"></returns>
 <description>
 Checks if the operand is a correct measure
 </description>
 <example>
 \begin{verbatim}
-"""
-#
 print "\t----\t ismeasure Ex 1 \t----"
 x=me.epoch('utc','today')
 print x
@@ -2469,8 +2266,6 @@ print me.ismeasure(y)
 #False
 print "Last example, exiting!"
 exit()
-#
-"""
 \end{verbatim}
 </example>
 </method>

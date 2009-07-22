@@ -11,6 +11,7 @@
 # 10-Oct-2008 jfl complex display release.
 # 14-Nov-2008 jfl documentation upgrade release.
 # 12-Dec-2008 jfl 12-dec release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -174,15 +175,22 @@ class BaseDisplay:
 
         stageName = stageDescription['name']
         dataView.writeGeneralHTMLDescription(stageName)
-        dataOperator.writeGeneralHTMLDescription(stageName)
+        if dataOperator != None:
+            dataOperator.writeGeneralHTMLDescription(stageName)
         self.writeGeneralHTMLDescription(stageName)
 
         self._htmlLogger.logHTML('<h2>Results</h2>')
 
 # flagging stats
         
-        dataView.writeFlaggingStatistics(stageDescription, dataOperator.rules(),
-         dataOperator.potentiallyFlaggedTargetIDs())
+        flagMessage = None
+        colour = None
+        if dataOperator != None:
+            flagMessage,colour = dataView.writeFlaggingStatistics(
+             stageDescription, dataOperator.rules(),
+             dataOperator.potentiallyFlaggedTargetIDs())
+
+        return flagMessage, colour
 
 
     def writeBaseHTMLDescriptionTail(self, stageDescription, dataView,
@@ -205,5 +213,6 @@ class BaseDisplay:
 
         self._htmlLogger.logHTML('<h2>Algorithms</h2>')
         dataView.writeDetailedHTMLDescription(stageName, topLevel=True)
-        dataOperator.writeDetailedHTMLDescription(stageName)
+        if dataOperator != None:
+            dataOperator.writeDetailedHTMLDescription(stageName)
         self.writeDetailedHTMLDescription(stageName)

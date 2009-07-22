@@ -132,6 +132,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
+    <param type="string" name="pointingcolumn">
+            <description>pointing data column to use</description>
+            <value>direction</value>
+            <allowed kind="enum" ignorecase="True">
+                <value>target</value>
+                <value>pointing_offset</value>
+                <value>source_offset</value>
+                <value>encoder</value>
+                <value>direction</value>
+            </allowed>
+    </param>
+
     <constraints>
             <when param="specunit">
                 <equals type="string" value="channel"/>
@@ -225,6 +237,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 solar objects by the system, this task automatically set 
                 the source name. 
                 example: 'moon' 
+        pointingcolumn -- pointing data column to use
+                option: 'direction', 'target', 'pointing_offset', 'source_offset', 'encoder' 
+                default: 'direction'
 
 
         DESCRIPTION:

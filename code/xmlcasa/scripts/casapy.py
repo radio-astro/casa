@@ -329,20 +329,26 @@ def inp(taskname=None):
             myf.update({'__last_taskname':taskname})
 
         print '# ',myf['taskname']+' :: '+(eval(myf['taskname']+'.description()'))
-        update_params(myf['taskname'])
+        update_params(myf['taskname'], myf)
     except TypeError, e:
         print "inp --error: ", e
     except Exception, e:
         print "---",e
 
-def update_params(func, printtext=True):
+def update_params(func, printtext=True, ipython_globals=None):
     from odict import odict
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-    myf=sys._getframe(stacklevel).f_globals
+
+    if ipython_globals == None:
+        a=inspect.stack()
+        stacklevel=0
+        for k in range(len(a)):
+            if (string.find(a[k][1], 'ipython console') > 0):
+                stacklevel=k
+                break
+        myf=sys._getframe(stacklevel).f_globals
+    else:
+        myf=ipython_globals
+
     ### set task to the one being called
     myf['taskname']=func
     obj=myf[func]
@@ -370,12 +376,12 @@ def update_params(func, printtext=True):
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://'+xmlfile);
 
-    a=myf[myf['taskname']].defaults("paramkeys")
+    a=myf[myf['taskname']].defaults("paramkeys",myf)
 
     params=a
     itsparams = {}
     for k in range(len(params)):
-        paramval = obj.defaults(params[k])
+        paramval = obj.defaults(params[k], myf)
 
         notdict=True
         ###if a dictionary with key 0, 1 etc then need to peel-open
@@ -389,7 +395,7 @@ def update_params(func, printtext=True):
                 myf.update({params[k]:paramval})
             if(printtext):
                 if(hascheck):
-                    noerror = obj.check_params(params[k],myf[params[k]])
+                    noerror = obj.check_params(params[k],myf[params[k]],myf)
                 # RI this doesn't work with numpy arrays anymore.  Noone seems
                 # interested, so I'll be the red hen and try to fix it.
                 myfparamsk=myf[params[k]]
@@ -460,7 +466,7 @@ def update_params(func, printtext=True):
                         break
             subkey=subdict[choice].keys()
             if(hascheck):
-                noerror=obj.check_params(params[k],userval)
+                noerror=obj.check_params(params[k],userval,myf)
             if(printtext):
                 if(myf[params[k]]==paramval[0][valuekey]):
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]),'dpdef','black', noerror)
@@ -479,7 +485,7 @@ def update_params(func, printtext=True):
                     else:
                         comment='blue'
                     if(hascheck):
-                        noerror = obj.check_params(subkey[j],myf[subkey[j]])
+                        noerror = obj.check_params(subkey[j],myf[subkey[j]],myf)
                     if(printtext):
                         if(myf[subkey[j]]==paramval):
                             print_params_col(subkey[j],myf[subkey[j]],obj.description(subkey[j],userval),'spdef',comment, noerror)
@@ -633,7 +639,7 @@ def __set_default_parameters(b):
                 if((subkey[j] != 'value') & (subkey[j] != 'notvalue')):
                     myf[subkey[j]]=subdict[0][subkey[j]]
 
-def saveinputs(taskname=None, outfile='', myparams=None):
+def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
     #parameter_printvalues(arg_names,arg_values,arg_types)
     """ Save current input values to file on disk for a specified task:
 
@@ -646,12 +652,17 @@ def saveinputs(taskname=None, outfile='', myparams=None):
     """
 
     try:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        if ipython_globals == None:
+            a=inspect.stack()
+            stacklevel=0
+            for k in range(len(a)):
+                if (string.find(a[k][1], 'ipython console') > 0):
+                    stacklevel=k
+                    break
+            myf=sys._getframe(stacklevel).f_globals
+        else:
+            myf=ipython_globals
+
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if type(taskname)!=str:
@@ -673,7 +684,7 @@ def saveinputs(taskname=None, outfile='', myparams=None):
         myf['taskname']=taskname
         if outfile=='': outfile=taskname+'.saved'
         ##make sure unfolded parameters get their default values
-        myf['update_params'](func=myf['taskname'], printtext=False)
+        myf['update_params'](func=myf['taskname'], printtext=False, ipython_globals=myf)
         ###
         taskparameterfile=open(outfile,'w')
         print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)

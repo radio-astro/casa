@@ -39,6 +39,3 @@ casa::MRadialVelocity casaMRadialVelocityFromVar(const ::casac::variant& theVar)
 casa::MBaseline casaMBaselineFromVar(const ::casac::variant& theVar);
 casa::Muvw casaMuvwFromVar(const ::casac::variant& theVar);
 casa::MEarthMagnetic casaMEarthMagneticFromVar(const ::casac::variant& theVar);
-
-casac::record* recordFromQuantity(const casa::Quantity q);
-casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);

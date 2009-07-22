@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSwriter.h: Class to write out Parkes multibeam data.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,11 +25,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: PKSwriter.h,v 19.16 2008-11-17 06:46:36 cal103 Exp $
 //#---------------------------------------------------------------------------
 
 #ifndef ATNF_PKSWRITER_H
 #define ATNF_PKSWRITER_H
+
+#include <atnf/PKSIO/PKSrecord.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -37,11 +39,12 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to write out Parkes multibeam data.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSwriter
 {
   public:
@@ -56,58 +59,21 @@ class PKSwriter
         const String antName,
         const Vector<Double> antPosition,
         const String obsMode,
+        const String bunit,
         const Float  equinox,
         const String dopplerFrame,
         const Vector<uInt> nChan,
         const Vector<uInt> nPol,
         const Vector<Bool> haveXPol,
-        const Bool havebase,
-        const String fluxUnit) = 0;
+        const Bool havebase) = 0;
 
     // Write the next data record.
     virtual Int write (
-        const Int             scanNo,
-        const Int             cycleNo,
-        const Double          mjd,
-        const Double          interval,
-        const String          fieldName,
-        const String          srcName,
-        const Vector<Double>  srcDir,
-        const Vector<Double>  srcPM,
-        const Double          srcVel,
-        const String          obsMode,
-        const Int             IFno,
-        const Double          refFreq,
-        const Double          bandwidth,
-        const Double          freqInc,
-        //const Double          restFreq,
-        const Vector<Double>  restFreq,
-        const Vector<Float>   tcal,
-        const String          tcalTime,
-        const Float           azimuth,
-        const Float           elevation,
-        const Float           parAngle,
-        const Float           focusAxi,
-        const Float           focusTan,
-        const Float           focusRot,
-        const Float           temperature,
-        const Float           pressure,
-        const Float           humidity,
-        const Float           windSpeed,
-        const Float           windAz,
-        const Int             refBeam,
-        const Int             beamNo,
-        const Vector<Double>  direction,
-        const Vector<Double>  scanRate,
-        const Vector<Float>   tsys,
-        const Vector<Float>   sigma,
-        const Vector<Float>   calFctr,
-        const Matrix<Float>   baseLin,
-        const Matrix<Float>   baseSub,
-        const Matrix<Float>   &spectra,
-        const Matrix<uChar>   &flagged,
-        const Complex         xCalFctr,
-        const Vector<Complex> &xPol) = 0;
+        const PKSrecord &pksrec) = 0;
+
+    // Write a history record.
+    virtual Int history(const String text) {return 0;};
+    virtual Int history(const char *text)  {return 0;};
 
     // Close the output file.
     virtual void close() = 0;

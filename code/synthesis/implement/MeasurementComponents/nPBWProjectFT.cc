@@ -85,13 +85,14 @@
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
+#include <scimath/Mathematics/MathFunc.h>
 
 #include <casa/System/ProgressMeter.h>
 
 #define CONVSIZE (1024*4)
 #define CONVWTSIZEFACTOR 4.0
 #define OVERSAMPLING 20
-#define THRESHOLD 1E-3
+#define THRESHOLD 1E-5
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -1432,11 +1433,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	vlaPB.applyPB(twoDPB, vb, bandID_p);
 	vlaPB.applyPBSq(twoDPBSq, vb, bandID_p);
+	/*
+	{
+	  String name("twoDPB.before.im");
+	  storeImg(name,twoDPB);
+	}
+	{
+	  //
+	  // Apply (multiply) by the Spheroidal functions
+	  //
+	  Vector<Float> maxVal(twoDPB.shape()(2));
+	  Vector<IPosition> posMax(twoDPB.shape()(2));
+	  
+	  SynthesisUtils::findLatticeMax(twoDPB,maxVal,posMax); 
+	  applyAntiAliasingOp(twoDPB,posMax,1);
+
+	  SynthesisUtils::findLatticeMax(twoDPBSq,maxVal,posMax); 
+	  applyAntiAliasingOp(twoDPBSq,posMax,1,True);
+	}
+	*/
 	Complex cpeak=max(twoDPB.get());
 	twoDPB.put(twoDPB.get()/cpeak);
 	cpeak=max(twoDPBSq.get());
 	twoDPBSq.put(twoDPBSq.get()/cpeak);
-
+	/*
+	{
+	  String name("twoDPBSq.im");
+	  storeImg(name,twoDPBSq);
+	}
+	{
+	  String name("twoDPB.im");
+	  storeImg(name,twoDPB);
+	}
+	*/
 	CoordinateSystem cs=twoDPB.coordinates();
 	Int index= twoDPB.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	SpectralCoordinate SpCS = twoDPB.coordinates().spectralCoordinate(index);
@@ -1495,7 +1524,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition ndx(4,ConvFuncOrigin,0,0,0);
     //    Cube<Int> convWtSupport(convSupport.shape());
     convWtSupport.resize(convSupport.shape(),True);
-    Int maxConvWtSupport=0;
+    Int maxConvWtSupport=0, supportBuffer;
     for (Int iw=0;iw<wConvSize;iw++)
       {
 	Bool found=False;
@@ -1505,7 +1534,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	ndx(0)=ndx(1)=ConvFuncOrigin;
 	ndx(2) = iw;
-	Complex maxVal = max(convFunc);
+	//	Complex maxVal = max(convFunc);
 	threshold = abs(convFunc(ndx))*THRESHOLD;
 	//
 	// Find the support size of the conv. function in pixels
@@ -1548,8 +1577,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::POST;
     
     {
-      Int bot=ConvFuncOrigin-convSampling*maxConvSupport-OVERSAMPLING,//-convSampling/2, 
-      top=ConvFuncOrigin+convSampling*maxConvSupport+OVERSAMPLING;//+convSampling/2;
+      supportBuffer = OVERSAMPLING;
+      Int bot=ConvFuncOrigin-convSampling*maxConvSupport-supportBuffer,//-convSampling/2, 
+      top=ConvFuncOrigin+convSampling*maxConvSupport+supportBuffer;//+convSampling/2;
       
       {
 	Array<Complex> tmp;
@@ -1561,8 +1591,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFunc.reference(*convFuncCache[lastPASlot]);
       }
       
-      bot=ConvFuncOrigin-convSampling*maxConvWtSupport;
-      top=ConvFuncOrigin+convSampling*maxConvWtSupport;
+      supportBuffer = (Int)(OVERSAMPLING*CONVWTSIZEFACTOR);
+      bot=ConvFuncOrigin-convSampling*maxConvWtSupport-supportBuffer;
+      top=ConvFuncOrigin+convSampling*maxConvWtSupport+supportBuffer;
       bot=max(0,bot);
       top=min(top,convWeights.shape()(0)-1);
       {
@@ -3916,5 +3947,168 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   */
 
+  void nPBWProjectFT::makeAntiAliasingOp(Vector<Complex>& op, const Int nx)
+  {
+    MathFunc<Float> sf(SPHEROIDAL);
+    if (op.nelements() != (uInt)nx)
+      {
+	op.resize(nx);
+	Float cfScale=uvScale(0)*30/(3.0*convSampling);
+	for(Int ix=-nx/4;ix<nx/4;ix++)
+	  op(ix+nx/2)=sf.value(abs((1-ix)*cfScale));
+// 	for(Int ix=-nx/2;ix<nx/2;ix++)
+// 	  cout << "SF: " << (1-ix)*cfScale << " " << real(op(ix+nx/2)) << " " << imag(op(ix+nx/2)) << endl;
+      }
+  }
+
+  void nPBWProjectFT::makeAntiAliasingCorrection(Vector<Complex>& correction, 
+						 const Vector<Complex>& op,
+						 const Int nx)
+  {
+    if (correction.nelements() != (uInt)nx)
+      {
+	correction.resize(nx);
+	correction=0.0;
+	Int opLen=op.nelements(), orig=nx/2;
+	for(Int i=-opLen;i<opLen;i++)
+	  {
+	    correction(i+orig) += op(abs(i));
+	  }
+	ArrayLattice<Complex> tmp(correction);
+	LatticeFFT::cfft(tmp,False);
+	correction=tmp.get();
+      }
+//     for(uInt i=0;i<correction.nelements();i++)
+//       cout << "FTSF: " << real(correction(i)) << " " << imag(correction(i)) << endl;
+  }
+
+  void nPBWProjectFT::correctAntiAliasing(Lattice<Complex>& image)
+  {
+    //  applyAntiAliasingOp(cf,2);
+    IPosition shape(image.shape());
+    IPosition ndx(shape);
+    ndx=0;
+    makeAntiAliasingCorrection(antiAliasingCorrection, 
+			       antiAliasingOp,shape(0));
+
+    Complex tmp,val;
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=0;iy<shape(1);iy++) 
+	  {
+	    for (Int ix=0;ix<shape(0);ix++) 
+	      {
+		ndx(0)=ix;
+		ndx(1)=iy;
+		tmp = image.getAt(ndx);
+		val=(antiAliasingCorrection(ix)*antiAliasingCorrection(iy));
+		if (abs(val) > 1e-5) tmp = tmp/val; else tmp=0.0;
+		image.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  }
+
+  void nPBWProjectFT::applyAntiAliasingOp(ImageInterface<Complex>& cf, 
+					  Vector<IPosition>& maxPos,
+					  Int op, 
+					  Bool Square)
+  {
+    //
+    // First the spheroidal function
+    //
+    IPosition shape(cf.shape());
+    IPosition ndx(shape);
+    Vector<Double> refPixel=cf.coordinates().referencePixel();
+    ndx=0;
+    Int nx=shape(0),posX,posY;
+    makeAntiAliasingOp(antiAliasingOp, nx);
+
+    Complex tmp,gain;
+
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=-nx/2;iy<nx/2;iy++) 
+	  {
+	    for (Int ix=-nx/2;ix<nx/2;ix++) 
+	      {
+		ndx(0)=ix+nx/2;
+		ndx(1)=iy+nx/2;
+		tmp = cf.getAt(ndx);
+		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+		if ((posX > 0) && (posX < nx) &&
+		    (posY > 0) && (posY < nx))
+		  gain = antiAliasingOp(posX)*antiAliasingOp(posY);
+		else
+		  if (op==2) gain = 1.0; else gain=0.0;
+		if (Square) gain *= gain;
+		switch (op)
+		  {
+		  case 0: tmp = tmp+gain;break;
+		  case 1: 
+		    {
+		      tmp = tmp*gain;
+		      break;
+		    }
+		  case 2: tmp = tmp/gain;break;
+		  }
+		cf.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  };
+  void nPBWProjectFT::applyAntiAliasingOp(ImageInterface<Float>& cf, 
+					  Vector<IPosition>& maxPos,
+					  Int op, 
+					  Bool Square)
+  {
+    //
+    // First the spheroidal function
+    //
+    IPosition shape(cf.shape());
+    IPosition ndx(shape);
+    Vector<Double> refPixel=cf.coordinates().referencePixel();
+    ndx=0;
+    Int nx=shape(0),posX,posY;
+    makeAntiAliasingOp(antiAliasingOp, nx);
+
+    Float tmp,gain;
+
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=-nx/2;iy<nx/2;iy++) 
+	  {
+	    for (Int ix=-nx/2;ix<nx/2;ix++) 
+	      {
+		ndx(0)=ix+nx/2;
+		ndx(1)=iy+nx/2;
+		tmp = cf.getAt(ndx);
+		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+		if ((posX > 0) && (posX < nx) &&
+		    (posY > 0) && (posY < nx))
+		  gain = real(antiAliasingOp(posX)*antiAliasingOp(posY));
+		else
+		  if (op==2) gain = 1.0; else gain=0.0;
+		if (Square) gain *= gain;
+		switch (op)
+		  {
+		  case 0: tmp = tmp+gain;break;
+		  case 1: 
+		    {
+		      tmp = tmp*gain;
+		      break;
+		    }
+		  case 2: tmp = tmp/gain;break;
+		  }
+		cf.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  };
 } //# NAMESPACE CASA - END
 

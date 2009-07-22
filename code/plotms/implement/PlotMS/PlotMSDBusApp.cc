@@ -83,6 +83,10 @@ const String PlotMSDBusApp::METHOD_QUIT   = "quit";
 String PlotMSDBusApp::dbusName(pid_t pid) {
     return "plotms_" + String::toString(pid); }
 
+const QString &PlotMSDBusApp::name( ) {
+    static QString _name("plotms");
+    return _name;
+}
 
 // Constructors/Destructors //
 
@@ -133,7 +137,7 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 
 // Protected Methods //
 
-void PlotMSDBusApp::dbusRunMethod(const String& methodName,
+void PlotMSDBusApp::dbusRunXmlMethod(const String& methodName,
         const Record& parameters, Record& retValue, const String& callerName,
         bool isAsync) {
     // Common parameters: plot index.

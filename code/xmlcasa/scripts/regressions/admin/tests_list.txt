@@ -23,9 +23,12 @@ ic2233_regression		sbhatnag@aoc.nrao.edu
 imagepoltest_regression         rreid@nrao.edu
 imagetest_regression            dpetry@eso.org
 imcontsub_test                  sdjaeger@ucalgary.ca
+imhead_test                     sdjaeger@ucalgary.ca
+immath_test			sdjaeger@ucalgary.ca
 immoment_test                   sdjaeger@ucalgary.ca
 imregrid_test                   jmlarsen@eso.org
 imsmooth_test                   sdjaeger@ucalgary.ca
+imval_test                      sdjaeger@ucalgary.ca
 irc_cs_regression               ttsutsum@aoc.nrao.edu
 irc_cs_task_regression          ttsutsum@aoc.nrao.edu 
 irc_hc3n_regression             ttsutsum@aoc.nrao.edu

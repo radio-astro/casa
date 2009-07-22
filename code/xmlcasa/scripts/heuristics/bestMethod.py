@@ -13,6 +13,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -134,6 +135,7 @@ class BestMethod(BaseDataModifier):
     def setapply(self, spw, field):
         """
         """
+#        print 'BestMethod.setApply', spw, field
         results = self._view.setapply(spw, field)
         return results
 
@@ -148,7 +150,7 @@ class BestMethod(BaseDataModifier):
 
         description = """
          <p>The 'best' bandpass method to be used for each spectral window was 
-         retrieved. The bandpass calibration was calculated. 
+         retrieved. 
          """
 
 # now add the 'view' description

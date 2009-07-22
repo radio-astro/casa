@@ -148,42 +148,12 @@ quanta::formxxx(const ::casac::variant& v, const std::string& format)
 {
   string out("");
   try {
+    casa::Quantity quant = casaQuantity(v);
 
-    //hms, dms, deg, rad, +deg.
-    casa::String form(format);
-    form.downcase();
-    casa::Quantity quant=casaQuantity(v);
-    MVAngle ang(quant);
-    if(form == "dms"){
-      out=ang(-0.5).string(MVAngle::ANGLE,8).c_str();
-    }
-    else if(form == "hms"){
-      out=ang.string(MVAngle::TIME,8).c_str();
-    }
-    else if(form == "deg"){
-      ostringstream os;
-      os << ang().degree() ;
-      out=os.str();
-    }
-    else if(form == "rad"){
-      
-      ostringstream os;
-      os << ang().radian() ;
-      out=os.str();
-    }
-    else if(form == "+deg"){
-      ostringstream os;
-      os << ang(0.0).degree() ;
-      out=os.str();
-    }
-    else{
+    if(!ang_as_formatted_str(out, quant, format))
       *itsLog << LogIO::WARN << "Don't understand " << format << LogIO::POST;
-      
-    }
-
-
-
-  } catch (AipsError x) {
+  }
+  catch(AipsError x){
     RETHROW(x);
   }
   return out;

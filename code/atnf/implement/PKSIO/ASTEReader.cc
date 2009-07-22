@@ -43,7 +43,7 @@ ASTEReader::ASTEReader( string name )
   : NROReader( name )
 {
   // DEBUG
-  cout << "ASTEReader::ASTEReader()" << endl ;
+  //cout << "ASTEReader::ASTEReader()" << endl ;
   //
 }
 
@@ -55,6 +55,8 @@ ASTEReader::~ASTEReader()
 // Read data header
 Int ASTEReader::read() 
 {
+  LogIO os( LogOrigin( "ASTEReader", "read()", WHERE ) ) ;
+
   int status = 0 ;
 
   // create ASTEDataset
@@ -64,7 +66,7 @@ Int ASTEReader::read()
   status = dataset_->fillHeader() ;
 
   if ( status != 0 ) {
-    cerr << "Failed to fill data header." << endl ;
+    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
   }
 
   return status ;

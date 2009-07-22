@@ -310,6 +310,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {return verifyShapes(pb.shape(),sky.shape());}
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
     Bool findSupport(Array<Complex>& func, Float& threshold, Int& origin, Int& R);
+    void makeAntiAliasingOp(Vector<Complex>& val, const Int len);
+    void makeAntiAliasingCorrection(Vector<Complex>& correction, 
+				    const Vector<Complex>& op, 
+				    const Int nx);
+    void applyAntiAliasingOp(ImageInterface<Complex>& cf, 
+			     Vector<IPosition>& offset,
+			     Int op=0, 
+			     Bool Square=False);
+    void applyAntiAliasingOp(ImageInterface<Float>& cf, 
+			     Vector<IPosition>& offset,
+			     Int op=0, 
+			     Bool Square=False);
+    void correctAntiAliasing(Lattice<Complex>& cf);
   protected:
     
     // Padding in FFT
@@ -470,6 +483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double cfRefFreq_p;
     Bool avgPBSaved;
     Bool avgPBReady;
+    Vector<Complex> antiAliasingOp,antiAliasingCorrection;
     //    VLACalcIlluminationConvFunc vlaPB;
     //
     //----------------------------------------------------------------------

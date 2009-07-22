@@ -6,6 +6,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -64,7 +65,7 @@ class BaselineData(BaseData):
                  viewClassList=bandpassCal[1:])
         if gainCal != None:
             self._gainCal = gainCal(tools, bookKeeper, msCalibrater, msFlagger, 
-             htmlLogger, msName, stageName, bandpassCal,
+             htmlLogger, msName, stageName, bandpassCal=bandpassCal,
              bandpassFlaggingStage=bandpassFlaggingStage)
 
 
@@ -113,6 +114,13 @@ class BaselineData(BaseData):
                 results['parameters']['dependencies']['bpCal'] = bpCalParameters
                 results['parameters']['dependencies']['gainCal'] = gainCalParameters
 
+# ensure ms flag state is 'Current' and save it for restoration after calculation
+# of the view - calibration of the data can flag it implicitly and we want to avoid
+# carrying forward 'hidden' flagging like that.
+         
+                self._msFlagger.setFlagState('Current')
+                self._msFlagger.saveFlagState('BaselineEntry')
+
 # loop through valid data_desc_id and field_id
 
             self._ms.open(thems=self._msName)
@@ -138,8 +146,8 @@ class BaselineData(BaseData):
                             self._gainCal.setapply(spw=data_desc_id,
                              field=field_id)
                             commands = []
-                            self._msCalibrater.correct(spw=data_desc_id,
-                             field=field_id, commands=commands)
+                            commands += self._msCalibrater.correct(
+                             spw=data_desc_id, field=field_id)
                         except KeyboardInterrupt:
                             raise
                         except:
@@ -261,6 +269,13 @@ class BaselineData(BaseData):
 
                             pickled_description = pickle.dumps(description)
                             results['data'][pickled_description] = result
+
+            if self._calibrationState=='corrected':
+
+# restore the flag state on entry and adopt is as 'Current'
+         
+                self._msFlagger.setFlagState('BaselineEntry')
+                self._msFlagger.adoptAsCurrentFlagState()
 
             self._ms.close()
 
@@ -449,9 +464,9 @@ class BaselineData(BaseData):
               <li>""" + description['gain calibration'] + """
              </ul>""")
 
-        self._htmlLogger.logHTML("""
-         <p>This data view was calculated by Python class %s.""" % 
-         self._className)
+#        self._htmlLogger.logHTML("""
+#         <p>This data view was calculated by Python class %s.""" % 
+#         self._className)
 
            
 class BaselineCorrectedAmplitude(BaselineData):

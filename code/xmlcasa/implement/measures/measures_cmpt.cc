@@ -3046,48 +3046,6 @@ measures::casaMEarthMagneticFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-::casac::record*
-measures::recordFromQuantity(const casa::Quantity q)
-{
-  ::casac::record *r=0;
-  try {
-    String error;
-    casa::Record R;
-    if (QuantumHolder(q).toRecord(error, R)) {
-      r = fromRecord(R);
-    } else {
-      *itsLog << LogIO::SEVERE << "Could not convert quantity to record."
-              << LogIO::POST;
-    }
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return r;
-}
-
-::casac::record*
-measures::recordFromQuantity(const Quantum<Vector<Double> >& q)
-{
-  ::casac::record *r=0;
-  try {
-    String error;
-    casa::Record R;
-    if (QuantumHolder(q).toRecord(error, R)) {
-      r = fromRecord(R);
-    } else {
-      *itsLog << LogIO::SEVERE << "Could not convert quantity to record."
-              << LogIO::POST;
-    }
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return r;
-}
-
 /*
 bool
 measures::selftest()

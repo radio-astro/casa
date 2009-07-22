@@ -29,7 +29,7 @@ import os
 import string
 import inspect
 from odict import odict
-from taskmanager import tm
+#from taskmanager import tm
 import task_</xsl:text><xsl:value-of select="$taskname"/>
 <xsl:text>
 def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-templates select="aps:input"/>

@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2writer.h: Class to write Parkes Multibeam data to a measurementset.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,27 +25,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id:
 //#---------------------------------------------------------------------------
 
 #ifndef ATNF_PKSMS2WRITER_H
 #define ATNF_PKSMS2WRITER_H
 
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSwriter.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Complex.h>
+#include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <casa/BasicSL/String.h>
+
+#include <casa/namespace.h>
 
 // <summary>
 // Class to write Parkes Multibeam data to a measurementset.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSMS2writer : public PKSwriter
 {
   public:
@@ -63,15 +65,16 @@ class PKSMS2writer : public PKSwriter
         const String antName,
         const Vector<Double> antPosition,
         const String obsMode,
+        const String bunit,
         const Float  equinox,
         const String dopplerFrame,
         const Vector<uInt> nChan,
         const Vector<uInt> nPol,
         const Vector<Bool> haveXPol,
-        const Bool   haveBase, 
-        const String fluxUnit);
+        const Bool   haveBase);
 
     // Write the next data record.
+/**
     virtual Int write(
         const Int             scanNo,
         const Int             cycleNo,
@@ -115,6 +118,9 @@ class PKSMS2writer : public PKSwriter
         const Matrix<uChar>   &flagged,
         const Complex         xCalFctr,
         const Vector<Complex> &xPol);
+**/
+    virtual Int write(
+        const PKSrecord &pksrec);
 
     // Close the MS, flushing all associated Tables.
     virtual void close();

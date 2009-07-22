@@ -1069,7 +1069,12 @@ class report:
                 fd.write('<br><a href="'+plot_file+'">Python profile</a>')
 
         if extended and subtest[1] == 'exec':          
-            framework_log = 'run-'+test+'-'+host+'.log'
+            framework_log = 'run-'     + test + '-' + host + '.log'
+            cpp_profile   = 'profile-' + test + '-' + host + '.dot'
+            if os.path.isfile(reg_dir + '/Log/' + cpp_profile):
+                os.system("cat " + reg_dir + '/Log/' + cpp_profile + \
+                          " | dot -Tpng -o " + report_dir + '/' + cpp_profile + '.png')
+                fd.write('<br><a href="'+cpp_profile+'.png">C++ profile</a>')
             if os.path.isfile(reg_dir + '/Log/' + framework_log):
                 shutil.copyfile(reg_dir + '/Log/' + framework_log, \
                                 report_dir + '/' + framework_log)

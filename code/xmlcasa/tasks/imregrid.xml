@@ -44,7 +44,7 @@ the same coordinate structure.
     		provide shape and coordinate parameters of output image  
     		default: none; example: imagename='orion_vla.im'
     	output -- Name of image which will store out put regridded image
-    		default: none; example: imagename='new_orion.im'
+    		default: imregrid_results.im; example: imagename='new_orion.im'
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 

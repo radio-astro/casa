@@ -119,10 +119,12 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
-{
-  String name("pb.im");
-  storeImg(name,*(ap.aperture));
-}
+    /*
+    {
+      String name("pb.im");
+      storeImg(name,*(ap.aperture));
+    }
+    */
     fillPB(*(ap.aperture),pbImage);
   }
   //--------------------------------------------------------------------------

@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--        \item changing the phase tracking center(s),
        \item correcting for differential aberration,  -->
        \item changing the refcode (i.e. B1950 to J2000 or 2006.78),
-       \item changing the projection, as in (-)NCP to SIN,
+<!--        \item changing the projection, as in (-)NCP to SIN,  -->
        \item refocusing (Not yet incorporated).
      \end{itemize}
 </description>
@@ -47,11 +47,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value></value>
         <example>refcode = 'J2000'</example>
     </param>
-    <param type="string" name="proj">
+<!--     <param type="string" name="proj">
         <description>Projection code to use for the output.</description>
         <value></value>
         <example>proj = 'SIN'</example>
-    </param>
+    </param>  -->
 <!--     <param type="any" direction="in" name="phasecenters">
         <description>Phase tracking centers to use for the output, in the same order as fields.  Use LON LAT offsets (i.e. "-0.5s 0.5s") in the same frame as refcode or absolute directions (i.e. "J2000 19h55m05.6s -34d44m43.0s"). Blank = use old ones.</description>
 	<any type="variant"/>

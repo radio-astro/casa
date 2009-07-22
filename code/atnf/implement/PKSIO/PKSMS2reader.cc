@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2reader.cc: Class to read Parkes Multibeam data from a v2 MS.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -40,6 +40,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/BasicMath/Math.h>
+#include <casa/Logging/LogIO.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasRef.h>
@@ -47,6 +48,7 @@
 
 // Parkes includes.
 #include <atnf/pks/pks_maths.h>
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSMS2reader.h>
 
 
@@ -139,6 +141,7 @@ Int PKSMS2reader::open(
   cCalCol.reference(stateCols.cal());
   cSigStateCol.reference(stateCols.sig());
   cRefStateCol.reference(stateCols.ref());
+
   cDataDescIdCol.reference(msCols.dataDescId());
   cSpWinIdCol.reference(dataDescCols.spectralWindowId());
   cChanFreqCol.reference(spWinCols.chanFreq());
@@ -185,10 +188,14 @@ Int PKSMS2reader::open(
   ROMSObservationColumns observationCols(cPKSMS.observation());
   //String telName = observationCols.telescopeName()(0);
   cTelName = observationCols.telescopeName()(0);
-  cATF = cTelName.contains("ATF");
+  //cATF = cTelName.contains("ATF");
+  //cOSF = cTelName.contains("OSF");
+  //cALMA = cTelName.contains("ALMA");
+  cALMA = cTelName.contains("ATF")||cTelName.contains("OSF")||
+           cTelName.contains("ALMA");
 
   if (cHaveDataCol = cPKSMS.isColumn(MSMainEnums::DATA)) { 
-    if (cATF) {
+    if (cALMA) {
       //try to read a single baseline interferometeric data 
       //and treat it as single dish data
       //maybe extended for ALMA commissioning later
@@ -205,7 +212,7 @@ Int PKSMS2reader::open(
   cFlagCol.reference(msCols.flag());
 
 
-  if (cGetXPol = (cPKSMS.isColumn(MSMainEnums::DATA) && (!cATF))) {
+  if (cGetXPol = (cPKSMS.isColumn(MSMainEnums::DATA) && (!cALMA))) {
     if ((cHaveXCalFctr = cPKSMS.tableDesc().isColumn("XCALFCTR"))) {
       cXCalFctrCol.attach(cPKSMS, "XCALFCTR");
     }
@@ -248,7 +255,7 @@ Int PKSMS2reader::open(
   haveXPol.resize(nIF);
   haveXPol = False;
 
-  if (cGetXPol && !(cATF)) {
+  if (cGetXPol && !(cALMA)) {
     for (Int irow = 0; irow < cNRow; irow++) {
       if (cDataCol.isDefined(irow)) {
         Int iIF = cDataDescIdCol(irow);
@@ -297,13 +304,15 @@ Int PKSMS2reader::getHeader(
         String &project,
         String &antName,
         Vector<Double> &antPosition,
-        String &obsMode,
+        // before merge...
+        //String &obsMode, 
+        String &obsType,
+        String &bunit,
         Float  &equinox,
         String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth, 
-        String &fluxunit)
+        Double &bandwidth) 
 {
   if (!cMSopen) {
     return 1;
@@ -317,31 +326,31 @@ Int PKSMS2reader::getHeader(
   // Antenna name and ITRF coordinates.
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
   antName = antennaCols.name()(0);
-  if (cATF) {
+  if (cALMA) {
      antName = cTelName + "-" + antName;
   }
   antPosition = antennaCols.position()(0);
 
   // Observation type.
   if (cObsModeCol.nrow()) {
-    obsMode = cObsModeCol(0);
-    if (obsMode == "\0") obsMode = "RF";
+    obsType = cObsModeCol(0);
+    if (obsType == "\0") obsType = "RF";
   } else {
-    obsMode = "RF";
+    obsType = "RF";
   }
 
-  fluxunit = "";
+  bunit = "";
   if (cHaveDataCol) {
     const TableRecord& keywordSet2
        = cDataCol.columnDesc().keywordSet();
     if(keywordSet2.isDefined("UNIT")) {
-      fluxunit = keywordSet2.asString("UNIT");
+      bunit = keywordSet2.asString("UNIT");
     }
   } else {
     const TableRecord& keywordSet
        = cFloatDataCol.columnDesc().keywordSet();
     if(keywordSet.isDefined("UNIT")) {
-      fluxunit = keywordSet.asString("UNIT");
+      bunit = keywordSet.asString("UNIT");
     }
   }
 
@@ -429,7 +438,8 @@ uInt PKSMS2reader::select(
         const Bool getSpectra,
         const Bool getXPol,
         const Bool getFeedPos,
-        const Bool getPointing)
+        const Bool getPointing,
+        const Int  coordSys)
 {
   if (!cMSopen) {
     return 1;
@@ -514,6 +524,9 @@ uInt PKSMS2reader::select(
   // Get Pointing data (for MS)
   cGetPointing = getPointing;
 
+  // Coordinate system?  (Only equatorial available.)
+  cCoordSys = 0;
+
   return maxNChan;
 }
 
@@ -565,6 +578,7 @@ Int PKSMS2reader::findRange(
 
 // Read the next data record.
 
+/**
 Int PKSMS2reader::read(
         Int             &scanNo,
         Int             &cycleNo,
@@ -607,7 +621,11 @@ Int PKSMS2reader::read(
         Matrix<uChar>   &flagged,
         Complex         &xCalFctr,
         Vector<Complex> &xPol)
+**/
+Int PKSMS2reader::read(PKSrecord &pksrec)
 {
+  LogIO os( LogOrigin( "PKSMS2reader", "read()", WHERE ) ) ;
+
   if (!cMSopen) {
     return 1;
   }
@@ -637,28 +655,29 @@ Int PKSMS2reader::read(
   }
   // Renumerate scan no. Here still is 1-based
   //scanNo = cScanNoCol(cIdx) - cScanNoCol(0) + 1;
-  scanNo = cScanNoCol(cIdx);
-  
-  if (scanNo != cScanNo) {
+  //scanNo = cScanNoCol(cIdx);
+  pksrec.scanNo = cScanNoCol(cIdx);
+
+  if (pksrec.scanNo != cScanNo) {
     // Start of new scan.
-    cScanNo  = scanNo;
+    cScanNo  = pksrec.scanNo;
     cCycleNo = 1;
     cTime    = cTimeCol(cIdx);
   }
 
   Double time = cTimeCol(cIdx);
-  mjd      = time/86400.0;
-  interval = cIntervalCol(cIdx);
+  pksrec.mjd      = time/86400.0;
+  pksrec.interval = cIntervalCol(cIdx);
 
   // Reconstruct the integration cycle number; due to small latencies the
   // integration time is usually slightly less than the time between cycles,
   // resetting cTime will prevent the difference from accumulating.
-  cCycleNo += nint((time - cTime)/interval);
-  cycleNo = cCycleNo;
-  cTime   = time;
+  cCycleNo += nint((time - cTime)/pksrec.interval);
+  pksrec.cycleNo = cCycleNo;
+  cTime = time;
 
   Int fieldId = cFieldIdCol(cIdx);
-  fieldName = cFieldNameCol(fieldId);
+  pksrec.fieldName = cFieldNameCol(fieldId);
 
   Int srcId = cSrcIdCol(fieldId);
   //For source with multiple spectral window setting, this is not
@@ -666,18 +685,19 @@ Int PKSMS2reader::read(
   //srcName = cSrcNameCol(srcId);
   for (uInt irow = 0; irow < cSrcId2Col.nrow(); irow++) {
     if (cSrcId2Col(irow) == srcId) {
-      srcName = cSrcNameCol(irow);
+      //srcName = cSrcNameCol(irow);
+      pksrec.srcName = cSrcNameCol(irow);
     }
   }
 
-  srcDir  = cSrcDirCol(srcId);
-  srcPM   = cSrcPMCol(srcId);
+  pksrec.srcDir  = cSrcDirCol(srcId);
+  pksrec.srcPM   = cSrcPMCol(srcId);
 
   // Systemic velocity.
-  if (!cHaveSrcVel || cATF) {
-    srcVel = 0.0f;
+  if (!cHaveSrcVel || cALMA) {
+    pksrec.srcVel = 0.0f;
   } else {
-    srcVel  = cSrcVelCol(srcId)(IPosition(1,0));
+    pksrec.srcVel = cSrcVelCol(srcId)(IPosition(1,0));
   }
 
   ROMSAntennaColumns antennaCols(cPKSMS.antenna());
@@ -690,43 +710,43 @@ Int PKSMS2reader::read(
   Int StateNRow = 0;
   StateNRow=cObsModeCol.nrow();
   if (Table::isReadable(cPKSMS.stateTableName())) {
-        obsMode = " ";
+        pksrec.obsType = " ";
     if (StateNRow > 0) {
       stateId = cStateIdCol(cIdx);
       if (stateId == -1) {
-        //obsMode = " ";
+        //pksrec.obsType = " ";
       } else {
-        obsMode = cObsModeCol(stateId);
+        pksrec.obsType = cObsModeCol(stateId);
         Bool sigState =cSigStateCol(stateId);
         Bool refState =cRefStateCol(stateId);
         //DEBUG
-        //cerr <<"stateid="<<stateId<<" obsmode="<<obsMode<<endl;
+        //cerr <<"stateid="<<stateId<<" obsmode="<<pksrec.obsType<<endl;
         if (cGBT) {
-          // split the obsMode string and append a proper label 
+          // split the obsType string and append a proper label 
           // (these are GBT specific)
-          int epos = obsMode.find_first_of(':');
-          int nextpos = obsMode.find_first_of(':',epos+1);
-          string obsMode1 = obsMode.substr(0,epos);
-          string obsMode2 = obsMode.substr(epos+1,nextpos-epos-1);
+          int epos = pksrec.obsType.find_first_of(':');
+          int nextpos = pksrec.obsType.find_first_of(':',epos+1);
+          string obsMode1 = pksrec.obsType.substr(0,epos);
+          string obsMode2 = pksrec.obsType.substr(epos+1,nextpos-epos-1);
      
           //cerr <<"obsMode2= "<<obsMode2<<endl;
-          if (!srcName.contains("_ps") 
-              &&!srcName.contains("_psr")
-              &&!srcName.contains("_nod")
-              &&!srcName.contains("_fs")
-              &&!srcName.contains("_fsr")) {
+          if (!pksrec.srcName.contains("_ps") 
+              &&!pksrec.srcName.contains("_psr")
+              &&!pksrec.srcName.contains("_nod")
+              &&!pksrec.srcName.contains("_fs")
+              &&!pksrec.srcName.contains("_fsr")) {
             // if Nod mode observation , append '_nod'
             if (obsMode1 == "Nod") {
-              srcName.append("_nod");
+              pksrec.srcName.append("_nod");
             } else if (obsMode1 == "OffOn") {
             // for GBT position switch observations (OffOn or OnOff) 
-              if (obsMode2 == "PSWITCHON") srcName.append("_ps");
-              if (obsMode2 == "PSWITCHOFF") srcName.append("_psr");
+              if (obsMode2 == "PSWITCHON") pksrec.srcName.append("_ps");
+              if (obsMode2 == "PSWITCHOFF") pksrec.srcName.append("_psr");
             } else {
               if (obsMode2 == "FSWITCH") {
               // for GBT frequency switch mode
-                if (sigState) srcName.append("_fs");
-                if (refState) srcName.append("_fsr");
+                if (sigState) pksrec.srcName.append("_fs");
+                if (refState) pksrec.srcName.append("_fsr");
               }
             } 
           }
@@ -743,47 +763,51 @@ Int PKSMS2reader::read(
     Cal = cCalCol(stateId);
   }
   if (cGBT) {
-    if (Cal > 0 && !srcName.contains("_calon")) {
-      srcName.append("_calon");
+    if (Cal > 0 && !pksrec.srcName.contains("_calon")) {
+      pksrec.srcName.append("_calon");
     }
   }
 
-  IFno = iIF + 1;
+  pksrec.IFno = iIF + 1;
   Int nChan = abs(cEndChan(iIF) - cStartChan(iIF)) + 1;
   
   // Minimal handling on continuum data.
   Vector<Double> chanFreq = cChanFreqCol(iIF);
   if (nChan == 1) {
-    freqInc  = chanFreq(0);
-    refFreq  = chanFreq(0);
-    restFreq = 0.0f;
+    pksrec.freqInc  = chanFreq(0);
+    pksrec.refFreq  = chanFreq(0);
+    pksrec.restFreq = 0.0f;
   } else {
   
     if (cStartChan(iIF) <= cEndChan(iIF)) {
-      freqInc = chanFreq(1) - chanFreq(0);
+      pksrec.freqInc = chanFreq(1) - chanFreq(0);
     } else {
-      freqInc = chanFreq(0) - chanFreq(1);
+      pksrec.freqInc = chanFreq(0) - chanFreq(1);
     }
-    refFreq  = chanFreq(cRefChan(iIF)-1);
+
+    pksrec.refFreq  = chanFreq(cRefChan(iIF)-1);
+
     Bool HaveSrcRestFreq= cSrcRestFrqCol.isDefined(srcId);
     if (HaveSrcRestFreq) {
       //restFreq = cSrcRestFrqCol(srcId)(IPosition(1,0));
-      restFreq = cSrcRestFrqCol(srcId);
+      //restFreq = cSrcRestFrqCol(srcId);
+      pksrec.restFreq = cSrcRestFrqCol(srcId);
     } else {
-      restFreq = 0.0f;
+      pksrec.restFreq = 0.0f;
     }
   }
-  bandwidth = abs(freqInc * nChan);
+  pksrec.bandwidth = abs(pksrec.freqInc * nChan);
 
-  tcal.resize(cNPol(iIF));
-  tcal      = 0.0f;
-  tcalTime  = "";
-  //azimuth   = 0.0f;
-  //elevation = 0.0f;
-  parAngle  = 0.0f;
-  focusAxi  = 0.0f;
-  focusTan  = 0.0f;
-  focusRot  = 0.0f;
+  pksrec.tcal.resize(cNPol(iIF));
+  pksrec.tcal      = 0.0f;
+  pksrec.tcalTime  = "";
+//  pksrec.azimuth   = 0.0f;
+//  pksrec.elevation = 0.0f;
+  pksrec.parAngle  = 0.0f;
+
+  pksrec.focusAxi  = 0.0f;
+  pksrec.focusTan  = 0.0f;
+  pksrec.focusRot  = 0.0f;
 
   // Find the appropriate entry in the WEATHER subtable.
   //Bool cHaveStateTab=Table::isReadable(cPKSMS.stateTableName());
@@ -797,22 +821,23 @@ Int PKSMS2reader::read(
       }
     }
   }
+
   if (weatherIdx < 0 || !cHaveWeatherTab) {
     // No appropriate WEATHER entry.
-    pressure    = 0.0f;
-    humidity    = 0.0f;
-    temperature = 0.0f;
+    pksrec.temperature = 0.0f;
+    pksrec.pressure    = 0.0f;
+    pksrec.humidity    = 0.0f;
   } else {
-    pressure    = cPressureCol(weatherIdx);
-    humidity    = cHumidityCol(weatherIdx);
-    temperature = cTemperatureCol(weatherIdx);
+    pksrec.temperature = cTemperatureCol(weatherIdx);
+    pksrec.pressure    = cPressureCol(weatherIdx);
+    pksrec.humidity    = cHumidityCol(weatherIdx);
   }
 
-  windSpeed = 0.0f;
-  windAz    = 0.0f;
+  pksrec.windSpeed = 0.0f;
+  pksrec.windAz    = 0.0f;
 
-  refBeam = 0;
-  beamNo  = ibeam + 1;
+  pksrec.refBeam = 0;
+  pksrec.beamNo  = ibeam + 1;
 
   //pointing/azel
   MVPosition mvpos(antennaCols.position()(0));
@@ -822,6 +847,9 @@ Int PKSMS2reader::read(
   MEpoch me(mvt);
   MeasFrame frame(mp, me);
   MDirection md;
+  pksrec.pCode = 0;
+  pksrec.rateAge = 0.0f;
+  pksrec.paRate = 0.0f;
   if (cGetPointing) {
     //cerr << "get pointing data ...." << endl;
     Vector<Double> pTimes = cPointingTimeCol.getColumn();
@@ -840,10 +868,10 @@ Int PKSMS2reader::read(
     md = vmd[0];
     // put J2000 coordinates in "direction" 
     if (cDirRef =="J2000") {
-      direction = pointingDir.column(0);
+      pksrec.direction = pointingDir.column(0);
     }
     else {
-      direction =
+      pksrec.direction =
         MDirection::Convert(md, MDirection::Ref(MDirection::J2000,
                                                 frame)
                             )().getAngle("rad").getValue();
@@ -851,21 +879,23 @@ Int PKSMS2reader::read(
     }
     uInt ncols = pointingDir.ncolumn();
     if (ncols == 1) {
-      scanRate = 0.0f;
+      pksrec.scanRate = 0.0f;
     } else {
-      scanRate  = pointingDir.column(1);
+      pksrec.scanRate(0) = pointingDir.column(1)(0);
+      pksrec.scanRate(1) = pointingDir.column(1)(1);
     }
   }
   else {
   // Get direction from FIELD table 
   // here, assume direction to be the field direction not pointing
     Matrix<Double> delayDir = cFieldDelayDirCol(fieldId);
-    direction = delayDir.column(0);
+    pksrec.direction = delayDir.column(0);
     uInt ncols = delayDir.ncolumn();
     if (ncols == 1) {
-      scanRate = 0.0f;
+      pksrec.scanRate = 0.0f;
     } else {
-      scanRate  = delayDir.column(1);
+      pksrec.scanRate(0)  = delayDir.column(1)(0);
+      pksrec.scanRate(1)  = delayDir.column(1)(1);
     }
   }
   // caluculate azimuth and elevation
@@ -892,8 +922,8 @@ Int PKSMS2reader::read(
                                                 frame)
                             )().getAngle("rad").getValue();
   //cerr<<"azel="<<azel<<endl;
-  azimuth = azel[0];
-  elevation = azel[1];
+  pksrec.azimuth = azel[0];
+  pksrec.elevation = azel[1];
 
   // Get Tsys assuming that entries in the SYSCAL table match the main table.
   if (cHaveTsys) {
@@ -903,14 +933,14 @@ Int PKSMS2reader::read(
     }
   }
   if (cHaveTsys) {
-    cTsysCol.get(cIdx, tsys, True);
+    cTsysCol.get(cIdx, pksrec.tsys, True);
   } else {
     Int numReceptor;
     cNumReceptorCol.get(0, numReceptor);
-    tsys.resize(numReceptor);
-    tsys = 1.0f;
+    pksrec.tsys.resize(numReceptor);
+    pksrec.tsys = 1.0f;
   }
-  cSigmaCol.get(cIdx, sigma, True);
+  cSigmaCol.get(cIdx, pksrec.sigma, True);
 
   //get Tcal if available
   if (cHaveTcal) {
@@ -920,9 +950,9 @@ Int PKSMS2reader::read(
     uInt nrws = nBeam * nIF;
     if (nTcalColRow > 0) {  
     // find tcal match with the data with the data time stamp
-      Double mjds = mjd*(24*3600);
+      Double mjds = pksrec.mjd*(24*3600);
       Double dtcalTime;
-      if ( mjd > lastmjd || cIdx==0 ) {
+      if ( pksrec.mjd > lastmjd || cIdx==0 ) {
         //Table tmptab = cSysCalTab(near(cSysCalTab.col("TIME"),mjds));
         tmptab = cSysCalTab(near(cSysCalTab.col("TIME"),mjds), nrws);
         //DEBUG
@@ -943,41 +973,44 @@ Int PKSMS2reader::read(
       ROArrayColumn<Float> tcalCol(tmptab2, "TCAL");
       ROScalarColumn<Double> tcalTimeCol(tmptab2, "TIME");
       if (syscalrow==0) {
-        cerr<<"Cannot find any matching Tcal at/near the data timestamp."
-           << " Set Tcal=0.0"<<endl;
+        os << LogIO::NORMAL 
+           <<"Cannot find any matching Tcal at/near the data timestamp."
+           << " Set Tcal=0.0" << LogIO::POST ;
       } else {
-        tcalCol.get(0, tcal);
+        tcalCol.get(0, pksrec.tcal);
         tcalTimeCol.get(0,dtcalTime);
-        tcalTime = MVTime(dtcalTime/(24*3600)).string(MVTime::YMD);
+        pksrec.tcalTime = MVTime(dtcalTime/(24*3600)).string(MVTime::YMD);
         //DEBUG
         //cerr<<"cIdx:"<<cIdx<<" tcal="<<tcal<<" tcalTime="<<tcalTime<<endl;
         tmptab.markForDelete(); 
         tmptab2.markForDelete(); 
       }
     }
-    lastmjd = mjd;
+    lastmjd = pksrec.mjd;
   }
 
   // Calibration factors (if available).
-  calFctr.resize(cNPol(iIF));
+  pksrec.calFctr.resize(cNPol(iIF));
   if (cHaveCalFctr) {
-    cCalFctrCol.get(cIdx, calFctr);
+    cCalFctrCol.get(cIdx, pksrec.calFctr);
   } else {
-    calFctr = 0.0f;
+    pksrec.calFctr = 0.0f;
   }
 
   // Baseline parameters (if available).
   if (cHaveBaseLin) {
-    baseLin.resize(2,cNPol(iIF));
-    cBaseLinCol.get(cIdx, baseLin);
+    pksrec.baseLin.resize(2,cNPol(iIF));
+    cBaseLinCol.get(cIdx, pksrec.baseLin);
 
-    baseSub.resize(9,cNPol(iIF));
-    cBaseSubCol.get(cIdx, baseSub);
+    pksrec.baseSub.resize(9,cNPol(iIF));
+    cBaseSubCol.get(cIdx, pksrec.baseSub);
 
   } else {
-    baseLin.resize(0,0);
-    baseSub.resize(0,0);
+    pksrec.baseLin.resize(0,0);
+    pksrec.baseSub.resize(0,0);
   }
+
+
   // Get spectral data.
   if (cGetSpectra) {
     Matrix<Float> tmpData;
@@ -1005,14 +1038,14 @@ Int PKSMS2reader::read(
 
     // Transpose spectra.
     Int nPol = tmpData.nrow();
-    spectra.resize(nChan, nPol);
-    flagged.resize(nChan, nPol);
+    pksrec.spectra.resize(nChan, nPol);
+    pksrec.flagged.resize(nChan, nPol);
     if (cEndChan(iIF) >= cStartChan(iIF)) {
       // Simple transposition.
       for (Int ipol = 0; ipol < nPol; ipol++) {
         for (Int ichan = 0; ichan < nChan; ichan++) {
-          spectra(ichan,ipol) = tmpData(ipol,ichan);
-          flagged(ichan,ipol) = tmpFlag(ipol,ichan);
+          pksrec.spectra(ichan,ipol) = tmpData(ipol,ichan);
+          pksrec.flagged(ichan,ipol) = tmpFlag(ipol,ichan);
         }
       }
 
@@ -1021,8 +1054,8 @@ Int PKSMS2reader::read(
       Int jchan = nChan - 1;
       for (Int ipol = 0; ipol < nPol; ipol++) {
         for (Int ichan = 0; ichan < nChan; ichan++, jchan--) {
-          spectra(ichan,ipol) = tmpData(ipol,jchan);
-          flagged(ichan,ipol) = tmpFlag(ipol,jchan);
+          pksrec.spectra(ichan,ipol) = tmpData(ipol,jchan);
+          pksrec.flagged(ichan,ipol) = tmpFlag(ipol,jchan);
         }
       }
     }
@@ -1034,21 +1067,21 @@ Int PKSMS2reader::read(
     //cerr<<"cHaveXCalFctr="<<cHaveXCalFctr<<endl;
 
     if (cHaveXCalFctr) {
-      cXCalFctrCol.get(cIdx, xCalFctr);
+      cXCalFctrCol.get(cIdx, pksrec.xCalFctr);
     } else {
-      xCalFctr = Complex(0.0f, 0.0f);
+      pksrec.xCalFctr = Complex(0.0f, 0.0f);
     }
 
-    if(!cATF) {
-      cDataCol.get(cIdx, xPol, True);
+    if(!cALMA) {
+      cDataCol.get(cIdx, pksrec.xPol, True);
 
       if (cEndChan(iIF) < cStartChan(iIF)) {
         Complex ctmp;
         Int jchan = nChan - 1;
         for (Int ichan = 0; ichan < nChan/2; ichan++, jchan--) {
-          ctmp = xPol(ichan);
-          xPol(ichan) = xPol(jchan);
-          xPol(jchan) = ctmp;
+          ctmp = pksrec.xPol(ichan);
+          pksrec.xPol(ichan) = pksrec.xPol(jchan);
+          pksrec.xPol(jchan) = ctmp;
         }
       }
     }

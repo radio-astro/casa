@@ -16,6 +16,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -101,13 +102,12 @@ class ReductionStage:
 # a description written to html before reduction proceeds further. Trap
 # KeyboardInterrupt explicitly so that ctrl-C can be used to halt the reduction.
 
+            flagMessage = None
             try:
 
 # save flag state on entry
         
                 self._view._msFlagger.saveFlagState('StageEntry')
-                self._view._msFlagger.saveFlagStateToFile(
-                 self._stageDescription['name'])
  
 # do the operation
 
@@ -115,8 +115,9 @@ class ReductionStage:
 
 # display the results
 
-                self._dataDisplay.display(self._stageDescription, self._view,
-                 self._dataOperator, log['logName'])
+                flagMessage,colour,ignore = self._dataDisplay.display(
+                 self._stageDescription, self._view, self._dataOperator,
+                 log['logName'])
 
             except KeyboardInterrupt:
                 raise
@@ -126,14 +127,15 @@ class ReductionStage:
                 traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
                 self._htmlLogger.logHTML('</pre>')
                 self._htmlLogger._failed = True
+            finally:
 
-#            finally:
+# close the html node for this Reducer
 
-## close the html node for this Reducer - tried leaving it to the destructor
-## but this may not be called before the next constructor runs
-
-#                self._htmlLogger.closeNode()
-#                sys.stdout.flush()
+                self._htmlLogger.closeNode()
+                if flagMessage != None:
+                    self._htmlLogger.logHTML('<br><font color=%s>%s</font>' % 
+                     (colour, flagMessage))
+                sys.stdout.flush()
 
         self._htmlLogger.timing_stop('ReductionStage.reduce')
         return

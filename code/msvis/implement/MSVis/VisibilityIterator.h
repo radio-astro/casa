@@ -196,6 +196,10 @@ public:
   Int msId() const
     { return msIter_p.msId();}
 
+  //reference to actual ms in interator 
+  const MeasurementSet& ms() const {
+    return msIter_p.ms();
+  }
  // Advance to the next Chunk of data
   ROVisibilityIterator& nextChunk();
 
@@ -474,6 +478,11 @@ public:
   //assign a VisImagingWeight object to this iterator...necessary if no scracth
   //imaging_weight column exists
   void useImagingWeight(const VisImagingWeight& imWgt);
+  //return number  of Ant 
+  Int numberAnt();
+  //Return number of rows in all selected ms's
+  Int numberCoh();
+
 
 protected:
   // advance the iteration

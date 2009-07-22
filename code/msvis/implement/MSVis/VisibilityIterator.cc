@@ -61,6 +61,30 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
   This = (ROVisibilityIterator*)this;
   isMultiMS_p=False;
   msCounter_p=0;
+  Block<Vector<Int> > blockNGroup(1);
+  Block<Vector<Int> > blockStart(1);
+  Block<Vector<Int> > blockWidth(1);
+  Block<Vector<Int> > blockIncr(1);
+  Block<Vector<Int> > blockSpw(1);
+  Int nspw=msIter_p.msColumns().spectralWindow().nrow();
+  blockNGroup[0].resize(nspw);
+  blockNGroup[0].set(1);
+  blockStart[0].resize(nspw);
+  blockStart[0].set(0);  
+  blockWidth[0].resize(nspw);
+  blockWidth[0]=msIter_p.msColumns().spectralWindow().numChan().getColumn(); 
+  blockIncr[0].resize(nspw);
+  blockIncr[0].set(1);
+  blockSpw[0].resize(nspw); 
+  indgen(blockSpw[0]);
+  selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
+		blockSpw);
+    
+    
+
+  
+
+
 }
 
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
@@ -74,6 +98,31 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
   This = (ROVisibilityIterator*)this; 
   msCounter_p=0;
   isMultiMS_p=True;
+  Int numMS=mss.nelements();
+  Block<Vector<Int> > blockNGroup(numMS);
+  Block<Vector<Int> > blockStart(numMS);
+  Block<Vector<Int> > blockWidth(numMS);
+  Block<Vector<Int> > blockIncr(numMS);
+  Block<Vector<Int> > blockSpw(numMS);
+
+  for (Int k=0; k < numMS; ++k){
+    ROMSSpWindowColumns msSpW(mss[k].spectralWindow());
+    Int nspw=msSpW.nrow();
+    blockNGroup[k].resize(nspw);
+    blockNGroup[k].set(1);
+    blockStart[k].resize(nspw);
+    blockStart[k].set(0);  
+    blockWidth[k].resize(nspw);
+    blockWidth[k]=msSpW.numChan().getColumn(); 
+    blockIncr[k].resize(nspw);
+    blockIncr[k].set(1);
+    blockSpw[k].resize(nspw); 
+    indgen(blockSpw[k]);
+  }
+  selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
+		blockSpw);
+
+
 }
 
 ROVisibilityIterator::ROVisibilityIterator(const ROVisibilityIterator& other)
@@ -221,6 +270,7 @@ void ROVisibilityIterator::originChunks()
 }
 
 Bool ROVisibilityIterator::isInSelectedSPW(const Int& spw){
+  
   for (uInt k=0; k < blockSpw_p[msId()].nelements() ; ++k){
     if(spw==blockSpw_p[msId()][k])
       return True;
@@ -1492,6 +1542,22 @@ void ROVisibilityIterator::detachVisBuffer(VisBuffer& vb)
     }
   }
 }
+
+Int ROVisibilityIterator::numberAnt(){
+
+  return msColumns().antenna().nrow(); // for single (sub)array only..
+  
+}
+
+Int ROVisibilityIterator::numberCoh(){
+  Int numcoh=0;
+  for (uInt k=0; k < uInt(msIter_p.numMS()) ; ++k){
+    numcoh+=msIter_p.ms(k).nrow();
+  }
+  return numcoh;
+  
+}
+
 
 VisibilityIterator::VisibilityIterator() {}
 

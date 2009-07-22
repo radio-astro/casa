@@ -3,6 +3,7 @@
 # History:
 # 26-Sep-2008 jfl First version.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -18,8 +19,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
     """
 
     def _imagePlaneclean(self, dirtyMapName, psfMapName, mode, nchan,
-     bmaj, bmin, bpa, boxes, modelMapName, cleanMapName, residualMapName,
-     integrated_rms=None):
+     bmaj, bmin, bpa, boxes, quarter_box, modelMapName, cleanMapName,
+     residualMapName, target_rms):
         """Private method to clean an image.
 
         Keyword arguments:
@@ -31,219 +32,232 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
         bmin          -- minor axis of beam.
         bpa           -- position angle of beam major axis.
         boxes         -- list of clean boxes (corners, in pixels).     
+        quarter_box   -- box covering a quarter of the map area.
         modelMapName  -- file to hold model.
         cleanMapName  -- file to hold clean map.
         residualMapName -- file to hold residuals.
-        integrated_rms  -- rms of residual from pilot 'mfs' clean.
+        target_rms    -- target rms of residual.
         """
         commands = []
 
-        self._deconvolver.open(dirty=dirtyMapName, psf=psfMapName)
+# make clean region from boxes
 
-# make mask from boxes
+        self._image.open(dirtyMapName)
+        csys = self._image.coordsys()
+        self._image.close()
 
-# ..remove box.mask explicitly if it exists - I have the feeling that
-#   it does not get replaced if already present.
+        clean_regions = {}
+        for i,box in enumerate(boxes):
+            boxname = 'r%s' % i
+            boxregion = self._regionmanager.wbox(
+             blc='%spix %spix' % (box[0], box[1]),
+             trc='%spix %spix' % (box[2], box[3]),
+             pixelaxes=[0,1], csys=csys.torecord())
+            clean_regions[boxname] = boxregion
 
-        if os.path.exists('box.mask'):
-            self._rmall('box.mask')
+        if len(clean_regions) > 1:
+            clean_region_union = self._regionmanager.makeunion(clean_regions)
+        else:
+            clean_region_union = clean_regions['r0']
 
-# ensure box coords are int - some casapy versions complain if not
+        quarter_region = self._regionmanager.wbox(
+         blc='%spix %spix' % (quarter_box[0], quarter_box[1]),
+         trc='%spix %spix' % (quarter_box[2], quarter_box[3]),
+         pixelaxes=[0,1], csys=csys.torecord())
 
-        new_boxes = []
-        for box in boxes:
-            new_box = []
-            for item in box:
-                new_box.append(int(item))
-            new_boxes.append(new_box)
-        self._deconvolver.regionmask(mask='box.mask', boxes=new_boxes)
+        clean_region = self._regionmanager.intersection(
+         {'r1':clean_region_union, 'r2':quarter_region})
 
-# remove any previous model
+# construct clean mask name, remove chars that confuse 'mask' parameter later
 
+        cleanmaskName = 'cleanmask.%s' % cleanMapName
+        cleanmaskName = cleanmaskName.replace('-','_')
+        cleanmaskName = cleanmaskName.replace('+','_')
+        cleanmaskName = cleanmaskName.replace('(','_')
+        cleanmaskName = cleanmaskName.replace(')','_')
+
+# remove any previous mask files and model
+
+        if os.path.exists(cleanmaskName):
+            self._rmall(cleanmaskName)
         if os.path.exists(modelMapName):
             self._rmall(modelMapName)
 
-# update commands list
+# open deconvolver, make cleanmask
 
-        commands.append('deconvolver.open(dirty=%s, psf=%s)' % (
-         dirtyMapName, psfMapName))
-        commands.append("# remove 'box.mask'")
-        commands.append("deconvolver.regionmask(mask='box.mask', boxes=%s)" %
-         new_boxes)
-        commands.append('# remove %s' % modelMapName)
+        self._deconvolver.open(dirty=dirtyMapName, psf=psfMapName)
+        self._deconvolver.regionmask(mask=cleanmaskName, region=clean_region)
 
-# start cleaning
+        self._image.open(cleanmaskName)
+        maskStats = self._image.statistics()
+        self._image.close()
+        maxMask = maskStats['max']
+        minMask = maskStats['min']
 
-        cleaning = True
-        if integrated_rms == None:
-            rms = 0.05
-            cleanRms = 1e6
-            threshold = 0.1
-            sum = 0.0
-        else:
-            rms = integrated_rms * math.sqrt(abs(float(nchan)))
-            cleanRms = 1e6
-#            threshold = min(0.1, 2 * rms)
-            threshold = 2 * rms
-            sum = 0.0
+        print 'min, max', minMask, maxMask
 
-        while cleaning:
-            if self._verbose:
-                print 'clean to threshold', threshold
+        if maxMask[0] < 1.0e-7:
+            raise RuntimeError, 'clean mask is empty'
+
+        print dirtyMapName
+        print psfMapName
+        self._image.open(cleanmaskName)
+        print 'mask shape', self._image.shape()
+        self._image.close()
+        self._image.open(infile=dirtyMapName)
+        print 'dirty shape', self._image.shape()
+        self._image.close()
+        self._image.open(infile=psfMapName)
+        print 'psf shape', self._image.shape()
+        self._image.close()
+
+# clean
+
+        threshold = 2 * target_rms
+
+        if self._verbose:
             print 'clean to threshold', threshold
+        print 'clean to threshold', threshold
 
-            self._deconvolver.clean(algorithm=self._algorithm,
-             niter=1000, gain=0.2,
-#             mask='box.mask', niter=1000, gain=0.2,
-             threshold="%sJy" % (threshold), displayprogress=False,
-             model=modelMapName)
+        threshold_reached = self._deconvolver.clean(algorithm=self._algorithm,
+         mask=cleanmaskName, niter=1000, gain=0.2,
+         threshold="%sJy" % (threshold), displayprogress=False,
+         model=modelMapName)
 
-            self._deconvolver.restore(image=cleanMapName, model=modelMapName,
-             bmaj=bmaj, bmin=bmin, bpa=bpa)
+# smooth the model with the beam, add the residuals
 
-            self._deconvolver.residual(model=modelMapName,
-             image=residualMapName)
+        self._deconvolver.restore(image=cleanMapName, model=modelMapName,
+         bmaj=bmaj, bmin=bmin, bpa=bpa)
 
-# cleaned down to this level..
+# calculate the residuals
 
-            newRms = -1
-            sumChange = -1
-            newCleanRms = -1
-            rms2d = -1
-            imMax = -1
+        self._deconvolver.residual(model=modelMapName,
+         image=residualMapName)
+        self._deconvolver.close()
 
-# get the sum of the model image, which can be used to estimate how
-# close we are to cleaning all the source that's to be found
+# get the sum of the model image
 
-            self._image.open(infile=modelMapName)
-            model_stats = self._image.statistics(mask='box.mask > 0.1',
-             robust=False)
-            newSum = model_stats['sum'][0]
-            self._image.close()
+        self._image.open(infile=modelMapName)
+        model_stats = self._image.statistics(mask='%s > 0.1' % cleanmaskName,
+         robust=False)
+        newSum = model_stats['sum'][0]
+        self._image.close()
 
 # and get the rms of the residual image, inside clean region and outside
 
-            self._image.open(infile=residualMapName)
-            resid_stats = self._image.statistics(mask='box.mask < 0.1',
-            robust=False)
-            resid_clean_stats = self._image.statistics(mask='box.mask > 0.1',
-             robust=False)
+        self._image.open(infile=residualMapName)
+        resid_stats = self._image.statistics(mask='%s < 0.1' % cleanmaskName,
+         robust=False)
+        resid_clean_stats = self._image.statistics(mask='%s > 0.1' % cleanmaskName,
+         robust=False)
 
-            if resid_clean_stats.has_key('rms'):
-                if len(resid_clean_stats['rms']) > 0:
-                    newCleanRms = resid_clean_stats['rms'][0]
-            else:
-                print 'no rms'
-                break
+        if resid_clean_stats.has_key('rms'):
+            if len(resid_clean_stats['rms']) > 0:
+                newCleanRms = resid_clean_stats['rms'][0]
+        else:
+            print 'no rms'
 
-            if resid_stats.has_key('rms'):
-                if len(resid_stats['rms']) > 0:
-                    newRms = resid_stats['rms'][0]
-                else:
-                    print 'failed to measure rms', residualMapName
-                    print 'statistics', resid_stats
-                    break
+        if resid_stats.has_key('rms'):
+            if len(resid_stats['rms']) > 0:
+                newRms = resid_stats['rms'][0]
             else:
-                print 'no rms'
-                break
+                print 'failed to measure rms', residualMapName
+                print 'statistics', resid_stats
+        else:
+            print 'no rms'
 
 # get 2d rms of centre quarter of integrated image
 
-            mapshape = self._image.shape()
-            blc = []
-            trc = []
-            for i in range(len(mapshape)):
-                if mapshape[i] > 10 :
-                    dd = float(mapshape[i]) / 4.0
-                    blc.append(int(dd))
-                    trc.append(int(mapshape[i]-dd))
-                else :
-                    blc.append(int(0))
-                    trc.append(int(mapshape[i]))
-            pixels = self._image.getchunk(axes=[3], blc=blc, trc=trc)
-            rms2d = std(pixels)
-            self._image.close()
+        mapshape = self._image.shape()
+        blc = []
+        trc = []
+        for i in range(len(mapshape)):
+            if mapshape[i] > 10 :
+                dd = float(mapshape[i]) / 4.0
+                blc.append(int(dd))
+                trc.append(int(mapshape[i]-dd))
+            else :
+                blc.append(int(0))
+                trc.append(int(mapshape[i]))
+        pixels = self._image.getchunk(axes=[3], blc=blc, trc=trc)
+        rms2d = std(pixels)
+        self._image.close()
 
 # get max of cleaned result
 
-            self._image.open(infile=cleanMapName)
-            clean_stats = self._image.statistics()
-            imMax = clean_stats['max'][0]
-            self._image.close()
+        self._image.open(infile=cleanMapName)
+        clean_stats = self._image.statistics()
+        imMax = clean_stats['max'][0]
+        self._image.close()
 
 # update commands list
 
-            self._deconvolver.residual(model=modelMapName,
-             image=residualMapName)
+        commands.append("# remove '%s'" % cleanmaskName)
+        commands.append("# remove %s" % modelMapName)
+        commands.append("deconvolver.open(dirty=%s, psf=%s)" % (
+         dirtyMapName, psfMapName))
+        commands.append("""deconvolver.regionmask(mask='%s',
+         region=clean_region)""" % cleanmaskName)
 
-            commands.append('# cleaning to threshold %s' % threshold)
-            commands.append("""deconvolver.clean(algorithm=%s,
-             mask='box.mask', niter=1000, gain=0.2, threshold="%sJy",
-             displayprogress=False, model=%s)""" % (self._algorithm,
-             threshold, modelMapName))
-            commands.append("""deconvolver.restore(image=%s, model=%s,
-             bmaj=%s, bmin=%s, bpa=%s)""" % (cleanMapName, modelMapName,
-             bmaj, bmin, bpa))
-            commands.append("""deconvolver.residual(model=%s, image=%s)""" % (
-             modelMapName, residualMapName))
+        commands.append("# clean to threshold %s" % threshold)
+        commands.append("""deconvolver.clean(algorithm=%s,
+         mask='%s', niter=1000, gain=0.2, threshold="%sJy",
+         displayprogress=False, model=%s)""" % (self._algorithm,
+         cleanmaskName, threshold, modelMapName))
+        commands.append("""deconvolver.restore(image=%s, model=%s,
+         bmaj=%s, bmin=%s, bpa=%s)""" % (cleanMapName, modelMapName,
+         bmaj, bmin, bpa))
+        commands.append("""deconvolver.residual(model=%s, image=%s)""" % (
+         modelMapName, residualMapName))
+        commands.append("deconvolver.close()")
 
-            commands.append('image.open(infile=%s)' % modelMapName)
-            commands.append("""rtn=image.statistics(mask='box.mask > 0.1',
-             robust=False""")
-            commands.append('image.close()')
-            commands.append('..get model sum: %s' % newSum)
-            commands.append('image.open(infile=%s)' % residualMapName)
-            commands.append("""rtn=image.statistics(mask='box.mask < 0.1',
-             robust=False""")
-            commands.append('..get rms outside cleaned area: %s' % newRms)
-            commands.append("""rtn=image.statistics(mask='box.mask > 0.1',
-             robust=False""")
-            commands.append('..get rms inside cleaned area: %s' % newCleanRms)
-            commands.append("""rtn=image.getchunk(axes=[3], blc=%s, trc=%s)"""
-            % (blc, trc))
-            commands.append('..get 2d rms from chunk: %s' % rms2d)
-            commands.append('image.close()')
+        commands.append("image.open(infile=%s)" % modelMapName)
+        commands.append("""rtn=image.statistics(mask='%s > 0.1',
+         robust=False""" % cleanmaskName)
+        commands.append("image.close()")
+        commands.append("..get model sum: %s" % newSum)
 
-            commands.append('image.open(infile=%s)' % cleanMapName)
-            commands.append("""rtn=image.statistics()""")
-            commands.append('..get clean image max: %s' % imMax)
-            commands.append('image.close()')
-            if self._verbose:
-                print 'new mad,imMax', newMad, imMax
-            print 'newRms, newCleanRms', newRms, newCleanRms
-            print 'sum, newSum', sum, newSum
+        commands.append("image.open(infile=%s)" % residualMapName)
+        commands.append("""rtn=image.statistics(mask='%s < 0.1',
+         robust=False""" % cleanmaskName)
+        commands.append("..get rms outside cleaned area: %s" % newRms)
+        commands.append("""rtn=image.statistics(mask='%s > 0.1',
+         robust=False""" % cleanmaskName)
+        commands.append("..get rms inside cleaned area: %s" % newCleanRms)
+        commands.append("""rtn=image.getchunk(axes=[3], blc=%s, trc=%s)"""
+         % (blc, trc))
+        commands.append("..get 2d rms from chunk: %s" % rms2d)
+        commands.append("image.close()")
 
-            if sum > 0.0:
-                sumChange = (newSum - sum)/sum
-            else:
-                sumChange = inf
-# continue cleaning? set new threshold
+        commands.append("image.open(infile=%s)" % cleanMapName)
+        commands.append("""rtn=image.statistics()""")
+        commands.append("..get clean image max: %s" % imMax)
+        commands.append("image.close()'")
+        if self._verbose:
+            print 'new mad,imMax', newMad, imMax
+        print 'newRms, newCleanRms', newRms, newCleanRms
+        print 'newSum', newSum
 
-            if (newCleanRms < 0.8 * newRms):
-                break
-            elif (newCleanRms > cleanRms):
-# clean running amok?
-                break
-            elif ((newCleanRms < newRms) and (newSum < 1.03 * sum)):
-                break
-            else:
-#                newThreshold = min(0.1, threshold, 2 * newRms)
-                newThreshold = min(threshold, 2 * newRms)
-                change = (threshold - newThreshold) / threshold
-                if change < 0.1:
-                    newThreshold = 0.8 * newThreshold
+        endState = 'OK'
 
-                threshold = newThreshold
-                sum = newSum
-                cleanRms = newCleanRms
+# cleaned rms falling too far below non-cleaned rms (possibly
+# cleaning too far)
 
-        self._deconvolver.close()
-        commands.append('deconvolver.close()')
-        return threshold, newRms, newCleanRms, sumChange, rms2d, imMax, commands
+        if newCleanRms < 0.5 * newRms:
+            endState = 'clean rms < 0.5 non-clean rms'
+        elif not threshold_reached:
+            endState = 'threshold not reached'
+
+        return threshold, newRms, newCleanRms, rms2d, imMax, commands, endState
 
 
-    def calculate(self): 
+    def calculate(self, logName=None): 
         """Method to calculate the cleaned images.
+
+        Keyword arguments:
+        logName -- The name of the casapy logname. This is only needed if
+                   the results are required for 'getdata' and are going to
+                   be displayed in html.
         """
 
 #        print 'ContinuumSubtractedCleanImage.calculate called'
@@ -283,13 +297,49 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 
 # get the bandpass calibration to apply for each SpW
 
-            bpCalParameters = self._bpCal.calculate()
-            parameters['dependencies']['bpCal'] = bpCalParameters
+            if self._bandpassCalDisplay == None or logName==None:
 
-# get the gain calibration
+# results are not going to be displayed in html
 
-            gainCalParameters = self._gainCal.calculate()
-            parameters['dependencies']['gainCal'] = gainCalParameters
+                bpCalParameters = self._bpCal.calculate()
+                parameters['dependencies']['bpCal'] = bpCalParameters
+            else:
+
+# results _are_ going to be diplayed in html.
+
+                bandpassCalDisplay = self._bandpassCalDisplay(tasks={},
+                 htmlLogger=self._htmlLogger, msName=self._msName)
+
+                display = '''The bandpass calibration was calculated. The details
+                 of the calculation and the results are shown '''
+                display += self._htmlLogger.openNode('here.',
+                 '%s.bandpass_calibration_details' % (self._stageName), True,
+                 stringOutput=True)
+                ignore,ignore,bpCalParameters = bandpassCalDisplay.display(
+                 {'name':self._stageName}, self._bpCal, None, logName)
+                self._htmlLogger.closeNode()
+                parameters['dependencies']['bpCal'] = bpCalParameters
+                parameters['dependencies']['bpCal']['separate node'] = display
+
+# likewise, get the gain calibration
+
+            if self._gainCalDisplay == None or logName==None:
+                gainCalParameters = self._gainCal.calculate()
+                parameters['dependencies']['gainCal'] = gainCalParameters
+            else:
+                gainCalDisplay = self._gainCalDisplay(tasks={},
+                 htmlLogger=self._htmlLogger, msName=self._msName)
+
+                display = '''The gain calibration was calculated. The details
+                 of the calculation and the results are shown '''
+                display += self._htmlLogger.openNode('here.',
+                 '%s.gain_calibration_details' % (self._stageName), True,
+                 stringOutput=True)
+                ignore,ignore,gainCalParameters = gainCalDisplay.display(
+                 {'name':self._stageName}, self._gainCal, None, logName)
+                self._htmlLogger.closeNode()
+                parameters['dependencies']['gainCal'] = gainCalParameters
+                parameters['dependencies']['gainCal']['separate node'] = display
 
 # iterate through fields and data_descs imaging each in turn
 
@@ -301,7 +351,51 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      'fieldName':self._fieldName[field_id],
                      'DATA_DESC_ID':data_desc_id,
                      'commands':[],
-                     'error':None}
+                     'error':{'psf':None,
+                     'pilot_clean':None,
+                     'standard_clean':None,
+                     'dirty_image':None, 
+                     'continuum_subtraction':None,
+                     'line_clean':None,
+                     'continuum_clean':None}} 
+
+# check that SpW has enough channels for processing to proceed
+
+                    nchan = self._results['summary']['nchannels'][data_desc_id]
+                    if nchan==1:
+                        results[(field_id, data_desc_id)]['error']['psf'] = \
+                         'continuum'
+                        results[(field_id, data_desc_id)]['error']['pilot_clean'] = \
+                         'continuum'
+                        results[(field_id, data_desc_id)]['error']['standard_clean'] = \
+                         'continuum'
+                        results[(field_id, data_desc_id)]['error']['dirty_image'] = \
+                         'continuum'
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_subtraction'] = 'continuum'
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = 'continuum'
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = 'continuum'
+                        continue
+                    elif nchan < 10 :
+                        error = 'too few channels to fit continuum (%s)' % nchan
+                        results[(field_id, data_desc_id)]['error']['psf'] = \
+                         error
+                        results[(field_id, data_desc_id)]['error']['pilot_clean'] = \
+                         error
+                        results[(field_id, data_desc_id)]['error']['standard_clean'] = \
+                         error
+                        results[(field_id, data_desc_id)]['error']['dirty_image'] = \
+                         error
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_subtraction'] = error
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error
+
+                        continue
 
                     self._imager.open(thems=self._msName)
                     self._imager.selectvis(spw=data_desc_id, field=field_id)
@@ -318,13 +412,38 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     try:    
                         self._bpCal.setapply(spw=data_desc_id, field=field_id)
                         self._gainCal.setapply(spw=data_desc_id, field=field_id)
-                        self._msCalibrater.correct(spw=data_desc_id,
-                         field=field_id, commands=commands)
+                        commands += self._msCalibrater.correct(spw=data_desc_id,
+                         field=field_id)
                     except KeyboardInterrupt:
                         raise
                     except:
-                        results[(field_id,data_desc_id)]['error'] = \
-                         'failed to calibrate'
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.cal_apply_exception' % (self._stageName), True,
+                         stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during calibration apply'
+
+                        results[(field_id, data_desc_id)]['error']['psf'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['pilot_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['standard_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['dirty_image'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_subtraction'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
                         continue
 
 # calculate the cell and map sizes, using the advise method as a guide.
@@ -380,6 +499,35 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     results[(field_id, data_desc_id)]['psfCubeName'] = \
                      psfCubeName
 
+# get the beam dimensions from the psf. Fit may have failed, if so
+# go to the next loop.
+
+                    if psfParameters['error'] != None:
+
+                        error_report = 'error fitting beam to psf'
+
+                        results[(field_id, data_desc_id)]['error']['psf'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['pilot_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['standard_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['dirty_image'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_subtraction'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
+                        continue
+
+                    bmaj = psfParameters['bmaj']
+                    bmin = psfParameters['bmin']
+                    bpa = psfParameters['bpa']
+                    print 'beam pars', bmaj, bmin, bpa
+
 # get the dirty image
 
                     dirtyImageParameters = self._dirtyImage.calculate(
@@ -393,65 +541,51 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 # get the continuum and line dirty images
 
                     lineDirtyMapName = ('lineDirty.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ','')
                     continuumDirtyMapName = (
                      'continuumDirty.%s.f%s.spw%s.fm%s' % (
-                    self._base_msName, self._fieldName[field_id], data_desc_id,
+                    self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ','')
 
 # ..Assume the first and last 4th of the spectral band are line free
 
                     self._image.open(infile=dirtyMapName)
-                    cubeshape = self._image.shape()
-                    nchan = cubeshape[3]
-                    if nchan > 10 :
-                        linefreechans=range(nchan/4) + range(3*nchan/4,nchan)
-                        self._image.continuumsub(outline=lineDirtyMapName,
-                         outcont=continuumDirtyMapName,
-                         channels=linefreechans, fitorder=1, overwrite=True)
-                        self._image.close()
+                    linefreechans=range(nchan/4) + range(3*nchan/4,nchan)
+                    self._image.continuumsub(outline=lineDirtyMapName,
+                     outcont=continuumDirtyMapName,
+                     channels=linefreechans, fitorder=1, overwrite=True)
+                    self._image.close()
 
-                        results[(field_id, data_desc_id)]\
-                         ['lineDirtyMapName'] = lineDirtyMapName
-                        results[(field_id, data_desc_id)]\
-                        ['continuumDirtyMapName'] = continuumDirtyMapName
-                    else :
-                        print 'not enough channels to compute continuum map'
-                        self._image.close()
+                    results[(field_id, data_desc_id)]\
+                     ['lineDirtyMapName'] = lineDirtyMapName
+                    results[(field_id, data_desc_id)]\
+                     ['continuumDirtyMapName'] = continuumDirtyMapName
 
-                        results[(field_id, data_desc_id)]\
-                         ['lineDirtyMapName'] = 'error'
-                        results[(field_id, data_desc_id)]\
-                         ['continuumDirtyMapName'] = 'error'
-                        continue
+# average continuum cube over all channels
 
-# get the beam dimensions from the psf. Fit may have failed, if so
-# go to the next loop.
-
-                    if psfParameters['error'] != None:
-                        results[(field_id,data_desc_id)]['error'] = \
-                         'error fitting beam to psf'
-                        continue
-
-                    bmaj = psfParameters['bmaj']
-                    bmin = psfParameters['bmin']
-                    bpa = psfParameters['bpa']
-                    print 'beam pars', bmaj, bmin, bpa
+                    self._image.open(continuumDirtyMapName)
+                    pixels = self._image.getchunk(axes=[3], list=True,
+                     dropdeg=False)
+                    csys=self._image.coordsys()
+                    self._image.close()
+                    flatMap = self._image.newimagefromarray(
+                     outfile=continuumDirtyMapName, pixels=pixels,
+                     csys=csys.torecord(), overwrite=True)
 
 # construct names of integrated maps
 
                     cleanIntegratedMapName = (
                     'cleanIntegrated.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ','')
                     cleanIntegratedModelName = (
                      'integratedModel.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
                     cleanIntegratedResidualMapName = (
                      'integratedResidual.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
 
                     results[(field_id, data_desc_id)]\
@@ -462,18 +596,46 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      ['cleanIntegratedResidualMapName'] = \
                      cleanIntegratedResidualMapName
  
-# first make a clean integrated image and use it to find the sources
-# ..set the image parameters
+# first make a clean integrated image and use it to find the sources, this
+# may fail
 
                     start_boxes = [[nx/8, nx/8, 7*nx/8, 7*nx/8]]
 
-                    integrated_threshold, integrated_rms,\
-                     integrated_cleaned_rms, integrated_sum_change,\
-                     integrated_rms2d, integrated_max, integrated_commands = \
-                     self._clean(data_desc_id, field_id, nx, cell,
-                     'mfs', -1, bmaj, bmin, bpa, start_boxes,
-                     cleanIntegratedModelName, cleanIntegratedMapName,
-                     cleanIntegratedResidualMapName)
+                    try:
+                        integrated_threshold, integrated_rms,\
+                         integrated_cleaned_rms, integrated_cleaned_rms_record,\
+                         integrated_sum, integrated_sum_change,\
+                         integrated_rms2d, integrated_max, integrated_commands,\
+                         integrated_endState = \
+                         self._clean(data_desc_id, field_id, nx, cell,
+                         'mfs', -1, bmaj, bmin, bpa, start_boxes,
+                         cleanIntegratedModelName, cleanIntegratedMapName,
+                         cleanIntegratedResidualMapName)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.pilot_clean_exception' % (self._stageName), True,
+                         stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during clean'
+
+                        results[(field_id, data_desc_id)]['error']['pilot_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']['standard_clean'] = \
+                         error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
+                        continue
 
                     results[(field_id,data_desc_id)]['integrated_boxes'] = \
                      start_boxes
@@ -483,12 +645,16 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      integrated_rms
                     results[(field_id,data_desc_id)]['integrated_cleaned_rms']\
                      = integrated_cleaned_rms
+                    results[(field_id,data_desc_id)]['integrated_cleaned_rms_record']\
+                     = integrated_cleaned_rms_record
                     results[(field_id,data_desc_id)]['integrated_sum_change']\
                      = integrated_sum_change
                     results[(field_id,data_desc_id)]['integrated_rms2d'] = \
                      integrated_rms2d
                     results[(field_id,data_desc_id)]['integrated_max'] = \
                      integrated_max
+                    results[(field_id,data_desc_id)]['integrated_endState'] = \
+                     integrated_endState
 
                     cutoff, nSource, sources, boxes, source_commands = \
                      self._findSourcesAndCleanBoxes(cleanIntegratedMapName,
@@ -507,13 +673,13 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 
                     cleanMapName = ('clean.%s.f%s.spw%s.fm%s' % (
                      self._base_msName,
-                     self._fieldName[field_id], data_desc_id, flag_marks)
+                     self._cleanFieldName[field_id], data_desc_id, flag_marks)
                      ).replace(' ', '')
                     cleanModelName = ('cleanModel.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
                     cleanResidualMapName = ('residual.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
 
                     results[(field_id, data_desc_id)]\
@@ -572,66 +738,70 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     results[(field_id, data_desc_id)]\
                      ['bandpassFlaggingStage'] = self._bandpassFlaggingStage
 
-# do the cleaning
+# do the cleaning, this may fail
 
                     print 'integrated threshold', integrated_threshold
                     print 'second clean'
-                    threshold, rms, cleaned_rms, sum_change, rms2d,\
-                     cleaned_max, finalCleanCommands = self._clean(
-                     data_desc_id, field_id, nx, cell, self._mode,
-                     nchan, bmaj, bmin, bpa, boxes,
-                     cleanModelName, cleanMapName, cleanResidualMapName,
-                     integrated_rms=integrated_rms)
+                    try:
+                        threshold, rms, cleaned_rms, cleaned_rms_record, \
+                         sum, sum_change, rms2d,\
+                         cleaned_max, finalCleanCommands, finalCleanEndState = \
+                         self._clean(
+                         data_desc_id, field_id, nx, cell, self._mode,
+                         nchan, bmaj, bmin, bpa, boxes, 
+                         cleanModelName, cleanMapName, cleanResidualMapName,
+                         integrated_rms=integrated_rms)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.standard_clean_exception' % (self._stageName), True,
+                         stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during clean'
+
+                        results[(field_id, data_desc_id)]['error']\
+                         ['standard_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
+                        continue
 
                     results[(field_id,data_desc_id)]['threshold'] = threshold
                     results[(field_id,data_desc_id)]['rms'] = rms
                     results[(field_id,data_desc_id)]['cleaned_rms'] = \
                      cleaned_rms
+                    results[(field_id,data_desc_id)]['cleaned_rms_record'] = \
+                     cleaned_rms_record
                     results[(field_id,data_desc_id)]['sum_change'] = sum_change
                     results[(field_id,data_desc_id)]['rms2d'] = rms2d
                     results[(field_id,data_desc_id)]['max'] = cleaned_max
                     results[(field_id,data_desc_id)]['finalCleanCommands'] = \
                      finalCleanCommands
+                    results[(field_id,data_desc_id)]['finalCleanEndState'] = \
+                     finalCleanEndState
 
-# now do image plane clean of the line dirty image 
-
-                    lineCleanMapName = ('lineClean.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName,
-                     self._fieldName[field_id], data_desc_id, flag_marks)
-                     ).replace(' ', '')
-                    lineModelMapName = ('lineCleanModel.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
-                     flag_marks)).replace(' ', '')
-                    lineResidualMapName = (
-                     'lineResidual.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
-                     flag_marks)).replace(' ', '')
-
-                    results[(field_id, data_desc_id)]\
-                     ['lineCleanMapName'] = lineCleanMapName
-                    results[(field_id, data_desc_id)]\
-                     ['lineModelMapName'] = lineModelMapName
-                    results[(field_id, data_desc_id)]\
-                     ['lineResidualMapName'] = lineResidualMapName
-
-                    self._imagePlaneclean(lineDirtyMapName, psfCubeName, 
-                     'channel', nchan, bmaj, bmin, bpa, boxes, lineModelMapName,
-                     lineCleanMapName, lineResidualMapName,
-                     integrated_rms=integrated_rms)
-
-# ..and continuum dirty image
+# now do image plane clean of continuum dirty image
 
                     continuumCleanMapName = (
                      'continuumClean.%s.f%s.spw%s.fm%s' % (self._base_msName,
-                     self._fieldName[field_id], data_desc_id, flag_marks)
+                     self._cleanFieldName[field_id], data_desc_id, flag_marks)
                      ).replace(' ', '')
                     continuumModelMapName = (
                     'continuumModel.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
                     continuumResidualMapName = (
                      'continuumResidual.%s.f%s.spw%s.fm%s' % (
-                     self._base_msName, self._fieldName[field_id], data_desc_id,
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
 
                     results[(field_id, data_desc_id)]\
@@ -641,10 +811,119 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     results[(field_id, data_desc_id)]\
                      ['continuumResidualMapName'] = continuumResidualMapName
 
-                    self._imagePlaneclean(continuumDirtyMapName, psfCubeName, 
-                     'mfs', 1, bmaj, bmin, bpa, boxes, continuumModelMapName,
-                     continuumCleanMapName, continuumResidualMapName,
-                     integrated_rms=integrated_rms)
+                    quarter_box = [nx/4, nx/4, 3*nx/4, 3*nx/4]
+
+                    print 'continuum clean', integrated_rms
+                    try:
+                        continuum_threshold, continuum_rms, continuum_cleaned_rms,\
+                         continuum_rms2d, continuum_cleaned_max,\
+                         continuumCleanCommands, continuumCleanEndState = \
+                         self._imagePlaneclean(continuumDirtyMapName, psfMapName, 
+                         'mfs', 1, bmaj, bmin, bpa, boxes, quarter_box, 
+                         continuumModelMapName, continuumCleanMapName,
+                         continuumResidualMapName, target_rms=integrated_rms)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.continuum_clean_exception' % (self._stageName), True,
+                         stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during clean'
+
+                        results[(field_id, data_desc_id)]['error']\
+                         ['continuum_clean'] = error_report
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
+                        continue
+
+                    results[(field_id,data_desc_id)]['continuum_threshold'] = \
+                     continuum_threshold
+                    results[(field_id,data_desc_id)]['continuum_rms'] = \
+                     continuum_rms
+                    results[(field_id,data_desc_id)]['continuum_cleaned_rms'] = \
+                     continuum_cleaned_rms
+                    results[(field_id,data_desc_id)]['continuum_rms2d'] = \
+                     continuum_rms2d
+                    results[(field_id,data_desc_id)]['continuum_max'] = \
+                     continuum_cleaned_max
+                    results[(field_id,data_desc_id)]['continuumCleanCommands'] = \
+                     continuumCleanCommands
+                    results[(field_id,data_desc_id)]['continuumCleanEndState'] = \
+                     continuumCleanEndState
+                    results[(field_id,data_desc_id)]['continuumQuarterBox'] = \
+                     quarter_box
+
+# now do image plane clean of the line dirty image 
+
+                    lineCleanMapName = ('lineClean.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName,
+                     self._cleanFieldName[field_id], data_desc_id, flag_marks)
+                     ).replace(' ', '')
+                    lineModelMapName = ('lineCleanModel.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
+                     flag_marks)).replace(' ', '')
+                    lineResidualMapName = (
+                     'lineResidual.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName, self._cleanFieldName[field_id], data_desc_id,
+                     flag_marks)).replace(' ', '')
+
+                    results[(field_id, data_desc_id)]\
+                     ['lineCleanMapName'] = lineCleanMapName
+                    results[(field_id, data_desc_id)]\
+                     ['lineModelMapName'] = lineModelMapName
+                    results[(field_id, data_desc_id)]\
+                     ['lineResidualMapName'] = lineResidualMapName
+
+                    print 'line clean', integrated_rms
+                    try:
+                        line_threshold, line_rms, line_cleaned_rms,\
+                         line_rms2d, line_cleaned_max, lineCleanCommands, \
+                         lineCleanEndState = \
+                         self._imagePlaneclean(lineDirtyMapName, psfCubeName,
+                         'channel', nchan, bmaj, bmin, bpa, boxes, quarter_box,
+                         lineModelMapName, lineCleanMapName, lineResidualMapName,
+                         target_rms=rms)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.line_clean_exception' % (self._stageName), True,
+                         stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during clean'
+
+                        results[(field_id, data_desc_id)]['error']\
+                         ['line_clean'] = error_report
+
+                        continue
+
+                    results[(field_id,data_desc_id)]['line_threshold'] = \
+                     line_threshold
+                    results[(field_id,data_desc_id)]['line_rms'] = line_rms
+                    results[(field_id,data_desc_id)]['line_cleaned_rms'] = \
+                     line_cleaned_rms
+                    results[(field_id,data_desc_id)]['line_rms2d'] = line_rms2d
+                    results[(field_id,data_desc_id)]['line_max'] = line_cleaned_max
+                    results[(field_id,data_desc_id)]['lineCleanCommands'] = \
+                     lineCleanCommands
+                    results[(field_id,data_desc_id)]['lineCleanEndState'] = \
+                     lineCleanEndState
+                    results[(field_id,data_desc_id)]['lineQuarterBox'] = \
+                     quarter_box
 
 # store the object info in the BookKeeper.
 # copying by reference the history dictionaries may lead to problems.
@@ -676,17 +955,17 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
         return description
 
 
-    def getData(self, topLevel=False):
+    def getData(self, logName=None):
         """Public method to return the cleaned images as a 'view' of the data.
         
         Keyword arguments:
-        topLevel -- True if this is the data 'view' to be displayed directly.
+        logName -- The name of the casapy log file.
         """
 
 #        print 'ContinuumSubtractedCleanImage.getData called'
 
         self._htmlLogger.timing_start('ContinuumSubtractedCleanImage.getdata')
-        parameters = self.calculate()
+        parameters = self.calculate(logName=logName)
         self._results['parameters'] = parameters
 
 # iterate through fields and data_descs extracting the image for each in turn
@@ -697,7 +976,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 
             description = {}
             description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (a) Stokes:I - Clean image' % (
+             'Field:%s (%s) SpW:%s (a) Stokes:I - Standard clean image' % (
              self._fieldName[field_id], self._fieldType[field_id], 
              self._pad(data_desc_id))
             BaseImage._fillData(self, description, 'clean map',
@@ -705,11 +984,11 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             emptyChannelField='emptyChannels', error_key='standard_clean')
 
             description = {}
             description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (b) Stokes:I - Clean residual' % (
+             'Field:%s (%s) SpW:%s (b) Stokes:I - Standard clean residual' % (
              self._fieldName[field_id], self._fieldType[field_id], 
              self._pad(data_desc_id))
             BaseImage._fillData(self, description, 'clean residual',
@@ -717,107 +996,42 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             emptyChannelField='emptyChannels', error_key='standard_clean')
 
             description = {}
             description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (c) Stokes:I - Pilot integrated clean image' \
-             % (self._fieldName[field_id], self._fieldType[field_id],
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description, 'clean integrated map',
-             v, mapField='cleanIntegratedMapName', 
-             cleanBoxField='integrated_boxes',
-             thresholdField='integrated_threshold',
-             rms2dField='integrated_rms2d')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (d) Stokes:I - Pilot integrated residual image' \
-             % (self._fieldName[field_id], self._fieldType[field_id],
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description, 'residual integrated map',
-             v, mapField='cleanIntegratedResidualMapName', 
-             cleanBoxField='integrated_boxes', 
-             thresholdField='integrated_threshold',
-             rms2dField='integrated_rms2d')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (e) Point Spread Function' \
-             % (self._fieldName[field_id], self._fieldType[field_id],
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description, 'point spread function',
-             v, mapField='psfMapName')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - DirtyImage' \
-             % (self._fieldName[field_id], self._fieldType[field_id], 
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description, 'dirty integrated map',
-             v, mapField='dirtyMapName',
-             noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - LineDirtyImage' \
-             % (self._fieldName[field_id], self._fieldType[field_id], 
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description, 'line dirty integrated map',
-             v, mapField='lineDirtyMapName',
-             noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - ContinuumDirtyImage' \
-             % (self._fieldName[field_id], self._fieldType[field_id], 
-             self._pad(data_desc_id))
-            BaseImage._fillData(self, description,
-             'continuum dirty integrated map',
-             v, mapField='continuumDirtyMapName',
-             noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
-
-            description = {}
-            description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - ContinuumCleanImage' \
+             'Field:%s (%s) SpW:%s (c) Stokes:I - ContinuumCleanImage' \
              % (self._fieldName[field_id], self._fieldType[field_id], 
              self._pad(data_desc_id))
             BaseImage._fillData(self, description,
              'continuum clean integrated map',
-             v, mapField='continuumCleanMapName',
-             noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             v, mapField='continuumCleanMapName', cleanBoxField='boxes',
+             quarterBoxField='continuumQuarterBox',
+             error_key='continuum_clean')
 
             description = {}
             description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - ContinuumCleanResidualImage' \
+             'Field:%s (%s) SpW:%s (d) Stokes:I - ContinuumCleanResidualImage' \
              % (self._fieldName[field_id], self._fieldType[field_id], 
              self._pad(data_desc_id))
             BaseImage._fillData(self, description,
              'continuum clean residual integrated map',
-             v, mapField='continuumResidualMapName',
-             noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             v, mapField='continuumResidualMapName', cleanBoxField='boxes',
+             quarterBoxField='continuumQuarterBox',
+             error_key='continuum_clean')
 
             description = {}
             description['TITLE'] = \
-             'Field:%s (%s) SpW:%s (f) Stokes:I - LineCleanImage' \
+             'Field:%s (%s) SpW:%s (e) Stokes:I - LineCleanImage' \
              % (self._fieldName[field_id], self._fieldType[field_id], 
              self._pad(data_desc_id))
             BaseImage._fillData(self, description,
              'line clean integrated map',
-             v, mapField='lineCleanMapName',
+             v, mapField='lineCleanMapName', cleanBoxField='boxes',
+             quarterBoxField='lineQuarterBox',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             emptyChannelField='emptyChannels', error_key='line_clean')
 
             description = {}
             description['TITLE'] = \
@@ -826,10 +1040,73 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              self._pad(data_desc_id))
             BaseImage._fillData(self, description,
              'line clean residual integrated map',
-             v, mapField='lineResidualMapName',
+             v, mapField='lineResidualMapName', cleanBoxField='boxes',
+             quarterBoxField='lineQuarterBox',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
-             emptyChannelField='emptyChannels')
+             emptyChannelField='emptyChannels', error_key='line_clean')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (g) Stokes:I - Pilot integrated clean image' \
+             % (self._fieldName[field_id], self._fieldType[field_id],
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description, 'clean integrated map',
+             v, mapField='cleanIntegratedMapName', 
+             cleanBoxField='integrated_boxes',
+             thresholdField='integrated_threshold',
+             rms2dField='integrated_rms2d', error_key='pilot_clean')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (h) Stokes:I - Pilot integrated residual image' \
+             % (self._fieldName[field_id], self._fieldType[field_id],
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description, 'residual integrated map',
+             v, mapField='cleanIntegratedResidualMapName', 
+             cleanBoxField='integrated_boxes', 
+             thresholdField='integrated_threshold',
+             rms2dField='integrated_rms2d', error_key='pilot_clean')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (e) Point Spread Function' \
+             % (self._fieldName[field_id], self._fieldType[field_id],
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description, 'point spread function',
+             v, mapField='psfMapName', error_key='psf')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (i) Stokes:I - DirtyImage' \
+             % (self._fieldName[field_id], self._fieldType[field_id], 
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description, 'dirty integrated map',
+             v, mapField='dirtyMapName',
+             noisyChannelField='noisyChannels',
+             bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             emptyChannelField='emptyChannels', error_key='dirty_image')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (j) Stokes:I - LineDirtyImage' \
+             % (self._fieldName[field_id], self._fieldType[field_id], 
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description, 'line dirty integrated map',
+             v, mapField='lineDirtyMapName',
+             noisyChannelField='noisyChannels',
+             bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             emptyChannelField='emptyChannels', error_key='continuum_subtraction')
+
+            description = {}
+            description['TITLE'] = \
+             'Field:%s (%s) SpW:%s (k) Stokes:I - ContinuumDirtyImage' \
+             % (self._fieldName[field_id], self._fieldType[field_id], 
+             self._pad(data_desc_id))
+            BaseImage._fillData(self, description,
+             'continuum dirty integrated map',
+             v, mapField='continuumDirtyMapName',
+             error_key='continuum_subtraction')
 
 # return a copy of the data list, otherwise operating on it outside this class
 
@@ -887,7 +1164,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
          ['gain calibration']
 
         cleanDescription = """
-         <p>The clean image was constructed as follows:
+         <p>The cleaned images were constructed as follows:
          <ul>
           <li>The image weight was set to 'natural'.
           <li>Iterating through the fields and spws to be imaged:
@@ -993,20 +1270,20 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>F.O.V.</td>
                <td>nx</td>
                <td>cell</td>
-               <td>map name</td>
-               <td>cube name</td>
+               <td>Map Name</td>
+               <td>Cube Name</td>
                <td>Bmaj</td>
                <td>Bmin</td>
                <td>Bpa</td>
-               <td>Casapy calls</td>
-               <td>error?</td>
+               <td>Casapy Calls</td>
+               <td>Error?</td>
               </tr>"""
 
         keys = parameters['data'].keys()
         keys.sort()
         for k in keys:
             v = parameters['data'][k]
-            if v['error'] == None:
+            if v['error']['psf'] == None:
                 w = v['psfParameters']
                 cleanDescription += """
               <tr>
@@ -1025,9 +1302,9 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%s</td>""" % (w['bmaj'], w['bmin'], w['bpa'])
                 else:
                     cleanDescription += """
-               <td></td>
-               <td></td>
-               <td></td>"""
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>"""
 
 # casapy calls in a separate node      
 
@@ -1040,26 +1317,25 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     self._htmlLogger.logHTML('<br>%s' % line)
                 self._htmlLogger.closeNode()
                 cleanDescription += '''
-               </td>'''
+               </td>
+               <td>&nbsp;</td>'''
 
             else:
                 cleanDescription += """
               <tr>
                <td>%i</td>
                <td>%i</td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>""" % (k[0], k[1])
-
-            cleanDescription += """
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
                <td>%s</td>
-              </tr>""" % v['error']
+              </tr>""" % (k[0], k[1], v['error']['psf'])
         cleanDescription += """
              </table>"""
 
@@ -1074,17 +1350,17 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>Spectral Window</td>
                <td>nx</td>
                <td>cell</td>
-               <td>nchan</td>
-               <td>map name</td>
-               <td>Casapy calls</td>
-               <td>error?</td>
+               <td>Nchan</td>
+               <td>Map Name</td>
+               <td>Casapy Calls</td>
+               <td>Error?</td>
               </tr>"""
 
         keys = parameters['data'].keys()
         keys.sort()
         for k in keys:
             v = parameters['data'][k]
-            if v['error'] == None:
+            if v['error']['dirty_image'] == None:
                 w = v['dirtyImageParameters']
                 cleanDescription += """
               <tr>
@@ -1107,36 +1383,33 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     self._htmlLogger.logHTML('<br>%s' % line)
                 self._htmlLogger.closeNode()
                 cleanDescription += '''
-               </td>'''
+               </td>
+               <td>&nbsp;</td>'''
 
             else:
                 cleanDescription += """
               <tr>
                <td>%i</td>
                <td>%i</td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>""" % (k[0], k[1])
-
-            cleanDescription += """
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
                <td>%s</td>
-              </tr>""" % v['error']
+              </tr>""" % (k[0], k[1], v['error']['dirty_image'])
         cleanDescription += """
              </table>"""
 
         cleanDescription += """
-            <li>Separate dirty images for the continuum line emission
-             were calculated:
-             <ul>
-              <li>It was assumed that the first and last quarters of the 
-               spectral band were line free.
-              <li>image.continuumsub was called to fit a 1st order polynomial
-               to each spectrum in the dirty map and write this to the
-               continuum dirty cube, and the residual to the line dirty
-               cube.
-             </ul>"""
+            <li>Separate dirty images for the continuum and line emission
+             were calculated (see Casapy Calls for details).
+             It was assumed that the first and last quarters of the 
+             spectral band were line free. 'image.continuumsub' was called to 
+             fit a 1st order polynomial
+             to each spectrum in the dirty map and write this to the
+             continuum dirty cube, and the residual to the line dirty
+             cube."""
 
         cleanDescription += """
              <p>continuum and line dirty image parameters:
@@ -1146,18 +1419,18 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>Spectral Window</td>
                <td>nx</td>
                <td>cell</td>
-               <td>nchan</td>
-               <td>continuum map name</td>
-               <td>line map name</td>
-               <td>Casapy calls</td>
-               <td>error?</td>
+               <td>Nchan</td>
+               <td>Continuum Map Name</td>
+               <td>Line Map Name</td>
+               <td>Casapy Calls</td>
+               <td>Error?</td>
               </tr>"""
 
         keys = parameters['data'].keys()
         keys.sort()
         for k in keys:
             v = parameters['data'][k]
-            if v['error'] == None:
+            if v['error']['continuum_subtraction'] == None:
                 w = v['dirtyImageParameters']
                 cleanDescription += """
               <tr>
@@ -1168,7 +1441,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%i</td>
                <td>%s</td>
                <td>%s</td>""" % (k[0], k[1], w['nx'], w['cell'], w['nchan'],
-               w['continuumMapName'], w['lineMapName'])
+               v['continuumDirtyMapName'], v['lineDirtyMapName'])
 
 # casapy calls in a separate node      
 
@@ -1181,26 +1454,24 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     self._htmlLogger.logHTML('<br>%s' % line)
                 self._htmlLogger.closeNode()
                 cleanDescription += '''
-               </td>'''
+               </td>
+               <td>&nbsp;</td>'''
 
             else:
                 cleanDescription += """
               <tr>
                <td>%i</td>
                <td>%i</td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>""" % (k[0], k[1])
-
-            cleanDescription += """
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
                <td>%s</td>
-              </tr>""" % v['error']
+              </tr>""" % (k[0], k[1], v['error']['continuum_subtraction'])
         cleanDescription += """
              </table>"""
-#yyy
 
         cleanDescription += """
             <li>A 'pilot' integrated image was made and searched for 
@@ -1246,9 +1517,9 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                present whose total flux was greater than the 'cutoff'
                fraction of the strongest source found. The value of 
                'cutoff' is given in the table below and was set to 
-               10 times the rms of the pixels divided by the maximum
+               5 times the rms of the pixels divided by the maximum
                pixel value. The sources found were examined and those
-               whose mean surface brightness per beam fell below 10 times 
+               whose mean surface brightness per beam fell below 5 times 
                the pixel rms were excluded.
                <pre>
       brightness = total flux * (beam major axis * beam minor axis)
@@ -1271,21 +1542,23 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>nx</td>
                <td>cell</td>
                <td>threshold</td>
-               <td>non cleaned rms</td>
-               <td>cleaned rms</td>
-               <td>flux change</td>
+               <td>Quality</td>
+               <td>Non-cleaned rms</td>
+               <td>Cleaned rms</td>
+               <td>Cleaned rms Record</td>
+               <td>Flux Change</td>
                <td>2d rms</td>
-               <td>cutoff</td>
+               <td>Cutoff</td>
                <td>Sources</td>
-               <td>casapy calls</td>
-               <td>error</td>
+               <td>Casapy Calls</td>
+               <td>Error</td>
               </tr>"""
 
         keys = parameters['data'].keys()
         keys.sort()
         for k in keys:
             v = parameters['data'][k]
-            if v['error'] == None:
+            if v['error']['pilot_clean'] == None:
                 cleanDescription += """
               <tr>
                <td>%i</td>
@@ -1293,47 +1566,60 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%i</td>
                <td>%s</td>
                <td>%.1e</td>
+               <td>%s</td>
                <td>%.1e</td>
                <td>%.1e</td>
+               <td>%s</td>
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>""" % (
                  k[0], k[1], v['nx'], v['cell'], v['integrated_threshold'],
-                 v['integrated_rms'], v['integrated_cleaned_rms'],
+                 v['integrated_endState'], v['integrated_rms'],
+                 v['integrated_cleaned_rms'],
+                 self._formatList(v['integrated_cleaned_rms_record'], '%.2g'),
                  v['integrated_sum_change'], v['integrated_rms2d'], v['cutoff'])
 
                 if v['nSource'] == 0:
                     cleanDescription += '''
-               <td>None</td>'''
+               <td>&nbsp;</td>'''
 
                 else:
 
-                    cleanDescription += """
-               <td>
-                <table border='1'> 
+# sources in a separate node to save space on the main page
+
+                        cleanDescription += '''
+               <td>'''
+                        cleanDescription += self._htmlLogger.openNode('sources',
+                         '%s.spw%s.%s' % (stageName, k,
+                         'pilot_image_sources'), True, stringOutput=True)
+                        self._htmlLogger.logHTML('''
+                <table border='1'>
                  <tr>
                   <td>Source #</td>
                   <td>x offset (pix)</td>
                   <td>y offset (pix)</td>\
                   <td>size (pix)</td>
                   <td>flux</td>
-                 </tr>"""
+                 </tr>''')
 
-                    for i,source in enumerate(v['sources']):
-                        cleanDescription += """
+                        for i,source in enumerate(v['sources']):
+                            self._htmlLogger.logHTML("""
                  <tr>
                   <td>%i</td>
                   <td>%4.1f</td>
                   <td>%4.1f</td>
                   <td>%4.1f</td>
                   <td>%5.3f %s</td>
-                 </tr>""" % (i, source['xPosition'], 
-                         source['yPosition'], source['sourceSize'],
-                         source['flux'], source['fluxUnit'])
+                 </tr>""" % (i, source['xPosition'],
+                            source['yPosition'], source['sourceSize'],
+                             source['flux'], source['fluxUnit']))
 
-                    cleanDescription += '''
-                </table>
-               </td>'''
+                        self._htmlLogger.logHTML('''
+                </table>''')
+
+                        self._htmlLogger.closeNode()
+                        cleanDescription += ('''
+               </td>''')
 
 # casapy calls in a separate node      
 
@@ -1347,7 +1633,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                 self._htmlLogger.closeNode()
                 cleanDescription += '''
                </td>
-               <td></td>
+               <td>&nbsp;</td>
               </tr>'''
 
             else:
@@ -1355,81 +1641,78 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
               <tr>
                <td>%i</td>
                <td>%i</td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
                <td>%s</td>
-              </tr>''' % (k[0], k[1], v['error'])
+              </tr>''' % (k[0], k[1], v['error']['pilot_clean'])
 
         cleanDescription += """
              </table>
-            <li>Final images were constructed using the clean boxes
-             derived from the 'pilot':
              <ul>
-              <li>'imager.defineimage' set the cell and map sizes
-               and number of channels of the cube to be created.
-              <li>As for the pilot integrated image, a loop was 
-               entered with the image cleaned down to a lower 
-               threshold each time. For each loop 'imager.regionmask'
-               set the clean boxes derived from the pilot image.
+              <li>'threshold' gives the target threshold of the last clean.
+              <li>'Non-cleaned rms' was calculated using all data in the
+               residual image/cube outside the cleaned area.
+              <li>'Cleaned rms' was calculated using data inside the cleaned
+               area.
+              <li>'Flux Change' gives the factional increase in cleaned flux in 
+               the last clean.
+              <li>'2d rms' was calculated from pixels in the centre quarter
+               of the continuum residual image.
              </ul>
 
-             <p>Final clean image parameters:
+
+            <li>An image plane clean of the 'line' dirty cube was done
+             using the 'deconvolver' tool (see Casapy Calls for details).
+             The clean threshold was 2 * rms of the residual on the
+             corresponding standard cleaned image.
+
+             <p>Line clean cube parameters:
              <table border='1'>
               <tr>
                <td>Field</td> 
                <td>Spectral Window</td>
                <td>nx</td>
                <td>cell</td>
-               <td>clean boxes</td>  
                <td>threshold</td>
-               <td>non cleaned rms</td>
-               <td>cleaned rms</td>
-               <td>flux change</td>
+               <td>Quality</td>
+               <td>Non-cleaned rms</td>
+               <td>Cleaned rms</td>
                <td>rms 2d</td>
-               <td>max</td>
-               <td>casapy calls</td>
-               <td>error?</td>
+               <td>Max</td>
+               <td>Casapy Calls</td>
+               <td>Error?</td>
               </tr>"""
 
         keys = parameters['data'].keys()
         keys.sort()
         for k in keys:
             v = parameters['data'][k]
-            if v['error'] == None:
+            if v['error']['line_clean'] == None:
                 cleanDescription += """
               <tr>
                <td>%i</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
-               <td>
-                <table>""" % (k[0], k[1], v['nx'], v['cell'])
-
-                for box in v['boxes']:
-                    cleanDescription += """
-                 <tr>
-                  <td>[%4.1f, %4.1f, %4.1f, %4.1f]</td>
-                 </tr>""" % (
-                     box[0], box[1], box[2], box[3])
-
-                cleanDescription += """
-                </table>
-               </td>
+               <td>%.1e</td>
+               <td>%s</td>
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>
-               <td>%.1e</td>
-               <td>%.1e</td>
-               <td>%.1e</td>""" % (v['threshold'], v['rms'], 
-                      v['cleaned_rms'], v['sum_change'], v['rms2d'], v['max'])
+               <td>%.1e</td>""" % (k[0], k[1], v['nx'], v['cell'],
+                      v['line_threshold'], v['lineCleanEndState'], 
+                      v['line_rms'], v['line_cleaned_rms'],
+                      v['line_rms2d'], v['line_max'])
 
 # casapy calls in a separate node      
 
@@ -1437,45 +1720,33 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>'''
                 cleanDescription += self._htmlLogger.openNode('casapy calls',
                  '%s.field%sspw%s.%s' % (stageName, k[0], k[1], 
-                 'final_image_casapy_calls'), True, stringOutput=True)
-                for line in v['finalCleanCommands']:
+                 'line_cube_casapy_calls'), True, stringOutput=True)
+                for line in v['lineCleanCommands']:
                     self._htmlLogger.logHTML('<br>%s' % line)
                 self._htmlLogger.closeNode()
                 cleanDescription += '''
                </td>
-               <td></td>'''
+               <td>&nbsp;</td>'''
 
             else:
                 cleanDescription += '''
               <tr>
                <td>%i</td>
                <td>%i</td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
-               <td></td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
                <td>%s</td>
-              </tr>''' % (k[0], k[1], v['error'])
+              </tr>''' % (k[0], k[1], v['error']['line_clean'])
 
         cleanDescription += """
              </table>
-             <ul>
-              <li>'threshold' gives the target threshold of the last clean.
-              <li>'non cleaned rms' was calculated using all data in the
-               residual image/cube outside the cleaned area.
-              <li>'cleaned rms' was calculated using data inside the cleaned
-               area.
-              <li>'flux change' gives the factional increase in cleaned flux in 
-               the last clean.
-              <li>'2d rms' was calculated from pixels in the centre quarter
-               of the continuum residual image.
-             </ul>
             <li>Flat representations of the clean cubes were calculated
              by averaging them over the 'channel' axis."""
 
@@ -1485,10 +1756,99 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              the average.""" % self._bandpassFlaggingStage
 
         cleanDescription += """
+             </table>
+            <li>An image plane clean of the 'continuum' dirty integrated map 
+             was done using the 'deconvolver' tool, using a method similar to
+             that described for the line cube.
+
+             <p>Continuum clean map parameters:
+             <table border='1'>
+              <tr>
+               <td>Field</td> 
+               <td>Spectral Window</td>
+               <td>nx</td>
+               <td>cell</td>
+               <td>threshold</td>
+               <td>Quality</td>
+               <td>Non-cleaned rms</td>
+               <td>Cleaned rms</td>
+               <td>rms 2d</td>
+               <td>Max</td>
+               <td>Casapy Calls</td>
+               <td>Error?</td>
+              </tr>"""
+
+        keys = parameters['data'].keys()
+        keys.sort()
+        for k in keys:
+            v = parameters['data'][k]
+            if v['error']['continuum_clean'] == None:
+                cleanDescription += """
+              <tr>
+               <td>%i</td>
+               <td>%i</td>
+               <td>%i</td>
+               <td>%s</td>
+               <td>%.1e</td>
+               <td>%s</td>
+               <td>%.1e</td>
+               <td>%.1e</td>
+               <td>%.1e</td>
+               <td>%.1e</td>""" % (k[0], k[1], v['nx'], v['cell'],
+                      v['continuum_threshold'],
+                      v['continuumCleanEndState'],
+                      v['continuum_rms'], v['continuum_cleaned_rms'],
+                      v['continuum_rms2d'],
+                      v['continuum_max'])
+
+# casapy calls in a separate node      
+
+                cleanDescription += '''
+               <td>'''
+                cleanDescription += self._htmlLogger.openNode('casapy calls',
+                 '%s.field%sspw%s.%s' % (stageName, k[0], k[1], 
+                 'continuum_map_casapy_calls'), True, stringOutput=True)
+                for line in v['continuumCleanCommands']:
+                    self._htmlLogger.logHTML('<br>%s' % line)
+                self._htmlLogger.closeNode()
+                cleanDescription += '''
+               </td>
+               <td>&nbsp;</td>'''
+
+            else:
+                cleanDescription += '''
+              <tr>
+               <td>%i</td>
+               <td>%i</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>&nbsp;</td>
+               <td>%s</td>
+              </tr>''' % (k[0], k[1], v['error']['continuum_clean'])
+
+        cleanDescription += """
+             </table>
+             <ul>
+              <li>'threshold' gives the target threshold of the last clean.
+              <li>'Non-cleaned rms' was calculated using all data in the
+               residual image/cube outside the cleaned area.
+              <li>'Cleaned rms' was calculated using data inside the cleaned
+               area.
+              <li>'2d rms' was calculated from pixels in the centre quarter
+               of the continuum residual image.
+             </ul>"""
+
+        cleanDescription += """
            </ul>
-         </ul>
-         <p>The clean image was constructed by Python class 
-         ContinummSubtractedCleanImage."""
+         </ul>"""
+#         <p>The clean image was constructed by Python class 
+#         ContinummSubtractedCleanImage."""
 
         cleanImageDescription['clean image'] = cleanDescription
         return cleanImageDescription
@@ -1502,16 +1862,6 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
         """
 
         description = self.createGeneralHTMLDescription(stageName)
-
-#        self._htmlLogger.logHTML("""
-#         <p>The data view is a clean image that was constructed as 
-#            follows:
-#            <ul>
-#                <li>""" + description['bandpass calibration'] + """
-#                <li>""" + description['gain calibration'] + """
-#                <li>""" + description['clean image'] + """
-#            </ul>""")
-
         self._htmlLogger.logHTML("""<p>The data view is a clean image.""")
 
 

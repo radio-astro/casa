@@ -102,9 +102,10 @@ class BandpassMerit(BaseDataModifier):
          max(antenna_range)+1], float)
         merit_flag = False
 
+        test_field = None
         for k,v in view_results['data'].iteritems():
             description = pickle.loads(k)
-            field = description['method']['test_field_id']
+            test_field = description['method']['test_field_id']
             method = description['method']
             dd = description['DATA_DESC_ID']
             corr = list(corr_axis[dd]).index(description['CORR'])
@@ -146,10 +147,13 @@ class BandpassMerit(BaseDataModifier):
         for dd in data_desc_range:
             if nchannels[dd] == 1:
                 continue
+            if test_field == None:
+                continue
+
             for corr in range(max_corr):
                 description = {}
                 title = '''Bandpass calibration merit - Field:%s Spw:%s Corr:%s''' % (
-                 self._pad(field), self._pad(dd), self._pad(corr))
+                 self._pad(test_field), self._pad(dd), self._pad(corr))
 
 # build title to appear in link, formatted with html
 
@@ -163,7 +167,7 @@ class BandpassMerit(BaseDataModifier):
 #                title += '</ul>'
                 description['TITLE'] = title 
                 description['method'] = method
-                description['FIELD_ID'] = field
+                description['FIELD_ID'] = test_field
                 description['DATA_DESC_ID'] = dd
                 description['CORR'] = corr
 
@@ -232,8 +236,8 @@ class BandpassMerit(BaseDataModifier):
 
             sum(abs(data - median(data))) / sum(sigma)
 
-         </pre>
-         <p>The figure of merit was calculated by Python class BandpassMerit.'''
+         </pre>'''
+#         <p>The figure of merit was calculated by Python class BandpassMerit.'''
 
         description += """<p>""" + self._view.createDetailedHTMLDescription(
          stageName, parameters=parameters['dependencies']['view'])\

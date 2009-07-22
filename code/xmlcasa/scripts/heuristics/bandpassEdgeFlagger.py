@@ -587,5 +587,5 @@ class BandpassEdgeFlagger(BaseFlagger):
 
             self._htmlLogger.logHTML('<li> %s' % description)
 
-        self._htmlLogger.logHTML('''</ul>
-        <p>The flagging was performed by Python class BandpassEdgeFlagger.''')
+#        self._htmlLogger.logHTML('''</ul>
+#        <p>The flagging was performed by Python class BandpassEdgeFlagger.''')

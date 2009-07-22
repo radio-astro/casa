@@ -15,6 +15,8 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 12-Dec-2008 jfl 12-dec release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
+# 15-Jun-2009 jfl added memory report.
 
 # package modules
 
@@ -357,6 +359,8 @@ class HTMLLogger:
                        then the link between the current file and the
                        previous results structure is written.  
         """
+#        print 'openNode', link
+
         relNodeName = '%s.html' % fileName
         relNodeName = relNodeName.replace('/', '')
         relNodeName = relNodeName.replace(' ', '')
@@ -485,6 +489,13 @@ class HTMLLogger:
 
 #        print 'timingStageStop'
         self.timing_stop('total')
+
+# get memory usage here
+
+        pid = os.getpid() 
+        a2 = os.popen('ps -p %d -o rss,vsz' % pid).readlines()
+        self._stageTiming['memory'] = a2[1] 
+
         self._timing.append(self._stageTiming.copy())
 
 
@@ -523,8 +534,10 @@ class HTMLLogger:
 
 # times for each stage
 
-        for stage in self._timing[1:]:
+        for timingStage in self._timing[1:]:
+            stage = timingStage.copy()
             stageName = stage.pop('name')
+            ignore = stage.pop('memory')
             items = stage.items()
             self.logHTML("""<h5>Stage: %s</h5>""" % stageName)
             self.logHTML("""<table><tr><td>Method</td><td>ncalls</td>
@@ -542,4 +555,18 @@ class HTMLLogger:
                  '<tr><td>%s</td><td>%s</td><td>%5.2f</td><td>%5.2f</td></tr>' % (
                  key, ncalls, item[1][1], item[1][3]))
             self.logHTML("</table>")
+
+# output memory usage in list order
+
+        self.logHTML("""<h4>Memory Usage</h4>""")
+        self.logHTML("""<table><tr><td>Stage</td><td>memory (rss vsz) </td></tr>""")
+
+        for stage in self._timing[1:]:
+            stageName = stage.pop('name')
+            memory = stage.pop('memory')
+
+            self.logHTML(
+             '<tr><td>%s</td><td>%s</td></tr>' % (stageName, memory))
+        self.logHTML("</table>")
+
         self.closeNode()

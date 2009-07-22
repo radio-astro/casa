@@ -57,18 +57,22 @@ imager::imager()
 
 imager::~imager()
 {
- if(itsMS)delete itsMS;
- itsMS=0;
- if(itsImager)delete itsImager;
- itsImager=0;
- if(itsPlotter)delete itsPlotter;
- itsPlotter=0;
+ if(itsMS)
+   delete itsMS;
+ itsMS = 0;
+ if(itsImager)
+   delete itsImager;
+ itsImager = 0;
+ if(itsPlotter)
+   delete itsPlotter;
+ itsPlotter = 0;
 }
 
 bool
-imager::advise(int& pixels, Quantity& cell, int& facets, std::string& phasecenter, const bool takeadvice, const double amplitudeloss, const ::casac::variant& fieldofview)
+imager::advise(int& pixels, ::casac::record& cell, int& facets,
+               std::string& phasecenter, const bool takeadvice,
+               const double amplitudeloss, const ::casac::variant& fieldofview)
 {
-
    Bool rstat(False);
    if(hasValidMS_p){
       try {
@@ -79,23 +83,30 @@ imager::advise(int& pixels, Quantity& cell, int& facets, std::string& phasecente
    
    // pixels and facets are expected to be returned !
          rstat = itsImager->advise(takeadvice, amplitudeloss, qfieldofview,
-                            qcell, pixels, facets, mphaseCenter);
-         cell = casacQuantity(qcell);
+                                   qcell, pixels, facets, mphaseCenter);
+         cell = *recordFromQuantity(qcell);
       //std::cerr << qcell << std::endl;
       //std::cerr << pixels << std::endl;
       //std::cerr << facets << std::endl;
       //std::cerr << mphaseCenter << std::endl;
-         ostringstream oss;
-         mphaseCenter.print(oss);
-         phasecenter = oss.str();
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
+         if(!MDirection2str(mphaseCenter, phasecenter)){ // <- try preferred format
+           ostringstream oss;
+           mphaseCenter.print(oss);     // Much less friendly format.
+           phasecenter = oss.str();
+         }
        }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
+      catch(AipsError x){
+        *itsLog << LogIO::SEVERE << "Exception Reported: "
+                << x.getMesg() << LogIO::POST;
+        RETHROW(x);
+      }
+   }
+   else{
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open."
+              << LogIO::POST;
+   }
+   return rstat;
 }
 
 bool
@@ -135,6 +146,37 @@ imager::boxmask(const std::string& mask, const std::vector<int>& blc, const std:
       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
     }
     return rstat;
+}
+
+bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
+{
+  Bool rstat(false);
+  try {
+    *itsLog << LogOrigin("im", "calcuvw");
+    if(!itsMS->isWritable()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << LogIO::POST;
+      return false;
+    }
+
+    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
+      
+    FixVis visfixer(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
+    //visfixer.setField(m1toBlankCStr_(fields));
+    visfixer.setFields(fields);
+    rstat = visfixer.calc_uvw(String(refcode));
+    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
 }
 
 bool
@@ -412,25 +454,71 @@ imager::filter(const std::string& type, const ::casac::variant& bmaj, const ::ca
 }
 
 bool
-imager::fitpsf(Quantity& bmaj, Quantity& bmin, Quantity& bpa, const std::string& psf, const bool async)
+imager::fitpsf(::casac::record& bmaj, ::casac::record& bmin, ::casac::record& bpa,
+               const std::string& psf, const bool async)
 {
-
-/*
-   Quantities are returned! so must not be const 
-*/
-
+  /*
+    bmaj, bmin, and bpa are returned, so they must not be const!
+  */
    Bool rstat(False);
    try {
       casa::Quantity cbmaj, cbmin, cbpa;
       rstat = itsImager->fitpsf(psf, cbmaj, cbmin, cbpa);
-      bpa = casacQuantity(cbpa);
-      bmaj = casacQuantity(cbmaj);
-      bmin = casacQuantity(cbmin);
-    } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       RETHROW(x);
+      bpa   = *recordFromQuantity(cbpa);
+      bmaj  = *recordFromQuantity(cbmaj);
+      bmin  = *recordFromQuantity(cbmin);
+   }
+   catch(AipsError x){
+     *itsLog << LogIO::SEVERE << "Exception Reported: "
+             << x.getMesg() << LogIO::POST;
+     RETHROW(x);
+   }
+   return rstat;
+}
+
+bool imager::fixvis(const std::vector<int>& fields,
+                    const std::vector<std::string>& phaseDirs,
+                    const std::string& refcode,
+                    const std::vector<double>& distances,
+                    const std::string& dataCol)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("im", "fixvis");
+    if(!itsMS->isWritable()){
+      *itsLog << LogIO::SEVERE
+	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << LogIO::POST;
+      return false;
     }
-    return rstat;
+    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
+      
+    casa::FixVis visfixer(*itsMS);
+    casa::Vector<casa::Int> cFields(fields);
+    int nFields = cFields.nelements();
+	
+    visfixer.setFields(cFields);
+
+    casa::Vector<casa::MDirection> phaseCenters;
+    phaseCenters.resize(nFields);
+    for(int i = 0; i < nFields; ++i){
+      if(!casaMDirection(phaseDirs[i], phaseCenters[i]))
+        throw(AipsError("Could not interpret phaseDirs parameter"));
+    }
+    visfixer.setPhaseDirs(phaseCenters, cFields);
+
+    visfixer.setDistances(Vector<Double>(distances));
+    rstat = visfixer.fixvis(refcode, dataCol);
+    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
 }
 
 bool
@@ -622,23 +710,32 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
 }
 
 bool
-imager::pb(const std::string& inimage, const std::string& outimage, const std::string& incomps, const std::string& outcomps, const std::string& operation, const std::string& pointingcenter, const ::casac::variant& parangle, const std::string& pborvp, const bool async)
+imager::pb(const std::string& inimage, const std::string& outimage,
+           const std::string& incomps, const std::string& outcomps,
+           const std::string& operation, const std::string& pointingcenter,
+           const ::casac::variant& parangle, const std::string& pborvp,
+           const bool async)
 {
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         MDirection mpointingcenter;
-         mdFromString(mpointingcenter, pointingcenter);
-         rstat = itsImager->pb(inimage, outimage, incomps, outcomps, operation, mpointingcenter,
-                               casaQuantity(parangle), pborvp);
-      } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
+  Bool rstat(False);
+  if(hasValidMS_p){
+    try{
+      MDirection mpointingcenter;
+      mdFromString(mpointingcenter, pointingcenter);
+      rstat = itsImager->pb(inimage, outimage, incomps, outcomps, operation,
+                            mpointingcenter, casaQuantity(parangle), pborvp);
+    }
+    catch(AipsError x){
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+              << LogIO::POST;
+      RETHROW(x);
+    }
+  }
+  else{
+    *itsLog << LogIO::SEVERE
+            << "No MeasurementSet has been assigned, please run open."
+            << LogIO::POST;
+  }
+  return rstat;
 }
 
 bool
@@ -1005,38 +1102,50 @@ imager::restore(const std::vector<std::string>& model, const std::string& compli
 }
 
 bool
-imager::sensitivity(Quantity& pointsource, double& relative, double& sumweights, const bool async)
+imager::sensitivity(::casac::record& pointsource, double& relative,
+                    double& sumweights, const bool async)
 {
-
    Bool rstat(False);
    if(hasValidMS_p){
-      try { 
+      try{ 
         casa::Quantity qpointsource;
         rstat = itsImager->sensitivity(qpointsource, relative, sumweights);
-        pointsource = casacQuantity(qpointsource);
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        pointsource = *recordFromQuantity(qpointsource);
+      }
+      catch(AipsError x){
+         *itsLog << LogIO::SEVERE << "Exception Reported: "
+                 << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+   }
+   else{
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open."
+              << LogIO::POST;
    }
    return rstat;
 }
 
 bool
-imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool async)
+imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin,
+                const ::casac::variant& bpa, const bool async)
 {
    Bool rstat(False);
    if(hasValidMS_p){
-      try {
-        rstat = itsImager->setbeam(casaQuantity(bmaj), casaQuantity(bmin), casaQuantity(bpa));
-      } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      try{
+        rstat = itsImager->setbeam(casaQuantity(bmaj), casaQuantity(bmin),
+                                   casaQuantity(bpa));
+      }
+      catch(AipsError x){
+         *itsLog << LogIO::SEVERE << "Exception Reported: "
+                 << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+   }
+   else{
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open."
+              << LogIO::POST;
    }
    return rstat;
 }
@@ -1515,22 +1624,29 @@ imager::uvrange(const double uvmin, const double uvmax)
 }
 
 bool
-imager::weight(const std::string& type, const std::string& rmode, const ::casac::variant& noise, const double robust, const ::casac::variant& fieldofview, const int npixels, const bool mosaic, const bool async)
+imager::weight(const std::string& type, const std::string& rmode,
+               const ::casac::variant& noise, const double robust,
+               const ::casac::variant& fieldofview, const int npixels,
+               const bool mosaic, const bool async)
 {
-
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         rstat = itsImager->weight(String(type), String(rmode), casaQuantity(noise), robust,
-                      casaQuantity(fieldofview), npixels);
-      } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-      }
-   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   }
-   return rstat;
+  Bool rstat(False);
+  if(hasValidMS_p){
+    try{
+      rstat = itsImager->weight(String(type), String(rmode), casaQuantity(noise),
+                                robust, casaQuantity(fieldofview), npixels);
+    }
+    catch(AipsError x){
+      *itsLog << LogIO::SEVERE << "Exception Reported: "
+              << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  }
+  else{
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open."
+              << LogIO::POST;
+  }
+  return rstat;
 }
 
 bool imager::mpFromString(casa::MPosition &thePos, const casa::String &in)
@@ -1561,7 +1677,8 @@ bool imager::mdFromString(casa::MDirection &theDir, const casa::String &in)
    return rstat;
 }
 
-bool imager::mrvFromString(casa::MRadialVelocity &theRadialVelocity, const casa::String &in)
+bool imager::mrvFromString(casa::MRadialVelocity &theRadialVelocity,
+                           const casa::String &in)
 {
    String tmpA, tmpB, tmpC;
    bool rstat(false);
@@ -1592,82 +1709,6 @@ bool imager::mrvFromString(casa::MRadialVelocity &theRadialVelocity, const casa:
       }
    }
    return rstat; 
-}
-
-bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
-{
-  Bool rstat(false);
-  try {
-    *itsLog << LogOrigin("im", "calcuvw");
-    if(!itsMS->isWritable()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open im with a writable ms so the UVW column can be changed."
-	      << LogIO::POST;
-      return false;
-    }
-
-    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
-      
-    FixVis visfixer(*itsMS);
-    *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
-    //visfixer.setField(m1toBlankCStr_(fields));
-    visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw(String(refcode));
-    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
-}
-
-bool imager::fixvis(const std::vector<int>& fields,
-                    const std::vector<std::string>& phaseDirs,
-                    const std::string& refcode,
-                    const std::vector<double>& distances,
-                    const std::string& dataCol)
-{
-  Bool rstat(False);
-  try {
-    *itsLog << LogOrigin("im", "fixvis");
-    if(!itsMS->isWritable()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open im with a writable ms so the UVW column can be changed."
-	      << LogIO::POST;
-      return false;
-    }
-    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
-      
-    casa::FixVis visfixer(*itsMS);
-    casa::Vector<casa::Int> cFields(fields);
-    int nFields = cFields.nelements();
-	
-    visfixer.setFields(cFields);
-
-    casa::Vector<casa::MDirection> phaseCenters;
-    phaseCenters.resize(nFields);
-    for(int i = 0; i < nFields; ++i){
-      if(!casaMDirection(phaseDirs[i], phaseCenters[i]))
-        throw(AipsError("Could not interpret phaseDirs parameter"));
-    }
-    visfixer.setPhaseDirs(phaseCenters, cFields);
-
-    visfixer.setDistances(Vector<Double>(distances));
-    rstat = visfixer.fixvis(refcode, dataCol);
-    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
 }
 
 } // casac namespace

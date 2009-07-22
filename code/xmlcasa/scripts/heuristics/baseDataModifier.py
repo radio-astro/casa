@@ -11,6 +11,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -20,7 +21,7 @@ from numpy import *
 # alma modules
 
 import baseData
-
+import util
 
 class BaseDataModifier:
 
@@ -118,7 +119,7 @@ class BaseDataModifier:
 
         success = self._table.open('%s/FIELD' % self._msName)
         fieldNames = self._table.getcol('NAME')
-        fieldTypes = self._table.getcol('SOURCE_TYPE')
+        fieldTypes = util.util.get_source_types(self._table)
         self._table.close()
         self._results['summary']['field_names'] = fieldNames
         self._results['summary']['field_types'] = fieldTypes
@@ -208,8 +209,10 @@ class BaseDataModifier:
         flagTargetIDs    -- List of IDs of fields potentially flagged.
         """
 
-        self._view.writeFlaggingStatistics(stageDescription, rules,
+        flagMessage,colour = self._view.writeFlaggingStatistics(stageDescription, rules,
          flagTargetIDs)
+
+        return flagMessage, colour
 
 
     def writeHTMLDescription(self, stageName, topLevel):

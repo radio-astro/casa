@@ -275,6 +275,7 @@ no match is found, the given specification is matched against the
 station name (the {\tt STATION} column of the {\tt ANTENNA} sub-table
 of the MS).
 
+
 \subsubsection{Baseline specification}
 
 A baseline specification consists of an ANT, an ANT followed by an
@@ -320,6 +321,31 @@ ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
 \end{center}
 \end{table}
 
+\subsubsection{Baseline negation operator}
+
+The negation operator '!' can be used to exclude a baseline
+specification from the final selection. {\it Note that this is a
+baseline negation operator and not antenna negation operator}.  E.g.,
+
+\begin{itemize}
+\item {\tt !15}  excludes all baselines with the antenna {\bf
+  named} ``15''
+\item {\tt !1$\sim$10} excludes all baselines involving the antennas
+  {\bf named} between ``1'' and ``10''
+\item {\tt !1,3,5,7,9}  excludes all baselines involving antennas {\bf named} ``1'',
+  ``3'', ``5'', ``7'' and ``9''
+\item {\tt 1~10;!5} selects all baselines involving antennas {\bf
+  named} between ``1'' and ``10'' {\it except} those involving antenna
+  {\bf named} ``5''.
+\end{itemize}
+
+Note that the negation operator applies to baseline specification {\it
+immediately} following it.  The negation operator {\tt cannot} be
+applied to individual members of the antenna specification/antenna
+list.  Hence, e.g. the expression {\tt ``1,2,!5,8''} is syntactically
+incorrect.
+
+\subsubsection{Examples}
 In the most comman usage, an atomic ANT selects all baselines
 containing all the antennas in ANT.  ANT\& selects only baselines
 between the list of antennas in the antenna specification.  ANT1\&ANT2
@@ -334,12 +360,16 @@ selects baselines between antennas in ANT1 and ANT2 only.  E.g.
 Following are more examples of baseline specification using ranges and
 names:
 \begin{itemize}
-\item baseline={\tt 1$\sim$3}             same as baseline=1,2,3
-\item baseline={\tt 1$\sim$3\&}           same as baseline=1,2,3\&
+\item baseline={\tt 1$\sim$3} same as baseline=1,2,3
+\item baseline={\tt 1$\sim$3\&} same as baseline=1,2,3\&
 \item baseline={\tt 1$\sim$3 \& 4$\sim$5} same as baseline={\tt 1,2,3\&4,5,6}
-\item baseline={\tt VLA:N* \& VLA:E*} selects all baselines between antennas
-                            with names starting with "VLA:N" and
-                            "VLA:E". 
+\item baseline={\tt VLA:N* \& VLA:E*} selects all baselines between
+                            antennas with names starting with "VLA:N"
+                            and "VLA:E".
+\item baseline={\tt 21;!15} selects baselines between antenna {\bf
+  named} ``21'' and all other available antennas, {\it except} antenna
+  {\bf named} ``15''.  I.e, baseline ``21-15'' (or its conjugate, if
+  present in the database) is excluded.
 \end{itemize}
 
 The full baseline selection expression is any of the examples shown
@@ -458,15 +488,15 @@ The full uv-distance selection expression is a comma-separated list of
 any of the above mentioned uv-distance specifications.  E.g.
 
 \begin{itemize}
-\item uvdist={\tt 100Kl}   selects all baselines for which $\sqrt{u^2+v^2}$ is
+\item uvdist={\tt 100Klambda}   selects all baselines for which $\sqrt{u^2+v^2}$ is
                     equal to 100 Kilo-Lambda. 
 \item uvdist={\tt 100Km}   selects all baselines for which $\sqrt{u^2+v^2}$ is
                     equal to 100 Kilo-meter.
-\item uvdist={\tt 100$\sim$200Kl} selects all baselines for which $\sqrt{u^2+v^2}$ is
+\item uvdist={\tt 100$\sim$200Klambda} selects all baselines for which $\sqrt{u^2+v^2}$ is
                       in the range [100, 200] Kilo-lambda.
-\item uvdist={\tt $>$100Kl}   selects all baselines for which $\sqrt{u^2 + v^2}$
+\item uvdist={\tt $>$100Klambda}   selects all baselines for which $\sqrt{u^2 + v^2}$
                       is greater than 100 Kilo-lambda.
-\item uvdist={\tt $<$100Kl}   selects all baselines for which $\sqrt{u^2 + v^2}$
+\item uvdist={\tt $<$100Klambda}   selects all baselines for which $\sqrt{u^2 + v^2}$
                       is less than 100 Kilo-lambda.
 \end{itemize}
 
@@ -602,7 +632,7 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 	\item Channels 20, 30 and 40 for SPW 5
 \end{itemize}          
 
-\item freq={\tt 1421Mhz;1422Mhz;1423Mhz : 0;1;2;10$\sim$94 20;30$\sim$100$\sim$10 ,0$\sim$3:10$\sim$30}
+\item freq={\tt 1421Mhz;1422Mhz;1423Mhz : 0;1;2;10$\sim$20;30$\sim$100$\sim$10 ,0$\sim$3:10$\sim$30}
 
 	 selects
 

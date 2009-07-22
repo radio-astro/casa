@@ -70,6 +70,18 @@ public:
     static const int UPDATE_DISPLAY;
     // </group>
     
+    // Update flag for log group.
+    // <group>
+    static const String UPDATE_LOG_NAME;
+    static const int UPDATE_LOG;
+    // </group>
+    
+    // Update flag for plotms_options group.
+    // <group>
+    static const String UPDATE_PLOTMS_OPTIONS_NAME;
+    static const int UPDATE_PLOTMS_OPTIONS;
+    // </group>
+    
 private:
     // Disable constructor.
     PMS_PP() { }

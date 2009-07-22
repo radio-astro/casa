@@ -43,7 +43,7 @@ NRO45Reader::NRO45Reader( string name )
   : NROReader( name )
 {
   // DEBUG
-  cout << "NRO45Reader::NRO45Reader()" << endl ;
+  //cout << "NRO45Reader::NRO45Reader()" << endl ;
   //
 }
 
@@ -55,6 +55,8 @@ NRO45Reader::~NRO45Reader()
 // Read data header
 Int NRO45Reader::read() 
 {
+  LogIO os( LogOrigin( "NRO45Reader", "read()", WHERE ) ) ;
+
   // DEBUG
   //cout << "NRO45Reader::read()" << endl ;
   //
@@ -67,7 +69,7 @@ Int NRO45Reader::read()
   status = dataset_->fillHeader() ;
 
   if ( status != 0 ) {
-    cerr << "Failed to fill data header." << endl ;
+    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
   }
 
   return status ;

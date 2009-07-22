@@ -71,7 +71,8 @@ class CoaddedAntennaAmplitude(BaseData):
                  msFlagger, htmlLogger, msName, stageName,
                  viewClassList=bandpassCal[1:])
             self._gainCal = gainCal(tools, bookKeeper, msCalibrater,
-             msFlagger, htmlLogger, msName, stageName, bandpassCal, 
+             msFlagger, htmlLogger, msName, stageName, 
+             bandpassCal=bandpassCal, 
              bandpassFlaggingStage=bandpassFlaggingStage)
 
 
@@ -142,9 +143,9 @@ class CoaddedAntennaAmplitude(BaseData):
                              field=field_id)
                             self._gainCal.setapply(spw=data_desc_id,
                              field=field_id)
-                            self._msCalibrater.correct(spw=data_desc_id,
-                             field=field_id, commands=results['parameters']
-                             [(field_id,data_desc_id)]['commands'])
+                            results['parameters'][(field_id,data_desc_id)]\
+                             ['commands'] += self._msCalibrater.correct(
+                             spw=data_desc_id, field=field_id)
 
                         except KeyboardInterrupt:
                             raise

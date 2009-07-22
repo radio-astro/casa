@@ -54,11 +54,10 @@ class SDCalibration:
         self.__tabletype = self.gettabletype()
         # NOTE: self.__tablein is always scantable
         self.__tablein = self.importdata()   
-        # output 
-        self.__fileout = filename.rstrip('/') + '_cal'
+        # output
         self.__tableout = None
         self.__calib = False
-        # calibration type
+        # calibration type is set automatically if 'none' is given
         if ( caltype != 'none' ):
             self.__caltype = caltype
         else:
@@ -106,7 +105,7 @@ class SDCalibration:
     def calibrate( self ):
         """
         Do calibration
-        Now only position switch is supported with limited use
+        NOTE: frequency switching is not implemented yet
         """
         # return if already calibrated
         if ( self.__calib ):
@@ -138,22 +137,40 @@ class SDCalibration:
     ###
     # save data
     ###
-    def save( self ):
+    def save( self, outfile=None ):
         """
-        Save calibrated result
+        Save calibrated result as ASAP Table
         """
         if ( not self.__calib ):
             self.log('INFO', msg='Data is not calibrated yet. Do calibrate first.')
             return
 
-        self.__tableout.save( self.__fileout, format='ASAP', overwrite=True )
+        if ( outfile == None ):
+            outfile = self.__filein.rstrip('/') + '_cal'
+        self.__tableout.save( outfile, format='ASAP', overwrite=True )
         # spectral unit should be K after the calibration
         tbtool=casac.homefinder.find_home_by_name('tableHome')
         tb=tbtool.create()
-        tb.open( self.__fileout, nomodify=False )
+        tb.open( outfile, nomodify=False )
         tb.putkeyword( 'FluxUnit', 'K' )
+        antname=tb.getkeyword( 'AntennaName' )
         tb.flush()
         tb.close()
+        # remove _pson, _wobon, _fshi, _fslo, ... from SRCNAME
+        if ( antname == 'APEX-12m' ):
+            calstr=''
+            if ( self.__caltype == 'ps' or self.__caltype == 'otf' ):
+                calstr = '_pson'
+            elif ( self.__caltype == 'wob' ):
+                calstr = '_wobon'
+            self.log( 'DEBUG', msg='Remove %s from SRCNAME' %(calstr) )
+            tb.open( outfile, nomodify=False )
+            srcname=tb.getcol('SRCNAME')
+            for i in range(len(srcname)):
+                srcname[i] = srcname[i].rstrip( calstr )
+            tb.putcol( 'SRCNAME', srcname )
+            tb.flush()
+            tb.close()
 
     ###
     # check if data was calibrated or not
@@ -271,13 +288,15 @@ class SDCalibration:
                 otype = 'map'
             srcnamecol = tb.getcol( 'SRCNAME' )
             cyclecol = tb.getcol( 'CYCLENO' )
+            tcalidcol = tb.getcol( 'TCAL_ID' )
             tb.close()
             # get tcal id
             tb.open( self.__filein )
             tcalid = []
             for i in range( srcnamecol.shape[0] ):
                 if ( srcnamecol[i].find( '_pson' ) != -1 ):
-                    tcalid.append( i )
+                    tcalid.append( tcalidcol[i] )
+            self.log( 'DEBUG', msg='tcalid = %s' % tcalid )
             tcalid = numpy.array( tcalid )
             tb.close()
             del tb
@@ -331,14 +350,17 @@ class SDCalibration:
                 asky.set_selection(sel)
                 ahot.set_selection(sel)
                 sel.set_scans(ic)
-                self.log('DEBUG',msg='search sky scan for row %s' % i )
+                self.log('DEBUG',msg='search sky scan for row %s (scanno=%s)' % (i,ic) )
                 spsky=self.getspectrum( sref, asky )
-                self.log('DEBUG',msg='search hot scan for row %s' % i )
+                self.log('DEBUG',msg='search hot scan for row %s (scanno=%s)' % (i,ic) )
                 sphot=self.getspectrum( sref, ahot )
                 spon=numpy.array(self.__tableout._getspectrum(i))
-                self.log('DEBUG',msg='search off scan for row %s' % i )
+                self.log('DEBUG',msg='search off scan for row %s (scanno=%s)' % (i,ic) )
                 spoff=self.getspectrum( sref, aoff )
-                ta=(spon-spoff)/(sphot-spsky)*self.__tcal[tcalid[i]]
+                # Classical chopper-wheel method (Ulich & Haas 1976)
+                #ta=(spon-spoff)/(sphot-spsky)*self.__tcal[tcalid[i]]
+                # APEX calibration
+                ta=((spon-spoff)/spoff)*(spsky/(sphot-spsky))*self.__tcal[tcalid[i]]
                 self.__tableout._setspectrum( ta, i )
                 aoff.set_selection()
                 asky.set_selection()
@@ -426,7 +448,7 @@ class SDCalibration:
                 type = 'asap'
             elif os.path.exists( self.__filein+'/ASDM.xml' ):
                 type = 'asdm'
-        elif re.search( '\.fits$', self._filename.lower() ) is not None:
+        elif re.search( '\.fits$', self.__filein.lower() ) is not None:
             type = 'fits'
 
         self.log( 'INFO', 'Table type is %s' % type )
@@ -558,6 +580,7 @@ class SDCalibration:
             for i in range( t.nrows() ):
                 tcalcol.append( t.getcell( 'TCAL', i ) )
             #self.log( 'DEBUG', msg='tcalcol = %s' % tcalcol )
+            self.log( 'DEBUG', msg='len(tcalcol) = %s' % len(tcalcol) )
             if ( len( tcalcol ) != 0 ):
                 val = tcalcol
             t.close()
@@ -692,21 +715,24 @@ class SDCalibration:
         """
         getspectrum( self, ref, scan, mode='proxim' )
 
-        ref  --- reference scantable
-        scan --- target scantable
-        mode --- indicate how to get spectrum
-                 'proxim'  :  get spectrum from the row which is a proximate
-                              time with respect to ref. (default)
-                 'immedi'  :  get spectrum from the row which is an immediate
-                              time with respect to ref.
-                 'nearest' :  get spectrum from the row which have the nearest
-                              time with respect to ref. 
-                 'linear'  :  get sprctrum by linearly interpolating spectra
-                              between the rows which corresponds to the
-                              proximate and the immediate with respect to ref.
+        reftime --- reference time
+        scan    --- target scantable
+        mode    --- indicate how to get spectrum
+                  'proxim'  :  get spectrum from the row which is a proximate
+                               time with respect to ref. (default)
+                  'immedi'  :  get spectrum from the row which is an immediate
+                               time with respect to ref.
+                  'nearest' :  get spectrum from the row which have the nearest
+                               time with respect to ref. 
+                  'linear'  :  get sprctrum by linearly interpolating spectra
+                               between the rows which corresponds to the
+                               proximate and the immediate with respect to ref.
         """
+        #self.log('DEBUG', msg='scanno list:')
+        #for i in range(scan.nrow()):
+        #    self.log('DEBUG', msg='   row %s: scanno=%s' %(i,scan.getscan(i)))
         if ( scan.nrow() == 1 ):
-            self.log('DEBUG', msg='use row %s' % 0 )
+            self.log('DEBUG', msg='use row %s (scanno=%s)' % (0,scan.getscan(0)) )
             return numpy.array( scan._getspectrum(0) )
         else:
             if ( mode == 'nearest' ):
@@ -717,11 +743,12 @@ class SDCalibration:
                     t=scan.get_time(i,True)
                     dt=abs(t-reftime)
                     if ( dtmin > dt ):
+                        dtmin=dt
                         idx=i
                 if ( idx==-1 ):
                     self.log( 'WARNING', msg='failed to find the nearest. return spectrum on the first row.' )
                     idx=0
-                self.log( 'DEBUG', msg='use row %s' % idx )
+                self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx,scan.getscan(idx)) )
                 return numpy.array(scan._getspectrum(idx))
             elif ( mode == 'proxim' ):
                 #reftime=ref.get_time(0,True)
@@ -732,11 +759,22 @@ class SDCalibration:
                     if ( t <= reftime ):
                         dt=abs(t-reftime)
                         if ( dtmin > dt ):
+                            dtmin=dt
                             idx=i
                 if ( idx==-1 ):
-                    self.log( 'WARNING', msg='failed to find the proximate. return spectrum on the first row.' )
-                    idx=0
-                self.log( 'DEBUG', msg='use row %s' % idx )
+                    self.log( 'WARNING', msg='failed to find the proximate. try immediate.' )
+                    dtmin=datetime.timedelta.max
+                    for i in range( scan.nrow() ):
+                        t=scan.get_time(i,True)
+                        if ( t > reftime ):
+                            dt = abs(t-reftime)
+                            if ( dtmin > dt ):
+                                dtmin=dt
+                                idx = i
+                    if ( idx == -1 ):
+                        self.log( 'WARNING', msg='failed to find the immediate. return spectrum on the first row.' )
+                        idx = 0
+                self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx,scan.getscan(idx)) )
                 return numpy.array(scan._getspectrum(idx))
             elif ( mode == 'immedi' ):
                 #reftime=ref.get_time(0,True)
@@ -747,11 +785,22 @@ class SDCalibration:
                     if ( t >= reftime ):
                         dt=abs(t-reftime)
                         if ( dtmin > dt ):
+                            dtmin=dt
                             idx=i
                 if ( idx==-1 ):
-                    self.log( 'WARNING', msg='failed to find the immediate. return spectrum on the first row.' )
-                    idx=0
-                self.log( 'DEBUG', msg='use row %s' % idx )
+                    self.log( 'WARNING', msg='failed to find the immediate. try proximate.' )
+                    dtmin=datetime.timedelta.max
+                    for i in range( scan.nrow() ):
+                        t = scan.get_time(i,True)
+                        if ( t < reftime ):
+                            dt = abs(t-reftime)
+                            if ( dtmin > dt ):
+                                dtmin=dt
+                                idx = i
+                    if ( idx == -1 ):
+                        self.log( 'WARNING', msg='failed to find the proximate. return spectrum on the first row.' )
+                        idx=0
+                self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx,scan.getscan(idx)) )
                 return numpy.array(scan._getspectrum(idx))
             elif ( mode == 'linear' ):
                 #reftime=ref.get_time(0,True)
@@ -765,22 +814,24 @@ class SDCalibration:
                         # proximate
                         dt=abs(t-reftime)
                         if ( dtmin1 > dt ):
+                            dtmin1=dt
                             idx1=i
                     else:
                         # immediate
                         dt=abs(t-reftime)
                         if ( dtmin2 > dt ):
+                            dtmin2=dt
                             idx2=i
                 if ( idx1==-1 and idx2 == -1 ):
                     self.log( 'WARNING', msg='failed to interpolate. return spectrum on the first row.' )
                     return numpy.array(scan._getspectrum(0))
                 elif ( idx1==-1 ):
                     self.log( 'WARNING', msg='failed to interpolate. return the nearest.' )
-                    self.log( 'DEBUG', msg='use row %s' % idx2 )
+                    self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx2,scan.getscan(idx2)) )
                     return numpy.array(scan._getspectrum(idx2))
                 elif ( idx2==-1 ):
                     self.log( 'WARNING', msg='failed to interpolate. return the nearest.' )
-                    self.log( 'DEBUG', msg='use row %s' % idx1 )
+                    self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx1,scan.getscan(idx1)) )
                     return numpy.array(scan._getspectrum(idx1))
                 else:
                     proximate=numpy.array(scan._getspectrum(idx1))
@@ -791,21 +842,40 @@ class SDCalibration:
                     dt2=timme-reftime
                     if ( dt1.days != 0 and dt2.days != 0 ):
                         if ( dt1 > dt2 ):
-                            self.log( 'DEBUG', msg='use row %s' % idx2 )
+                            self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx2,scan.getscan(idx2)) )
                             return immediate
                         else:
-                            self.log( 'DEBUG', msg='use row %s' % idx1 )
+                            self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx1,scan.getscan(idx1)) )
                             return proximate
                     elif ( dt1.days != 0 ):
-                        self.log( 'DEBUG', msg='use row %s' % idx2 )
+                        self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx2,scan.getscan(idx2)) )
                         return immediate
                     elif ( dt2.days != 0 ):
-                        self.log( 'DEBUG', msg='use row %s' % idx1 )
+                        self.log( 'DEBUG', msg='use row %s (scanno=%s)' % (idx1,scan.getscan(idx1)) )
                         return proximate
                     else:
-                        self.log( 'DEBUG', msg='interpolate between %s and %s' %(idx1,idx2) )
+                        self.log( 'DEBUG', msg='interpolate between %s and %s (scanno: %s, %s)' %(idx1,idx2,scan.getscan(idx1),scan.getscan(idx2)) )
                         interp=(immediate-proximate)/(dt1+dt2)*dt1+proximate
                         return interp
         self.log( 'ERROR', msg='failed to get appropriate spectrum.' )
         return numpy.array( [], float )
 
+    def average( self, weight='tint' ):
+        """
+        Average data using asap tool.
+        If caltype is 'otf', this does nothing.
+
+        weight --- weighting scheme
+                   'none'   : no weight
+                   'var'    : 1/var(spec) weighted
+                   'tsys'   : 1/Tsys**2 weightd
+                   'tint'   : integration time weighted
+                   'tintsys': Tint/Tsys**2 weighted
+                   'median' : median averaging
+        """
+        if ( self.__caltype == 'otf' ):
+            self.log( 'INFO', msg='average() is disabled for OTF data.' )
+        else:
+            self.log( 'INFO', msg='averaging dumped data for each scan.' )
+            averaged_scan=average_time( self.__tableout, scanav=True, weight=weight )
+            self.__tableout=averaged_scan

@@ -10,7 +10,7 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, plotlevel):
+def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
        # NEED to include spw, src? name for movingsource param. in function argument
        # put implementation here....
         casalog.origin('sdtpimaging')
@@ -161,69 +161,90 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             	        msg='stokes=%s specified but the data contains only %s' % (stokes, corrtypestr)
                         raise Exception, msg
 
-            # check ephemsrcname and set a proper source name if not given
-            if ephemsrcname=='':
-            	# assume single source/field
-               	# try determine if it is a known ephemeris source 
-               	tb.open(sdfile+'/SOURCE')
-               	src=tb.getcol('NAME')
-               	tb.close()
-               	src = src[0]
-               	ephemobjs = set(['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','SUN','MOON'])
-               	if src.upper() in ephemobjs:
-                    ephemsrcname=src
+            #parameter checks/setup for imaging
+            if createimage:
+                # pointing data column to use
+                #if pointingcolumn.upper()=="OFFSET":
+                #    pointingcolumn="POINTING_OFFSET"
+                # check ephemsrcname and set a proper source name if not given
+                if ephemsrcname=='':
+            	    # assume single source/field
+               	    # try determine if it is a known ephemeris source 
+               	    tb.open(sdfile+'/SOURCE')
+               	    src=tb.getcol('NAME')
+               	    tb.close()
+               	    src = src[0]
+               	    ephemobjs = set(['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','SUN','MOON'])
+               	    if src.upper() in ephemobjs:
+                        ephemsrcname=src
 
-            # imaging related setup
-            if createimage is True and imagename=='':
-            	msg='Please specify out image name'
-                raise Exception, msg
-            if len(imsize) == 1:
-	        nx=imsize[0]
-	       	ny=imsize[0]
-	    else:
-	     	nx=imsize[0]
-	       	ny=imsize[1]
-
-            cellx=celly=''
-	    if type(cell) == int or type(cell) == float:
-	        cellx=qa.quantity(cell, 'arcmin')
-	        celly=qa.quantity(cell, 'arcmin')
-	    elif type(cell) == str:
-                if qa.isquantity(cell):
-	            cellx=cell
-                    celly=cell
-                else:
-                    msg='Unrecognized quantity for cell'
+                if imagename=='':
+            	    msg='Please specify out image name'
                     raise Exception, msg
-            elif type(cell) == list:
-                if len(cell) == 1:
-                    if type(cell[0]) == int or type(cell[0]) == float:
-                        cellx=qa.quantity(cell[0], 'arcmin')
-                        celly=qa.quantity(cell[0], 'arcmin')
-                    elif type(cell[0])==str:
-                        if qa.isquantity(cell[0]):
-                            cellx=cell[0]
-                            celly=cell[0]
-                        else:
-                            msg='Unrecognized quantity for cell'
-                            raise Exception, msg
+                # imsize
+                if len(imsize) == 1:
+	            nx=imsize[0]
+	       	    ny=imsize[0]
 	        else:
-                    if type(cell[0]) == int or type(cell[0]) == float:
-                        cellx=qa.quantity(cell[0], 'arcmin')
-                    elif type(cell[0])==str:
-                        if qa.isquantity(cell[0]):
-                            cellx=cell[0]
-                        else:
-                            msg='Unrecognized quantity for cell'
-                            raise Exception, msg
-                    if type(cell[1]) == int or type(cell[1]) == float:
-                        celly=qa.quantity(cell[1], 'arcmin')
-                    elif type(cell[1])==str:
-		        if qa.isquantity(cell[1]):
-		 	    celly=cell[1]
-		       	else:
-                    	    msg='Unrecognized quantity for cell'
-                            raise Exception, msg
+	     	    nx=imsize[0]
+	       	    ny=imsize[1]
+                # cell size
+                cellx=celly=''
+	        if type(cell) == int or type(cell) == float:
+	            cellx=qa.quantity(cell, 'arcmin')
+	            celly=qa.quantity(cell, 'arcmin')
+	        elif type(cell) == str:
+                    if qa.isquantity(cell):
+	                cellx=cell
+                        celly=cell
+                    else:
+                        msg='Unrecognized quantity for cell'
+                        raise Exception, msg
+                elif type(cell) == list:
+                    if len(cell) == 1:
+                        if type(cell[0]) == int or type(cell[0]) == float:
+                            cellx=qa.quantity(cell[0], 'arcmin')
+                            celly=qa.quantity(cell[0], 'arcmin')
+                        elif type(cell[0])==str:
+                            if qa.isquantity(cell[0]):
+                                cellx=cell[0]
+                                celly=cell[0]
+                            else:
+                                msg='Unrecognized quantity for cell'
+                                raise Exception, msg
+	            else:
+                        if type(cell[0]) == int or type(cell[0]) == float:
+                            cellx=qa.quantity(cell[0], 'arcmin')
+                        elif type(cell[0])==str:
+                            if qa.isquantity(cell[0]):
+                                cellx=cell[0]
+                            else:
+                                msg='Unrecognized quantity for cell'
+                                raise Exception, msg
+                        if type(cell[1]) == int or type(cell[1]) == float:
+                            celly=qa.quantity(cell[1], 'arcmin')
+                        elif type(cell[1])==str:
+		            if qa.isquantity(cell[1]):
+		 	        celly=cell[1]
+		       	    else:
+                    	        msg='Unrecognized quantity for cell'
+                                raise Exception, msg
+                if phasecenter =='' and len(ephemsrcname)>0:
+                   # if phasecenter is undefined and if it is a moving source, 
+                   # the phasecneter is set to the position of the moving source
+                   # at the time of the first data in the POINTING table.  
+                   if pointingcolumn.upper() =='POINTING_OFFSET':
+                     phasecenter='AZELGEO 0d0m 0d0m'
+                   else:
+                     tb.open(sdfile+'/OBSERVATION')
+                     telname=tb.getcol('TELESCOPE_NAME')
+                     tb.close()
+                     tb.open(sdfile+'/POINTING')
+                     t = tb.getcol('TIME')
+                     tb.close()
+                     me.doframe(me.observatory(telname[0]))
+                     me.doframe(me.epoch('utc',str(t[0])+'s'))
+                     phasecenter = me.measure(me.direction(ephemsrcname),'AZELGEO') 
             # get number of scans 
             tb.open(sdfile+'/STATE')
             # assume each SUB_SCAN id represents each raster 'scan'
@@ -502,13 +523,16 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             # field id 0 is assumed   #
             ###########################
             if createimage:
+                #if pointingcolumn.upper()=="OFFSET":
+                #   pointingcolumn="POINTING_OFFSET"
+                print "pointingcolumn=",pointingcolumn
                 print "Imaging...."
                 im.open(sdfile)
                 im.selectvis(field=0, spw='', baseline=antenna)
                 im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
-                #print "im.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s, phasecenter=%s, spw=0, movingsource='moon') " % (str(imsize[0]), str(imsize[1]), cell[0], cell[1], phasecenter)
-                im.setoptions(ftmachine='sd')
+                im.setoptions(ftmachine='sd', gridfunction=gridfunction)
                 #im.setsdoptions(convsupport=5)
+                im.setsdoptions(pointingcolumntouse=pointingcolumn)
                 im.makeimage(type='singledish', image=imagename)
                 im.close()
 

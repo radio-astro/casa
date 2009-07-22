@@ -80,7 +80,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         myf['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         myf['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
-        myf['update_params'](func=myf['taskname'],printtext=False)
+        myf['update_params'](func=myf['taskname'],printtext=False,ipython_globals=myf)
         ###
         ###
         #Handle globals or user over-ride of arguments
@@ -190,7 +190,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
           saveinputs = myf['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams)
+          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, myf)
 	except Exception, instance:
 	  print '**** Error **** ',instance
 </xsl:text>
@@ -203,21 +203,24 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
 #
-    def paramgui(self, useGlobals=True):
+    def paramgui(self, useGlobals=True, ipython_globals=None):
         """
         Opens a parameter GUI for this task.  If useGlobals is true, then any relevant global parameter settings are used.
         """
         import paramgui
 
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-            stacklevel=k
-            break
-        myf = sys._getframe(stacklevel).f_globals
-
         if useGlobals:
+            if ipython_globals == None:
+                a=inspect.stack()
+                stacklevel=0
+                for k in range(len(a)):
+                    if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
+                      stacklevel=k
+                      break
+                myf=sys._getframe(stacklevel).f_globals
+            else:
+                myf=ipython_globals
+
             paramgui.setGlobals(myf)
         else:
             paramgui.setGlobals({})
@@ -228,14 +231,18 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
 #
-    def defaults(self, param=None):
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+    def defaults(self, param=None, ipython_globals=None):
+        if ipython_globals == None:
+            a=inspect.stack()
+            stacklevel=0
+            for k in range(len(a)):
+                if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
+                    stacklevel=k
+                    break
+            myf=sys._getframe(stacklevel).f_globals
+        else:
+            myf=ipython_globals
+
         a = odict()
 </xsl:text>
 <xsl:for-each select="aps:input">
@@ -277,14 +284,17 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 
 #
 #
-    def check_params(self, param=None, value=None):
-      a=inspect.stack() 
-      stacklevel=0
-      for k in range(len(a)):
-        if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-	    stacklevel=k
-	    break
-      myf=sys._getframe(stacklevel).f_globals
+    def check_params(self, param=None, value=None, ipython_globals=None):
+      if ipython_globals == None:
+          a=inspect.stack()
+          stacklevel=0
+          for k in range(len(a)):
+              if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
+                stacklevel=k
+                break
+          myf=sys._getframe(stacklevel).f_globals
+      else:
+          myf=ipython_globals
 
       value = myf['cu'].expandparam(param, value)
       if(type(value) == numpy.ndarray) :

@@ -16,6 +16,7 @@
 # 21-Jan-2009 jfl ut4b release.
 # 29-Jan-2009 jfl G_t default changed from 3600 to 60.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 import types
 
@@ -32,7 +33,7 @@ class BandpassCalibration(BaseData):
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
      msName, stageName, methodForEachSpw=None, defaultSourceType='*BANDPASS*',
-     dataType='amplitude', polAverage=True, bandpassFlaggingStage=None):
+     dataType='complex', polAverage=False, bandpassFlaggingStage=None):
         """Constructor.
 
         Keyword arguments:
@@ -46,7 +47,8 @@ class BandpassCalibration(BaseData):
         stageName         -- The name of the stage using the object.
         methodForEachSpw  -- Dictionary with method to use for each spw.
         defaultSourceType -- Source to use if not specified in methodForEachSpw.
-        dataType          -- The type of data to be returned by getdata.
+        dataType          -- The type of data to be returned by getdata;
+                             'amplitude' or 'phase'.
         polAverage        -- True if gains are averaged over polarization.
         bandpassFlaggingStage -- Name of stage whose channel flags specify
                               -- channels at edge of band.
@@ -103,10 +105,12 @@ class BandpassCalibration(BaseData):
 
 # solve
 
-        self._msCalibrater.solve(field=field_id, spw=data_desc_id,
+        new_commands = self._msCalibrater.solve(field=field_id,
+         spw=data_desc_id,
          type='B', t='inf', combine='scan',
-         table=btab, append=False, apmode='AP', solnorm=True, minsnr=0.0, 
-         commands=command)
+         table=btab, append=False, apmode='AP', solnorm=True, minsnr=0.0)
+
+        command += new_commands
 
         self._htmlLogger.timing_stop('BandpassCalibration._calculate_channel_B')
 
@@ -129,10 +133,12 @@ class BandpassCalibration(BaseData):
 
 # solve
 
-        self._msCalibrater.solvebandpoly(field=field_id, spw=data_desc_id,
-         table=btab, append=False, 
+        new_commmands = self._msCalibrater.solvebandpoly(field=field_id,
+         spw=data_desc_id, table=btab, append=False, 
          degamp=degamp, degphase=degphase, visnorm=False, solnorm=True,
-         maskcenter=0, maskedge=0, commands=command)
+         maskcenter=0, maskedge=0)
+
+        command += new_commands
 
         self._htmlLogger.timing_stop(
          'BandpassCalibration._calculate_polynomial_B')
@@ -233,7 +239,7 @@ class BandpassCalibration(BaseData):
                  data_desc_id, t, flag_marks)
 
                 parameters['data'][data_desc_id]['gtab'] = gtab
-                parameters['data'][data_desc_id]['mode'] = 'not set'
+                parameters['data'][data_desc_id]['mode'] = 'failed'
                 parameters['data'][data_desc_id]['table'] = btab
                 parameters['data'][data_desc_id]['error'] = ''
 
@@ -273,15 +279,28 @@ class BandpassCalibration(BaseData):
                     self._msCalibrater.setapply(type='GAINCURVE')
 
                 try:
-                    self._msCalibrater.solve(field=field_id,
+                    new_commands = self._msCalibrater.solve(field=field_id,
                      spw=data_desc_id, type='G', t=t, combine='scan',
-                     apmode='P', table=gtab, append=False, commands=command)
+                     apmode='P', table=gtab, append=False)
+
+                    command += new_commands
 
                 except KeyboardInterrupt:
                     raise
                 except:
-                    parameters['data'][data_desc_id]['error'] = \
-                     'failed to phase-up BANDPASS calibration data'
+                    error_report = self._htmlLogger.openNode('exception',
+                     '%s.phase_up_bandpass_exception' % (self._stageName), True,
+                     stringOutput = True)
+
+                    self._htmlLogger.logHTML('Exception details<pre>')
+                    traceback.print_exc()
+                    traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                    self._htmlLogger.logHTML('</pre>')
+                    self._htmlLogger.closeNode()
+
+                    error_report += ' while phasing up BANDPASS calibration data'
+
+                    parameters['data'][data_desc_id]['error'] = error_report
                     command.append('...exception')
                     continue
 
@@ -306,8 +325,20 @@ class BandpassCalibration(BaseData):
                     except KeyboardInterrupt:
                         raise
                     except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.bandpass_calc_exception' % (self._stageName),
+                         True, stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += ' while calculating BANDPASS calibration'
+
                         parameters['data'][data_desc_id]['error'] += \
-                         'bandpass calibration failed'
+                         error_report
 
                 elif mode == 'POLYNOMIAL':
                     parameters['data'][data_desc_id]['mode'] = 'BPOLY'
@@ -324,8 +355,20 @@ class BandpassCalibration(BaseData):
                     except KeyboardInterrupt:
                         raise
                     except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.bandpass_calc_exception' % (self._stageName),
+                         True, stringOutput = True)
+
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += ' while calculating BANDPASS calibration'
+
                         parameters['data'][data_desc_id]['error'] += \
-                         'bandpass calibration failed'
+                         error_report
 
                 else:
                     raise NameError, 'bad mode: %s' % mode
@@ -365,10 +408,13 @@ class BandpassCalibration(BaseData):
 # calculate the G gains for 'BeforeHeuristics', 'StageEntry' and 'Current' -
 # 'BeforeHeuristics' assumes no bandpassFlaggingStage
 
+        print 'before'
         self._msFlagger.setFlagState('BeforeHeuristics')
         originalBP = self.calculate()
+        print 'stage entry'
         self._msFlagger.setFlagState('StageEntry')
         stageEntryBP = self.calculate()
+        print 'current'
         self._msFlagger.setFlagState('Current')
         currentBP = self.calculate()
 
@@ -491,28 +537,26 @@ class BandpassCalibration(BaseData):
                     for p in range(npol):
                         data[antenna,:] += sqrt(
                          gain[p,:,i].imag**2 + gain[p,:,i].real**2)
-#                        indeces = compress(logical_not(cal_flag[p,:,i]),
-#                         arange(nchannels))
-#                        flag[1][antenna,indeces] = 0
                         flag[2][antenna,:] = logical_or(flag[2][antenna,:],
                          cal_flag[p,:,i])
                         flag[1][antenna,:] = logical_or(flag[1][antenna,:],
                          cal_flag_stage_entry[p,:,i])
                         flag[0][antenna,:] = logical_or(flag[0][antenna,:],
                          cal_flag_original[p,:,i])
-#                        indeces = compress(logical_not(
-#                         cal_flag_on_entry[p,:,i]), arange(nchannels))
-#                        flag[0][antenna,indeces] = 0
                     data[antenna,:] /= float(npol)
 
                 description = {}
                 description['DATA_DESC_ID'] = int(data_desc_id)
                 description['FIELD_ID'] = int(field_id)
-                description['TITLE'] = \
-                 'Field:%s SpW:%s Pol:Average - bandpass calibration %s' % (
-                 self._fieldName[int(field_id)], self._pad(data_desc_id),
-                 self._dataType)
-
+                if self._dataType =='complex':
+                    description['TITLE'] = \
+                     'Field:%s SpW:%s Pol:Average - complex bandpass calibration' % (
+                     self._fieldName[int(field_id)], self._pad(data_desc_id))
+                else:
+                    description['TITLE'] = \
+                     'Field:%s SpW:%s Pol:Average - bandpass calibration %s' % (
+                     self._fieldName[int(field_id)], self._pad(data_desc_id),
+                     self._dataType)
                 result = {}
                 result['dataType'] = 'bandpass calibration %s' % self._dataType
                 result['xtitle'] = 'CHANNEL'
@@ -539,8 +583,11 @@ class BandpassCalibration(BaseData):
 # separate results for pols
 
                 for p in range(npol):
-                    if self._dataType == 'amplitude':
+                    if (self._dataType == 'amplitude') or \
+                     (self._dataType == 'phase'):
                         data = zeros([max(antenna_range)+1, nchannels], float)
+                    elif (self._dataType == 'complex'):
+                        data = zeros([max(antenna_range)+1, nchannels], complex)
                     else:
                         raise NameError, 'bad dataType: %s' % self._dataType
                     flag = [ones([max(antenna_range)+1, nchannels], int),
@@ -554,26 +601,33 @@ class BandpassCalibration(BaseData):
                              'antenna1 %s from file %s is outside antenna range' % (
                              antenna, bp['data'][data_desc_id]['table'])
                             continue
-                        data[antenna,:] = sqrt(
-                         gain[p,:,i].imag**2 + gain[p,:,i].real**2)
-#                        indeces = compress(logical_not(cal_flag[p,:,i]),
-#                         arange(nchannels))
+
+                        if self._dataType == 'amplitude':
+                            data[antenna,:] = sqrt(
+                             gain[p,:,i].imag**2 + gain[p,:,i].real**2)
+                        elif self._dataType == 'phase':
+                            data[antenna,:] = arctan2(
+                             gain[p,:,i].imag, gain[p,:,i].real)
+                        elif self._dataType == 'complex':
+                            data[antenna,:] = gain[p,:,i]
+
                         flag[2][antenna,:] = cal_flag[p,:,i]
                         flag[1][antenna,:] = cal_flag_stage_entry[p,:,i]
                         flag[0][antenna,:] = cal_flag_original[p,:,i]
-#                        indeces = compress(logical_not(
-#                         cal_flag_on_entry[p,:,i]), arange(nchannels))
-#                        flag[0][antenna,indeces] = 0
 
                     description = {}
                     description['DATA_DESC_ID'] = int(data_desc_id)
                     description['FIELD_ID'] = int(field_id)
                     description['POLARIZATION_ID'] = int(p)
-                    description['TITLE'] = \
-                     'Field:%s SpW:%s Pol:%s - bandpass calibration %s' % (
-                     self._fieldName[int(field_id)], self._pad(data_desc_id), p,
-                     self._dataType)
-
+                    if self._dataType =='complex':
+                        description['TITLE'] = \
+                         'Field:%s SpW:%s Pol:%s - complex bandpass calibration' % (
+                         self._fieldName[int(field_id)], self._pad(data_desc_id), p)
+                    else:
+                        description['TITLE'] = \
+                         'Field:%s SpW:%s Pol:%s - bandpass calibration %s' % (
+                         self._fieldName[int(field_id)], self._pad(data_desc_id), p,
+                         self._dataType)
                     result = {}
                     result['dataType'] = 'bandpass calibration %s' % self._dataType
                     result['xtitle'] = 'CHANNEL'
@@ -583,7 +637,7 @@ class BandpassCalibration(BaseData):
                     result['data'] = data
                     result['mad_floor'] = zeros([max(antenna_range)+1,
                      nchannels], float)
-                    result['dataType'] = 'bp cal amplitude'
+                    result['dataType'] = 'bp cal %s' % self._dataType
                     result['dataUnits'] = ''
                     result['flagVersions'] = ['BeforeHeuristics', 'StageEntry', 
                      'Current']
@@ -663,6 +717,7 @@ class BandpassCalibration(BaseData):
         """
         nchannels = self._results['summary']['nchannels']
 
+#        print 'BandpassCalibration.setApply', spw, field
         if self._results['summary']['telescope_name'] == 'VLA':
             self._msCalibrater.setapply('GAINCURVE')
  
@@ -679,8 +734,7 @@ class BandpassCalibration(BaseData):
         stageName -- Name of the recipe stage using this object.
         """
 
-        description = """<p>The bandpass calibration was calculated,
-                          if necessary."""
+        description = """<p>The normalised bandpass calibration was calculated."""
 
         bandpassDescription = {'bandpass calibration':description}
         return bandpassDescription
@@ -708,10 +762,13 @@ class BandpassCalibration(BaseData):
              <p>No bandpass calibration was performed because all spectral
               windows contain continuum data."""
 
+        elif parameters.has_key('separate node'):
+            description = parameters['separate node']
+
         else:
             description = """
-             <p>The bandpass calibration was calculated using the parameters
-              listed in the following table:
+             <p>The normalised bandpass calibration was calculated using 
+              the parameters listed in the following table:
 
              <table CELLPADDING="5" BORDER="1"
              <tr>
@@ -719,11 +776,11 @@ class BandpassCalibration(BaseData):
               <th>Field</th>
               <th>G_t</th>
               <th>Mode</th>
-              <th>channel flags</th>
+              <th>Channel Flags</th>
               <th>Apply Table</th>
               <th>Apply Type</th>
-              <th>Casapy calls</th>
-              <th>error?</th>
+              <th>Casapy Calls</th>
+              <th>Error?</th>
              </tr>"""
 
             keys = parameters['data'].keys()
@@ -775,10 +832,15 @@ class BandpassCalibration(BaseData):
                 self._htmlLogger.closeNode()
                 description += "</td>"
 
+# use &nbsp; to make empty cells look good
+
                 if entry.has_key('error'):
-                    description += """<td>%s</td>""" % entry['error']
+                    if entry['error'] == '':
+                        description += """<td>&nbsp;</td>"""
+                    else:
+                        description += """<td>%s</td>""" % entry['error']
                 else:
-                    description += """<td> </td>"""
+                    description += """<td>&nbsp;</td>"""
                 description += "</tr>"
             description += """
              </table>
@@ -791,19 +853,15 @@ class BandpassCalibration(BaseData):
                itself is calculated.
               <li>Mode is the type of bandpass solution obtained; 'CHANNEL', 
                or 'POLYNOMIAL'.
-              <li>'channel flags' gives the name of the stage that specified the
+              <li>'Channel Flags' gives the name of the stage that specified the
                channels to be flagged before solving, if any.
               <li>'Apply Table' is the name of the file containing the bandpass
                solution.
               <li>'Apply Type' gives the casapy type of the bandpass solution.
-              <li>'Casapy calls' links to a list of the casapy calls used
-               to calculate the bandpass solution.
-              <li>'error?' describes any error that occurred during the
-               calculation. 
-             </ul>
+             </ul>"""
 
-             <p>The bandpass calibration was calculated by the Python class 
-             BandpassCalibration."""
+#             <p>The bandpass calibration was calculated by the Python class 
+#             BandpassCalibration."""
 
         bandpassDescription = {'bandpass calibration':description}
         return bandpassDescription
@@ -1070,8 +1128,8 @@ class BandpassTestCalibratedAmplitude(BandpassCalibration):
             command = []
             try:
                 self.setapply(spw=data_desc_id, field=test_field_id)
-                self._msCalibrater.correct(spw=data_desc_id,
-                 field=test_field_id, commands=command)
+                command += self._msCalibrater.correct(spw=data_desc_id,
+                 field=test_field_id)
             except KeyboardInterrupt:
                 raise
             except:
@@ -1209,5 +1267,32 @@ class BandpassCalibrationAmplitude(BandpassCalibration):
          msFlagger, htmlLogger, msName, stageName, methodForEachSpw,
          defaultSourceType, 'amplitude',
          bandpassFlaggingStage=bandpassFlaggingStage)
-             
- 
+
+
+class BandpassCalibrationPhase(BandpassCalibration):
+
+    def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
+     msName, stageName, methodForEachSpw=None, defaultSourceType='*BANDPASS*',
+     bandpassFlaggingStage=None):
+        """Constructor.
+
+        Keyword arguments:
+        tools             -- BaseTools object.
+        bookKeeper        -- BookKeeper object.
+        msCalibrater      -- MSCalibrater object.
+        msFlagger         -- MSFlagger object.
+        htmlLogger        -- The HTMLLogger object that is writing the HTML
+                             log of this reduction run.
+        msName            -- The name of the MeasurementSet being reduced.
+        stageName         -- The name of the stage using this object.
+        methodForEachSpw  -- Dictionary with method to use for each spw.
+        defaultSourceType -- Source to use if not specified in methodForEachSpw.
+        bandpassFlaggingStage -- Name of stage whose channel flags specify
+                              -- channels at edge of band.
+        """
+
+#        print 'BandpassCalibrationPhase.__init__ called'
+        BandpassCalibration.__init__(self, tools, bookKeeper, msCalibrater,
+         msFlagger, htmlLogger, msName, stageName, methodForEachSpw,
+         defaultSourceType, 'phase',
+         bandpassFlaggingStage=bandpassFlaggingStage)

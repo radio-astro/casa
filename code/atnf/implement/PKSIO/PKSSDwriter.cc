@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSSDwriter.cc: Class to write Parkes multibeam data to an SDFITS file.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,14 +25,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: PKSSDwriter.cc,v 19.15 2008-11-17 06:56:50 cal103 Exp $
 //#---------------------------------------------------------------------------
 
-#include <atnf/PKSIO/PKSMBrecord.h>
+#include <atnf/PKSIO/MBrecord.h>
 #include <atnf/PKSIO/PKSSDwriter.h>
 
+#include <casa/Logging/LogIO.h>
+
+#include <casa/stdio.h>
 #include <casa/Quanta/MVTime.h>
 
+#include <string>
+
+// Class name
+const string className = "PKSSDwriter" ;
 
 //--------------------------------------------------- PKSSDwriter::PKSSDwriter
 
@@ -62,14 +69,17 @@ Int PKSSDwriter::create(
         const String antName,
         const Vector<Double> antPosition,
         const String obsMode,
+        const String bunit,
         const Float  equinox,
         const String dopplerFrame,
         const Vector<uInt> nChan,
         const Vector<uInt> nPol,
         const Vector<Bool> haveXPol,
-        const Bool   haveBase,
-        const String fluxUnit)
+        const Bool   haveBase)
 {
+  const string methodName = "create()" ;
+  LogIO os( LogOrigin( className, methodName, WHERE ) ) ;
+
   double antPos[3];
   antPos[0] = antPosition(0);
   antPos[1] = antPosition(1);
@@ -77,9 +87,7 @@ Int PKSSDwriter::create(
 
   cNIF = nChan.nelements();
   if (nPol.nelements() != cNIF || haveXPol.nelements() != cNIF) {
-    cerr << "PKSSDwriter::create: "
-         << "Inconsistent number of IFs for nChan, nPol, and/or haveXPol."
-         << endl;
+    os << LogIO::SEVERE << "Inconsistent number of IFs for nChan, nPol, and/or haveXPol." << LogIO::POST ;
     return 1;
   }
 
@@ -101,13 +109,14 @@ Int PKSSDwriter::create(
   Bool deleteIt;
   Int status = cSDwriter.create((char *)sdName.chars(),
         (char *)observer.chars(), (char *)project.chars(),
-        (char *)antName.chars(), antPos, (char *)obsMode.chars(), equinox,
-        (char *)dopplerFrame.chars(), cNIF,
+        (char *)antName.chars(), antPos, (char *)obsMode.chars(),
+        (char *)bunit.chars(), equinox, (char *)dopplerFrame.chars(), cNIF,
         (int *)cNChan.getStorage(deleteIt),
         (int *)cNPol.getStorage(deleteIt),
         (int *)cHaveXPol.getStorage(deleteIt), (int)cHaveBase, 1);
+  //logMsg(cSDwriter.getMsg());
+  //cSDwriter.clearMsg();
   if (status) {
-    cSDwriter.reportError();
     cSDwriter.deleteFile();
     close();
   }
@@ -120,108 +129,71 @@ Int PKSSDwriter::create(
 // Write the next data record.
 
 Int PKSSDwriter::write(
-        const Int             scanNo,
-        const Int             cycleNo,
-        const Double          mjd,
-        const Double          interval,
-        const String          fieldName,
-        const String          srcName,
-        const Vector<Double>  srcDir,
-        const Vector<Double>  srcPM,
-        const Double          srcVel,
-        const String          obsMode,
-        const Int             IFno,
-        const Double          refFreq,
-        const Double          bandwidth,
-        const Double          freqInc,
-        //const Double          restFreq,
-        const Vector<Double>  restFreq,
-        const Vector<Float>   tcal,
-        const String          tcalTime,
-        const Float           azimuth,
-        const Float           elevation,
-        const Float           parAngle,
-        const Float           focusAxi,
-        const Float           focusTan,
-        const Float           focusRot,
-        const Float           temperature,
-        const Float           pressure,
-        const Float           humidity,
-        const Float           windSpeed,
-        const Float           windAz,
-        const Int             refBeam,
-        const Int             beamNo,
-        const Vector<Double>  direction,
-        const Vector<Double>  scanRate,
-        const Vector<Float>   tsys,
-        const Vector<Float>   sigma,
-        const Vector<Float>   calFctr,
-        const Matrix<Float>   baseLin,
-        const Matrix<Float>   baseSub,
-        const Matrix<Float>   &spectra,
-        const Matrix<uChar>   &flagged,
-        const Complex         xCalFctr,
-        const Vector<Complex> &xPol)
+        const PKSrecord &pksrec)
 {
+  const string methodName = "write()" ;
+  LogIO os( LogOrigin( className, methodName, WHERE ) ) ;
+
   // Do basic checks.
+  Int IFno = pksrec.IFno;
   uInt iIF = IFno - 1;
   if (IFno < 1 || Int(cNIF) < IFno) {
-    cerr << "PKSDwriter::write: "
-         << "Invalid IF number " << IFno
-         << " (maximum " << cNIF << ")." << endl;
+    os << LogIO::SEVERE 
+       << "Invalid IF number " << IFno
+       << " (maximum " << cNIF << ")." << LogIO::POST ;
     return 1;
   }
 
-  uInt nChan = spectra.nrow();
+  uInt nChan = pksrec.spectra.nrow();
   if (nChan != cNChan(iIF)) {
-    cerr << "PKSDwriter::write: "
-         << "Wrong number of channels for IF " << IFno << "," << endl
-         << "                   "
+    os << LogIO::SEVERE << "Wrong number of channels for IF " << IFno << "," << endl
          << "got " << nChan << " should be " << cNChan(iIF) << "." << endl;
+    os << LogIO::POST ;
     return 1;
   }
 
-  uInt nPol = spectra.ncolumn();
+  uInt nPol = pksrec.spectra.ncolumn();
   if (nPol != cNPol(iIF)) {
-    cerr << "PKSDwriter::write: "
-         << "Wrong number of polarizations for IF " << IFno << "," << endl
-         << "                   "
-         << "got " << nPol << " should be " << cNPol(iIF) << "." << endl;
+    os << LogIO::SEVERE << "Wrong number of polarizations for IF " << IFno << "," << endl
+       << "got " << nPol << " should be " << cNPol(iIF) << "." << endl;
+    os << LogIO::POST ;
     return 1;
   }
 
-  // Extract calendar information from mjd.
-  MVTime time(mjd);
+  // Extract calendar information frrom mjd.
+  MVTime time(pksrec.mjd);
   Int year  = time.year();
   Int month = time.month();
   Int day   = time.monthday();
 
-  // Transfer data to a single-IF PKSMBrecord.
-  PKSMBrecord mbrec(1);
+  // Transfer data to a single-IF MBrecord.
+  MBrecord mbrec(1);
 
   // Start with basic beam- and IF-independent bookkeeping information.
-  mbrec.scanNo  = scanNo;
-  mbrec.cycleNo = cycleNo;
+  mbrec.scanNo  = pksrec.scanNo;
+  mbrec.cycleNo = pksrec.cycleNo;
 
   sprintf(mbrec.datobs, "%4.4d-%2.2d-%2.2d", year, month, day);
-  mbrec.utc      = fmod(mjd, 1.0) * 86400.0;
-  mbrec.exposure = float(interval);
+  mbrec.utc      = fmod(pksrec.mjd, 1.0) * 86400.0;
+  mbrec.exposure = float(pksrec.interval);
 
-  strncpy(mbrec.srcName, (char *)srcName.chars(), 17);
-  mbrec.srcRA    = srcDir(0);
-  mbrec.srcDec   = srcDir(1);
-
-  //mbrec.restFreq = restFreq;
-  mbrec.restFreq = restFreq(0);
-
-  strncpy(mbrec.obsType, (char *)obsMode.chars(), 16);
+  strncpy(mbrec.srcName, (char *)pksrec.srcName.chars(), 17);
+  mbrec.srcRA    = pksrec.srcDir(0);
+  mbrec.srcDec   = pksrec.srcDir(1);
+  if (pksrec.restFreq.shape()==0) { 
+     mbrec.restFreq = 0;
+  }
+  else {
+     mbrec.restFreq = pksrec.restFreq(0);
+  }
+  strncpy(mbrec.obsType, (char *)pksrec.obsType.chars(), 16);
 
   // Now beam-dependent parameters.
-  mbrec.beamNo   = beamNo;
-  mbrec.ra       = direction(0);
-  mbrec.dec      = direction(1);
-  mbrec.raRate   = scanRate(0);
-  mbrec.decRate  = scanRate(1);
+  mbrec.beamNo   = pksrec.beamNo;
+  mbrec.ra       = pksrec.direction(0);
+  mbrec.dec      = pksrec.direction(1);
+  mbrec.raRate   = pksrec.scanRate(0);
+  mbrec.decRate  = pksrec.scanRate(1);
 
   // Now IF-dependent parameters.
   mbrec.nIF      = 1;
@@ -230,21 +202,21 @@ Int PKSSDwriter::write(
   mbrec.nPol[0]  = nPol;
 
   mbrec.fqRefPix[0] = (nChan/2) + 1;
-  mbrec.fqRefVal[0] = refFreq;
-  mbrec.fqDelt[0]   = freqInc;
+  mbrec.fqRefVal[0] = pksrec.refFreq;
+  mbrec.fqDelt[0]   = pksrec.freqInc;
 
   // Now the data itself.
-  for (uInt i = 0; i < tsys.nelements(); i++) {
-    mbrec.tsys[0][i] = tsys(i);
+  for (uInt i = 0; i < pksrec.tsys.nelements(); i++) {
+    mbrec.tsys[0][i] = pksrec.tsys(i);
   }
 
   for (uInt ipol = 0; ipol < nPol; ipol++) {
-    mbrec.calfctr[0][ipol] = calFctr(ipol);
+    mbrec.calfctr[0][ipol] = pksrec.calFctr(ipol);
   }
 
   if (cHaveXPol(iIF)) {
-    mbrec.xcalfctr[0][0] = xCalFctr.real();
-    mbrec.xcalfctr[0][1] = xCalFctr.imag();
+    mbrec.xcalfctr[0][0] = pksrec.xCalFctr.real();
+    mbrec.xcalfctr[0][1] = pksrec.xCalFctr.imag();
   } else {
     mbrec.xcalfctr[0][0] = 0.0f;
     mbrec.xcalfctr[0][1] = 0.0f;
@@ -254,13 +226,13 @@ Int PKSSDwriter::write(
     mbrec.haveBase = 1;
 
     for (uInt ipol = 0; ipol < nPol; ipol++) {
-      mbrec.baseLin[0][ipol][0] = baseLin(0,ipol);
-      mbrec.baseLin[0][ipol][1] = baseLin(1,ipol);
+      mbrec.baseLin[0][ipol][0] = pksrec.baseLin(0,ipol);
+      mbrec.baseLin[0][ipol][1] = pksrec.baseLin(1,ipol);
 
-      for (uInt j = 0; j < baseSub.nrow(); j++) {
-        mbrec.baseSub[0][ipol][j] = baseSub(j,ipol);
+      for (uInt j = 0; j < pksrec.baseSub.nrow(); j++) {
+        mbrec.baseSub[0][ipol][j] = pksrec.baseSub(j,ipol);
       }
-      for (uInt j = baseSub.nrow(); j < 9; j++) {
+      for (uInt j = pksrec.baseSub.nrow(); j < 9; j++) {
         mbrec.baseSub[0][ipol][j] = 0.0f;
       }
     }
@@ -270,17 +242,17 @@ Int PKSSDwriter::write(
   }
 
   Bool delSpectra = False;
-  const Float *specstor = spectra.getStorage(delSpectra);
+  const Float *specstor = pksrec.spectra.getStorage(delSpectra);
   mbrec.spectra[0] = (float *)specstor;
 
   Bool delFlagged = False;
-  const uChar *flagstor = flagged.getStorage(delFlagged);
+  const uChar *flagstor = pksrec.flagged.getStorage(delFlagged);
   mbrec.flagged[0] = (unsigned char *)flagstor;
 
   Bool delXPol = False;
   const Complex *xpolstor;
   if (cHaveXPol(iIF)) {
-    xpolstor = xPol.getStorage(delXPol);
+    xpolstor = pksrec.xPol.getStorage(delXPol);
   } else {
     xpolstor = 0;
   }
@@ -288,34 +260,49 @@ Int PKSSDwriter::write(
 
   // Finish off with system calibration parameters.
   mbrec.extraSysCal = 1;
-  mbrec.refBeam     = refBeam;
-  for (uInt i = 0; i < tcal.nelements(); i++) {
-    mbrec.tcal[0][i] = tcal(i);
+  mbrec.refBeam     = pksrec.refBeam;
+  for (uInt i = 0; i < pksrec.tcal.nelements(); i++) {
+    mbrec.tcal[0][i] = pksrec.tcal(i);
   }
-  strncpy(mbrec.tcalTime, (char *)tcalTime.chars(), 16);
-  mbrec.azimuth   = azimuth;
-  mbrec.elevation = elevation;
-  mbrec.parAngle  = parAngle;
-  mbrec.focusAxi  = focusAxi;
-  mbrec.focusTan  = focusTan;
-  mbrec.focusRot  = focusRot;
-  mbrec.temp      = temperature;
-  mbrec.pressure  = pressure;
-  mbrec.humidity  = humidity;
-  mbrec.windSpeed = windSpeed;
-  mbrec.windAz    = windAz;
+  strncpy(mbrec.tcalTime, (char *)pksrec.tcalTime.chars(), 16);
+  mbrec.azimuth   = pksrec.azimuth;
+  mbrec.elevation = pksrec.elevation;
+  mbrec.parAngle  = pksrec.parAngle;
+  mbrec.focusAxi  = pksrec.focusAxi;
+  mbrec.focusTan  = pksrec.focusTan;
+  mbrec.focusRot  = pksrec.focusRot;
+  mbrec.temp      = pksrec.temperature;
+  mbrec.pressure  = pksrec.pressure;
+  mbrec.humidity  = pksrec.humidity;
+  mbrec.windSpeed = pksrec.windSpeed;
+  mbrec.windAz    = pksrec.windAz;
 
   Int status = cSDwriter.write(mbrec);
+  //logMsg(cSDwriter.getMsg());
+  //cSDwriter.clearMsg();
   if (status) {
-    cSDwriter.reportError();
     status = 1;
   }
 
-  spectra.freeStorage(specstor, delSpectra);
-  flagged.freeStorage(flagstor, delFlagged);
-  xPol.freeStorage(xpolstor, delXPol);
+  pksrec.spectra.freeStorage(specstor, delSpectra);
+  pksrec.flagged.freeStorage(flagstor, delFlagged);
+  pksrec.xPol.freeStorage(xpolstor, delXPol);
 
   return status;
+}
+
+//------------------------------------------------------- PKSSDwriter::history
+
+// Write a history record.
+
+Int PKSSDwriter::history(const String text)
+{
+  return cSDwriter.history((char *)text.chars());
+}
+
+Int PKSSDwriter::history(const char *text)
+{
+  return cSDwriter.history((char *)text);
 }
 
 //--------------------------------------------------------- PKSSDwriter::close
@@ -325,4 +312,6 @@ Int PKSSDwriter::write(
 void PKSSDwriter::close()
 {
   cSDwriter.close();
+  //logMsg(cSDwriter.getMsg());
+  //cSDwriter.clearMsg();
 }

@@ -22,6 +22,7 @@ $res_dir = "" if (0);   # non-default result dir
 $noloop  = "" if (0);   # Iterate through tests only once
 $noclean = "" if (0);   # Do not cleanup result dir
 $all     = "" if (0);   # Loop through all tests?
+$opcontrol = "" if (0); # path to opcontrol (oprofile)
 
 $reg_dir  = $ARGV[0];
 $data_dir = $ARGV[1];
@@ -134,7 +135,8 @@ if ($load_average_15 < $la_limit) {
 
             $test_number = ($next + $base) % ($#tests+1);	    
 	    $testname = $tests[$test_number];
-	    $runcasa_log = "$workdir/Log/run-$testname-$hostname.log";
+	    $runcasa_log     = "$workdir/Log/run-$testname-$hostname.log";
+	    $runcasa_profile = "$workdir/Log/profile-$testname-$hostname.dot";
 	    
 	    system("/bin/rm -rf $workdir") == 0 or die $!;
 	    mkdir("$workdir") or die;
@@ -149,8 +151,15 @@ if ($load_average_15 < $la_limit) {
 		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname";
 	    
 	    print gettime(), "Run test $test_number $testname: $cmd > $runcasa_log 2>&1\n";
+            if ($opcontrol) {
+                system("$opcontrol --reset") == 0 or die $!;
+                system("$opcontrol --start --no-vmlinux") == 0 or die $!;
+            }
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
-	    
+            if ($opcontrol) {
+                system("$opcontrol --stop") == 0 or die $!;
+                system("opreport -clf image-exclude:/no-vmlinux | $admin_dir/gprof2dot.py -e0 -n0.1 -f oprofile > $runcasa_profile");
+            }
 	    if (-d "$workdir/result") {
 		rename("$workdir/result/", "$workdir/Result/") or die $!;
 		$result_files = "Result/";

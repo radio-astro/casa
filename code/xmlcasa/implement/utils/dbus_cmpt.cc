@@ -26,7 +26,7 @@
 //# $Id: $
 #include <xmlcasa/utils/dbus_cmpt.h>
 
-#include <casaqt/QtUtilities/QtDBusApp.qo.h>
+#include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
 
 namespace casac {
@@ -43,7 +43,7 @@ const String dbus::FROM_NAME = "casapy";
 bool dbus::asyncCallMethod_(const string& objectName, const string& methodName,
         const record& parameters) {
     Record* params = toRecord(parameters);
-    bool res = QtDBusApp::dbusCallMethodNoRet(FROM_NAME, objectName,
+    bool res = QtDBusXmlApp::dbusXmlCallNoRet(FROM_NAME, objectName,
             methodName, *params, true);
     delete params;
     return res;

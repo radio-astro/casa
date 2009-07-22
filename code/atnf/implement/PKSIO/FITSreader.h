@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# FITSreader.h: ATNF single-dish FITS reader.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2007
 //# Mark Calabretta, ATNF
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -37,12 +37,16 @@
 #ifndef ATNF_FITSREADER_H
 #define ATNF_FITSREADER_H
 
-#include <atnf/PKSIO/PKSMBrecord.h>
+#include <atnf/PKSIO/MBrecord.h>
+
+using namespace std;
+
 
 // <summary>
 // ATNF single-dish FITS reader.
 // </summary>
 
+//class FITSreader
 class FITSreader
 {
   public:
@@ -73,6 +77,7 @@ class FITSreader
         char   telescope[32],
         double antPos[3],
         char   obsType[32],
+        char   bunit[32],
         float  &equinox,
         char   radecsys[32],
         char   dopplerFrame[32],
@@ -89,6 +94,10 @@ class FITSreader
 
     // Set data selection criteria.  Channel numbering is 1-relative, zero or
     // negative channel numbers are taken to be offsets from the last channel.
+    // Coordinate systems are
+    //   0: equatorial (RA,Dec),
+    //   1: vertical (Az,El),
+    //   2: feed-plane.
     int select(
         const int startChan[],
         const int endChan[],
@@ -96,7 +105,9 @@ class FITSreader
         const int getSpectra = 1,
         const int getXPol = 0,
         const int getFeedPos = 0,
-        const int getPointing = 0);
+        const int getPointing = 0,
+        const int coordSys = 0);
+
 
     // Find the range in time and position of the data selected.
     virtual int findRange(
@@ -108,15 +119,20 @@ class FITSreader
 
     // Read the next data record.
     virtual int read(
-        PKSMBrecord &record) = 0;
+//        PKSMBrecord &record) = 0;
+        MBrecord &record) = 0;
 
     // Close the RPFITS file.
     virtual void close(void) = 0;
 
   protected:
-    int    *cBeams, *cEndChan, cGetFeedPos, cGetSpectra, cGetXPol, cHaveBase,
-           cHaveSpectra, *cHaveXPol, *cIFs, cNBeam, *cNChan, cNIF, *cNPol,
-           *cRefChan, *cStartChan;
+    int  *cBeams, *cEndChan, cGetFeedPos, cCoordSys, cGetSpectra, cGetXPol, 
+           cHaveBase, cHaveSpectra, *cHaveXPol, *cIFs, cNBeam, *cNChan, cNIF, 
+           *cNPol, *cRefChan, *cStartChan;
+
+    // For use in constructing messages.
+    char cMsg[256];
+
 };
 
 #endif

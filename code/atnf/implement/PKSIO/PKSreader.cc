@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSreader.cc: Class to read Parkes multibeam data.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -40,7 +40,6 @@
 #include <casa/IO/RegularFileIO.h>
 #include <casa/OS/File.h>
 
-
 //--------------------------------------------------------------- getPKSreader
 
 // Return an appropriate PKSreader for a Parkes Multibeam dataset.
@@ -49,44 +48,44 @@ PKSreader* getPKSreader(
         const String name,
         const Int retry,
         const Int interpolate,
-        String &format,
-        Vector<Bool> &beams,
-        Vector<Bool> &IFs,
-        Vector<uInt> &nChan,
-        Vector<uInt> &nPol,
-        Vector<Bool> &haveXPol,
-        Bool   &haveBase,
-        Bool   &haveSpectra)
+        String &format)
 {
   // Check accessibility of the input.
   File inFile(name);
   if (!inFile.exists()) {
     format = "DATASET NOT FOUND";
-    return 0;
+    return 0x0;
   }
 
   if (!inFile.isReadable()) {
     format = "DATASET UNREADABLE";
-    return 0;
+    return 0x0;
   }
 
   // Determine the type of input.
-  PKSreader *reader = 0;
+  PKSreader *reader = 0x0;
   if (inFile.isRegular()) {
     // Is it MBFITS or SDFITS?
-    RegularFileIO file(name);
-    char buf[32];
-    file.read(30, buf, False);
-    buf[30] = '\0';
-    if (String(buf) == "SIMPLE  =                    T") {
-      // Looks like SDFITS.
+    if (strstr(name.chars(), ".sdfits")) {
+      // Looks like SDFITS, possibly gzip'd.
       format = "SDFITS";
       reader = new PKSFITSreader("SDFITS");
 
     } else {
-      // Assume it's MBFITS.
-      format = "MBFITS";
-      reader = new PKSFITSreader("MBFITS", retry, interpolate);
+      RegularFileIO file(name);
+      char buf[32];
+      file.read(30, buf, False);
+      buf[30] = '\0';
+      if (String(buf) == "SIMPLE  =                    T") {
+        // Looks like SDFITS.
+        format = "SDFITS";
+        reader = new PKSFITSreader("SDFITS");
+
+       } else {
+         // Assume it's MBFITS.
+         format = "MBFITS";
+         reader = new PKSFITSreader("MBFITS", retry, interpolate);
+       }
     }
 
   } else if (inFile.isDirectory()) {
@@ -103,7 +102,55 @@ PKSreader* getPKSreader(
   } else {
     format = "UNRECOGNIZED INPUT FORMAT";
   }
+  return reader;
+}
 
+//--------------------------------------------------------------- getPKSreader
+
+// Search a list of directories for a Parkes Multibeam dataset and return an
+
+PKSreader* getPKSreader(
+        const String name,
+        const Vector<String> directories,
+        const Int retry,
+        const Int interpolate,
+        Int    &iDir,
+        String &format)
+{
+  PKSreader *reader = 0x0;
+
+  iDir = -1;
+  Int nDir = directories.nelements();
+  for (Int i = 0; i < nDir; i++) {
+    String inName = directories(i) + "/" + name;
+    reader = getPKSreader(inName, retry, interpolate, format);
+    if (reader) {
+      iDir = i;
+      break;
+    }
+  }
+
+  return reader;
+}
+
+//--------------------------------------------------------------- getPKSreader
+
+// Open an appropriate PKSreader for a Parkes Multibeam dataset.
+
+PKSreader* getPKSreader(
+        const String name,
+        const Int retry,
+        const Int interpolate,
+        String &format,
+        Vector<Bool> &beams,
+        Vector<Bool> &IFs,
+        Vector<uInt> &nChan,
+        Vector<uInt> &nPol,
+        Vector<Bool> &haveXPol,
+        Bool   &haveBase,
+        Bool   &haveSpectra)
+{
+  PKSreader *reader = getPKSreader(name, retry, interpolate, format);
 
   // Try to open it.
   if (reader) {
@@ -111,20 +158,17 @@ PKSreader* getPKSreader(
                      haveSpectra)) {
       format += " OPEN ERROR";
       delete reader;
-    } else {
-      return reader;
+      reader = 0x0;
     }
   }
 
-  return 0;
+  return reader;
 }
-
 
 //--------------------------------------------------------------- getPKSreader
 
 // Search a list of directories for a Parkes Multibeam dataset and return an
 // appropriate PKSreader for it.
-
 PKSreader* getPKSreader(
         const String name,
         const Vector<String> directories,
@@ -140,17 +184,18 @@ PKSreader* getPKSreader(
         Bool   &haveBase,
         Bool   &haveSpectra)
 {
-  Int nDir = directories.nelements();
-  for (iDir = 0; iDir < nDir; iDir++) {
-    String inName = directories(iDir) + "/" + name;
-    PKSreader *reader = getPKSreader(inName, retry, interpolate, format,
-                                     beams, IFs, nChan, nPol, haveXPol,
-                                     haveBase, haveSpectra);
-    if (reader != 0) {
-      return reader;
+  PKSreader *reader = getPKSreader(name, directories, retry, interpolate,
+                                   iDir, format);
+
+  // Try to open it.
+  if (reader) {
+    if (reader->open(name, beams, IFs, nChan, nPol, haveXPol, haveBase,
+                     haveSpectra)) {
+      format += " OPEN ERROR";
+      delete reader;
+      reader = 0x0;
     }
   }
 
-  iDir = -1;
-  return 0;
+  return reader;
 }

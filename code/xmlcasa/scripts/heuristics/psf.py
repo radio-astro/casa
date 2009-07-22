@@ -6,6 +6,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -46,17 +47,18 @@ class Psf(BaseData):
         self._imager.selectvis(spw=int(spw), field=int(field))
 
         commands.append('imager.open(thems=%s)' % self._msName)
-        commands.append('imager.selectvis(spw=%s, field=%s)' % (spw, field))
+        commands.append('imager.selectvis(spw=int(%s), field=int(%s))' % 
+         (spw, field))
 
 # set the image parameters for the 'msf' result
 
         self._imager.defineimage(nx=nx, ny=nx, cellx=cell, celly=cell,
          stokes='I', phasecenter=int(field), mode='mfs', nchan=-1,
-	 spw=[int(spw)])
+         spw=[int(spw)])
         self._imager.summary()
 
         commands.append('''imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
-         stokes='I', phasecenter=%s, mode='mfs', nchan=-1, spw=[%s])''' % (nx,
+         stokes='I', phasecenter=int(%s), mode='mfs', nchan=-1, spw=[int(%s)])''' % (nx,
          nx, cell, cell, field, spw))
         commands.append('imager.summary()')
 
@@ -103,9 +105,9 @@ class Psf(BaseData):
         self._imager.summary()
 
         commands.append('''imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
-         stokes='I', phasecenter=%s, mode='channel', nchan=%s, spw=[%s])''' % (
-         nx, nx, cell, cell, field, self._results['summary']['nchannels'][spw], 
-         spw))
+         stokes='I', phasecenter=int(%s), mode='channel', nchan=%s,
+         spw=[int(%s)])''' % (nx, nx, cell, cell, field,
+         self._results['summary']['nchannels'][spw], spw))
         commands.append('imager.summary()')
 
 # compose output file name
@@ -148,13 +150,9 @@ class Psf(BaseData):
         stageName -- The name of the stage using the class.
         """
         description = """
-         The point spread function was constructed:
-         <ul>
-          <li>'imager.defineimage' set the map parameters.
-          <li>'imager.makeimage(type='psf', ...)' calculated the psf.
-          <li>'imager.fitpsf' fitted the beam.
-         </ul>
-         This work was done by Python class Psf."""
+         The point spread function was constructed (see Casapy Calls for 
+         details)."""
+#         This work was done by Python class Psf."""
 
         return description
 

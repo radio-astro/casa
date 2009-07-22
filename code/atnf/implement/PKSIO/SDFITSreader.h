@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# SDFITSreader.h: ATNF CFITSIO interface class for SDFITS input.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: SDFITSreader.h,v 19.16 2008-11-17 06:47:05 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# The SDFITSreader class reads single dish FITS files such as those written
 //# by SDFITSwriter containing Parkes Multibeam data.
@@ -37,9 +37,14 @@
 #define ATNF_SDFITSREADER_H
 
 #include <atnf/PKSIO/FITSreader.h>
-#include <atnf/PKSIO/PKSMBrecord.h>
+#include <atnf/PKSIO/MBrecord.h>
+
+#include <casa/Logging/LogIO.h>
 
 #include <fitsio.h>
+
+using namespace std;
+using namespace casa;
 
 // <summary>
 // ATNF class for SDFITS input using CFITSIO.
@@ -75,6 +80,7 @@ class SDFITSreader : public FITSreader
         char   telescope[32],
         double antPos[3],
         char   obsMode[32],
+        char   bunit[32],
         float  &equinox,
         char   radecsys[32],
         char   dopplerFrame[32],
@@ -98,10 +104,7 @@ class SDFITSreader : public FITSreader
         double* &positions);
 
     // Read the next data record.
-    virtual int read(PKSMBrecord &record);
-
-    // Print out CFITSIO error messages.
-    void reportError(void);
+    virtual int read(MBrecord &record);
 
     // Close the SDFITS file.
     virtual void close(void);
@@ -123,6 +126,9 @@ class SDFITSreader : public FITSreader
           PARANGLE, FOCUSAXI, FOCUSTAN, FOCUSROT, TAMBIENT, PRESSURE,
           HUMIDITY, WINDSPEE, WINDDIRE, NDATA};
 
+    // Message handling.
+    void log(LogOrigin origin, LogIO::Command cmd, const char *msg = 0x0);
+
     void findData(int iData, char *name, int type);
     int   readDim(int iData, long iRow, int *naxis, long naxes[]);
     int  readParm(char *name, int type, void *value);
@@ -130,10 +136,10 @@ class SDFITSreader : public FITSreader
     int  readData(int iData, long iRow, void *value);
     void  findCol(char *name, int *colnum);
 
-    // These are for ALFA data, "BDFITS" or "CIMAFITS".
+    // These are for ALFA data: "BDFITS" or "CIMAFITS".
     int   cALFA, cALFA_BD, cALFA_CIMA, cALFAscan, cScanNo;
     float cALFAcal[8][2], cALFAcalOn[8][2], cALFAcalOff[8][2];
-    int   alfaCal(short iBeam, short iIF);
+    int   alfaCal(short iBeam, short iIF, short iPol);
 
     // These are for GBT data.
     int   cGBT, cFirstScanNo;

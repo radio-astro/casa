@@ -52,7 +52,7 @@ namespace casa {
 // Currently supported types for parameters and returned values:
 //   bool, int, uInt, double, String, Records with these types.
 // For a discussion of what these fields mean, see the documentation for
-// QtDBusApp.
+// QtDBusXmlApp.
 class QtDBusXML {
 public:
     // Static Methods //

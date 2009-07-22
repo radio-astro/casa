@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2reader.h: Class to read Parkes Multibeam data from a v2 MS.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@
 #define ATNF_PKSMS2READER_H
 
 #include <atnf/PKSIO/PKSreader.h>
+#include <atnf/PKSIO/PKSrecord.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -45,11 +46,11 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to read Parkes Multibeam data from a v2 MS.
 // </summary>
-
-#include <casa/namespace.h>
 
 class PKSMS2reader : public PKSreader
 {
@@ -78,12 +79,13 @@ class PKSMS2reader : public PKSreader
         String &antName,
         Vector<Double> &antPosition,
         String &obsMode,
+        String &bunit,
         Float  &equinox,
-        String &freqRef,
+        //String &freqRef,
+        String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth,
-        String &fluxunit);
+        Double &bandwidth);
 
     // Get frequency parameters for each IF.
     virtual Int getFreqInfo(
@@ -101,7 +103,9 @@ class PKSMS2reader : public PKSreader
         const Bool getSpectra = True,
         const Bool getXPol    = False,
         const Bool getFeedPos = False,
-        const Bool getPointing = False);
+        const Bool getPointing = False,
+        const Int  coordSys   = 0);
+
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -111,6 +115,7 @@ class PKSMS2reader : public PKSreader
         Matrix<Double> &positions);
 
     // Read the next data record.
+/**
     virtual Int read(
         Int             &scanNo,
         Int             &cycleNo,
@@ -153,6 +158,9 @@ class PKSMS2reader : public PKSreader
         Matrix<uChar>   &flagged,
         Complex         &xCalFctr,
         Vector<Complex> &xPol);
+**/
+    virtual Int read(PKSrecord &pksrec);
+
 
     // Read the next data record, just the basics.
     virtual Int read(
@@ -169,7 +177,7 @@ class PKSMS2reader : public PKSreader
 
   private:
     Bool   cHaveBaseLin, cHaveCalFctr, cHaveSrcVel, cHaveTsys, cHaveXCalFctr,
-           cMSopen, cHaveTcal, cHaveDataCol, cATF, cHaveSysCal, cHaveCorrectedDataCol;
+           cMSopen, cHaveTcal, cHaveDataCol, cALMA, cHaveSysCal, cHaveCorrectedDataCol;
     Int    cCycleNo, cIdx, cNRow, cScanNo;
     Double cTime, lastmjd;
     Vector<Int>    cEndChan, cRefChan, cStartChan;

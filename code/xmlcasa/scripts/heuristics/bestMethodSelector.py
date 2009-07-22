@@ -12,6 +12,7 @@
 # 10-Sep-2008 jfl msCalibrater release.
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -151,22 +152,27 @@ class BestMethodSelector(BaseDataModifier):
 
 # output the B calibration info to HTML
 
-        bestMethodDescription = '''
-         <table CELLPADDING="5" BORDER="1"
-          <tr>
-           <th>Spw</th>'''
+        if len(bestMethodToUse) == 0:
+            bestMethodDescription = '''
+             No methods have been stored for any spectral window.'''
+        else:
+            bestMethodDescription = '''
+             <table CELLPADDING="5" BORDER="1"
+              <tr>
+               <th>Spw</th>'''
 
-        for k in bestMethodToUse.values()[0].keys():
-            bestMethodDescription += '<th>%s</th>' % k
-        bestMethodDescription += '</tr>'
-
-        for k,v in bestMethodToUse.iteritems():
-            bestMethodDescription += '''<tr>
-             <td>%s</td>''' % k
-            for w in v.values(): 
-                bestMethodDescription += '<td>%s</td>' % w
+            for k in bestMethodToUse.values()[0].keys():
+                bestMethodDescription += '<th>%s</th>' % k
             bestMethodDescription += '</tr>'
-        bestMethodDescription += '</table>'
+
+            for k,v in bestMethodToUse.iteritems():
+                bestMethodDescription += '''<tr>
+                 <td>%s</td>''' % k
+                for w in v.values(): 
+                    bestMethodDescription += '<td>%s</td>' % w
+                bestMethodDescription += '</tr>'
+            bestMethodDescription += '</table>'
+
         self._bestMethodDescription = bestMethodDescription
 
 # go through results and delete the sub-optimal entries
@@ -263,8 +269,8 @@ class BestMethodSelector(BaseDataModifier):
  
         self._htmlLogger.logHTML('''<p>
          The best calibration was the one in the following range of test 
-         calibrations that had the lowest figure of merit.
-         <p>The view was calculated by Python class BestMethodSelector.''')
+         calibrations that had the lowest figure of merit.''')
+#         <p>The view was calculated by Python class BestMethodSelector.''')
 
         self._htmlLogger.logHTML(self._resultsDescription)
 

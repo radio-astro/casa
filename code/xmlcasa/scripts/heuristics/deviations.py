@@ -166,8 +166,8 @@ class DataDeviationPerBaseline(BaseData):
 
                         self._bpCal.setapply(spw=data_desc_id, field=field_id)
                         self._gainCal.setapply(spw=data_desc_id, field=field_id)
-                        self._msCalibrater.correct(spw=data_desc_id,
-                         field=field_id, commands=commands)
+                        commands += self._msCalibrater.correct(spw=data_desc_id,
+                         field=field_id)
 
                     except KeyboardInterrupt:
                         raise
@@ -640,9 +640,9 @@ class DataDeviationPerBaseline(BaseData):
               <li>""" + description['gain calibration'] + """
              </ul>""")
 
-        self._htmlLogger.logHTML("""
-         <p>This data view was calculated by Python class %s.""" % 
-         self._className)
+#        self._htmlLogger.logHTML("""
+#         <p>This data view was calculated by Python class %s.""" % 
+#         self._className)
 
            
 class RawAmplitudeDeviationPerBaseline(DataDeviationPerBaseline):

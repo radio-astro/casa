@@ -16,6 +16,7 @@ using the results.
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # standard library modules
 
@@ -345,9 +346,13 @@ class SequenceFlagger(BaseFlagger):
 # write out the description
 
         self._htmlLogger.logHTML('''
-         The statistics of each data 'view' were
-         calculated and errant pixels flagged according to the
-         rules listed below.<ul>''')
+         Errant pixels were detected and flagged according to the
+         rules listed below. The flagging was done in a loop; in each
+         iteration the data 'view' would be calculated, the rule(s) would 
+         be applied, the data would be flagged. This cycle continued until 
+         no new flags were raised. If more than one rule was used then 
+         for each flagging pass the rules were applied in no particular 
+         order.<ul>''')
         for rule in self._rules:
             description = 'No description available for flagging rule: %s' % (
              rule['rule'])
@@ -405,9 +410,14 @@ class SequenceFlagger(BaseFlagger):
 
         self._htmlLogger.logHTML('<h3>Data Flagging</h3>')
         self._htmlLogger.logHTML('''
-         The data view was a 2-d image. The statistics of the image were
-         calculated and errant pixels flagged according to the
-         rules listed below. Flagged pixels were mapped back to set the
+         The data view was a 2-d image.
+         Errant pixels were detected and flagged according to the
+         rules listed below. The flagging was done in a loop; in each
+         iteration the data 'view' would be calculated, the rule(s) would 
+         be applied, the data would be flagged. This cycle continued until 
+         no new flags were raised. If more than one rule was used then 
+         for each flagging pass the rules were applied in no particular 
+         order. Flagged pixels were mapped back to set the
          FLAG_ROW values of the contributing elements in
          the MeasurementSet <ul>''')
 
@@ -441,7 +451,7 @@ class SequenceFlagger(BaseFlagger):
                  self._htmlLogger.glossaryLink('MAD'),
                  rule['axis'], rule['limit'])
 
-            elif rule['rule'] == 'outlier':
+            elif rule['rule'] == 'high outlier':
                 description = '''
                  The data sequences were slices along the data axis specified
                  by the 'axis' parameter. For each sequence
@@ -470,6 +480,7 @@ class SequenceFlagger(BaseFlagger):
                  self._htmlLogger.glossaryLink('chunk'),
                  self._htmlLogger.glossaryLink('MAD'),
                  rule['axis'], rule['limit'])
+
             elif rule['rule'] == 'too many flags':
                 description = '''
                  The data view was sliced up into 1-d arrays running
@@ -483,5 +494,5 @@ class SequenceFlagger(BaseFlagger):
  
             self._htmlLogger.logHTML('<li> %s' % description)
 
-        self._htmlLogger.logHTML('''</ul>
-        <p>The flagging was performed by Python class SequenceFlagger.''')
+        self._htmlLogger.logHTML('''</ul>''')
+#        <p>The flagging was performed by Python class SequenceFlagger.''')

@@ -9,6 +9,7 @@ the data in it."""
 # 10-Sep-2008 jfl msCalibrater release.
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -46,11 +47,13 @@ class ChunkMedian(BaseDataModifier):
 
 # have these data been calculated already?
 
+        inputs = self.inputs()
+
         entryID,results = self._bookKeeper.available(
-         objectType='ChunkMedian', sourceType=None,
-         furtherInput={},      
+         objectType=inputs['objectType'], sourceType=inputs['sourceType'],
+         furtherInput=inputs['furtherInput'],      
          outputFiles=[],
-         dependencies=[self._view.inputs()])
+         dependencies=inputs['dependencies'])
 
         if entryID == None:
 
@@ -81,12 +84,14 @@ class ChunkMedian(BaseDataModifier):
                 chunks = v[-1]['chunks']
                 times = v[-1]['y']
 
+                current = flagVersions.index('Current')
                 chunkTime = zeros([len(chunks)], float)
                 chunkInterval = zeros([len(chunks)], float)
                 outChunks = []
                 outData = zeros([len(chunks),shape(data)[1]], float)
-                outFlag = [ones([len(chunks),shape(data)[1]], int),
-                 ones([len(chunks),shape(data)[1]], int)]
+                outFlag = []
+                for fi,fs in enumerate(flagVersions):
+                    outFlag.append(ones([len(chunks),shape(data)[1]], int))
 
                 for i in range(len(chunks)):
                     chunk = chunks[i]
@@ -102,13 +107,12 @@ class ChunkMedian(BaseDataModifier):
                             validData = compress(chunkFlag==0, chunkData)
                             if len(validData) > 0:
                                 outFlag[fi][i,antenna] = 0
+                                if fi==current:
+                                    outData[i,antenna] = median(validData)
                             else:
                                 outFlag[fi][i,antenna] = 1
-                        chunkFlag = take(flag[-1][:,antenna], chunk)
-                        if len(validData) > 0:
-                            outData[i,antenna] = median(validData)
-                        else:
-                            outData[i,antenna] = 0.0
+                                if fi==current:
+                                    outData[i,antenna] = 0.0
                 
                 result = {}      
                 result['dataType'] = 'median per chunk of %s' % (
@@ -159,6 +163,20 @@ class ChunkMedian(BaseDataModifier):
         return temp
 
 
+    def inputs(self):
+        """Method to return the input settings for this object.
+        """
+        result = {}
+        result['objectType'] = 'ChunkMedian'
+        result['sourceType'] = None
+        result['furtherInput'] = {}
+        result['outputFiles'] = []
+        result['dependencies'] = [self._view.inputs()]
+        result['flag_marks'] = {}
+        
+        return result  
+ 
+
     def writeGeneralHTMLDescription(self, stageName):
         """Write a general description of the class to html.
 
@@ -203,7 +221,6 @@ class ChunkMedian(BaseDataModifier):
          <p>The data view is calculated from the input data view described
          below. Pixels along the TIME axis of the input are replaced by the
          median value for the %s that they belong to.
-         <p>The data view is calculated by Python class ChunkMedian.
 
          <h5>The Input Data View</h5>""" % 
          self._htmlLogger.glossaryLink('chunk'))

@@ -231,7 +231,8 @@ def input_test():
     if ( not os.path.exists( 'input_test_cont2' ) or not results ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Continuum file, 'input_test_cont2', was not created."
+                   +"\nError: Continuum file, 'input_test_cont2', was not created."\
+                   +"\nResults: "+str(results)
         
     
         
@@ -607,7 +608,7 @@ def continuum_test():
         if file.startswith( 'cont_test_' ):
             shutil.rmtree( file )
 
-        
+    
     try:
         results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
     except Exception, err:
@@ -615,42 +616,55 @@ def continuum_test():
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Unable to subtract continuum with a fit order of 0 "\
                  +"\n\t REULTS: "+str(results)
-        
-    if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
+    else:
+        if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: continuum 3 output files were NOT created."
+        else:
+            # Now that we know something has been done lets check some values
+            # with previously created files to see if the values are the same.
+            # We randomly pick 50 points (almost 10%)
+            for count in range(0,50):
+                x = random.randint(0,511)
+                y = random.randint(0,511)
+                box=str(x)+','+str(y)+','+str(x)+','+str(y)
+                chan = str(random.randint(0,39))
 
-    # Now that we know something has been done lets check some values
-    # with previously created files to see if the values are the same.
-    # We randomly pick 50 points (almost 10%)
-    for count in range(0,50):
-        x = random.randint(0,511)
-        y = random.randint(0,511)
-        box=str(x)+','+str(y)+','+str(x)+','+str(y)
-        chan = str(random.randint(0,39))
-        
-        line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
-        line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
-        #print "Spec line prev value: ", line_prev_value
-        #print "spec line current value: ", line_cur_value        
-        if ( line_prev_value != line_cur_value ):
-            retValue['success']    = False
-            retValue['error_msgs'] = '\nError: continuum value differs with '\
-                + "previously calculated value at: "\
-                + "\t["+str(x)+','+str(y)+','+chan+',I].'\
-                + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-
-        cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
-        cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
-        #print "Continuum prev value: ", cont_prev_value
-        #print "Continuum current value: ", cont_cur_value        
-        if ( cont_prev_value != cont_cur_value ):
-            retValue['success']    = False
-            retValue['error_msgs'] = '\nError: continuum value differs with '\
-                + "previously calculated value at: "\
-                + "\t["+str(x)+','+str(y)+','+chan+',I].'
-                #+ "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
+                line_prev_value={}
+                line_cur_value={'empty':''}
+                try: 
+                    line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
+                    line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
+                except:
+                    retValue['success']=False
+                    retValue['error_msgs']=retValue['error_msgs']\
+                        +"\nError: Unable to compare spectral line files."
+                else:
+                   #print "Spec line prev value: ", line_prev_value
+                   #print "spec line current value: ", line_cur_value        
+                   if ( line_prev_value != line_cur_value ):
+                    retValue['success']    = False
+                    retValue['error_msgs'] = '\nError: spectral line value differs with '\
+                          + "previously calculated value at: "\
+                          + "\t["+str(x)+','+str(y)+','+chan+',I].'\
+                          + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
+                try:
+                    cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
+                    cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
+                except:
+                    retValue['success']=False
+                    retValue['error_msgs']=retValue['error_msgs']\
+                        +"\nError: Unable to compare continuum files."
+                else:
+                   #print "Continuum prev value: ", cont_prev_value
+                   #print "Continuum current value: ", cont_cur_value        
+                   if ( cont_prev_value != cont_cur_value ):
+                    retValue['success']    = False
+                    retValue['error_msgs'] = '\nError: continuum value differs with '\
+                        + "previously calculated value at: "\
+                        + "\t["+str(x)+','+str(y)+','+chan+',I].'
+                        #+ "\tvalues are "+str(cont_prev_value)+" and "+str(cont_cur_value)
 
     return retValue
 
@@ -716,43 +730,59 @@ def fitorder_test():
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Unable to subtract continuum with a fit order="+str(order)\
                 +"\n\t REULTS: "+str(results)
-        
-        if ( not os.path.exists( contfile ) or not os.path.exists( linefile ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
+        else:
+            if ( not os.path.exists( contfile ) or not os.path.exists( linefile ) or not results ): 
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: output files were NOT created for fitorder="\
                    +str(order)+" test."
+            else:
+                # Now that we know something has been done lets check some values
+                # with previously created files to see if the values are the same.
+                # We randomly pick 50 points (almost 10%)
+                for count in range(0,50):
+                    x = random.randint(0,511)
+                    y = random.randint(0,511)
+                    box=str(x)+','+str(y)+','+str(x)+','+str(y)
+                    chan = str(random.randint(0,39))
 
-        # Now that we know something has been done lets check some values
-        # with previously created files to see if the values are the same.
-        # We randomly pick 50 points (almost 10%)
-        for count in range(0,50):
-            x = random.randint(0,511)
-            y = random.randint(0,511)
-            box=str(x)+','+str(y)+','+str(x)+','+str(y)
-            chan = str(random.randint(0,39))
-        
-            line_prev_value = imval( oldlinefile, box=box, chans=chan, stokes='I' )
-            line_cur_value  = imval( linefile, box=box, chans=chan, stokes='I' )
-            #print "Spec line prev value: ", line_prev_value
-            #print "spec line current value: ", line_cur_value        
-            if ( line_prev_value != line_cur_value ):
-                retValue['success']    = False
-                retValue['error_msgs'] = '\nError: continuum value differs with '\
+                    line_prev_value={}
+                    line_cur_value={ 'empty':''}
+                    try:
+                        line_prev_value = imval( oldlinefile, box=box, chans=chan, stokes='I' )
+                        line_cur_value  = imval( linefile, box=box, chans=chan, stokes='I' )
+                    except:
+                        retValue['success']=False
+                        retValue['error_msgs']=retValue['error_msgs']\
+                          +"\nError: Unable to compare spectral line files."
+                    else:
+                        #print "Spec line prev value: ", line_prev_value
+                        #print "spec line current value: ", line_cur_value
+                        if ( line_prev_value != line_cur_value ):
+                            retValue['success']    = False
+                            retValue['error_msgs'] = '\nError: continuum value differs with '\
                                + "previously calculated value at: "\
                                + "\t["+str(x)+','+str(y)+','+chan+',I].'\
                                + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-                
-            cont_prev_value = imval( oldcontfile, box=box, chans=chan, stokes='I' )
-            cont_cur_value  = imval( contfile, box=box, chans=chan, stokes='I' )
-            #print "Continuum prev value: ", cont_prev_value
-            #print "Continuum current value: ", cont_cur_value        
-            if ( cont_prev_value != cont_cur_value ):
-                retValue['success']    = False
-                retValue['error_msgs'] = '\nError: continuum value differs with '\
-                          + "previously calculated value at: "\
-                          + "\t["+str(x)+','+str(y)+','+chan+',I].'
-                          #+ "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
+                    cont_prev_value={}
+                    cont_cur_value={ 'empty':''}
+                    try:
+                        cont_prev_value = imval( oldcontfile, box=box, chans=chan, stokes='I' )
+                        cont_cur_value  = imval( contfile, box=box, chans=chan, stokes='I' )
+                    except:
+                        retValue['success']=False
+                        retValue['error_msgs']=retValue['error_msgs']\
+                          +"\nError: Unable to compare continuum files "\
+                          +oldcontfile+"  and  "+contfile
+                    else:
+                      #print "Continuum prev value: ", cont_prev_value
+                      #print "Continuum current value: ", cont_cur_value
+                      if ( cont_prev_value != cont_cur_value ):
+                          retValue['success']    = False
+                          retValue['error_msgs'] = '\nError: continuum value differs with '\
+                             + "previously calculated value at: "\
+                             + "\t["+str(x)+','+str(y)+','+chan+',I].'
+                             #+ "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
 
     return retValue
 
@@ -821,5 +851,6 @@ def run():
     print "PASSED: ", passed
     if ( not passed ):
         casalog.post( error_msgs, 'EXCEPTION' )
+        raise Exception, 'imcontsub test has failed!\n'+error_msgs
     
     return []

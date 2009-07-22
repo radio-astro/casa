@@ -1010,7 +1010,11 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
   
   /* If there still are empty points (entire spectrum is flagged) flag it. */
   for(uInt i=0;i<tdata.nelements();i++)
-   if(tdata[i]==0) {cout << "chan " << i << " is blank" << endl;tfband[i]=True;}
+   if(tdata[i]==0) 
+     {
+       //cout << "chan " << i << " is blank" << endl;
+       tfband[i]=True;
+     }
   
   fit = tdata;
 
@@ -1130,8 +1134,15 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
   if(StartChan==0){start=0;tdata[0]=tdata[1];}
   
   /* If there still are empty points (entire spectrum is flagged) flag it. */
-  for(uInt i=0;i<tdata.nelements();i++)
-   if(tdata[i]==0) {cout << "chan " << i << " is blank" << endl;tfband[i]=True;}
+  for (uInt i=0;
+       i < tdata.nelements();
+       i++) {
+    
+    if(tdata[i]==0) {
+      //cout << "chan " << i << " is bland" << endl;
+      tfband[i]=True;
+    }
+  }
   
   fit = tdata;
 

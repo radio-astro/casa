@@ -91,7 +91,7 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
         casalog.post("fldid vector: " + str(fldids), 'DEBUG1' )
         im.open(vis)
         im.calcuvw(fldids, refcode)
-        im.close()        
+        im.close()
     except Exception, instance:
         casalog.post('*** Error *** ' + str(instance), 'SEVERE')
     return

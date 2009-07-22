@@ -357,7 +357,6 @@ class ClosurePhase(BaseData):
          division 'corrected data'/'model data' for that time/baseline.
          For multi-channel spectral windows the median is taken of the data 
          across the channels.
-         <p>The view was calculated by Python class ClosurePhase.
 
          <h5>The Model that is compared to the Data</h5>""")
 

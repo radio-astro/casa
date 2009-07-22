@@ -38,9 +38,13 @@
 #include <vector> 
 #include <iostream>
 
+//#include <casa/aips.h>
+#include <casa/Logging/LogIO.h>
 #include <atnf/PKSIO/NRODataRecord.h>
+#include <casa/namespace.h>
 
 #define SCAN_HEADER_SIZE 424 
+
 
 using namespace std ;
 
@@ -63,9 +67,6 @@ class NRODataset
   // Data initialization
   virtual void initialize() ;
 
-  // Finalization
-  virtual void finalize() ;
-
   // open file
   virtual int open() ;
 
@@ -79,30 +80,30 @@ class NRODataset
   virtual int fillRecord( int i ) ;
 
   // simple getter
-  char *getLOFIL() { return LOFIL ; } ;
-  char *getVER() { return VER ; } ;
-  char *getGROUP() { return GROUP ; } ;
-  char *getPROJ() { return PROJ ; } ;
-  char *getSCHED() { return SCHED ; } ;
-  char *getOBSVR() { return OBSVR ; } ;
-  char *getLOSTM() { return LOSTM ; } ;
-  char *getLOETM() { return LOETM ; } ;
+  string getLOFIL() { return LOFIL ; } ;
+  string getVER() { return VER ; } ;
+  string getGROUP() { return GROUP ; } ;
+  string getPROJ() { return PROJ ; } ;
+  string getSCHED() { return SCHED ; } ;
+  string getOBSVR() { return OBSVR ; } ;
+  string getLOSTM() { return LOSTM ; } ;
+  string getLOETM() { return LOETM ; } ;
   int getARYNM() { return ARYNM ; } ;
   int getNSCAN() { return NSCAN ; } ;
-  char *getTITLE() { return TITLE ; } ;
-  char *getOBJ() { return OBJ ; } ;
-  char *getEPOCH() { return EPOCH ; } ;
+  string getTITLE() { return TITLE ; } ;
+  string getOBJ() { return OBJ ; } ;
+  string getEPOCH() { return EPOCH ; } ;
   double getRA0() { return RA0 ; } ;
   double getDEC0() { return DEC0 ; } ;
   double getGLNG0() { return GLNG0 ; } ;
   double getGLAT0() { return GLAT0 ; } ;
   int getNCALB() { return NCALB ; } ;
   int getSCNCD() { return SCNCD ; } ;
-  char *getSCMOD() { return SCMOD ; } ;
+  string getSCMOD() { return SCMOD ; } ;
   double getURVEL() { return URVEL ; } ;
-  char *getVREF() { return VREF ; } ;
-  char *getVDEF() { return VDEF ; } ;
-  char *getSWMOD() { return SWMOD ; } ;
+  string getVREF() { return VREF ; } ;
+  string getVDEF() { return VDEF ; } ;
+  string getSWMOD() { return SWMOD ; } ;
   double getFRQSW() { return FRQSW ; } ;   
   double getDBEAM() { return DBEAM ; } ;   
   double getMLTOF() { return MLTOF ; } ;    
@@ -111,7 +112,7 @@ class NRODataset
   double getCMTSOM() { return CMTSOM ; } ;
   double getCMTNODE() { return CMTNODE ; } ;
   double getCMTI() { return CMTI ; } ;
-  char *getCMTTM() { return CMTTM ; } ;
+  string getCMTTM() { return CMTTM ; } ;
   double getSBDX() { return SBDX ; } ;
   double getSBDY() { return SBDY ; } ;
   double getSBDZ1() { return SBDZ1 ; } ;
@@ -128,25 +129,25 @@ class NRODataset
   int getSCNLEN() { return SCNLEN ; } ;
   int getSBIND() { return SBIND ; } ;
   int getIBIT() { return IBIT ; } ;
-  char *getSITE() { return SITE ; } ;
-  vector<char *> getRX() { return RX ; } ;
+  string getSITE() { return SITE ; } ;
+  vector<string> getRX() { return RX ; } ;
   vector<double> getHPBW() { return HPBW ; } ;
   vector<double> getEFFA() { return EFFA ; } ;
   vector<double> getEFFB() { return EFFB ; } ;
   vector<double> getEFFL() { return EFFL ; } ;
   vector<double> getEFSS() { return EFSS ; } ;
   vector<double> getGAIN() { return GAIN ; } ;
-  vector<char *> getHORN() { return HORN ; } ;
-  vector<char *> getPOLTP() { return POLTP ; } ;
+  vector<string> getHORN() { return HORN ; } ;
+  vector<string> getPOLTP() { return POLTP ; } ;
   vector<double> getPOLDR() { return POLDR ; } ;
   vector<double> getPOLAN() { return POLAN ; } ;
   vector<double> getDFRQ() { return DFRQ ; } ;
-  vector<char *> getSIDBD() { return SIDBD ; } ;
+  vector<string> getSIDBD() { return SIDBD ; } ;
   vector<int> getREFN() { return REFN ; } ;
   vector<int> getIPINT() { return IPINT ; } ;
   vector<int> getMULTN() { return MULTN ; } ;
   vector<double> getMLTSCF() { return MLTSCF ; } ;
-  vector<char *> getLAGWIND() { return LAGWIND ; } ;
+  vector<string> getLAGWIND() { return LAGWIND ; } ;
   vector<double> getBEBW() { return BEBW ; } ;
   vector<double> getBERES() { return BERES ; } ;
   vector<double> getCHWID() { return CHWID ; } ;
@@ -156,7 +157,7 @@ class NRODataset
   vector< vector<double> > getFQCAL() { return FQCAL ; } ;
   vector< vector<double> > getCHCAL() { return CHCAL ; } ;
   vector< vector<double> > getCWCAL() { return CWCAL ; } ;
-  char *getCDMY1() { return CDMY1 ; } ;
+  string getCDMY1() { return CDMY1 ; } ;
   vector<double> getDSBFC() { return DSBFC ;} ;
   int getDataSize() { return datasize_ ; } ;
   int getRowNum() { return rowNum_ ; } ;
@@ -171,6 +172,8 @@ class NRODataset
   virtual double getStartIntTime( int i ) ;
   virtual double getMJD( char *time ) ;
   virtual vector<bool> getIFs() ;
+  virtual vector<double> getFrequencies( int i ) ;
+  virtual uInt getArrayId( string type ) ;
 
  protected:
   // fill header information
@@ -203,29 +206,32 @@ class NRODataset
   // Release DataRecord
   void releaseRecord() ;
 
+  // show primary information
+  void show() ;
+
   // Type of file record
-  char *LOFIL ;
+  string LOFIL ;
 
   // Version 
-  char *VER ;
+  string VER ;
 
   // Group name
-  char *GROUP ;
+  string GROUP ;
 
   // Project name
-  char *PROJ ;
+  string PROJ ;
 
   // Name of observation scheduling file
-  char *SCHED ;
+  string SCHED ;
 
   // Name of observer
-  char *OBSVR ;
+  string OBSVR ;
 
   // Observation start time with format of "YYYYMMDDHHMMSS" (UTC)
-  char *LOSTM ;
+  string LOSTM ;
 
   // observation end time with format of "YYYYMMDDHHMMSS" (UTC)
-  char *LOETM ;
+  string LOETM ;
 
   // Number of arrays (beams and IFs)
   int ARYNM ;
@@ -234,13 +240,13 @@ class NRODataset
   int NSCAN ;
 
   // Title of observation
-  char *TITLE ;
+  string TITLE ;
 
   // Name of target object 
-  char *OBJ ;
+  string OBJ ;
 
   // Equinox (B1950 or J2000)
-  char *EPOCH ;
+  string EPOCH ;
 
   // Right ascension [rad]
   double RA0 ;
@@ -261,19 +267,19 @@ class NRODataset
   int SCNCD ;
 
   // Scan sequence pattern
-  char *SCMOD ;
+  string SCMOD ;
 
   // User-defined recessional velocity [m/s]
   double URVEL ;
 
   // Reference frame for recessional velocity  (LSR or HEL or GAL)
-  char *VREF ;
+  string VREF ;
 
   // Definition of recessional velocity  (RAD or OPT)
-  char *VDEF ;
+  string VDEF ;
 
   // Switching mode  (POS or BEAM or FREQ)
-  char *SWMOD ;
+  string SWMOD ;
 
   // Switching frequency [Hz]
   double FRQSW ;
@@ -300,7 +306,7 @@ class NRODataset
   double CMTI ;
 
   // Comet: Time of the perihelion passage
-  char *CMTTM ;
+  string CMTTM ;
 
   // Correction for position of subreflector DX [mm] 
   double SBDX ;
@@ -351,13 +357,13 @@ class NRODataset
   int IBIT ;
 
   // Site (antenna) name  (45m or ASTE)
-  char *SITE ;
+  string SITE ;
 
   // Dummy data
-  char *CDMY1 ;
+  string CDMY1 ;
 
   // Type of detector frontend 
-  vector<char *> RX ;
+  vector<string> RX ;
 
   // HPBW [rad]
   vector<double> HPBW ;
@@ -378,10 +384,10 @@ class NRODataset
   vector<double> GAIN ;
 
   // Type of polarization at feed horn  (R or L or H or V)
-  vector<char *> HORN ;
+  vector<string> HORN ;
 
   // Type of polarization  (CIRC or LINR)
-  vector<char *> POLTP ;
+  vector<string> POLTP ;
 
   // Rotation direction of circular polarization
   vector<double> POLDR ;
@@ -393,7 +399,7 @@ class NRODataset
   vector<double> DFRQ ;
 
   // Type of sideband  (LSB or USB or DSB)
-  vector<char *> SIDBD ;
+  vector<string> SIDBD ;
 
   // Identifier of reference synthesizer
   vector<int> REFN ;
@@ -408,7 +414,7 @@ class NRODataset
   vector<double> MLTSCF ;
 
   // Type of LAG window  (NONE or HANN or HAMM or BLCK)
-  vector<char *> LAGWIND ;
+  vector<string> LAGWIND ;
 
   // Bandwidth at backend
   vector<double> BEBW ;
@@ -473,6 +479,9 @@ class NRODataset
   // OS endian
   int endian_ ;
   int same_ ;
+
+  // Logger
+  //LogIO os ;
 } ;
 
 

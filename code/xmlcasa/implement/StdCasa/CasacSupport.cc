@@ -4,6 +4,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <casa/Quanta/MVAngle.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MeasTable.h>
 
@@ -158,6 +159,47 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
   return True;
 
 }
+
+::casac::record* recordFromQuantity(const Quantity q)
+{
+  ::casac::record *r=0;
+  try{
+    String error;
+    Record R;
+    if(QuantumHolder(q).toRecord(error, R))
+      r = fromRecord(R);
+    else
+      throw(AipsError("Could not convert quantity to record."));
+  }
+  catch(AipsError x){
+    ostringstream oss;
+
+    oss << "Exception Reported: " << x.getMesg();
+    RETHROW(x);
+  }
+  return r;
+}
+
+::casac::record* recordFromQuantity(const Quantum<Vector<Double> >& q)
+{
+  ::casac::record *r=0;
+  try {
+    String error;
+    casa::Record R;
+    if(QuantumHolder(q).toRecord(error, R))
+      r = fromRecord(R);
+    else
+      throw(AipsError("Could not convert quantity to record."));
+  }
+  catch(AipsError x){
+    ostringstream oss;
+
+    oss << "Exception Reported: " << x.getMesg();
+    RETHROW(x);
+  }
+  return r;
+}
+
 /*
  * Note to self, asArrayDouble doesn't cut it.  We'll have to do asType and convert element by element,
  * sigh.....
@@ -807,8 +849,77 @@ Bool casaMDirection(const ::casac::variant& theVar,
   
 
   return False;
+}
 
+Bool ang_as_formatted_str(string& out, const casa::Quantity& qang,
+                          const std::string& format)
+{
+  Bool retval = true;
+  
+  try{
+    //hms, dms, deg, rad, +deg.
+    casa::String form(format);
+    form.downcase();
 
+    MVAngle ang(qang);
+    if(form == "dms"){
+      out = ang(-0.5).string(MVAngle::ANGLE, 8).c_str();
+    }
+    else if(form == "hms"){
+      out = ang.string(MVAngle::TIME, 8).c_str();
+    }
+    else if(form == "deg"){
+      ostringstream os;
+      os << ang().degree();
+      out = os.str();
+    }
+    else if(form == "rad"){
+      ostringstream os;
+      os << ang().radian();
+      out = os.str();
+    }
+    else if(form == "+deg"){
+      ostringstream os;
+      os << ang(0.0).degree();
+      out = os.str();
+    }
+    else{
+      retval = false;  // Format not understood - return false instead of
+                       // throwing an exception.
+    }
+  }
+  catch(AipsError x){
+    retval = false;
+    RETHROW(x);
+  }
+  return retval;
+}
+
+Bool MDirection2str(const MDirection& in, std::string& out)
+{
+  Quantum<Vector<Double> > lonlat(in.getAngle());
+  Vector<Double> lonlatval(lonlat.getValue());
+  Unit           inunit(lonlat.getUnit());
+  string refcode(in.getRefString());
+  
+  casa::Quantity qlon(lonlatval[0], inunit);
+  casa::Quantity qlat(lonlatval[1], inunit);
+  
+  string lon("");
+  string lat("");
+  Bool success;
+  if(refcode == "J2000" || refcode[0] == 'B'){
+    success = ang_as_formatted_str(lon, qlon, "hms");
+    success = success && ang_as_formatted_str(lat, qlat, "dms");
+  }
+  else{
+    success = success && ang_as_formatted_str(lon, qlon, "deg");
+    success = success && ang_as_formatted_str(lat, qlat, "deg");
+  }
+
+  if(success)
+    out = refcode + " " + lon + " " + lat;
+  return success;
 }
 
 Bool casaMFrequency(const ::casac::variant& theVar, 

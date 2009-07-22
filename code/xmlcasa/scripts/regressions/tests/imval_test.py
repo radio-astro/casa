@@ -83,7 +83,7 @@
 # import os
 # sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
 # import publish_summary
-# publish_summary.runTest( 'imsmooth_test' )
+# publish_summary.runTest( 'imval_test' )
 #
 # To test the script by itself, ie. not with test infrastructure.
 # where WORKING_DIR is where you'll run the script
@@ -94,12 +94,12 @@
 # casapy
 # CASA <2>: cd WORKING_DIR
 # CASA <3>: import imval_test
-# CASA <4>: imsmooth_test.run()
+# CASA <4>: imval_test.run()
 # </example>
 #
 # <motivation>
-# To provide a test standard to the imsmooth task to try and ensure
-# coding changes do not break the 
+# To provide a test standard to the imval task to try and ensure
+# coding changes do not break the task.
 # </motivation>
 #
 # <todo>
@@ -373,7 +373,7 @@ def input_test( image_file, good_rgn_file ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs'] \
                        +'Invalid stokes value, Q,  not detected.'
-    print "HERE"
+
     results=None
     try:
         results = imval( imagename=image_file, stokes=0 )
@@ -386,8 +386,6 @@ def input_test( image_file, good_rgn_file ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs'] \
                        +'Invalid stokes value, 0,  not detected.'
-    print "GEESH"
-
     results=None
     try:
         results = imval( imagename=image_file, stokes='I' )

@@ -35,19 +35,25 @@ Quantity          casaQuantity(const casac::variant &);
  Bool toCasaVectorQuantity(const ::casac::variant& theval, 
 			   casa::Vector<casa::Quantity>& theQuants);
 
+::casac::record* recordFromQuantity(const Quantity q);
+::casac::record* recordFromQuantity(const Quantum<Vector<Double> >& q);
+
 Record           *toRecord(const casac::record &);
 ValueHolder      *toValueHolder(const casac::variant&);
 ::casac::variant *fromValueHolder(const ValueHolder &);
- Bool             casaMDirection(const ::casac::variant& theVar, 
+Bool             casaMDirection(const ::casac::variant& theVar, 
 				            MDirection& theMeas);
- Bool             casaMFrequency(const ::casac::variant& theVar, 
-				            MFrequency& theMeas);
- Bool             casaMPosition(const ::casac::variant& theVar, 
-				            MPosition& theMeas);
- Bool             casaMRadialVelocity(const ::casac::variant& theVar, 
+Bool             ang_as_formatted_str(string& out, const casa::Quantity& qang,
+                                      const std::string& format);
+Bool             MDirection2str(const MDirection& in, std::string& out);
+Bool             casaMFrequency(const ::casac::variant& theVar, 
+                                MFrequency& theMeas);
+Bool             casaMPosition(const ::casac::variant& theVar, 
+                               MPosition& theMeas);
+Bool             casaMRadialVelocity(const ::casac::variant& theVar, 
 				            MRadialVelocity& theMeas);
- Bool             casaMEpoch(const ::casac::variant& theVar, 
-				            MEpoch& theMeas);
+Bool             casaMEpoch(const ::casac::variant& theVar, 
+                            MEpoch& theMeas);
  //utility to split a single string to multiple if they are , or empty space 
  //seperated
  Int sepCommaEmptyToVectorStrings(Vector<String>& retStr, 

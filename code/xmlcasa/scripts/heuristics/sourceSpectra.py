@@ -359,9 +359,9 @@ class SourceSpectra(BaseDataModifier):
          cube. Each 'pixel spectrum' was taken from the cube at the 
          pixel position of a 'source' detected during the cleaning
          process. Each 'box spectrum' was the mean spectrum over the
-         pixels in the corresponding clean box.
+         pixels in the corresponding clean box.""")
 
-         <p>The view was calculated by Python class SourceSpectra.""")
+#         <p>The view was calculated by Python class SourceSpectra.""")
 
         self._htmlLogger.logHTML("""
          <h5>The Clean Cube</h5>""")

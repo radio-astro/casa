@@ -20,6 +20,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -40,7 +41,7 @@ class GainCalibration(BaseData):
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
      msName, stageName, bandpassCal, sourceTypes=['GAIN'], timesol=300.0,
-     dataType='amplitude', bandpassFlaggingStage=None):
+     dataType='complex', bandpassFlaggingStage=None):
         """Constructor.
 
         Keyword arguments:
@@ -55,7 +56,7 @@ class GainCalibration(BaseData):
         sourceTypes         -- Types of source to be used for the G calibration.
         timesol             -- 'timesol' parameter passed to calibrater.
         dataType            -- The type of data to be returned by getdata.
-                               'amplitude', 'phase' or 'SNR'.
+                               'amplitude', 'phase', 'complex' or 'SNR'.
         bandpassFlaggingStage -- Name of stage where bandpass edge channels
                                  were detected. If not None then these
                                  channels will be flagged in the calibrator
@@ -110,21 +111,25 @@ class GainCalibration(BaseData):
         originalGainTable   -- Name of gain table holding the results for the
                                raw MS (no heuristic flagging applied).
         requiredDataType -- The type of gain information to be returned;
-                            'amplitude', 'phase' or 'SNR'.
+                            'amplitude', 'phase', 'complex' or 'SNR'.
         results          -- Dictionary to add results to.
         """
 
-#        print 'GainCalibration._read_results called: %s %s' % (gainTable,
-#         gainTableOnEntry)
+#        print 'GainCalibration._read_results called: %s %s %s' % (gainTable,
+#         stageEntryGainTable, originalGainTable)
 
+        currentGainTableExists = True
         if not os.path.exists(gainTable):
             print 'WARNING - %s does not exist' % gainTable
-            return
+            currentGainTableExists = False
+
+        stageEntryGainTableExists = True
         if not os.path.exists(stageEntryGainTable):
             print 'WARNING - %s does not exist' % stageEntryGainTable
-            return
+            stageEntryGainTableExists = False
+
         if not os.path.exists(originalGainTable):
-            print 'WARNING - %s does not exist' % originalGainTable
+            print 'ERROR - %s does not exist' % originalGainTable
             return
 
 # get range of data_desc_ids, antennas
@@ -135,7 +140,7 @@ class GainCalibration(BaseData):
 # open the CAL_DESC sub-table and read the column that maps CAL_DESC_ID
 # to DATA_DESC_ID
 
-        self._table.open('%s/CAL_DESC' % gainTable)
+        self._table.open('%s/CAL_DESC' % originalGainTable)
         cal_desc_2_data_desc = self._table.getcol('SPECTRAL_WINDOW_ID')[0]
         self._table.close()
 
@@ -157,41 +162,60 @@ class GainCalibration(BaseData):
                 if self._valid_field_spw.count([field_id,data_desc_id]) == 0:
                     continue
 
-# read the results themselves
-
-                self._table.open(gainTable)
-                taql = 'CAL_DESC_ID==%s && FIELD_ID==%s' % (cal_desc_id,
-                 field_id)
-                subTable = self._table.query(query=taql)
-                antenna1 = subTable.getcol('ANTENNA1')
-                gain = subTable.getcol('GAIN')
-                snr = subTable.getcol('SNR')
-                cal_flag = subTable.getcol('FLAG')
-                field_id_column = subTable.getcol('FIELD_ID')
-                time_column = subTable.getcol('TIME')
-                self._table.close()
-
-# and 'BeforeHeuristics' state info
+# read the 'BeforeHeuristics' results
 
                 self._table.open(originalGainTable)
                 taql = 'CAL_DESC_ID==%s && FIELD_ID==%s' % (cal_desc_id,
                  field_id)
                 subTable = self._table.query(query=taql)
                 antenna1_original = subTable.getcol('ANTENNA1')
+                gain_original = subTable.getcol('GAIN')
+                snr_original = subTable.getcol('SNR')
                 cal_flag_original = subTable.getcol('FLAG')
+                field_id_column_original = subTable.getcol('FIELD_ID')
                 time_column_original = subTable.getcol('TIME')
                 self._table.close()
 
+# read the 'Current' results, if not available set same as BeforeHeuristics
+# but with all gains flagged
+
+                if currentGainTableExists:
+                    self._table.open(gainTable)
+                    taql = 'CAL_DESC_ID==%s && FIELD_ID==%s' % (cal_desc_id,
+                     field_id)
+                    subTable = self._table.query(query=taql)
+                    antenna1 = subTable.getcol('ANTENNA1')
+                    gain = subTable.getcol('GAIN')
+                    snr = subTable.getcol('SNR')
+                    cal_flag = subTable.getcol('FLAG')
+                    field_id_column = subTable.getcol('FIELD_ID')
+                    time_column = subTable.getcol('TIME')
+                    self._table.close()
+                else:
+                    antenna1 = array(antenna1_original)
+                    gain = array(gain_original)
+                    snr = array(snr_original)
+                    cal_flag = array(cal_flag_original)
+                    cal_flag[:] = 1
+                    field_id_column = array(field_id_column_original)
+                    time_column = array(time_column_original)
+
 # and 'StageEntry' state info
 
-                self._table.open(stageEntryGainTable)
-                taql = 'CAL_DESC_ID==%s && FIELD_ID==%s' % (cal_desc_id,
-                 field_id)
-                subTable = self._table.query(query=taql)
-                antenna1_stage_entry = subTable.getcol('ANTENNA1')
-                cal_flag_stage_entry = subTable.getcol('FLAG')
-                time_column_stage_entry = subTable.getcol('TIME')
-                self._table.close()
+                if stageEntryGainTableExists:
+                    self._table.open(stageEntryGainTable)
+                    taql = 'CAL_DESC_ID==%s && FIELD_ID==%s' % (cal_desc_id,
+                     field_id)
+                    subTable = self._table.query(query=taql)
+                    antenna1_stage_entry = subTable.getcol('ANTENNA1')
+                    cal_flag_stage_entry = subTable.getcol('FLAG')
+                    time_column_stage_entry = subTable.getcol('TIME')
+                    self._table.close()
+                else:
+                    antenna1_stage_entry = array(antenna1_original)
+                    cal_flag_stage_entry = array(cal_flag_original)
+                    cal_flag_stage_entry[:] = 1
+                    time_column_stage_entry = array(time_column_original)
 
 # if timesol='int', get the timestamps of the data directly from the ms.
 # This establishes the full extent of the data; the calibrator currently does
@@ -240,7 +264,11 @@ class GainCalibration(BaseData):
 # easy to separate pixels that cannot be calculated because the calibration
 # method fails from those whose underlying data have all been flagged.
 
-                    data = zeros([len(times), max(antenna_range)+1], float)
+                    if requiredDataType == 'complex':
+                        data = zeros([len(times), max(antenna_range)+1], complex)
+                    else:
+                        data = zeros([len(times), max(antenna_range)+1], float)
+                    amplitude = zeros([len(times), max(antenna_range)+1], float)
                     solution_time = [
                      zeros([len(times), max(antenna_range)+1], double),
                      zeros([len(times), max(antenna_range)+1], double),
@@ -280,12 +308,16 @@ class GainCalibration(BaseData):
                         if not(cal_flag[p,0,i]):
                             solution_time[3][time_index, antenna] = \
                              time_column[i]
+                            amplitude[time_index,antenna] = sqrt(
+                             gain[p,0,i].imag**2 + gain[p,0,i].real**2)
                             if requiredDataType == 'amplitude':
-                                data[time_index,antenna] = sqrt(
-                                 gain[p,0,i].imag**2 + gain[p,0,i].real**2)
+                                data[time_index,antenna] = \
+                                 amplitude[time_index,antenna]
                             elif requiredDataType == 'phase':
                                 data[time_index,antenna] = math.atan2(
                                  gain[p,0,i].imag, gain[p,0,i].real)
+                            elif requiredDataType == 'complex':
+                                data[time_index,antenna] = gain[p,0,i]
                             elif requiredDataType == 'SNR':
                                 data[time_index,antenna] = snr[p,0,i]
                             else:
@@ -341,37 +373,7 @@ class GainCalibration(BaseData):
                                          argmin(abs(phases))]
                                     last_phase = data[t,antenna]
 
-# actually don't unwrap across antennas - normally the data are plotted in
-# slices for each antenna and people prefer low phase angles to phase wraps 
-# between antennas which are invisible in the slice display
-
-#                        phase_wraps = arange(-5,6) * 2.0 * pi
-#                        last_phase = None
-#                        for antenna in antenna_range:
-#                            valid_data = compress(
-#                             logical_not(flag[-1][:,antenna]), data[:,antenna])
-#                            if len(valid_data):
-#                                median_data = median(valid_data)
-#                                if last_phase != None:
-#                                    phases = (median_data - last_phase) + \
-#                                     phase_wraps
-#                                    data[:,antenna] += phase_wraps[
-#                                         argmin(abs(phases))]
-#                                last_phase = median_data + phase_wraps[
-#                                 argmin(abs(phases))]
-#                            print antenna, last_phase
-
-# lastly ensure that the phase display is centred in the -180 to +180 range
-
-#                        phase_wraps = arange(-5,6) * 2.0 * pi
-#                        valid_data = compress(logical_not(ravel(flag[-1])),
-#                         ravel(data))
-#                        if len(valid_data):
-#                            mean_phase = mean(valid_data)
-#                            phases = mean_phase + phase_wraps
-#                            data += phase_wraps[argmin(abs(phases))]
-
-# instead, ensure that the phases for each antenna are centred in the -180 to
+# ensure that the phases for each antenna are centred in the -180 to
 # +180 range
 
                         phase_wraps = arange(-5,6) * 2.0 * pi
@@ -391,7 +393,7 @@ class GainCalibration(BaseData):
                     description['FIELD_ID'] = int(field_id)
                     description['POLARIZATION_ID'] = int(p)
                     description['TITLE'] = \
-                     'Field:%s (%s) Spw:%s Pol:%s - gain calibration %s' % (
+                     'Field:%s (%s) Spw:%s Pol:%s - gain calibration (%s)' % (
                      self._fieldName[int(field_id)],
                      self._fieldType[int(field_id)], self._pad(data_desc_id),
                      p, requiredDataType)
@@ -420,6 +422,18 @@ class GainCalibration(BaseData):
                     result['flagVersions'] = ['NoData', 'BeforeHeuristics',
                      'StageEntry', 'Current']
                     result['data_time'] = solution_time
+
+                    meanAmplitude = zeros(shape(amplitude)[1])
+                    meanAmplitudeFlag = zeros(shape(amplitude)[1], bool)
+                    for ant in range(max(antenna_range)+1):
+                        valid_data = compress(flag[-1][:,ant]==0,
+                         amplitude[:,ant])
+                        if len(valid_data) > 0:
+                            meanAmplitude[ant] = mean(valid_data)
+                            meanAmplitudeFlag[ant] = 0
+                    result['meanAmplitude'] = meanAmplitude
+                    result['meanAmplitudeFlag'] = meanAmplitudeFlag
+
                     result['chunks'] = chunks
 
                     pickled_description = pickle.dumps(description)
@@ -460,8 +474,12 @@ class GainCalibration(BaseData):
          dependencies=inputs['dependencies'], outputFiles=[])
        
         if entryID == None:
-            parameters = {'history':self._fullStageName, 'solve':{}, 
-             'data':{}, 'command':{}, 'dependencies':{}}
+            parameters = {'history':self._fullStageName,
+             'data':{}, 
+             'command':{},
+             'dependencies':{}}
+
+            commands = {}
 
 # make sure the bandpass calibration is available
 
@@ -474,8 +492,11 @@ class GainCalibration(BaseData):
             field_ids = []
             field_names = self._results['summary']['field_names']
 
-            parameters['solve']['setjy'] = {}
             self._imager.open(thems=self._msName, compress=False)
+
+            for spw in data_desc_ids:
+                commands[spw] = ["""imager.open(thems='%s', compress=False)""" %
+                 self._msName]
 
             for sourceType in self._sourceTypes:
                 new_field_ids = self.getFieldsOfType(sourceType)
@@ -489,6 +510,7 @@ class GainCalibration(BaseData):
 # FLUX from catalogue, or hardwired for PdB sources
 
                     for field in new_field_ids:
+
                         if field_names[field] == 'MWC349':
                             self._table.open(self._msName + '/SPECTRAL_WINDOW')
                             ref_frequency = self._table.getcol(
@@ -498,40 +520,76 @@ class GainCalibration(BaseData):
                             for spw in data_desc_ids:
                                 flux = 0.95 * (ref_frequency[spw] / 87e9)**0.6
 
-                                parameters['solve']['setjy'][(field,spw)] = \
-                                 self._msCalibrater.setjy(field=field, spw=spw,
+                                new_commands = self._msCalibrater.setjy(
+                                  field=field, spw=spw,
                                   fluxdensity=[flux, 0.0, 0.0, 0.0],
                                   standard='CLIC')
 
+                                commands[spw] += new_commands
+
                         elif field_names[field] == '2200+420':
-                            parameters['solve']['setjy'][(field,'all')] = \
-                             self._msCalibrater.setjy(field=field, spw=-1,
-                             fluxdensity=[3.0, 0.0, 0.0, 0.0],
-                             standard='MYGUESS')
+                            for spw in data_desc_ids:
+                                new_commands = self._msCalibrater.setjy(
+                                 field=field, spw=spw,
+                                 fluxdensity=[3.0, 0.0, 0.0, 0.0],
+                                 standard='MYGUESS')
+
+                                commands[spw] += new_commands
 
                         elif field_names[field] == 'CRL618':
-                            parameters['solve']['setjy'][(field,'all')] = \
-                             self._msCalibrater.setjy(field=field, spw=-1,
-                             fluxdensity=[1.55, 0.0, 0.0, 0.0], standard='CLIC')
+                            for spw in data_desc_ids:
+                                new_commands = self._msCalibrater.setjy(
+                                 field=field, spw=spw,
+                                 fluxdensity=[1.55, 0.0, 0.0, 0.0],
+                                 standard='CLIC')
+
+                                commands[spw] += new_commands
 
                         else:
 
 # otherwise force the tool to read the data from the catalogue (VLA)
 
-                            parameters['solve']['setjy'][(field,'all')] = \
-                             self._msCalibrater.setjy(field=field, spw=-1,
-                             fluxdensity=[-1.0, 0.0, 0.0, 0.0],
-                             standard='Perley-Taylor99')
+                            for spw in data_desc_ids:
+                                new_commands = self._msCalibrater.setjy(
+                                 field=field, spw=spw,
+                                 fluxdensity=[-1.0, 0.0, 0.0, 0.0],
+                                 standard='Perley-Taylor99')
 
-                elif sourceType.count('GAIN') > 0:
+                                commands[spw] += new_commands
 
-# GAIN fields to 1Jy
+                else:
+
+# GAIN fields to 1Jy, and others e.g. for measuring TARGET calibration per 
+# timestamp
   
                     for field in new_field_ids:
-                        parameters['solve']['setjy'][(field,'all')] = \
-                         self._msCalibrater.setjy(field=field, spw=-1,
-                         fluxdensity=[1.0, 0.0, 0.0, 0.0],
-                         standard='Perley-Taylor99')
+                        for spw in data_desc_ids:
+ 
+                            new_commands = self._msCalibrater.setjy(
+                             field=field, spw=spw,
+                             fluxdensity=[1.0, 0.0, 0.0, 0.0],
+                             standard='Perley-Taylor99')
+ 
+                            commands[spw] += new_commands
+
+                print 'checking cal setup'
+
+# make sure CORRECTED_DATA columns are set to same as DATA - managed without
+# doing this for a long time so perhaps it is being done somewhere else too.
+
+                self._table.open(self._msName, nomodify=False)
+
+                for field in new_field_ids:
+                    for spw in data_desc_ids:
+                        s = self._table.query('FIELD_ID==%s && DATA_DESC_ID==%s' % 
+                         (field, spw))
+                        data_col = s.getcol('DATA')
+                        corrected_data_col = s.getcol('CORRECTED_DATA')
+                        if not all(abs(data_col - corrected_data_col) < 1.0e-7):
+                            print 'calibrator discrepency fixed', field, spw
+
+                self._table.close()
+                print 'finished checking'
             self._imager.close()
 
 # save the on-entry flag state if will be flagging edges
@@ -550,11 +608,6 @@ class GainCalibration(BaseData):
             try:
                 for data_desc_id in data_desc_ids:
                     parameters['data'][data_desc_id] = {}
-                    parameters['command'][data_desc_id] = []
-
-# use an alias for brevity
-
-                    command = parameters['command'][data_desc_id]
 
 # if not continuum flag the bandpass edge channels to improve S/N
  
@@ -574,7 +627,7 @@ class GainCalibration(BaseData):
 
                         self._msFlagger.apply_bandpass_flags(data_desc_id,
                          field_ids, flag_channels)
-                        command.append('...apply channel flags')
+                        commands[data_desc_id].append('...apply channel flags')
 
 # calculate the gains
 
@@ -589,26 +642,37 @@ class GainCalibration(BaseData):
                         if self._bpCal != None:
                             self._bpCal.setapply(spw=data_desc_id,
                              field=field_ids)
-                        self._msCalibrater.solve(field=field_ids,
+                        new_commands = self._msCalibrater.solve(field=field_ids,
                          spw=data_desc_id, type='G', t=self._timesol,
                          combine='scan', table=gtab, append=append, apmode='AP',
-                         solnorm=False, minsnr = 0.0, commands=command)
+                         solnorm=False, minsnr = 0.0)
+
+                        commands[data_desc_id] += new_commands
 
                     except KeyboardInterrupt:
                         raise
                     except:
+                        error_report = self._htmlLogger.openNode('exception',
+                         '%s.gain_cal_exception' % (self._stageName), True,
+                         stringOutput = True)
+        
+                        self._htmlLogger.logHTML('Exception details<pre>')
+                        traceback.print_exc()
+                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                        self._htmlLogger.logHTML('</pre>')
+                        self._htmlLogger.closeNode()
+
+                        error_report += 'during gain calibration'
+
                         parameters['data'][data_desc_id]['error'] = \
-                         'gain calibration failed' 
+                         error_report
                         print 'exception', sys.exc_info()
 
                     parameters['data'][data_desc_id]['table'] = gtab 
-                    parameters['data'][data_desc_id]['solve'] = {} 
-                    parameters['data'][data_desc_id]['solve']['type'] = 'G' 
-                    parameters['data'][data_desc_id]['solve']['field_id'] = \
-                     field_ids 
-                    parameters['data'][data_desc_id]['solve']['t'] = \
-                     self._timesol 
-                    parameters['data'][data_desc_id]['solve']['apmode'] = 'AP'
+                    parameters['data'][data_desc_id]['type'] = 'G' 
+                    parameters['data'][data_desc_id]['field_id'] = field_ids 
+                    parameters['data'][data_desc_id]['t'] = self._timesol 
+                    parameters['data'][data_desc_id]['apmode'] = 'AP'
                     parameters['data'][data_desc_id]['type'] = 'G'
                     parameters['data'][data_desc_id]['bandpassFlaggingStage']\
                      = self._bandpassFlaggingStage
@@ -616,10 +680,10 @@ class GainCalibration(BaseData):
                      bpCalParameters['data'].has_key(data_desc_id):
                         if bpCalParameters['data'][data_desc_id].has_key(
                          'table'):
-                            parameters['data'][data_desc_id]['solve']['btab']\
+                            parameters['data'][data_desc_id]['btab']\
                              = bpCalParameters['data'][data_desc_id]['table']
                     else:
-                            parameters['data'][data_desc_id]['solve']['btab']\
+                            parameters['data'][data_desc_id]['btab']\
                              = None
 
             finally:
@@ -628,6 +692,8 @@ class GainCalibration(BaseData):
 
                 if self._bandpassFlaggingStage != None:
                     self._msFlagger.recallFlagState()
+
+            parameters['command'] = commands
 
 # store the object info in the BookKeeper
 
@@ -799,26 +865,11 @@ class GainCalibration(BaseData):
         gainDescription = """
          The gain was calculated as follows:
         <ul>     
-         <li>The 'imager' tool was used to set the flux values of the 
-          calibrator(s) according to their type, as described in the 
-          following table.
-
-          <table CELLPADDING="5" BORDER="1"'
-           <tr>
-            <th>Field</th>
-            <th>SpW</th>
-            <th>Casapy call</th>
-           </tr>"""
-
-        for k,entry in parameters['solve']['setjy'].iteritems():
-            gainDescription += '<tr>'
-            gainDescription += '<td>%s (%s)</td>' % (k[0],self._fieldType[k[0]])
-            gainDescription += '<td>%s</td>' % k[1]
-            gainDescription += '<td>%s</td>' % entry
-            gainDescription += '</tr>'
-
-        gainDescription += """</table>
+         <li>The flux values of the calibrator(s) were set according to their 
+          type.
+         <li>For line spectral windows the bandpass calibration was applied.
          <li>The gains were calculated.
+
           <table CELLPADDING="5" BORDER="1"
            <tr>
             <th>Spw</th>
@@ -826,20 +877,20 @@ class GainCalibration(BaseData):
             <th>t</th>
             <th>apmode</th>
             <th>BP table</th>
-            <th>channel flags</th>
+            <th>Channel Flags</th>
             <th>Apply Table</th>
             <th>Apply Type</th>
-            <th>Casapy calls</th>
-            <th>error?</th>
+            <th>Casapy Calls</th>
+            <th>Error?</th>
            </tr>"""
 
         for i,entry in parameters['data'].iteritems():
             gainDescription += "<tr><td>%s</td>" % i
-            gainDescription += '<td>%s</td>' % entry['solve']['field_id']
-            gainDescription += '<td>%s</td>' % entry['solve']['t']
-            gainDescription += '<td>%s</td>' % entry['solve']['apmode']
-            if entry['solve'].has_key('btab'):
-                gainDescription += '<td>%s</td>' % entry['solve']['btab']
+            gainDescription += '<td>%s</td>' % entry['field_id']
+            gainDescription += '<td>%s</td>' % entry['t']
+            gainDescription += '<td>%s</td>' % entry['apmode']
+            if entry.has_key('btab'):
+                gainDescription += '<td>%s</td>' % entry['btab']
             else:
                 gainDescription += '<td>None</td>'
             gainDescription += '<td>%s</td>' % entry['bandpassFlaggingStage']
@@ -860,7 +911,7 @@ class GainCalibration(BaseData):
             if entry.has_key('error'):
                 gainDescription += '<td>%s</td>' % entry['error']
             else:
-                gainDescription += '<td></td>'
+                gainDescription += '<td>&nbsp;</td>'
             gainDescription += '</tr>'
 
         gainDescription += """
@@ -877,12 +928,9 @@ class GainCalibration(BaseData):
            <li>'Apply Table' is the name of the file containing the gain
                 solution.
            <li>'Apply Type' gives the casapy type of the gain solution.
-           <li>'Casapy calls' links to alist of the casapy calls used to
-               calculate the gain solution.
-           <li>'error?' describes any occur that occurred.
           </ul>
-        </ul>     
-        <p>The gain was calculated by Python class GainCalibration."""
+        </ul>"""
+#        <p>The gain was calculated by Python class GainCalibration."""
 
         description['gain calibration'] = gainDescription
         return description

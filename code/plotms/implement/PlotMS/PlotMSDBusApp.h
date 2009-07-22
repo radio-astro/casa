@@ -27,7 +27,7 @@
 #ifndef PLOTMSDBUSAPP_H_
 #define PLOTMSDBUSAPP_H_
 
-#include <casaqt/QtUtilities/QtDBusApp.qo.h>
+#include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
@@ -39,14 +39,18 @@ namespace casa {
 class PlotMS;
 
 
-// Subclass of QtDBusApp to control plotms using DBus communication.
-class PlotMSDBusApp: public QtDBusApp, public PlotMSParametersWatcher,
+// Subclass of QtDBusXmlApp to control plotms using DBus communication.
+class PlotMSDBusApp: public QtDBusXmlApp, public PlotMSParametersWatcher,
                      public PlotMSPlotManagerWatcher {
     
     //# Friend class declarations.
     friend class PlotMSDBusAppWatcher;
     
 public:
+
+    static const QString &name( );
+    const QString &getName( ) const { return name( ); }
+
     // Static //
     
     // Constants for the casaplotms standalone executable.
@@ -189,11 +193,11 @@ public:
     void plotsChanged(const PlotMSPlotManager& manager);
     
 protected:
-    // Implements QtDBusApp::dbusRunMethod().
-    void dbusRunMethod(const String& methodName, const Record& parameters,
+    // Implements QtDBusXmlApp::dbusRunXmlMethod().
+    void dbusRunXmlMethod(const String& methodName, const Record& parameters,
             Record& retValue, const String& callerName, bool isAsync);
     
-    // Overrides QtDBusApp::dbusXmlReceived() to print the message to the log
+    // Overrides QtDBusXmlApp::dbusXmlReceived() to print the message to the log
     // as needed.
     void dbusXmlReceived(const QtDBusXML& xml);
     

@@ -14,11 +14,14 @@
 # 10-Oct-2008 jfl complex display release.
 #  3-Nov-2008 jfl amalgamated stage release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 recipe = [ 
          {'comment':'''Direct flagging; e.g. autocorrelations.'''},
 
          {'name':'Basic flagging',
+          'description':"""This stage flags data that are already known to be
+                  bad or are inappropriate to be used in further reduction.""",
           'stage':"""view=baseData.BaseData(),
                    operator=taqlFlagger.TaqlFlagger(rules=
                        [{'rule':'autocorrelation', 'colour':'crimson'}])"""
@@ -26,35 +29,57 @@ recipe = [
 
          {'comment':'Results from direct calibration of data.'},
 
-         {'name':'Initial F calibration amplitude display',
+         {'name':'Initial B calibration coefficients display',
+          'description':"""The aim of this stage is to show the
+                  bandpass calibration coefficients that
+                  are derived in a straightforward way from the
+                  MeasurementSet before it has undergone any significant
+                  flagging.""",
           'stage':"""
-                  view=fluxCalibration.FluxCalibrationAmplitude(
-                       bandpassCal=[bandpassCalibration.BandpassCalibration]),
-                  display=sliceDisplay.SliceY()"""
+                  view=bandpassCalibration.BandpassCalibration(),
+                  display=complexSliceDisplay.SliceX()"""
          },
 
-         {'name':'Initial F calibration phase display',
+         {'name':'Initial F calibration coefficients display',
+          'description':"""The aim of this stage is to show the
+                  flux calibration coefficients that are derived in a
+                  straightforward way from the MeasurementSet before
+                  it has undergone any significant flagging.""",
           'stage':"""
-                  view=fluxCalibration.FluxCalibrationPhase(
+                  view=fluxCalibration.FluxCalibration(
                        bandpassCal=[bandpassCalibration.BandpassCalibration]),
-                  display=sliceDisplay.SliceY()"""
+                  display=complexSliceDisplay.SliceY()"""
          },
 
          {'name':'Initial GAIN clean maps',
+          'description':"""The aim of this stage is to show
+                  cleaned images of the GAIN calibrator
+                  using a straightforward calibration method
+                  before the data have undergone any significant flagging.
+                  The maps show the emission integrated over the
+                  spectral window""",
           'stage':"""
                   view=cleanImageV2.CleanImageV2(
                      sourceType=['*GAIN*'],
                      mode='mfs',
                      algorithm='hogbom',
-                     maxPixels = 400,
+                     maxPixels = 200,
                      bandpassCal=[bandpassCalibration.BandpassCalibration],
+                     bandpassCalDisplay=complexSliceDisplay.SliceX,
                      gainCal=fluxCalibration.FluxCalibration,
+                     gainCalDisplay=complexSliceDisplay.SliceY,
                      psf=psf.Psf,
                      dirtyImage=dirtyImageV2.DirtyImageV2),
                   display=skyDisplay.SkyDisplay()"""
          },
 
          {'name':'Initial TARGET mosaic clean maps',
+          'description':"""The aim of this stage is to show
+                  cleaned images of the target mosaics
+                  using a straightforward calibration method
+                  before the data have undergone any significant flagging.
+                  The maps show the emission integrated over the
+                  spectral window""",
           'stage':"""
                   view=mosaicCleanImage.MosaicCleanImage(
                      sourceType=['*SOURCE*'],
@@ -62,7 +87,9 @@ recipe = [
                      algorithm='mfhogbom',
                      maxPixels = 1500,
                      bandpassCal=[bandpassCalibration.BandpassCalibration],
+                     bandpassCalDisplay=complexSliceDisplay.SliceX,
                      gainCal=fluxCalibration.FluxCalibration,
+                     gainCalDisplay=complexSliceDisplay.SliceY,
                      psf=psf.Psf,
                      dirtyImage=dirtyImageV2.DirtyImageV2),
                   display=skyDisplay.SkyDisplay()"""
@@ -71,7 +98,7 @@ recipe = [
          {'comment':'Flag bad antennas in raw calibrater data.'},
 
          {'name':'Flag calibrator baselines with noisy amplitudes',
-          'description':"""The aim of this stage was to flag baselines in
+          'description':"""The aim of this stage is to flag baselines in
                   calibrater data that have noisy amplitudes.""",
           'stage':"""
                   view=buildImage.BuildImage(yAxis='ANTENNA1', 
@@ -82,7 +109,7 @@ recipe = [
                         description='''This data view is a 2-d array with axes
                         x:ANTENNA2 and y:ANTENNA1. Each pixel is a measure
                         of the noise on the uncalibrated amplitudes for that
-                        baseline.<h5>How the Data View was constructed</h5>'''),
+                        baseline.'''),
                   operator=imageFlagger.ImageFlagger(rules=[
                        {'rule':'outlier', 'colour':'crimson', 'limit':5.0,
                        'min_N':10}]),
@@ -90,17 +117,21 @@ recipe = [
          },
 
          {'name':'Flag calibrator baselines with noisy phases',
-          'description':"""The aim of this stage was to flag baselines in
+          'description':"""The aim of this stage is to flag baselines in
                   calibrater data that have a lot of phase noise. In addition,
                   if a large fraction of the baselines from a given antenna
-                  had been flagged then all data for that antenna were
+                  have been flagged then all data for that antenna are
                   flagged.""",
           'stage':"""
                   view=buildImage.BuildImage(yAxis='ANTENNA1', 
                        view=medianAndMAD.MAD(
                        collapseAxis='TIME',
                        view=deviations.RawPhaseDeviationPerBaseline(
-                       sourceType=['*BANDPASS*','*FLUX*','*GAIN*']))),
+                       sourceType=['*BANDPASS*','*FLUX*','*GAIN*'])),
+                       description='''This data view is a 2-d array with axes
+                        x:ANTENNA2 and y:ANTENNA1. Each pixel is a measure
+                        of the noise on the uncalibrated phases for that
+                        baseline.'''),
                   operator=imageFlagger.ImageFlagger(rules=[
                        {'rule':'outlier', 'colour':'crimson', 'limit':10.0,
                        'min_N':10},
@@ -111,7 +142,16 @@ recipe = [
 
          {'comment':'Antenna based flagging of bad calibrator timestamps.'},
 
-         {'name':'BANDPASS, FLUX and GAIN antenna amplitude flagging',
+         {'name':'Flag antenna timestamps with bad amplitudes in calibrator data',
+          'description':"""The aim of this stage is to look at the
+                  calibrater data for each antenna as a function of time
+                  and to flag timestamps whose amplitudes are statistical
+                  outliers.
+                  In addition, if a large fraction of the time series from a
+                  given antenna have been flagged then all data for that
+                  antenna are flagged. If a large fraction of the data from
+                  all antennas at a given timestamp have been flagged then
+                  all data for that timestamp are flagged.""",
           'stage':"""
                   view=gainCalibration.GainCalibrationAmplitudePerTimestamp(
                        bandpassCal=[bandpassCalibration.BandpassCalibration],
@@ -126,7 +166,10 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'name':'BANDPASS, FLUX and GAIN  antenna phase display',
+         {'name':'Display calibration phases for each antenna/timestamp in calibrator data',
+          'description':"""The aim of this stage is to display the
+                  phase behaviour of the calibrator data for each antenna as
+                  a function of time.""",
           'stage':"""
                   view=gainCalibration.GainCalibrationPhasePerTimestamp(
                        bandpassCal=[bandpassCalibration.BandpassCalibration],
@@ -134,9 +177,13 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'comment':'Baseline based flagging of bad calibrator timestamps.'},
+         {'comment':'Flag baseline timestamps with bad calibrator data.'},
 
-         {'name':'BANDPASS, FLUX and GAIN baseline amplitude deviation flagging',
+         {'name':'Flag baseline timestamps with outlying amplitudes in calibrator data',
+          'description':"""The aim of this stage is to look at the
+                  calibrater data for each baseline as a function of time
+                  and to flag timestamps whose amplitudes are statistical
+                  outliers.""",
           'stage':"""
                   view=deviations.RawAmplitudeDeviationPerBaseline(
                        sourceType=['*BANDPASS*','*FLUX*','*GAIN*']),
@@ -146,13 +193,14 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'comment':'Detect and flag bandpass edges.'},
+         {'comment':'Detect bandpass edges.'},
 
          {'name':'Detect BANDPASS edge',
-          'description':"""The aim of this stage was to detect the edges
+          'description':"""The aim of this stage is to detect the edges
                   of the bandpass in each spectral window. The identity
-                  of the edge channels was stored so that they could
-                  be flagged as needed in later stages.""",
+                  of the edge channels is stored so that they can
+                  be flagged as needed in later stages but the data
+                  are left unflagged here.""",
           'stage':"""
                   view=medianAndMAD.MedianAndMAD(
                        collapseAxis='ANTENNA',
@@ -168,21 +216,20 @@ recipe = [
                   display=sliceDisplay.SliceX()"""
          },
 
-         {'comment':"""Find the best bandpass calibration method (doesn't do 
-           much for the regression test)."""},
+         {'comment':"""Find the best bandpass calibration method."""},
 
          {'name':'Find best bandpass calibration',
-          'description':"""The aim of this stage was to find the best method
+          'description':"""The aim of this stage is to find the best method
                   for calculating the bandpass calibration in this data set.
-                  This was achieved by using a range of methods to calculate
+                  This is achieved by using a range of methods to calculate
                   the bandpass calibration, then calibrating another source by
                   each result, lastly measuring the 'flatness' of that
-                  spectrum. The best method was that giving the flattest
+                  spectrum. The best method is that giving the flattest
                   spectrum.""",
           'stage':"""
                   view=bestMethodSelector.BestMethodSelector(
                        view=rangeTrial.RangeTrial(parameterRange=
-                       {'G_t':[60.0],
+                        {'G_t':[20.0,80.0,160.0,320.0,3600.0],
                        'method':[{'mode':'CHANNEL'}],
                        'source_type':['*BANDPASS*'],
                        'bandpass_flagging_stage':['Detect BANDPASS edge'],
@@ -198,10 +245,10 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'name':'Display best bandpass calibration',
-          'description':"""The aim of this stage was to show the quality
+         {'name':"Display 'quality' of best bandpass calibration",
+          'description':"""The aim of this stage is to show the quality
                   of the 'best' bandpass calibration method.
-                  This was achieved by using the 'best' method to calculate
+                  This is achieved by using the 'best' method to calculate
                   the bandpass calibration, then calibrating another source
                   with it. That calibrated result is shown here.""",
           'stage':"""
@@ -219,19 +266,25 @@ recipe = [
 # the SOURCE.
 
          {'name':'Flag best bandpass calibration',
-          'description':"""The aim of this stage was to flag baselines
+          'description':"""The aim of this stage is to flag baselines
                   for which the 'best' bandpass calibration method
-                  did not produce very good results.
-                  This was achieved by using the 'best' method to calculate
+                  does not produce very good results.
+                  This is achieved by using the 'best' method to calculate
                   the bandpass calibration, then calibrating another source
                   with it, lastly measuring the 'flatness' of that
                   spectrum to produce a 'figure of merit' for each baseline.
-                  Baselines with anomalous, high figures of merit were
+                  Baselines with anomalous, high figures of merit are
                   flagged.""",
           'stage':"""
                   view=bestMethod.BestMethod(
                        viewClassList=[bandpassMerit.BandpassMerit,
-                       bandpassCalibration.BandpassTestCalibratedAmplitude]),
+                       bandpassCalibration.BandpassTestCalibratedAmplitude],
+                       description='''The data view is a list of 2-d arrays,
+                       one for each spectral window, with axes
+                       ANTENNA1 and ANTENNA2. Each
+                       pixel shows the 'merit' of the bandpass calibration
+                       test for that baseline. Numbers of order 1 or less
+                       are good.'''),
                   operator=imageFlagger.ImageFlagger(rules=[
                        {'rule':'outlier', 'colour':'crimson', 'limit':10.0,
                        'min_N':10},
@@ -244,12 +297,12 @@ recipe = [
 
          {'comment':'Flag on calibration results.'},
 
-         {'name':'Antenna flagging on G calibration SNR',
-          'description':"""The aim of this stage was to flag G
-                  calibrations with unusually low signal to noise ratio.
-                  This stage is still under development - the flagging
-                  will flag G calibrations with unusually high signal
-                  to noise as well.""",
+         {'name':'Flag antenna G calibrations with bad SNR',
+          'description':"""The aim of this stage is to flag G
+                  calibrations with unusually low signal to noise ratio,
+                  or with SNR below a hard limit.
+                  Antennas or timestamps with a high proportion of G calibrations
+                  flagged are then completely flagged.""",
           'stage':"""
                   view=gainCalibration.GainCalibrationSNR(
                        bandpassCal=[bestMethod.BestMethod,
@@ -267,11 +320,11 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'name':'Antenna flagging on G calibration median phase jump',
-          'description':"""The aim of this stage was to flag antennas
+         {'name':'Flag antennas with high G calibration median phase jump',
+          'description':"""The aim of this stage is to flag antennas
                   for which the median absolute 
                   phase jump between G calibrations
-                  was unusually high.""",
+                  is unusually high.""",
           'stage':"""
                   view=medianJump.MedianJump(
                        view=gainCalibration.GainCalibrationPhase(
@@ -289,48 +342,18 @@ recipe = [
                   display=sliceDisplay.SliceY()"""
          },
 
-         {'comment':'Display flux calibrated antenna gains.'},
-
-         {'name':'F calibration amplitude display',
-          'description':"""The aim of this stage was to show the
-                  amplitudes of the flux calibration as calculated
-                  after flagging of the calibrators has been completed.
-                  This is the calibration that will be used in the
-                  calculation of the final images.""",
-          'stage':"""
-                  view=fluxCalibration.FluxCalibrationAmplitude(
-                       bandpassCal=[bestMethod.BestMethod,
-                       bandpassCalibration.BandpassCalibration],
-                       bandpassFlaggingStage='Detect BANDPASS edge'),
-                  display=sliceDisplay.SliceY()"""
-         },
-
-         {'name':'F calibration phase display',
-          'description':"""The aim of this stage was to show the
-                  phases of the flux calibration as calculated
-                  after flagging of the calibrators has been completed.
-                  This is the calibration that will be used in the
-                  calculation of the final images.""",
-          'stage':"""
-                  view=fluxCalibration.FluxCalibrationPhase(
-                       bandpassCal=[bestMethod.BestMethod,
-                       bandpassCalibration.BandpassCalibration],
-                       bandpassFlaggingStage='Detect BANDPASS edge'),
-                  display=sliceDisplay.SliceY()"""
-         },
-
          {'comment':'Flag bad TARGET data'},
 
          {'name':'Flag antenna timestamps with bad amplitudes in TARGET data',
-          'description':"""The aim of this stage was to look at the
+          'description':"""The aim of this stage is to look at the
                   target data for each antenna as a function of time
-                  and to flag timestamps whose amplitudes were statistical
+                  and to flag timestamps whose amplitudes are statistical
                   outliers.
                   In addition, if a large fraction of the time series from a
-                  given antenna had been flagged then all data for that
-                  antenna were flagged. If a large fraction of the data from
-                  all antennas at a given timestamp had been flagged then
-                  all data for that timestamp were flagged.""",
+                  given antenna have been flagged then all data for that
+                  antenna are flagged. If a large fraction of the data from
+                  all antennas at a given timestamp have been flagged then
+                  all data for that timestamp are flagged.""",
           'stage':"""
                   view=gainCalibration.GainCalibrationAmplitudePerTimestamp(
                        bandpassCal=[bestMethod.BestMethod,
@@ -347,17 +370,75 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'comment':'Display of calibrated complex data'},
 
-         {'name':'calibrated GAIN and FLUX complex data',
-          'description':"""The aim of this stage was to display the calibrated
-                  visibilities of the GAIN and FLUX calibraters as
+         {'comment':'Flag data with large closure errors.'},
+
+         {'name':'Flag GAIN closure magnitude',
+          'description':"""The aim of this stage is to flag
+                  GAIN calibrator data with unusually high closure errors.""",
+          'stage':"""
+                  view=buildImage.BuildImage(
+                      description='''This data view is a 2-d array.
+                      Each pixel is the median of the closure error
+                      of the clean image [closure error = abs{{corrected data / $
+                      - {1 + 0i}}] for that baseline. For multi-channel spectral
+                      windows the visibilities were averaged over the channels
+                      first.''',
+                      yAxis='ANTENNA1',
+                      view=medianAndMAD.MedianAndMAD(
+                      collapseAxis='TIME',
+                      view=chunkMedian.ChunkMedian(
+                      description='''This data view is a 2-d array.
+                      Each pixel is the median over time of the closure
+                      error magnitude [distance from 1 +0i] of the
+                      ratio between source model and data''',
+                      view=closureError.ClosureErrorMagnitude(
+                      view=cleanImageV2.CleanImageV2(
+                      sourceType='*GAIN*',
+                      mode='mfs',
+                      algorithm='hogbom',
+                      maxPixels=500,
+                      bandpassCal=[bestMethod.BestMethod,
+                      bandpassCalibration.BandpassCalibration],
+                      gainCal=fluxCalibration.FluxCalibration,
+                      psf=psf.Psf,
+                      dirtyImage=dirtyImageV2.DirtyImageV2,
+                      bandpassFlaggingStage='Detect BANDPASS edge'))))),
+                  operator=imageFlagger.ImageFlagger(rules=[
+                       {'rule':'outlier', 'colour':'crimson', 'limit':5.0,
+                       'min_N':10}
+                       ]),
+                  display=imageDisplay.ImageDisplay()"""
+         },
+
+
+         {'comment':'Display flux calibrated antenna gain coefficients.'},
+
+         {'name':'F calibration coefficient display',
+          'description':"""The aim of this stage is to show the
+                  flux calibration coefficients as calculated
+                  after flagging of the calibrators has been completed.
+                  This is the calibration that will be used in the
+                  calculation of the final images.""",
+          'stage':"""
+                  view=fluxCalibration.FluxCalibration(
+                       bandpassCal=[bestMethod.BestMethod,
+                       bandpassCalibration.BandpassCalibration],
+                       bandpassFlaggingStage='Detect BANDPASS edge'),
+                  display=complexSliceDisplay.SliceY()"""
+         },
+
+         {'comment':'Display of final flagged and calibrated complex data'},
+
+         {'name':'calibrated GAIN complex data',
+          'description':"""The aim of this stage is to display the calibrated
+                  visibilities of the GAIN calibrator as
                   points on the complex plane. For multi-channel spectral
-                  windows the visibilities were averaged over the channels
+                  windows the visibilities are averaged over the channels
                   before display.""",
           'stage':"""
                   view=baselineData.BaselineCorrectedComplexData(
-                   sourceType=['*GAIN*', '*FLUX*'],
+                   sourceType=['*GAIN*'],
                    bandpassCal=[bestMethod.BestMethod,
                    bandpassCalibration.BandpassCalibration],
                    gainCal=fluxCalibration.FluxCalibration,
@@ -366,15 +447,13 @@ recipe = [
          },
 
          {'name':'calibrated GAIN and TARGET amplitude display',
-          'description':"""The aim of this stage was to display the
+          'description':"""The aim of this stage is to display the
                   calibrated visibility amplitudes of the GAIN calibrater
-                  and target source in such a way that deviant data
-                  can be identified as coming from a particular time
-                  range or antenna. For multi-channel spectral
-                  windows the visibilities were averaged over the channels
-                  before display.""",
+                  and target source, coadded for each antenna at each
+                  timestamp. This will give some idea of the extent of
+                  flagging and of the calibration quality.""",
           'stage':"""
-                  view=baselineData.BaselineCorrectedAmplitude( 
+                  view=coaddedAntennaAmplitude.CoaddedAntennaCorrectedVectorAmplitude(
                    sourceType=['*GAIN*', '*SOURCE*'],
                    bandpassCal=[bestMethod.BestMethod,
                    bandpassCalibration.BandpassCalibration],
@@ -383,43 +462,57 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-         {'name':'calibrated GAIN and TARGET phase display',
-          'description':"""The aim of this stage was to display the
-                  calibrated visibility phases of the GAIN calibrater
-                  and target source in such a way that deviant data
-                  can be identified as coming from a particular time
-                  range or antenna. For multi-channel spectral   
-                  windows the visibilities were averaged over the channels
-                  before display.""",
-          'stage':"""
-                  view=baselineData.BaselineCorrectedPhase( 
-                   sourceType=['*GAIN*', '*SOURCE*'],
-                   bandpassCal=[bestMethod.BestMethod,
-                   bandpassCalibration.BandpassCalibration],
-                   gainCal=fluxCalibration.FluxCalibration,
-                   bandpassFlaggingStage='Detect BANDPASS edge'),
-                  display=imageDisplay.ImageDisplay()"""
-         },
+         {'comment':'Cleaned calibrator images and spectra'},
 
-         {'comment':'Final results'},
-
-         {'name':'GAIN, FLUX and BANDPASS cleaned cubes',
+         {'name':'Calibrator clean cubes',
+          'description':"""The aim of this stage is to show
+                  the cleaned cubes of the calibrator sources, calculated
+                  from the flagged data using the 'best' calibration
+                  methods.""",
           'stage':"""
                   view=cleanImageV2.CleanImageV2(
                      sourceType=['*GAIN*', '*FLUX*', '*BANDPASS*'],
                      mode='channel',
                      algorithm='hogbom',
-                     maxPixels = 500,
+                     maxPixels = 200,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
+                     bandpassCalDisplay=complexSliceDisplay.SliceX,
                      gainCal=fluxCalibration.FluxCalibration,
+                     gainCalDisplay=complexSliceDisplay.SliceY,
                      psf=psf.Psf,
                      dirtyImage=dirtyImageV2.DirtyImageV2,
                      bandpassFlaggingStage='Detect BANDPASS edge'),
                   display=skyDisplay.SkyDisplay()"""
          },
 
+         {'name':'Calibrator spectra',
+          'description':"""The aim of this stage is to show
+                  the spectra from sources detected during the cleaning
+                  of the calibrators.""",
+          'stage':"""
+                  view=sourceSpectra.SourceSpectra(
+                     view=cleanImageV2.CleanImageV2(
+                     sourceType=['*GAIN*','*FLUX*','*BANDPASS*'],
+                     mode='channel',
+                     algorithm='hogbom',
+                     maxPixels = 200,
+                     bandpassCal=[bestMethod.BestMethod,
+                     bandpassCalibration.BandpassCalibration],
+                     gainCal=fluxCalibration.FluxCalibration,
+                     psf=psf.Psf,
+                     dirtyImage=dirtyImageV2.DirtyImageV2,
+                     bandpassFlaggingStage='Detect BANDPASS edge')),
+                  display=sliceDisplay.SliceX()"""
+         },
+
+         {'comment':'Cleaned TARGET images and spectra.'},
+
          {'name':'TARGET clean mosaic cube',
+          'description':"""The aim of this stage is to show
+                  the final cleaned cube of the target source, calculated
+                  from the flagged data using the 'best' calibration
+                  methods.""",
           'stage':"""
                   view=mosaicCleanImage.MosaicCleanImage(
                      sourceType='*SOURCE*',
@@ -428,7 +521,9 @@ recipe = [
                      maxPixels = 500,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
+                     bandpassCalDisplay=complexSliceDisplay.SliceX,
                      gainCal=fluxCalibration.FluxCalibration,
+                     gainCalDisplay=complexSliceDisplay.SliceY,
                      psf=psf.Psf,
                      dirtyImage=dirtyImageV2.DirtyImageV2,
                      bandpassFlaggingStage='Detect BANDPASS edge'),
@@ -436,7 +531,7 @@ recipe = [
          },
 
          {'name':'Spectra from TARGET sources',
-          'description':"""The aim of this stage was to show
+          'description':"""The aim of this stage is to show
                   the spectra from sources detected during the cleaning
                   of the target field.""",
           'stage':"""

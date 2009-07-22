@@ -8,6 +8,7 @@
 #  2-Jun-2008 jfl 2-jun release.
 # 25-Jun-2008 jfl regression release.
 # 14-Nov-2008 jfl documentation upgrade release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -60,10 +61,19 @@ class NoDisplay(BaseDisplay):
 
 # write descriptions of the data view, operation and display
 
-        self.writeBaseHTMLDescriptionHead(stageDescription, dataView,
-         dataOperator)
+        flagMessage,colour = self.writeBaseHTMLDescriptionHead(stageDescription,
+         dataView, dataOperator)
         self.writeBaseHTMLDescriptionTail(stageDescription, dataView,
          dataOperator, logName)
+
+# pass out parameters from data view, if present
+
+        if dataResult.has_key('parameters'):
+            dataParameters = dataResult['parameters']
+        else:
+            dataParameters = None
+
+        return flagMessage, colour, dataParameters
 
 
     def writeGeneralHTMLDescription(self, stageName):

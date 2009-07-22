@@ -87,9 +87,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="string"></value>
     </param>
 
+
     <param type="string" name="ephemsrcname" subparam="true">
 	    <description>ephemeris source name</description>
 	    <value></value>
+    </param>
+
+    <param type="string" name="pointingcolumn" subparam="true">
+	    <description>pointing data column to use</description>
+	    <value>direction</value>
+	    <allowed kind="enum" ignorecase="True">
+	    <value>target</value>
+	    <value>pointing_offset</value>
+	    <value>source_offset</value>
+	    <value>encoder</value>
+	    <value>direction</value>
+    </allowed>
+    </param>
+
+    <param type="string" name ="gridfunction" subparam="true">
+            <description>gridding function for imaging ("BOX","SF","PB")</description>
+            <value>BOX</value>
+            <allowed kind="enum">
+                <value>BOX</value>
+                <value>PB</value>
+                <value>SF</value>
+            </allowed>
     </param>
 
     <param type="int" name="plotlevel">
@@ -113,6 +136,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="cell"><value type="vector"><value>1</value><value>1</value></value></default>
                         <default param="phasecenter"><value type="string"></value></default>
                         <default param="ephemsrcname"><value type="string"></value></default>
+                        <default param="pointingcolumn"><value type="string">direction</value></default>
+                        <default param="gridfunction"><value type="string">BOX</value></default>
                 </equals>
             </when>
     </constraints>
@@ -171,6 +196,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           if the source name in the data matches one of the known solar objects by
                           the system, this task automatically set the source name. 
                  example: 'moon' 
+               pointingcolumn -- pointing data column to use
+                 option: 'direction', 'target', 'pointing_offset', 'source_offset', 'encoder' 
+                 default: 'direction'
+               gridfunction -- gridding function for imaging
+                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
+                 default: 'BOX'
+                 example: 'SF'
         plotlevel -- control for plotting of results
                 options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
                 default: 0 (no plotting)
@@ -185,12 +217,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdtpimaging performs data selection, calibration, and imaging for single-dish
-        totalpower raster scan data.  This is a still experimental task made to work for 
-        the data taken at the ALMA Testing Facility (ATF). Currently, this task directly 
-        accesses the Measurement Set data only because of the data access efficiency. 
-        So it differs from other single-dish tasks that mostly operate on the ASAP scantable 
-        data format.  By setting calmode='none', one can run sdtpimaging to plot the data 
-        (raw or calibrated, if exists) and further imaging by setting createimage=True. 
+        totalpower raster scan data.  This is a still experimental task made to work 
+        mostly for the data taken at the ALMA Testing Facility (ATF) or OSF. Currently, 
+        this task directly accesses the Measurement Set data only because of the data access 
+        efficiency. So it differs from other single-dish tasks that mostly operate on the 
+        ASAP scantable data format.  By setting calmode='none', one can run sdtpimaging to 
+        plot the data (raw or calibrated, if exists) and further imaging by setting createimage=True. 
         The calibration available at this moment is just a simple baseline subtraction for
         each scan. The fitted regions set by masklist are the common for all the scans. 
         Selection of the antennas can be made by setting antennaid(s) or antenna name(s)
@@ -201,7 +233,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         By setting flaglist, one can set flag by scan numbers to be excluded from imaging.
         (Note: 'scan numbers' are determined from state id and related to SUB_SCAN column in STATE
          subtable and not to SCAN_NUMBER in MS.) 
-
+        The selection of polarizations can be made by specify the polarization name in stokes, 
+        such as 'XX' or 'YY' for linear polarizations. For example, with createimage=True,
+        stokes='XXYY' will produces an image cube with each plane contains image of one of i
+        the polarizations while stokes='' or stokes='I' will produces a 'total intensity' or Stokes I image. 
+        Among the imaging sub-parameters, ephemsrcname is used to set to a name of the moving source
+        such as planets to produce a stationary image (can be omitted), and pointingcolumn is
+        used to specify which pointing data column to use for imaging. 
   </example>
 
 </task>

@@ -4,6 +4,7 @@
 # 10-Oct-2008 jfl First version.
 # 14-Nov-2008 jfl documentation upgrade release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -71,7 +72,7 @@ class ComplexDisplay(BaseDisplay):
 
         pylab.axis([-lim, lim, -lim, lim])
         if len(x) > 0:
-            pylab.scatter(x, y, s=2, marker='x')
+            pylab.scatter(x, y, s=1, marker='x')
         else:
             pylab.annotate('no data', (0.5,0.5), xycoords='axes fraction')
 
@@ -117,8 +118,8 @@ class ComplexDisplay(BaseDisplay):
 
 # write general description of the data view, operation
 
-        self.writeBaseHTMLDescriptionHead(stageDescription, dataView,
-         dataOperator)
+        flagMessage,colour = self.writeBaseHTMLDescriptionHead(stageDescription,
+         dataView, dataOperator)
 
 # display results
 
@@ -238,8 +239,15 @@ class ComplexDisplay(BaseDisplay):
         self.writeBaseHTMLDescriptionTail(stageDescription, dataView,
          dataOperator, logName)
 
+# pass out parameters from data view, if present
+        
+        if dataResult.has_key('parameters'):
+            dataParameters = dataResult['parameters']
+        else:
+            dataParameters = None
+
         self._htmlLogger.timing_stop('ComplexDisplay.display')
-        return
+        return flagMessage, colour, dataParameters
 
 
     def writeGeneralHTMLDescription(self, stageName):
@@ -267,7 +275,7 @@ class ComplexDisplay(BaseDisplay):
          <p>If data were flagged as part of this reduction stage then
          each display contains 2 images; one displaying the data view before
          flagging, the other after flagging. The reasons for data having
-         been flagged are colour coded.
-         <p>The display was produced by Python class ComplexDisplay.
-         ''')
+         been flagged are colour coded.''')
+#         <p>The display was produced by Python class ComplexDisplay.
+#         ''')
 

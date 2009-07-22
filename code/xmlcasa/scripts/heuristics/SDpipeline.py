@@ -17,16 +17,8 @@ import SDCalibration as SDC
 import SDImaging as SDI
 import re
 
-# for Statistics plot
-MATPLOTLIB_FIGURE_ID_1 = 8904
-# for Fit spectrum plot
-MATPLOTLIB_FIGURE_ID_2 = 8905
-# for debug baseline plot
-MATPLOTLIB_FIGURE_ID_3 = 8906
-# for spectrum result
-MATPLOTLIB_FIGURE_ID_4 = 8907
-# for clustering result
-MATPLOTLIB_FIGURE_ID_5 = 8908
+# 0:DebugPlot 1:TPlotRADEC 2:TPlotAzEl 3:TPlotCluster 4:TplotFit 5:TPlotMultiSP 6:TPlotSparseSP 7:TPlotChannelMap 8:TPlotFlag 9:TPlotIntermediate
+MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 8913]
 
 MaxPanels4SparseSP = 8
 
@@ -107,6 +99,7 @@ def SDpipeline(filename, outname='default', calib=False, IF='all', POL='all', BE
 
     ### Default Plot control (Overridden if there is 'SDpipeline.plotcontrol.txt' file in the current directory)
     # Plot on terminal (either True, False, or 'Last')
+    TPlotDebug = False
     TPlotRADEC = False
     TPlotAzEl = False
     TPlotCluster = False
@@ -115,6 +108,7 @@ def SDpipeline(filename, outname='default', calib=False, IF='all', POL='all', BE
     TPlotSparseSP = False
     TPlotChannelMap = False
     TPlotFlag = False
+    TPlotIntermediate = False
     # Plot on browser (either True, False, or 'Last')
     BPlotRADEC = True
     BPlotAzEl = True
@@ -307,12 +301,16 @@ def SDpipeline(filename, outname='default', calib=False, IF='all', POL='all', BE
     if BEAM == 'all': BEAM = listall[5]
 
     PL.ion()
-    if LogLevel > 3:
-        PL.figure(MATPLOTLIB_FIGURE_ID_3)
-    PL.figure(MATPLOTLIB_FIGURE_ID_4)
-    PL.figure(MATPLOTLIB_FIGURE_ID_5)
-    PL.figure(MATPLOTLIB_FIGURE_ID_2)
-    PL.figure(MATPLOTLIB_FIGURE_ID_1)
+    if TPlotDebug != False: PL.figure(MATPLOTLIB_FIGURE_ID[0])
+    if TPlotRADEC != False: PL.figure(MATPLOTLIB_FIGURE_ID[1])
+    if TPlotAzEl != False: PL.figure(MATPLOTLIB_FIGURE_ID[2])
+    if TPlotCluster != False: PL.figure(MATPLOTLIB_FIGURE_ID[3])
+    if TPlotFit != False: PL.figure(MATPLOTLIB_FIGURE_ID[4])
+    if TPlotMultiSP != False: PL.figure(MATPLOTLIB_FIGURE_ID[5])
+    if TPlotSparseSP != False: PL.figure(MATPLOTLIB_FIGURE_ID[6])
+    if TPlotChannelMap != False: PL.figure(MATPLOTLIB_FIGURE_ID[7])
+    if TPlotFlag != False: PL.figure(MATPLOTLIB_FIGURE_ID[8])
+    if TPlotIntermediate != False: PL.figure(MATPLOTLIB_FIGURE_ID[9])
     PL.ioff()
 
     #spacing = radius / 2.0
@@ -646,7 +644,7 @@ def SDpipeline(filename, outname='default', calib=False, IF='all', POL='all', BE
                         BFlog0.close()
                         if SDT.PlotCheck(BPlotFit, ITER, iteration) != False: FigFileDir = PlotDir+'/'+BF_FIT_PDIR+'/'
                         else: FigFileDir = False
-                        BF.Process6(SpStorage, DataTable, rows, scan, FitOrder, Abcissa[vIF], TimeGap, showevery=100, savefile=FitTableOut, edge=edge, LogLevel=LogLevel, LogFile=BFlog, ShowRMS=SDT.PlotCheck(TPlotFlag, ITER, iteration), ShowPlot=SDT.PlotCheck(TPlotFit, ITER, iteration), FigFileDir=FigFileDir, FigFileRoot='Fit_%s_%s_%s' % (vIF, vPOL, ITER))
+                        BF.Process6(SpStorage, DataTable, rows, scan, FitOrder, Abcissa[vIF], TimeGap, showevery=100, savefile=FitTableOut, edge=edge, LogLevel=LogLevel, LogFile=BFlog, ShowRMS=SDT.PlotCheck(TPlotFlag, ITER, iteration), ShowPlot=SDT.PlotCheck(TPlotFit, ITER, iteration), ShowDebug=TPlotDebug, FigFileDir=FigFileDir, FigFileRoot='Fit_%s_%s_%s' % (vIF, vPOL, ITER))
                         BFlog0 = open(LogDir+'/' + SD_PIPELINE_LOG, 'a')
                         ProcEndTime = time.time()
                         SDT.LogMessage('INFO', LogLevel, BFlog0, Msg='Process6 End: %s (ElapseTime=%.1f sec)' % (time.ctime(ProcEndTime), ProcEndTime - ProcStartTime))
@@ -668,7 +666,7 @@ def SDpipeline(filename, outname='default', calib=False, IF='all', POL='all', BE
                         BFlog0.close()
                         if SDT.PlotCheck(BPlotFlag, ITER, iteration) != False: FigFileDir = PlotDir+'/'+BF_STAT_PDIR+'/'
                         else: FigFileDir = False
-                        BF.Process7(SpStorage, DataTable, Abcissa[vIF], rows, TimeGap, TimeTable, Iteration=10, interactive=False, edge=edge, UserFlag=UserFlag, LogLevel=LogLevel, LogFile=BFlog, ShowPlot=SDT.PlotCheck(TPlotFlag, ITER, iteration), FigFileDir=FigFileDir, FigFileRoot='Stat_%s_%s_%s' % (vIF, vPOL, ITER))
+                        BF.Process7(SpStorage, DataTable, Abcissa[vIF], rows, TimeGap, TimeTable, Iteration=10, edge=edge, UserFlag=UserFlag, LogLevel=LogLevel, LogFile=BFlog, ShowPlot=SDT.PlotCheck(TPlotFlag, ITER, iteration), FigFileDir=FigFileDir, FigFileRoot='Stat_%s_%s_%s' % (vIF, vPOL, ITER))
                         ProcEndTime = time.time()
                         BFlog0 = open(LogDir+'/' + SD_PIPELINE_LOG, 'a')
                         SDT.LogMessage('INFO', LogLevel, BFlog0, Msg='Process7 End: %s (Elapse Time=%.1f sec)' % (time.ctime(ProcEndTime), ProcEndTime - ProcStartTime))

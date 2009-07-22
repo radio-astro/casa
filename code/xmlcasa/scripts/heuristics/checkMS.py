@@ -15,6 +15,7 @@
 # 19-Dec-2008 jfl times stored as epoch measures.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+# 15-Jun-2009 jfl add uv plots, use GHz and MHz.
 
 # standard library modules
 
@@ -31,6 +32,8 @@ from numpy import *
 import pylab
 
 # alma modules
+
+import util
 
 ###########################################################################
 #################  checkMS  ############################################
@@ -68,32 +71,178 @@ class CheckMS:
         """Destructor.
         """
 
+
+    def _plot_antenna_positions(self):
+        """Plot the antenna positions.
+        """
+        self._htmlLogger.logHTML('<hr>')
+        self._htmlLogger.logHTML('<h2 ALIGN="LEFT">  Antenna Positions: </h2>')
+        self._htmlLogger.logHTML('''<img WIDTH="800" HEIGHT="600"
+         ALIGN="CENTER" BORDER="0" SRC="antenna_positions.png">''')
+
+        pylab.figure()
+        pylab.clf()
+        plotName = 'Antenna Positions'
+        plotFile = 'html/antenna_positions.png'
+
+# read the antenna positions. These seem to be in metres rel to centre of the
+# Earth.
+
+        self._table.open('%s/ANTENNA' % self._msfile)
+        position = self._table.getcol('POSITION')
+        flag_row = self._table.getcol('FLAG_ROW')
+        position_keywords = self._table.getcolkeywords('POSITION')
+        self._table.close()
+ 
+# Make a position Measure for each antenna, this stores info in terms of long, lat
+# and distance from centre of Earth
+
+        antennas = {}
+        for ant in arange(shape(position)[1]):
+            if not(flag_row[ant]):
+                ant_pos = self._measures.position(
+                 rf=position_keywords['MEASINFO']['Ref'],
+                 v0=self._quanta.quantity(position[0,ant],
+                 position_keywords['QuantumUnits'][0]),
+                 v1=self._quanta.quantity(position[1,ant],
+                 position_keywords['QuantumUnits'][1]),
+                 v2=self._quanta.quantity(position[2,ant],
+                 position_keywords['QuantumUnits'][2]))
+
+                antennas[ant] = ant_pos
+
+# store the longs and lats of the antennas in lists - convert ot canonical 
+# units
+
+        longs = []
+        lats = []
+        radii = []
+        names = []
+        for ant in antennas.keys():
+            position = antennas[ant]
+            radius = position['m2']['value']
+            radius_unit = position['m2']['unit']
+            radius_quantum = self._quanta.quantity(radius, radius_unit)
+            radius_quantum = self._quanta.convert(radius_quantum, 'm')
+            radius = self._quanta.getvalue(radius_quantum)
+
+            long = position['m0']['value']
+            long_unit = position['m0']['unit']
+            long_quantum = self._quanta.quantity(long, long_unit)
+            long_quantum = self._quanta.convert(long_quantum, 'rad')
+            long = self._quanta.getvalue(long_quantum)
+
+            lat = position['m1']['value']
+            lat_unit = position['m1']['unit']
+            lat_quantum = self._quanta.quantity(lat, lat_unit)
+            lat_quantum = self._quanta.convert(lat_quantum, 'rad')
+            lat = self._quanta.getvalue(lat_quantum)
+
+            longs.append(long)
+            lats.append(lat)
+            radii.append(radius)
+            names.append(ant)
+
+# calculate a mean longitude and get the antenna longs relative to that
+# - otherwise get numerical errors
+
+        longs = array(longs)
+        longs -= mean(longs)
+        lats = array(lats)
+        radii = array(radii)
+
+# multiply longs by cos(lat) and radius to convert to metres
+
+        x = longs * cos(lats) * radii
+        y = lats * radii
+
+# make x,y relative to 'centre' of array
+
+        x -= mean(x)
+        y -= mean(y)
+
+# plot
+
+        pylab.figure()
+        pylab.clf()
+        pylab.subplot(1,1,1)
+
+        for ant in antennas.keys():
+            pylab.scatter([x[ant]], [y[ant]], s=10, c='blue', marker='o')
+            pylab.text(x[ant], y[ant], str(ant), ha='right', va='center')
+        pylab.axis('equal')
+
+        pylab.title(plotName)
+        pylab.xlabel('X (m)')
+        pylab.ylabel('Y (m)')
+
+        pylab.savefig(plotFile)
+        pylab.clf()
+        pylab.close()
+
+        pylab.ioff()
+
+
     def _plot_uv_coverage(self):
         """Plot the uv coverage for each field.
         """
-        if not self._tasks.has_key('plotxy'):
-            return
-        if not self._tasks.has_key('default'):
-            return
+        self._htmlLogger.logHTML('<hr>')
+        if self._tasks.has_key('plotxy') and self._tasks.has_key('default'):
+            self._htmlLogger.logHTML('<h2 ALIGN="LEFT">  U-V Coverage: </h2>')
+            plotxy = self._tasks['plotxy']
+            default = self._tasks['default']
+            for field in range(self._nfields):
+                pylab.figure()
+                pylab.clf()
+                plotName = 'Field %s (%s) - u,v coverage' % (
+                 self._fieldlist[field]._name, self._fieldlist[field]._type)
+                plotFile = 'html/uv_coverage_field_%s.png' % field
+                default(plotxy)
+                plotxy(vis=self._msfile, xaxis='u', yaxis='v', field=str(field),
+                 interactive=False, figfile=plotFile, selectplot=True, 
+                 title=plotName)
+                pylab.clf()
+                pylab.close()
+                self._htmlLogger.appendNode(plotName, plotFile)
+            pylab.ioff()
+            self._htmlLogger.flushNode()
 
-        self._htmlLogger.logHTML('<h2 ALIGN="LEFT">  U-V Coverage: </h2>')
-        plotxy = self._tasks['plotxy']
-        default = self._tasks['default']
-        for field in range(self._nfields):
-            pylab.figure()
-            pylab.clf()
-            plotName = 'Field %s (%s) - u,v coverage' % (
-             self._fieldlist[field]._name, self._fieldlist[field]._type)
-            plotFile = 'html/uv_coverage_field_%s.png' % field
-            default(plotxy)
-            plotxy(vis=self._msfile, xaxis='u', yaxis='v', field=str(field),
-             interactive=False, figfile=plotFile, selectplot=True, 
-             title=plotName)
-            pylab.clf()
-            pylab.close()
-            self._htmlLogger.appendNode(plotName, plotFile)
-        pylab.ioff()
-        self._htmlLogger.flushNode()
+        else:
+            self._htmlLogger.logHTML('<h2 ALIGN="LEFT">  U-V Coverage: </h2>')
+            self._table.open(self._msfile)
+            for field in range(self._nfields):
+                pylab.figure()
+                pylab.clf()
+                plotName = 'Field %s (%s) - u,v coverage' % (
+                 self._fieldlist[field]._name, self._fieldlist[field]._type)
+                plotFile = 'html/uv_coverage_field_%s.png' % field
+
+                s = self._table.query('FIELD_ID==%s && NOT(FLAG_ROW)' % field)
+                uvw = s.getcol('UVW')
+
+                pylab.figure()
+                pylab.clf()
+                pylab.subplot(1,1,1)
+
+                print 'shape', shape(uvw)
+                pylab.title(plotName)
+                if len(uvw) > 0:
+                    pylab.scatter(uvw[0,:], uvw[1,:], facecolor='blue', 
+                     edgecolor='blue', s=1, marker='o')
+                    pylab.axis('equal')
+
+                    pylab.xlabel('U (m)')
+                    pylab.ylabel('V (m)')
+                else:
+                    pylab.annotate('no data', (0.5,0.5), xycoords='axes fraction')
+
+                pylab.savefig(plotFile)
+                pylab.clf()
+                pylab.close()
+                self._htmlLogger.appendNode(plotName, plotFile)
+            pylab.ioff()
+            self._table.close()
+            self._htmlLogger.flushNode()
 
 
     def writeHtmlSummary(self):
@@ -126,6 +275,8 @@ class CheckMS:
 #        self._htmlLogger.logHTML("""Black boxes show the time limits of scans, or 
 #         places where the exposures in a scan are not contiguous.""")
 
+        self._plot_antenna_positions()
+
         self._plot_uv_coverage()
 
         for ifield in range(self._nfields):
@@ -139,8 +290,8 @@ class CheckMS:
         align = ' ALIGN="CENTER" '
         colspan = ' COLSPAN="1" '
         self._htmlLogger.logHTML("<tr><td"+align+colspan+"> SPWID </td>") 
-        self._htmlLogger.logHTML("<td"+align+colspan+"> REF_FREQ </td>")
-        self._htmlLogger.logHTML("<td"+align+colspan+"> BANDWIDTH </td>") 
+        self._htmlLogger.logHTML("<td"+align+colspan+"> REF_FREQ (GHz) </td>")
+        self._htmlLogger.logHTML("<td"+align+colspan+"> BANDWIDTH (MHz) </td>") 
         self._htmlLogger.logHTML("<td"+align+colspan+"> nchannels </td></tr>")
         for ispecw in range(self._nspecwin):           
            self._specwinlist[ispecw]._info2html(self._htmlLogger)
@@ -161,12 +312,27 @@ class CheckMS:
         self._nfields = len(field_names)        
 
         # get field types (kind of calibrator or target)
-       
-        source_types = list(self._table.getcol('SOURCE_TYPE'))
+
+        source_types = list(util.util.get_source_types(self._table))
+
         if (len(source_types)) == 0:
            source_types = ["UNKNOWN"]*self._nfields
-           
-        # close table
+        
+        # get field coords (PHASE_DIR)
+        phase_dir = self._table.getcol('PHASE_DIR')
+        phase_dir_keywords = self._table.getcolkeywords('PHASE_DIR')
+
+        field_dirs = []
+        for field in range(self._nfields):
+            dir_measure = self._measures.direction(
+             phase_dir_keywords['MEASINFO']['Ref'],
+             '%s%s' % (phase_dir[0,0,field],
+             phase_dir_keywords['QuantumUnits'][0]),
+             '%s%s' % (phase_dir[1,0,field],
+              phase_dir_keywords['QuantumUnits'][1]))
+
+            field_dirs.append(dir_measure)
+
         self._table.close()
         
         for ifield in range(self._nfields):
@@ -174,7 +340,8 @@ class CheckMS:
            st = st.strip()
            st = st.upper()
 
-           tmpfield = Field(self._tools, ifield, field_names[ifield], st)
+           tmpfield = Field(self._tools, ifield, field_names[ifield], st,
+            field_dirs[ifield])
            self._fieldlist.append(tmpfield)
  
         
@@ -243,18 +410,34 @@ class CheckMS:
         rtn = self._table.open(self._msfile + '/SPECTRAL_WINDOW')
 
         # get reference frequencies
-        ref_freqs = list(self._table.getcol('REF_FREQUENCY'))
+        ref_freqs = self._table.getcol('REF_FREQUENCY')
+        ref_freq_unit = self._table.getcolkeyword('REF_FREQUENCY',
+         'QuantumUnits')[0]
+        ref_freqs_ghz = []
+        for freq in ref_freqs:
+            ref_freq_quantum = self._quanta.quantity(freq, ref_freq_unit)
+            ref_freq_quantum = self._quanta.convert(ref_freq_quantum, 'GHz')
+            ref_freqs_ghz.append(self._quanta.getvalue(ref_freq_quantum))
         self._nspecwin=len(ref_freqs)
+
         # get  band widths
-        band_widths = list(self._table.getcol('TOTAL_BANDWIDTH'))
+        bandwidths = list(self._table.getcol('TOTAL_BANDWIDTH'))
+        bandwidth_unit = self._table.getcolkeyword('TOTAL_BANDWIDTH',
+         'QuantumUnits')[0]
+        bandwidths_mhz = []
+        for band in bandwidths:
+            bandwidth_quantum = self._quanta.quantity(band, bandwidth_unit)
+            bandwidth_quantum = self._quanta.convert(bandwidth_quantum, 'MHz')
+            bandwidths_mhz.append(self._quanta.getvalue(bandwidth_quantum))
+
         # get  number of channels
         nchannels = list(self._table.getcol('NUM_CHAN'))
         
-        # close observation table
-        rtn = self._table.close()
+        self._table.close()
              
         for ispecw in range(self._nspecwin):
-           tmpspecwin = Specwin(ispecw, ref_freqs[ispecw],band_widths[ispecw],nchannels[ispecw])
+           tmpspecwin = Specwin(ispecw, ref_freqs_ghz[ispecw],
+            bandwidths_mhz[ispecw], nchannels[ispecw])
            self._specwinlist.append(tmpspecwin)
  
 
@@ -491,7 +674,7 @@ class CheckMS:
 class Field:
     """Class containing info about a single field."""
 
-    def __init__(self, tools, id, name, type):
+    def __init__(self, tools, id, name, type, direction):
         """Constructor.
 
         Keyword arguments:
@@ -500,6 +683,8 @@ class Field:
         name -- string containing the name of the field.
         type -- string containing the type of the field 
                 (e.g. BANDPASS, FLUX, GAIN).
+        direction -- direction measure holding the 
+                     PHASE_DIR of the field.
 
 
         """
@@ -508,6 +693,7 @@ class Field:
         self._id = id
 	self._name = name
         self._type = type
+        self._direction = direction
 
 # initializations 
 
@@ -527,8 +713,19 @@ class Field:
         Keyword arguments:
 
         """
-        htmlLogger.logHTML("<h3>  NAME: "+str(self._name)+"</h3>")
-        htmlLogger.logHTML("<h3>  TYPE: "+str(self._type)+"</h3>")
+        htmlLogger.logHTML("<h3>  NAME           : "+str(self._name)+"</h3>")
+        htmlLogger.logHTML("<h3>  TYPE           : "+str(self._type)+"</h3>")
+        measRef= self._measures.getref(self._direction)
+        if measRef=='J2000' or measRef=='B1950':
+            dir = self._measures.getvalue(self._direction)
+            ra = dir['m0']
+            dec = dir['m1']
+            htmlLogger.logHTML("<h3>  PHASE DIRECTION: "+
+             self._quanta.angle(ra, form=['time', 'clean']) +
+             self._quanta.angle(dec, form=['clean']) + ' ' + measRef)
+        else:
+            htmlLogger.logHTML("<h3>  PHASE DIRECTION: "+
+             self._measures.dirshow(self._direction)+"</h3>")
         htmlLogger.logHTML('<table CELLPADDING="5" BORDER="1">')
         align = ' ALIGN="CENTER" '
         colspan1 = ' COLSPAN="1" '
@@ -849,8 +1046,8 @@ class Specwin:
 
         Keyword arguments:
         id -- integer corresponding to the spectral window id
-        ref_freq -- reference frequency
-        band_width -- band width
+        ref_freq -- reference frequency GHz
+        band_width -- bandwidth GHz
         nchannels  -- number of channels
 
 
@@ -880,6 +1077,8 @@ class Specwin:
         align2 = ' ALIGN="LEFT" VALIGN="TOP" '
         w1 = 'WIDTH="50" '
         w2 = 'WIDTH="100" '
+
+# convert frequencies to GHz
 
         htmlLogger.logHTML("<tr>")
         htmlLogger.logHTML("<td"+align1+w1+">"+str(self._id)+"</td>") 

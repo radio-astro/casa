@@ -272,6 +272,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         ndrop++;
                     }
                 }
+		else{
+		  imWeight(chn,row)=0.0;
+		}
             }
         }
 

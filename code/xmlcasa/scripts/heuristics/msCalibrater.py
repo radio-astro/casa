@@ -4,6 +4,7 @@
 # 10-Sep-2008 jfl Original version.
 #  3-Nov-2008 jfl amalgamated stage release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -13,6 +14,8 @@ import os.path
 import types
 
 # alma modules
+
+import casac
 
 
 class MSCalibrater:
@@ -43,15 +46,28 @@ class MSCalibrater:
 #        print 'MSCalibrater constructor called'
 
         htmlLogger.timingStageStart('MSCalibration')
-        tools.copy(self)
+#        tools.copy(self)
+
         self._html = htmlLogger
         self._msName = msName
         self._verbose = verbose
+
+# create private copies of tools
+
+        calibraterTool = casac.homefinder.find_home_by_name('calibraterHome')
+        self._calibrater = calibraterTool.create()
+        imagerTool = casac.homefinder.find_home_by_name('imagerHome')
+        self._imager = imagerTool.create()
+        msTool = casac.homefinder.find_home_by_name('msHome')
+        self._ms = msTool.create()
+        tableTool = casac.homefinder.find_home_by_name('tableHome')
+        self._table = tableTool.create()
 
 # open the ms in the calibrater tool
 
         self._calibrater.open(self._msName)
         self._imager.open(self._msName)
+        self._table.open(self._msName, nomodify=False)
 
 # get some basic info about the MS.
 
@@ -69,6 +85,16 @@ class MSCalibrater:
                 self._calibrationApplied[(field_id,data_desc_id)] = None
 
         self._calibrationToApply = []
+
+#        self._verbose = True
+
+
+    def __del__(self):
+        """Destructor.
+        """
+        self._calibrater.close()
+        self._imager.close()
+        self._table.close()
 
 
     def _rmall(self, dirPath):  
@@ -94,7 +120,7 @@ class MSCalibrater:
         os.rmdir(dirPath)                       # remove now-empty dirPath
 
 
-    def correct(self, field, spw, commands):
+    def correct(self, field, spw):
         """Method to apply the stored corrections to the specified field(s)
         and spw of the MS.
 
@@ -104,8 +130,11 @@ class MSCalibrater:
         spw   -- The spectral window to which the calibration is to be
                  applied.
         """
+        self._verbose = True
         if self._verbose:
             print 'MSCalibrater.correct called'
+
+        commands = []
 
         if len(self._calibrationToApply) < 1:
             raise RuntimeError, 'no calibrations to apply'
@@ -143,16 +172,31 @@ class MSCalibrater:
                     for cal in self._calibrationToApply:
                         calType = cal[0]
                         calTable = cal[1]
+                        spwmap = cal[2]
+                        if calType == 'failed':
+                            raise NameError, 'no calibration available'
+
                         if calTable == None:
                             self._calibrater.setapply(type=calType)
-                            commands.append('calibrater.setapply(type=%s)' %
+                            commands.append("calibrater.setapply(type='%s')" %
                              calType)
                         else:
-                            self._calibrater.setapply(type=calType,
-                             table=calTable)
-                            commands.append(
-                             'calibrater.setapply(type=%s, table=%s)' % 
-                             (calType, calTable))
+                            if spwmap==None:
+                                self._calibrater.setapply(type=calType,
+                                 table=calTable)
+                                commands.append(
+                                 "calibrater.setapply(type='%s', table='%s')" % 
+                                 (calType, calTable))
+                            else:
+                                print \
+                                 'calibrater.setapply(type=%s, table=%s, spwmap=%s)' % \
+                                 (calType, calTable, spwmap)
+
+                                self._calibrater.setapply(type=calType,
+                                 table=calTable, spwmap=list(spwmap))
+                                commands.append(
+                                 "calibrater.setapply(type='%s', table='%s', spwmap=%s)" % 
+                                 (calType, calTable, spwmap))
 
                     self._calibrater.correct()
                     commands.append('calibrater.correct()')
@@ -162,12 +206,13 @@ class MSCalibrater:
                     commands.append('...exception')
                     raise
                 finally:
-                    self._applyField = None
-                    self._applySpw = None
                     self._calibrationToApply = []
         if self._verbose:
             for command in commands:
                 print command
+        self._verbose = False
+
+        return commands
 
 
     def fluxscale(self, tablein, reference, tableout, transfer, append):
@@ -180,6 +225,97 @@ class MSCalibrater:
          reference=reference, tableout=tableout, transfer=transfer,
          append=append)
         return fluxd
+
+
+    def groupSolve(self, field, spw, table, append, splinetime, preavg, 
+     npointaver, phasewrap):
+        """Apply stored calibrations then calculate a calibration solution.
+            
+        Keyword arguments:
+        field             -- The field of list of field ids to which the
+                             correction is to be applied.
+        spw               -- The list of spectral windows to be combined in
+                             calculating the solution.
+        table             -- parameter for setsolve.
+        append            -- parameter for setsolve.
+        splinetime        --
+        preavg            --
+        npointaver        --
+        phasewrap         --
+        """
+
+        if self._verbose:
+            print ''
+            print 'MSCalibrater.groupSolve called'
+
+        commands = []
+
+# __builtin__ to prevent name clash with parameter
+
+        if __builtin__.type(field) != types.ListType:
+            fieldList = [field]
+        else:
+            fieldList = field
+
+# OK, columns ready. Arrange to pre-apply calibrations before the solve 
+
+        self._calibrater.reset(apply=True, solve=True)
+        self._calibrater.selectvis(spw=spw, field=fieldList)
+        commands.append('calibrater.reset(apply=True, solve=True)')
+        commands.append('calibrater.selectvis(spw=%s, field=%s)' % (
+         spw, fieldList))
+
+        try:
+            for cal in self._calibrationToApply:
+                calType = cal[0]
+                calTable = cal[1]
+
+                if calType == 'failed':
+                    raise NameError, 'calibration not available' 
+
+                if calTable == None:
+                    self._calibrater.setapply(type=calType)
+                    commands.append('calibrater.setapply(type=%s)' % calType)
+                else:
+                    commands.append('calibrater.setapply(type=%s, table=%s)' % 
+                     (calType, calTable))
+                    self._calibrater.setapply(type=calType, table=calTable)
+        except:
+            commands.append('...exception')
+            self._calibrationToApply = []
+            raise
+
+# now delete any previous result file and solve
+
+        if self._verbose:
+            print 'solving for %s' % type
+
+        self._rmall(table)
+        self._calibrater.setsolvegainspline(table=table, append=append, 
+         mode='PHASAMP', splinetime=splinetime, preavg=preavg,
+         npointaver=npointaver, phasewrap=phasewrap)
+
+        commands.append('''calibrater.setsolvegainspline(table='%s', 
+         append=%s, mode='PHASAMP', splinetime=%s, preavg=%s,
+         npointaver=%s, phasewrap=%s)''' % (table, append, splinetime,
+         preavg, npointaver, phasewrap))
+
+        try:
+            commands.append('calibrater.solve()')
+            self._calibrater.solve()
+        except:
+            commands.append('...exception')
+        finally:
+
+# reset list of calibrations to apply
+
+            self._calibrationToApply = []
+
+        if self._verbose:
+            for command in commands:
+                print command
+
+        return commands
 
 
     def resetCalibrationApplied(self):
@@ -195,17 +331,20 @@ class MSCalibrater:
                 self._calibrationApplied[(field_id,data_desc_id)] = None
 
 
-    def setapply(self, type, table=None):
+    def setapply(self, type, table=None, spwmap=None):
         """Request that a calibration be applied to the MS.
 
         Keyword arguments:
         type     -- type of calibration.
         table    -- Name of table containing calibration.
+        spwmap   -- list mapping calibrations between spw; spwmap[j]=i
+                    means ith solutions to be applied to j.
         """
+#        print 'MSCalibrater.setApply called', type, table
         if self._verbose:
             print 'MSCalibrater.setApply called', type, table
 
-        self._calibrationToApply.append((type,table))
+        self._calibrationToApply.append((type,table,spwmap))
 
 
     def setjy(self, field, spw, fluxdensity, standard):
@@ -221,10 +360,34 @@ class MSCalibrater:
         if self._verbose:
             print 'setjy', (field,spw), fluxdensity, standard
 
+        commands = []
+
+# set the flux in the MODEL_DATA column
+
         self._imager.setjy(field=field, spw=spw, fluxdensity=fluxdensity,
          standard=standard)
-        commands = '''imager.setjy(field=%s, spw=%s, fluxdensity=%s,
-         standard=%s)''' % (field, spw, fluxdensity, standard)
+        commands.append('''imager.setjy(field=%s, spw=%s, fluxdensity=%s,
+         standard=%s)''' % (field, spw, fluxdensity, standard))
+
+# and set CORRECTED_DATA=DATA
+
+        if spw == -1:
+            for dd in self._data_desc_ids:
+                s = self._table.query('FIELD_ID==%s && DATA_DESC_ID==%s' %
+                 (field, dd))
+                data_col = s.getcol('DATA')
+                s.putcol('CORRECTED_DATA', data_col)
+
+                commands.append(
+                 '''...set CORRECTED_DATA=DATA for field %s / spw %s''' %
+                 (field, dd))
+        else:
+            s = self._table.query('FIELD_ID==%s && DATA_DESC_ID==%s' % (field, spw))
+            data_col = s.getcol('DATA')
+            s.putcol('CORRECTED_DATA', data_col)
+
+            commands.append(
+             '''...set CORRECTED_DATA=DATA for field %s / spw %s''' % (field, spw))
 
         if spw == -1:
             for dd in self._data_desc_ids:
@@ -238,7 +401,7 @@ class MSCalibrater:
 
 
     def solve(self, field, spw, type, t, combine, apmode, table, append,
-     solnorm=False, minsnr=0.0, commands=[]):
+     solnorm=False, minsnr=0.0):
         """Apply stored calibrations then calculate a calibration solution.
             
         Keyword arguments:
@@ -254,12 +417,13 @@ class MSCalibrater:
         append            -- parameter for setsolve.
         solnorm           -- parameter for setsolve.
         minsnr            -- parameter for setsolve.
-        commands          -- list of casapy commands issued.
         """
 
         if self._verbose:
             print ''
             print 'MSCalibrater.solve called'
+
+        commands = []
 
 # __builtin__ to prevent name clash with parameter
 
@@ -268,31 +432,7 @@ class MSCalibrater:
         else:
             fieldList = field
 
-# do we need to initalise the CORRECTED_DATA and MODEL_DATA columns?
-
-        initcal = False
-        for f in fieldList:
-            k = (f, spw)
-            if not(self._calibrationApplied.has_key(k)):
-                initcal = True
-                break
-            elif (self._calibrationApplied[k] != 'initcal') and \
-             (self._calibrationApplied[k] != 'setjy'):
-                initcal = True
-                break
-
-        if initcal:
-
-# yes, initialise the calibration columns
-
-            self._calibrater.initcalset()
-            commands.append('calibrater.initcalset()')
-
-            for f in self._field_ids:
-               for s in self._data_desc_ids:
-                   self._calibrationApplied[(f,s)] = 'initcal'
-
-# OK, columns ready. Arrange to pre-apply calibrations before the solve 
+# Arrange to pre-apply calibrations before the solve 
 
         self._calibrater.reset(apply=True, solve=True)
         self._calibrater.selectvis(spw=spw, field=fieldList)
@@ -300,21 +440,26 @@ class MSCalibrater:
         commands.append('calibrater.selectvis(spw=%s, field=%s)' % (
          spw, fieldList))
 
-        for cal in self._calibrationToApply:
-            calType = cal[0]
-            calTable = cal[1]
-            if calTable == None:
-                self._calibrater.setapply(type=calType)
-                commands.append('calibrater.setapply(type=%s)' % calType)
-            else:
-                commands.append('calibrater.setapply(type=%s, table=%s)' % 
-                 (calType, calTable))
-                try:
+        try:
+            for cal in self._calibrationToApply:
+                calType = cal[0]
+                calTable = cal[1]
+
+                if calType == 'failed':
+                    raise NameError, 'calibration not available' 
+
+                if calTable == None:
+                    self._calibrater.setapply(type=calType)
+                    commands.append("calibrater.setapply(type='%s')" % calType)
+                else:
+                    commands.append(
+                     "calibrater.setapply(type='%s', table='%s')" % 
+                     (calType, calTable))
                     self._calibrater.setapply(type=calType, table=calTable)
-                except:
-                    commands.append('...exception')
-                    self._calibrationToApply = []
-                    raise
+        except:
+            commands.append('...exception')
+            self._calibrationToApply = []
+            raise
 
 # now delete any previous result file and solve
 
@@ -325,8 +470,8 @@ class MSCalibrater:
         self._calibrater.setsolve(type=type, t=t, combine=combine,
          apmode=apmode, table=table, append=append, solnorm=solnorm,
          minsnr=minsnr)
-        commands.append('''calibrater.setsolve(type=%s, t=%s, combine=%s,
-         apmode=%s, table=%s, append=%s, solnorm=%s, minsnr=%s)''' % (type,
+        commands.append("""calibrater.setsolve(type='%s', t=%s, combine='%s',
+         apmode='%s', table='%s', append=%s, solnorm=%s, minsnr=%s)""" % (type,
          t, combine, apmode, table, append, solnorm, minsnr))
 
         try:
@@ -344,6 +489,8 @@ class MSCalibrater:
         if self._verbose:
             for command in commands:
                 print command
+
+        return commands
 
 
     def solvebandpoly(self, field, spw, table, append, degamp, degphase, 
@@ -427,9 +574,9 @@ class MSCalibrater:
         self._calibrater.setsolvebandpoly(table=table, append=append,
          degamp=degamp, degphase=degphase, visnorm=visnorm, solnorm=solnorm,
          maskcenter=maskcenter, maskedge=maskedge)
-        commands.append('''calibrater.setsolvebandpoly(table=%s, append=%s,
+        commands.append("""calibrater.setsolvebandpoly(table='%s', append=%s,
          degamp=%s, degphase=%s, visnorm=%s, solnorm=%s, maskcenter=%s,
-         maskedge=%s)''' % (table, append, degamp, degphase, visnorm,
+         maskedge=%s)""" % (table, append, degamp, degphase, visnorm,
          solnorm, maskcenter, maskedge))
 
         try:

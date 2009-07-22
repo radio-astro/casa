@@ -60,6 +60,8 @@ using namespace std ;
 NROReader *getNROReader( const String filename, 
                          String &datatype )
 {
+  LogIO os( LogOrigin( "", "getNROReader()", WHERE ) ) ;
+
   // Check accessibility of the input.
   File inFile( filename ) ;
   if ( !inFile.exists() ) {
@@ -82,7 +84,7 @@ NROReader *getNROReader( const String filename,
     fread( buf, 4, 1, file ) ;
     buf[4] = '\0' ;
     // DEBUG
-    //cout << "getNROReader:: buf = " << buf << endl ;
+    //os << LogIO::NORMAL << "getNROReader:: buf = " << String(buf) << LogIO::POST ;
     //
     if ( string( buf ) == "XTEN" ) {
       // FITS data
@@ -134,15 +136,15 @@ NROReader *getNROReader( const String filename,
     datatype = "UNRECOGNIZED INPUT FORMAT";
   }
 
+  // DEBUG
+  os << LogIO::NORMAL << "Data format of " << filename << ": " << datatype << LogIO::POST ;
+  //
+
   // return reader if exists
   if ( reader ) {
     reader->read() ;
     return reader ;
   }
-
-  // DEBUG
-  //cout << filename << ": " << datatype << endl ;
-  //
 
   return 0 ;
 }
@@ -204,13 +206,16 @@ Int NROReader::getPolarizationNum()
 
 double NROReader::getStartTime() 
 {
-  char *startTime = dataset_->getLOSTM() ;
+  //char *startTime = dataset_->getLOSTM() ;
+  string startTime = dataset_->getLOSTM() ;
+  //cout << "getStartTime()  startTime = " << startTime << endl ;
   return getMJD( startTime ) ;
 }
 
 double NROReader::getEndTime() 
 {
-  char *endTime = dataset_->getLOETM() ;
+  //char *endTime = dataset_->getLOETM() ;
+  string endTime = dataset_->getLOETM() ;
   return getMJD( endTime ) ;
 }
 
@@ -223,7 +228,7 @@ double NROReader::getMJD( char *time )
 {
   // TODO: should be checked which time zone the time depends on
   // 2008/11/14 Takeshi Nakazato
-  string strStartTime( time ) ;
+  string strStartTime = string( time ) ;
   string strYear = strStartTime.substr( 0, 4 ) ;
   string strMonth = strStartTime.substr( 4, 2 ) ;
   string strDay = strStartTime.substr( 6, 2 ) ;
@@ -241,118 +246,25 @@ double NROReader::getMJD( char *time )
   return t.modifiedJulianDay() ;
 }
 
-Int NROReader::getIndex( int irow )
+double NROReader::getMJD( string strStartTime ) 
 {
-  // DEBUG 
-  //cout << "NROReader::getIndex()  start" << endl ;
-  //
-  NRODataRecord *record = dataset_->getRecord( irow ) ;
-  string str = record->ARRYT ;
-  // DEBUG
-  //cout << "NROReader::getIndex()  str = " << str << endl ;
-  //
-  string substr = str.substr( 1, 2 ) ;
-  uInt index = (uInt)(atoi( substr.c_str() ) - 1) ;
-  // DEBUG 
-  //cout << "NROReader::getIndex()  irow = " << irow << " index = " << index << endl ;
-  //
+  // TODO: should be checked which time zone the time depends on
+  // 2008/11/14 Takeshi Nakazato
+  string strYear = strStartTime.substr( 0, 4 ) ;
+  string strMonth = strStartTime.substr( 4, 2 ) ;
+  string strDay = strStartTime.substr( 6, 2 ) ;
+  string strHour = strStartTime.substr( 8, 2 ) ;
+  string strMinute = strStartTime.substr( 10, 2 ) ;
+  string strSecond = strStartTime.substr( 12, strStartTime.size() - 12 ) ;
+  uInt year = atoi( strYear.c_str() ) ;
+  uInt month = atoi( strMonth.c_str() ) ;
+  uInt day = atoi( strDay.c_str() ) ;
+  uInt hour = atoi( strHour.c_str() ) ;
+  uInt minute = atoi( strMinute.c_str() ) ;
+  double second = atof( strSecond.c_str() ) ;
+  Time t( year, month, day, hour, minute, second ) ;
 
-  // DEBUG 
-  //cout << "NROReader::getIndex()  end" << endl ;
-  //
-  return index ;
-}
-
-vector<double> NROReader::getFrequencies( int i )
-{
-  // return value
-  // v[0]  reference channel
-  // v[1]  reference frequency
-  // v[2]  frequency increment
-  vector<double> v( 3, 0.0 ) ;
-
-  NRODataRecord *record = dataset_->getRecord( i ) ;
-  string arryt = string( record->ARRYT ) ;
-  string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
-  uInt ib = atoi( sbeamno.c_str() ) - 1 ; 
-
-
-  v[0] = dataset_->getCHCAL()[ib][0] - 1 ; // 0-base
-
-  int ia ;
-  if ( strncmp( record->ARRYT, "X", 1 ) == 0 )
-    ia = 1 ;  // FX
-  else
-    ia = 2 ;  
-
-  int iu ;
-  if ( record->FQIF1 > 0 )
-    iu = 1 ;  // USB
-  else 
-    iu = 2 ;  // LSB
-
-  int ivdef = -1 ;
-  if ( strncmp( dataset_->getVDEF(), "RAD", 3 ) == 0 )
-    ivdef = 0 ;
-  else if ( strncmp( dataset_->getVDEF(), "OPT", 3 ) == 0 )
-    ivdef = 1 ;
-  // DEBUG
-  //cout << "NROReader::getFrequencies() ivdef = " << ivdef << endl ;
-  //
-  double vel = dataset_->getURVEL() + record->VRAD ;
-  double cvel = 2.99792458e8 ; // speed of light [m/s]
-  double fq0 = record->FREQ0 ;
-  //double fq0 = record->FQTRK ;
-
-  int ncal = dataset_->getNFCAL()[ib] ;
-  double freqs[ncal] ;
-
-  for ( int ii = 0 ; ii < ncal ; ii++ ) {
-    freqs[ii] = dataset_->getFQCAL()[ib][ii] ;
-    freqs[ii] -= dataset_->getF0CAL()[ib] ;
-    if ( ia == 1 ) {
-      if ( iu == 1 ) {
-        freqs[ii] = fq0 + freqs[ii] ;
-      }
-      else if ( iu == 2 ) {
-        freqs[ii] = fq0 - freqs[ii] ;
-      }
-    }
-    else if ( ia == 2 ) {
-      if ( iu == 1 ) {
-        freqs[ii] = fq0 - freqs[ii] ;
-      }
-      else if ( iu == 2 ) {
-        freqs[ii] = fq0 + freqs[ii] ;
-      }
-    }
-
-//     if ( ivdef == 0 ) {
-//       double factor = 1.0 / ( 1.0 - vel / cvel ) ;
-//       freqs[ii] = freqs[ii] * factor - record->FQTRK * ( factor - 1.0 ) ;
-//     }
-//     else if ( ivdef == 1 ) {
-//       double factor = vel / cvel ;
-//       freqs[ii] = freqs[ii] * ( 1.0 + factor ) - record->FQTRK * factor ;
-//     }
-  }
-
-  double cw = dataset_->getCWCAL()[ib][0] ;
-  // DEBUG
-  //if ( i == 25 ) {
-  //cout << "NROReader::getFrequencies() FQCAL[0] = " << dataset_->getFQCAL()[ib][0] << " FQCAL[1] = " << dataset_->getFQCAL()[ib][1] << endl ;
-  //cout << "NROReader::getFrequencies() freqs[0] = " << freqs[0] << " freqs[1] = " << freqs[1] << endl ;
-  //}
-  if ( cw == 0.0 ) {
-    cw = ( freqs[1] - freqs[0] ) 
-      / ( dataset_->getCHCAL()[ib][1] - dataset_->getCHCAL()[ib][0] ) ;
-    if ( cw < 0.0 ) 
-      cw = abs( cw ) ;
-  }
-  v[1] = freqs[0] ;
-  v[2] = cw ;
-
-  return v ;
+  return t.modifiedJulianDay() ;
 }
 
 vector<Bool> NROReader::getIFs()
@@ -380,10 +292,13 @@ vector<Bool> NROReader::getBeams()
 // Get SRCDIRECTION in RADEC(J2000)
 Vector<Double> NROReader::getSourceDirection()
 {
+  LogIO os( LogOrigin( "NROReader", "getSourceDirection()", WHERE ) ) ;
+
   Vector<Double> v ;
   Double srcra = Double( dataset_->getRA0() ) ;
   Double srcdec = Double( dataset_->getDEC0() ) ;
-  char *epoch = dataset_->getEPOCH() ;
+  char epoch[5] ; 
+  strncpy( epoch, (dataset_->getEPOCH()).c_str(), 5 ) ;
   if ( strncmp( epoch, "B1950", 5 ) == 0 ) {
     // convert to J2000 value
     MDirection result = 
@@ -398,6 +313,9 @@ Vector<Double> NROReader::getSourceDirection()
     //cout << "NROReader::getSourceDirection()  SRCDIRECTION convert from (" 
     //<< srcra << "," << srcdec << ") B1950 to (" 
     //<< v( 0 ) << ","<< v( 1 ) << ") J2000" << endl ;
+    os << LogIO::NORMAL << "SRCDIRECTION convert from (" 
+       << srcra << "," << srcdec << ") B1950 to (" 
+       << v( 0 ) << ","<< v( 1 ) << ") J2000" << LogIO::POST ;
   }
   else if ( strncmp( epoch, "J2000", 5 ) == 0 ) {
     v.resize( 2 ) ;
@@ -411,9 +329,12 @@ Vector<Double> NROReader::getSourceDirection()
 // Get DIRECTION in RADEC(J2000)
 Vector<Double> NROReader::getDirection( int i )
 {
+  LogIO os( LogOrigin( "NROReader", "getDirection()", WHERE ) ) ;
+
   Vector<Double> v ;
   NRODataRecord *record = dataset_->getRecord( i ) ;
-  char *epoch = dataset_->getEPOCH() ;
+  char epoch[5] ;
+  strncpy( epoch, (dataset_->getEPOCH()).c_str(), 5 ) ;
   int icoord = dataset_->getSCNCD() ;
   Double dirx = Double( record->SCX ) ;
   Double diry = Double( record->SCY ) ;
@@ -431,6 +352,9 @@ Vector<Double> NROReader::getDirection( int i )
     //cout << "NROReader::getDirection()  DIRECTION convert from (" 
     //<< dirx << "," << diry << ") LB to (" 
     //<< v( 0 ) << ","<< v( 1 ) << ") RADEC" << endl ;
+    os << LogIO::NORMAL << "DIRECTION convert from (" 
+       << dirx << "," << diry << ") LB to (" 
+       << v( 0 ) << ","<< v( 1 ) << ") RADEC" << LogIO::POST ;
   }
   else if ( icoord == 2 ) {
     // convert from AZEL to RADEC
@@ -443,6 +367,9 @@ Vector<Double> NROReader::getDirection( int i )
     //cout << "NROReader::getDirection()  DIRECTION convert from (" 
     //<< dirx << "," << diry << ") AZEL to (" 
     //<< v( 0 ) << ","<< v( 1 ) << ") RADEC" << endl ;
+    os << LogIO::NORMAL << "DIRECTION convert from (" 
+       << dirx << "," << diry << ") AZEL to (" 
+       << v( 0 ) << ","<< v( 1 ) << ") RADEC" << LogIO::POST ;
   }
   else if ( icoord == 0 ) {
     if ( strncmp( epoch, "B1950", 5 ) == 0 ) {
@@ -459,6 +386,9 @@ Vector<Double> NROReader::getDirection( int i )
       //cout << "STFiller::readNRO()  DIRECTION convert from (" 
       //<< dirx << "," << diry << ") B1950 to (" 
       //<< v( 0 ) << ","<< v( 1 ) << ") J2000" << endl ;
+      os << LogIO::NORMAL << "DIRECTION convert from (" 
+         << dirx << "," << diry << ") B1950 to (" 
+         << v( 0 ) << ","<< v( 1 ) << ") J2000" << LogIO::POST ;
     }
     else if ( strncmp( epoch, "J2000", 5 ) == 0 ) {
       v.resize( 2 ) ;
@@ -487,14 +417,19 @@ int NROReader::getHeaderInfo( Int &nchan,
                               String &fluxunit,
                               String &epoch,
                               String &poltype )
-{
-  
+{  
   nchan = dataset_->getNUMCH() ; 
+  //cout << "nchan = " << nchan << endl ;
   npol = getPolarizationNum() ;
+  //cout << "npol = " << npol << endl ;
   observer = dataset_->getOBSVR() ;
+  //cout << "observer = " << observer << endl ;
   project = dataset_->getPROJ() ;
+  //cout << "project = " << project << endl ;
   obstype = dataset_->getSWMOD() ;
+  //cout << "obstype = " << obstype << endl ;
   antname = dataset_->getSITE() ;
+  //cout << "antname = " << antname << endl ;
   // TODO: should be investigated antenna position since there are 
   //       no corresponding information in the header
   // 2008/11/13 Takeshi Nakazato
@@ -503,46 +438,56 @@ int NROReader::getHeaderInfo( Int &nchan,
   // 2008/11/26 Takeshi Nakazato
   vector<double> pos = getAntennaPosition() ;
   antpos = pos ;
-  char *eq = dataset_->getEPOCH() ;
-  if ( strncmp( eq, "B1950", 5 ) == 0 )
+  //cout << "antpos = " << antpos << endl ;
+  string eq = dataset_->getEPOCH() ;
+  if ( eq.compare( 0, 5, "B1950" ) == 0 )
     equinox = 1950.0 ;
-  else if ( strncmp( eq, "J2000", 5 ) == 0 ) 
+  else if ( eq.compare( 0, 5, "J2000" ) == 0 ) 
     equinox = 2000.0 ;
-  char *vref = dataset_->getVREF() ;
-  if ( strncmp( vref, "LSR", 3 ) == 0 ) {
-    //strcat( vref, "K" ) ;
-    if ( strlen( vref ) == 3 )
-      strcat( vref, "K" ) ;
-    else
+  //cout << "equinox = " << equinox << endl ;
+  string vref = dataset_->getVREF() ;
+  if ( vref.compare( 0, 3, "LSR" ) == 0 ) {
+    if ( vref.size() == 3 ) {
+      vref.append( "K" ) ;
+    }
+    else {
       vref[3] = 'K' ;
+    }
   }
   freqref = vref ;
+  //cout << "freqref = " << freqref << endl ;
   NRODataRecord *record = dataset_->getRecord( 0 ) ;
   reffreq = record->FREQ0 ;
+  //cout << "reffreq = " << reffreq << endl ;
   bw = dataset_->getBEBW()[0] ;
+  //cout << "bw = " << bw << endl ;
   utc = getStartTime() ;
+  //cout << "utc = " << utc << endl ;
   fluxunit = "K" ;
+  //cout << "fluxunit = " << fluxunit << endl ;
   epoch = "UTC" ;  
-  char *poltp = dataset_->getPOLTP()[0] ;
-  if ( strcmp( poltp, "" ) == 0 ) 
+  //cout << "epoch = " << epoch << endl ;
+  string poltp = dataset_->getPOLTP()[0] ;
+  //cout << "poltp = '" << poltp << "'" << endl ;
+  if ( poltp == "" ) 
     //poltp = "None" ;
     poltp = "linear" ;   // if no polarization type specified, set to "linear"
   //else if ( strcmp( poltp, "LINR" ) == 0 )
-  else if ( strncmp( poltp, "LINR", 1 ) == 0 )
+  else if ( poltp.compare( 0, 1, "LINR", 0, 1 ) == 0 )
     poltp = "linear" ;
   //else if ( strcmp( poltp, "CIRL" ) == 0 )
-  else if ( strncmp( poltp, "CIRL", 1 ) == 0 )
+  else if ( poltp.compare( 0, 1, "CIRL", 0, 1 ) == 0 )
     poltp = "circular" ;
   poltype = poltp ;
-  // DEBUG
-  cout << "NROReader::getHeaderInfo()  poltype = " << poltype << endl ;
-  //
+  //cout << "poltype = " << poltype << endl ;
 
   vector<Bool> ifs = getIFs() ;
   nif = ifs.size() ;
+  //cout << "nif = " << nif << endl ;
 
   vector<Bool> beams = getBeams() ;
   nbeam = beams.size() ;
+  //cout << "nbeam = " << nbeam << endl ;
 
   return 0 ;
 }
@@ -589,47 +534,59 @@ int NROReader::getScanInfo( int irow,
                             Array<Double> &scanrate )
 {
   // DEBUG
-  //cout << "NROReader::getScanInfo() " << endl ;
+  //cout << "NROReader::getScanInfo()  irow = " << irow << endl ;
   //
   NRODataRecord *record = dataset_->getRecord( irow ) ;
 
   // scanno
   scanno = (uInt)(record->ISCAN) ;
+  //cout << "scanno = " << scanno << endl ;
 
   // cycleno
   cycleno = 0 ;
+  //cout << "cycleno = " << cycleno << endl ;
 
   // beamno
   string arryt = string( record->ARRYT ) ;
   string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
   uInt ibeamno = atoi( sbeamno.c_str() ) ; 
   beamno = ibeamno - 1 ;
+  //cout << "beamno = " << beamno << endl ;
 
   // polno
   polno = 0 ;
+  //cout << "polno = " << polno << endl ;
 
   // freqs (for IFNO and FREQ_ID)
-  freqs = getFrequencies( irow ) ;
+  //freqs = getFrequencies( irow ) ;
+  freqs = dataset_->getFrequencies( irow ) ;
+  //cout << "freqs = [" << freqs[0] << ", " << freqs[1] << ", " << freqs[2] << "]" << endl ;
 
   // restfreq (for MOLECULE_ID)
   Vector<Double> rf( IPosition( 1, 1 ) ) ;
   rf( 0 ) = record->FREQ0 ;
   restfreq = rf ;
+  //cout << "restfreq = " << rf << endl ;
 
   // refbeamno
   refbeamno = 0 ;
+  //cout << "refbeamno = " << refbeamno << endl ;
 
   // scantime
   scantime = Double( dataset_->getStartIntTime( irow ) ) ;
+  //cout << "scantime = " << scantime << endl ;
 
   // interval
   interval = Double( dataset_->getIPTIM() ) ;
+  //cout << "interval = " << interval << endl ;
 
   // srcname
   srcname = String( dataset_->getOBJ() ) ;
+  //cout << "srcname = " << srcname << endl ;
 
   // fieldname
   fieldname = String( dataset_->getOBJ() ) ;
+  //cout << "fieldname = " << fieldname << endl ;
 
   // spectra
   vector<double> spec = dataset_->getSpectrum( irow ) ;
@@ -639,70 +596,90 @@ int NROReader::getScanInfo( int irow,
     *itr = spec[index++] ;
   }
   spectra = sp ;
-
+  //cout << "spec.size() = " << spec.size() << endl ;
+  
   // flagtra
   Array<uChar> flag( spectra.shape() ) ;
   flag.set( 0 ) ;
   flagtra = flag ;
+  //cout << "flag.size() = " << flag.size() << endl ;
 
   // tsys
   Array<Float> tmp( IPosition( 1, 1 ), record->TSYS ) ;
   tsys = tmp ;
+  //cout << "tsys[0] = " << tsys[0] << endl ;
 
   // direction
   direction = getDirection( irow ) ;
+  //cout << "direction = [" << direction[0] << ", " << direction[1] << "]" << endl ;
 
   // azimuth
   azimuth = record->RAZ ;
+  //cout << "azimuth = " << azimuth << endl ;
 
   // elevation
   elevation = record->REL ;
+  //cout << "elevation = " << elevation << endl ;
 
   // parangle
   parangle = 0.0 ;
+  //cout << "parangle = " << parangle << endl ;
 
   // opacity
   opacity = 0.0 ;
+  //cout << "opacity = " << opacity << endl ;
 
   // tcalid 
   tcalid = 0 ;
+  //cout << "tcalid = " << tcalid << endl ;
 
   // fitid
   fitid = -1 ;
+  //cout << "fitid = " << fitid << endl ;
 
   // focusid 
   focusid = 0 ;
+  //cout << "focusid = " << focusid << endl ;
 
   // temperature (for WEATHER_ID)
   temperature = Float( record->TEMP ) ;
+  //cout << "temperature = " << temperature << endl ;
 
   // pressure (for WEATHER_ID)
   pressure = Float( record->PATM ) ;
+  //cout << "pressure = " << pressure << endl ;
 
   // humidity (for WEATHER_ID) 
   humidity = Float( record->PH2O ) ;
+  //cout << "humidity = " << humidity << endl ;
 
   // windvel (for WEATHER_ID)
   windvel = Float( record->VWIND ) ;
+  //cout << "windvel = " << windvel << endl ;
 
   // winddir (for WEATHER_ID)
   winddir = Float( record->DWIND ) ;
-
+  //cout << "winddir = " << winddir << endl ;
+  
   // srcvel 
   srcvel = dataset_->getURVEL() ;
+  //cout << "srcvel = " << srcvel << endl ;
 
   // propermotion
   Array<Double> srcarr( IPosition( 1, 2 ) ) ;
   srcarr = 0.0 ;
   propermotion = srcarr ;
+  //cout << "propermotion = [" << propermotion[0] << ", " << propermotion[1] << "]" << endl ; 
 
   // srcdir
   srcdir = getSourceDirection() ;
+  //cout << "srcdir = [" << srcdir[0] << ", " << srcdir[1] << endl ;
 
   // scanrate
   Array<Double> sr( IPosition( 1, 1 ) ) ;
   sr = 0.0 ;
   scanrate = sr ;
+  //cout << "scanrate = " << scanrate[0] << endl ;
 
   return 0 ;
 }

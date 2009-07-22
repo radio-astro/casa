@@ -4,6 +4,7 @@
 # 26-Sep-2008 jfl First version.
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -63,7 +64,8 @@ class DirtyImageV2(BaseImage):
         self._imager.selectvis(spw=int(spw), field=int(field))
 
         commands.append('imager.open(thems=%s)' % self._msName)
-        commands.append('imager.selectvis(spw=%s, field=%s)' % (spw, field))
+        commands.append('imager.selectvis(spw=int(%s), field=int(%s))' % 
+         (spw, field))
 
 # generate names of files to hold results
 
@@ -93,7 +95,7 @@ class DirtyImageV2(BaseImage):
         self._imager.summary()
 
         commands.append('''imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
-         stokes='I', phasecenter=%s, mode=%s, nchan=%s, spw=[%s])''' % (nx, nx,
+         stokes='I', phasecenter=int(%s), mode=%s, nchan=%s, spw=[int(%s)])''' % (nx, nx,
          cell, cell, field, self._mode, nchan, spw))
         commands.append('imager.summary()')
 
@@ -107,8 +109,8 @@ class DirtyImageV2(BaseImage):
          compleximage=complexDirtyMapName)
         self._imager.close()
 
-        commands.append("imager.makeimage(type='corrected', image=%s, comleximage=%s)" % (
-         dirtyMapName, complexDirtyMapName))
+        commands.append("""imager.makeimage(type='corrected', image=%s,
+         compleximage=%s)""" % (dirtyMapName, complexDirtyMapName))
         commands.append('imager.close()')
 
         parameters['commands'] = commands
@@ -134,12 +136,7 @@ class DirtyImageV2(BaseImage):
         stageName -- The name of the stage using the class.
         """
         description = """
-         The dirty image was constructed:
-         <ul>
-          <li>'imager.defineimage' set the map parameters.
-          <li>'imager.makeimage'(type='corrected', ...) calculated the
-              dirty image.
-         </ul>
-         This work was done by Python class DirtyImageV2."""
+         The dirty image was constructed (see Casapy Calls for details)."""
+#         This work was done by Python class DirtyImageV2."""
 
         return description

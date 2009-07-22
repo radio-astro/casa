@@ -448,7 +448,7 @@ def Process3(SpStorage2, dummyscan, DataTable, ResultTable, PosDict, rows, SpWin
 
 
 
-def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, rows, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=4.0, Xorder=-1, Yorder=-1, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, rows, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=4.0, Xorder=-1, Yorder=-1, ClusterRule=None, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
 
     # 2D fit line characteristics calculated in Process3
     # Sigma clipping iterations will be applied if Nsigma is positive
@@ -487,12 +487,11 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
     #import numarray.convolve as SPC
     #import scipy.stsci.convolve as SPC
 
-    import SDpipelineControl as SDC
-    reload(SDC)
-
-    Valid = SDC.SDParam['Cluster']['ThresholdValid']
-    Marginal = SDC.SDParam['Cluster']['ThresholdMarginal']
-    Questionable = SDC.SDParam['Cluster']['ThresholdQuestionable']
+    #import SDpipelineControl as SDC
+    #reload(SDC)
+    Valid = ClusterRule['ThresholdValid']
+    Marginal = ClusterRule['ThresholdMarginal']
+    Questionable = ClusterRule['ThresholdQuestionable']
 
     # for Pre-Defined Spectrum Window
     if len(SpWin) != 0:
@@ -515,29 +514,31 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
     # First cycle
     if len(ResultTable) == 0:
         ROWS = rows
-        if Pattern.upper() == 'SINGLE-POINT':
+        #if Pattern.upper() == 'SINGLE-POINT':
+        if Pattern.upper() == 'SINGLE-POINT' or Pattern.upper() == 'MULTI-POINT':
             for row in rows:
                 SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[row][21], DetectSignal[row][2], DataTable[row][22]))
                 DataTable[row][21] = DetectSignal[row][2]
                 DataTable[row][22] = False
             return Lines
-        elif Pattern.upper() == 'MULTI-POINT':
-            for x in range(len(GridTable)):
-                for ID in DetectSignal.keys():
-                    # Check position RA and DEC
-                    if DetectSignal[ID][0] == GridTable[x][4] and \
-                       DetectSignal[ID][1] == GridTable[x][5]:
-                        for rowlist in GridTable[x][6]:
-                            SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[rowlist[0]][21], DetectSignal[rowlist[0]][2], DataTable[rowlist[0]][22]))
-                            DataTable[rowlist[0]][21] = DetectSignal[rowlist[0]][2]
-                            DataTable[rowlist[0]][22] = False
-                        break
-            return Lines
+        #elif Pattern.upper() == 'MULTI-POINT':
+        #    for x in range(len(GridTable)):
+        #        for ID in DetectSignal.keys():
+        #            # Check position RA and DEC
+        #            if DetectSignal[ID][0] == GridTable[x][4] and \
+        #               DetectSignal[ID][1] == GridTable[x][5]:
+        #                for rowlist in GridTable[x][6]:
+        #                    SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[rowlist[0]][21], DetectSignal[rowlist[0]][2], DataTable[rowlist[0]][22]))
+        #                    DataTable[rowlist[0]][21] = DetectSignal[rowlist[0]][2]
+        #                    DataTable[rowlist[0]][22] = False
+        #                break
+        #    return Lines
 
     # Iteration case
     else:
         ROWS = range(len(ResultTable))
-        if Pattern.upper() == 'SINGLE-POINT':
+        #if Pattern.upper() == 'SINGLE-POINT':
+        if Pattern.upper() == 'SINGLE-POINT' or Pattern.upper() == 'MULTI-POINT':
             for row in rows:
                 RealSignal[row] = DetectSignal[0]
                 SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[row][21], DetectSignal[0][2], DataTable[row][22]))
@@ -548,25 +549,25 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
                     DataTable[row][21] = DetectSignal[0][2]
                     DataTable[row][22] = False
             return Lines
-        elif Pattern.upper() == 'MULTI-POINT':
-            SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DetectSignal = %s' % DetectSignal)
-            for x in range(len(GridTable)):
-                for ID in DetectSignal.keys():
-                    # Check position RA and DEC
-                    if DetectSignal[ID][0] == GridTable[x][4] and \
-                       DetectSignal[ID][1] == GridTable[x][5]:
-                        for rowlist in GridTable[x][6]:
-                            SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='rowlist = %s' % rowlist)
-                            RealSignal[rowlist[0]] = DetectSignal[ID]
-                            SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[rowlist[0]][21], DetectSignal[x][2], DataTable[rowlist[0]][22]))
-                            if DataTable[rowlist[0]][21] == DetectSignal[x][2]:
-                                if type(DataTable[rowlist[0]][22]) != int:
-                                    DataTable[rowlist[0]][22] = ITER
-                            else:
-                                DataTable[rowlist[0]][21] = DetectSignal[x][2]
-                                DataTable[rowlist[0]][22] = False
-                        break
-            return Lines
+        #elif Pattern.upper() == 'MULTI-POINT':
+        #    SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DetectSignal = %s' % DetectSignal)
+        #    for x in range(len(GridTable)):
+        #        for ID in DetectSignal.keys():
+        #            # Check position RA and DEC
+        #            if DetectSignal[ID][0] == GridTable[x][4] and \
+        #               DetectSignal[ID][1] == GridTable[x][5]:
+        #                for rowlist in GridTable[x][6]:
+        #                    SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='rowlist = %s' % rowlist)
+        #                    RealSignal[rowlist[0]] = DetectSignal[ID]
+        #                    SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='DataTable = %s, DetectSignal = %s, OldFlag = %s' % (DataTable[rowlist[0]][21], DetectSignal[x][2], DataTable[rowlist[0]][22]))
+        #                    if DataTable[rowlist[0]][21] == DetectSignal[x][2]:
+        #                        if type(DataTable[rowlist[0]][22]) != int:
+        #                            DataTable[rowlist[0]][22] = ITER
+        #                    else:
+        #                        DataTable[rowlist[0]][21] = DetectSignal[x][2]
+        #                        DataTable[rowlist[0]][22] = False
+        #                break
+        #    return Lines
 
     # RASTER CASE
     # Read data from Table to generate ID -> RA, DEC conversion table
@@ -614,7 +615,7 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
     # Max number of protect regions are SDC.SDParam['Cluster']['MaxCluster'] (Max lines)
     ProcStartTime = time.time()
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='K-mean Clustering Analaysis Start: %s' % time.ctime(ProcStartTime))
-    MaxCluster = int(min(SDC.SDParam['Cluster']['MaxCluster'], max(MaxLines + 1, (Npos ** 0.5)/2)))
+    MaxCluster = int(min(ClusterRule['MaxCluster'], max(MaxLines + 1, (Npos ** 0.5)/2)))
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Maximum number of clusters (MaxCluster) = %s' % MaxCluster)
     # Whiten is no more necessary 2007/2/12
     # whitened = VQ.whiten(Region2)
@@ -914,7 +915,7 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
             SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='Cluster Member = %s' % Nmember)
 
             # Blur each SubCluster with the radius of sqrt(Nmember/Pi) * ratio
-            ratio = SDC.SDParam['Cluster']['BlurRatio']
+            ratio = ClusterRule['BlurRatio']
             # Set-up SubCluster
             for n in range(len(Nmember)):
                 ##SubPlane = NA.zeros((nra, ndec), type=NA.Float32)
@@ -1172,7 +1173,7 @@ def Process4(DetectSignal, DataTable, ResultTable, GridTable, PosDict, Abcissa, 
 
 
 
-def Process5(SpStorage, DataTable, TimeTableList, rows, edge=(0, 0), LogLevel=2, LogFile=False):
+def Process5(SpStorage, DataTable, TimeTableList, rows, edge=(0, 0), FitOrderRule=None, LogLevel=2, LogFile=False):
 
     # Determine Baseline-Fitting order for each time-bin
     #  DataTable[row][21] = [[LineStartChannel1, LineEndChannel1],
@@ -1185,19 +1186,23 @@ def Process5(SpStorage, DataTable, TimeTableList, rows, edge=(0, 0), LogLevel=2,
     #                IDn,[RA,DEC,[[LineStartChannel1, LineEndChannel1],
     #                             [LineStartChannelN, LineEndChannelN]]]}
 
-    import SDpipelineControl as SDC
-    reload(SDC)
+    #import SDpipelineControl as SDC
+    #reload(SDC)
 
     NROW = len(rows)
     StartTime = time.time()
     SDT.LogMessage('TITLE', LogLevel, LogFile, Msg='<'*15 + '  Process5  ' + '>'*15)
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Start: %s' % time.ctime(StartTime))
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Determine Baseline-Fitting order for each time-bin...')
-    SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Applied time bin: %s' % SDC.SDParam['FittingOrder']['ApplicableDuration'])
+    SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Applied time bin: %s' % FitOrderRule['ApplicableDuration'])
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Processing %d spectra...' % NROW)
 
     # Select time gap list: 'subscan': large gap; 'raster': small gap
-    if SDC.SDParam['FittingOrder']['ApplicableDuration'] == 'subscan':
+    #if SDC.SDParam['FittingOrder']['ApplicableDuration'] == 'subscan':
+    #    TimeTable = TimeTableList[1]
+    #else:
+    #    TimeTable = TimeTableList[0]
+    if FitOrderRule['ApplicableDuration'] == 'subscan':
         TimeTable = TimeTableList[1]
     else:
         TimeTable = TimeTableList[0]
@@ -1518,14 +1523,15 @@ def MergeGapTables(DataTable, TimeGap, TimeTable, PosGap, LogLevel=2, LogFile=Fa
     row = -1
     ##tmpGap = list(NA.sort(NA.array(TimeGap[0] + PosGap)))
     tmpGap = list(NP.sort(NP.array(TimeGap[0] + PosGap)))
-    t = tmpGap[0]
     NewGap = []
-    for row in tmpGap[1:]:
-        if t != row and t in ROWS:
-            NewGap.append(t)
-            t = row
-    if row in ROWS:
-        NewGap.append(row)
+    if len( tmpGap ) != 0: 
+        t = tmpGap[0]
+        for row in tmpGap[1:]:
+            if t != row and t in ROWS:
+                NewGap.append(t)
+                t = row
+        if row in ROWS:
+            NewGap.append(row)
     TimeGap[0] = NewGap
 
     SubTable = []
@@ -1593,12 +1599,13 @@ def ObsPatternAnalysis(PosDict, rows, LogLevel=2, LogFile=False):
 
 
 
-def Process6(SpStorage, DataTable, rows, scan, DictFitOrder, Abcissa, TimeGapList=[[],[]], fixscale=True, stepbystep=False, showevery=10, saveparams=True, savefile='BaselineFitRating.csv', edge=(0, 0), LogLevel=2, LogFile=False, ShowRMS=True, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+def Process6(SpStorage, DataTable, rows, scan, DictFitOrder, Abcissa, TimeGapList=[[],[]], fixscale=True, stepbystep=False, showevery=10, saveparams=True, savefile='BaselineFitRating.csv', edge=(0, 0), FitOrderRule=None, LogLevel=2, LogFile=False, ShowRMS=True, ShowPlot=True, DebugPlot=False, FigFileDir=False, FigFileRoot=False):
     
-    import SDpipelineControl as SDC
-    reload(SDC)
+    #import SDpipelineControl as SDC
+    #reload(SDC)
 
-    MaxPolynomialOrder = SDC.SDParam['FittingOrder']['MaxPolynomialOrder']
+    #MaxPolynomialOrder = SDC.SDParam['FittingOrder']['MaxPolynomialOrder']
+    MaxPolynomialOrder = FitOrderRule['MaxPolynomialOrder']
     # MaxPolynomialOrder = 'none' or any integer
 
     SDT.LogMessage('TITLE', LogLevel, LogFile, Msg='<'*15 + '  Process6  ' + '>'*15)
@@ -1668,7 +1675,7 @@ def Process6(SpStorage, DataTable, rows, scan, DictFitOrder, Abcissa, TimeGapLis
             SDT.LogMessage('INFO', LogLevel, LogFile, Msg='global edge parameters= (%s,%s)' % edge)
             SDT.LogMessage('DEBUG', LogLevel, LogFile, Msg='Polynomial order = %d  Max Polynomial order = %d' % (polyorder, maxpolyorder))
             #(SpStorage[1][row], NewRMS, OldRMS, nmask, win_polyorder, fragment, nwindow) = CalcBaselineFit(dummyscan, DataTable[row][21], polyorder, NCHAN, 0, edge, LogLevel=LogLevel, LogFile=LogFile)
-            (SpStorage[1][row], NewRMS, OldRMS, nmask, win_polyorder, fragment, nwindow) = CalcBaselineFit(dummyscan, DataTable[row][21], min(polyorder, maxpolyorder), NCHAN, 0, edge, LogLevel=LogLevel, LogFile=LogFile)
+            (SpStorage[1][row], NewRMS, OldRMS, nmask, win_polyorder, fragment, nwindow) = CalcBaselineFit(dummyscan, DataTable[row][21], min(polyorder, maxpolyorder), NCHAN, 0, edge, ShowPlot=DebugPlot, LogLevel=LogLevel, LogFile=LogFile)
             DataTable[row][16][1] = NewRMS
             DataTable[row][16][2] = OldRMS
             fitparams = 'poly_order=%d : %d  nwindow=%d : %d     ' % (polyorder, win_polyorder, fragment, nwindow)
@@ -1705,20 +1712,26 @@ def Process6(SpStorage, DataTable, rows, scan, DictFitOrder, Abcissa, TimeGapLis
 
 
 
-def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTableList=[[],[]], Iteration=5, interactive=True, edge=(0,0), UserFlag=[], LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTableList=[[],[]], Iteration=5, interactive=True, edge=(0,0), UserFlag=[], FlagRule=None, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
 
-    import SDpipelineControl as SDC
-    reload(SDC)
+    #import SDpipelineControl as SDC
+    #reload(SDC)
+    #ThreNewRMS = SDC.SDParam['RmsPostFitFlag']['Threshold']
+    #ThreOldRMS = SDC.SDParam['RmsPreFitFlag']['Threshold']
+    #ThreNewDiff = SDC.SDParam['RunMeanPostFitFlag']['Threshold']
+    #ThreOldDiff = SDC.SDParam['RunMeanPreFitFlag']['Threshold']
+    #ThreTsys = SDC.SDParam['TsysFlag']['Threshold']
+    #Nmean = SDC.SDParam['RunMeanPreFitFlag']['Nmean']
 
-    ThreNewRMS = SDC.SDParam['RmsPostFitFlag']['Threshold']
-    ThreOldRMS = SDC.SDParam['RmsPreFitFlag']['Threshold']
-    ThreNewDiff = SDC.SDParam['RunMeanPostFitFlag']['Threshold']
-    ThreOldDiff = SDC.SDParam['RunMeanPreFitFlag']['Threshold']
-    ThreTsys = SDC.SDParam['TsysFlag']['Threshold']
-    Nmean = SDC.SDParam['RunMeanPreFitFlag']['Nmean']
+    ThreNewRMS = FlagRule['RmsPostFitFlag']['Threshold']
+    ThreOldRMS = FlagRule['RmsPreFitFlag']['Threshold']
+    ThreNewDiff = FlagRule['RunMeanPostFitFlag']['Threshold']
+    ThreOldDiff = FlagRule['RunMeanPreFitFlag']['Threshold']
+    ThreTsys = FlagRule['TsysFlag']['Threshold']
+    Nmean = FlagRule['RunMeanPreFitFlag']['Nmean']
 
     # Select time gap list: 'subscan': large gap; 'raster': small gap
-    if SDC.SDParam['Flagging']['ApplicableDuration'] == "subscan":
+    if FlagRule['Flagging']['ApplicableDuration'] == "subscan":
         TimeTable = TimeTableList[1]
     else:
         TimeTable = TimeTableList[0]
@@ -1735,7 +1748,7 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Nchan for running mean=%s' % Nmean)
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Flagging thresholds for: (post-fit, pre-fit, post-fit diff, pre-fit diff, Tsys )= (%s, %s, %s, %s, %s)*RMS' \
                    % (ThreNewRMS, ThreOldRMS, ThreNewDiff, ThreOldDiff, ThreTsys))
-    SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Applied time bin for the running mean calculation: %s' % SDC.SDParam['Flagging']['ApplicableDuration'])
+    SDT.LogMessage('INFO', LogLevel, LogFile, Msg='Applied time bin for the running mean calculation: %s' % FlagRule['Flagging']['ApplicableDuration'])
     SDT.LogMessage('TIMER', LogLevel, LogFile, Msg='|' + '='*36 + ' 100% ' + '=' * 36 + '|')
     StartTime = time.time()
     STEP = HASH = HASH0 = 0
@@ -1946,9 +1959,9 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     # data. Maybe this is due to underestimating the total integration time.
     # Check again later.
     # 2008/10/31 divided the category into two
-    #ThreExpectedRMS = SDC.SDParam['RmsExpectedFlag']['Threshold']
-    ThreExpectedRMSPreFit = SDC.SDParam['RmsExpectedPreFitFlag']['Threshold']
-    ThreExpectedRMSPostFit = SDC.SDParam['RmsExpectedPostFitFlag']['Threshold']
+    #ThreExpectedRMS = FlagRule['RmsExpectedFlag']['Threshold']
+    ThreExpectedRMSPreFit = FlagRule['RmsExpectedPreFitFlag']['Threshold']
+    ThreExpectedRMSPostFit = FlagRule['RmsExpectedPostFitFlag']['Threshold']
     #ThreExpectedRMS = 1.333
 
     # The noise equivalent bandwidth is proportional to the channel width
@@ -2000,18 +2013,18 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
             DataTable[row][18][2] = 1
         # Check every flags to create summary flag
         Flag = 1
-        if (DataTable[row][18][0] == 0 and SDC.SDParam['WeatherFlag']['isActive']) or \
-           (DataTable[row][18][1] == 0 and SDC.SDParam['TsysFlag']['isActive']) or \
-           (DataTable[row][18][2] == 0 and SDC.SDParam['UserFlag']['isActive']):
+        if (DataTable[row][18][0] == 0 and FlagRule['WeatherFlag']['isActive']) or \
+           (DataTable[row][18][1] == 0 and FlagRule['TsysFlag']['isActive']) or \
+           (DataTable[row][18][2] == 0 and FlagRule['UserFlag']['isActive']):
             Flag = 0
         PermanentFlag.append(Flag)
         if Flag == 0 or \
-           (DataTable[row][17][1] == 0 and SDC.SDParam['RmsPostFitFlag']['isActive']) or \
-           (DataTable[row][17][2] == 0 and SDC.SDParam['RmsPreFitFlag']['isActive']) or \
-           (DataTable[row][17][3] == 0 and SDC.SDParam['RunMeanPostFitFlag']['isActive']) or \
-           (DataTable[row][17][4] == 0 and SDC.SDParam['RunMeanPreFitFlag']['isActive']) or \
-           (DataTable[row][17][5] == 0 and SDC.SDParam['RmsExpectedPostFitFlag']['isActive']) or \
-           (DataTable[row][17][6] == 0 and SDC.SDParam['RmsExpectedPreFitFlag']['isActive']):
+           (DataTable[row][17][1] == 0 and FlagRule['RmsPostFitFlag']['isActive']) or \
+           (DataTable[row][17][2] == 0 and FlagRule['RmsPreFitFlag']['isActive']) or \
+           (DataTable[row][17][3] == 0 and FlagRule['RunMeanPostFitFlag']['isActive']) or \
+           (DataTable[row][17][4] == 0 and FlagRule['RunMeanPreFitFlag']['isActive']) or \
+           (DataTable[row][17][5] == 0 and FlagRule['RmsExpectedPostFitFlag']['isActive']) or \
+           (DataTable[row][17][6] == 0 and FlagRule['RmsExpectedPreFitFlag']['isActive']):
             DataTable[row][19] = 0
             FlaggedRows.append(row)
         else:
@@ -2071,11 +2084,11 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     PlotData = {'row': prows[0], 'data': pdata[0], 'flag': pflag[0], \
                 'thre': [threshold[4][1], 0.0], \
                 'gap': [PosGap, TimeGap], \
-			'title': "Tsys (K)\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % SDC.SDParam['TsysFlag']['Threshold'], \
+			'title': "Tsys (K)\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule['TsysFlag']['Threshold'], \
                 'xlabel': "row (spectrum)", \
                 'ylabel': "Tsys (K)", \
                 'permanentflag': PermanentFlag, \
-                'isActive': SDC.SDParam['TsysFlag']['isActive'], \
+                'isActive': FlagRule['TsysFlag']['isActive'], \
                 'threType': "line"}
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_0')
 
@@ -2084,33 +2097,33 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     PlotData['data'] = pdata[1]
     PlotData['flag'] = pflag[1]
     PlotData['thre'] = [threshold[1][1]]
-    PlotData['title'] = "Baseline RMS (K) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % SDC.SDParam['RmsPreFitFlag']['Threshold']
+    PlotData['title'] = "Baseline RMS (K) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule['RmsPreFitFlag']['Threshold']
     PlotData['ylabel'] = "Baseline RMS (K)"
-    PlotData['isActive'] = SDC.SDParam['RmsPreFitFlag']['isActive']
+    PlotData['isActive'] = FlagRule['RmsPreFitFlag']['isActive']
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_1')
 
     # RMS flag after baseline fit
     PlotData['data'] = pdata[2]
     PlotData['flag'] = pflag[2]
     PlotData['thre'] = [threshold[0][1]]
-    PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % SDC.SDParam['RmsPostFitFlag']['Threshold']
-    PlotData['isActive'] = SDC.SDParam['RmsPostFitFlag']['isActive']
+    PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule['RmsPostFitFlag']['Threshold']
+    PlotData['isActive'] = FlagRule['RmsPostFitFlag']['isActive']
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_2')
 
     # Running mean flag before baseline fit
     PlotData['data'] = pdata[3]
     PlotData['flag'] = pflag[3]
     PlotData['thre'] = [threshold[3][1]]
-    PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (SDC.SDParam['RunMeanPreFitFlag']['Nmean'], SDC.SDParam['RunMeanPreFitFlag']['Threshold'])
-    PlotData['isActive'] = SDC.SDParam['RunMeanPreFitFlag']['isActive']
+    PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPreFitFlag']['Nmean'], FlagRule['RunMeanPreFitFlag']['Threshold'])
+    PlotData['isActive'] = FlagRule['RunMeanPreFitFlag']['isActive']
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_3')
 
     # Running mean flag after baseline fit
     PlotData['data'] = pdata[4]
     PlotData['flag'] = pflag[4]
     PlotData['thre'] = [threshold[2][1]]
-    PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (SDC.SDParam['RunMeanPostFitFlag']['Nmean'], SDC.SDParam['RunMeanPostFitFlag']['Threshold'])
-    PlotData['isActive'] = SDC.SDParam['RunMeanPostFitFlag']['isActive']
+    PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPostFitFlag']['Nmean'], FlagRule['RunMeanPostFitFlag']['Threshold'])
+    PlotData['isActive'] = FlagRule['RunMeanPostFitFlag']['isActive']
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_4')
 
     # Expected RMS flag before baseline fit
@@ -2118,7 +2131,7 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     PlotData['flag'] = pflag[5]
     PlotData['thre'] = [pdata[5]]
     PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f, Red H-line(s): out of vertical scale limit(s)" % ThreExpectedRMSPreFit
-    PlotData['isActive'] = SDC.SDParam['RmsExpectedPreFitFlag']['isActive']
+    PlotData['isActive'] = FlagRule['RmsExpectedPreFitFlag']['isActive']
     PlotData['threType'] = "plot"
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_5')
 
@@ -2127,7 +2140,7 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
     PlotData['flag'] = pflag[6]
     PlotData['thre'] = [pdata[6]]
     PlotData['title'] = "Baseline RMS (K) compared with the expected RMS calculated from Tsys after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: threshold with the scaling factor of %.1f" % ThreExpectedRMSPostFit
-    PlotData['isActive'] = SDC.SDParam['RmsExpectedPostFitFlag']['isActive']
+    PlotData['isActive'] = FlagRule['RmsExpectedPostFitFlag']['isActive']
     PlotData['threType'] = "plot"
     SDP.StatisticsPlot(PlotData, ShowPlot, FigFileDir, FigFileRoot+'_6')
 
@@ -2145,15 +2158,15 @@ def Process7(SpStorage, DataTable, Abcissa, rows, TimeGapList=[[],[]], TimeTable
         print >> Out, '<p class="ttl">Flagging Status</p>'
         print >> Out, '<table border="1">'
         print >> Out, '<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th></tr>'
-        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('User', SDC.SDParam['UserFlag']['isActive'], SDC.SDParam['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]))
-        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Weather', SDC.SDParam['WeatherFlag']['isActive'], SDC.SDParam['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]))
-        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Tsys', SDC.SDParam['TsysFlag']['isActive'], SDC.SDParam['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('RMS baseline (pre-fit)', SDC.SDParam['RmsPreFitFlag']['isActive'], SDC.SDParam['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[4]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('RMS baseline (post-fit)', SDC.SDParam['RmsPostFitFlag']['isActive'], SDC.SDParam['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[3]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Running Mean (pre-fit)', SDC.SDParam['RunMeanPreFitFlag']['isActive'], SDC.SDParam['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[6]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Running Mean (post-fit)', SDC.SDParam['RunMeanPostFitFlag']['isActive'], SDC.SDParam['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[5]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Expected RMS (pre-fit)', SDC.SDParam['RmsExpectedPreFitFlag']['isActive'], SDC.SDParam['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[8]))
-        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Expected RMS (post-fit)', SDC.SDParam['RmsExpectedPostFitFlag']['isActive'], SDC.SDParam['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[7]))
+        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('User', FlagRule['UserFlag']['isActive'], FlagRule['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]))
+        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Weather', FlagRule['WeatherFlag']['isActive'], FlagRule['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]))
+        print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Tsys', FlagRule['TsysFlag']['isActive'], FlagRule['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('RMS baseline (pre-fit)', FlagRule['RmsPreFitFlag']['isActive'], FlagRule['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[4]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('RMS baseline (post-fit)', FlagRule['RmsPostFitFlag']['isActive'], FlagRule['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[3]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Running Mean (pre-fit)', FlagRule['RunMeanPreFitFlag']['isActive'], FlagRule['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[6]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Running Mean (post-fit)', FlagRule['RunMeanPostFitFlag']['isActive'], FlagRule['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[5]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Expected RMS (pre-fit)', FlagRule['RmsExpectedPreFitFlag']['isActive'], FlagRule['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[8]))
+        print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Expected RMS (post-fit)', FlagRule['RmsExpectedPostFitFlag']['isActive'], FlagRule['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[7]))
         print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows))
         print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
         print >> Out, '</table>\n</body>\n</html>'
@@ -2342,7 +2355,7 @@ def GroupForGrid(DataTable, rows, vIF, vPOL, CombineRadius, Allowance, GridSpaci
 
 
 
-def Process8(SpStorage, DataTable, GridTable, CombineRadius, weight='CONST', LogLevel=2, LogFile=False):
+def Process8(SpStorage, DataTable, GridTable, CombineRadius, GridRule, LogLevel=2, LogFile=False):
 
     # The process does re-map and combine spectrum for each position
     # GridTable format:
@@ -2362,12 +2375,16 @@ def Process8(SpStorage, DataTable, GridTable, CombineRadius, weight='CONST', Log
     #             ......
     #     [IF, POL, X, Y, RA, DEC, # of Combined Sp., # of flagged Sp.]]
 
-    import SDpipelineControl as SDC
-    reload(SDC)
-    clip = SDC.SDParam['Gridding']['Clipping']
-    rms_weight = SDC.SDParam['Gridding']['WeightRMS']
-    tsys_weight = SDC.SDParam['Gridding']['WeightTsysExptime']
+    #import SDpipelineControl as SDC
+    #reload(SDC)
+    #clip = SDC.SDParam['Gridding']['Clipping']
+    #rms_weight = SDC.SDParam['Gridding']['WeightRMS']
+    #tsys_weight = SDC.SDParam['Gridding']['WeightTsysExptime']
     #weight = SDC.SDParam['Gridding']['WeightDistance']
+    clip = GridRule['Clipping']
+    rms_weight = GridRule['WeightRMS']
+    tsys_weight = GridRule['WeightTsysExptime']
+    weight = GridRule['WeightDistance']
 
     NROW = len(GridTable)
     StartTime = time.time()
@@ -2495,12 +2512,12 @@ def SelectData(event):
 
 
 
-def CalcBaselineFit(scan, masklist, polyorder, nchan, modification, edge=(0, 0), LogLevel=2, LogFile=False):
+def CalcBaselineFit(scan, masklist, polyorder, nchan, modification, edge=(0, 0), ShowPlot=False, LogLevel=2, LogFile=False):
 
     StartTime = time.time()
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='CalcBaselineFit Start:%s' % time.ctime(StartTime))
     # Initialize plot for debugging
-    if LogLevel > 3: SDP.DrawDebugFit(mode='INIT')
+    if ShowPlot: SDP.DrawDebugFit(mode='INIT')
 
     ##data = NA.array(scan._getspectrum(0))
     data = NP.array(scan._getspectrum(0))
@@ -2651,7 +2668,7 @@ def CalcBaselineFit(scan, masklist, polyorder, nchan, modification, edge=(0, 0),
                 resultdata[WIN][i] *= (2.0 * x ** 3.0 - 3.0 * x ** 2.0 + 1.0)
 
         # Plot for verification use only : START
-        if LogLevel > 3:
+        if ShowPlot:
             plotdata =  data - resultdata[WIN]
             for i in range(NCHAN):
                 if i < PosL0:
@@ -2696,7 +2713,7 @@ def CalcBaselineFit(scan, masklist, polyorder, nchan, modification, edge=(0, 0),
     SDT.LogMessage('INFO', LogLevel, LogFile, Msg='RMS before/after fitting calculation End: %s (Elapsed time = %.1f sec)' % (time.ctime(ProcEndTime), ProcEndTime - ProcStartTime) )
 
     # Plot for verification use only : START
-    if LogLevel > 3:
+    if ShowPlot:
         ##plotdata = data - NA.sum(resultdata)
         plotdata = data - NP.sum(resultdata)
         Ymin = min(plotdata) - (max(plotdata) - min(plotdata)) * 0.15

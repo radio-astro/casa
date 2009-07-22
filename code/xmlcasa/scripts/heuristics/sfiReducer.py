@@ -21,6 +21,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 import os
 import re
@@ -48,10 +49,11 @@ import casapyTasks
 import checkMS
 import chunkMedian
 import cleanImageV2
-import closurePhase
+import closureError
 import coaddedAntennaAmplitude
 import continuumSubtractedCleanImage
 import complexDisplay
+import complexSliceDisplay
 import deviations
 import dirtyImageV2
 import fluxCalibration
@@ -74,12 +76,12 @@ import skyDisplay
 import sliceDisplay
 import sourceSpectra
 import taqlFlagger
-
+import util
 
 class SFIReducer:
     """Class to reduce Single Field Interferometry data.
     """
-    def __init__(self, msName, recipe='vla_regression_recipe', tasks={}):
+    def __init__(self, msName, recipe='vla_recipe', tasks={}):
         """Constructor.
 
         Keyword arguments:
@@ -103,7 +105,7 @@ class SFIReducer:
             # as workaround for CAS-1508 (crash in CASA's casalog component)
             # this is disabled
             #
-            #            self._log['logTool'].setglobal(True)
+            self._log['logTool'].setglobal(True)
             #
             pass
 
@@ -185,6 +187,13 @@ class SFIReducer:
 
         if doIt:
 
+# store flag state on entry to this stage, create an entry in FLAG_CMD to
+# bookmark the start of the stage. Do it here in case a mistake in the recipe
+# causes an exception at stage creation.
+
+            self._msFlagger.saveFlagStateToFile(stage['name'])
+            self._msFlagger.setFlags(stage, [], {})
+
 # build the ReductionStage object and tell it to do the work
 
 # build a string with the code to construct the ReductionStage object
@@ -208,7 +217,7 @@ class SFIReducer:
             codeString = codeString.replace(',)', ')')
 
 # .add the tools, bookKeeper, msCalibrater and msFlagger objects to all data
-# view objects.
+#  view objects.
 
             p = re.compile('view\s*=[^(]*\([^)]*\)')
             viewString = p.search(codeString).group()
@@ -223,7 +232,8 @@ class SFIReducer:
             search = p.search(codeString)
             if type(search) != types.NoneType:
                 viewString = search.group()
-                newViewString = viewString.replace('(', '(tasks=self._tasks, ')
+                newViewString = viewString.replace("(",
+                 "(tasks=self._tasks, ")
                 codeString = codeString.replace(viewString, newViewString)
 
             codeString = """redStage = reductionStage.ReductionStage(self._html, 
@@ -245,11 +255,11 @@ class SFIReducer:
                 self._html.logHTML('''<p>Failed stage code:<pre>''')
                 self._html.logHTML(codeString)
                 self._html.logHTML('</pre>')
-            finally:
                 self._html.closeNode()
+                self._html.logHTML('<font color="red">Failed</font>')
 
 
-    def reduce(self, start=None):
+    def reduce(self, start=None, flux='', gain='', bandpass=''):
         """Method to reduce the MeasurementSet.
 
         Keyword arguments:
@@ -258,6 +268,12 @@ class SFIReducer:
         """
 
 # load the recipe.
+
+        #print "Initialize calibrators to gain='%s', flux='%s', bandpass='%s'" % \
+        # (gain, flux, bandpass)
+        util.gaincal = gain
+        util.fluxcal = flux
+        util.bandpasscal = bandpass
 
         recipeModule = __import__('heuristics.' + self._recipeName, fromlist=
          ['heuristics'])
@@ -329,7 +345,7 @@ class SFIReducer:
 
 # move the log file to where the browser will expect find it
 
-        shutil.copyfile('casapy.log', 'html/%s' % self._log['logName'])  
+        shutil.move('casapy.log', 'html/%s' % self._log['logName'])  
 
 # Tell the html logger to write out the timing info. Leaving this to the 
 # __del__ method caused problems.

@@ -19,6 +19,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -29,9 +30,12 @@ import os
 import pickle
 import re
 import sys
+import traceback
 import types
 
 # alma modules
+
+import util
 
 class BaseData:
 
@@ -75,8 +79,20 @@ class BaseData:
 
         rtn = self._table.open(self._msName + '/FIELD')
         self._fieldName = self._table.getcol('NAME')
-        self._fieldType = self._table.getcol('SOURCE_TYPE')
+        self._fieldType = util.util.get_source_types(self._table)
         rtn = self._table.close()
+
+# get some 'clean' field names, without chars that might cause trouble in
+# filenames
+
+        self._cleanFieldName = []
+        for fieldName in self._fieldName:
+            cleanFieldName = fieldName.replace('-','_')
+            cleanFieldName = cleanFieldName.replace('+','_')
+            cleanFieldName = cleanFieldName.replace('(','_')
+            cleanFieldName = cleanFieldName.replace(')','_')
+            cleanFieldName = cleanFieldName.replace(' ','_')
+            self._cleanFieldName.append(cleanFieldName)
 
 # list of valid field/spw combinations
 
@@ -137,6 +153,25 @@ class BaseData:
                 chunk = [i+1]
         chunks.append(array(chunk))
         return chunks
+
+
+    def _formatList(self, v, format):
+        """
+        the list v is converted to a string, with each number in the specified
+        format.
+        """
+        result ='['
+        empty = True
+        for item in v:
+            empty = False
+            result += ' ' + (format % item) +','
+        
+        if empty:
+            result += ']'
+        else:
+            result = result[:-1] + ']'
+
+        return result
 
 
     def _getAntennaRange(self):
@@ -272,7 +307,7 @@ class BaseData:
            
         success = self._table.open('%s/FIELD' % self._msName)
         fieldNames = self._table.getcol('NAME')
-        fieldTypes = self._table.getcol('SOURCE_TYPE')
+        fieldTypes = util.util.get_source_types(self._table)
         self._table.close()
         self._results['summary']['field_names'] = fieldNames
         self._results['summary']['field_types'] = fieldTypes
@@ -387,7 +422,7 @@ class BaseData:
 # Open the FIELD sub-Table and from it get the field type.
 
             rtn = self._table.open(self._msName + '/FIELD')
-            source_type_col = self._table.getcol('SOURCE_TYPE')
+            source_type_col = util.util.get_source_types(self._table)
 
             for field_id in range(len(source_type_col)):
                 column_type = source_type_col[field_id]
@@ -413,7 +448,10 @@ class BaseData:
         flagTargetIDs    -- List of IDs of fields potentially flagged.
         """
 
-        self._msFlagger.writeFlaggingStatistics(stageDescription, rules, flagTargetIDs)
+        flagMessage,colour = self._msFlagger.writeFlaggingStatistics(stageDescription,
+         rules, flagTargetIDs)
+
+        return flagMessage, colour
 
 
     def setFlags(self, stageDescription, rules, flags, apply=True):
@@ -456,7 +494,7 @@ class BaseData:
              <h3>Data View</h3>""")
 
         self._htmlLogger.logHTML('''<p>The 'view' in this case simply
-         allowed the 'flagger' direct access to the MeasurementSet.
-         <p>The view was constructed by Python class BaseData.''')
+         allowed the 'flagger' direct access to the MeasurementSet.''')
+#         <p>The view was constructed by Python class BaseData.''')
         return
 

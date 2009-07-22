@@ -58,6 +58,8 @@ NRO45FITSReader::~NRO45FITSReader()
 // Read data header
 Int NRO45FITSReader::read() 
 {
+  LogIO os( LogOrigin( "NRO45FITSReader", "read()", WHERE ) ) ;
+
   // DEBUG
   //cout << "NRO45FITSReader::read()" << endl ;
   //
@@ -70,7 +72,8 @@ Int NRO45FITSReader::read()
   status = dataset_->fillHeader() ;
 
   if ( status != 0 ) {
-    cerr << "Failed to fill data header." << endl ;
+    //cerr << "Failed to fill data header." << endl ;
+    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
   }
 
   return status ;

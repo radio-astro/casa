@@ -553,12 +553,27 @@ bool LogViewer::fileSaveAs()
        QString(), tr("Casa Log Files (*.log)"));
     if (fn.isEmpty())
         return false;
-    fn = fn.section('/', -1);
-    //qDebug() << "fn=" << fn;
-    if (fn == "casapy.log")
-        fn.prepend("~");
-    if (fn.startsWith("-"))
-       fn.replace("-", "_");
+
+    int pos = fn.lastIndexOf('/');
+
+    if (pos < 0)
+       return false;
+
+    QString path = fn.left(pos);
+    QString fnm = fn.section('/', -1);
+    if (fnm == "casapy.log")
+       fnm.prepend("~");
+    if (fnm.startsWith("-"))
+       fnm.replace("-", "_");
+    //if (fnm == "")
+    //    fnm = "~casapy.log";
+    if (!fnm.endsWith(".log"))
+        fnm.append(".log");
+
+    fn = path + '/' + fnm;
+    
+    //qDebug() << "fn=" << fn << "fnm=" << fnm;
+    
     QFile file(fn);
     if (!file.open(QFile::WriteOnly))
         return false;

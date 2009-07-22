@@ -8,18 +8,9 @@ import casac
 from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
 from matplotlib.font_manager import FontProperties 
 
-    
 
-# for Statistics plot
-MATPLOTLIB_FIGURE_ID_1 = 8904
-# for Fit spectrum plot
-MATPLOTLIB_FIGURE_ID_2 = 8905
-# for debug baseline plot
-MATPLOTLIB_FIGURE_ID_3 = 8906
-# for spectrum result
-MATPLOTLIB_FIGURE_ID_4 = 8907
-# for clustering result
-MATPLOTLIB_FIGURE_ID_5 = 8908
+# 0:DebugPlot 1:TPlotRADEC 2:TPlotAzEl 3:TPlotCluster 4:TplotFit 5:TPlotMultiSP 6:TPlotSparseSP 7:TPlotChannelMap 8:TPlotFlag 9:TPlotIntermediate
+MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 8913]
 
 MAX_NhPanel = 5
 MAX_NvPanel = 5
@@ -159,7 +150,9 @@ def ShowResult(mode='init', DataTable=[], rows=[], TimeGap=[], PosGap=[], thresh
     ShowDiffPlot = False
 
     if ShowPlot == False and FigFileDir == False: return
-    PL.figure(MATPLOTLIB_FIGURE_ID_1)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[9])
+    if ShowPlot: PL.ioff()
     Mark = 'bo'
     Plot = []
     
@@ -495,7 +488,9 @@ def StatisticsPlot(PlotData, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
     #            }
 
     if ShowPlot == False and FigFileDir == False: return
-    PL.figure(MATPLOTLIB_FIGURE_ID_1)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[8])
+    if ShowPlot: PL.ioff()
     
     if FigFileDir != False:
         if os.access(FigFileDir+'listofplots.txt', os.F_OK):
@@ -606,7 +601,11 @@ def StatisticsPlot(PlotData, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
 
     if ShowPlot != False: PL.draw()
     if FigFileDir != False:
-        PL.savefig(FigFileDir+FigFileRoot+'.png', format='png', dpi=DPIDetail)
+        OldPlot = FigFileDir+FigFileRoot+'.png'
+        NewPlot = FigFileDir+FigFileRoot+'_trim.png'
+        PL.savefig(OldPlot, format='png', dpi=DPIDetail)
+        #PL.savefig(FigFileDir+FigFileRoot+'.png', format='png', dpi=DPIDetail)
+        os.system('convert %s -trim %s' % (OldPlot, NewPlot))
 
     del data, ScaleOut
     return
@@ -735,7 +734,9 @@ def DrawFitSpectrum(xaxis, rawdata, resultdata, row, counter, Nrow, fitparam, st
         print >> BrowserFile, FigFileRoot+'_%s.png' % Npanel
         BrowserFile.close()
 
-    PL.figure(MATPLOTLIB_FIGURE_ID_2)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[4])
+    if ShowPlot: PL.ioff()
 
     if type(NoChange) != int:
         TitleColor = 'k'
@@ -922,7 +923,9 @@ def DrawMultiSpectra(data, Table, Abcissa, rows, mode='mode', chan0=-1, chan1=-1
     # Plotting routine
     if connect is True: Mark = '-b'
     else: Mark = 'bo'
-    PL.figure(MATPLOTLIB_FIGURE_ID_4)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[5])
+    if ShowPlot: PL.ioff()
     if chan1 == -1:
         chan0 = 0
         chan1 = len(data[rows[0]])
@@ -1090,7 +1093,9 @@ def DrawSparseSpectra(data, Table, Abcissa, Npanel, chan0=-1, chan1=-1, AutoScal
 
     # Plotting routine
     Mark = '-b'
-    PL.figure(MATPLOTLIB_FIGURE_ID_4)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[6])
+    if ShowPlot: PL.ioff()
 
     if AutoScale: 
         # to eliminate max/min value due to bad pixel or bad fitting,
@@ -1294,17 +1299,17 @@ def PlotXY(TableFile, output, Xaxis, Yaxis, Title='None', Xlabel='None', Ylabel=
 def DrawDebugFit(mode='Init', xaxis=[], data=[], Ymin=0, Ymax=1):
 
     if mode.upper() == 'INIT':
-        PL.figure(MATPLOTLIB_FIGURE_ID_3)
+        PL.figure(MATPLOTLIB_FIGURE_ID[0])
         PL.cla()
         PL.clf()
         return
     elif mode.upper() == 'FIRST':
-        PL.figure(MATPLOTLIB_FIGURE_ID_3)
+        PL.figure(MATPLOTLIB_FIGURE_ID[0])
         PL.subplot(121)
         PL.plot(xaxis, data, color='b', linestyle='-', linewidth=0.2)
         return
     else:
-        PL.figure(MATPLOTLIB_FIGURE_ID_3)
+        PL.figure(MATPLOTLIB_FIGURE_ID[0])
         PL.subplot(122)
         PL.plot(xaxis, data, color='b', linestyle='-', linewidth=0.2)
         PL.axis([0, len(xaxis), Ymin, Ymax])
@@ -1323,7 +1328,9 @@ def ShowClusterInChannelSpace(data, BestLines, ShowPlot=True, FigFileDir=False, 
     """
     if ShowPlot == False and FigFileDir == False: return
 
-    PL.figure(MATPLOTLIB_FIGURE_ID_5)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[3])
+    if ShowPlot: PL.ioff()
     PL.cla()
     PL.clf()
 
@@ -1400,7 +1407,9 @@ def ShowCluster(data, Threshold, Lines, Abcissa, RA0, DEC0, ScaleRA, ScaleDEC, m
     # Plotting routine
     #Marks = ['ys', 'cs', 'bs', 'gs']
     Marks = ['gs', 'bs', 'cs', 'ys']
-    PL.figure(MATPLOTLIB_FIGURE_ID_5)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[3])
+    if ShowPlot: PL.ioff()
     X = len(data[0])
     Y = len(data[0][0])
 
@@ -1561,7 +1570,9 @@ def DrawRADEC(Table, rows, connect=True, circle=[], ObsPattern=False, ShowPlot=T
     Aspect = 1.0 / math.cos(Table[0][10] / 180.0 * 3.141592653)
 
     # Plotting routine
-    PL.figure(MATPLOTLIB_FIGURE_ID_1)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[1])
+    if ShowPlot: PL.ioff()
     if connect is True: Mark = 'g-o'
     else: Mark = 'bo'
     PL.cla()
@@ -1691,7 +1702,9 @@ def DrawAzEl(Table, TimeGapList, rows, ShowPlot=True, FigFile=False):
                 ElArr[ndays-1].append(El[n])
 
     # Plotting routine
-    PL.figure(MATPLOTLIB_FIGURE_ID_2)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[2])
+    if ShowPlot: PL.ioff()
     PL.cla()
     PL.clf()
 
@@ -1807,7 +1820,9 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
     elif NChannelMap == 15: (NhPanel, NvPanel) = (5, 3)
     else: (NhPanel, NvPanel) = (5, 3)
     TickSize = 6
-    PL.figure(MATPLOTLIB_FIGURE_ID_5)
+    if ShowPlot: PL.ion()
+    PL.figure(MATPLOTLIB_FIGURE_ID[7])
+    if ShowPlot: PL.ioff()
     # 2008/9/20 Dec Effect has been taken into account
     Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
 

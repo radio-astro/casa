@@ -46,7 +46,7 @@ class imager
     imager();
     virtual ~imager();
 
-    bool advise(int& pixels, Quantity& cell, int& facets, std::string& phasecenter, const bool takeadvice = true, const double amplitudeloss = 0.05, const ::casac::variant& fieldofview = ::casac::initialize_variant("1.0deg"));
+    bool advise(int& pixels, ::casac::record& cell, int& facets, std::string& phasecenter, const bool takeadvice = true, const double amplitudeloss = 0.05, const ::casac::variant& fieldofview = ::casac::initialize_variant("1.0deg"));
 
     bool approximatepsf(const std::string& psf = "", const bool async = false);
 
@@ -76,7 +76,7 @@ class imager
 
     bool filter(const std::string& type = "gaussian", const ::casac::variant& bmaj = ::casac::initialize_variant("1arcsec"), const ::casac::variant& bmin = ::casac::initialize_variant("1arcsec"), const ::casac::variant& bpa = ::casac::initialize_variant("0deg"), const bool async = false);
 
-    bool fitpsf(Quantity& bmaj, Quantity& bmin, Quantity& bpa, const std::string& psf, const bool async = false);
+    bool fitpsf(::casac::record& bmaj, ::casac::record& bmin, ::casac::record& bpa, const std::string& psf, const bool async = false);
 
     bool fixvis(const std::vector<int>& fields = std::vector<int> (1, -1), const std::vector<std::string>& phasedirs = std::vector<std::string> (1, ""), const std::string& refcode = "", const std::vector<double>& distances = std::vector<double> (1, 0.0), const std::string& datacolumn = "all");
 
@@ -118,7 +118,7 @@ class imager
 
     bool restore(const std::vector<std::string>& model = std::vector<std::string> (1, ""), const std::string& complist = "", const std::vector<std::string>& image = std::vector<std::string> (1, ""), const std::vector<std::string>& residual = std::vector<std::string> (1, ""), const bool async = false);
 
-    bool sensitivity(Quantity& pointsource, double& relative, double& sumweights, const bool async = false);
+    bool sensitivity(::casac::record& pointsource, double& relative, double& sumweights, const bool async = false);
 
     bool setbeam(const ::casac::variant& bmaj = ::casac::initialize_variant("1.0arcsec"), const ::casac::variant& bmin = ::casac::initialize_variant("1.0arcsec"), const ::casac::variant& bpa = ::casac::initialize_variant("0deg"), const bool async = false);
 

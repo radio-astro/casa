@@ -1,4 +1,4 @@
-//# QtDBusApp.qo.h: Abstract parent to use the CASA DBus server.
+//# QtDBusXmlApp.qo.h: Abstract parent to use the CASA DBus server.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,9 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef QTDBUSAPP_QO_H_
-#define QTDBUSAPP_QO_H_
+#ifndef QTDBUSXMLAPP_QO_H_
+#define QTDBUSXMLAPP_QO_H_
 
+#include <casaqt/QtUtilities/QtDBusApp.h>
 #include <casaqt/QtUtilities/QtDBusXML.h>
 
 #include <QDBusAbstractAdaptor>
@@ -37,7 +38,7 @@
 namespace casa {
 
 //# Forward Declarations.
-class QtDBusAppAdaptor;
+class QtDBusXmlAppAdaptor;
 
 
 // Abstract parent of classes that want to register themselves with CASA's
@@ -54,7 +55,7 @@ class QtDBusAppAdaptor;
 //   registered using dbusNameIsRegistered().
 // * The method name.  Each object keeps track of what methods it supports, and
 //   this process happens dynamically on a per-message basis.
-// * Whether to call asynchronously or not.  See dbusCallMethodNoRet().
+// * Whether to call asynchronously or not.  See dbusXmlCallNoRet().
 // * The method parameters.  The parameters are set using name/value pairs in a
 //   Record.  Like the method name, this is on a dynamic, per-object basis.
 //   IMPORTANT: not all types are currently supported; see QtDBusXML
@@ -65,25 +66,22 @@ class QtDBusAppAdaptor;
 //
 // If a class wants to receive DBus communications, it must take the following
 // steps:
-// 1) Subclass QtDBusApp.
-// 2) Implement the dbusRunMethod() method, which is called when a DBus method
+// 1) Subclass QtDBusXmlApp.
+// 2) Implement the dbusRunXmlMethod() method, which is called when a DBus method
 //    call is received.  For a discussion of the parameters to this method, see
 //    above.
 // 3) Call dbusRegisterSelf() with a unique name.
 //
 // Classes that wish to send but not receive messages do NOT need to subclass
-// QtDBusApp and can just use the public static methods to call methods on
+// QtDBusXmlApp and can just use the public static methods to call methods on
 // DBus-registered objects.  For a discussion of the parameters to these
 // static methods, see above.
-class QtDBusApp {
+class QtDBusXmlApp : public QtDBusApp {
     
     //# Friend class declarations.
-    friend class QtDBusAppAdaptor;
-    
+    friend class QtDBusXmlAppAdaptor;
+
 public:
-    // Returns true if the given name is registered with CASA's DBus server,
-    // false otherwise.
-    static bool dbusNameIsRegistered(const String& objectName);
     
     // Calls the given method on the object with the given name that is
     // registered with CASA's DBus server, using the given parameters.  The
@@ -93,37 +91,37 @@ public:
     // does NOT give a return value, even if the remote method does.  Returns
     // true for success, false for failure.  Will fail if the given object
     // name is not registered with CASA's DBus server.
-    static bool dbusCallMethodNoRet(const String& fromName,
+    static bool dbusXmlCallNoRet(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, bool isAsync = false);
     
-    // Like dbusCallMethodNoRet(), except that if the remote method has a
+    // Like dbusXmlCallNoRet(), except that if the remote method has a
     // return value of the given type, then the value is set accordingly.  If
     // there is no return value or it is a different type, the value is not
     // set.  If retValueSet is given, it will be set to true if the return
     // value was set and false otherwise.
     // <group>
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, bool& retValue,
             bool* retValueSet = NULL);
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, int& retValue,
             bool* retValueSet = NULL);
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, uInt& retValue,
             bool* retValueSet = NULL);
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, double& retValue,
             bool* retValueSet = NULL);
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, String& retValue,
             bool* retValueSet = NULL);
-    static bool dbusCallMethod(const String& fromName,
+    static bool dbusXmlCall(const String& fromName,
             const String& objectName, const String& methodName,
             const Record& parameters, Record& retValue,
             bool* retValueSet = NULL);
@@ -131,10 +129,10 @@ public:
     
 protected:
     // Constructor.
-    QtDBusApp();
+    QtDBusXmlApp();
     
     // Destructor.  Unregisters from the CASA DBus server if needed.
-    virtual ~QtDBusApp();
+    virtual ~QtDBusXmlApp();
     
     
     // ABSTRACT METHODS //
@@ -146,7 +144,7 @@ protected:
     // asynchronous call or not, are also provided but do not need to be used.
     // Note, however, that asynchronous method calls will NOT use a return
     // value even if one is set.
-    virtual void dbusRunMethod(const String& methodName,
+    virtual void dbusRunXmlMethod(const String& methodName,
             const Record& parameters, Record& retValue,
             const String& callerName, bool isAsync) = 0;
     
@@ -156,7 +154,7 @@ protected:
     // Method that can be overridden if the subclass wants to be informed
     // whenever ANY dbus message is received, even if this object is not the
     // intended recipient.  Note that most applications won't need to do this
-    // (and probably shouldn't) since dbusRunMethod() will be called with the
+    // (and probably shouldn't) since dbusRunXmlMethod() will be called with the
     // appropriate parameters if this object is the intended recipient.
     virtual void dbusXmlReceived(const QtDBusXML& xml) { }
     
@@ -191,46 +189,44 @@ protected:
     
     // Calls the static version of the method with this application's name.
     // <group>
-    bool dbusCallMethodNoRet(const String& objectName,
+    bool dbusXmlCallNoRet(const String& objectName,
             const String& methodName, const Record& parameters,
             bool isAsync = false) {
-        return dbusCallMethodNoRet(dbusSelfRegisteredName(), objectName,
+        return dbusXmlCallNoRet(dbusSelfRegisteredName(), objectName,
                                    methodName, parameters, isAsync); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, bool& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, int& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, uInt& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, double& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, String& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
-    bool dbusCallMethod(const String& objectName, const String& methodName,
+    bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, Record& retValue,
             bool* retValueSet = NULL) {
-        return dbusCallMethod(dbusSelfRegisteredName(), objectName, methodName,
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
     // </group>
     
 private:
-    // Connection to DBus.
-    QDBusConnection dbusConnection_;
     
     // Flag for whether the application is currently registered or not.
     bool dbusRegistered_;
@@ -239,11 +235,11 @@ private:
     QString dbusName_;
     
     // DBus adaptor.
-    QtDBusAppAdaptor* dbusAdaptor_;
+    QtDBusXmlAppAdaptor* dbusAdaptor_;
 
     
     // Method for when one of the slots in the adaptor is activated.  First
-    // sends to dbusXmlReceived(), then to dbusRunMethod().
+    // sends to dbusXmlReceived(), then to dbusRunXmlMethod().
     void dbusSlot(QtDBusXML& xml);
     
     
@@ -251,54 +247,48 @@ private:
     
     // Constants for DBus names.
     // <group>
-    static const QString DBUS_SERVICE_BASE;
-    static const QString DBUS_OBJECT_BASE;
     static const QString DBUS_INTERFACE_NAME;
     static const QString DBUS_MESSAGE_SLOT;
     // </group>
     
-    // QDBusConnection that applications should use.
-    static const QDBusConnection DBUS_CONNECTION;
-    
-    
     // Private Static Methods //
     
     // Helper method for calling remote methods.
-    static bool dbusCallMethod(const String& from, const String& to,
+    static bool dbusXmlCall(const String& from, const String& to,
             const String& methodName, bool methodIsAsync,
             const Record& parameters, Record* retValue);
 };
 
 
-// Subclass of QDBusAbstractAdaptor for use with CASA's QtDBusApp class.  This
-// class is a very thin layer on top of QtDBusApp.
-class QtDBusAppAdaptor : public QDBusAbstractAdaptor {
-    Q_OBJECT
+// Subclass of QDBusAbstractAdaptor for use with CASA's QtDBusXmlApp class.  This
+// class is a very thin layer on top of QtDBusXmlApp.
+class QtDBusXmlAppAdaptor : public QDBusAbstractAdaptor {
+     Q_OBJECT
     
     // Interface name definition.
     // <group>
-    #define CASA_DBUS_INTERFACE "edu.nrao.casa.QtDBusApp"
-    Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.QtDBusApp")
+    #define CASA_DBUS_INTERFACE "edu.nrao.casa.QtDBusXmlApp"
+    Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.QtDBusXmlApp")
     // </group>
     
     //# Friend class declarations.
-    friend class QtDBusApp;
+    friend class QtDBusXmlApp;
     
 public slots:
     // Slot for receiving messages.  If its name is changed,
-    // QtDBusApp::DBUS_MESSAGE_SLOT must be updated.
-    QString messageSlot(const QString& xml);
+    // QtDBusXmlApp::DBUS_MESSAGE_SLOT must be updated.
+    QString xmlSlot(const QString& xml);
     
 private:
     // Constructor which takes the application.
-    QtDBusAppAdaptor(QtDBusApp& app);
+    QtDBusXmlAppAdaptor(QtDBusXmlApp& app);
     
     // Destructor.
-    ~QtDBusAppAdaptor();
+    ~QtDBusXmlAppAdaptor();
     
     
     // Application.
-    QtDBusApp& itsApp_;
+    QtDBusXmlApp& itsApp_;
     
     // Dummy object.
     QObject* itsObject_;

@@ -38,6 +38,16 @@ namespace casa {
 
 // Static //
 
+const int dum_a =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("REDRAW");
+const int dum_b =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("MS_DATA");
+const int dum_c =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CACHE");
+const int dum_d =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CANVAS");
+const int dum_e =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("DISPLAY");
 const int PlotMSParameters::UPDATE_LOG =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("LOG");
 const int PlotMSParameters::UPDATE_PLOTMS_OPTIONS =
@@ -59,7 +69,8 @@ PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
         itsLogPriority_(logPriority),
         itsClearSelectionsOnAxesChange_(clearSelections),
         itsCachedImageWidth_(cachedImageWidth),
-        itsCachedImageHeight_(cachedImageHeight) { }
+        itsCachedImageHeight_(cachedImageHeight) {
+       	}
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) {
     operator=(copy); }

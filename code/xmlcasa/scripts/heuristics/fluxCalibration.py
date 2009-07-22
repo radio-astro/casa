@@ -17,6 +17,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -36,9 +37,9 @@ class FluxCalibration(GainCalibration):
     """
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
-     msName, stageName, bandpassCal, gainSourceType='*GAIN*',
-     fluxSourceType='*FLUX*', timesol=300.0, dataType='amplitude',
-     bandpassFlaggingStage=None):
+     msName, stageName, gainSourceType='*GAIN*',
+     fluxSourceType='*FLUX*', timesol=300.0, dataType='complex',
+     bandpassCal=None, bandpassFlaggingStage=None):
         """Constructor.
 
         Keyword arguments:
@@ -54,7 +55,7 @@ class FluxCalibration(GainCalibration):
         fluxSourceType      -- Type of source to be used for the F calibration.
         timesol             -- 'timesol' parameter passed to calibrater.
         dataType            -- The type of data to be returned by getdata;
-                               'amplitude', 'phase' or 'SNR'.
+                               'amplitude', 'phase', 'complex' or 'SNR'.
         bandpassFlaggingStage -- Name of stage where bandpass edge channels
                                  were detected. If not None then these
                                  channels will be flagged in the FLUX and
@@ -65,8 +66,8 @@ class FluxCalibration(GainCalibration):
         """
 
         GainCalibration.__init__(self, tools, bookKeeper, msCalibrater,
-         msFlagger, htmlLogger, msName, stageName, bandpassCal,
-         [gainSourceType, fluxSourceType], timesol,
+         msFlagger, htmlLogger, msName, stageName, bandpassCal=bandpassCal,
+         sourceTypes=[gainSourceType, fluxSourceType], timesol=timesol,
          bandpassFlaggingStage=bandpassFlaggingStage)
         self._gainSourceType = gainSourceType
         self._fluxSourceType = fluxSourceType
@@ -174,8 +175,20 @@ class FluxCalibration(GainCalibration):
                 except KeyboardInterrupt:
                     raise
                 except:
+                    error_report = self._htmlLogger.openNode('exception',
+                     '%s.flux_transfer_exception' % (self._stageName), True,
+                     stringOutput = True)
+
+                    self._htmlLogger.logHTML('Exception details<pre>')
+                    traceback.print_exc()
+                    traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
+                    self._htmlLogger.logHTML('</pre>')
+                    self._htmlLogger.closeNode()
+
+                    error_report += 'during flux calibration transfer'
+
                     parameters['solve']['error'][data_desc_id] = \
-                     'failed to transfer flux calibration'
+                     error_report
 
                 parameters['data'][data_desc_id]['table'] = ftab
 
@@ -311,17 +324,25 @@ class FluxCalibration(GainCalibration):
         return description
  
 
-    def createDetailedHTMLDescription(self, stageName, parameters=None):
+    def createDetailedHTMLDescription(self, stageName, topLevel=False,
+     parameters=None):
         """Write a description of the class to html.
 
         Keyword arguments:
         stageName  -- Name of the recipe stage using this object.
+        topLevel   -- True if this data 'view' is to be displayed directly,
+                      not passing through a data modifier object.
         parameters -- The dictionary that holds the descriptive information.
         """
         if parameters == None:
             parameters = self._parameters
 
         description = {}
+
+        if parameters.has_key('separate node'):
+            description['gain calibration'] = parameters['separate node']
+            description['bandpass calibration'] = 'no bandpass description'
+            return description
 
         description['bandpass calibration'] = \
          self._bpCal.createDetailedHTMLDescription(stageName, parameters=
@@ -344,24 +365,96 @@ class FluxCalibration(GainCalibration):
               <table CELLPADDING="5" BORDER="1"
                <tr>
                  <th>SpW</th>
-                 <th>Casapy call</th>
-                 <th>error?</th>
+                 <th>Casapy Call</th>
+                 <th>Error?</th>
                </tr>"""
+
+# use &nbsp; to make empty cell look good
 
         for k,entry in parameters['solve']['fluxscale'].iteritems():
             fluxDescription += '<tr>'
             fluxDescription += '<td>%s</td>' % k
             fluxDescription += '<td>%s</td>' % entry
-            fluxDescription += '<td>%s</td>' % parameters['solve']['error'][k]
+            error = parameters['solve']['error'][k]
+            if error == '':
+                fluxDescription += '<td>&nbsp;</td>'
+            else:
+                fluxDescription += '<td>%s</td>' % error
             fluxDescription += '</tr>'
 
         fluxDescription += """
               </table>
-         </ul>
-         <p>The flux calibration was calculated by Python class 
-         FluxCalibration."""
+         </ul>"""
+#         <p>The flux calibration was calculated by Python class 
+#         FluxCalibration."""
 
         description['gain calibration'] = fluxDescription
+
+        if topLevel:
+
+# table of mean gain coefficient amplitudes for the first GAIN
+# calibrator found in the results
+
+            meanAmplitudes = {}
+         
+            gain_fields = self.getFieldsOfType('*GAIN*')
+
+            for k,entry in self._results['data'].iteritems():
+                desc = pickle.loads(k)
+                spw = desc['DATA_DESC_ID']
+                pol = desc['POLARIZATION_ID']
+                if not meanAmplitudes.has_key((spw,pol)):
+                    field_id = desc['FIELD_ID']
+                    if gain_fields.count(field_id) > 0:
+                        meanAmplitudes[(spw,pol)] = {
+                         'data':entry[-1]['meanAmplitude'],
+                         'flag':entry[-1]['meanAmplitudeFlag']}            
+
+            coefficients = """
+          <table CELLPADDING="5" BORDER="1"
+           <tr>
+             <th>Antenna</th>"""
+
+            keys = meanAmplitudes.keys()
+            keys.sort()
+            for spw_pol in keys:
+               coefficients += """
+             <th>SpW %s Pol %s</th>""" % (spw_pol[0], spw_pol[1])
+
+            coefficients += """
+           </tr>"""
+
+            antenna = 0
+            looping = True
+            while looping:
+                looping = False
+                start = True
+                for spw_pol in keys:
+                    if antenna < len(meanAmplitudes[spw_pol]['data']):
+                        looping = True
+                        if start:
+                            coefficients += """
+           <tr>"""
+                            coefficients += """
+            <td>%s</td>""" % antenna
+                            start = False
+
+                        if meanAmplitudes[spw_pol]['flag'][antenna] == 0:
+                            coefficients += """
+            <td>%.2e</td>""" % (meanAmplitudes[spw_pol]['data'][antenna])
+                        else:
+                            coefficients += """
+            <td>-</td>"""
+
+                antenna += 1
+                coefficients += """
+           </tr>"""
+
+            coefficients += """
+          </table>"""
+
+            description['mean gain coefficients'] = coefficients
+
         return description
  
 
@@ -374,19 +467,14 @@ class FluxCalibration(GainCalibration):
 
         description = self.createGeneralHTMLDescription(stageName)
 
-#        self._htmlLogger.logHTML("""
-#             <p>The data view shows the %ss of a flux calibration that was
-#             calculated as follows:
-#             <ul>""" % self._dataType)
+        if self._dataType == 'complex':
+            info = """<p>The data view shows the complex coefficients from a 
+             flux calibration."""
+        else:
+            info = """<p>The data view shows the %ss of the coefficients from
+             a flux calibration.""" % self._dataType
 
-#        self._htmlLogger.logHTML("""
-#              <li>""" + description['bandpass calibration'] + """
-#              <li>""" + description['gain calibration'] + """
-#             </ul>""")
-
-        self._htmlLogger.logHTML("""
-             <p>The data view shows the %ss of a flux calibration.
-             """ % self._dataType)
+        self._htmlLogger.logHTML(info)
 
 
     def writeDetailedHTMLDescription(self, stageName, topLevel,
@@ -401,22 +489,40 @@ class FluxCalibration(GainCalibration):
 
         """
 
+#        print 'writeDetailedHTMLDescription', topLevel, parameters
+
         if parameters == None:
             parameters = self._parameters
 
         description = self.createDetailedHTMLDescription(stageName,
-         parameters=parameters)
+         topLevel=topLevel, parameters=parameters)
 
-        self._htmlLogger.logHTML("""
-         <h3>Data View</h3>
-             <p>The data view shows the %ss of a flux calibration that was 
-             calculated as follows:
-             <ul>""" % self._dataType)
+        if description.has_key('separate node'):
+            self._htmlLogger.logHTML(description['separate node'])
+        else:
 
-        self._htmlLogger.logHTML("""
-              <li>""" + description['bandpass calibration'] + """
-              <li>""" + description['gain calibration'] + """
-             </ul>""")
+            if self._dataType == 'complex':
+                info = """<p>The data view shows the complex coefficients from a 
+                 flux calibration."""
+            else:
+                info = """<p>The data view shows the %ss of the coefficients from
+                 a flux calibration.""" % self._dataType
+
+            self._htmlLogger.logHTML("""
+             <h3>Data View</h3>
+                 %s The mean
+                 amplitudes (averaged over time) of the flux calibrated
+                 gain coefficients
+                 derived from the GAIN calibrator for each antenna are shown
+                 below:
+                 %s
+                 <p>The flux calibration was calculated as follows
+                 <ul>""" % (info, description['mean gain coefficients']))
+
+            self._htmlLogger.logHTML("""
+                  <li>""" + description['bandpass calibration'] + """
+                  <li>""" + description['gain calibration'] + """
+                 </ul>""")
 
 
 class FluxCalibrationAmplitude(FluxCalibration):

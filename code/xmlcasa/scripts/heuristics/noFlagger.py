@@ -11,6 +11,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
+#  2-Jun-2009 jfl line and continuum release.
 
 from baseFlagger import *
 
@@ -48,12 +49,10 @@ class NoFlagger(BaseFlagger):
 #        print 'NoFlagger.operate called'
         self._htmlLogger.timing_start('noFlagger.operate')
 
-# record this stage in the FLAG_CMD sub-table even though no flags
-# have been set. 
-
-        dataView.setFlags(stageDescription, [], {})
+# no message returned
 
         self._htmlLogger.timing_stop('noFlagger.operate')
+        return 'test', 'green'
   
 
     def writeGeneralHTMLDescription(self, stageName):

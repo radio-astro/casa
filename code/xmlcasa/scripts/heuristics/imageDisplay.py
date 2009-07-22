@@ -18,6 +18,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -575,8 +576,8 @@ class ImageDisplay(BaseDisplay):
 
 # write general description of the data view, operation
 
-        self.writeBaseHTMLDescriptionHead(stageDescription, dataView,
-         dataOperator)
+        flagMessage,colour = self.writeBaseHTMLDescriptionHead(stageDescription,
+         dataView, dataOperator)
 
 # display results
 
@@ -677,13 +678,6 @@ class ImageDisplay(BaseDisplay):
                 title = description['TITLE']
                 yoff = self._plotText(0.1, yoff, title, 35)
 
-# history
-            
-#            yoff -= 0.1
-#            yoff = self._plotText(0.1, yoff, 'Calculation History:', 50)
-#            yoff = self._plotText(0.1, yoff,
-#                 'Origin:%s' % history, 50, mult=0.8)
- 
 # flagging
 
             yoff -= 0.1
@@ -768,8 +762,15 @@ class ImageDisplay(BaseDisplay):
         self.writeBaseHTMLDescriptionTail(stageDescription, dataView,
          dataOperator, logName)
 
+# pass out parameters from data view, if present
+        
+        if dataResult.has_key('parameters'):
+            dataParameters = dataResult['parameters']
+        else:
+            dataParameters = None
+
         self._htmlLogger.timing_stop('imageDisplay.display')
-        return
+        return flagMessage, colour, dataParameters
 
 
     def writeGeneralHTMLDescription(self, stageName):
@@ -796,7 +797,7 @@ class ImageDisplay(BaseDisplay):
          <p>If data were flagged during this reduction stage then
          each display contains 2 images; one displaying the data view before
          flagging, the other after flagging. The reasons for data having
-         been flagged are colour coded.
-         <p>The display was produced by Python class ImageDisplay.
-         """)
+         been flagged are colour coded.""")
+#         <p>The display was produced by Python class ImageDisplay.
+#         """)
 

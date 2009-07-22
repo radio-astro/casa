@@ -274,5 +274,6 @@ class TaqlFlagger(BaseFlagger):
 
             self._htmlLogger.logHTML('<li> %s' % description)
 
-        self._htmlLogger.logHTML('''</ul>
-        <p>The flagging was performed by Python class TaqlFlagger.''')
+        self._htmlLogger.logHTML('''</ul>''')
+#        self._htmlLogger.logHTML('''</ul>
+#        <p>The flagging was performed by Python class TaqlFlagger.''')

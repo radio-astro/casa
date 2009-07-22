@@ -21,6 +21,7 @@
 # 12-Dec-2008 jfl 12-dec release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -153,13 +154,16 @@ class BaseImage(BaseData):
 
 
     def _fillData(self, description, dataType, dataDictionary, mapField, 
-     cleanBoxField=None, thresholdField=None, rms2dField=None, 
+     error_key, cleanBoxField=None, quarterBoxField=None, thresholdField=None,
+     rms2dField=None, 
      additional_info={}, noisyChannelField=None,
      bandpassFlaggingStageField=None, emptyChannelField=None):
         """Utility method to fill the results structure from the current 
         image.
 
         Keyword arguments:
+        error_key         -- key in error dictionary that applies to this
+                             data product.
         noisyChannelField -- Channels designated as lying at the 'edge' of the
                              bandpass where S/N is lower.
         bandpassFlaggingStageField -- Name of stage where noisy channels 
@@ -170,10 +174,10 @@ class BaseImage(BaseData):
                              map.
         """
 
-#        print 'BaseImage._fillData() called', map_msName
+#        print 'BaseImage._fillData() called', description['TITLE']
         self._htmlLogger.timing_start('BaseImage._fillData')
 
-        if dataDictionary['error'] == None:
+        if dataDictionary['error'][error_key] == None:
             flagging,flaggingReason,flaggingApplied = self._msFlagger.getFlags()
 
 # get the current data
@@ -225,9 +229,9 @@ class BaseImage(BaseData):
             elif noisy_channels != None and empty_channels!=None:
                 flag_channels = list(noisy_channels) + list(empty_channels)
 
-#            print 'edge channels', noisy_channels
-#            print 'empty channels', empty_channels
-#            print 'flag_channels', flag_channels
+            print 'edge channels', noisy_channels
+            print 'empty channels', empty_channels
+            print 'flag_channels', flag_channels
 
 # remove duplicate channels and sort
 
@@ -269,6 +273,7 @@ class BaseImage(BaseData):
                 for region in channelRegions:
                     mask += '%s:%s,' % (region[0], region[1])
                 mask = mask[:-1] + '])'
+  
                 pixels = self._image.getregion(mask=mask, axes=[3],
                  list=True, dropdeg=True)
             else:
@@ -312,18 +317,26 @@ class BaseImage(BaseData):
                      (box[1] - crpix[1]) * cdelt[1] * 180.0 * 3600.0 / math.pi,
                      (box[2] - crpix[0]) * cdelt[0] * 180.0 * 3600.0 / math.pi,
                      (box[3] - crpix[1]) * cdelt[1] * 180.0 * 3600.0 / math.pi])
+            if quarterBoxField != None and dataDictionary.has_key(quarterBoxField):
+                box = dataDictionary[quarterBoxField]
+                result['clean_limit_box'] = [
+                 (box[0] - crpix[0]) * cdelt[0] * 180.0 * 3600.0 / math.pi,
+                 (box[1] - crpix[1]) * cdelt[1] * 180.0 * 3600.0 / math.pi,
+                 (box[2] - crpix[0]) * cdelt[0] * 180.0 * 3600.0 / math.pi,
+                 (box[3] - crpix[1]) * cdelt[1] * 180.0 * 3600.0 / math.pi]
+
             for k, v in additional_info.iteritems():
                 result[k] = v
         else:
             result = {}
-        result['error'] = dataDictionary['error']
+        result['error'] = dataDictionary['error'][error_key]
 
         pickled_description = pickle.dumps(description)
         if self._results['data'].has_key(pickled_description):
             self._results['data'][pickled_description].append(result)
         else:
             self._results['data'][pickled_description] = [result]
-                        
+
         self._htmlLogger.timing_stop('BaseImage._fillData')
 
 

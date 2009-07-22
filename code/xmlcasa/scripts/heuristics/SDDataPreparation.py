@@ -65,14 +65,14 @@ def ReadData(filename, TableOut, SummaryOut):
     # ASDM data
     import sys
     p=sys.path
-    b5654=False
+    olderversion=False
     for ip in p:
-        if ( ip.find('20.0.5654') != -1 ):
-            b5654=True
+        if ( ip.find('20.0.5654') != -1 or ip.find('23.1.6826') ):
+            olderversion=True
             break
     if ( os.path.isdir(filename) and os.path.exists(filename+'/ASDM.xml') ):
         tasks.importasdm(asdm=filename,corr_mode='all',srt='all',time_sampling='all',ocorr_mode='ao',async=False)
-        if b5654:
+        if olderversion:
             s=sd.scantable(filename+'.ms',average=False)
         else:
             s=sd.scantable(filename+'.ms',average=False,getpt=True)
@@ -81,7 +81,7 @@ def ReadData(filename, TableOut, SummaryOut):
         filename=filename+'.ms'
         os.system('\\rm -rf '+filename+'.ms.flagversions')
     else:
-        if b5654:
+        if olderversion:
             s = sd.scantable(filename, average=False)
         else:
             s = sd.scantable(filename, average=False, getpt=True)
@@ -238,7 +238,8 @@ def ReadData(filename, TableOut, SummaryOut):
         else:
             #RestFreq = s.get_restfreqs()[IF]/1.0e9
             RestFreq = s.get_restfreqs()[0]/1.0e9
-        if re.match('^AP', TelName) or re.match('^SMT', TelName) or re.match('^HHT', TelName):
+        #if re.match('^AP', TelName) or re.match('^SMT', TelName) or re.match('^HHT', TelName):
+        if re.match('APEX$', TelName) or re.match('^SMT', TelName) or re.match('^HHT', TelName):
             ##Abcissa[IF].append(NA.array(s.get_abcissa()[0]) + RestFreq)
             Abcissa[IF].append(NP.array(s.get_abcissa()[0]) + RestFreq)
         else:
@@ -285,19 +286,32 @@ def RenumASAPData(filename):
     scnos = s.getscannos()
     if not isasapf:
         s.save(tabname)
-    if len(scnos) < nr :
-	tbtool = casac.homefinder.find_home_by_name('tableHome')
-	tb = tbtool.create()
-    	tb.open(tabname, nomodify=False)
-    	scol = tb.getcol('SCANNO')
-        #newscol = NP.arange(len(scol))
-        newscol = NP.arange(len(scol)).tolist()
-        ok = tb.putcol('SCANNO',newscol)
-        tb.flush()
-        tb.close()
-        tmpout = sd.scantable(tabname,False)
-    else:
-        tmpout = s.copy()
+##  26/06/09 TN
+##  Renumbering SCANNO is always enabled.
+##     if len(scnos) < nr :
+## 	tbtool = casac.homefinder.find_home_by_name('tableHome')
+## 	tb = tbtool.create()
+##     	tb.open(tabname, nomodify=False)
+##     	scol = tb.getcol('SCANNO')
+##         #newscol = NP.arange(len(scol))
+##         newscol = NP.arange(len(scol)).tolist()
+##         ok = tb.putcol('SCANNO',newscol)
+##         tb.flush()
+##         tb.close()
+##         tmpout = sd.scantable(tabname,False)
+##     else:
+##         tmpout = s.copy()
+    tbtool = casac.homefinder.find_home_by_name('tableHome')
+    tb = tbtool.create()
+    tb.open(tabname, nomodify=False)
+    scol = tb.getcol('SCANNO')
+    #newscol = NP.arange(len(scol))
+    newscol = NP.arange(len(scol)).tolist()
+    ok = tb.putcol('SCANNO',newscol)
+    tb.flush()
+    tb.close()
+    tmpout = sd.scantable(tabname,False)
+
     del s    
     return(tmpout)
 
@@ -421,7 +435,7 @@ def WriteMSData(filename, MSout, SpStorage, DataTable, outform='ASAP', LogLevel=
         tb.open(MSout+'/OBSERVATION',nomodify=False)
         telname=tb.getcol('TELESCOPE_NAME')
         for i in range(len(telname)):
-            if ( telname[i].find('APEX') != -1 ):
+            if ( telname[i].find('APEX-12m') != -1 ):
                 telname[i] = 'ALMA'
         tb.putcol('TELESCOPE_NAME',telname)
         tb.flush()
@@ -569,7 +583,8 @@ def WriteNewMSData(ReferenceFile, MSout, SpStorage, Table, outform='ASAP', LogLe
         #L_scanno.append(0)
         #L_tsys.append(Ref_tsys)
         #L_interval.append(Ref_interval * Table[row][6])
-        intervalCol[row] = Ref_interval * Table[row][6]
+        #intervalCol[row] = Ref_interval * Table[row][6]
+        intervalCol[row] = 0.1
 #    dir1 = NA.array(L_dir1,dtype='float64')
 #    dir2 = NA.array(L_dir2,dtype='float64')
     #NewDirectionCol = NA.array([dir1, dir2])
@@ -634,7 +649,7 @@ def WriteNewMSData(ReferenceFile, MSout, SpStorage, Table, outform='ASAP', LogLe
         tb.open(MSout+'/OBSERVATION',nomodify=False)
         telname=tb.getcol('TELESCOPE_NAME')
         for i in range(len(telname)):
-            if ( telname[i].find('APEX') != -1 ):
+            if ( telname[i].find('APEX-12m') != -1 ):
                 telname[i] = 'ALMA'
         tb.putcol('TELESCOPE_NAME',telname)
         tb.flush()

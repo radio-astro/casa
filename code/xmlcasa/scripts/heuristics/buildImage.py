@@ -299,7 +299,6 @@ class BuildImage(BaseDataModifier):
                 Each item in the list from the 'view object' is for a 
                 different value of %s, and this value is the y coordinate 
                 of the slice in the built 2-d array.
-             <p>The view was constructed by Python class BuildImage.
          """ % self._yAxis)
 
         self._htmlLogger.logHTML("""
