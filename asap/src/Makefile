@@ -11,9 +11,19 @@ TARGET   := /tmp/_asap.so
 # the casa environment AIPSPATH has to be defined
 CASAROOT  := $(word 1, $(CASAPATH))
 CASAARCH  := $(word 2, $(CASAPATH))
-CASAINC   := -I$(CASAROOT)/code/include -I$(CASAROOT)/$(CASAARCH)/include/casacore -I$(CASAROOT)/$(CASAARCH)/include
-CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 
+COREINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=COREINCD eval_vars) && echo $$COREINCD)
+CORELIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=CORELIB eval_vars) && echo $$CORELIB)
+WCSLIBLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=WCSLIBLIBD eval_vars) && echo $$WCSLIBLIBD)
+WCSLIBLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=WCSLIBLIB eval_vars) && echo $$WCSLIBLIB)
+PYTHONLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIBD eval_vars) && echo $$PYTHONLIBD)
+PYTHONINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONINCD eval_vars) && echo $$PYTHONINCD)
+PYTHONLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIB eval_vars) && echo $$PYTHONLIB)
+BOOSTROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=BOOSTROOT eval_vars) && echo $$BOOSTROOT)
+
+CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
+CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
+USELIB := lib
 
 # the compiler
 ifndef CXX
@@ -23,7 +33,6 @@ endif
 # compiler flags
 CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
-#CXXOPTS := -DAIPS_NO_TEMPLATE_SRC
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
@@ -34,32 +43,19 @@ endif
 # cfitsio
 CFITSIOROOT := /usr
 CFITSIOINC := -I$(CFITSIOROOT)/include/cfitsio
-#CFITSIOLIB := -L$(CFITSIOROOT)/lib -lcfitsio
 CFITSIOLIB := -lcfitsio
 
 #rpfits
 RPFITSROOT := /usr
-#RPFITSLIB := $(RPFITSROOT)/lib/librpfits.a
 RPFITSLIB := -lrpfits
 
-#wcs
-WCSLIB := -lwcs
-
 G2CROOT := /usr
-#G2CARCH := $(G2CROOT)/lib/gcc/i386-apple-darwin8.7.1/4.2.0/libgcc.a
-#G2CARCH := $(G2CROOT)/lib/gcc/powerpc-apple-darwin8.7.0/4.2.0/libgcc.a
-G2CARCH := $(G2CROOT)/lib/gcc/i386-redhat-linux/4.1.2/libgcc.a
-#G2CLIB := $(G2CROOT)/lib/libgfortran.a
-G2CLIB := $(G2CARCH)
-#G2CLIB := -lg2c
+G2CLIB := -lgfortran
 
 # This assumes all casa libs are static only (*.a)
 # if not than there might by symbol resolution errors.
-CASAPPLIB := -L$(CASALIB) \
-             -latnf -lcasa_images -lcasa_ms -lcasa_components -lcasa_coordinates \
-             -lcasa_lattices -lcasa_fits -lcasa_measures -lcasa_measures_f \
-             -lcasa_tables -lcasa_scimath -lcasa_scimath_f -lcasa_casa  \
-             $(WCSLIB)  \
+CASAPPLIB := -L$(CASALIB) -latnf $(CORELIB) \
+             -L$(WCSLIBLIBD) $(WCSLIBLIB) \
              $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
 
 # darwin specific CASA flags
@@ -70,10 +66,8 @@ else
 endif
 
 # python
-PYVERSION := 2.5
-PYTHONROOT := /usr/lib/casapy
-PYTHONINC := -I$(PYTHONROOT)/include/python$(PYVERSION)
-PYTHONLIB := -L$(PYTHONROOT)/lib -lpython$(PYVERSION)
+PYTHONINC := $(addprefix -I,$(PYTHONINCD))
+PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
 
 # use python universal build
 ifeq "$(CASAARCH)" "darwin"
@@ -87,12 +81,8 @@ endif
 LD        := $(CXX)
 
 # has to be build with same g++ version as casa
-#BOOSTROOT := /home/casa/boost
-BOOSTROOT := /usr/lib/casapy
-#BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python-gcc34
 BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python
-#BOOSTINC  := -I$(BOOSTROOT)/include/boost-1_35
-BOOSTINC  := -I$(BOOSTROOT)/include -I$(BOOSTROOT)/include/boost
+BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
