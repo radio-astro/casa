@@ -92,7 +92,7 @@ BOOSTROOT := /usr/lib/casapy
 #BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python-gcc34
 BOOSTLIB  := -L$(BOOSTROOT)/lib -lboost_python
 #BOOSTINC  := -I$(BOOSTROOT)/include/boost-1_35
-BOOSTINC  := -I$(BOOSTROOT)/include/boost
+BOOSTINC  := -I$(BOOSTROOT)/include -I$(BOOSTROOT)/include/boost
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
