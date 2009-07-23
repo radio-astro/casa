@@ -7290,7 +7290,7 @@ Bool Imager::createFTMachine()
     }
     ft_p->setPointingDirColumn(pointingDirCol_p);
 
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     // Get bigger chunks o'data: this should be tuned some time
     // since it may be wrong for e.g. spectral line
     vi.setRowBlocking(100);
