@@ -99,6 +99,15 @@ INC += -I/usr/include/cfitsio
 endif
 
 ##
+## setup INSTDIR
+##
+ifneq "$(INSTDIR)" ""
+instlib_path := $(INSTDIR)/lib/
+else
+instlib_path :=
+endif
+
+##
 ## setup DESTDIR
 ##
 ifeq "$(DESTDIR)" ""
@@ -108,17 +117,13 @@ DESTDIR := $(shell pwd)/build
 else
 ifeq "$(ARCH)" ""
 ARCH := $(shell echo $$CASAPATH | perl -pe "s|\S+\s+(\S+).*|\$$1|")
+ifneq "$(ARCH)" ""
+ifeq "$(instlib_path)" ""
+instlib_path := $(DESTDIR)/$(ARCH)/lib/
 endif
 endif
 endif
-
-##
-## setup INSTDIR
-##
-ifneq "$(INSTDIR)" ""
-instlib_path := $(INSTDIR)/lib/
-else
-instlib_path :=
+endif
 endif
 
 INCDIR := $(DESTDIR)/include
