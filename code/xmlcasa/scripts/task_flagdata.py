@@ -5,9 +5,12 @@ from taskinit import *
 pathname = os.environ.get('CASAPATH').split()[0]
 arch     = os.environ.get('CASAPATH').split()[1]
 if pathname.find('lib') >= 0:
-        filepath = pathname+'/lib/python2.5/heuristics/'
+   filepath = pathname+'/lib/python2.5/heuristics/'
 else:
-        filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
+   if pathname.find('Contents') >= 0:
+      filepath = pathname+= '/Resources/python/heuristics/'
+   else :
+      filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
 
 sys.path.append(filepath)
 
