@@ -8,7 +8,7 @@ if pathname.find('lib') >= 0:
    filepath = pathname+'/lib/python2.5/heuristics/'
 else:
    if pathname.find('Contents') >= 0:
-      filepath = pathname+= '/Resources/python/heuristics/'
+      filepath = pathname+ '/Resources/python/heuristics/'
    else :
       filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
 
