@@ -14,7 +14,7 @@ LEXCOMPILE = $(LEX) $(LFLAGS) $(AM_LFLAGS)
 YACCCOMPILE = $(YACC) $(YFLAGS) $(AM_YFLAGS)
 
 .ll.lcc:
-	$(LEXCOMPILE) -P $* -o $@ $<
+	$(LEXCOMPILE) -P$* -o$@ $<
 
 .yy.ycc:
 	$(YACCCOMPILE) -p $* -o $@ $<
