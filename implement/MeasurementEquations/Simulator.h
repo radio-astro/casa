@@ -199,8 +199,8 @@ public:
 
   Bool settrop(const String& mode, 
 	       const String& table,
-	       const Float timescale,
-	       const Float rms);
+	       const Float pwv,
+	       const Float scale);
 
   // Apply antenna pointing and squint errors
   Bool setpointingerror(const String& epJTableName,

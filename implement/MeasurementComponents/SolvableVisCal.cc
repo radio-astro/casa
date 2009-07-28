@@ -420,9 +420,10 @@ CalCorruptor::CalCorruptor(const Int nSim) :
   nSim_(nSim),
   initialized_(False),
   prtlev_(PRTLEV),
-  curr_slot_(-1)
-{
-}
+  curr_slot_(-1),
+  curr_spw_(-1), nSpw_(0),
+  curr_ant_(-1), nAnt_(0) 
+{}
 
 CalCorruptor::~CalCorruptor() {}
 
@@ -513,8 +514,8 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
 
 
 // Set up simulated params
-void SolvableVisCal::setupSim(const Int& nSim, VisSet& vs, const Record& simpar) {
-
+Int SolvableVisCal::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
+{
   if (prtlev()>2) cout << "      SVC::setupSim()" << endl;
 
   // This method only called in simulate context!
@@ -527,24 +528,23 @@ void SolvableVisCal::setupSim(const Int& nSim, VisSet& vs, const Record& simpar)
 
 
 
-void SolvableVisCal::simPar(VisBuffGroupAcc& vbga) {
+Bool SolvableVisCal::simPar(VisBuffGroupAcc& vbga) {
   
   if (prtlev()>2) cout << "      SVC::simPar()" << endl;
-
   // This method only called in simulate context!
   AlwaysAssert((isSimulated()),AipsError);
 
   // Every VC needs to have its own version of this!
   throw(AipsError("This VisCal doesn't yet support simulation"));
- 
+  return False;
 }
 
 
 String SolvableVisCal::siminfo() {
 
   ostringstream o;
-  o << boolalpha
-    << typeName() << " <simulated>"
+  //o << boolalpha
+  o << "simulated " << typeName() 
     << ": output table="      << calTableName()
     << " simint="     << simint()
     << " t="          << interval();
@@ -1025,11 +1025,11 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     logSink() << "Combining fields." << LogIO::POST;
   
 
-  if (!isSimulated()) {
+  //if (!isSimulated()) {
     logSink() << "For solint = " << solint() << ", found "
 	      <<  nSol << " solution intervals."
 	      << LogIO::POST;
-  }
+  //}
 
   // Inflate the CalSet
   inflate(nChanParList(),startChanList(),nChunkPerSpw);
@@ -1041,6 +1041,214 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   return nSol;
 
 }
+
+
+
+
+
+
+
+Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes) {
+
+  // New version that counts solutions (which may overlap in 
+  //   field and/or ddid) rather than chunks
+
+  // Set Nominal per-spw channelization
+  setSolveChannelization(vs);
+
+  // Interpret solution interval for the VisIter
+  Double iterInterval(max(interval(),DBL_MIN));
+  if (interval() < 0.0) {   // means no interval (infinite solint)
+    iterInterval=0.0;
+    interval()=DBL_MAX;
+  }
+
+  if (prtlev()>2) {
+    cout << "simint = " << interval() << endl;
+    cout << boolalpha << "combscan() = " << combscan() << endl;
+    cout << boolalpha << "combfld()  = " << combfld() << endl;
+    cout << boolalpha << "combspw()  = " << combspw() << endl;
+  }
+
+  Int nsortcol(4+Int(!combscan()));  // include room for scan
+  Block<Int> columns(nsortcol);
+  Int i(0);
+  columns[i++]=MS::ARRAY_ID;
+  if (!combscan()) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
+  if (!combfld()) columns[i++]=MS::FIELD_ID;      // force field boundaries
+  if (!combspw()) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
+  columns[i++]=MS::TIME;
+  if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
+  if (combfld()) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
+  if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
+  
+  if (prtlev()>2) {
+    cout << "Sort columns: ";
+    for (Int i=0;i<nsortcol;++i) 
+      cout << columns[i] << " ";
+    cout << endl;
+  }
+
+  vs.resetVisIter(columns,iterInterval);
+  
+  // Number of VisIter chunks per spw
+  Vector<Int> nChunkPerSpw(vs.numberSpw(),0);
+
+  // Number of VisIter chunks per solution
+  nChunkPerSol.resize(100);
+  nChunkPerSol=0;
+
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+  vi.originChunks();
+  vi.origin();
+    
+  Double time0(86400.0*floor(vb.time()(0)/86400.0));
+  Double time1(0.0),time(0.0);
+
+  Int thisscan(-1),lastscan(-1);
+  Int thisfld(-1),lastfld(-1);
+  Int thisspw(-1),lastspw(-1);
+  Int chunk(0);
+  Int sol(-1);
+  Double soltime1(-1.0);
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
+    vi.origin();
+    time1=vb.time()(0);  // first time in this chunk
+    thisscan=vb.scan()(0);
+    thisfld=vb.fieldId();
+    thisspw=vb.spectralWindow();
+    
+    nChunkPerSpw(thisspw)++;
+
+    // New chunk means new sol interval, IF....
+    if ( (!combfld() && !combspw()) ||              // not combing fld nor spw, OR
+	 ((time1-soltime1)>interval()) ||           // (combing fld and/or spw) and solint exceeded, OR
+	 ((time1-soltime1)<0.0) ||                  // a negative time step occurs, OR
+	 (!combscan() && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
+	 (!combspw() && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
+	 (!combfld() && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR 
+	 (sol==-1))  {                              // this is the first interval
+      soltime1=time1;
+      sol++;
+      if (prtlev()>4) {
+	cout << "--------------------------------" << endl;
+	cout << "sol = " << sol << endl;
+      }
+      // increase size of nChunkPerSol array, if needed
+      if (nChunkPerSol.nelements()<uInt(sol+1))
+	nChunkPerSol.resize(nChunkPerSol.nelements()+100,True);
+      nChunkPerSol(sol)=0;
+      // keep the times!
+      if (solTimes.nelements()<uInt(sol+1))
+	solTimes.resize(solTimes.nelements()+100,True);
+      solTimes(sol)=soltime1;
+    }
+
+    // Increment chunk-per-sol count for current solution
+    nChunkPerSol(sol)++;
+
+    if (prtlev()>4) {
+      cout << "          ck=" << chunk << " " << soltime1-time0 << endl;
+      
+      Int iter(0);
+      for (vi.origin(); vi.more();vi++,iter++) {
+	time=vb.time()(0);
+	cout  << "                 " << "vb=" << iter << " ";
+	cout << "ar=" << vb.arrayId() << " ";
+	cout << "sc=" << vb.scan()(0) << " ";
+	if (!combfld()) cout << "fl=" << vb.fieldId() << " ";
+	if (!combspw()) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << "t=" << floor(time-time0)  << " (" << floor(time-soltime1) << ") ";
+	if (combfld()) cout << "fl=" << vb.fieldId() << " ";
+	if (combspw()) cout << "sp=" << vb.spectralWindow() << " ";
+	cout << endl;
+      }
+    }
+    
+    lastscan=thisscan;
+    lastfld=thisfld;
+    lastspw=thisspw;
+    
+  }
+  
+  if (prtlev()>2) {
+    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
+    cout << "nchunk = " << chunk << endl;
+  }
+
+  Int nSol(sol+1);
+  
+  nChunkPerSol.resize(nSol,True);
+  solTimes.resize(nSol,True);
+  
+  spwMap().resize(vs.numberSpw());
+  indgen(spwMap());
+  Vector<Int> spwlist=spwMap()(nChunkPerSpw>0).getCompressedArray();
+  Int spwlab=0;
+  if (combspw()) {
+    while (nChunkPerSpw(spwlab)<1) spwlab++;
+    if (prtlev()>2) cout << "Obtaining " << nSol << " solutions, labelled as spw=" << spwlab  << endl;
+    spwMap()=-1;  // TBD: needed?
+    spwMap()(nChunkPerSpw>0)=spwlab;
+
+    if (prtlev()>2)
+      cout << "nChanParList = " << nChanParList()(nChunkPerSpw>0).getCompressedArray() 
+	   << "==" << nChanParList()(spwlab) <<  endl;
+
+    // Verify that all spws have same number of channels (so they can be combined!)
+    if (!allEQ(nChanParList()(spwMap()>-1).getCompressedArray(),nChanParList()(spwlab)))
+      throw(AipsError("Spws with different selected channelizations cannot be combined."));
+
+    nChunkPerSpw = 0;
+    nChunkPerSpw(spwlab)=nSol;
+  }
+
+  if (prtlev()>2) {
+    cout << " spwMap()  = " << spwMap() << endl;
+    cout << " spwlist = " << spwlist << endl;
+    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
+    cout << "Total solutions = " << nSol << endl;
+  }
+  if (prtlev()>4) 
+    cout << "nChunkPerSim = " << nChunkPerSol << endl;
+  
+
+  if (combscan())
+    logSink() << "Combining scans." << LogIO::POST;
+  if (combspw()) 
+    logSink() << "Combining spws: " << spwlist << " -> " << spwlab << LogIO::POST;
+  if (combfld()) 
+    logSink() << "Combining fields." << LogIO::POST;
+  
+
+  logSink() << "For simint = " << solint() << ", found "
+	    <<  nSol << " solution intervals."
+	    << LogIO::POST;
+
+  // Inflate the CalSet
+  inflate(nChanParList(),startChanList(),nChunkPerSpw);
+
+  // Size the solvePar arrays
+  initSolvePar();
+
+  // Return the total number of solution intervals
+  return nSol;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void SolvableVisCal::initSolve(VisSet& vs) {
 

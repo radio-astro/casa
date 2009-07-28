@@ -71,14 +71,34 @@ class CalCorruptor {
   inline Bool& initialized() { return initialized_; };
   inline Int& prtlev() { return prtlev_; };
   inline Int& curr_slot() { return curr_slot_; };
+  inline Double& curr_time() { return curr_time_; };
+  inline Double& startTime() { return starttime_; };
+  inline Double& stopTime() { return stoptime_; };
+  inline Double& slot_time(const Int i) { return slot_times_(i); };
+  inline Double& slot_time() { return slot_times_(curr_slot()); };
+  inline Int& currAnt() { return curr_ant_; };
+  inline Int& currSpw() { return curr_spw_; };
+  inline Int& nAnt() { return nAnt_; };
+  inline Int& nSpw() { return nSpw_; };  
+  inline Int& currChan() { return curr_chan_; };  
+  inline Int& nChan() { return fnChan_[currSpw()]; };  
+  inline Vector<Float>& fRefFreq() { return fRefFreq_; };
+  inline Vector<Float>& fWidth() { return fWidth_; };
+  inline Vector<Int>& fnChan() { return fnChan_; };
   virtual void initialize()=0;
-     
+ 
  protected:
    
    Int nSim_;
    Bool initialized_;
    Int prtlev_;
    Int curr_slot_;
+   Int nAnt_,curr_ant_;
+   Int nSpw_,curr_spw_,curr_chan_;
+   Double curr_time_,starttime_,stoptime_;
+   Vector<Double> slot_times_;   
+   Vector<Float> fRefFreq_,fWidth_; // for each spw
+   Vector<Int> fnChan_;
 
  private:
 
@@ -314,10 +334,10 @@ public:
   virtual void setSimulate(const Record& simpar);
 
   // Set up simulated params wrt visset
-  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
+  virtual Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
 
   // Calculate simulated parameters by some means 
-  virtual void simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
 
   // access to simulation variables that are general to all VisCals
   inline String& simint() { return simint_; };
@@ -332,8 +352,9 @@ public:
   CalCorruptor *corruptor_p;
 
   // RI TODO simplify? i.e. do we need full comb machinery?
-  inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
-    return sizeUpSolve(vs,nChunkPerSol) ; }
+  Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+  //inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
+  //  return sizeUpSolve(vs,nChunkPerSol) ; }
  
 
 protected:

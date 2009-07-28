@@ -1032,33 +1032,30 @@ Bool Simulator::setapply(const String& type,
 
 Bool Simulator::settrop(const String& mode, 
 			const String& caltable,   // output
-			// RI TODO take out timescale as a user parameter?
-			const Float timescale,
-			const Float rms) {
-  // RI TODO change rms to vector Float or complex?
-  //const Vector<Double>& rms) {
+			const Float pwv,
+			const Float scale) {
   
   LogIO os(LogOrigin("Simulator", "settrop()", WHERE));
 
   try {
         
-    if (mode=="test"||mode=="screen") {
+    if (mode=="test"||mode=="individual"||mode=="screen") {
       
       // Set record format for calibration table simulation information
       RecordDesc simparDesc;
       simparDesc.addField ("type", TpString);
       simparDesc.addField ("caltable", TpString);
-      simparDesc.addField ("timescale", TpFloat);
-      simparDesc.addField ("rms", TpFloat);
+      simparDesc.addField ("mean_pwv", TpFloat);
       simparDesc.addField ("mode", TpString);
+      simparDesc.addField ("scale", TpFloat);
             
       // Create record with the requisite field values
       Record simpar(simparDesc);
       simpar.define ("type", "T");
       simpar.define ("caltable", caltable);
-      simpar.define ("timescale", timescale);
-      simpar.define ("rms", rms);
+      simpar.define ("mean_pwv", pwv);
       simpar.define ("mode", mode);
+      simpar.define ("scale", scale);
 
       // RI TODO check timescale and set to smaller if ness - other VC
       // simulators may just set timescale internally to whatever is most
@@ -1077,7 +1074,7 @@ Bool Simulator::settrop(const String& mode,
       calc_corrupt(svc,simpar);
 
     } else {
-      throw(AipsError("unsupported mode in settrop"));
+      throw(AipsError("unsupported mode "+mode+" in settrop()"));
     }
 
     return True;
@@ -1123,6 +1120,8 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
     
     // Add a new VisCal to the apply list
     svc = createSolvableVisCal(upType,*vs_p);
+
+    svc->setPrtlev(4);
 
     // Generic VisCal setSimulate will throw an exception -- 
     //   each VC needs to have its own.
@@ -1184,148 +1183,125 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
 
     // we made sure this was in seconds above
     Double &interval = svc->interval();  
-
+    
     // enforce that the caltable not be on any finer cadence 
     // than the actual data / integration time
     // RI TODO relax min sim_interval ?     
     if (interval < integrationTime_p.getValue("s"))
       interval = integrationTime_p.getValue("s");
-
-    // SolvableVisCal::sizeUpSolve makes sensible decisions based on 
-    // spwcomb(), etc.  We could override that in special visCals if 
-    // we need to, so for now sizeUpSim is a pass through to 
-    // sizeUpSolve
     
-    Vector<Int> nChunkPerSim;
-    Int nSim = svc->sizeUpSim(*vs_p,nChunkPerSim);
     
     // sizeUpSolve also deals with nCorr for us
     // sizeUpSolve does inflate the CalSet - did we make one?
     // sizeUpSolve does setSolveChannelization() and initSolvePar();
     // initSolvePar does solveCPar().resize(nPar(),1,nAnt());
-        
-    os << "For simint = " << svc->simint() 
-       << ", Simulator will create "
-       <<  nSim << " corruption intervals."
-       << LogIO::POST;
-        
-    svc->setupSim(nSim,*vs_p,simpar); // does this need the VisSet?  
+    
+    Vector<Int> nChunkPerSim;
+    Vector<Double> solTimes;
+    Int nSim = svc->setupSim(*vs_p,simpar,nChunkPerSim,solTimes);
+    
     // setupSim might be a good place to set the VI sort order and 
     // reset the VI (in which case it needs a pointer to the VisSet)
-
+    
+    
     // The iterator, VisBuffer
     VisIter& vi(vs_p->iter());
     VisBuffer vb(vi);
-
+    
     Int nSpw=vs_p->numberSpw();
     // same as cs_p->nSpw()  ?    
     Vector<Int> slotidx(nSpw,-1);
-
+    
     Int nGood(0);
     vi.originChunks();
     Double t0(0.);
+    
     for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {
-
-      // Arrange to accumulate - TODO think about whether full combination 
-      // machinery is overkill or not
-      // preavg is not set in this context
-      // VisBuffGroupAcc vbga(vs->numberAnt(),vs->numberSpw(),vs->numberFld(),preavg());
+      
+      // Arrange to accumulate - TODO is full combination machinery overkill?
+      
       VisBuffGroupAcc vbga(vs_p->numberAnt(),vs_p->numberSpw(),vs_p->numberFld(),False);
-
+      
       for (Int ichunk=0;ichunk<nChunkPerSim(isim);++ichunk) {
-        // Current _chunk_'s spw
-        Int spw(vi.spectralWindow());
-        
-        for (vi.origin(); vi.more(); vi++) {
-
-	  // Force read of the field Id
-	  // vb.fieldId();
-
-          // Apply the channel mask (~no-op, if unnecessary)
-	  //   I don't think we need this in a sim context.
-          // vc_p->applyChanMask(vb);
-
-	  // This forces the data/model/wt I/O, 
-	  //   and applies any prior calibrations
-	  // it requires ve_p.svc() to have been set to any pre-apply VCs
-	  //   by ve_p.setsolve(svc_p) which we can't do here.
-	  // ve_p.collapse(vb);
-	  //
-	  // so we need to advance the VB manually:
+	// Current _chunk_'s spw
+	Int spw(vi.spectralWindow());
+	
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // for some reason we need to advance the VB manually.
 	  vb.invalidate();
 	  vb.modelVisCube();
 	  vb.visCube();
-	  vb.weightMat();
-
+	  // vb.weightMat();
+	  
 	  // for debugging:
 	  // if os << "for first row of chunk " << ichunk << 
 	  //   ", slot " << isim << endl << 
 	  //   " rowids = " << vb.rowIds() << endl <<
 	  //   " scan = " << vb.scan0() <<
 	  //   " time = " << vb.time()[0]-t0 << endl << LogIO::POST;
-
-          // Accumulate collapsed vb in a time average
-          vbga.accumulate(vb);
-        }
-        // Advance the VisIter, if possible
-        if (vi.moreChunks()) vi.nextChunk();
+	  
+	  // Accumulate collapsed vb in a time average
+	  vbga.accumulate(vb);
+	}
+	// Advance the VisIter, if possible
+	if (vi.moreChunks()) vi.nextChunk();
       }
       
       // Finalize the averged VisBuffer
       // RI TODO this normalizes (divides by weights) - needed? check.
       vbga.finalizeAverage();
-
-      // os << vbga.globalTimeStamp() << endl <<  LogIO::POST;
+      
       if (isim==0)
 	t0= vbga.globalTimeStamp();
       
       // Establish meta-data for this interval, setting currSpw(), 
-      // currField, refTime in SVC
+      // currField(), refTime() in SVC
       Bool vbOk=svc->syncSolveMeta(vbga);
-
       
       Int thisSpw=svc->spwMap()(vbga(0).spectralWindow());
       slotidx(thisSpw)++;
-
+      
       if (!(svc->corruptor_p))
 	throw(AipsError("Error in Simulator::calc_corrupt: corruptor doesn't exist!"));
-
-      // os << vc->corruptor_p->curr_slot() << endl <<  LogIO::POST;
-
+      
       if (vbOk) {
 	// channel loop here, row in VBA loop inside vc::simPar
 	Int nc = ((const SolvableVisCal*)svc)->nChanPar();
 	// for (Int ich=((const SolvableVisCal*)svc)->nChanPar()-1;ich>-1;--ich) {
 	for (Int ich=nc-1;ich>-1;--ich) {
 	  svc->focusChan()=ich;
-	  svc->simPar(vbga); 
-	  svc->keep(slotidx(thisSpw));
-	  
+	  // RI TODO just pass time stamp etc? just one VB? 
+	  if (!svc->simPar(vbga)) 
+	    throw(AipsError("Error calculating simulated VC")); 
+	  // svc has reftime() from syncSolveMeta above, needs antennas?
+	  // svc->simPar(); 
+	  svc->keep(slotidx(thisSpw));	  
 	} 
       }
       // RI TODO simPar probably needs to be smarter and actually only advance 
       // the slot itself if the timestamp changes (e.g. if iterating 
       // through spws at the same timestamp
       // vc_p->advance_corruptor(); // may be different ways of doing this?
-      svc->corruptor_p->curr_slot()++;
-
+      // svc->corruptor_p->curr_slot()++;
+      
     } // end of nSim
     
     if (svc->calTableName()!="<none>") {
       
       // Store whole of result in a caltable
-            
+      
       // RI TODO check if user wanting to overwrite calTable
       os << LogIO::NORMAL 
-         << "Writing calTable = "+svc->calTableName()+" ("+svc->typeName()+")" 
-         << endl << LogIO::POST;
+	 << "Writing calTable = "+svc->calTableName()+" ("+svc->typeName()+")" 
+	 << endl << LogIO::POST;
       
       // write the table
       // append()=False set by setSimulate()
       svc->store();
     }
     return True;
-
+    
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::POST;

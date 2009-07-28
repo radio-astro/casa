@@ -241,7 +241,7 @@ void TJones::guessPar(VisBuffer& vb) {
   Float amp(0.0),ampave(0.0);
   Int namp(0);
   solveCPar()=Complex(0.0);
-  for (Int irow=1;irow<vb.nRow();++irow) {
+  for (Int irow=1;irow<vb.nRow();++irow) {  // why not row zero? copied from Calibrator
 
     if (rowok(irow)) {
       Int a1=vb.antenna1()(irow);
@@ -321,31 +321,100 @@ void TJones::initTrivDJ() {
 
 
 
-void TJones::setupSim(const Int& nSim, VisSet& vs, const Record& simpar) {
-
+Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
+{
   if (prtlev()>2) cout << "   T::setupSim()" << endl;
+
   // This method only called in simulate context!
   AlwaysAssert((isSimulated()),AipsError);
 
+  // this is done in sizeUpSim, and if VS goes away we'll probably need to 
+  // be passing either the ms or the vi down from Calibrator and Simulator
+  // into here and then on to suzeUpSim.
+  // right now, I want vi to get vi.msColumns()
+  // I'm assuming that there's only one ms attached to the VI *
+  VisIter& vi(vs.iter());
+  // VisBuffer vb(vi);
+  
+  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
+  
   // we can use the private access directly the corruptor
   tcorruptor_p = new TJonesCorruptor(nSim);
   // but set the public one 
   corruptor_p = tcorruptor_p;
 
-  if (simpar.isDefined("rms")) {    
-    tcorruptor_p->rms()=simpar.asFloat("rms");
-  } else {
-      throw(AipsError("No RMS specified for TJones corruptor."));
+  corruptor_p->startTime()=min(solTimes);
+  corruptor_p->stopTime()=max(solTimes);
+  corruptor_p->prtlev()=prtlev();
+
+  Int Seed;
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
   }
 
-  tcorruptor_p->initialize();
+  Float Beta(0.5); // exponent for generalized 1/f noise
+  if (simpar.isDefined("beta")) {    
+    Beta=simpar.asFloat("beta");
+  }
 
-  if (prtlev()>2) cout << "     corruptor_p_->curr_slot()=" << 
-    corruptor_p->curr_slot() << endl;
+  Float Scale(1.0); // scale of fluctuations rel to mean
+  if (simpar.isDefined("scale")) {    
+    Scale=simpar.asFloat("scale");
+  }
+
+  // initialize spw etc information in Corruptor
+  // the "initialize" function that's corruptor-specific calculates the 
+  // corruption values
+  // this preparation is just to tell the corruptor about its VC - maybe 
+  // the logic should be changed so the corruptor doesn't have to know 
+  // all this?
+
+  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
+ 
+  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
+  // things will break if spw mapping, ie not in same order as in vs
+  corruptor_p->nSpw()=nSpw();
+  corruptor_p->nAnt()=nAnt();
+  corruptor_p->currAnt()=0;
+  corruptor_p->currSpw()=0;
+  corruptor_p->fRefFreq().resize(nSpw());
+  corruptor_p->fnChan().resize(nSpw());
+  corruptor_p->fWidth().resize(nSpw());
+
+    for (Int irow=0;irow<nSpw();++irow) { 
+      corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
+      corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);
+      corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
+      // totalBandwidthQuant ?  in other places its assumed to be in Hz
+    }
+      // see MSsummary.cc for more info/examples
+
+  if (simpar.isDefined("mean_pwv"))
+    tcorruptor_p->mean_pwv() = simpar.asFloat("mean_pwv");
+
+  if (tcorruptor_p->mean_pwv()<=0)
+    throw(AipsError("TCorruptor attempted initialization with undefined PWV"));
+
+  if (simpar.isDefined("mode")) {    
+    if (simpar.asString("mode") == "test")
+      tcorruptor_p->initialize();
+    else if (simpar.asString("mode") == "individual") {
+      tcorruptor_p->initialize(Seed,Beta,Scale);
+    } else 
+      throw(AipsError("Unknown Mode for TJonesCorruptor"));        
+  } else {
+      throw(AipsError("No Mode specified for TJones corruptor."));
+  }
+
+  return nSim;
 }
 
 
-void TJones::simPar(VisBuffGroupAcc& vbga) {
+
+Bool TJones::simPar(VisBuffGroupAcc& vbga) {
+// void TJones::simPar() {
+
+  LogIO os(LogOrigin("T", "simPar()", WHERE));
 
   if (prtlev()>4) cout << "   T::simPar()" << endl;
 
@@ -359,192 +428,437 @@ void TJones::simPar(VisBuffGroupAcc& vbga) {
 
   // loop through correlations or use corridx ?
 
-  for (Int ivb=0;ivb<vbga.nBuf();++ivb) {
-    CalVisBuffer& cvb(vbga(ivb));   // why the cast to a CalVisBuffer different from regular VB?
-    Vector<Int>& a1(cvb.antenna1());
-    Vector<Int>& a2(cvb.antenna2());
-    for (Int irow=0;irow<cvb.nRow();++irow) {
-      if ( !cvb.flagRow()(irow) &&
-	   cvb.antenna1()(irow)!=cvb.antenna2()(irow) &&
-	   nfalse(cvb.flag().column(irow))> 0 ) {
-	
-	  // uses vc->currField() and vc->refTime() as set by syncSolvemeta()	  
-	  solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->thisgain(cvb.frequency()(focusChan()));
+  try {
+    
+    for (Int ivb=0;ivb<vbga.nBuf();++ivb) {
+      CalVisBuffer& cvb(vbga(ivb));   // why the cast to a CalVisBuffer different from regular VB?
+      Vector<Int>& a1(cvb.antenna1());
+      Vector<Int>& a2(cvb.antenna2());
+      for (Int irow=0;irow<cvb.nRow();++irow) {
+	if ( !cvb.flagRow()(irow) &&
+	     cvb.antenna1()(irow)!=cvb.antenna2()(irow) &&
+	     nfalse(cvb.flag().column(irow))> 0 ) {	
+	  
+	  // outside row loop i.e. use all same Corruptor slot for this VB?
+	  if (corruptor_p->curr_time()!=refTime()) {
+	    
+	    corruptor_p->curr_time()=refTime();
+	    
+	    // find new slot if required
+	    Double dt(1e10),dt0(-1);
+	    dt0 = abs(corruptor_p->slot_time() - refTime());
+
+	    if (refTime()<corruptor_p->curr_time()) {
+	      //throw(AipsError("T:simPar error: VB not monotonic in time!"));
+
+	      for (Int newslot=corruptor_p->curr_slot()-1;newslot>=0;newslot--) {
+		dt=abs(corruptor_p->slot_time(newslot) - refTime());
+		if (dt<dt0) {
+		  // use this check for on-depand corruptors to get new val.
+		  corruptor_p->curr_slot()=newslot;
+		  dt0 = dt;
+		  if (prtlev()>4) 
+		    cout << "    T:simPar retreating to time " << refTime() << endl;
+		}
+	      }	  
+	    } else {	      
+	      for (Int newslot=corruptor_p->curr_slot()+1;newslot<corruptor_p->nSim();newslot++) {
+		dt=abs(corruptor_p->slot_time(newslot) - refTime());
+		if (dt<dt0) {
+		  // use this check for on-depand corruptors to get new val.
+		  corruptor_p->curr_slot()=newslot;
+		  dt0 = dt;
+		  if (prtlev()>4) 
+		    cout << "    T:simPar advancing to time " << refTime() << endl;
+		}	  
+	      }
+	    }
+	  }
+	  
+	  corruptor_p->currAnt()=a1(irow);
+	  // solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(cvb.frequency()(focusChan()));
+	  solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(focusChan());
+	  // RI TODO if we keep the VBGA we need to actually do something 
+	  // with all nBuf() in there!!!
+	}
       }
     }
-  }
-  
-  //  cout << "Guess:" << endl
-  //       << "amp = " << amplitude(solveCPar())
-  //       << "phase = " << phase(solveCPar())
-  //       << endl;
-  
-  // solveParOK()=True;
-  // keep(slotidx(thisSpw));
-  
+  } catch (AipsError x) {
+    if (tcorruptor_p) delete tcorruptor_p;
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
 }
 
 
-#define PRTLEV 0
+
+
 
 TJonesCorruptor::TJonesCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
-  delay_(0),
-  rms_(0.)
-{
-  //initialize();
-}
+  mean_pwv_(-1.)
+{}
 
 TJonesCorruptor::~TJonesCorruptor() {
   if (prtlev()>2) cout << "TCorruptor::~TCorruptor()" << endl;
 }
 
-void TJonesCorruptor::initialize() {
-  delay().resize(nSim());
-  for (Int i=0;i<nSim();++i) {
-    // shwag for testing
-    delay()(i) = Float(i)/Float(nSim())/1.e9*rms(); // 0-rms nanosecond
-  } 
-  curr_slot()=0;
-  initialized()=True;
-  if (prtlev()>2) cout << "TCorruptor::init" << endl;
 
+#ifdef RI_ATM
 
-#ifdef FBM_REMY
+Vector<Float>* TJonesCorruptor::pwv() { 
+  if (currAnt()<=pwv_p.nelements())
+    return pwv_p[currAnt()];
+  else
+    return NULL;
+};
+ 
+Float& TJonesCorruptor::pwv(const Int islot) { 
+  if (currAnt()<=pwv_p.nelements())
+    return (*pwv_p[currAnt()])(islot);
+  else
+    throw(AipsError("TJonesCorruptor internal error accessing delay()"));;
+};
 
-  fBM* myfbm = new fBM(nSim(),3);
-  //  cout << fBM(2,1) << " - ";
-  cout << myfbm->data(2,1) << " - ";
-  myfbm->initialize(100,0.3);
-  //  cout << fBM(2,1) << " FOOBAR " << endl;    
-  cout << myfbm->data(2,1) << " FOOBAR " << endl;  
+Float TJonesCorruptor::delay(const Int islot, const Int ichan) { 
+  if (currAnt()<=pwv_p.nelements()) {
+    Float deltapwv = (*pwv_p[currAnt()])(islot);
+//    if (prtlev()>2 and currAnt()<2 and islot<2) {
+//      cout << islot << " | " << ichan << " | " << currAnt() << " : " << 
+//	itsSkyStatus->getWetOpacity().get("rad") << 
+//	" * " << deltapwv << " * " << mean_pwv() << endl;
+//    }
+    return itsSkyStatus->getDispersivePhaseDelay(currSpw(),ichan).get("rad") 
+      * deltapwv * mean_pwv();
+  } else
+    throw(AipsError("TJonesCorruptor internal error accessing pwv()"));;
+};
+
+#else // ----------
+
+Vector<Float>* TJonesCorruptor::delay() { 
+  if (currAnt()<=delay_p.nelements())
+    return delay_p[currAnt()];
+  else
+    return NULL;
+};
+ 
+Float TJonesCorruptor::delay(const Int islot, const Int ichan) { 
+  if (currAnt()<=delay_p.nelements())
+    return (*delay_p[currAnt()])(islot);
+  else
+    throw(AipsError("TJonesCorruptor internal error accessing delay()"));;
+};
 
 #endif
+
+
+
+
+
+
+void TJonesCorruptor::initialize() {
+  // for testing
+
+  if (slot_times_.nelements()<=0) {
+    slot_times_.resize(nSim());
+    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
+    for (Int i=0;i<nSim();i++) 
+      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
+  }
+  curr_slot()=0;      
+  curr_time()=slot_time();  
+
+#ifdef RI_ATM
+  initAtm();
+  pwv_p.resize(1,False,True);
+  pwv_p[0] = new Vector<Float>(nSim());
+  // not really pwv, but this is a test mode
+  for (Int i=0;i<nSim();++i) 
+    (*pwv())(i) = Float(i)/Float(nSim())*mean_pwv();  
+#else
+  delay_p.resize(1,False,True);
+  delay_p[0] = new Vector<Float>(nSim());
+  for (Int i=0;i<nSim();++i) 
+    (*delay())(i) = Float(i)/Float(nSim())*mean_pwv(); // pretends pwv is # radians
+#endif
+
+  initialized()=True;
+  if (prtlev()>2) cout << "TCorruptor::init" << endl;
 }
 
 
-// for phase screen we'll need to pass a mean time from the vb to 
-// thisgain, as well as a direction.  initialize will just set up 
-// the screen.  we won't need to pass the slot index.
-// similarly, we may not need to construct that corruptor with nsim - 
-// it could have a parameterless constructor, and then 
-// initialize would need to know the total scan length and wind 
-// speed to make the screen long enough to blow over the array for the 
-// entire scan
 
-Complex TJonesCorruptor::thisgain(const Double& freq) {
-  // if (prtlev()>2) cout << "TCorruptor::thisgain" << endl;
+
+#ifdef RI_ATM
+void TJonesCorruptor::initAtm() {
+
+  atm::Temperature  T( 270.0,"K" );   // Ground temperature
+  atm::Pressure     P( 560.0,"mb");   // Ground Pressure
+  atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (indication)
+  atm::Length       Alt(  5000,"m" ); // Altitude of the site 
+  atm::Length       WVL(   2.0,"km"); // Water vapor scale height
+
+  double TLR = -5.6;     // Tropospheric lapse rate (must be in K/km)
+  atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
+  atm::Pressure Pstep(  10.0,"mb");   // Primary pressure step
+  double PstepFact = 1.2; // Pressure step ratio between two consecutive layers
+  atm::Atmospheretype atmType = atm::tropical;
+
+  itsatm = new atm::AtmProfile(Alt, P, T, TLR, 
+			       H, WVL, Pstep, PstepFact, 
+			       topAtm, atmType);
+
+  if (nSpw()<=0)
+    throw(AipsError("TCorruptor::initAtm called before spw setup."));
+
+  // does SpectralGrid constructor work with multiple spws?
+
+  double fRes(fWidth()[0]/fnChan()[0]);
+  itsSpecGrid = new atm::SpectralGrid(fnChan()[0],0, 
+				      atm::Frequency(fRefFreq()[0],"Hz"),
+				      atm::Frequency(fRes,"Hz"));
+
+  itsrip = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
+  
+  if (prtlev()>2) cout << "TCorruptor::getDispersiveWetPathLength = " 
+		       << itsrip->getDispersiveWetPathLength().get("micron") 
+		       << " microns" << endl;
+
+  itsSkyStatus = new atm::SkyStatus(*itsrip);
+
+  if (prtlev()>2) cout << "TCorruptor::getDispersivePhaseDelay = " 
+		       << itsSkyStatus->getDispersivePhaseDelay(0,0).get("rad") 
+		       << " rad" << endl;
+
+}
+#endif
+
+
+void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
+  // individual delays for each antenna
+
+  fBM* myfbm = new fBM(nSim());
+
+#ifdef RI_ATM
+  initAtm();
+
+  pwv_p.resize(nAnt(),False,True);
+  for (Int iant=0;iant<nAnt();++iant){
+    pwv_p[iant] = new Vector<Float>(nSim());
+    myfbm->initialize(Seed+iant,Beta); // (re)initialize
+    *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
+    Float pmean = mean(*(pwv_p[iant]));
+    Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
+    if (prtlev()>2 and currAnt()<2) {
+      cout << "RMS fBM fluctuation for antenna " << iant 
+	   << " = " << rms << " ( " << pmean << " ) " << endl;      
+    }
+    // PWV = PWV_mean * 10.^ ( fBM - 0.5)
+    // fluctuations are 1/scale to scale x pwv_mean
+    for (Int islot=0;islot<nSim();++islot)
+      (*(pwv_p[iant]))[islot] = pow(10., (*(pwv_p[iant]))[islot]/rms/3.0*scale );  
+    if (prtlev()>2 and currAnt()<2) {
+      Float pmean = mean(*(pwv_p[iant]));
+      Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
+      cout << "RMS pwv fluctuation for antenna " << iant 
+	   << " = " << rms << endl;      
+    }
+    currAnt()=iant;
+  }
+
+#else
+
+  delay_p.resize(nAnt(),False,True);
+  for (Int iant=0;iant<nAnt();++iant){
+    delay_p[iant] = new Vector<Float>(nSim());
+    myfbm->initialize(Seed+iant,Beta); // (re)initialize
+    *(delay_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
+    // RI TODO get scaling right with rms input from sm etc
+    *(delay_p[iant]) = *(delay_p[iant]);
+    currAnt()=iant;
+    //if (prtlev()>2) {
+    //  Float ave(mean(*(delay_p[iant])));
+    //  cout << "Average delay for antenna " << iant 
+    //	   << " = " << ave << endl;      
+    //}
+  }
+
+#endif
+
+  if (slot_times_.nelements()<=0) {
+    slot_times_.resize(nSim());
+    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
+    for (Int i=0;i<nSim();i++) 
+      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
+  }
+  curr_slot()=0;      
+  curr_time()=slot_time();  
+
+  initialized()=True;
+  if (prtlev()>2) cout << "TCorruptor::init" << endl;
+
+}
+
+
+// RI TODO another initializer for the phase screen
+//
+// for phase screen we'll need to pass a mean time from the vb to 
+// thisgain, as well as a direction.  initialize will need to know 
+// the total scan length and wind speed to make the screen long 
+// enough to blow over the array for the entire scan
+
+
+
+
+
+Complex TJonesCorruptor::gain(const Int ichan) {
+
+  // RI TODO different calculation if mode="screen"
+
   if (curr_slot()>=0 and curr_slot()<nSim()) {
-    Double phase=freq*delay()[curr_slot()];
+    // delay() gets currAnt  so this works for mode=test
+    // which only has one effective Ant, and mode=individual, as long as 
+    // ant has been set before the call to gain()
+    
+    // Float freq = fRefFreq()[currSpw()] + 
+    //   Float(ichan) * (fWidth()[currSpw()]/Float(fnChan()[currSpw()]));
+    
+#ifdef RI_ATM 
+    Float phase = delay(curr_slot(),ichan); // DispersivePhaseDelay returns angle
+#else
+    Float phase = delay(curr_slot(),0); 
+#endif
+
     return Complex(cos(phase),sin(phase));
   } else {
-    cout << "TCorruptor::thisgain: slot " << curr_slot() << "out of range!" << endl;
+    cout << "TCorruptor::gain: slot " << curr_slot() << "out of range!" << endl;
     return Complex(1.);
   }
 }
 
 
 
-#ifdef FBM_REMY
+fBM::fBM(uInt i1) :    
+  initialized_(False)
+{ data_ = new Vector<Float>(i1); };
 
-  fBM::fBM(uInt i1) :    
-    initialized_(False)
-  { data_ = new Vector<Double>(i1); };
+fBM::fBM(uInt i1, uInt i2) :
+  initialized_(False)
+{ data_ = new Matrix<Float>(i1,i2); };
 
-  fBM::fBM(uInt i1, uInt i2) :
-    initialized_(False)
-  { data_ = new Matrix<Double>(i1,i2); };
+fBM::fBM(uInt i1, uInt i2, uInt i3) :
+  initialized_(False)
+{ data_ = new Cube<Float>(i1,i2,i3); };
 
-  fBM::fBM(uInt i1, uInt i2, uInt i3) :
-    initialized_(False)
-  { data_ = new Cube<Double>(i1,i2,i3); };
-
-  void fBM::initialize(const Int seed, const Double beta) {
-
-    MLCG  rndGen_p(seed);
-    Normal noiseDist_p(&rndGen_p, 0.0, 1.0); // sigma=1.
-    IPosition s = data_->shape();
-    uInt ndim = s.nelements();
-    Double amp,phase,pi=3.14159265;    
-    uInt i0,j0;
-    FFTServer<Complex,Complex> server; // could do C,R but then the output 
-    // first axis is reduced in size.
-    // FFTServer C,R does assume that the input is hermitian and only has 
-    // half of the elements in each direction, so 
-    // RI TODO use C,R fft and don't bother with setting other half of 
-    // freq-domain array F.
-
-    switch(ndim) {
-    case 1:
-      // beta = 1+2H = 5-2D
-      Vector<Complex> F(s(0)),G(s(0));
-      for (uInt i=0; i<s(0)/2-1; i++) {
-	// data_->operator()(IPosition(1,i))=5.;
-	phase = 2.*pi*rndGen_p(); 
+void fBM::initialize(const Int seed, const Float beta) {
+  
+  MLCG rndGen_p(seed,seed);
+  Normal nDist_p(&rndGen_p, 0.0, 1.0); // sigma=1.
+  Uniform uDist_p(&rndGen_p, 0.0, 1.0);
+  IPosition s = data_->shape();
+  uInt ndim = s.nelements();
+  Float amp,phase,pi=3.14159265358979;
+  uInt i0,j0;
+  
+  // FFTServer<Float,Complex> server;
+  // takes a lot of thread thrashing to resize the server, so
+  FFTServer<Float,Complex> server(IPosition(1,s(0)));
+  // This class assumes that a Complex array is stored as
+  // pairs of floating point numbers, with no intervening gaps, 
+  // and with the real component first ie., 
+  // <src>[re0,im0,re1,im1, ...]</src>. This means that the 
+  // following type casts work,
+  // <srcblock>
+  // S * complexPtr;
+  // T * realPtr = (T * ) complexPtr;
+  // </srcblock>
+  
+  Matrix<Complex> F2(s(0)/2,s(0)/2);
+  Matrix<Float> G2;
+  Vector<Complex> F(s(0)/2);
+  Vector<Float> G; // size zero to let FFTServer calc right size
+  
+  // FFTServer C,R assumes that the input is hermitian and only has 
+  // half of the elements in each direction
+  
+  switch(ndim) {
+  case 1:
+    // beta = 1+2H = 5-2D
+    for (uInt i=0; i<s(0)/2-1; i++) {
+      // data_->operator()(IPosition(1,i))=5.;
+      phase = 2.*pi*uDist_p(); 
+      // RI TODO is this assuming the origin is at 0,0 in which case 
+      // we should be using FFTServer::fft0 ? 
+      amp = pow(Float(i+1), -0.5*beta) * nDist_p();
+      F(i)=Complex(amp*cos(phase),amp*sin(phase));
+      // F(s(0)-i)=Complex(amp*cos(phase),-amp*sin(phase));
+    }
+    server.fft(G,F,False);  // complex to real Xform
+    // G comes out twice length of F 
+    for (uInt i=0; i<s(0); i++)
+      data_->operator()(IPosition(1,i)) = G(i); // there has to be a better way with strides or something.
+    //    cout << endl << F(2) << " -> " << G(2) << " -> " 
+    //	 << data_->operator()(IPosition(1,2)) << endl;
+    break;
+  case 2:
+    // beta = 1+2H = 7-2D
+    // I think the server will resize itself.
+    // server.resize(IPosition(2,s(0),s(1)));
+    F2.resize(s(0)/2,s(1)/2);
+    for (uInt i=0; i<s(0)/2; i++)
+      for (uInt j=0; j<s(1)/2; j++) {
+	phase = 2.*pi*uDist_p(); 	  
+	// ok to draw from the MLCG directly as well as through the Normal ?
 	// RI TODO is this assuming the origin is at 0,0 in which case 
 	// we should be using FFTServer::fft0 ? 
-	amp = Power(Double(i+1), -0.5*beta) * noiseDist_p();
-	F(i)=Complex(amp*cos(phase),amp*sim(phase));
-	F(s(0)-i)=Complex(amp*cos(phase),-amp*sim(phase));
+	if (i!=0 or j!=0) {
+	  amp = pow(Float(i)*Float(i) + Float(j)*Float(j), 
+		    -0.25*(beta+1)) * nDist_p();
+	} else {
+	  amp = 0.;
+	}
+	F2(i,j)=Complex(amp*cos(phase),amp*sin(phase));
+	// if (i==0) {
+	//   i0=0;
+	// } else {
+	//   i0=s(0)-i;
+	// }
+	// if (j==0) {
+	//   j0=0;
+	// } else {
+	//   j0=s(1)-j;
+	// }
+	// F2(i0,j0)=Complex(amp*cos(phase),-amp*sin(phase));
       }
-      server.fft(F,G);
-      data_->operator()=G.real(); 
-      cout << G.real() << endl;
-      break;
-    case 2:
-      // beta = 1+2H = 7-2D
-      Matrix<Complex> F(s(0),s(1));
-      for (uInt i=0; i<s(0)/2; i++)
-	for (uInt j=0; j<s(1)/2; j++) {
-	  phase = 2.*pi*rndGen_p(); 	  
-	  // ok to draw from the MLCG directly as well as through the Normal ?
-	  // RI TODO is this assuming the origin is at 0,0 in which case 
-	  // we should be using FFTServer::fft0 ? 
-	  if (i!=0 or j!=0) {
-	    amp = pow(Double(i)^2 + Double(j)^2, -0.25*(beta+1)) * noiseDist_p();
-	  } else {
-	    amp = 0.;
-	  }
-	  F(i,j)=Complex(amp*cos(phase),amp*sim(phase));
-	  if (i==0) {
-	    i0=0;
-	  } else {
-	    i0=s(0)-i;
-	  }
-	  if (j==0) {
-	    j0=0;
-	  } else {
-	    j0=s(1)-j;
-	  }
-	  F(i0,j0)=Complex(amp*cos(phase),-amp*sim(phase));
-	}
-      // FFTServer
-      // The complex to real transform does not check that the
-      // imaginary component of the values where u=0 are zero
-      F(s(0)/2,0).imag()=0.;
-      F(0,s(1)/2).imag()=0.;
-      F(s(0)/2,s(1)/2).imag()=0.;
-      for (uInt i=0; i<s(0)/2; i++)
-	for (uInt j=0; j<s(1)/2; j++) {
-	  phase = 2.*pi*rndGen_p();
-	  amp = pow(Double(i)^2 + Double(j)^2, -0.25*(beta+1)) * noiseDist_p();
-	  F(i,s(1)-j) = Complex(amp*cos(phase),amp*sin(phase));
-	  F(s(0)-i,j) = Complex(amp*cos(phase),-amp*sin(phase));
-	}
-      //data_->operator()(IPosition(2,i,j))=5.;
-      //data_->operator()=InvFFT(F); //complex to real
-      break;
-    case 3:
-      // beta = 1+2H = 9-2D
-      throw(AipsError("no 3d fractional Brownian motion yet."));
-      for (uInt i=0; i<s(0); i++)
-	for (uInt j=0; j<s(1); j++)
-	  for (uInt k=0; j<s(3); k++)
-	    data_->operator()(IPosition(3,i,j,k))=5.;     
-    }
-  };
+    // The complex to real transform does not check that the
+    // imaginary component of the values where u=0 are zero
+    F2(s(0)/2,0).imag()=0.;
+    F2(0,s(1)/2).imag()=0.;
+    F2(s(0)/2,s(1)/2).imag()=0.;
+    // for (uInt i=0; i<s(0)/2; i++)
+    // 	for (uInt j=0; j<s(1)/2; j++) {
+    // 	  phase = 2.*pi*uDist_p();
+    // 	  amp = pow(Double(i)*Double(i) + Double(j)*Double(j), 
+    // 		    -0.25*(beta+1)) * nDist_p();
+    // 	  F2(i,s(1)-j) = Complex(amp*cos(phase),amp*sin(phase));
+    // 	  F2(s(0)-i,j) = Complex(amp*cos(phase),-amp*sin(phase));
+    // 	}
+    server.fft(G2,F2,False);  // complex to real Xform
+    //data_->operator()(IPosition(2,i,j))=5.;
+    //data_->operator()=InvFFT(F); //complex to real
+    break;
+  case 3:
+    // beta = 1+2H = 9-2D
+    throw(AipsError("no 3d fractional Brownian motion yet."));
+    for (uInt i=0; i<s(0); i++)
+      for (uInt j=0; j<s(1); j++)
+	for (uInt k=0; j<s(3); k++)
+	  data_->operator()(IPosition(3,i,j,k))=5.;     
+  }
+};
 
-#endif
 
 
 

@@ -33,7 +33,36 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
+// for simulation 
+#include <casa/BasicMath/Random.h>
+#include <scimath/Mathematics/FFTServer.h>
 
+#define RI_ATM
+
+#ifdef RI_ATM
+using namespace std;
+#include <ATMRefractiveIndexProfile.h>
+#include <ATMPercent.h>
+#include <ATMPressure.h>
+#include <ATMNumberDensity.h>
+#include <ATMMassDensity.h>
+#include <ATMTemperature.h>
+#include <ATMLength.h>
+#include <ATMInverseLength.h>
+#include <ATMOpacity.h>
+#include <ATMHumidity.h>
+#include <ATMFrequency.h>
+#include <ATMWaterVaporRadiometer.h>
+#include <ATMWVRMeasurement.h>
+#include <ATMAtmosphereType.h>
+#include <ATMType.h>
+#include <ATMProfile.h>
+#include <ATMSpectralGrid.h>
+#include <ATMRefractiveIndex.h>
+#include <ATMSkyStatus.h>
+#include <ATMTypeName.h>
+#include <ATMAngle.h>
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -114,17 +143,37 @@ class TJonesCorruptor : public CalCorruptor {
  public:
    TJonesCorruptor(const Int nSim);
    virtual ~TJonesCorruptor();
-   inline Vector<Double>& delay() { return delay_; };
-   inline Float& rms() { return rms_; };
+
+#ifdef RI_ATM
+   Float& pwv(const Int i); 
+   Vector<Float>* pwv();
+   void initAtm();
+#else
+   Vector<Float>* delay();
+#endif
+
+   Float delay(const Int islot, const Int ichan); // not ref since calced
+   inline String& mode() { return mode_; };
+   inline Float& mean_pwv() { return mean_pwv_; };
    virtual void initialize();
-   virtual Complex thisgain(const Double& freq);
-   // virtual Complex thisgain(const Int slot, const Vector<Double> freq);     
+   void initialize(const Int Seed, const Float Beta, const Float scale);
+   Complex gain(const Int islot);   
 
  protected:
 
  private:   
-   Vector<Double> delay_;
-   Float rms_;
+   Float mean_pwv_;
+   String mode_; // general parameter for different kinds of corruptions
+
+#ifdef RI_ATM
+   atm::AtmProfile *itsatm;
+   atm::RefractiveIndexProfile *itsrip;
+   atm::SkyStatus *itsSkyStatus;
+   atm::SpectralGrid *itsSpecGrid;
+   PtrBlock<Vector<Float>*> pwv_p;
+#else
+   PtrBlock<Vector<Float>*> delay_p;
+#endif
 };
 
 
@@ -158,10 +207,11 @@ public:
   virtual void guessPar(VisBuffer& vb);
 
   // Set up simulated params
-  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
+  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+//  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
 
   // Simulate/calculate parameters for given sim interval
-  virtual void simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
 
 protected:
 
@@ -187,10 +237,6 @@ private:
 
 
 
-//#define FBM_REMY
-
-#ifdef FBM_REMY
-
 // this generates fractional brownian motion aka generalized 1/f noise
 // class fBM : public Array<Double> {
 class fBM {
@@ -202,20 +248,19 @@ class fBM {
   fBM(uInt i1, uInt i2, uInt i3);
   // virtual ~fBM(); // not ness if we don't derive from this
   inline Bool& initialized() { return initialized_; };
-  void initialize(const uInt& seed, const Double& beta);
+  void initialize(const Int seed, const Float beta);
 
-  inline Double data(uInt i1) { return data_->operator()(IPosition(1,i1)); };
-  inline Double data(uInt i1, uInt i2) { return data_->operator()(IPosition(2,i1,i2)); };
-  inline Double data(uInt i1, uInt i2, uInt i3) { return data_->operator()(IPosition(3,i1,i2,i3)); };
+  inline Array<Float> data() { return *data_; };
+  inline Float data(uInt i1) { return data_->operator()(IPosition(1,i1)); };
+  inline Float data(uInt i1, uInt i2) { return data_->operator()(IPosition(2,i1,i2)); };
+  inline Float data(uInt i1, uInt i2, uInt i3) { return data_->operator()(IPosition(3,i1,i2,i3)); };
 
 
  private:
   Bool initialized_;
-  Array<Double>* data_;
+  Array<Float>* data_;
 
 };
-
-#endif
 
 
 
