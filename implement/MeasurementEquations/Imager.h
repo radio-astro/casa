@@ -246,6 +246,9 @@ class Imager
   Bool setscales(const String& scaleMethod,          // "nscales"  or  "uservector"
 		 const Int inscales,
 		 const Vector<Float>& userScaleSizes);
+  // set bias
+  Bool setSmallScaleBias(const Float inbias);
+
   // Set the number of taylor series terms in the expansion of the
   // image as a function of frequency.
   Bool settaylorterms(const Int intaylor, 
@@ -665,7 +668,7 @@ protected:
   Double reffreq_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
-
+  Float smallScaleBias_p; //ms-clean
   Int nmodels_p;
   // Everything here must be a real class since we make, handle and
   // destroy these.

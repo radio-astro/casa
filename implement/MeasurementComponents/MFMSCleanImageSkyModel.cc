@@ -65,9 +65,10 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel()
 
 MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales, 
 					       const Int sln,
-					       const Int spm)
+					       const Int spm,
+                                               const Float inbias)
 : method_p(NSCALES), nscales_p(nscales), progress_p(0),
-  stopLargeNegatives_p(sln), stopPointMode_p(spm)
+  stopLargeNegatives_p(sln), stopPointMode_p(spm),smallScaleBias_p(inbias)
 {
 
 
@@ -79,9 +80,10 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales,
 
 MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Vector<Float>& userScaleSizes, 
 					       const Int sln,
-					       const Int spm)
+					       const Int spm,
+                                               const Float inbias)
 : method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), progress_p(0),
-  stopLargeNegatives_p(sln), stopPointMode_p(spm)
+  stopLargeNegatives_p(sln), stopPointMode_p(spm), smallScaleBias_p(inbias)
 {
 
   donePSF_p=False;
@@ -331,6 +333,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		    os << "Creating multiscale cleaner with psf and residual images" << LogIO::POST;
 		    cleaner=new LatticeCleaner<Float>(subPSF, subResid);
 		    setScales(*cleaner);
+                    cleaner->setSmallScaleBias(smallScaleBias_p);
 		    if (doMask) {		  
 		      cleaner->setMask(*subMaskPointer);
 		    }

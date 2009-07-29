@@ -4622,9 +4622,9 @@ Bool Imager::clean(const String& algorithm,
 	  return False;
 	}
 	if (scaleMethod_p=="uservector") {	
-	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p);
+	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p,smallScaleBias_p);
 	} else {
-	  sm_p = new MSCleanImageSkyModel(nscales_p);
+	  sm_p = new MSCleanImageSkyModel(nscales_p, smallScaleBias_p);
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
@@ -4664,11 +4664,13 @@ Bool Imager::clean(const String& algorithm,
 	if (scaleMethod_p=="uservector") {
 	  sm_p = new MFMSCleanImageSkyModel(userScaleSizes_p, 
 					    stoplargenegatives_p, 
-					    stoppointmode_p);
+					    stoppointmode_p,
+                                            smallScaleBias_p);
 	} else {
 	  sm_p = new MFMSCleanImageSkyModel(nscales_p, 
 					    stoplargenegatives_p, 
-					    stoppointmode_p);
+					    stoppointmode_p,
+                                            smallScaleBias_p);
 	}
 	//	if(ftmachine_p=="mosaic"|| ftmachine_p=="wproject")
 	// For some reason  this does not seem to work without full
@@ -6337,6 +6339,12 @@ Bool Imager::setscales(const String& scaleMethod,
   scaleInfoValid_p = True;  
   return True;
 };
+
+Bool Imager::setSmallScaleBias(const Float inbias)
+{ 
+  smallScaleBias_p = inbias;
+  return True;
+}
 
 // Added for wb algo.
 Bool Imager::settaylorterms(const Int intaylor,const Double inreffreq)
