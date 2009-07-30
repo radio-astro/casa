@@ -1033,7 +1033,7 @@ Bool Simulator::setapply(const String& type,
 Bool Simulator::settrop(const String& mode, 
 			const String& caltable,   // output
 			const Float pwv,
-			const Float scale) {
+			const Float deltapwv) {
   
   LogIO os(LogOrigin("Simulator", "settrop()", WHERE));
 
@@ -1047,7 +1047,7 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("caltable", TpString);
       simparDesc.addField ("mean_pwv", TpFloat);
       simparDesc.addField ("mode", TpString);
-      simparDesc.addField ("scale", TpFloat);
+      simparDesc.addField ("delta_pwv", TpFloat);
             
       // Create record with the requisite field values
       Record simpar(simparDesc);
@@ -1055,7 +1055,7 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("caltable", caltable);
       simpar.define ("mean_pwv", pwv);
       simpar.define ("mode", mode);
-      simpar.define ("scale", scale);
+      simpar.define ("delta_pwv", deltapwv);
 
       // RI TODO check timescale and set to smaller if ness - other VC
       // simulators may just set timescale internally to whatever is most

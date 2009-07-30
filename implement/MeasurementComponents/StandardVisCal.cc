@@ -356,10 +356,18 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   if (simpar.isDefined("beta")) {    
     Beta=simpar.asFloat("beta");
   }
+  
+  if (simpar.isDefined("mean_pwv"))
+    tcorruptor_p->mean_pwv() = simpar.asFloat("mean_pwv");
+  
+  if (tcorruptor_p->mean_pwv()<=0)
+    throw(AipsError("TCorruptor attempted initialization with undefined PWV"));
 
-  Float Scale(1.0); // scale of fluctuations rel to mean
-  if (simpar.isDefined("scale")) {    
-    Scale=simpar.asFloat("scale");
+  Float Scale(.15); // scale of fluctuations rel to mean
+  if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
+    Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
+    if (Scale>.5)
+      Scale=.5;  // RI_TODO warn when doing this!!!
   }
 
   // initialize spw etc information in Corruptor
@@ -388,12 +396,6 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
       // totalBandwidthQuant ?  in other places its assumed to be in Hz
     }
       // see MSsummary.cc for more info/examples
-
-  if (simpar.isDefined("mean_pwv"))
-    tcorruptor_p->mean_pwv() = simpar.asFloat("mean_pwv");
-
-  if (tcorruptor_p->mean_pwv()<=0)
-    throw(AipsError("TCorruptor attempted initialization with undefined PWV"));
 
   if (simpar.isDefined("mode")) {    
     if (simpar.asString("mode") == "test")
@@ -505,7 +507,7 @@ TJonesCorruptor::~TJonesCorruptor() {
 }
 
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
 
 Vector<Float>* TJonesCorruptor::pwv() { 
   if (currAnt()<=pwv_p.nelements())
@@ -529,8 +531,8 @@ Float TJonesCorruptor::delay(const Int islot, const Int ichan) {
 //	itsSkyStatus->getWetOpacity().get("rad") << 
 //	" * " << deltapwv << " * " << mean_pwv() << endl;
 //    }
-    return itsSkyStatus->getDispersivePhaseDelay(currSpw(),ichan).get("rad") 
-      * deltapwv * mean_pwv();
+    return itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
+      * deltapwv / 57.2958; // convert from deg to rad
   } else
     throw(AipsError("TJonesCorruptor internal error accessing pwv()"));;
 };
@@ -559,7 +561,7 @@ Float TJonesCorruptor::delay(const Int islot, const Int ichan) {
 
 
 void TJonesCorruptor::initialize() {
-  // for testing
+  // for testing only
 
   if (slot_times_.nelements()<=0) {
     slot_times_.resize(nSim());
@@ -570,18 +572,22 @@ void TJonesCorruptor::initialize() {
   curr_slot()=0;      
   curr_time()=slot_time();  
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
   initAtm();
-  pwv_p.resize(1,False,True);
-  pwv_p[0] = new Vector<Float>(nSim());
-  // not really pwv, but this is a test mode
-  for (Int i=0;i<nSim();++i) 
-    (*pwv())(i) = Float(i)/Float(nSim())*mean_pwv();  
+  pwv_p.resize(nAnt(),False,True);
+  for (Int ia=0;ia<nAnt();++ia) {
+    pwv_p[ia] = new Vector<Float>(nSim());
+    // not really pwv, but this is a test mode
+    for (Int i=0;i<nSim();++i) 
+      (*(pwv_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10;  
+  }
 #else
-  delay_p.resize(1,False,True);
-  delay_p[0] = new Vector<Float>(nSim());
-  for (Int i=0;i<nSim();++i) 
-    (*delay())(i) = Float(i)/Float(nSim())*mean_pwv(); // pretends pwv is # radians
+  delay_p.resize(nAnt(),False,True);
+  for (Int ia=0;ia<nAnt();++ia) {    
+    delay_p[ia] = new Vector<Float>(nSim());
+    for (Int i=0;i<nSim();++i) 
+      (*(delay_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10; 
+  }
 #endif
 
   initialized()=True;
@@ -591,7 +597,7 @@ void TJonesCorruptor::initialize() {
 
 
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
 void TJonesCorruptor::initAtm() {
 
   atm::Temperature  T( 270.0,"K" );   // Ground temperature
@@ -599,6 +605,8 @@ void TJonesCorruptor::initAtm() {
   atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (indication)
   atm::Length       Alt(  5000,"m" ); // Altitude of the site 
   atm::Length       WVL(   2.0,"km"); // Water vapor scale height
+
+  // RI todo get Alt from observatory info in Simulator
 
   double TLR = -5.6;     // Tropospheric lapse rate (must be in K/km)
   atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
@@ -620,18 +628,19 @@ void TJonesCorruptor::initAtm() {
 				      atm::Frequency(fRefFreq()[0],"Hz"),
 				      atm::Frequency(fRes,"Hz"));
 
-  itsrip = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
+  itsRIP = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
   
   if (prtlev()>2) cout << "TCorruptor::getDispersiveWetPathLength = " 
-		       << itsrip->getDispersiveWetPathLength().get("micron") 
-		       << " microns" << endl;
+		       << itsRIP->getDispersiveWetPathLength().get("micron") 
+		       << " microns at " 
+		       << fRefFreq()[0]/1e9 << " GHz" << endl;
 
-  itsSkyStatus = new atm::SkyStatus(*itsrip);
-
-  if (prtlev()>2) cout << "TCorruptor::getDispersivePhaseDelay = " 
-		       << itsSkyStatus->getDispersivePhaseDelay(0,0).get("rad") 
-		       << " rad" << endl;
-
+//  itsSkyStatus = new atm::SkyStatus(*itsRIP);
+//
+//  if (prtlev()>2) cout << "TCorruptor::getDispersivePhaseDelay = " 
+//		       << itsSkyStatus->getDispersivePhaseDelay(0,0).get("rad") 
+//		       << " rad" << endl;
+//
 }
 #endif
 
@@ -641,7 +650,7 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
 
   fBM* myfbm = new fBM(nSim());
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
   initAtm();
 
   pwv_p.resize(nAnt(),False,True);
@@ -655,15 +664,17 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
       cout << "RMS fBM fluctuation for antenna " << iant 
 	   << " = " << rms << " ( " << pmean << " ) " << endl;      
     }
-    // PWV = PWV_mean * 10.^ ( fBM - 0.5)
-    // fluctuations are 1/scale to scale x pwv_mean
+    // scale is set above to delta/meanpwv
+    // Float lscale = log(scale)/rms;
     for (Int islot=0;islot<nSim();++islot)
-      (*(pwv_p[iant]))[islot] = pow(10., (*(pwv_p[iant]))[islot]/rms/3.0*scale );  
+      (*(pwv_p[iant]))[islot] = (*(pwv_p[iant]))[islot]*scale/rms;  
     if (prtlev()>2 and currAnt()<2) {
       Float pmean = mean(*(pwv_p[iant]));
       Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
-      cout << "RMS pwv fluctuation for antenna " << iant 
-	   << " = " << rms << endl;      
+      cout << "RMS fractional fluctuation for antenna " << iant 
+	   << " = " << rms << " ( " << pmean << " ) " 
+	// << " lscale = " << lscale 
+	   << endl;      
     }
     currAnt()=iant;
   }
@@ -702,12 +713,50 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
 }
 
 
+
 // RI TODO another initializer for the phase screen
 //
 // for phase screen we'll need to pass a mean time from the vb to 
 // thisgain, as well as a direction.  initialize will need to know 
 // the total scan length and wind speed to make the screen long 
 // enough to blow over the array for the entire scan
+  
+void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const Int xsize, const Int ysize) {
+  // 2d delay screen
+
+  fBM* myfbm = new fBM(xsize,ysize);
+
+#ifdef AIPS_USEATM
+  initAtm();
+#else
+  throw(AipsError("No screen for you without ATM."));
+#endif
+
+  screen_p = new Vector<Float>(xsize,ysize);
+  myfbm->initialize(Seed,Beta); // (re)initialize
+  Float pmean = mean(*screen_p);
+  Float rms = sqrt(mean( (*screen_p-pmean)*(*screen_p-pmean) ));
+  if (prtlev()>2 and currAnt()<2) {
+    cout << "RMS screen fluctuation " 
+	 << " = " << rms << " ( " << pmean << " ) " << endl;      
+  }
+  // scale is set above to delta/meanpwv
+  *screen_p = myfbm->data() * scale/rms;
+
+
+  if (slot_times_.nelements()<=0) {
+    slot_times_.resize(nSim());
+    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
+    for (Int i=0;i<nSim();i++) 
+      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
+  }
+  curr_slot()=0;      
+  curr_time()=slot_time();  
+
+  initialized()=True;
+  if (prtlev()>2) cout << "TCorruptor::init" << endl;
+
+}
 
 
 
@@ -725,7 +774,7 @@ Complex TJonesCorruptor::gain(const Int ichan) {
     // Float freq = fRefFreq()[currSpw()] + 
     //   Float(ichan) * (fWidth()[currSpw()]/Float(fnChan()[currSpw()]));
     
-#ifdef RI_ATM 
+#ifdef AIPS_USEATM 
     Float phase = delay(curr_slot(),ichan); // DispersivePhaseDelay returns angle
 #else
     Float phase = delay(curr_slot(),0); 

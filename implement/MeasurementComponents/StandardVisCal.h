@@ -37,9 +37,7 @@
 #include <casa/BasicMath/Random.h>
 #include <scimath/Mathematics/FFTServer.h>
 
-#define RI_ATM
-
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
 using namespace std;
 #include <ATMRefractiveIndexProfile.h>
 #include <ATMPercent.h>
@@ -144,7 +142,7 @@ class TJonesCorruptor : public CalCorruptor {
    TJonesCorruptor(const Int nSim);
    virtual ~TJonesCorruptor();
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
    Float& pwv(const Int i); 
    Vector<Float>* pwv();
    void initAtm();
@@ -155,9 +153,14 @@ class TJonesCorruptor : public CalCorruptor {
    Float delay(const Int islot, const Int ichan); // not ref since calced
    inline String& mode() { return mode_; };
    inline Float& mean_pwv() { return mean_pwv_; };
+   inline Vector<Float>& screen() { return *screen_p; };
+   inline Float screen(const Int i, const Int j) { 
+     // RI_TODO out of bounds check or is that done by Vector?
+     return (*screen_p)[i,j]; };
    virtual void initialize();
    void initialize(const Int Seed, const Float Beta, const Float scale);
-   Complex gain(const Int islot);   
+   void initialize(const Int Seed, const Float Beta, const Float scale, const Int xsize, const Int ysize);
+   Complex gain(const Int islot);
 
  protected:
 
@@ -165,12 +168,13 @@ class TJonesCorruptor : public CalCorruptor {
    Float mean_pwv_;
    String mode_; // general parameter for different kinds of corruptions
 
-#ifdef RI_ATM
+#ifdef AIPS_USEATM
    atm::AtmProfile *itsatm;
-   atm::RefractiveIndexProfile *itsrip;
+   atm::RefractiveIndexProfile *itsRIP;
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
    PtrBlock<Vector<Float>*> pwv_p;
+   Vector<Float>* screen_p;
 #else
    PtrBlock<Vector<Float>*> delay_p;
 #endif
