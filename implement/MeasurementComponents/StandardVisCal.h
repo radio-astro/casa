@@ -153,10 +153,10 @@ class TJonesCorruptor : public CalCorruptor {
    Float delay(const Int islot, const Int ichan); // not ref since calced
    inline String& mode() { return mode_; };
    inline Float& mean_pwv() { return mean_pwv_; };
-   inline Vector<Float>& screen() { return *screen_p; };
+   inline Matrix<Float>& screen() { return *screen_p; };
    inline Float screen(const Int i, const Int j) { 
      // RI_TODO out of bounds check or is that done by Vector?
-     return (*screen_p)[i,j]; };
+     return screen_p->operator()(i,j); };
    virtual void initialize();
    void initialize(const Int Seed, const Float Beta, const Float scale);
    void initialize(const Int Seed, const Float Beta, const Float scale, const Int xsize, const Int ysize);
@@ -167,6 +167,7 @@ class TJonesCorruptor : public CalCorruptor {
  private:   
    Float mean_pwv_;
    String mode_; // general parameter for different kinds of corruptions
+   Matrix<Float>* screen_p; 
 
 #ifdef AIPS_USEATM
    atm::AtmProfile *itsatm;
@@ -174,7 +175,6 @@ class TJonesCorruptor : public CalCorruptor {
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
    PtrBlock<Vector<Float>*> pwv_p;
-   Vector<Float>* screen_p;
 #else
    PtrBlock<Vector<Float>*> delay_p;
 #endif

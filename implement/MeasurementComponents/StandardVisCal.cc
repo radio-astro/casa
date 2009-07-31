@@ -400,14 +400,19 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   if (simpar.isDefined("mode")) {    
     if (simpar.asString("mode") == "test")
       tcorruptor_p->initialize();
-    else if (simpar.asString("mode") == "individual") {
+    else if (simpar.asString("mode") == "individual") 
       tcorruptor_p->initialize(Seed,Beta,Scale);
+    else if (simpar.asString("mode") == "screen") {
+      // RI_TODO calc xsize ysize from windspeed, track length, array size
+      Int xsize(100);
+      Int ysize(100);
+      tcorruptor_p->initialize(Seed,Beta,Scale,xsize,ysize);
     } else 
       throw(AipsError("Unknown Mode for TJonesCorruptor"));        
   } else {
-      throw(AipsError("No Mode specified for TJones corruptor."));
+    throw(AipsError("No Mode specified for TJones corruptor."));
   }
-
+  
   return nSim;
 }
 
@@ -732,17 +737,19 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
   throw(AipsError("No screen for you without ATM."));
 #endif
 
-  screen_p = new Vector<Float>(xsize,ysize);
-  myfbm->initialize(Seed,Beta); // (re)initialize
+  screen_p = new Matrix<Float>(xsize,ysize);
+  myfbm->initialize(Seed,Beta); 
+  *screen_p=myfbm->data();
   Float pmean = mean(*screen_p);
-  Float rms = sqrt(mean( (*screen_p-pmean)*(*screen_p-pmean) ));
+  Float rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
+  cout << (*screen_p)(10,10) << endl;
+  cout << (*screen_p)[20] << endl;
   if (prtlev()>2 and currAnt()<2) {
     cout << "RMS screen fluctuation " 
 	 << " = " << rms << " ( " << pmean << " ) " << endl;      
   }
   // scale is set above to delta/meanpwv
   *screen_p = myfbm->data() * scale/rms;
-
 
   if (slot_times_.nelements()<=0) {
     slot_times_.resize(nSim());
@@ -812,8 +819,6 @@ void fBM::initialize(const Int seed, const Float beta) {
   uInt i0,j0;
   
   // FFTServer<Float,Complex> server;
-  // takes a lot of thread thrashing to resize the server, so
-  FFTServer<Float,Complex> server(IPosition(1,s(0)));
   // This class assumes that a Complex array is stored as
   // pairs of floating point numbers, with no intervening gaps, 
   // and with the real component first ie., 
@@ -823,11 +828,23 @@ void fBM::initialize(const Int seed, const Float beta) {
   // S * complexPtr;
   // T * realPtr = (T * ) complexPtr;
   // </srcblock>
+
+  Int stemp(s(0));
+  if (ndim>1)
+    stemp=s(1);
+
+  IPosition size(1,s(0));
+  IPosition size2(2,s(0),stemp);
+  // takes a lot of thread thrashing to resize the server but I can't
+  // figure a great way around the scope issues to just define a 2d one
+  // right off the bat
+  FFTServer<Float,Complex> server(size);
   
-  Matrix<Complex> F2(s(0)/2,s(0)/2);
-  Matrix<Float> G2;
   Vector<Complex> F(s(0)/2);
-  Vector<Float> G; // size zero to let FFTServer calc right size
+  Vector<Float> G; // size zero to let FFTServer calc right size  
+
+  Matrix<Complex> F2(s(0)/2,stemp/2);
+  Matrix<Float> G2;
   
   // FFTServer C,R assumes that the input is hermitian and only has 
   // half of the elements in each direction
@@ -853,8 +870,8 @@ void fBM::initialize(const Int seed, const Float beta) {
     break;
   case 2:
     // beta = 1+2H = 7-2D
-    // I think the server will resize itself.
-    // server.resize(IPosition(2,s(0),s(1)));
+    // Will the server resize itself?
+    server.resize(size2);
     F2.resize(s(0)/2,s(1)/2);
     for (uInt i=0; i<s(0)/2; i++)
       for (uInt j=0; j<s(1)/2; j++) {
@@ -870,6 +887,7 @@ void fBM::initialize(const Int seed, const Float beta) {
 	}
 	F2(i,j)=Complex(amp*cos(phase),amp*sin(phase));
 	// if (i==0) {
+
 	//   i0=0;
 	// } else {
 	//   i0=s(0)-i;
@@ -895,6 +913,11 @@ void fBM::initialize(const Int seed, const Float beta) {
     // 	  F2(s(0)-i,j) = Complex(amp*cos(phase),-amp*sin(phase));
     // 	}
     server.fft(G2,F2,False);  // complex to real Xform
+    cout << G2.shape() << endl;
+    // there has to be a better way
+    for (uInt i=0; i<s(0); i++)
+      for (uInt j=0; j<s(1); j++)
+	data_->operator()(IPosition(2,i,j)) = G2(i,j); 
     //data_->operator()(IPosition(2,i,j))=5.;
     //data_->operator()=InvFFT(F); //complex to real
     break;
