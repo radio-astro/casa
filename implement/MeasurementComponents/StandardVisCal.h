@@ -37,7 +37,6 @@
 #include <casa/BasicMath/Random.h>
 #include <scimath/Mathematics/FFTServer.h>
 
-#ifdef AIPS_USEATM
 using namespace std;
 #include <ATMRefractiveIndexProfile.h>
 #include <ATMPercent.h>
@@ -60,7 +59,6 @@ using namespace std;
 #include <ATMSkyStatus.h>
 #include <ATMTypeName.h>
 #include <ATMAngle.h>
-#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -142,15 +140,9 @@ class TJonesCorruptor : public CalCorruptor {
    TJonesCorruptor(const Int nSim);
    virtual ~TJonesCorruptor();
 
-#ifdef AIPS_USEATM
    Float& pwv(const Int i); 
    Vector<Float>* pwv();
    void initAtm();
-#else
-   Vector<Float>* delay();
-#endif
-
-   Float delay(const Int islot, const Int ichan); // not ref since calced
    inline String& mode() { return mode_; };
    inline Float& mean_pwv() { return mean_pwv_; };
    inline Matrix<Float>& screen() { return *screen_p; };
@@ -159,25 +151,28 @@ class TJonesCorruptor : public CalCorruptor {
      return screen_p->operator()(i,j); };
    virtual void initialize();
    void initialize(const Int Seed, const Float Beta, const Float scale);
-   void initialize(const Int Seed, const Float Beta, const Float scale, const Int xsize, const Int ysize);
+   void initialize(const Int Seed, const Float Beta, const Float scale,
+		   const ROMSAntennaColumns& antcols);
    Complex gain(const Int islot);
+   Complex gain(const Int ix, const Int iy, const Int islot);
+   inline Vector<Float>& antx() { return antx_; };
+   inline Vector<Float>& anty() { return anty_; };
+   inline Float& windspeed() { return windspeed_; };
+   inline Float& pixsize() { return pixsize_; };
 
  protected:
 
  private:   
-   Float mean_pwv_;
+   Float mean_pwv_,windspeed_,pixsize_;
    String mode_; // general parameter for different kinds of corruptions
    Matrix<Float>* screen_p; 
 
-#ifdef AIPS_USEATM
    atm::AtmProfile *itsatm;
    atm::RefractiveIndexProfile *itsRIP;
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
    PtrBlock<Vector<Float>*> pwv_p;
-#else
-   PtrBlock<Vector<Float>*> delay_p;
-#endif
+   Vector<Float> antx_,anty_;   
 };
 
 

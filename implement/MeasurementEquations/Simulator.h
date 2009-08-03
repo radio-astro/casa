@@ -200,7 +200,9 @@ public:
   Bool settrop(const String& mode, 
 	       const String& table,
 	       const Float pwv,
-	       const Float deltapwv);
+	       const Float deltapwv,
+	       const Float beta,
+	       const Float windspeed);
 
   // Apply antenna pointing and squint errors
   Bool setpointingerror(const String& epJTableName,

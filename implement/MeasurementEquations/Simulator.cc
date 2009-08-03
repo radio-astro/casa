@@ -1033,7 +1033,9 @@ Bool Simulator::setapply(const String& type,
 Bool Simulator::settrop(const String& mode, 
 			const String& caltable,   // output
 			const Float pwv,
-			const Float deltapwv) {
+			const Float deltapwv,
+			const Float beta,
+			const Float windspeed) {
   
   LogIO os(LogOrigin("Simulator", "settrop()", WHERE));
 
@@ -1048,6 +1050,8 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("mean_pwv", TpFloat);
       simparDesc.addField ("mode", TpString);
       simparDesc.addField ("delta_pwv", TpFloat);
+      simparDesc.addField ("beta", TpFloat);
+      simparDesc.addField ("windspeed", TpFloat);
             
       // Create record with the requisite field values
       Record simpar(simparDesc);
@@ -1056,12 +1060,13 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("mean_pwv", pwv);
       simpar.define ("mode", mode);
       simpar.define ("delta_pwv", deltapwv);
+      simpar.define ("beta", beta);
+      simpar.define ("windspeed", deltapwv);
 
       // RI TODO check timescale and set to smaller if ness - other VC
       // simulators may just set timescale internally to whatever is most
       // appropriate
       
-
       // create the VC and set basic stuff
       SolvableVisCal *svc = create_corrupt(simpar);
       
