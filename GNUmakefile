@@ -463,11 +463,11 @@ endef
 
 ifeq "$(ONELIB)" "1"
 define build-app
-	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio
+	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl
 endef
 else
 define build-app
-	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio
+	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl
 endef
 endif
 
@@ -573,7 +573,7 @@ t% : t%.cc
 	    $(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio; \
 	fi
 
-$(BINDIR)/% : fits/apps/%.cc
+$(BINDIR)/% : fits/apps/fits2table/%.cc
 	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
 
 $(BINDIR)/% : msfits/apps/%.cc
@@ -582,7 +582,7 @@ $(BINDIR)/% : msfits/apps/%.cc
 $(BINDIR)/% : images/apps/%.cc
 	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
 
-$(BINDIR)/% : measures/apps/%.cc
+$(BINDIR)/% : measures/apps/measuresdata/%.cc
 	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
 
 
