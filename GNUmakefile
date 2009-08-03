@@ -81,7 +81,6 @@ endif
 endif
 
 DEP := 1
-ONELIB := 0
 
 VERSION:=$(shell head -1 VERSION | perl -pe "s|^(\S+).*|\$$1|")
 
@@ -151,10 +150,14 @@ endif
 
 ifneq "$(ARCH)" ""
 LIBDIR := $(DESTDIR)/$(ARCH)/lib
+BINDIR := $(DESTDIR)/$(ARCH)/bin
 else
 LIBDIR := $(DESTDIR)/lib
+BINDIR := $(DESTDIR)/bin
 endif
 LASTVERSION := $(LIBDIR)/.version.last
+ONELIB := $(shell perl -e 'if (-e "$(LIBDIR)/libcasacore.$(SO)") { print "1" } else { print "0" }')
+
 
 CASACC := $(shell find casa -type f -name '*.cc' | egrep -v '/test/|/apps/')
 CASAOBJ := $(CASACC:%.cc=%.o)
@@ -244,6 +247,7 @@ LATTICESLNK_PATH := $(LIBDIR)/libcasa_lattices.$(SO)
 IMAGESCC := $(shell find images -type f -name '*.cc' | egrep -v '/test/|/apps/')
 IMAGESOBJ := $(IMAGESCC:%.cc=%.o)
 TIMAGES := $(shell find images -type f -name 't*.cc' | grep /test/)
+AIMAGES := $(shell find images -type f -name '*.cc' | grep /apps/)
 IMAGESINC := $(shell find images -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^images/@$(INCDIR)/casacore/@g")
 ifneq "$(ARCH)" ""
 IMAGESLIB := images/images/Images/ImageExprGram.lcc images/images/Images/ImageExprGram.ycc \
@@ -303,6 +307,7 @@ MEASURESF := $(shell find measures -type f -name '*.f' | egrep -v '/test/|/apps/
 MEASURESOBJ := $(MEASURESCC:%.cc=%.o)
 MEASURESFOBJ := $(MEASURESF:%.f=%.o)
 TMEASURES := $(shell find measures -type f -name 't*.cc' | grep /test/)
+AMEASURES := $(shell find measures -type f -name '*.cc' | grep /apps/)
 MEASURESINC := $(shell find measures -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^measures/@$(INCDIR)/casacore/@g")
 ifneq "$(ARCH)" ""
 MEASURESLIB := $(shell echo $(MEASURESOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
@@ -355,6 +360,7 @@ MSLNK_PATH := $(LIBDIR)/libcasa_ms.$(SO)
 FITSCC := $(shell find fits -type f -name '*.cc' | egrep -v '/test/|/apps/')
 FITSOBJ := $(FITSCC:%.cc=%.o)
 TFITS := $(shell find fits -type f -name 't*.cc' | grep /test/)
+AFITS := $(shell find fits -type f -name '*.cc' | grep /apps/)
 FITSINC := $(shell find fits -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^fits/@$(INCDIR)/casacore/@g")
 ifneq "$(ARCH)" ""
 FITSLIB := $(shell echo $(FITSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
@@ -374,6 +380,7 @@ FITSLNK_PATH := $(LIBDIR)/libcasa_fits.$(SO)
 MSFITSCC := $(shell find msfits -type f -name '*.cc' | egrep -v '/test/|/apps/')
 MSFITSOBJ := $(MSFITSCC:%.cc=%.o)
 TMSFITS := $(shell find msfits -type f -name 't*.cc' | grep /test/)
+AMSFITS := $(shell find msfits -type f -name '*.cc' | grep /apps/)
 MSFITSINC := $(shell find msfits -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^msfits/@$(INCDIR)/casacore/@g")
 ifneq "$(ARCH)" ""
 MSFITSLIB := $(shell echo $(MSFITSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
@@ -448,10 +455,21 @@ define orphan-headers
   perl -e 'use File::Find; %headers = ( ); @removed = ( ); sub find_hdrs { if ( -f $$_ && ( m/\.h$$/ || m/\.tcc$$/ )) { $$headers{"$$File::Find::dir/$$_"} = 1; } } sub find_orphans { if ( -f $$_ && ( m/\.h$$/ || m/\.tcc$$/ )) { my $$file = "$$File::Find::dir/$$_"; my $$found = 0; $$file =~ s@^\./@@; foreach $$key (keys %headers) { if ( $$key =~ m|\Q$$file\E$$| ) { $$found = 1; last; } } unless ( $$found ) { push( @removed, "$$File::Find::dir/$$_"); unlink($$_); } } } find( { wanted => \&find_hdrs }, "$2" ); chdir("$1/casacore"); find( { wanted => \&find_orphans }, "$2" ); if ( scalar(@removed) > 0 ) { print "removed out-of-date, installed header files from $1:\n"; print "\t" . join("\n\t",@removed) . "\n"; }'
 endef
 
+
 define install-header
 	if test ! -d $(dir $2); then mkdir -p $(dir $2); fi
 	cp $1 $2
 endef
+
+ifeq "$(ONELIB)" "1"
+define build-app
+	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio
+endef
+else
+define build-app
+	$(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio
+endef
+endif
 
 #--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 $(INCDIR)/casacore/casa/%.h: casa/casa/%.h
@@ -554,6 +572,19 @@ t% : t%.cc
 	else \
 	    $(C++) $(CXXFLAGS) -I$(dir $<) $(COREINC) $(INC) -o $@ $< -L$(LIBDIR) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio; \
 	fi
+
+$(BINDIR)/% : fits/apps/%.cc
+	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
+
+$(BINDIR)/% : msfits/apps/%.cc
+	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
+
+$(BINDIR)/% : images/apps/%.cc
+	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
+
+$(BINDIR)/% : measures/apps/%.cc
+	$(call build-app,-lcasacore,-lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa)
+
 
 %.$(SO) : %.$(SOV)
 	rm -f $@
@@ -1014,6 +1045,23 @@ test-msfits: $(TMSFITS:%.cc=%.trd)
 test:  $(TCASA:%.cc=%.trd) $(TCOMPONENTS:%.cc=%.trd) $(TCOORDINATES:%.cc=%.trd) $(TLATTICES:%.cc=%.trd) \
 	$(TIMAGES:%.cc=%.trd) $(TTABLES:%.cc=%.trd) $(TSCIMATH:%.cc=%.trd) $(TMEASURES:%.cc=%.trd) \
 	$(TFITS:%.cc=%.trd) $(TMS:%.cc=%.trd) $(TMSFITS:%.cc=%.trd)
+
+###
+### handle building apps
+###
+ifeq "$(ONELIB)" "0"
+_app_deps_: cleandep_recurse_allsys images msfits
+else
+_app_deps_: libcasacore
+endif
+
+apps-images: _app_deps_ $(addprefix $(BINDIR)/, $(notdir $(AIMAGES:%.cc=%)))
+apps-measures: _app_deps_ $(addprefix $(BINDIR)/, $(notdir $(AMEASURES:%.cc=%)))
+apps-fits: _app_deps_ $(addprefix $(BINDIR)/, $(notdir $(AFITS:%.cc=%)))
+apps-msfits: _app_deps_ $(addprefix $(BINDIR)/, $(notdir $(AMSFITS:%.cc=%)))
+
+apps: apps-msfits apps-fits apps-images apps-measures
+
 
 ifeq "$(DEP)" "1"
 -include $(CASADEP) $(COMPONENTSDEP) $(COORDINATESDEP) $(LATTICESDEP) $(IMAGESDEP) \
