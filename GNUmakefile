@@ -961,6 +961,7 @@ else
 $(TCASA:%.cc=%): $(CORELNK_PATH)
 endif
 test-casa: $(TCASA:%.cc=%.trd)
+ctest-casa: $(TCASA:%.cc=%)
 
 .precious: $(TCOMPONENTS:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -969,6 +970,7 @@ else
 $(TCOMPONENTS:%.cc=%): $(CORELNK_PATH)
 endif
 test-components: $(TCOMPONENTS:%.cc=%.trd)
+ctest-components: $(TCOMPONENTS:%.cc=%)
 
 .precious: $(TCOORDINATES:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -977,6 +979,7 @@ else
 $(TCOORDINATES:%.cc=%): $(CORELNK_PATH)
 endif
 test-coordinates: $(TCOORDINATES:%.cc=%.trd)
+ctest-coordinates: $(TCOORDINATES:%.cc=%)
 
 .precious: $(TLATTICES:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -985,6 +988,7 @@ else
 $(TLATTICES:%.cc=%): $(CORELNK_PATH)
 endif
 test-lattices: $(TLATTICES:%.cc=%.trd)
+ctest-lattices: $(TLATTICES:%.cc=%)
 
 .precious: $(TIMAGES:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -993,6 +997,7 @@ else
 $(TIMAGES:%.cc=%): $(CORELNK_PATH)
 endif
 test-images: $(TIMAGES:%.cc=%.trd)
+ctest-images: $(TIMAGES:%.cc=%)
 
 .precious: $(TTABLES:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1001,6 +1006,7 @@ else
 $(TTABLES:%.cc=%): $(CORELNK_PATH)
 endif
 test-tables: $(TTABLES:%.cc=%.trd)
+ctest-tables: $(TTABLES:%.cc=%)
 
 .precious: $(TSCIMATH:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1009,6 +1015,7 @@ else
 $(TSCIMATH:%.cc=%): $(CORELNK_PATH)
 endif
 test-scimath: $(TSCIMATH:%.cc=%.trd)
+ctest-scimath: $(TSCIMATH:%.cc=%)
 
 .precious: $(TMEASURES:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1017,6 +1024,7 @@ else
 $(TMEASURES:%.cc=%): $(CORELNK_PATH)
 endif
 test-measures: $(TMEASURES:%.cc=%.trd)
+ctest-measures: $(TMEASURES:%.cc=%)
 
 .precious: $(TFITS:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1025,6 +1033,7 @@ else
 $(TFITS:%.cc=%): $(CORELNK_PATH)
 endif
 test-fits: $(TFITS:%.cc=%.trd)
+ctest-fits: $(TFITS:%.cc=%)
 
 .precious: $(TMS:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1033,6 +1042,7 @@ else
 $(TMS:%.cc=%): $(CORELNK_PATH)
 endif
 test-ms: $(TMS:%.cc=%.trd)
+ctest-ms: $(TMS:%.cc=%)
 
 .precious: $(TMSFITS:%.cc=%)
 ifeq "$(ONELIB)" "0"
@@ -1041,6 +1051,7 @@ else
 $(TMSFITS:%.cc=%): $(CORELNK_PATH)
 endif
 test-msfits: $(TMSFITS:%.cc=%.trd)
+ctest-msfits: $(TMSFITS:%.cc=%)
 
 test:  $(TCASA:%.cc=%.trd) $(TCOMPONENTS:%.cc=%.trd) $(TCOORDINATES:%.cc=%.trd) $(TLATTICES:%.cc=%.trd) \
 	$(TIMAGES:%.cc=%.trd) $(TTABLES:%.cc=%.trd) $(TSCIMATH:%.cc=%.trd) $(TMEASURES:%.cc=%.trd) \
