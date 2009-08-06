@@ -4283,7 +4283,7 @@ Bool Imager::residual(const Vector<String>& model,
       }
       if(!clone(theModels(thismodel), imageNames(thismodel))) return False;
     }
-    
+    destroySkyEquation();
     if(!createSkyEquation(theModels, complist)) return False;
     
     addResidualsToSkyEquation(imageNames);
@@ -4878,11 +4878,11 @@ Bool Imager::clean(const String& algorithm,
   
   catch (exception &x) { 
     for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
-	 if (!images_p[thismodel].null()) {
+      if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
              images_p[thismodel]->table().relinquishAutoLocks(True);
              images_p[thismodel]->table().unlock();
 	 }
-	 if (residuals_p[thismodel]->ok()) {
+      if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
              residuals_p[thismodel]->table().relinquishAutoLocks(True);
              residuals_p[thismodel]->table().unlock();
 	 }
