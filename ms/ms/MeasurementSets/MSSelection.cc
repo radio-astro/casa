@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id$ 
 //----------------------------------------------------------------------------
 
 #include <ms/MeasurementSets/MSSelection.h>
@@ -35,6 +35,8 @@
 #include <ms/MeasurementSets/MSArrayGram.h>
 #include <ms/MeasurementSets/MSTimeGram.h>
 #include <ms/MeasurementSets/MSUvDistGram.h>
+#include <ms/MeasurementSets/MSPolnGram.h>
+#include <ms/MeasurementSets/MSRange.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/RecordGram.h>
 
@@ -58,10 +60,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 MSSelection::MSSelection() : 
   fullTEN_p(),ms_p(NULL), antennaExpr_p(""), corrExpr_p(""), fieldExpr_p(""),
   spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-  taqlExpr_p(""), exprOrder_p(MAX_EXPR, NO_EXPR),
+  polnExpr_p(""), taqlExpr_p(""), exprOrder_p(MAX_EXPR, NO_EXPR),
   antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
-  scanIDs_p(),arrayIDs_p(), baselineIDs_p(),selectedTimesList_p(),
-  selectedUVRange_p(),selectedUVUnits_p(),
+  scanIDs_p(),arrayIDs_p(), ddIDs_p(), baselineIDs_p(),selectedTimesList_p(),
+  selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
   maxScans_p(1000), maxArray_p(1000)
 {
   clear();
@@ -91,13 +93,14 @@ MSSelection::MSSelection(const MeasurementSet& ms,
 			 const String& taqlExpr,
 			 const String& corrExpr,
 			 const String& scanExpr,
-			 const String& arrayExpr):
+			 const String& arrayExpr,
+			 const String& polnExpr):
   fullTEN_p(), ms_p(&ms), antennaExpr_p(""), corrExpr_p(""), fieldExpr_p(""),
   spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-  taqlExpr_p(""), exprOrder_p(MAX_EXPR, NO_EXPR),
+  polnExpr_p(""),taqlExpr_p(""), exprOrder_p(MAX_EXPR, NO_EXPR),
   antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
-  scanIDs_p(),baselineIDs_p(),selectedTimesList_p(),
-  selectedUVRange_p(),selectedUVUnits_p(),
+  scanIDs_p(),baselineIDs_p(),ddIDs_p(), selectedTimesList_p(),
+  selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
   maxScans_p(1000), maxArray_p(1000)
 {
   //
@@ -105,21 +108,17 @@ MSSelection::MSSelection(const MeasurementSet& ms,
   // using the setExpr* methods to do that keeps that state of the
   // object consistent.
   //
-  reset(ms,mode,timeExpr,antennaExpr,fieldExpr,spwExpr,uvDistExpr,taqlExpr,corrExpr,scanExpr,arrayExpr);
-  /*
-  clear(); // Clear everything - a moot point in the constructor (but
-	   // good as reference code for developers)
-  setAntennaExpr(antennaExpr);
-  setCorrExpr(corrExpr);
-  setFieldExpr(fieldExpr);
-  setSpwExpr(spwExpr);
-  setScanExpr(scanExpr);
-  setTimeExpr(timeExpr);
-  setUvDistExpr(uvDistExpr);
-  setTaQLExpr(taqlExpr);
-  if (mode==PARSE_NOW)
-    fullTEN_p = toTableExprNode(ms_p);
-  */
+  reset(ms,mode,
+	timeExpr,
+	antennaExpr,
+	fieldExpr,
+	spwExpr,
+	uvDistExpr,
+	taqlExpr,
+	corrExpr,
+	scanExpr,
+	arrayExpr,
+	polnExpr);
 }
 
 
@@ -135,7 +134,8 @@ void MSSelection::reset(const MeasurementSet& ms,
 			const String& taqlExpr,
 			const String& corrExpr,
 			const String& scanExpr,
-			const String& arrayExpr)
+			const String& arrayExpr,
+			const String& polnExpr)
 {
   //
   // Do not initialize the private string variables directly. Instead
@@ -162,7 +162,9 @@ void MSSelection::reset(const MeasurementSet& ms,
   setArrayExpr(arrayExpr);
   setTimeExpr(timeExpr);
   setUvDistExpr(uvDistExpr);
+  setPolnExpr(polnExpr);
   setTaQLExpr(taqlExpr);
+
   if (mode==PARSE_NOW)
     fullTEN_p = toTableExprNode(ms_p);
 }
@@ -180,7 +182,8 @@ MSSelection::~MSSelection()
 MSSelection::MSSelection(const Record& selectionItem) : 
   antennaExpr_p(""), corrExpr_p(""), fieldExpr_p(""),
   spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-  taqlExpr_p(""),antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(),baselineIDs_p()
+  polnExpr_p(""),taqlExpr_p(""),antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
+  spwIDs_p(),baselineIDs_p(), ddIDs_p(), selectedPolMap_p(Vector<Int>(0))
 {
 // Construct from a record representing a selection item
 // Output to private data:
@@ -200,7 +203,8 @@ MSSelection::MSSelection(const Record& selectionItem) :
 
 //----------------------------------------------------------------------------
 
-MSSelection::MSSelection (const MSSelection& other)
+  MSSelection::MSSelection (const MSSelection& other):
+    selectedPolMap_p(Vector<Int>(0))
 {
 // Copy constructor
 // Input:
@@ -217,6 +221,7 @@ MSSelection::MSSelection (const MSSelection& other)
     this->timeExpr_p    = other.timeExpr_p;
     this->uvDistExpr_p  = other.uvDistExpr_p;
     this->taqlExpr_p    = other.taqlExpr_p;
+    this->polnExpr_p    = other.polnExpr_p;
     this->exprOrder_p   = other.exprOrder_p;
   }
 }
@@ -240,6 +245,7 @@ MSSelection& MSSelection::operator= (const MSSelection& other)
     this->timeExpr_p    = other.timeExpr_p;
     this->uvDistExpr_p  = other.uvDistExpr_p;
     this->taqlExpr_p    = other.taqlExpr_p;
+    this->polnExpr_p    = other.polnExpr_p;
     this->exprOrder_p   = other.exprOrder_p;
   }
 
@@ -320,7 +326,7 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
   for(uInt i=0; i<exprOrder_p.nelements(); i++)
     {
       const TableExprNode *node = 0x0;
-      TableExprNode taql;
+      TableExprNode ten;
       switch(exprOrder_p[i])
 	{
         case ANTENNA_EXPR:
@@ -329,7 +335,10 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	    antenna2IDs_p.resize(0);
 	    baselineIDs_p.resize(0,2);
 	    if(antennaExpr_p != "" &&
-	       msAntennaGramParseCommand(ms, antennaExpr_p, antenna1IDs_p, antenna2IDs_p,baselineIDs_p)==0)
+	       msAntennaGramParseCommand(ms, antennaExpr_p, 
+					 antenna1IDs_p, 
+					 antenna2IDs_p,
+					 baselineIDs_p)==0)
 	      node = msAntennaGramParseNode();
 	    break;
 	  }
@@ -346,6 +355,20 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	    if(fieldExpr_p != "" &&
 	       msFieldGramParseCommand(ms, fieldExpr_p,fieldIDs_p) == 0)
 	      node = msFieldGramParseNode();
+	    break;
+	  }
+        case POLN_EXPR:
+	  {
+	    if (polnExpr_p != "")
+	      {
+		msPolnGramParseCommand(ms, 
+				       polnExpr_p,
+				       spwIDs_p,
+				       ten,
+				       ddIDs_p,
+				       selectedPolMap_p);
+		//		node = &ten;
+	      }
 	    break;
 	  }
         case SPW_EXPR:
@@ -372,13 +395,6 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	      node = msArrayGramParseNode();
 	    break;
 	  }
-	  /*
-        case TIME_EXPR:
-          if(timeExpr_p != "" &&
-             msTimeGramParseCommand(ms, timeExpr_p) == 0)
-            node = msTimeGramParseNode();
-          break;
-	  */
         case UVDIST_EXPR:
 	  {
 	    selectedUVRange_p.resize(2,0);
@@ -395,8 +411,8 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	    if(taqlExpr_p != "")
 	      {
 		//	      taql = tableCommand(taqlExpr_p).node();
-		taql = RecordGram::parse(*ms,taqlExpr_p);
-		node = &taql;
+		ten = RecordGram::parse(*ms,taqlExpr_p);
+		node = &ten;
 	      }
 	    break;
 	  }
@@ -404,14 +420,28 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
         default:  break;
 	} // Switch
       
-      if(node && node->isNull() == False) {
-	if(condition.isNull() == True) {
+      if(node && node->isNull() == False)
+	if(condition.isNull() == True)
 	  condition = *node;
-	} else {
+	else
 	  condition = condition && *node;
-        }
-      }
     }//For
+
+  // {
+  //    TableExprNode polnNode;
+  //   if (polnExpr_p != "")
+  //     {
+  // 	msPolnGramParseCommand(ms, 
+  // 			       polnExpr_p,
+  // 			       spwIDs_p,
+  // 			       polnNode,
+  // 			       ddIDs_p,
+  // 			       selectedPolMap_p);
+  // 	if (!polnNode.isNull())
+  // 	  if(condition.isNull() == True) condition = polnNode;
+  // 	  else                           condition = condition && polnNode;
+  //     }
+  // }
   //
   // Now parse the time expression.  Internally use the condition
   // generated so far to find the first logical row to use to get
@@ -425,13 +455,9 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
   //
   // Add the time-expression TEN to the condition
   //
-  if(timeNode && timeNode->isNull() == False) {
-    if(condition.isNull() == True) {
-      condition = *timeNode;
-    } else {
-      condition = condition && *timeNode;
-    }
-  }
+  if(timeNode && timeNode->isNull() == False)
+    if(condition.isNull() == True) condition = *timeNode;
+    else                           condition = condition && *timeNode;
 
   fullTEN_p = condition;
   msAntennaGramParseDeleteNode();
@@ -459,6 +485,10 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	selectedMS.flush();
 	newRefMS=True;
       }
+//     MSRange msr(selectedMS);
+//     Vector<String> items(1); items(0)="SCAN_NUMBER";
+//     Record scanRange=msr.range(items);
+//     scanRange.get(scanRange.fieldNumber("scan_number"),scanIDs_p);
     return newRefMS;
   }
 
@@ -477,7 +507,7 @@ void MSSelection::clear(const MSExprType type)
       timeExpr_p    = "";
       uvDistExpr_p  = "";
       taqlExpr_p    = "";
-      
+      polnExpr_p    = "";
       exprOrder_p = Vector<Int>(MAX_EXPR, NO_EXPR);
     }
   else
@@ -497,6 +527,7 @@ void MSSelection::clear(const MSExprType type)
 	      case TIME_EXPR:    timeExpr_p    = "";break;
 	      case UVDIST_EXPR:  uvDistExpr_p  = "";break;
 	      case TAQL_EXPR:    taqlExpr_p    = "";break;
+	      case POLN_EXPR:    polnExpr_p    = "";break;
 	      default:;
 	      };
 	  }
@@ -508,16 +539,18 @@ void MSSelection::clear(const MSExprType type)
 
 Bool MSSelection::setOrder(MSSelection::MSExprType type)
 {
+  Bool ret=False;
   for(uInt i=0; i<exprOrder_p.nelements(); i++)
     {
       if(exprOrder_p[i] == NO_EXPR)
 	{
 	  exprOrder_p[i] = type;
-	  return True;
+	  ret=True;
+	  break;
 	}
     }
   
-  return False;
+  return ret;
 }
 
 //----------------------------------------------------------------------------
@@ -699,6 +732,25 @@ Bool MSSelection::setTaQLExpr(const String& taqlExpr)
   
   return False;
 }
+//----------------------------------------------------------------------------
+
+Bool MSSelection::setPolnExpr(const String& polnExpr)
+{
+  // Set the Poln expression
+  // Input:
+  //    polnExpr        const String&  Supplementary poln expression
+  // Output to private data:
+  //    polnExpr_p      String         Supplementary poln expression
+  //
+  if(setOrder(POLN_EXPR))
+    {
+      polnExpr_p = polnExpr;
+      resetTEN();
+      return True;
+    }
+  
+  return False;
+}
 
 //----------------------------------------------------------------------------
 
@@ -769,6 +821,11 @@ void MSSelection::fromSelectionItem(const Record& selectionItem)
   if (definedAndSet(selectionItem,"uvdist")) {
     setUvDistExpr(selectionItem.asString("uvdist"));
     //    cout << uvDistExpr_p << ", uvdist" << endl;
+  }
+  // Poln expression
+  if (definedAndSet(selectionItem,"poln")) {
+    setUvDistExpr(selectionItem.asString("poln"));
+    //    cout << polnExpr_p << ", poln" << endl;
   }
 }
 

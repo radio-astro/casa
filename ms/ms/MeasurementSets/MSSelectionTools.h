@@ -52,6 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& arrayExpr=""
 		  );
   String stripWhite(const String& str, Bool onlyends=True);
+  int tokenize(const String& str, const String& sep, Vector<String>& tokens,Bool upCase=False);
 };
 
 #endif
