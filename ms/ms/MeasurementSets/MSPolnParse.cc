@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (polnIDs.nelements() == 0)
       {
 	ostringstream mesg;
-	mesg << "No match for polarization ID(s) " << polnIDs << " ";
+	mesg << "No match for polarization ID(s) ";
 	throw(MSSelectionPolnParseError(String(mesg.str())));
       }
     // cout << "No. of pol IDs = " << polnIDs.nelements() << endl;
@@ -266,10 +266,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// cout << tokens.nelements() << " " << tokens << " " << nTokens << endl;
 	if (nTokens > 2)
 
-	  //	  MSPolnGramerror
-	  throw(MSSelectionPolnParseError(String("Too many ':'s.  Tip: Channel "
-						 "specification is not useful "
-						 "and not allowed.")));
+	  throw(MSSelectionPolnParseError(String("Too many ':'s.  [Tip: Channel "
+	  					 "specification is not useful "
+	  					 "and not allowed.]")));
+	  // MSPolnGramerror(String("Too many ':'s.  [Tip: Channel "
+	  // 			 "specification is not useful "
+	  // 			 "and not allowed.]"));
 	//
 	// If there were two ":" separate tokens, they were of the form SPW:POLN
 	//
@@ -296,10 +298,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	catch (MSSelectionSpwError &x)
 	  {
-	    String mesg;
-	    mesg = " "+polnSpecList[i];
-	    x.addMessage(mesg);
-	    //	    MSPolnGramerror((char *)(x.getMesg().c_str()));
+	    // String mesg;
+	    // mesg = " "+polnSpecList[i];
+	    // x.addMessage(mesg);
+	    // //	    MSPolnGramerror((char *)(x.getMesg().c_str()));
 	    throw(MSSelectionPolnParseError(x.getMesg()));
 	  }
 	//
@@ -336,9 +338,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void MSPolnParse::setIDLists(const Int key, const Int ndx, Vector<Int>& val)
   {
-    setupMap_p(key).resize(2,True);
     if (ndx>1)
       throw(MSSelectionError("Internal error in MSPolnParse::setIDLists(): Index greater 1"));
-    setupMap_p(key)[ndx]=val;
+
+    setupMap_p(key).resize(2,True);
+    if (val.nelements() == 0)
+      {
+	if (setupMap_p.isDefined(key)) 
+	  setupMap_p.remove(key);
+      }
+    else
+      setupMap_p(key)[ndx]=val;
   }
 } //# NAMESPACE CASA - END

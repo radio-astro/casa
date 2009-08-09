@@ -106,6 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	String newMesgs;
 	newMesgs = constructMessage(msPolnGramPosition(), command);
 	x.addMessage(newMesgs);
+	MSPolnGramerror((char *)(x.getMesg().c_str()));
 	throw;
       }
   }
