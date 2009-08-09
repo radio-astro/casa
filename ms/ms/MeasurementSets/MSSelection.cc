@@ -477,7 +477,6 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
     if (fullTEN_p.isNull()) fullTEN_p=toTableExprNode(ms_p);
     if ((!fullTEN_p.isNull()) && (fullTEN_p.nrow() > 0))
       {
-	cout << "fullTen.nrow() = " << fullTEN_p.nrow() << endl;
 	selectedMS = MS((*ms_p)(fullTEN_p));
 	if (outMSName!="") selectedMS.rename(outMSName,Table::New);
 	selectedMS.flush();
