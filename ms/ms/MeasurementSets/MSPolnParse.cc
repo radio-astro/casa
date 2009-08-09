@@ -45,7 +45,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //------------------------------------------------------------------------------
   //  
   MSPolnParse::MSPolnParse ()
-    : MSParse(),node_p(0x0), ddIDList_p(), polMap_p(Vector<Int>(0))
+    : MSParse(),
+      node_p(0x0), 
+      ddIDList_p(), 
+      polMap_p(Vector<Int>(0)),
+      setupMap_p(Vector<Vector<Int> >(0))
   {
     if (MSPolnParse::node_p!=0x0) delete MSPolnParse::node_p;
     MSPolnParse::node_p=0x0;
@@ -55,7 +59,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //------------------------------------------------------------------------------
   //  
   MSPolnParse::MSPolnParse (const MeasurementSet* ms)
-    : MSParse(ms, "Pol"),node_p(0x0), ddIDList_p(), polMap_p(Vector<Int>(0))
+    : MSParse(ms, "Pol"),
+      node_p(0x0), 
+      ddIDList_p(), 
+      polMap_p(Vector<Int>(0)),
+      setupMap_p(Vector<Vector<Int> >(0))
   {
     ddIDList_p.resize(0);
     if(MSPolnParse::node_p) delete MSPolnParse::node_p;
@@ -102,36 +110,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //				   Matrix<Int>& ddIDMap)
   {
     Vector<Int> ddIDs;
-    // Vector<Int> polId(polnIDs.nelements());
-    // for (uInt p=0; p<polnIDs.nelements(); p++)
-    //   {
-    // 	Vector<Int> tmp(1); tmp[0]=polnIDs[p];
-    // 	polId[p] = msPolNdx.matchCorrType(tmp,False)[0];
-    //   }
     if (polnIDs.nelements() == 0)
       {
 	ostringstream mesg;
 	mesg << "No match for polarization ID(s) " << polnIDs << " ";
 	throw(MSSelectionPolnParseError(String(mesg.str())));
-	//	MSPolnGramerror((char *)mesg.str().c_str());
       }
     // cout << "No. of pol IDs = " << polnIDs.nelements() << endl;
     // cout << "No. of SPW IDs = " << spwIDs.nelements() << endl;
-    for (uInt s=0; s<spwIDs.nelements(); s++)
-      for (uInt p=0; p<polnIDs.nelements(); p++)
-	{
-	  Int n;
-	  Vector<Int> tmp=msDDNdx.matchSpwIdAndPolznId(spwIDs[s],polnIDs[p]);
-	  if (tmp.nelements() > 0)
-	    {
-	      ddIDs.resize((n=ddIDs.nelements())+1,True);
-	      ddIDs[n]=tmp(0);
-	      // cout << "MAP[SPW, POLN, DD] = " << spwIDs[s] 
-	      // 	   << " " << polnIDs[p] 
-	      // 	   << " " << tmp
-	      // 	   << endl;
-	    }
-	}
+    for (uInt p=0; p<polnIDs.nelements(); p++)
+      {
+	Vector<Int> thisDDList;
+	thisDDList.resize(0);
+	for (uInt s=0; s<spwIDs.nelements(); s++)
+	  {
+	    Int n;
+	    Vector<Int> tmp=msDDNdx.matchSpwIdAndPolznId(spwIDs[s],polnIDs[p]);
+	    if (tmp.nelements() > 0)
+	      {
+		ddIDs.resize((n=ddIDs.nelements())+1,True);
+		ddIDs[n]=tmp[0];
+		thisDDList.resize((n=thisDDList.nelements())+1,True);
+		thisDDList[n]=tmp[0];
+	      }
+	  }
+	//	cout << "P = " << polnIDs[p] << " " << thisDDList << endl;
+	setIDLists(polnIDs[p], 1, thisDDList);
+      }
     return ddIDs;
   }
   //
@@ -182,7 +187,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 
 	if (allFound=(foundCounter == polIds.nelements()))
-	  polIndexMap(row)=polIndices;
+	  {
+	    polIndexMap(row)=polIndices;
+	    setIDLists((Int)row,0,polIndices);
+	  }
 	if (allFound)
 	  {
 	    uInt n;
@@ -229,8 +237,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //   2. Generate list of indices using SPW and POLN tokens.
   //   3. Generate the {SPW, POLN} --> DDID map
   //
-  Int MSPolnParse::theParser(const String& command,
-			     const Vector<Int>& selectedSpwIDs)
+  Int MSPolnParse::theParser(const String& command) 
+			     // Vector<Int>& selectedDDIDs, 
+			     // Matrix<Int>& selectedSpwPolnMap)
   {
     Int ret=0, nSpecList=0;
     Vector<String> polnSpecList;
@@ -304,9 +313,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // 	 << "Poln = " << polnExpr << " " << polnIDs << endl;
 	    MSDataDescIndex msDDNdx(ms()->dataDescription());
 	    MSPolarizationIndex msPolNdx(ms()->polarization());
-	    // cout << "SPW:POLN = " << spwIDs << endl
-	    // 	 << "SPW Expr = " << selectedSpwIDs << endl;
 	    ddIDList_p=getMapToDDIDs(msDDNdx, msPolNdx, spwIDs, polnIDs);
+
 	    // cout << "DD IDs = " << ddIDList_p << endl;
 	  }
 	catch (MSSelectionPolnParseError& x)
@@ -316,10 +324,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    x.addMessage(mesg);
 	    throw;
 	  }
-         selectFromIDList(ddIDList_p);
+	selectFromIDList(ddIDList_p);
       }
     return ret;
   }
 
   const TableExprNode* MSPolnParse::node() { return node_p; }
+  //
+  //------------------------------------------------------------------------------
+  //  A convenience method to set the vectors of Poln or DD IDs in the setupMap.
+  //
+  void MSPolnParse::setIDLists(const Int key, const Int ndx, Vector<Int>& val)
+  {
+    setupMap_p(key).resize(2,True);
+    if (ndx>1)
+      throw(MSSelectionError("Internal error in MSPolnParse::setIDLists(): Index greater 1"));
+    setupMap_p(key)[ndx]=val;
+  }
 } //# NAMESPACE CASA - END

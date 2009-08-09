@@ -31,6 +31,7 @@
 //# Includes
 #include <ms/MeasurementSets/MSParse.h>
 #include <casa/Containers/OrderedMap.h>
+#include <casa/Containers/MapIO.h>
 #include <ms/MeasurementSets/MSPolarization.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSPolIndex.h>
@@ -103,11 +104,12 @@ public:
   //  static MSPolnParse* thisMSSParser;
   void reset() {polMap_p.clear(); ddIDList_p.resize(0);};
   void cleanup() {if (node_p) delete node_p;node_p=0x0;};
-  Int theParser(const String& command, 
-		const Vector<Int>& selectedSpwIDs);
-
-  OrderedMap<Int, Vector<Int> > selectedPolnMap() {return polMap_p;}
-  Vector<Int> selectedDDIDs() {return ddIDList_p;}
+  Int theParser(const String& command); 
+		// Vector<Int>& selectedDDIDs, 
+		// Matrix<Int>& selectedSpwPolnMap);
+  OrderedMap<Int, Vector<Int> > selectedPolnMap()           {return polMap_p;}
+  OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap() {return setupMap_p;}
+  Vector<Int> selectedDDIDs()                               {return ddIDList_p;}
 private:
   Vector<Int> getMapToDDIDs(MSDataDescIndex& msDDNdx, MSPolarizationIndex& msPolNdx,
 			    const Vector<Int>& spwIDs, const Vector<Int>& polnIDs);
@@ -116,7 +118,10 @@ private:
   Vector<Int> getPolnIDs(const String& polSpec);
   TableExprNode* node_p;
   OrderedMap<Int, Vector<Int> > polMap_p;
+  OrderedMap<Int, Vector<Vector<Int> > > setupMap_p;
   Vector<Int> ddIDList_p;
+
+  void setIDLists(const Int key, const Int ndx, Vector<Int>& val);
 };
 
 } //# NAMESPACE CASA - END
