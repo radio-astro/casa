@@ -288,6 +288,9 @@ class MSSelection
   inline OrderedMap<Int, Vector<Int> > getPolMap(const MeasurementSet* ms=NULL) 
   {getTEN(ms); return selectedPolMap_p;};
 
+  inline OrderedMap<Int, Vector<Vector<Int> > > getSetupMap(const MeasurementSet* ms=NULL) 
+  {getTEN(ms); return selectedSetupMap_p;};
+
   inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
   {getTEN(ms); return scanIDs_p.copy();}
 
@@ -368,6 +371,7 @@ class MSSelection
   Matrix<Double> selectedUVRange_p;
   Vector<Bool> selectedUVUnits_p;
   OrderedMap<Int, Vector<Int> > selectedPolMap_p;
+  OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap_p;
   Int maxScans_p, maxArray_p;
 };
 

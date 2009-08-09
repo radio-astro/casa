@@ -64,6 +64,7 @@ MSSelection::MSSelection() :
   antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
   scanIDs_p(),arrayIDs_p(), ddIDs_p(), baselineIDs_p(),selectedTimesList_p(),
   selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
+  selectedSetupMap_p(Vector<Vector<Int> >(0)),
   maxScans_p(1000), maxArray_p(1000)
 {
   clear();
@@ -101,6 +102,7 @@ MSSelection::MSSelection(const MeasurementSet& ms,
   antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
   scanIDs_p(),baselineIDs_p(),ddIDs_p(), selectedTimesList_p(),
   selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
+  selectedSetupMap_p(Vector<Vector<Int> >(0)),
   maxScans_p(1000), maxArray_p(1000)
 {
   //
@@ -183,7 +185,9 @@ MSSelection::MSSelection(const Record& selectionItem) :
   antennaExpr_p(""), corrExpr_p(""), fieldExpr_p(""),
   spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
   polnExpr_p(""),taqlExpr_p(""),antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
-  spwIDs_p(),baselineIDs_p(), ddIDs_p(), selectedPolMap_p(Vector<Int>(0))
+  spwIDs_p(),baselineIDs_p(), ddIDs_p(), selectedPolMap_p(Vector<Int>(0)),
+  selectedSetupMap_p(Vector<Vector<Int> >(0))
+
 {
 // Construct from a record representing a selection item
 // Output to private data:
@@ -204,7 +208,9 @@ MSSelection::MSSelection(const Record& selectionItem) :
 //----------------------------------------------------------------------------
 
   MSSelection::MSSelection (const MSSelection& other):
-    selectedPolMap_p(Vector<Int>(0))
+    selectedPolMap_p(Vector<Int>(0)),
+  selectedSetupMap_p(Vector<Vector<Int> >(0))
+
 {
 // Copy constructor
 // Input:
@@ -357,20 +363,6 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	      node = msFieldGramParseNode();
 	    break;
 	  }
-        case POLN_EXPR:
-	  {
-	    if (polnExpr_p != "")
-	      {
-		msPolnGramParseCommand(ms, 
-				       polnExpr_p,
-				       spwIDs_p,
-				       ten,
-				       ddIDs_p,
-				       selectedPolMap_p);
-		//		node = &ten;
-	      }
-	    break;
-	  }
         case SPW_EXPR:
 	  {
 	    spwIDs_p.resize(0);
@@ -395,6 +387,13 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	      node = msArrayGramParseNode();
 	    break;
 	  }
+	  /*
+        case TIME_EXPR:
+          if(timeExpr_p != "" &&
+             msTimeGramParseCommand(ms, timeExpr_p) == 0)
+            node = msTimeGramParseNode();
+          break;
+	  */
         case UVDIST_EXPR:
 	  {
 	    selectedUVRange_p.resize(2,0);
@@ -416,6 +415,20 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	      }
 	    break;
 	  }
+        case POLN_EXPR:
+	  {
+	    if (polnExpr_p != "")
+	      {
+		msPolnGramParseCommand(ms, 
+				       polnExpr_p,
+				       ten,
+				       ddIDs_p,
+				       selectedPolMap_p,
+				       selectedSetupMap_p);
+		node = &ten;
+	      }
+	    break;
+	  }
         case NO_EXPR:break;
         default:  break;
 	} // Switch
@@ -426,22 +439,6 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 	else
 	  condition = condition && *node;
     }//For
-
-  // {
-  //    TableExprNode polnNode;
-  //   if (polnExpr_p != "")
-  //     {
-  // 	msPolnGramParseCommand(ms, 
-  // 			       polnExpr_p,
-  // 			       spwIDs_p,
-  // 			       polnNode,
-  // 			       ddIDs_p,
-  // 			       selectedPolMap_p);
-  // 	if (!polnNode.isNull())
-  // 	  if(condition.isNull() == True) condition = polnNode;
-  // 	  else                           condition = condition && polnNode;
-  //     }
-  // }
   //
   // Now parse the time expression.  Internally use the condition
   // generated so far to find the first logical row to use to get
@@ -480,6 +477,7 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
     if (fullTEN_p.isNull()) fullTEN_p=toTableExprNode(ms_p);
     if ((!fullTEN_p.isNull()) && (fullTEN_p.nrow() > 0))
       {
+	cout << "fullTen.nrow() = " << fullTEN_p.nrow() << endl;
 	selectedMS = MS((*ms_p)(fullTEN_p));
 	if (outMSName!="") selectedMS.rename(outMSName,Table::New);
 	selectedMS.flush();
