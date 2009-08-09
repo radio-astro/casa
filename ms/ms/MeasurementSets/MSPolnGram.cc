@@ -79,10 +79,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   int msPolnGramParseCommand (const MeasurementSet* ms, 
 			      const String& command,
-			      const Vector<Int>& selectedSpwIDList,
 			      TableExprNode& node,
 			      Vector<Int>& selectedDDIDs,
-			      OrderedMap<Int, Vector<Int> >& selectedPolnMap) 
+			      OrderedMap<Int, Vector<Int> >& selectedPolnMap,
+			      OrderedMap<Int, Vector<Vector<Int> > >& selectedSetupMap) 
   {
     try 
       {
@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	MSPolnParse parser(ms);
 	parser.reset();
 	// parse command string
-	ret=parser.theParser(command, selectedSpwIDList);
+	ret=parser.theParser(command);
 			     // selectedDDIDs,
 			     // selectedSpwPolnMap);
 	// selectedIDs = parser.selectedIDs();
@@ -98,6 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	node=(*(parser.node()));
 	selectedDDIDs = parser.selectedDDIDs();
 	selectedPolnMap = parser.selectedPolnMap();
+	selectedSetupMap = parser.selectedSetupMap();
 	return ret;
       }
     catch (MSSelectionPolnError &x)

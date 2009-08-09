@@ -75,10 +75,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Declare the bison parser (is implemented by bison command).
   int msPolnGramParseCommand (const MeasurementSet *ms, const String& command);
   int msPolnGramParseCommand (const MeasurementSet *ms, const String& command,
-			      const Vector<Int>& selectedSpwIDList,
 			      TableExprNode& node,
 			      Vector<Int>& selectedDDIDs, 
-			      OrderedMap<Int, Vector<Int> >& selectedPolnMap);
+			      OrderedMap<Int, Vector<Int> >& selectedPolnMap,
+			      OrderedMap<Int, Vector<Vector<Int> > >& selectedSetupMap
+			      );
   
   // The yyerror function for the parser.
   // It throws an exception with the current token.
