@@ -425,7 +425,7 @@ TableExprNode MSSelection::toTableExprNode(const MeasurementSet* ms)
 				       ddIDs_p,
 				       selectedPolMap_p,
 				       selectedSetupMap_p);
-		node = &ten;
+	//	node = &ten;
 	      }
 	    break;
 	  }
