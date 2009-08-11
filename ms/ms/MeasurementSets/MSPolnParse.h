@@ -112,10 +112,21 @@ public:
   Vector<Int> selectedDDIDs()                               {return ddIDList_p;}
 private:
   Vector<Int> getMapToDDIDs(MSDataDescIndex& msDDNdx, MSPolarizationIndex& msPolNdx,
-			    const Vector<Int>& spwIDs, const Vector<Int>& polnIDs);
+			    const Vector<Int>& spwIDs, Vector<Int>& polnIDs,
+			    Vector<Int>& polIndices);
   Vector<Int> matchPolIDsToPolTableRow(const Vector<Int>& polIds,
-				       OrderedMap<Int, Vector<Int> >& polIndexMap);
-  Vector<Int> getPolnIDs(const String& polSpec);
+				       OrderedMap<Int, Vector<Int> >& polIndexMap,
+				       Vector<Int>& polIndices,
+				       Bool addToMap=False);
+  Vector<Int> getPolnIDs(const String& polSpec, Vector<Int>& polIndices);
+  Vector<Int> getPolnIndices(const Int& polnID, const Vector<Int>& polnIDList);
+  //
+  // These are the versions used in the code.
+  Vector<Int> getPolnIDsV2(const String& polSpec, Vector<Int>& polTypes);
+  Vector<Int> getMapToDDIDsV2(const String& polExpr, 
+			      const Vector<Int>& spwIDs, 
+			      Vector<Int>& polnIDs,
+			      Vector<Int>& polnIndices);
   TableExprNode* node_p;
   OrderedMap<Int, Vector<Int> > polMap_p;
   OrderedMap<Int, Vector<Vector<Int> > > setupMap_p;

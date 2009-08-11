@@ -44,6 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //# Constructor
   //------------------------------------------------------------------------------
   //  
+  extern const char*           strpMSPolnGram;
   MSPolnParse::MSPolnParse ()
     : MSParse(),
       node_p(0x0), 
@@ -106,10 +107,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Vector<Int> MSPolnParse::getMapToDDIDs(MSDataDescIndex& msDDNdx, 
 					 MSPolarizationIndex& msPolNdx,
 					 const Vector<Int>& spwIDs, 
-					 const Vector<Int>& polnIDs)
+					 Vector<Int>& polnIDs,
+					 Vector<Int>& polnIndices)
   {
     Vector<Int> ddIDs;
     Vector<Int> thisDDList;
+    Vector<Int> validPolIDs, validPolIndices;
     if (polnIDs.nelements() == 0)
       {
 	ostringstream mesg;
@@ -131,8 +134,94 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		thisDDList[n]=tmp[0];
 	      }
 	  }
-	setIDLists(polnIDs[p], 1, thisDDList);
+	if (thisDDList.nelements() > 0) 
+	  {
+	    uInt n;
+	    setIDLists(polnIDs[p], 1, thisDDList);
+	    validPolIDs.resize((n=validPolIDs.nelements())+1,True);
+	    validPolIDs[n]=polnIDs[p];
+	    validPolIndices.resize((n=validPolIndices.nelements())+1,True);
+	    validPolIndices[n]=polnIndices[p];
+	    //	    cout << "Found DDID for PolID " << polnIDs[p] << endl;
+	  }
+	// else
+	//   cout << "Not found DDID for PolID " << polnIDs[p] << endl;
       }
+    polnIDs.resize(0); polnIDs=validPolIDs;
+    polnIndices.resize(0); polnIndices=validPolIndices;
+    return ddIDs;
+  }
+  //
+  //------------------------------------------------------------------------------
+  //  
+  Vector<Int> MSPolnParse::getMapToDDIDsV2(const String& polnExpr, 
+					   const Vector<Int>& spwIDs, 
+					   Vector<Int>& polnIDs,
+					   Vector<Int>& polnIndices)
+  {
+    Vector<Int> ddIDs, polTypes;
+    Vector<Int> thisDDList;
+    Vector<Int> validPolIDs, validPolIndices;
+    MSDataDescIndex msDDNdx(ms()->dataDescription());
+    MSPolarizationIndex msPolNdx(ms()->polarization());
+    //    cout << "SpwIDs = " << spwIDs << endl;
+    polnIDs = getPolnIDsV2(polnExpr, polTypes);
+    //    cout << "PolIDs = " << polnIDs << " polTypes = " << polTypes << endl;
+    //   if (polnIDs.nelements() == 0)
+   if (polTypes.nelements() == 0)
+      {
+	ostringstream mesg;
+	mesg << "No match for polarization ID(s) ";
+	throw(MSSelectionPolnParseError(String(mesg.str())));
+      }
+    for (uInt p=0; p<polnIDs.nelements(); p++)
+      {
+	Vector<Int> tt;
+	tt = getPolnIndices(polnIDs[p],polTypes);
+	//	cout << "Poln indices for " << polnIDs[p] << " = " << tt << endl;
+	polnIndices.resize(0);polnIndices=tt;
+	thisDDList.resize(0);
+	for (uInt s=0; s<spwIDs.nelements(); s++)
+	  {
+	    Int n;
+	    Vector<Int> tmp=msDDNdx.matchSpwIdAndPolznId(spwIDs[s],polnIDs[p]);
+	    if (tmp.nelements() > 0)
+	      {
+		ddIDs.resize((n=ddIDs.nelements())+1,True);
+		ddIDs[n]=tmp[0];
+		thisDDList.resize((n=thisDDList.nelements())+1,True);
+		thisDDList[n]=tmp[0];
+		setIDLists((Int)polnIDs[p],0,polnIndices);
+		polMap_p(polnIDs[p]).resize(0);
+		polMap_p(polnIDs[p])=polnIndices;
+		//		cout << "DDIDs for SPW = " << spwIDs[s] << " = " << tmp[0] << endl;
+	      }
+	  }
+	if (thisDDList.nelements() > 0) 
+	  {
+	    uInt n;
+	    setIDLists(polnIDs[p], 1, thisDDList);
+	    validPolIDs.resize((n=validPolIDs.nelements())+1,True);
+	    validPolIDs[n]=polnIDs[p];
+	    validPolIndices.resize((n=validPolIndices.nelements())+1,True);
+	    validPolIndices[n]=polnIndices[p];
+	  }
+	// else
+	//   cout << "Not found DDID for PolID " << polnIDs[p] << endl;
+      }
+    if (ddIDs.nelements() == 0)
+      {
+	ostringstream mesg;
+	mesg << "No match for polarization ID(s) ";
+	//	strpMSPolnGram = polnExpr.c_str();
+	throw(MSSelectionPolnParseError(String(mesg.str())));
+      }
+    polnIDs.resize(0); polnIDs=validPolIDs;
+    polnIndices.resize(0); polnIndices=validPolIndices;
+    // for(uInt p=0; p<polnIDs.nelements(); p++)
+    //   setIDLists((Int)polnIDs[p],0,polnIndices);
+    //    cout << "VPolIDs = " << polnIDs << endl;
+    //    cout << "VPolIndices " << polnIndices << endl;
     return ddIDs;
   }
   //
@@ -143,7 +232,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  i.e. "RR", "LL" etc.
   //
   Vector<Int> MSPolnParse::matchPolIDsToPolTableRow(const Vector<Int>& polIds,
-						    OrderedMap<Int, Vector<Int> >& polIndexMap)
+						    OrderedMap<Int, Vector<Int> >& polIndexMap,
+						    Vector<Int>& polIndices,
+						    Bool addToMap)
   {
     Vector<Int> rowList;
     MSPolarization mspol(ms()->polarizationTableName());
@@ -157,17 +248,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Vector<Int> corrType;
 	mspolC.corrType().get(row,corrType);
 	//
-	// Next - look for match between the suppliced polId list in
+	// Next - look for match between the supplied polId list in
 	// the extracted corrType.  User support: Do not assume the
 	// order of the supplied pol IDs (human free-will was involved
-	// in generating that list!).  Also do a min-match.  E.g. a
+	// in generating that list!).  Also do a max-match.  E.g. a
 	// supplied polID list from "RR LL" should match all of the
 	// following corrType lists: "RR LL", "RR LL LR RL", "RR",
 	// "LL".
 	//
 	Bool allFound=False;
 	Int foundCounter=0;
-	Vector<Int> polIndices(0,-1);
+	//	Vector<Int> polIndices(0,-1);
 	for(uInt i=0; i<polIds.nelements(); i++)
 	  {
 	    for(uInt j=0; j<corrType.nelements(); j++)
@@ -183,7 +274,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if (allFound=(foundCounter == polIds.nelements()))
 	  {
-	    setIDLists((Int)row,0,polIndices);
+	    if (addToMap) setIDLists((Int)row,0,polIndices);
 	  }
 	if (allFound)
 	  {
@@ -198,9 +289,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //------------------------------------------------------------------------------
   //  
-  Vector<Int> MSPolnParse::getPolnIDs(const String& polSpec)
+  Vector<Int> MSPolnParse::getPolnIndices(const Int& polId, const Vector<Int>& polnTypes)
   {
-    String sep(";");
+    MSPolarization mspol(ms()->polarizationTableName());
+    ROMSPolarizationColumns mspolC(mspol);
+    Vector<Int> polIndices;
+
+    //    for (uInt row=0; row<mspolC.nrow();row++)
+      {
+	Vector<Int> corrType;
+	mspolC.corrType().get(polId,corrType);
+	for(uInt i=0; i<polnTypes.nelements(); i++)
+	  for(uInt j=0; j<corrType.nelements(); j++)
+	    if (polnTypes[i] == corrType[j])
+	      {
+		Int m=0;
+		polIndices.resize((m=polIndices.nelements())+1,True);
+		polIndices[m]=j;
+		break;
+	      }
+      }
+    return polIndices;
+  }
+  //
+  //------------------------------------------------------------------------------
+  //  
+  Vector<Int> MSPolnParse::getPolnIDs(const String& polSpec, Vector<Int>& polIndices)
+  {
+    String sep(",");
     Vector<String> tokens;
     Vector<Int> idList, polIDList;
     //
@@ -217,8 +333,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  selection.  Also make a map of the poln IDs and list of in-row
     //  indices which will then be used for in-row selection.
     //
-    polIDList=matchPolIDsToPolTableRow(idList,polMap_p);
-
+    polIDList=matchPolIDsToPolTableRow(idList,polMap_p, polIndices);
+    //    cout << "IDList=" << idList << " " << polIDList << " " << polIndices << endl;
+    return polIDList;
+  }
+  //  
+//------------------------------------------------------------------------------
+  //  
+  Vector<Int> MSPolnParse::getPolnIDsV2(const String& polSpec, Vector<Int>& polTypes)
+  {
+    String sep(",");
+    Vector<String> tokens;
+    Vector<Int> polIDList, polIndices;
+    //
+    // Split the given string into ";" separated tokens.  Upcase the
+    // string before splitting.
+    //
+    tokenize(polSpec,sep,tokens,True);
+    polTypes.resize(tokens.nelements());
+    for(uInt i=0;i<polTypes.nelements();i++)
+      polTypes[i]=Stokes::type(tokens[i]);
+    polIDList=matchPolIDsToPolTableRow(polTypes,polMap_p, polIndices);
     return polIDList;
   }
   //
@@ -233,7 +368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Int ret=0, nSpecList=0;
     Vector<String> polnSpecList;
-    String sep(",");
+    String sep(";");
 
     nSpecList=tokenize(command,sep,polnSpecList);
 
@@ -290,24 +425,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	try
 	  {
-	    polnIDs=getPolnIDs(polnExpr);
-	    MSDataDescIndex msDDNdx(ms()->dataDescription());
-	    MSPolarizationIndex msPolNdx(ms()->polarization());
+	    Vector<Int> polIndices;
 	    Vector<Int> tddIDList,tt;
-	    tddIDList=getMapToDDIDs(msDDNdx, msPolNdx, spwIDs, polnIDs);
+	    // polnIDs=getPolnIDs(polnExpr, polIndices);
+	    // MSDataDescIndex msDDNdx(ms()->dataDescription());
+	    // MSPolarizationIndex msPolNdx(ms()->polarization());
+	    // cout << "PolIDs = " << polnIDs << endl;
+	    
+	    //	    tddIDList=getMapToDDIDs(msDDNdx, msPolNdx, spwIDs, polnIDs, polIndices);
+	    //	    cout << "PolExpr = " << polnExpr << endl;
+	    tddIDList=getMapToDDIDsV2(polnExpr, spwIDs, polnIDs, polIndices);
+	    //	    cout << "DDIDs = " << tddIDList << endl;
+	    //	    cout << "-----------------------------------" << endl;
 	    tt=set_union(tddIDList, ddIDList_p);
 	    ddIDList_p.resize(0);
 	    ddIDList_p = tt;
 	  }
 	catch (MSSelectionPolnParseError& x)
 	  {
-	    String mesg("(named ");
-	    mesg = mesg + polnExpr + ")";
+	    String mesg("(named " + polnExpr + ")");
+	    //	    mesg = mesg + polnExpr + ")";
 	    x.addMessage(mesg);
 	    throw;
 	  }
 	selectFromIDList(ddIDList_p);
       }
+    {
+      //
+      // Remove entries which did map to any DD ID(s)
+      //
+      MapIter<Int, Vector<Vector<Int> > > omi(setupMap_p);
+      for(omi.toStart(); !omi.atEnd(); omi++)
+	if (omi.getVal()[1].nelements() == 0)
+	  omi.remove(omi.getKey());
+	  //	  setupMap_p.remove(omi.getKey());
+    }
     return ret;
   }
   //
@@ -336,9 +488,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (setupMap_p(key)[ndx].nelements() > 0) setupMap_p(key)[ndx].resize(0);
 	setupMap_p(key)[ndx]=v0;
       }
-    else
-      if (setupMap_p.isDefined(key) && ndx == 1) 
-     	setupMap_p.remove(key);
   }
   //
   //------------------------------------------------------------------------------
