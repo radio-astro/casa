@@ -2395,6 +2395,7 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 Record
 ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
 	      Bool& converged, Record& Region,
+          const Int& chan, const String& stokesString,
 	      const String& mask,
 	      const Vector<String>& models,
 	      Record& Estimate,
@@ -2458,22 +2459,95 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
 	      << LogIO::EXCEPTION;
     }
 
+    const CoordinateSystem &cSys1 = pImage_p->coordinates();
+
+    Int stokesIndex = cSys1.findCoordinate(Coordinate::STOKES);
+    Int specIndex = cSys1.findCoordinate(Coordinate::SPECTRAL);
+    Vector<Int> stokesPixIdx = cSys1.pixelAxes(stokesIndex);
+    Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
+
+    cout << "stokes index " << stokesIndex << " spec idx " << specIndex << " stokes pix idx " << stokesPixIdx << " spec pix idx " << specPixIdx << endl;
+
+    IPosition imShape = pImage_p->shape();
+    // pass in a Vector here
+    Vector<Int> tmpVector = imShape.asVector();
+    tmpVector.set(0);
+    IPosition startPos(tmpVector);
+    // Pass in an IPosition here to the constructor
+    // this will subtract 1 from each element of the IPosition imShape
+    IPosition endPos(imShape - 1);
+    tmpVector.set(1);
+    IPosition stride(tmpVector);
+    startPos[specPixIdx[0]] = chan;
+    endPos[specPixIdx[0]] = chan;
+
+    cout << " ready to call stokesCoordinate " << endl;
+    StokesCoordinate stokesCoord = cSys1.stokesCoordinate(stokesIndex);
+    Int stokesPix;
+    if (! stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))) {
+        throw (AipsError("Stokes parameter " + stokesString + " is not in image"));
+    }
+    startPos[stokesPixIdx[0]] = stokesPix;
+    endPos[stokesPixIdx[0]] = stokesPix;
+
+    Slicer sl(startPos, endPos, stride, Slicer::endIsLast);
+    SubImage<Float> subImageTmp(*pImage_p, sl, False);
+ 
+
     // Convert region from Glish record to ImageRegion. Convert mask
     // to ImageRegion and make SubImage.  Drop degenerate axes.
     ImageRegion* pRegionRegion = 0;
     ImageRegion* pMaskRegion = 0;
     AxesSpecifier axesSpec(False);
     SubImage<Float> subImage =
-      makeSubImage (pRegionRegion, pMaskRegion, *pImage_p,
+      makeSubImage (pRegionRegion, pMaskRegion, subImageTmp,
 		    *(tweakedRegionRecord(&Region)), mask, list,
 		    *itsLog, False, axesSpec);
+    cout << "tmp subimage made" << endl;
     delete pRegionRegion;
     delete pMaskRegion;
 
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
     const CoordinateSystem& cSys = subImage.coordinates();
-    Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
+    //Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
+    cout << "isSky was called" << endl;
+    // TODO refactor this into a seperate private method
+    /*
+    Int stokesIndex = cSys.findCoordinate(Coordinate::STOKES);
+    Int specIndex = cSys.findCoordinate(Coordinate::SPECTRAL);
+    Vector<Int> stokesPixIdx = cSys.pixelAxes(stokesIndex);
+    Vector<Int> specPixIdx = cSys.pixelAxes(specIndex);
+
+    cout << "stokes index " << stokesIndex << " spec idx " << specIndex << " stokes pix idx " << stokesPixIdx << " spec pix idx " << specPixIdx << endl;
+
+    IPosition imShape = subImageTmp.shape();
+    // pass in a Vector here
+    Vector<Int> tmpVector = imShape.asVector();
+    tmpVector.set(0);
+    IPosition startPos(tmpVector);
+    // Pass in an IPosition here to the constructor
+    // this will subtract 1 from each element of the IPosition imShape
+    IPosition endPos(imShape - 1);
+    tmpVector.set(1);
+    IPosition stride(tmpVector);
+    startPos[specPixIdx[0]] = chan;
+    endPos[specPixIdx[0]] = chan;
+
+    cout << " ready to call stokesCoordinate " << endl;
+    StokesCoordinate stokesCoord = cSys.stokesCoordinate(stokesIndex);
+    Int stokesPix;
+    if (! stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))) {
+        throw (AipsError("Stokes parameter " + stokesString + " is not in image"));
+    }
+    startPos[stokesPixIdx[0]] = stokesPix;
+    endPos[stokesPixIdx[0]] = stokesPix;
+
+    Slicer sl(startPos, endPos, stride, Slicer::endIsLast);
+    SubImage<Float> subImage(subImageTmp, sl, False);
+    */
+    cout << "slicing done " << subImage.shape() << endl; 
+    Bool xIsLong = CoordinateUtil::isSky(*itsLog, subImage.coordinates());
     // Get 2D pixels and mask
     Array<Float> pixels = subImage.get(True);
     IPosition shape = pixels.shape();

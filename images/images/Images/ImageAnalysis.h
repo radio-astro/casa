@@ -218,7 +218,9 @@ class ImageAnalysis
 					 const bool overwrite = false);
 
     Record fitsky(Array<Float>& pixels, Array<Bool>& pixelmask, 
-		   Bool& converged, Record& region, const String& mask, 
+		   Bool& converged, Record& region,
+           const Int& chan, const String& stokesString,
+           const String& mask, 
 		   const Vector<String>& models, Record& estimate, 
 		   const Vector<String>& fixedparams, 
 		   const Vector<Float>& includepix, 
