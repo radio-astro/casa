@@ -55,32 +55,62 @@
 
 
 Double _stringToDouble(String& string) {
-  istringstream instr(string);
-  Double var;
-  instr >> var;
-  return var;
+    istringstream instr(string);
+    Double var;
+    instr >> var;
+    return var;
 }
 
 
 // process the 'box' command line arguement and return the associated region as
 // a record.
-void _processBox(const String& box, Vector<Double>& blc, Vector<Double>& trc) {
+ImageRegion _processBox(const String& imagename, const String& box) {
     Vector<String> boxParts = stringToVector(box);
+    ImageRegion imRegion;
     if (boxParts.size() != 4) {
-        return;
+        return imRegion;
     }
+    Vector<Double> blc(2);
+    Vector<Double> trc(2);
     blc[0] = _stringToDouble(boxParts[0]);
     blc[1] = _stringToDouble(boxParts[1]);
     trc[0] = _stringToDouble(boxParts[2]);
     trc[1] = _stringToDouble(boxParts[3]);
-    return;
+
+    Vector<Quantum<Double> > wblc(2);
+    Vector<Quantum<Double> > wtrc(2);
+
+    // FIXME for some reason "pix" is not recognized!
+    for (Int k=0; k<2; ++k) {
+        cout << "k " << k << " blc[k] " << blc[k] << " trc[k] " << trc[k] << endl;
+        wblc[k] = Quantum<Double>(blc[k], Unit("pix"));
+        wtrc[k] = Quantum<Double>(trc[k], Unit("pix"));
+    }
+    PagedImage<Float> image(imagename);
+    CoordinateSystem coordsys = image.coordinates();
+    RegionManager regManager = RegionManager(coordsys);
+
+    Int dirIndex = coordsys.findCoordinate(Coordinate::DIRECTION); 
+    Vector<Int> pixelAxis(2);
+    pixelAxis[0] = dirIndex;
+    pixelAxis[1] = dirIndex + 1;
+    imRegion = *(regManager.wbox(wblc, wtrc, pixelAxis, coordsys));
+
+    return imRegion;
 } 
+
+ImageRegion _processRegionName(const String& imagename, const String& region) {
+    PagedImage<Float> image(imagename);
+    ImageRegion imRegion = image.getRegion(region);
+    return imRegion;
+}
 
 bool _processInputs(Int argc, char *argv[]) {
     Input input(1);
     input.version("$ID:$");
     input.create("imagename");
     input.create("box");
+    input.create("region");
     input.readArguments(argc, argv);
     String imagename = input.getString("imagename");
     if (imagename.size() == 0) {
@@ -88,42 +118,34 @@ bool _processInputs(Int argc, char *argv[]) {
         return false;
     }
     String box = input.getString("box");
-    if (box.freq(",") != 3) {
+    String region = input.getString("region");
+    ImageRegion imRegion;
+    if (box == "") {
+        // box not specified, check for saved region
+        if (region == "") {
+            // neither region nor box specified, use entire image
+        }
+        else {
+            // get the ImageRegion from the specified region
+            imRegion = _processRegionName(imagename, region);
+        }
+
+    }
+    else if (box.freq(",") != 3) {
         cerr << "command line box not specified correctly" << endl;
         return false;
     }
-    Vector<Double> blc(2);
-    Vector<Double> trc(2);
+    else {
+        if (region != "") {
+            cout << "both box and region specified, box will be used" << endl;
+        }
+        // we have been given a box by the user and it is specified correctly
+        imRegion = _processBox(imagename, box);
 
-    Vector<Quantum<Double> > wblc(2);
-    Vector<Quantum<Double> > wtrc(2);
-    _processBox(box, blc, trc);
-/*
-    for (Int k=0; k<2; ++k) {
-        cout << "k " << k << " blc[k] " << blc[k] << " trc[k] " << trc[k] << endl;
-        wblc[k] = Quantum<Double>(blc[k], Unit("pix"));
-        wtrc[k] = Quantum<Double>(trc[k], Unit("pix"));
     }
-*/
     PagedImage<Float> image(imagename);
-    cout << "regions " << image.regionNames() << endl;
-    CoordinateSystem coordsys = image.coordinates();
-    RegionManager regManager = RegionManager(coordsys);
-
-     
-
-    Int dirIndex = coordsys.findCoordinate(Coordinate::DIRECTION); 
-    Vector<Int> pixelAxis(2);
-    pixelAxis[0] = dirIndex;
-    pixelAxis[1] = dirIndex + 1;
-    //ImageRegion* imRegion = regManager.wbox(wblc, wtrc, pixelAxis, coordsys);
-
-
-
-
-    //delete imRegion;
-    ImageRegion box1 = image.getRegion(image.regionNames()[0]);
-    SubImage<Float> subim(image, box1, False);
+    
+    SubImage<Float> subim(image, imRegion, False);
     LogIO logio;
     ImageStatistics<Float> stats(subim, logio, True, False);
     IPosition minpos, maxpos;
