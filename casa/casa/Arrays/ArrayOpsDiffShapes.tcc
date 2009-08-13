@@ -42,7 +42,7 @@ LogicalArray reformedMask(const Array<T>& data, const T truthvalue,
      && data.shape() == desiredform){
     return (data == truthvalue);
   }
-  else if(data.nelements() == desiredform.product()){
+  else if(static_cast<Int>(data.nelements()) == desiredform.product()){
     return (data == truthvalue).reform(desiredform);
   }
   else{
