@@ -2392,34 +2392,66 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
     return pResid;
 }
 
-Record
-ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
-	      Bool& converged, Record& Region,
-          const Int& chan, const String& stokesString,
-	      const String& mask,
-	      const Vector<String>& models,
-	      Record& Estimate,
-	      const Vector<String>& fixed,
-	      const Vector<Float>& includepix,
-	      const Vector<Float>& excludepix, const Bool fitIt,
-	      const Bool deconvolveIt, const Bool list)
-{
+
+Record ImageAnalysis::fitsky(
+    Array<Float>& residPixels, Array<Bool>& residMask,
+    Bool& converged, Record& Region,
+    const Int& chan, const String& stokesString,
+    const String& mask,
+    const Vector<String>& models,
+    Record& Estimate,
+    const Vector<String>& fixed,
+    const Vector<Float>& includepix,
+    const Vector<Float>& excludepix, const Bool fitIt,
+    const Bool deconvolveIt, const Bool list
+) {
+
+    ComponentList cl;
+    fitsky(
+        residPixels, residMask, cl, converged, Region, chan, stokesString,
+        mask, models, Estimate, fixed, includepix, excludepix, fitIt,
+        deconvolveIt, list
+    );
+ 
+    Record outrec;
+    String error;
+    if (! cl.toRecord(error, outrec)) {
+        *itsLog << "Failed to generate output record from result. "
+            << error << LogIO::POST;
+    }
+
+    return outrec;
+}
+
+void ImageAnalysis::fitsky(
+    Array<Float>& residPixels, Array<Bool>& residMask,
+    ComponentList& cl,
+    Bool& converged, Record& Region,
+    const Int& chan, const String& stokesString,
+    const String& mask,
+    const Vector<String>& models,
+    Record& Estimate,
+    const Vector<String>& fixed,
+    const Vector<Float>& includepix,
+    const Vector<Float>& excludepix, const Bool fitIt,
+    const Bool deconvolveIt, const Bool list
+) {
     *itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
     String error;
     
     Vector<SkyComponent> estimate;
-    ComponentList cl;
 
-    if (! cl.fromRecord(error, Estimate)) {
+    ComponentList compList;
+    if (! compList.fromRecord(error, Estimate)) {
       *itsLog << LogIO::WARN
 	      <<"Can not  convert input parameter to ComponentList "
 	      << error << LogIO::POST;
     } else {
-      int n = cl.nelements();
+      int n = compList.nelements();
       estimate.resize(n);
       for (int i = 0; i < n; i++) {
-	estimate(i) = cl.component(i);
+	estimate(i) = compList.component(i);
       }
     }
 
@@ -2466,8 +2498,6 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
     Vector<Int> stokesPixIdx = cSys1.pixelAxes(stokesIndex);
     Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
 
-    cout << "stokes index " << stokesIndex << " spec idx " << specIndex << " stokes pix idx " << stokesPixIdx << " spec pix idx " << specPixIdx << endl;
-
     IPosition imShape = pImage_p->shape();
     // pass in a Vector here
     Vector<Int> tmpVector = imShape.asVector();
@@ -2481,7 +2511,14 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
     startPos[specPixIdx[0]] = chan;
     endPos[specPixIdx[0]] = chan;
 
-    cout << " ready to call stokesCoordinate " << endl;
+    // TODO: check that chan passed in is within bounds
+
+    // TODO: check if image has stokes axis, if not bypass this doing the
+    // correct thing afterward
+
+    // TODO if just direction axes in images, bypass all this and go directly to 
+    // fitting.
+
     StokesCoordinate stokesCoord = cSys1.stokesCoordinate(stokesIndex);
     Int stokesPix;
     if (! stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))) {
@@ -2503,7 +2540,6 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
       makeSubImage (pRegionRegion, pMaskRegion, subImageTmp,
 		    *(tweakedRegionRecord(&Region)), mask, list,
 		    *itsLog, False, axesSpec);
-    cout << "tmp subimage made" << endl;
     delete pRegionRegion;
     delete pMaskRegion;
 
@@ -2511,42 +2547,6 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
     const CoordinateSystem& cSys = subImage.coordinates();
     //Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
-    cout << "isSky was called" << endl;
-    // TODO refactor this into a seperate private method
-    /*
-    Int stokesIndex = cSys.findCoordinate(Coordinate::STOKES);
-    Int specIndex = cSys.findCoordinate(Coordinate::SPECTRAL);
-    Vector<Int> stokesPixIdx = cSys.pixelAxes(stokesIndex);
-    Vector<Int> specPixIdx = cSys.pixelAxes(specIndex);
-
-    cout << "stokes index " << stokesIndex << " spec idx " << specIndex << " stokes pix idx " << stokesPixIdx << " spec pix idx " << specPixIdx << endl;
-
-    IPosition imShape = subImageTmp.shape();
-    // pass in a Vector here
-    Vector<Int> tmpVector = imShape.asVector();
-    tmpVector.set(0);
-    IPosition startPos(tmpVector);
-    // Pass in an IPosition here to the constructor
-    // this will subtract 1 from each element of the IPosition imShape
-    IPosition endPos(imShape - 1);
-    tmpVector.set(1);
-    IPosition stride(tmpVector);
-    startPos[specPixIdx[0]] = chan;
-    endPos[specPixIdx[0]] = chan;
-
-    cout << " ready to call stokesCoordinate " << endl;
-    StokesCoordinate stokesCoord = cSys.stokesCoordinate(stokesIndex);
-    Int stokesPix;
-    if (! stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))) {
-        throw (AipsError("Stokes parameter " + stokesString + " is not in image"));
-    }
-    startPos[stokesPixIdx[0]] = stokesPix;
-    endPos[stokesPixIdx[0]] = stokesPix;
-
-    Slicer sl(startPos, endPos, stride, Slicer::endIsLast);
-    SubImage<Float> subImage(subImageTmp, sl, False);
-    */
-    cout << "slicing done " << subImage.shape() << endl; 
     Bool xIsLong = CoordinateUtil::isSky(*itsLog, subImage.coordinates());
     // Get 2D pixels and mask
     Array<Float> pixels = subImage.get(True);
@@ -2621,14 +2621,8 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
 	encodeSkyComponent (*itsLog, facToJy, subImage,
 			    convertModelType(Fit2D::GAUSSIAN),
 			    parameters, stokes, xIsLong, deconvolveIt);
-      ComponentList cl;
       cl.add(result(0));
-      Record outrec;
-      if (! cl.toRecord(error, outrec)) {
-	*itsLog << "Failed to generate output record from result. "
-		<< error << LogIO::POST;
-      }
-      return outrec;
+      return;
     }
 
     // For ease of use, make each model have a mask string
@@ -2723,7 +2717,7 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
     } else {
       converged = False;
       *itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
-      return Record();
+      return;
     }
 
     // Compute residuals
@@ -2731,7 +2725,6 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
     // Convert units of solution from pixel units to astronomical units
     Vector<SkyComponent> result(nModels);
     Double facToJy;
-    ComponentList cL;
     for (uInt i=0; i<models.nelements(); i++) {
       ComponentType::Shape modelType = convertModelType(Fit2D::type(modelTypes(i)));
       Vector<Double> solution = fitter.availableSolution(i);
@@ -2741,16 +2734,10 @@ ImageAnalysis::fitsky(Array<Float> & residPixels, Array<Bool>& residMask,
                                       stokes, xIsLong, deconvolveIt);
       encodeSkyComponentError (*itsLog, result(i), facToJy, subImage, solution,
                                errors, stokes, xIsLong);
-      cL.add(result(i));
+      cl.add(result(i));
     }
 
-    Record outrec;
-    if (! cL.toRecord(error, outrec)) {
-      *itsLog << "Failed to convert Vector<SkyComponent> to output record "
-	      << error << LogIO::WARN;
-    } 
-
-    return outrec;
+    return;
  
 }
 

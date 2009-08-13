@@ -41,6 +41,7 @@ class String;
 class Record;
 class Fit2D;
 class ImageRegion;
+class ComponentList;
 template<class T> class Array;
 template<class T> class Block;
 template<class T> class PtrBlock; 
@@ -216,6 +217,17 @@ class ImageAnalysis
 					 const Int axis, const Int order, 
 					 Record& region, const String& mask, 
 					 const bool overwrite = false);
+
+    void fitsky(Array<Float>& pixels, Array<Bool>& pixelmask,
+            ComponentList& cl, Bool& converged, Record& region,
+            const Int& chan, const String& stokesString,
+            const String& mask, 
+            const Vector<String>& models, Record& estimate, 
+            const Vector<String>& fixedparams, 
+            const Vector<Float>& includepix, 
+            const Vector<Float>& excludepix, 
+            const Bool fit = True, 
+            const Bool deconvolve = False, const Bool list = True);
 
     Record fitsky(Array<Float>& pixels, Array<Bool>& pixelmask, 
 		   Bool& converged, Record& region,

@@ -27,14 +27,16 @@
 
 
 #include <casa/Inputs/Input.h>
-#include <images/Images/GaussianFitter.h>
+// #include <images/Images/GaussianFitter.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageStatistics.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Regions/RegionManager.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
+#include <components/ComponentModels/Flux.h>
 
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/iostream.h>
@@ -50,6 +52,9 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
+#include <components/ComponentModels/ComponentList.h>
+#include <components/ComponentModels/SkyComponent.h>
+
 #include <casa/namespace.h>
 
 
@@ -64,38 +69,31 @@ Double _stringToDouble(String& string) {
 
 // process the 'box' command line arguement and return the associated region as
 // a record.
-ImageRegion _processBox(const String& imagename, const String& box) {
+ImageRegion _processBox(const ImageInterface<Float>& image, const String& box) {
     Vector<String> boxParts = stringToVector(box);
     ImageRegion imRegion;
     if (boxParts.size() != 4) {
         return imRegion;
     }
-    Vector<Double> blc(2);
-    Vector<Double> trc(2);
+    IPosition imShape = image.shape(); 
+    Vector<Double> blc(imShape.nelements());
+    Vector<Double> trc(imShape.nelements());
+
+    for (Int i=0; i<imShape.nelements(); ++i) {
+        blc[i] = 0;
+        trc[i] = imShape[i] - 1;
+    }
+    
+    // TODO: locate direction coordinates (axes) for more general case when
+    // position axes are not 0 and 1
     blc[0] = _stringToDouble(boxParts[0]);
     blc[1] = _stringToDouble(boxParts[1]);
     trc[0] = _stringToDouble(boxParts[2]);
     trc[1] = _stringToDouble(boxParts[3]);
 
-    Vector<Quantum<Double> > wblc(2);
-    Vector<Quantum<Double> > wtrc(2);
-
-    // FIXME for some reason "pix" is not recognized!
-    for (Int k=0; k<2; ++k) {
-        cout << "k " << k << " blc[k] " << blc[k] << " trc[k] " << trc[k] << endl;
-        wblc[k] = Quantum<Double>(blc[k], Unit("pix"));
-        wtrc[k] = Quantum<Double>(trc[k], Unit("pix"));
-    }
-    PagedImage<Float> image(imagename);
-    CoordinateSystem coordsys = image.coordinates();
-    RegionManager regManager = RegionManager(coordsys);
-
-    Int dirIndex = coordsys.findCoordinate(Coordinate::DIRECTION); 
-    Vector<Int> pixelAxis(2);
-    pixelAxis[0] = dirIndex;
-    pixelAxis[1] = dirIndex + 1;
-    imRegion = *(regManager.wbox(wblc, wtrc, pixelAxis, coordsys));
-
+    LCBox lcBox(blc, trc, imShape);
+    WCBox wcBox(lcBox, image.coordinates());
+    imRegion = ImageRegion(wcBox);
     return imRegion;
 } 
 
@@ -111,6 +109,8 @@ bool _processInputs(Int argc, char *argv[]) {
     input.create("imagename");
     input.create("box");
     input.create("region");
+    input.create("ngauss");
+    input.create("chan");
     input.readArguments(argc, argv);
     String imagename = input.getString("imagename");
     if (imagename.size() == 0) {
@@ -120,6 +120,8 @@ bool _processInputs(Int argc, char *argv[]) {
     String box = input.getString("box");
     String region = input.getString("region");
     ImageRegion imRegion;
+    PagedImage<Float> image(imagename);
+    Bool doRegion = False;
     if (box == "") {
         // box not specified, check for saved region
         if (region == "") {
@@ -128,6 +130,7 @@ bool _processInputs(Int argc, char *argv[]) {
         else {
             // get the ImageRegion from the specified region
             imRegion = _processRegionName(imagename, region);
+            doRegion = True;
         }
 
     }
@@ -140,14 +143,62 @@ bool _processInputs(Int argc, char *argv[]) {
             cout << "both box and region specified, box will be used" << endl;
         }
         // we have been given a box by the user and it is specified correctly
-        imRegion = _processBox(imagename, box);
+        imRegion = _processBox(image, box);
+        doRegion = True;
 
     }
-    PagedImage<Float> image(imagename);
+    Record rec;
+    if (box != "" && region != "") {
+        rec = Record(imRegion.toRecord(""));
+    }
+
+    Int ngauss = input.getInt("ngauss");
+    // input.getInt() will default to 0 if param not specified
+    Int chan = input.getInt("chan"); 
+
+    cout << "ngauss " << ngauss << endl;
+    ComponentList compList;
+    Array<Float> residPixels;
+    Array<Bool> residMask;
+    Bool converged;
+    String stokesString = "I";
+    String mask;
+    // make this ngauss when we get that far
+    Vector<String> models(1);
+    models[0] = "gaussian";
+    Vector<String> fixedparams;
+    Record estimate; 
+    Vector<Float> includepix, excludepix;
+    ImageAnalysis myImage(&image);
+    cout << "before fitsky call" << endl;
+    myImage.fitsky(
+        residPixels, residMask, compList, converged,
+        rec,
+        chan, stokesString, mask, models,
+        estimate, fixedparams, includepix, excludepix
+    );   
+    cout << "after fitsky call" << endl;
+
+    Flux<Double> flux;
+    for(Int k=0; k<compList.nelements(); ++k) {
+        SkyComponent skyComp = compList.component(k);
+        flux = skyComp.flux();
+        cout << "flux val " << flux.value(Stokes::I) << endl;
+    }
+     
     
-    SubImage<Float> subim(image, imRegion, False);
+    
+    
+    // this needs to be cleaned up, it was done as an intro to the casa dev system
+
+    ImageInterface<Float>* imagePtr = &image;
+    SubImage<Float> subim;
+    if (doRegion) {
+        subim = SubImage<Float>(image, imRegion, False);
+        imagePtr = &subim;
+    }
     LogIO logio;
-    ImageStatistics<Float> stats(subim, logio, True, False);
+    ImageStatistics<Float> stats(*imagePtr, logio, True, False);
     IPosition minpos, maxpos;
     stats.getMinMaxPos(minpos, maxpos);
     cout << " min pos " << minpos << " maxpos " << maxpos << endl; 
@@ -156,16 +207,16 @@ bool _processInputs(Int argc, char *argv[]) {
     cout << "sumsq " << sumsquared << endl;
     // get single channel
     IPosition start(4, 0, 0, 0, 0);
-    IPosition end = subim.shape() - 1;
+    IPosition end = imagePtr->shape() - 1;
     IPosition stride(4, 1, 1, 1, 1);
     cout << "start " << start << " end " << end << endl;
     // channel 38
-    start[3] = 38;
-    end[3] = 38; 
+    start[3] = chan;
+    end[3] = chan; 
     cout << "start " << start << " end " << end << endl;
 
     Slicer sl(start, end, stride, Slicer::endIsLast);
-    SubImage<Float> subim2(subim, sl, False);
+    SubImage<Float> subim2(*imagePtr, sl, False);
     
     stats.setNewImage(subim2);
     stats.getMinMaxPos(minpos, maxpos);
@@ -173,7 +224,6 @@ bool _processInputs(Int argc, char *argv[]) {
 
     stats.getStatistic (sumsquared, LatticeStatsBase::SUMSQ);
     cout << "sumsq " << sumsquared << endl;
-  
 
 /*
     GaussianFitter myGF(image, regionRecord);
