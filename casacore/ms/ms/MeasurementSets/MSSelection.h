@@ -37,7 +37,10 @@
 #include <tables/Tables/ExprNode.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Cube.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
+#include <casa/Containers/OrderedMap.h>
+#include <casa/Containers/MapIO.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
@@ -196,6 +199,7 @@ class MSSelection
                     ARRAY_EXPR,
                     TIME_EXPR,
                     UVDIST_EXPR,
+		    POLN_EXPR,
                     TAQL_EXPR,
                     MAX_EXPR = TAQL_EXPR};
   enum MSSMode {PARSE_NOW=0, PARSE_LATE};
@@ -215,7 +219,8 @@ class MSSelection
 	       const String& taqlExpr="",
 	       const String& corrExpr="",
 	       const String& scanExpr="",
-	       const String& arrayExpr="");
+	       const String& arrayExpr="",
+	       const String& polnExpr="");
 
    MSSelection(const Record& selectionItem);
 
@@ -241,6 +246,7 @@ class MSSelection
    Bool setTimeExpr(const String& timeExpr);
    Bool setUvDistExpr(const String& uvDistExpr);
    Bool setTaQLExpr(const String& taqlExpr);
+   Bool setPolnExpr(const String& polnExpr);
 
 //   inline virtual Vector<Int> getAntenna1List() {return antenna1IDs_p;}
 //   inline virtual Vector<Int> getAntenna2List() {return antenna2IDs_p;}
@@ -275,6 +281,15 @@ class MSSelection
 
   inline Matrix<Int> getChanList(const MeasurementSet* ms=NULL) 
   {if (chanIDs_p.nelements() <= 0) getTEN(ms); return chanIDs_p.copy();}
+
+  inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
+  {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p.copy();}
+
+  inline OrderedMap<Int, Vector<Int> > getPolMap(const MeasurementSet* ms=NULL) 
+  {getTEN(ms); return selectedPolMap_p;};
+
+  inline OrderedMap<Int, Vector<Vector<Int> > > getSetupMap(const MeasurementSet* ms=NULL) 
+  {getTEN(ms); return selectedSetupMap_p;};
 
   inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
   {getTEN(ms); return scanIDs_p.copy();}
@@ -314,7 +329,8 @@ class MSSelection
 	     const String& taqlExpr="",
 	     const String& corrExpr="",
 	     const String& scanExpr="",
-	     const String& arrayExpr="");
+	     const String& arrayExpr="",
+	     const String& polnExpr="");
 
   void setMaxScan(const Int& n) {maxScans_p=n;};
 
@@ -344,14 +360,18 @@ class MSSelection
   String timeExpr_p;
   String uvDistExpr_p;
   String taqlExpr_p;
+  String polnExpr_p;
   // Priority
   Vector<Int> exprOrder_p;
-  Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p;
+  Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p,
+    ddIDs_p;
   Matrix<Int> chanIDs_p;
   Matrix<Int> baselineIDs_p;
   Matrix<Double> selectedTimesList_p;
   Matrix<Double> selectedUVRange_p;
   Vector<Bool> selectedUVUnits_p;
+  OrderedMap<Int, Vector<Int> > selectedPolMap_p;
+  OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap_p;
   Int maxScans_p, maxArray_p;
 };
 

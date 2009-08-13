@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
+//# $Id: MSSpwGram.cc 20266 2008-02-26 00:43:05Z gervandiepen $
 
 // MSSpwGram; grammar for field command lines
 
@@ -151,39 +151,5 @@ void MSSpwGramerror (const char*)
   throw (MSSelectionSpwParseError("Spw Expression: Parse error at or near '" +
 				  String(MSSpwGramtext) + "'"));
 }
-
-// String msSpwGramRemoveEscapes (const String& in)
-// {
-//     String out;
-//     int leng = in.length();
-//     for (int i=0; i<leng; i++) {
-// 	if (in[i] == '\\') {
-// 	    i++;
-// 	}
-// 	out += in[i];
-//     }
-//     return out;
-// }
-
-// String msSpwGramRemoveQuotes (const String& in)
-// {
-//     //# A string is formed as "..."'...''...' etc.
-//     //# All ... parts will be extracted and concatenated into an output string.
-//     String out;
-//     String str = in;
-//     int leng = str.length();
-//     int pos = 0;
-//     while (pos < leng) {
-// 	//# Find next occurrence of leading ' or ""
-// 	int inx = str.index (str[pos], pos+1);
-// 	if (inx < 0) {
-// 	    throw (AipsError ("MSSpwParse - Ill-formed quoted string: " +
-// 			      str));
-// 	}
-// 	out += str.at (pos+1, inx-pos-1);             // add substring
-// 	pos = inx+1;
-//     }
-//     return out;
-// }
 
 } //# NAMESPACE CASA - END

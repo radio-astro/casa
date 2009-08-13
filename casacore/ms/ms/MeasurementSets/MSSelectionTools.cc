@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <string.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //----------------------------------------------------------------------------
@@ -125,5 +126,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	while(str[j1] == ' ') j1--;
       }
     return str.substr(j0,j1-j0+1);
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  int tokenize(const String& str, const String& sep, Vector<String>& tokens,
+	       Bool upcase)
+  {
+    String tmpStr(str);
+    String::size_type tokpos,startpos=0;
+    if (upcase) tmpStr.upcase();
+    char *sep_p=(char *)sep.c_str();
+
+    char *tok=strtok((char *)tmpStr.c_str(), sep_p);
+    if (tok)
+      {
+	tokens.resize(1);
+	tokens(0)=tok;
+	while((tok=strtok((char*)NULL,sep_p)))
+	  {
+	    tokens.resize(tokens.nelements()+1,True);
+	    tokens(tokens.nelements()-1)=stripWhite(String(tok),True).c_str();
+	  }
+      }
+    else
+      {tokens.resize(1); tokens(0)=tmpStr;}
+    return tokens.nelements();
+    /*    
+    while ((tokpos=tmpStr.index(sep,startpos)))
+      {
+	tokens.resize(tokens.nelements()+1,True);
+	if (tokpos==String::npos)
+	  tokens(tokens.nelements()-1)=tmpStr.after(startpos-1);
+	else
+	  tokens(tokens.nelements()-1)=tmpStr.before(sep,startpos);
+	
+	if (tokpos==String::npos) break;
+	
+	startpos=tokpos+1;
+      }
+
+    return (int)(tokens.nelements());
+    */
   }
 };
