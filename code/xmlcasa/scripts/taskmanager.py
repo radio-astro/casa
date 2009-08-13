@@ -122,8 +122,11 @@ class taskmanager(object):
         self.__clean_furls( )
         if os.path.exists(self.__dir['log root'] + '/last'):
             self.__rmdir(self.__dir['log root'] + '/last')
-        os.rename(self.__dir['session log root'], self.__dir['log root'] + '/last')
-            
+        try:
+            os.rename(self.__dir['session log root'], self.__dir['log root'] + '/last')
+        except:
+            print "could not rename " + self.__dir['session log root'] + " to " + self.__dir['log root'] + '/last' + " ..."
+
     def __find_engine( self ) :
         for engine in self.__hub['engines'] :
             prop = self.__hub['mec'].get_properties(targets=[engine['index']],block=False)
@@ -187,7 +190,7 @@ class taskmanager(object):
                 if ids is None :
                     ids = [ ]
                 postset = sets.Set( ids )
-                if try_count > 20 : 
+                if try_count > 20 :
                     raise Exception, "could not start ipengine"
                 time.sleep(0.5)
                 try_count += 1
@@ -210,13 +213,13 @@ class taskmanager(object):
 
     def __start_hub(self):
         self.__mkdir(self.__dir['session log root'])
-        self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller', 
+        self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
                                                  '--multiengine-furl-file=' + self.__furl['mec'],
-                                                 '--task-furl-file=' + self.__furl['tc'], 
-                                                 '--ipythondir=' + self.__dir['rc'], 
+                                                 '--task-furl-file=' + self.__furl['tc'],
+                                                 '--ipythondir=' + self.__dir['rc'],
                                                  '--logfile=' + self.__dir['session log root'] + "/controller." ],
                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
@@ -315,10 +318,21 @@ class taskmanager(object):
             contents = os.listdir(p)
             for f in contents:
                 if os.path.isfile( p + dirsep + f ) or os.path.islink( p + dirsep + f ):
-                    os.remove( p + dirsep + f )
+                    try:
+                        os.remove( p + dirsep + f )
+                    except:
+                        print "could not remove:", p + dirsep + f
                 elif os.path.isdir( p + dirsep + f ):
                     self.__rmdir( p + dirsep + f )
-            os.rmdir(p)
+            try:
+                os.rmdir(p)
+            except:
+                print "could not remove:", p
+                print "renaming to:     ", p + ".nfs-" + str(os.getpid())
+                try:
+                    os.rename( p, p + ".nfs-" + str(os.getpid()) )
+                except:
+                    print "               ...renaming failed!!!"
 
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     tm = taskmanager( task_path=[ '', os.environ['__CASAPY_PYTHONDIR'] ] )
