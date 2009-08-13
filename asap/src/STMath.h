@@ -198,6 +198,15 @@ public:
                                     casa::Float tau=0.0,
                                     casa::Float tcal=0.0 );
 
+  /**
+   * Folding frequency-switch data
+   * @param sig
+   * @param ref
+   * @param choffset
+   **/
+  casa::CountedPtr<Scantable> dofold( const casa::CountedPtr<Scantable> &sig,
+                                      const casa::CountedPtr<Scantable> &ref,
+                                      casa::Int choffset );
 
   casa::CountedPtr<Scantable>
     freqSwitch( const casa::CountedPtr<Scantable>& in );

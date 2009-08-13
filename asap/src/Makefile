@@ -16,10 +16,12 @@ COREINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=COR
 CORELIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=CORELIB eval_vars) && echo $$CORELIB)
 WCSLIBLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=WCSLIBLIBD eval_vars) && echo $$WCSLIBLIBD)
 WCSLIBLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=WCSLIBLIB eval_vars) && echo $$WCSLIBLIB)
+PYTHONROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONROOT eval_vars) && echo $$PYTHONROOT)
 PYTHONLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIBD eval_vars) && echo $$PYTHONLIBD)
 PYTHONINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONINCD eval_vars) && echo $$PYTHONINCD)
 PYTHONLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIB eval_vars) && echo $$PYTHONLIB)
 BOOSTROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=BOOSTROOT eval_vars) && echo $$BOOSTROOT)
+RPFITSLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=RPFITSLIBD eval_vars) && echo $$RPFITSLIBD)
 
 CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
@@ -37,7 +39,6 @@ CXXFLAGS += -ansi -Wno-long-long -Wall
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
    CXXFLAGS +=-DAIPS_DARWIN
-   CXXFLAGS += -Wno-long-double
 endif
 
 # cfitsio
@@ -46,7 +47,6 @@ CFITSIOINC := -I$(CFITSIOROOT)/include/cfitsio
 CFITSIOLIB := -lcfitsio
 
 #rpfits
-RPFITSROOT := /usr
 RPFITSLIB := -lrpfits
 
 G2CROOT := /usr
@@ -56,7 +56,7 @@ G2CLIB := -lgfortran
 # if not than there might by symbol resolution errors.
 CASAPPLIB := -L$(CASALIB) -latnf $(CORELIB) \
              -L$(WCSLIBLIBD) $(WCSLIBLIB) \
-             $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
+             -L$(RPFITSLIBD) $(RPFITSLIB) $(CFITSIOLIB) $(G2CLIB) -lstdc++
 
 # darwin specific CASA flags
 ifeq "$(CASAARCH)" "darwin"
@@ -72,9 +72,9 @@ PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
 # use python universal build
 ifeq "$(CASAARCH)" "darwin"
    PYVERSION := 2.5
-   PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
+   #PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
    PYTHONINC := -I$(PYTHONROOT)/include/python$(PYVERSION)
-   PYTHONLIB := -L$(PYTHONROOT)/lib -framework Python
+   #PYTHONLIB := -F$(PYTHONROOT)/lib -framework Python
 endif
 
 # the linker

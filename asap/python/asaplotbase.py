@@ -21,8 +21,12 @@ try:
 except ImportError:
     from matplotlib.transforms import blend_xy_sep_transform  as blended_transform_factory
 
+from asap import asaplog
+
 if int(matplotlib.__version__.split(".")[1]) < 87:
-    print "Warning: matplotlib version < 0.87. This might cause errors. Please upgrade."
+    #print "Warning: matplotlib version < 0.87. This might cause errors. Please upgrade."
+    asaplog.push( "matplotlib version < 0.87. This might cause errors. Please upgrade." )
+    print_log( 'WARN' )
 
 #class MyFormatter(OldScalarFormatter):
 #    def __call__(self, x, pos=None):
@@ -448,11 +452,17 @@ class asaplotbase:
                     self.figure.savefig(fname,dpi=dpi)
                     print 'Written file %s' % (fname)
             except IOError, msg:
-                print 'Failed to save %s: Error msg was\n\n%s' % (fname, err)
+                #print 'Failed to save %s: Error msg was\n\n%s' % (fname, err)
+                print_log()
+                asaplog.push('Failed to save %s: Error msg was\n\n%s' % (fname, msg))
+                print_log( 'ERROR' )
                 return
         else:
-            print "Invalid image type. Valid types are:"
-            print "'ps', 'eps', 'png'"
+            #print "Invalid image type. Valid types are:"
+            #print "'ps', 'eps', 'png'"
+            asaplog.push( "Invalid image type. Valid types are:" )
+            asaplog.push( "'ps', 'eps', 'png'" )
+            print_log('WARN')
 
 
     def set_axes(self, what=None, *args, **kwargs):

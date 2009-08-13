@@ -26,11 +26,12 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.cpp 1387 2007-07-26 16:00:22Z TakTsutsumi $
+//# $Id: STFitter.cpp 1616 2009-08-07 05:49:27Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Logging/LogIO.h>
 #include <scimath/Fitting.h>
 #include <scimath/Fitting/LinearFit.h>
 #include <scimath/Functionals/CompiledFunction.h>
@@ -146,7 +147,9 @@ bool Fitter::setExpression(const std::string& expr, int ncomp)
     funcs_.resize(1);
     funcs_[0] = new Polynomial<Float>(ncomp);
   } else {
-    cerr << " compiled functions not yet implemented" << endl;
+    //cerr << " compiled functions not yet implemented" << endl;
+    LogIO os( LogOrigin( "Fitter", "setExpression()", WHERE ) ) ;
+    os << LogIO::WARN << " compiled functions not yet implemented" << LogIO::POST;
     //funcs_.resize(1);
     //funcs_[0] = new CompiledFunction<Float>();
     //funcs_[0]->setFunction(String(expr));

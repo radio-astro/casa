@@ -67,7 +67,6 @@
 using namespace casa;
 using namespace asap;
 
-namespace asap {
 
 STFITSImageWriter::STFITSImageWriter() : isClass_(False)
 {;}
@@ -287,4 +286,3 @@ STFITSImageWriter::getDirectionCoordinate(const String& reff,
    
 }
 
-};

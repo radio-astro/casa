@@ -2,6 +2,7 @@ from asap.scantable import scantable
 from asap import rcParams
 from asap import print_log
 from asap import selector
+from asap import asaplog
 
 def average_time(*args, **kwargs):
     """
@@ -65,7 +66,9 @@ def average_time(*args, **kwargs):
         if not isinstance(s,scantable):
             msg = "Please give a list of scantables"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -183,7 +186,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if s is None:
         msg = "The input data appear to contain no position-switch mode data."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -191,7 +196,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if ssub is None:
         msg = "No data was found with given scan numbers!"
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -200,7 +207,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if ssubon.nrow() != ssuboff.nrow():
         msg = "mismatch in numbers of CAL on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -210,7 +219,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if sig.nscan() != ref.nscan():
         msg = "mismatch in numbers of on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -220,7 +231,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
         if tauval<=0.0:
             msg = "Need to supply a valid tau to use the supplied Tsys"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -266,7 +279,9 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if s is None:
         msg = "The input data appear to contain no Nod observing mode data."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -303,7 +318,9 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
         if tauval<=0.0:
             msg = "Need to supply a valid tau to use the supplied Tsys"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -368,7 +385,9 @@ def simple_math(left, right, op='add', tsys=True):
         tsys:          if True (default) then apply the operation to Tsys
                        as well as the data
     """
-    print "simple_math is deprecated use +=/* instead."
+    #print "simple_math is deprecated use +=/* instead."
+    asaplog.push( "simple_math is deprecated use +=/* instead." )
+    print_log('WARN')
 
 def merge(*args):
     """
@@ -397,7 +416,9 @@ def merge(*args):
         if not isinstance(s,scantable):
             msg = "Please give a list of scantables"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)

@@ -211,13 +211,17 @@ def rc_params():
         if line.startswith('#'): continue
         tup = line.split(':',1)
         if len(tup) !=2:
-            print ('Illegal line #%d\n\t%s\n\tin file "%s"' % (cnt, line, fname))
+            #print ('Illegal line #%d\n\t%s\n\tin file "%s"' % (cnt, line, fname))
+            asaplog.push('Illegal line #%d\n\t%s\n\tin file "%s"' % (cnt, line, fname))
+            print_log('WARN')
             continue
 
         key, val = tup
         key = key.strip()
         if not defaultParams.has_key(key):
-            print ('Bad key "%s" on line %d in %s' % (key, cnt, fname))
+            #print ('Bad key "%s" on line %d in %s' % (key, cnt, fname))
+            asaplog.push('Bad key "%s" on line %d in %s' % (key, cnt, fname))
+            print_log('WARN')
             continue
 
         default, converter =  defaultParams[key]
@@ -227,7 +231,9 @@ def rc_params():
         val = val.strip()
         try: cval = converter(val)   # try to convert to proper type or raise
         except ValueError, msg:
-            print ('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, msg))
+            #print ('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, msg))
+            asaplog.push('Bad val "%s" on line #%d\n\t"%s"\n\tin file "%s"\n\t%s' % (val, cnt, line, fname, msg))
+            print_log('WARN')
             continue
         else:
             # Alles Klar, update dict
@@ -342,6 +348,7 @@ sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
 
 # Logging
+from taskinit import *
 from asap._asap import Log as _asaplog
 global asaplog
 asaplog=_asaplog()
@@ -350,9 +357,10 @@ if rcParams['verbose']:
 else:
     asaplog.disable()
 
-def print_log():
+def print_log(level='INFO'):
     log = asaplog.pop()
-    if len(log) and rcParams['verbose']: print log
+    #if len(log) and rcParams['verbose']: print log
+    if len(log) and rcParams['verbose']: casalog.post( log, priority=level )
     return
 
 def mask_and(a, b):
@@ -388,9 +396,11 @@ if rcParams['useplotter']:
         plotter = asapplotter(gui)
         del gui
     except ImportError:
-        print "Matplotlib not installed. No plotting available"
+        #print "Matplotlib not installed. No plotting available"
+        asaplog.post( "Matplotlib not installed. No plotting available")
+        print_log('WARN')
 
-__date__ = '$Date: 2009-07-17 15:58:28 -0600 (Fri, 17 Jul 2009) $'.split()[1]
+__date__ = '$Date: 2009-08-05 23:48:39 -0600 (Wed, 05 Aug 2009) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '

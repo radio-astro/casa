@@ -54,7 +54,8 @@ class scantable(Scantable):
                     s = "File '%s' not found." % (filename)
                     if rcParams['verbose']:
                         asaplog.push(s)
-                        print asaplog.pop().strip()
+                        #print asaplog.pop().strip()
+                        print_log('ERROR')
                         return
                     raise IOError(s)
                 if os.path.isdir(filename) \
@@ -71,7 +72,9 @@ class scantable(Scantable):
                         msg = "The given file '%s'is not a valid " \
                               "asap table." % (filename)
                         if rcParams['verbose']:
-                            print msg
+                            #print msg
+                            asaplog.push( msg )
+                            print_log( 'ERROR' )
                             return
                         else:
                             raise IOError(msg)
@@ -119,7 +122,9 @@ class scantable(Scantable):
             if not overwrite:
                 msg = "File %s exists." % name
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                     return
                 else:
                     raise IOError(msg)
@@ -158,7 +163,9 @@ class scantable(Scantable):
         from asap import unique
         if not _is_valid(scanid):
             if rcParams['verbose']:
-                print "Please specify a scanno to drop from the scantable"
+                #print "Please specify a scanno to drop from the scantable"
+                asaplog.push( 'Please specify a scanno to drop from the scantable' )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError("No scan given")
@@ -170,7 +177,10 @@ class scantable(Scantable):
                 raise ValueError("Can't remove all scans")
         except ValueError:
             if rcParams['verbose']:
-                print "Couldn't find any match."
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
                 return
             else: raise
         try:
@@ -183,7 +193,10 @@ class scantable(Scantable):
             return scantable(scopy)
         except RuntimeError:
             if rcParams['verbose']:
-                print "Couldn't find any match."
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
             else:
                 raise
 
@@ -208,8 +221,10 @@ class scantable(Scantable):
         """
         if scanid is None:
             if rcParams['verbose']:
-                print "Please specify a scan no or name to " \
-                      "retrieve from the scantable"
+                #print "Please specify a scan no or name to " \
+                #      "retrieve from the scantable"
+                asaplog.push( 'Please specify a scan no or name to retrieve from the scantable' )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError("No scan given")
@@ -238,11 +253,17 @@ class scantable(Scantable):
             else:
                 msg = "Illegal scanid type, use 'int' or 'list' if ints."
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise TypeError(msg)
         except RuntimeError:
-            if rcParams['verbose']: print "Couldn't find any match."
+            if rcParams['verbose']:
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
             else: raise
 
     def __str__(self):
@@ -271,7 +292,9 @@ class scantable(Scantable):
             else:
                 msg = "Illegal file name '%s'." % (filename)
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise IOError(msg)
         if rcParams['verbose']:
@@ -429,10 +452,21 @@ class scantable(Scantable):
             out +=  "--------------------------------------------------\n"
 
         if rcParams['verbose']:
-            print "--------------------------------------------------"
-            print " ", stat, statunit
-            print "--------------------------------------------------"
-            print out
+            import os
+            usr=os.environ['USER']
+            tmpfile='/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+            f=open(tmpfile,'w')
+            print >> f, "--------------------------------------------------"
+            print >> f, " ", stat, statunit
+            print >> f, "--------------------------------------------------"
+            print >> f, out
+            f.close()
+            f=open(tmpfile,'r')
+            x=f.readlines()
+            f.close()
+            for xx in x:
+                asaplog.push( xx )
+            print_log()
         #else:
             #retval = { 'axesnames': ['scanno', 'beamno', 'ifno', 'polno', 'cycleno'],
             #           'axes' : axes,
@@ -512,10 +546,11 @@ class scantable(Scantable):
             out += '= %3.3f\n' % (outvec[i])
             out +=  "--------------------------------------------------\n"
         if rcParams['verbose']:
-            print "--------------------------------------------------"
-            print " %s" % (label)
-            print "--------------------------------------------------"
-            print out
+            asaplog.push("--------------------------------------------------")
+            asaplog.push(" %s" % (label))
+            asaplog.push("--------------------------------------------------")
+            asaplog.push(out)
+            print_log()
         # disabled because the vector seems more useful
         #retval = {'axesnames': axesnames, 'axes': axes, 'data': outvec}
         return outvec
@@ -702,7 +737,9 @@ class scantable(Scantable):
         else:
             msg  = "Please specify a valid freq type. Valid types are:\n", valid
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
             else:
                 raise TypeError(msg)
         print_log()
@@ -721,7 +758,10 @@ class scantable(Scantable):
             Scantable.set_dirframe(self, frame)
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
             else:
                 raise
         self._add_history("set_dirframe", varlist)
@@ -767,7 +807,10 @@ class scantable(Scantable):
             self._flag(mask, unflag)
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else: raise
         self._add_history("flag", varlist)
@@ -798,7 +841,10 @@ class scantable(Scantable):
                                                width*base[unit]))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else: raise
         s._add_history("lag_flag", varlist)
@@ -1117,7 +1163,9 @@ class scantable(Scantable):
             else:
                 msg = "Illegal file name '%s'." % (filename)
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise IOError(msg)
         if rcParams['verbose']:
@@ -1175,7 +1223,10 @@ class scantable(Scantable):
                               scanav))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else: raise
         s._add_history("average_time", varlist)
@@ -1399,7 +1450,10 @@ class scantable(Scantable):
             s = scantable(self._math._convertpol(self, poltype))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else:
                 raise
@@ -1476,7 +1530,10 @@ class scantable(Scantable):
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError(msg)
@@ -1921,7 +1978,9 @@ class scantable(Scantable):
         from asap.asapfit import asapfit
         fit = asapfit(self._getfit(row))
         if rcParams['verbose']:
-            print fit
+            #print fit
+            asaplog.push( '%s' %(fit) )
+            print_log()
             return
         else:
             return fit.as_dict()
@@ -2028,7 +2087,8 @@ class scantable(Scantable):
                 msg = "File '%s' does not exists" % (name)
                 if rcParams['verbose']:
                     asaplog.push(msg)
-                    print asaplog.pop().strip()
+                    #print asaplog.pop().strip()
+                    print_log( 'ERROR' )
                     return
                 raise IOError(msg)
             fullnames.append(name)

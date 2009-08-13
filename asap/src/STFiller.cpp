@@ -34,6 +34,7 @@
 #endif
 #include <casa/System/ProgressMeter.h>
 #include <atnf/PKSIO/NROReader.h>
+#include <casa/Logging/LogIO.h>
 
 #include <time.h>
 
@@ -469,13 +470,19 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   time_t t0 ;
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
-  
-  cout << "STFiller::openNRO()  Start time = " << t0 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
+  LogIO os( LogOrigin( "STFiller", "openNRO()", WHERE ) ) ;
+//   cout << "STFiller::openNRO()  Start time = " << t0 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+  os << "Start time = " << t0 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << LogIO::POST ;
 
   // fill STHeader
   header_ = new STHeader() ;
@@ -497,8 +504,9 @@ void STFiller::openNRO( int whichIF, int whichBeam )
                                 header_->fluxunit,
                                 header_->epoch,
                                 header_->poltype ) ) {
-    cout << "STFiller::openNRO()  Failed to get header information." << endl ;
-    return ;
+//     cout << "STFiller::openNRO()  Failed to get header information." << endl ;
+//     return ;
+    throw( AipsError("Failed to get header information.") ) ;
   }
 
   // set frame keyword of FREQUENCIES table
@@ -525,10 +533,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     }
   }
 
-  // DEBUG
-  //cout << "STFiller::openNRO()  nIF " << endl ;
-  //
-
   beamOffset_ = 0;
   vector<Bool> beams = nreader_->getBeams() ;
   if (whichBeam>=0) {
@@ -548,10 +552,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     }
   }
 
-  // DEBUG
-  //cout << "STFiller::openNRO()  nBeam " << endl ;
-  //
-
   header_->nbeam = nBeam_ ;
   header_->nif = nIF_ ;
 
@@ -559,19 +559,24 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   table_->setHeader( *header_ ) ;
 
   // DEBUG
-  //cout << "STFiller::openNRO() Velocity Definition = " << nheader->getVDEF() << endl ;
-
-  // DEBUG
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
-  cout << "STFiller::openNRO()  End time = " << t1 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
-  cout << "STFiller::openNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+//   cout << "STFiller::openNRO()  End time = " << t1 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+//   cout << "STFiller::openNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os << "End time = " << t1 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << endl ;
+  os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os.post() ;
   //
 
   return ;
@@ -583,12 +588,19 @@ int STFiller::readNRO()
   time_t t0 ;
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
-  cout << "STFiller::readNRO()  Start time = " << t0 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
+  LogIO os( LogOrigin( "STFiller", "readNRO()", WHERE ) ) ;
+//   cout << "STFiller::readNRO()  Start time = " << t0 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+  os << "Start time = " << t0 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << LogIO::POST ;
   //
 
   // fill row
@@ -629,27 +641,22 @@ int STFiller::readNRO()
   Vector<Double> srcdir ;
   Array<Double> scanrate ;
   for ( i = 0 ; i < imax ; i++ ) {
-//     if( nreader_->getDataset()->getRecord( i ) == NULL ) {
-//       cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
-//       return -1 ;
-//     }
-
     string scanType = nreader_->getScanType( i ) ;
     Int srcType = -1 ;
     if ( scanType.compare( 0, 2, "ON") == 0 ) {
-      // cout << "ON srcType: " << i << endl ;
+      // os << "ON srcType: " << i << LogIO::POST ;
       srcType = 0 ;
     }
     else if ( scanType.compare( 0, 3, "OFF" ) == 0 ) {
-      //cout << "OFF srcType: " << i << endl ;
+      //os << "OFF srcType: " << i << LogIO::POST ;
       srcType = 1 ;
     }
     else if ( scanType.compare( 0, 4, "ZERO" ) == 0 ) {
-      //cout << "ZERO srcType: " << i << endl ;
+      //os << "ZERO srcType: " << i << LogIO::POST ;
       srcType = 2 ;
     }
     else {
-      //cout << "Undefined srcType: " << i << endl ;
+      //os << "Undefined srcType: " << i << LogIO::POST ;
       srcType = 3 ;
     }
  
@@ -690,8 +697,9 @@ int STFiller::readNRO()
                                   propermotion,
                                   srcdir,
                                   scanrate ) ) {
-        cerr << "STFiller::readNRO()  Failed to get scan information." << endl ;
-        return 1 ;
+//         cerr << "STFiller::readNRO()  Failed to get scan information." << endl ;
+//         return 1 ;
+        throw( AipsError("Failed to get scan information.") ) ;
       }
 
       RecordFieldPtr<uInt> scannoCol( rec, "SCANNO" ) ;
@@ -715,9 +723,9 @@ int STFiller::readNRO()
       else {
         int iadd = -1 ;
         for ( uInt iif = 0 ; iif < freqs.size() ; iif++ ) {
-          //cout << "STFiller::readNRO()  freqs[" << iif << "][1] = " << freqs[iif][1] << endl ;
+          //os << "freqs[" << iif << "][1] = " << freqs[iif][1] << LogIO::POST ;
           double fdiff = abs( freqs[iif][1] - fqs[1] ) / freqs[iif][1] ;
-          //cout << "STFiller::readNRO()  fdiff = " << fdiff << endl ;
+          //os << "fdiff = " << fdiff << LogIO::POST ;
           if ( fdiff < 1.0e-8 ) {
             iadd = iif ;
             break ;
@@ -797,7 +805,7 @@ int STFiller::readNRO()
     }
     // DEBUG
     //int rownum = nreader_->getRowNum() ;
-    //cout << "STFiller::readNRO() Finished row " << i << "/" << rownum << endl ;
+    //os << "Finished row " << i << "/" << rownum << LogIO::POST ;
     //
   }
 
@@ -805,16 +813,28 @@ int STFiller::readNRO()
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
-  cout << "STFiller::readNRO()  Processed " << i << " rows" << endl ;
-  cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored " 
-       << count << " \"ZERO\" scans)" << endl ;
-  cout << "STFiller::readNRO()  End time = " << t1 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
-  cout << "STFiller::readNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+//   cout << "STFiller::readNRO()  Processed " << i << " rows" << endl ;
+//   cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored " 
+//        << count << " \"ZERO\" scans)" << endl ;
+//   cout << "STFiller::readNRO()  End time = " << t1 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+//   cout << "STFiller::readNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os << "Processed " << i << " rows" << endl ;
+  os << "Added " << i - count << " rows (ignored " 
+     << count << " \"ZERO\" scans)" << endl ;
+  os.post() ;
+  os << "End time = " << t1 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << endl ;
+  os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os.post() ;
   //
 
   return 0 ;

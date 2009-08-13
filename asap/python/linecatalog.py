@@ -4,9 +4,10 @@ A representation of a spectral line catalog.
 Author: Malte Marquarding
 
 """
-__revision__ = "$Revision: 1603 $"
+__revision__ = "$Revision: 1614 $"
 from asap._asap import linecatalog as lcbase
 from asap import rcParams
+from asap import asaplog
 import os
 
 class linecatalog(lcbase):
@@ -29,7 +30,9 @@ class linecatalog(lcbase):
         else:
             msg = "File '%s' not found" % fpath
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else:
                 raise IOError(msg)
@@ -96,7 +99,9 @@ class linecatalog(lcbase):
             if not overwrite:
                 msg = "File %s exists." % name
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                     return
                 else:
                     raise IOError(msg)

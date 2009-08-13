@@ -3,6 +3,7 @@ from asap import rcParams
 from asap import print_log
 from asap import _n_bools
 from asap import mask_and
+from asap import asaplog
 
 class fitter:
     """
@@ -58,7 +59,9 @@ class fitter:
         if not thescan:
             msg = "Please give a correct scan"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -104,7 +107,9 @@ class fitter:
         else:
             msg = "Invalid function type."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -133,7 +138,10 @@ class fitter:
                or self.fitfunc is None:
             msg = "Fitter not yet initialised. Please set data & fit function"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                from asap import asaplog
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -169,7 +177,10 @@ class fitter:
                 raise RuntimeError,"Fit didn't converge."
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push(msg)
+                print_log('ERROR')
             else:
                 raise
         self._fittedrow = row
@@ -227,7 +238,9 @@ class fitter:
         if self.fitfunc is None:
             msg = "Please specify a fitting function first."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -269,7 +282,9 @@ class fitter:
         if self.fitfunc != "gauss":
             msg = "Function only operates on Gaussian components."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise ValueError(msg)
@@ -280,7 +295,9 @@ class fitter:
         else:
             msg = "Please select a valid  component."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise ValueError(msg)
@@ -321,7 +338,9 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -344,7 +363,9 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -374,7 +395,9 @@ class fitter:
                   area += [a for i in range(3)]
         fpars = self._format_pars(cpars, cfixed, errors and cerrs, area)
         if rcParams['verbose']:
-            print fpars
+            #print fpars
+            asaplog.push(fpars)
+            print_log()
         return {'params':cpars, 'fixed':cfixed, 'formatted': fpars,
                 'errors':cerrs}
 
@@ -415,7 +438,9 @@ class fitter:
         pars = self.fitter.getestimate()
         fixed = self.fitter.getfixedparameters()
         if rcParams['verbose']:
-            print self._format_pars(pars,fixed,None)
+            #print self._format_pars(pars,fixed,None)
+            asaplog.push(self._format_pars(pars,fixed,None))
+            print_log()
         return pars
 
     def get_residual(self):
@@ -425,7 +450,9 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -438,13 +465,17 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
         ch2 = self.fitter.getchi2()
         if rcParams['verbose']:
-            print 'Chi^2 = %3.3f' % (ch2)
+            #print 'Chi^2 = %3.3f' % (ch2)
+            asaplog.push( 'Chi^2 = %3.3f' % (ch2) )
+            print_log()
         return ch2
 
     def get_fit(self):
@@ -454,7 +485,9 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -467,7 +500,9 @@ class fitter:
         if not self.fitted:
             msg = "Not yet fitted."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise RuntimeError(msg)
@@ -475,7 +510,9 @@ class fitter:
         if not isinstance(self.data, scantable):
             msg = "Not a scantable"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -593,7 +630,9 @@ class fitter:
         if not isinstance(self.data, scantable) :
             msg = "Data is not a scantable"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
