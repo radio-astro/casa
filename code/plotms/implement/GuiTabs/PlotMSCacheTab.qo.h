@@ -39,8 +39,8 @@ class PlotMSCacheTab : public PlotMSPlotSubtab, Ui::CacheTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent tab and plotter.
-    PlotMSCacheTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
+    // Constructor which takes the parent plotter.
+    PlotMSCacheTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSCacheTab();

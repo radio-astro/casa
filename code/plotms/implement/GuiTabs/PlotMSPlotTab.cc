@@ -33,26 +33,11 @@
 #include <plotms/GuiTabs/PlotMSDataTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
-#include <plotms/GuiTabs/PlotMSMultiAxesTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
 namespace casa {
-
-//////////////////////////////////
-// PLOTMSPLOTSUBTAB DEFINITIONS //
-//////////////////////////////////
-
-PlotMSPlotSubtab::PlotMSPlotSubtab(PlotMSPlotTab* plotTab,
-        PlotMSPlotter* parent) : PlotMSTab(parent), itsPlotTab_(plotTab) { }
-
-PlotMSPlotSubtab::~PlotMSPlotSubtab() { }
-
-PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
-    return itsPlotTab_->currentlySetParameters(); }
-
 
 ///////////////////////////////
 // PLOTMSPLOTTAB DEFINITIONS //
@@ -119,18 +104,16 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     
     // Add "new" action(s) to go chooser.
     goChooser->addItem("New Single Plot");
-    goChooser->addItem("New Multi Plot");
-    int plotTypes = 2;
     
     // Add "clear" action to go chooser.
     goChooser->addItem("Clear Plotter");
     
     // If not showing a current plot, pick the latest plot if it exists.
-    if(itsCurrentPlot_ == NULL && goChooser->count() > plotTypes + 1)
-        setIndex = goChooser->count() - (plotTypes + 2);
+    if(itsCurrentPlot_ == NULL && goChooser->count() > 2)
+        setIndex = goChooser->count() - 3;
     
     // Set to current plot, or latest plot if no current plot, and set tab.
-    if(setIndex >= 0 && setIndex < goChooser->count() - (plotTypes + 1)) {
+    if(setIndex >= 0 && setIndex < goChooser->count() - 2) {
         goChooser->setCurrentIndex(setIndex);
         goClicked();
     }
@@ -208,7 +191,7 @@ void PlotMSPlotTab::plot() {
             } else if(cload) {
                 // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
-                        PMS_PP::UPDATE_REDRAW | PMS_PP::UPDATE_CACHE);
+                        PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
             }
             plotsChanged(itsPlotManager_);
         }
@@ -217,18 +200,6 @@ void PlotMSPlotTab::plot() {
 
 
 // Protected //
-
-void PlotMSPlotTab::clearSubtabs() {
-    itsSubtabs_.clear();
-    tabWidget->clear();
-}
-
-void PlotMSPlotTab::clearSubtabsAfter(int index) {
-    while(index < itsSubtabs_.size()) {
-        itsSubtabs_.removeAt(itsSubtabs_.size() - 1);
-        tabWidget->removeTab(tabWidget->count() - 1);
-    }
-}
 
 void PlotMSPlotTab::addSubtab(PlotMSPlotSubtab* tab) {
     insertSubtab(itsSubtabs_.size(), tab); }
@@ -258,7 +229,7 @@ PlotMS##TYPE##Tab* PlotMSPlotTab::insert##TYPE##Subtab(int index) {           \
         tab = dynamic_cast<PlotMS##TYPE##Tab*>(t);                            \
         if(tab != NULL) break;                                                \
     }                                                                         \
-    if(tab == NULL) tab = new PlotMS##TYPE##Tab(this, itsPlotter_);           \
+    if(tab == NULL) tab = new PlotMS##TYPE##Tab(itsPlotter_);                 \
     insertSubtab(index, tab);                                                 \
     return tab;                                                               \
 }
@@ -269,7 +240,6 @@ PT_ST(Canvas)
 PT_ST(Data)
 PT_ST(Display)
 PT_ST(Export)
-PT_ST(MultiAxes)
 
 
 // Private //
@@ -333,15 +303,12 @@ void PlotMSPlotTab::goClicked() {
         goChanged(index);
         
     } else {
-        int newSinglePlot = goChooser->count() - 3,
-            newMultiPlot  = goChooser->count() - 2,
+        int newSinglePlot = goChooser->count() - 2,
             clearPlotter  = goChooser->count() - 1;
         
-        if(index == newSinglePlot || index == newMultiPlot) {
+        if(index == newSinglePlot) {
             // this will update the go chooser as necessary
-            PlotMSPlot* plot = index == newSinglePlot ?
-                               (PlotMSPlot*)itsPlotManager_.addSinglePlot() :
-                               (PlotMSPlot*)itsPlotManager_.addMultiPlot();
+            PlotMSPlot* plot = itsPlotManager_.addSinglePlot(itsParent_);
             
             // switch to new plot if needed
             if(itsCurrentPlot_ != NULL) {
@@ -369,8 +336,6 @@ void PlotMSPlotTab::tabChanged() {
         
         foreach(PlotMSPlotSubtab* tab, itsSubtabs_)
             tab->update(*itsCurrentPlot_);
-        
-        itsCurrentPlot_->plotTabHasChanged(*this);
         
         itsUpdateFlag_ = true;
     }

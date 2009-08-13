@@ -38,8 +38,8 @@ namespace casa {
 // PLOTMSCANVASTAB DEFINITIONS //
 /////////////////////////////////
 
-PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
-        PlotMSPlotSubtab(plotTab, parent) {
+PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotter* parent) :
+        PlotMSPlotSubtab(parent) {
     setupUi(this);
     
     PlotFactoryPtr factory = parent->getFactory();

@@ -121,9 +121,6 @@ public:
     // See PlotMSPlotManager::addSinglePlot().
     PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
     
-    // See PlotMSPlotManager::addMultiPlot();
-    PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
-    
 private:
     // Plotter GUI.
     PlotMSPlotter* itsPlotter_;

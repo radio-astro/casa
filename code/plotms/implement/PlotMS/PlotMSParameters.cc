@@ -41,14 +41,12 @@ namespace casa {
 const int dum_a =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("REDRAW");
 const int dum_b =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("MSDATA");
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("MS_DATA");
 const int dum_c =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CACHE");
 const int dum_d =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("AXES");
-const int dum_e =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CANVAS");
-const int dum_f =
+const int dum_e =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("DISPLAY");
 const int PlotMSParameters::UPDATE_LOG =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("LOG");
@@ -107,6 +105,7 @@ bool PlotMSParameters::clearSelectionsOnAxesChange() const {
 void PlotMSParameters::setClearSelectionsOnAxesChange(bool flag) {
     if(flag != itsClearSelectionsOnAxesChange_) {
         itsClearSelectionsOnAxesChange_ = flag;
+        // it's not actually a change to LOG, but use that for now..
         updateFlag(UPDATE_PLOTMS_OPTIONS);
     }
 }
@@ -117,6 +116,7 @@ void PlotMSParameters::setCachedImageSize(int width, int height) {
     if(width != itsCachedImageWidth_ || height != itsCachedImageHeight_) {
         itsCachedImageWidth_ = width;
         itsCachedImageHeight_ = height;
+        // it's not actually a change to LOG, but use that for now..
         updateFlag(UPDATE_PLOTMS_OPTIONS);
     }
 }

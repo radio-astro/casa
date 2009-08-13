@@ -46,6 +46,59 @@ public:
     // </group>
     
     
+    // Non-Static //
+    
+    // Constructor which takes the PlotMS parent.  Starts out with default
+    // parameters.
+    PlotMSSinglePlot(PlotMS* parent);
+    
+    // Destructor.
+    ~PlotMSSinglePlot();
+    
+    
+    // Include overloaded methods.
+    using PlotMSPlot::initializePlot;
+    
+    
+    // Implements PlotMSPlot::name().
+    String name() const;
+    
+    // Implements PlotMSPlot::layoutNumCanvases().
+    unsigned int layoutNumCanvases() const;
+    
+    // Implements PlotMSPlot::layoutNumPages().
+    unsigned int layoutNumPages() const;
+    
+    // Implements PlotMSPlot::generateCanvases().
+    vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages);
+    
+    // Implements PlotMSPlot::setupPlotSubtabs().
+    void setupPlotSubtabs(PlotMSPlotTab& tab) const;
+    
+    // Implements PlotMSPlot::parametersHaveChanged().
+    void parametersHaveChanged(const PlotMSPlotParameters::Group& group);
+    
+    // Implements PlotMSPlot::selectedRegions().
+    PlotMSRegions selectedRegions() const;
+    
+    // Implements PlotMSPlot::visibleSelectedRegions().
+    PlotMSRegions visibleSelectedRegions() const;
+    
+protected:
+    // Implements PlotMSPlot::initializePlot().
+    bool initializePlot();
+    
+    // Implements PlotMSPlot::assignCanvases().
+    bool assignCanvases();
+    
+    // Implements PlotMSPlot::parametersHaveChanged_().
+    bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
+                int updateFlag, bool releaseWhenDone);
+    
+    // Overrides PlotMSPlot::constructorSetup().
+    void constructorSetup();
+    
+private:
     // Simple class to hold parameter to resume updating after a threaded
     // cache loading.
     class TCLParams {
@@ -66,66 +119,8 @@ public:
         // </group>
     };
     
-    
-    // Non-Static //
-    
-    // Constructor which takes the PlotMS parent.  Starts out with default
-    // parameters.
-    PlotMSSinglePlot(PlotMS* parent);
-    
-    // Destructor.
-    ~PlotMSSinglePlot();
-    
-    
-    // Include overloaded methods.
-    using PlotMSPlot::initializePlot;
-    
-    
-    // Implements PlotMSPlot::name().
-    String name() const;
-    
-    // Implements PlotMSPlot::plots().
-    vector<MaskedScatterPlotPtr> plots() const;
-    
-    // Implements PlotMSPlot::canvases().
-    vector<PlotCanvasPtr> canvases() const;
-    
-    // Implements PlotMSPlot::setupPlotSubtabs().
-    void setupPlotSubtabs(PlotMSPlotTab& tab) const;
-    
-    // Implements PlotMSPlot::attachToCanvases().
-    void attachToCanvases();
-    
-    // Implements PlotMSPlot::detachFromCanvases().
-    void detachFromCanvases();
-    
-    // Implements PlotMSPlot::plotTabHasChanged().
-    void plotTabHasChanged(PlotMSPlotTab& tab) { }
-    
-protected:
-    // Implements PlotMSPlot::assignCanvases().
-    bool assignCanvases(PlotMSPages& pages);
-    
-    // Implements PlotMSPlot::initializePlot().
-    bool initializePlot();
-    
-    // Implements PlotMSPlot::parametersHaveChanged_().
-    bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
-                int updateFlag, bool releaseWhenDone);
-    
-    // Implements PlotMSPlot::selectedRegions().
-    PlotMSRegions selectedRegions(
-                const vector<PlotCanvasPtr>& canvases) const;
-    
-    // Overrides PlotMSPlot::constructorSetup().
-    void constructorSetup();
-    
-private:    
     // Convenient access to single plot.
     MaskedScatterPlotPtr itsPlot_;
-    
-    // Convenient access to single plot as a colored plot.
-    ColoredPlotPtr itsColoredPlot_;
     
     // Convenient access to single canvas.
     PlotCanvasPtr itsCanvas_;

@@ -63,7 +63,7 @@ PlotMSPlot::~PlotMSPlot() {
     if(itsVisSet_ != NULL) delete itsVisSet_;
     
     // Clean up plots
-    // detachFromCanvases();
+    detachFromCanvases();
 }
 
 
@@ -72,36 +72,32 @@ PlotMSPlot::~PlotMSPlot() {
 const PlotMSPlotParameters& PlotMSPlot::parameters() const{ return itsParams_;}
 PlotMSPlotParameters& PlotMSPlot::parameters() { return itsParams_; }
 
+vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
+
 vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
-    vector<PlotCanvasPtr> v, canv = canvases(),
-                          visCanv= itsParent_->getPlotter()->currentCanvases();
+    vector<PlotCanvasPtr> v, canv= itsParent_->getPlotter()->currentCanvases();
     bool found = false;
-    for(unsigned int i = 0; i < canv.size(); i++) {
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
         found = false;
-        for(unsigned int j = 0; !found && j < visCanv.size(); j++)
-            if(canv[i] == visCanv[j]) found = true;
-        if(found) v.push_back(canv[i]);
+        for(unsigned int j = 0; !found && j < canv.size(); j++)
+            if(itsCanvases_[i] == canv[j]) found = true;
+        if(found) v.push_back(itsCanvases_[i]);
     }
     return v;
 }
 
-PlotMSRegions PlotMSPlot::selectedRegions() const {
-    return selectedRegions(canvases()); }
-PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
-    return selectedRegions(visibleCanvases()); }
-
-bool PlotMSPlot::initializePlot(PlotMSPages& pages) {    
+bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
+    if(canvases.size() != layoutNumCanvases()) return false;
+    itsCanvases_ = canvases;
+    
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
     // Initialize plot objects and assign canvases.
-    if(!assignCanvases(pages) || !initializePlot()) {
+    if(!initializePlot() || !assignCanvases()) {
         if(!hold) releaseDrawing();
         return false;
     }
-    
-    // Set up page.
-    pages.setupCurrentPage();
     
     // Attach plot objects to their assigned canvases.
     attachToCanvases();
@@ -117,7 +113,6 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
     return true;
 }
 
-/*
 void PlotMSPlot::attachToCanvases() {
     for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsCanvasMap_[&*itsPlots_[i]]->plotItem(itsPlots_[i]);
@@ -127,7 +122,6 @@ void PlotMSPlot::detachFromCanvases() {
     for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsCanvasMap_[&*itsPlots_[i]]->removePlotItem(itsPlots_[i]);
 }
-*/
 
 PlotMSData& PlotMSPlot::data() { return itsData_; }
 const PlotMSData& PlotMSPlot::data() const { return itsData_; }
@@ -188,25 +182,23 @@ void PlotMSPlot::plotDataChanged() {
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
-    vector<MaskedScatterPlotPtr> p = plots();
-    for(unsigned int i = 0; i < p.size(); i++)
-        if(!p[i].null()) p[i]->dataChanged();
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        itsPlots_[i]->dataChanged();
     
     if(!hold) releaseDrawing();
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
-    vector<PlotCanvasPtr> canv = canvases();
-    if(canv.size() == 0) return true;
-    else if(canv.size() == 1)
-        return canv[0]->exportToFile(format);
+    if(itsCanvases_.size() == 0) return true;
+    else if(itsCanvases_.size() == 1)
+        return itsCanvases_[0]->exportToFile(format);
     else {
         bool success = true;
         
         PlotExportFormat form(format);
-        for(unsigned int i = 0; i < canv.size(); i++) {
+        for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
             form.location = String::toString(i) + "-" + format.location;
-            if(!canv[i]->exportToFile(form)) success = false;
+            if(!itsCanvases_[i]->exportToFile(form)) success = false;
         }
         
         return success;        
@@ -216,9 +208,8 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {
     if(canvas.null()) return;
 
-    vector<MaskedScatterPlotPtr> p = plots();
-    for(unsigned int i = 0; i < p.size(); i++)
-        if(!p[i].null()) canvas->removePlotItem(p[i]);
+    for(unsigned int i = 0; i < itsPlots_.size(); i++)
+        canvas->removePlotItem(itsPlots_[i]);
 }
 
 
@@ -283,21 +274,19 @@ bool PlotMSPlot::updateData() {
 }
 
 bool PlotMSPlot::allDrawingHeld() {
-    vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null() && !canv[i]->drawingIsHeld()) return false;
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
+        if(!itsCanvases_[i]->drawingIsHeld()) return false;
     return true;
 }
 
 void PlotMSPlot::holdDrawing() {
-    vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++) canv[i]->holdDrawing();
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
+        itsCanvases_[i]->holdDrawing();
 }
 
 void PlotMSPlot::releaseDrawing() {
-    vector<PlotCanvasPtr> canv = canvases();
-    for(unsigned int i = 0; i < canv.size(); i++)
-        if(!canv[i].null()) canv[i]->releaseDrawing();
+    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
+        itsCanvases_[i]->releaseDrawing();
 }
 
 }

@@ -45,8 +45,8 @@ class PlotMSCanvasTab : public PlotMSPlotSubtab, Ui::CanvasTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent tab and plotter.
-    PlotMSCanvasTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
+    // Constructor which takes the parent plotter.
+    PlotMSCanvasTab(PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSCanvasTab();

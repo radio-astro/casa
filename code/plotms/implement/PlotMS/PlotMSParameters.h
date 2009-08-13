@@ -50,6 +50,7 @@ public:
     static const int UPDATE_PLOTMS_OPTIONS;
     // </group>
     
+    
     // Gets/Sets the file chooser history limit.  (See QtFileDialog.)  Static
     // parameter.
     // <group>

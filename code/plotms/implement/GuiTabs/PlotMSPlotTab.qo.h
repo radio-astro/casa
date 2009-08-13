@@ -44,8 +44,6 @@ class PlotMSCanvasTab;
 class PlotMSDataTab;
 class PlotMSDisplayTab;
 class PlotMSExportTab;
-class PlotMSMultiAxesTab;
-class PlotMSPlotTab;
 
 
 // Subclass of PlotMSTab for tabs that are meant to be used as subtabs in a
@@ -54,11 +52,11 @@ class PlotMSPlotSubtab : public PlotMSTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent tab and plotter.
-    PlotMSPlotSubtab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
+    // Constructor which takes the parent plotter.
+    PlotMSPlotSubtab(PlotMSPlotter* parent) : PlotMSTab(parent) { }
     
     // Destructor.
-    virtual ~PlotMSPlotSubtab();
+    virtual ~PlotMSPlotSubtab() { }
     
     
     // Gets/Sets the MS filename, selection, and averaging using a
@@ -82,14 +80,6 @@ signals:
     // This signal should be emitted whenever the value of the widget changes
     // because of user interaction.
     void changed();
-    
-protected:
-    // Plot tab.
-    PlotMSPlotTab* itsPlotTab_;
-    
-    
-    // See PlotMSPlotTab::currentlySetParameters().
-    PlotMSPlotParameters currentlySetParameters() const;
 };
 
 
@@ -101,7 +91,6 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     Q_OBJECT
     
     //# Friend class declarations.
-    friend class PlotMSMultiPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
     friend class PlotMSSinglePlot;
@@ -160,13 +149,7 @@ public slots:
     // current plot.
     void plot();
     
-protected:
-    // Clears set subtabs.
-    void clearSubtabs();
-    
-    // Clears set subtabs after (and including) the given index.
-    void clearSubtabsAfter(int index);
-    
+protected:    
     // Adds the given subtab to the end of the tab widget.
     void addSubtab(PlotMSPlotSubtab* tab);
     
@@ -188,19 +171,7 @@ protected:
     PlotMSDisplayTab* insertDisplaySubtab(int index);
     PlotMSExportTab* addExportSubtab();
     PlotMSExportTab* insertExportSubtab(int index);
-    PlotMSMultiAxesTab* addMultiAxesSubtab();
-    PlotMSMultiAxesTab* insertMultiAxesSubtab(int index);
     // </group>
-    
-    // Returns the first subtab with the given type, or NULL if there are none
-    // of that type.
-    template <class T>
-    T* subtab() {
-        T* t;
-        foreach(PlotMSPlotSubtab* tab, itsSubtabs_)
-            if((t = dynamic_cast<T*>(tab)) != NULL) return t;
-        return NULL;
-    }
     
 private:    
     // PlotMSPlotSubtab objects in tab widget.

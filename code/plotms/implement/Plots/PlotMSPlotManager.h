@@ -36,7 +36,6 @@ namespace casa {
 
 //# Forward Declararations
 class PlotMS;
-class PlotMSMultiPlot;
 class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
@@ -48,10 +47,6 @@ class PlotMSSinglePlot;
 // Plotter.  Any PlotMSPlots should be owned by the manager, which will handle
 // deletion as necessary.
 class PlotMSPlotManager {
-    
-    //# Friend class declarations.
-    friend class PlotMSMultiPlot;
-    
 public:
     // Constructor.  Parent must be set using setParent() before manager can be
     // used.
@@ -97,12 +92,9 @@ public:
     // Creates a new PlotMSSinglePlot, initializes it properly, adds it to the
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
-    PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSSinglePlot* addSinglePlot(PlotMS* parent,
+            const PlotMSPlotParameters* p = NULL);
     
-    // Creates a new PlotMSMultiPlot, initializes it properly, adds it to the
-    // plotter, and returns a pointer to it.  If parameters are given, they are
-    // used; otherwise the defaults are used.
-    PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
     
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
@@ -130,8 +122,12 @@ private:
     PlotMSPages itsPages_;
     
     
-    // Helper method for add*Plot methods.
-    void addPlot(PlotMSPlot* plot, const PlotMSPlotParameters* p);
+    // Adds the given plot to the plotter, by creating new canvases,
+    // initializing the plot and assigning it canvases, and then putting the
+    // canvases in the plotter layout.  For now, multiple plots are handled
+    // by putting new canvases either to the right of or below the old
+    // canvases, whichever is the most "square".
+    void addPlotToPlotter(PlotMSPlot* plot);
     
     // Notifies any watchers that the managed plots have changed.
     void notifyWatchers() const;

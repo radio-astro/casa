@@ -29,7 +29,6 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-#include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
@@ -46,7 +45,7 @@ int main(int argc, char* argv[]) {
     PlotMSSelection select;
     PlotMSAveraging averaging;
     bool cachedImageSizeToScreenResolution = false, usePixels = false,
-         casapy = false, debug = false, multiPlot = false;
+         casapy = false, debug = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -58,8 +57,7 @@ int main(int argc, char* argv[]) {
            ARG_CASAPY = PlotMSDBusApp::APP_CASAPY_SWITCH,
            ARG_DEBUG1 = "-d", ARG_DEBUG2 = "--debug",
            ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
-           ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
-           ARG_MULTIPLOT = "-m";
+           ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH;
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
                           averagingFields = PlotMSAveraging::fieldStrings();
     
@@ -103,10 +101,7 @@ int main(int argc, char* argv[]) {
             if(averagingFields.size() > 0)
                 cout << "\n     MS Averaging parameters for initial plot.";
             
-            cout << "\n* " << ARG_MULTIPLOT << "\n     "
-                 << "Have initial plot be multiplot instead of single plot."
-            
-                 << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
+            cout << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
                  << "Use pixels instead of symbols for initial plot."
             
                  << "\n* " << ARG_CISTSR << " or " << ARG_CISTSR2 << "\n     "
@@ -141,9 +136,6 @@ int main(int argc, char* argv[]) {
             
         } else if(arg2 == ARG_PIXELS1 || arg2 == ARG_PIXELS2) {
             usePixels = true;
-            
-        } else if(arg2 == ARG_MULTIPLOT) {
-            multiPlot = true;
             
         } else if(arg2 == ARG_CASAPY) {
             casapy = true;
@@ -199,9 +191,6 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // WARNING ABOUT MULTIPLOT NOT WORKING
-    cout << "WARNING: Multi plots are currently in development and should probably not be used by non-developers." << endl;
-    
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
     
@@ -231,10 +220,8 @@ int main(int argc, char* argv[]) {
     PlotMS plotms(params, casapy);
     if(!casapy) plotms.showGUI(true); // don't automatically show for casapy
     
-    // Set up parameters for plot.
-    PlotMSPlotParameters plotparams = multiPlot ?
-            PlotMSMultiPlot::makeParameters(&plotms) :
-            PlotMSSinglePlot::makeParameters(&plotms);
+    // Set up parameters for single plot.
+    PlotMSPlotParameters plotparams= PlotMSSinglePlot::makeParameters(&plotms);
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setAveraging, averaging)
@@ -248,9 +235,8 @@ int main(int argc, char* argv[]) {
         PMS_PP_CALL(plotparams, PMS_PP_Display, setUnflaggedSymbol, sym)
     }
     
-    // Add the plot to plotms.
-    if(multiPlot) plotms.addMultiPlot(&plotparams);
-    else          plotms.addSinglePlot(&plotparams);
+    // If single plot is set, add the plot to plotms.
+    plotms.addSinglePlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
     // is closed.  This is somewhat risky in that if the remote applications

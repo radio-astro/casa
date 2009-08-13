@@ -30,7 +30,6 @@
 #include <graphics/GenericPlotter/PlotData.h>
 
 #include <plotms/Data/PlotMSCache.h>
-#include <plotms/Data/PlotMSCacheIndexer.h>
 
 #include <casa/namespace.h>
 using namespace std;
@@ -43,7 +42,7 @@ class PlotMS;
 
 // Layer between plot cache and the rest of PlotMS and the GenericPlotter
 // classes.
-class PlotMSData : public PlotMaskedPointData, public PlotBinnedData {
+class PlotMSData : public PlotMaskedPointData {
 public:
     // Constructor which takes the parent PlotMS.
     PlotMSData(PlotMS* plotms);
@@ -88,17 +87,6 @@ public:
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
     // </group>
     
-    // Implemented PlotBinnedData methods.
-    // <group>
-    unsigned int numBins() const;
-    unsigned int binAt(unsigned int i) const;
-    bool isBinned() const;
-    // </group>
-    
-    
-    // Tells the cache what to colorize on, on the next draw.  Returns whether
-    // the plot needs to be redrawn or not.
-    bool colorize(bool doColorize, PMS::Axis colorizeAxis);    
     
     // Returns the reference value for the given axis, if applicable.
     // <group>
@@ -151,16 +139,6 @@ private:
     
     // Cache.
     PlotMSCachePtr itsCache_;
-
-    // Indexer
-    PlotMSCacheIndexerPtr itsIndexer_;
-    
-    // Last set colorizing parameters.
-    // <group>
-    bool itsColorize_;
-    PMS::Axis itsColorizeAxis_;
-    // </group>
-
 };
 
 }

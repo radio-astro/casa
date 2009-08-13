@@ -72,8 +72,6 @@ public:
         to = r.second;
     }
     void setRange(bool isDate, bool isCustom, double from, double to);
-    void setRange(bool isDate, bool isCustom, prange_t range) {
-        setRange(isDate, isCustom, range.first, range.second); }
     // </group>
     
     // Overrides PlotMSWidget::addRadioButtonsToGroup().

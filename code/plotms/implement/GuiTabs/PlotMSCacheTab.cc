@@ -37,8 +37,8 @@ namespace casa {
 // PLOTMSCACHETAB DEFINITIONS //
 ////////////////////////////////
 
-PlotMSCacheTab::PlotMSCacheTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
-        PlotMSPlotSubtab(plotTab, parent) {
+PlotMSCacheTab::PlotMSCacheTab(PlotMSPlotter* parent) :
+        PlotMSPlotSubtab(parent) {
     setupUi(this);
     
     // Setup widgets.

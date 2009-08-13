@@ -54,11 +54,11 @@ class PlotMSCacheThread : public PlotMSThread {
     friend class PlotMSCacheThreadHelper;
     
 public:
-    // LOADING constructor which takes the PlotMSPlot, the PlotMSData, the axes
-    // and data columns, the averaging, a flag for whether to call setupPlot
-    // after the loading, and optional post-thread method parameters.
-    PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
-            const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& data,
+    // LOADING constructor which takes the PlotMSPlot, the axes and data
+    // columns, the averaging, a flag for whether to call setupPlot after the
+    // loading, and optional post-thread method parameters.
+    PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
+            const vector<PMS::DataColumn>& data,
             const PlotMSAveraging& averaging, bool setupPlot = false,
             PMSPTMethod postThreadMethod = NULL,
             PMSPTObject postThreadObject = NULL);

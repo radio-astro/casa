@@ -53,13 +53,15 @@ void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
     if(params.typedGroup<PMS_PP_Cache>() == NULL)
         params.setGroup<PMS_PP_Cache>();
     
-    // Add axes parameters if needed.
-    if(params.typedGroup<PMS_PP_Axes>() == NULL)
-        params.setGroup<PMS_PP_Axes>();
-        
     // Add canvas parameters if needed.
-    if(params.typedGroup<PMS_PP_Canvas>() == NULL)
-        params.setGroup<PMS_PP_Canvas>();
+    PlotFactoryPtr f;
+    if(plotms != NULL) f = plotms->getPlotter()->getFactory();
+    if(params.typedGroup<PMS_PP_Canvas>() == NULL) {
+        PMS_PP_Canvas c(f);
+        c.setGridMajorLine(PMS::DEFAULT_GRID_LINE(f));
+        c.setGridMinorLine(PMS::DEFAULT_GRID_LINE(f));
+        params.setGroup(c);
+    }
     
     // Add display parameters if needed.
     if(params.typedGroup<PMS_PP_Display>() == NULL)
@@ -81,37 +83,15 @@ String PlotMSSinglePlot::name() const {
     const PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
     const PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
     const PMS_PP_Display* dp = itsParams_.typedGroup<PMS_PP_Display>();
-    
-    if(d== NULL || c== NULL || dp == NULL || !d->isSet()) return "Single Plot";
+    if(d == NULL || c == NULL || dp == NULL) return "";
+    else if(!d->isSet()) return "Single Plot";
     else return dp->titleFormat().getLabel(c->xAxis(), c->yAxis());
 }
 
-vector<MaskedScatterPlotPtr> PlotMSSinglePlot::plots() const {
-    return vector<MaskedScatterPlotPtr>(1, itsPlot_); }
+unsigned int PlotMSSinglePlot::layoutNumCanvases() const { return 1; }
+unsigned int PlotMSSinglePlot::layoutNumPages() const { return 1; }
 
-vector<PlotCanvasPtr> PlotMSSinglePlot::canvases() const {
-    return vector<PlotCanvasPtr>(1, itsCanvas_); }
-
-void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
-    tab.insertDataSubtab(0);
-    tab.insertAxesSubtab(1);
-    tab.insertCacheSubtab(2);
-    tab.insertDisplaySubtab(3);
-    tab.insertCanvasSubtab(4);
-    tab.insertExportSubtab(5);
-    tab.clearSubtabsAfter(6);
-}
-
-void PlotMSSinglePlot::attachToCanvases() {
-    itsCanvas_->plotItem(itsPlot_); }
-
-void PlotMSSinglePlot::detachFromCanvases() {
-    itsCanvas_->removePlotItem(itsPlot_); }
-
-
-// Protected Methods //
-
-bool PlotMSSinglePlot::assignCanvases(PlotMSPages& pages) {
+vector<PlotCanvasPtr> PlotMSSinglePlot::generateCanvases(PlotMSPages& pages) {
     // Use the current page.
     if(pages.totalPages() == 0) pages.insertPage();
     PlotMSPage page = pages.currentPage();
@@ -152,25 +132,60 @@ bool PlotMSSinglePlot::assignCanvases(PlotMSPages& pages) {
     page.setOwner(row, col, this);
     pages.itsPages_[pages.itsCurrentPageNum_] = page;
     
-    // Assign the canvas.
-    itsCanvas_ = page.canvas(row, col);
-    return true;
+    // Return the canvas.
+    return vector<PlotCanvasPtr>(1, page.canvas(row, col));
 }
+
+void PlotMSSinglePlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
+    tab.insertDataSubtab(0);
+    tab.insertAxesSubtab(1);
+    tab.insertCacheSubtab(2);
+    tab.insertDisplaySubtab(3);
+    tab.insertCanvasSubtab(4);
+    tab.insertExportSubtab(5);
+}
+
+PlotMSRegions PlotMSSinglePlot::selectedRegions() const {
+    PlotMSRegions r;
+    vector<PlotCanvasPtr> canv = canvases();
+    PMS::Axis x = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0),
+              y = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0);
+    if(x == 0 || y == 0) return r; // shouldn't happen
+    for(unsigned int i = 0; i < canv.size(); i++) r.addRegions(x, y, canv[i]);
+    return r;
+}
+
+PlotMSRegions PlotMSSinglePlot::visibleSelectedRegions() const {
+    PlotMSRegions r;
+    vector<PlotCanvasPtr> canv = visibleCanvases();
+    PMS::Axis x = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0),
+              y = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0);
+    if(x == 0 || y == 0) return r; // shouldn't happen
+    for(unsigned int i = 0; i < canv.size(); i++) r.addRegions(x, y, canv[i]);
+    return r;
+}
+
+
+// Protected Methods //
 
 bool PlotMSSinglePlot::initializePlot() {
     PlotMaskedPointDataPtr data(&itsData_, false);
     itsPlot_ = itsFactory_->maskedPlot(data);
-    
-    // Set colors using list.
-    itsColoredPlot_ = ColoredPlotPtr(dynamic_cast<ColoredPlot*>(&*itsPlot_),
-                                     false);
-    if(!itsColoredPlot_.null()) {
-        const vector<String>& colors = PMS::COLORS_LIST();
-        for(unsigned int i = 0; i < colors.size(); i++)
-            itsColoredPlot_->setColorForBin(i, itsFactory_->color(colors[i]));
-    }
-    
+    itsPlots_.push_back(itsPlot_);
     return true;
+}
+
+bool PlotMSSinglePlot::assignCanvases() {
+    if(!itsPlot_.null() && itsCanvases_.size() > 0) {
+        // clear up any unused canvases (shouldn't happen)
+        itsCanvases_.resize(1);
+        
+        itsCanvas_ = itsCanvases_[0];        
+        itsCanvasMap_[&*itsPlot_] = itsCanvas_;
+        
+        return true;        
+    }
+    return false;
 }
 
 bool PlotMSSinglePlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
@@ -229,17 +244,6 @@ bool PlotMSSinglePlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
     */
 }
 
-PlotMSRegions PlotMSSinglePlot::selectedRegions(
-            const vector<PlotCanvasPtr>& canvases) const {
-    PlotMSRegions r;
-    PMS::Axis x = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0),
-              y = (PMS::Axis)PMS_PP_RETCALL(itsParams_,PMS_PP_Cache, yAxis, 0);
-    if(x == 0 || y == 0) return r; // shouldn't happen
-    for(unsigned int i = 0; i < canvases.size(); i++)
-        r.addRegions(x, y, canvases[i]);
-    return r;
-}
-
 void PlotMSSinglePlot::constructorSetup() {
     PlotMSPlot::constructorSetup();
     makeParameters(itsParams_, itsParent_);
@@ -272,7 +276,7 @@ bool PlotMSSinglePlot::updateCache() {
             PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
     itsTCLParams_.endCacheLog = true;
     
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsData_, axes, data,
+    PlotMSCacheThread* ct = new PlotMSCacheThread(this, axes, data,
             d->averaging(), true, &PlotMSSinglePlot::cacheLoaded, this);
     itsParent_->getPlotter()->doThreadedOperation(ct);
     
@@ -285,12 +289,11 @@ bool PlotMSSinglePlot::updateCanvas() {
         bool set = PMS_PP_RETCALL(itsParams_, PMS_PP_MSData, isSet, false) &&
                    itsVisSet_ != NULL;
         
-        PMS_PP_Axes* a = itsParams_.typedGroup<PMS_PP_Axes>();
         PMS_PP_Cache* d = itsParams_.typedGroup<PMS_PP_Cache>();
         PMS_PP_Canvas* c = itsParams_.typedGroup<PMS_PP_Canvas>();
-        if(a== NULL || d== NULL || c== NULL) return false; // shouldn't happen
+        if(d == NULL || c == NULL) return false; // shouldn't happen
         
-        PlotAxis cx = a->xAxis(), cy = a->yAxis();
+        PlotAxis cx = c->xAxis(), cy = c->yAxis();
         PMS::Axis x = d->xAxis(), y = d->yAxis();
         
         // Set axes scales
@@ -316,12 +319,12 @@ bool PlotMSSinglePlot::updateCanvas() {
         
         // Custom ranges
         itsCanvas_->setAxesAutoRescale(true);
-        if(set && a->xRangeSet() && a->yRangeSet())
-            itsCanvas_->setAxesRanges(cx, a->xRange(), cy, a->yRange());
-        else if(set && a->xRangeSet())
-            itsCanvas_->setAxisRange(cx, a->xRange());
-        else if(set && a->yRangeSet())
-            itsCanvas_->setAxisRange(cy, a->yRange());
+        if(set && c->xRangeSet() && c->yRangeSet())
+            itsCanvas_->setAxesRanges(cx, c->xRange(), cy, c->yRange());
+        else if(set && c->xRangeSet())
+            itsCanvas_->setAxisRange(cx, c->xRange());
+        else if(set && c->yRangeSet())
+            itsCanvas_->setAxisRange(cy, c->yRange());
         
         // Show/hide axes
         itsCanvas_->showAxes(false);
@@ -361,22 +364,18 @@ bool PlotMSSinglePlot::updateCanvas() {
 bool PlotMSSinglePlot::updateDisplay() {
     try {
         PMS_PP_Cache* h = itsParams_.typedGroup<PMS_PP_Cache>();
-        PMS_PP_Axes* a = itsParams_.typedGroup<PMS_PP_Axes>();
+        PMS_PP_Canvas* c = itsParams_.typedGroup<PMS_PP_Canvas>();
         PMS_PP_Display* d = itsParams_.typedGroup<PMS_PP_Display>();
         
         // shouldn't happen
-        if(h == NULL || a == NULL || d == NULL) return false;
+        if(h == NULL || c == NULL || d == NULL) return false;
         
         // Set symbols.
         itsPlot_->setSymbol(d->unflaggedSymbol());
         itsPlot_->setMaskedSymbol(d->flaggedSymbol());
         
-        // Colorize, and set data changed if redraw is needed.
-        if(itsData_.colorize(d->colorizeFlag(), d->colorizeAxis()))
-            itsPlot_->dataChanged();
-        
         // Set item axes.
-        itsPlot_->setAxes(a->xAxis(), a->yAxis());
+        itsPlot_->setAxes(c->xAxis(), c->yAxis());
         
         // Set plot title.
         PMS::Axis x = h->xAxis(), y = h->yAxis();

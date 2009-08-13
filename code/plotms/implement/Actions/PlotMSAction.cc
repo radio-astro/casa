@@ -489,8 +489,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        PlotMSCacheThread* ct;
 	        
 	        if(itsType_ == CACHE_LOAD) {
-	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
-	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
+	            ct = new PlotMSCacheThread(plot, a, vector<PMS::DataColumn>(
+	                    a.size(), PMS::DEFAULT_DATACOLUMN),
 	                    paramsData->averaging(), false,
 	                    &PMS_PP_Cache::notifyWatchers, paramsCache);
 
@@ -631,7 +631,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 
 	case QUIT:
-	    //QApplication::setQuitOnLastWindowClosed(true);
+	    QApplication::setQuitOnLastWindowClosed(true);
 		plotms->close();
 		return true;
 

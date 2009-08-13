@@ -35,23 +35,6 @@
     <number>3</number>
    </property>
    <item>
-    <widget class="QFrame" name="chooserFrame" >
-     <property name="frameShape" >
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow" >
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="Line" name="chooserLine" >
-     <property name="orientation" >
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="titleLabel" >
      <property name="text" >
       <string>Canvas Title</string>

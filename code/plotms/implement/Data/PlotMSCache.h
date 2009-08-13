@@ -46,9 +46,6 @@ class PlotMS;
 
 
 class PlotMSCache {
-    
-    // Friend class declarations.
-    friend class PlotMSData;
   
 public:    
     static const PMS::Axis METADATA[];
@@ -66,10 +63,6 @@ public:
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
-
-  // Report the data shapes
-  inline Matrix<Int>& chunkShapes() {return chshapes_;};
-
 
   // Report the total number of points currently arranged for plotting
   //  (TBD: this is incorrect unless ALL cache spaces are full!!)
@@ -113,12 +106,9 @@ public:
   void setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis);
   void getAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
   
-  // Returns whether cache is filled
-  bool cacheReady() const { return dataLoaded_; }
-
-  // Returns whether the cache is filled AND ready to return plotting 
-  //  data via the get methods or not.
-  bool readyForPlotting() const { return cacheReady() && axesSet_; };
+  // Returns whether the cache is ready to return plotting data via the get
+  // methods or not.
+  bool readyForPlotting() const;
 
   // Get X and Y limits (amp vs freq hardwired version)
   void getRanges(Double& minX, Double& maxX, Double& minY, Double& maxY);
@@ -130,46 +120,6 @@ public:
   Double get(PMS::Axis axis);
 
   Bool getFlagMask(Int i);
-
-  // Access to flags per chunk
-  inline Array<Bool>& flag(Int chunk) { return *flag_[chunk]; };
-
-
-  // Axis-specific generic gets
-  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk); };
-  inline Double getField(Int chnk,Int irel)    { return field_(chnk); };
-  inline Double getTime(Int chnk,Int irel)     { return time_(chnk); };
-  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk); };
-  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk); };
-
-  inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
-  inline Double getChan(Int chnk,Int irel) { return *(chan_[chnk]->data()+irel); };
-  inline Double getCorr(Int chnk,Int irel) { return *(corr_[chnk]->data()+irel); };
-  inline Double getAnt1(Int chnk,Int irel) { return *(antenna1_[chnk]->data()+irel); };
-  inline Double getAnt2(Int chnk,Int irel) { return *(antenna2_[chnk]->data()+irel); };
-  inline Double getBsln(Int chnk,Int irel) { return *(baseline_[chnk]->data()+irel); };
-  inline Double getUVDist(Int chnk,Int irel) { return *(uvdist_[chnk]->data()+irel); };
-  inline Double getUVDistL(Int chnk,Int irel) { return *(uvdistL_[chnk]->data()+irel); };
-  inline Double getU(Int chnk,Int irel) { return *(u_[chnk]->data()+irel); };
-  inline Double getV(Int chnk,Int irel) { return *(v_[chnk]->data()+irel); };
-  inline Double getW(Int chnk,Int irel) { return *(w_[chnk]->data()+irel); };
-
-  inline Double getAmp(Int chnk,Int irel)  { return *(amp_[chnk]->data()+irel); };
-  inline Double getPha(Int chnk,Int irel)  { return *(pha_[chnk]->data()+irel); };
-  inline Double getReal(Int chnk,Int irel) { return *(real_[chnk]->data()+irel); };
-  inline Double getImag(Int chnk,Int irel) { return *(imag_[chnk]->data()+irel); };
-
-  inline Double getFlag(Int chnk,Int irel) { return *(flag_[chnk]->data()+irel); };
-  inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
-  inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
-
-  // These are antenna-based
-  inline Double getAntenna(Int chnk,Int irel) { return *(antenna_[chnk]->data()+irel); };
-  inline Double getAz(Int chnk,Int irel)      { return *(az_[chnk]->data()+irel); };
-  inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
-  inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
-
-
 
   // Axis-specific gets
   inline Double getScan()      { return scan_(currChunk_); };
@@ -190,12 +140,11 @@ public:
   inline Double getW() { return *(w_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
   inline Double getAmp()  { return *(amp_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); }; 
+  // flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_)) ? -1.0 : 
   inline Double getPha()  { return  *(pha_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
+  // flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_)) ? -999.0 : 
   inline Double getReal() { return *(real_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  //  inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  inline Double getImag() { return getImag2(currChunk_,(irel_%idatamax_(currChunk_))); };
-  inline Double getImag2(Int ch, Int i) { return *(imag_[ch]->data()+i); };
-
+  inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
@@ -226,6 +175,7 @@ public:
   // eventually be used for a cache manager to let the user know the
   // relative memory use of each axis).
   vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
+
 
 private:
     
@@ -269,7 +219,7 @@ private:
   void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,
               PMS::DataColumn xData, PMS::DataColumn yData);
   
-  // Issue meta info report to the given stringstream.
+  // Issue mete info report to the given stringstream.
   void reportMeta(Double x, Double y, stringstream& ss);
 
   // Set currChunk_ according to a supplied index
@@ -279,8 +229,8 @@ private:
   void deleteCache();
   
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
-		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
+  void loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
+          PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
   
   // Returns the number of points loaded for the given axis or 0 if not loaded.
   unsigned int nPointsForAxis(PMS::Axis axis) const;
@@ -370,7 +320,7 @@ private:
 
   // Current setup/state.
   bool dataLoaded_;
-  bool axesSet_;
+  bool currentSet_;
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;

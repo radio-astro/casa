@@ -35,23 +35,6 @@
     <number>3</number>
    </property>
    <item>
-    <widget class="QFrame" name="chooserFrame" >
-     <property name="frameShape" >
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow" >
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="Line" name="chooserLine" >
-     <property name="orientation" >
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="titleLabel" >
      <property name="text" >
       <string>Plot Title</string>
@@ -99,54 +82,6 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
-      <number>3</number>
-     </property>
-     <item>
-      <layout class="QHBoxLayout" >
-       <property name="spacing" >
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QCheckBox" name="colorize" >
-         <property name="text" >
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="colorizeLabel" >
-         <property name="text" >
-          <string>Colorize by:</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QComboBox" name="colorizeChooser" >
-       <property name="enabled" >
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer>
-       <property name="orientation" >
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" >
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
     <widget class="Line" name="line" >
      <property name="orientation" >
       <enum>Qt::Horizontal</enum>
@@ -189,22 +124,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>colorize</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>colorizeChooser</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>15</x>
-     <y>102</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>114</x>
-     <y>99</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
