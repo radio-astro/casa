@@ -1352,16 +1352,32 @@ void MSFitsInput::fillMSMainTable(Int& nField, Int& nSpW)
 
 void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 {
-  itsLog << LogOrigin("MSFitsInput()", "fillAntennaTable");
+  itsLog << LogOrigin("MSFitsInput", "fillAntennaTable");
   const Regex trailing(" *$"); // trailing blanks
   TableRecord btKeywords=bt.getKeywords();
-  if (nAnt_p>bt.nrows()) {
-    itsLog << "Not all antennas found in antenna table:"
-       << " expected " << nAnt_p << ", found " << bt.nrows()
-       << LogIO::EXCEPTION;
-  }
-  Int nAnt=bt.nrows();
-  receptorAngle_p.resize(2*nAnt);
+  Int nAnt, nAntMax;
+  Bool itsEVLA=((array_p=="VLA") || (array_p=="EVLA"));
+  if (itsEVLA)
+    {
+      nAntMax=nAnt_p;
+      if (nAnt_p != bt.nrows())
+	itsLog << array_p 
+	       << " telescope quirk detected.  Filler purports to construct the full"
+	       << " ANTENNA table with possible blank entries." 
+	       << LogIO::WARN << LogIO::POST;
+    }
+  else 
+    if (nAnt_p>bt.nrows()) 
+      {
+	itsLog << "Not all antennas found in antenna table:"
+	       << " expected " << nAnt_p << ", found " << bt.nrows()
+	       << LogIO::EXCEPTION;
+      }
+  nAnt=bt.nrows();
+
+  if (itsEVLA) receptorAngle_p.resize(2*(nAntMax+1));
+  else receptorAngle_p.resize(2*nAnt);
+  receptorAngle_p=0.0;
   Vector<Double> arrayXYZ(3);
   arrayXYZ=0.0;
   if(!btKeywords.isDefined("ARRAYX")||!btKeywords.isDefined("ARRAYY")||
@@ -1481,9 +1497,24 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 
    // add antenna info to table
    ant.setPositionRef(MPosition::ITRF);
-   Int row=ms_p.antenna().nrow()-1;
+   Int row=ms_p.antenna().nrow();
+
+   if (itsEVLA && (row < nAntMax))
+     {
+       Int n=nAntMax - row + 1;
+       for(Int i=0; i<n; i++)
+	 {ms_p.antenna().addRow(); row++;}
+     }
+   row = ms_p.antenna().nrow()-1;
+   for(Int i=0;i<row;i++)
+     ant.flagRow().put(i,True);
+
    for (Int i=0; i<nAnt; i++) {
-     ms_p.antenna().addRow(); row++;
+     if (!itsEVLA)
+       {ms_p.antenna().addRow(); row++;}
+     else
+       row=id(i)-1;
+
      ant.dishDiameter().put(row,antDiams(i)); 
      String mount;
      switch (mountType(i)) {
@@ -1537,7 +1568,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 
 void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW)
 {
-  itsLog << LogOrigin("MSFitsInput()", "fillSpectralWindowTable");
+  itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable");
 
   //  cout << "fSWT type: " << MFrequency::showType(freqsys_p) << endl;
 
@@ -1703,7 +1734,7 @@ void MSFitsInput::fillSpectralWindowTable()
 
 void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField)
 {
-  itsLog << LogOrigin("MSFitsInput()", "fillFieldTable");
+  itsLog << LogOrigin("MSFitsInput", "fillFieldTable");
   MSFieldColumns& msField(msc_p->field());
   // Table suTab=bt.fullTable("",Table::Scratch);
   Table suTab=bt.fullTable();
@@ -1837,7 +1868,7 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField)
 // single source fits case
 void MSFitsInput::fillFieldTable(Int nField)
 {
-  itsLog << LogOrigin("MSFitsInput()", "fillFieldTable");
+  itsLog << LogOrigin("MSFitsInput", "fillFieldTable");
   // some UVFITS files have the source number set, but have no SU
   // table. We will assume there is only a single source in that case
   // and set all fieldId's back to zero
@@ -2038,7 +2069,7 @@ void MSFitsInput::fillExtraTables()
 }
 
 void MSFitsInput::fixEpochReferences() {
-  itsLog << LogOrigin("MSFitsInput()", "fixEpochReferences");
+  itsLog << LogOrigin("MSFitsInput", "fixEpochReferences");
   if (timsys_p=="IAT") timsys_p="TAI";
   if (timsys_p=="UTC" || timsys_p=="TAI") {
     if (timsys_p=="UTC") msc_p->setEpochRef(MEpoch::UTC, False);
