@@ -251,6 +251,10 @@ Bool FixVis::fixvis(const String& refcode, const String& dataColName)
         setImageField(selectedField);
         if(makeSelection(selectedField)){
           processSelected(fldCounter);
+
+	  // Update FIELD (and/or optional tables SOURCE, OBSERVATION, but not
+	  // POINTING?) to new PTC.
+
           retval = true;
         }
         else{
@@ -340,13 +344,7 @@ Bool FixVis::makeSelection(const Int selectedField)
 {
   logSink() << LogOrigin("FixVis", "makeSelection()");
     
-  //VisSet/MSIter will check if SORTED exists and resort if necessary.
-  {
-    Matrix<Int> noselection;
-    VisSet vs(ms_p, noselection);
-  }
-  const MeasurementSet sorted = ms_p.keywordSet().asTable("SORTED_TABLE");
-    
+  //VisSet/MSIter will check if SORTED_TABLE exists and resort if necessary.
   MSSelection thisSelection;
   if(selectedField >= 0 && nAllFields_p > 1){
     Vector<Int> wrapper;
@@ -361,15 +359,15 @@ Bool FixVis::makeSelection(const Int selectedField)
       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antennaSelStr_p));
   }
     
-  TableExprNode exprNode = thisSelection.toTableExprNode(&sorted);    
+  TableExprNode exprNode = thisSelection.toTableExprNode(&ms_p);    
     
   // Now remake the selected ms
   if(!(exprNode.isNull())){
-    mssel_p = MeasurementSet(sorted(exprNode));
+    mssel_p = MeasurementSet(ms_p(exprNode));
   }
   else if(selectedField < 0 || nsel_p == nAllFields_p){
     // Null take all the ms ...setdata() blank means that
-    mssel_p = MeasurementSet(sorted);
+    mssel_p = MeasurementSet(ms_p);
   }
   else{
     logSink() << LogIO::SEVERE
