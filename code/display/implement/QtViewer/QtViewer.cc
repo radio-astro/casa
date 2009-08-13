@@ -25,7 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-
+#include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
@@ -36,7 +36,7 @@ extern int qInitResources_QtViewer();
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0),
+QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0), dbus_(NULL),
 		       autoDDOptionsShow(True) {
 
   qInitResources_QtViewer();
@@ -57,6 +57,8 @@ QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0),
   
   qdo_ = new QtDataOptionsPanel(this);
 
+  dbus_ = new QtDBusViewerAdaptor(this);
+  dbus_->connectToDBus();
 }
 
 

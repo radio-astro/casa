@@ -1122,9 +1122,10 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 pl.setp(l,fontsize="x-small")
                 l=ax.get_yticklabels()
                 pl.setp(l,fontsize="x-small")
-                from matplotlib.font_manager import fontManager, FontProperties
-                font= FontProperties(size='x-small');
-                pl.legend(("bmaj=%7.1e" % beam['major']['value'],"bmin=%7.1e" % beam['minor']['value']),prop=font)                
+                #from matplotlib.font_manager import fontManager, FontProperties
+                #font= FontProperties(size='x-small');
+                #pl.legend(("bmaj=%7.1e" % beam['major']['value'],"bmin=%7.1e" % beam['minor']['value']),prop=font)                
+                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                 ia.done()
 
                 

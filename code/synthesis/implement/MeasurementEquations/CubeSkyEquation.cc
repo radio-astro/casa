@@ -77,31 +77,31 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
     internalChangesGet_p(False), firstOneChangesPut_p(False), 
     firstOneChangesGet_p(False)
 {
+ 
+  init(ft);
 
-  /*
-  sm_=&sm;
-  vs_=&vs;
-  cft_=&cft;
-  ej_=0; dj_=0; tj_=0; fj_=0; iDebug_p=0; isPSFWork_p=False; 
-  noModelCol_p=noModelCol;
-  isBeginingOfSkyJonesCache_p=True; 
-  */
+}
+  CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol) : SkyEquation(sm, vi, ft, cft, noModelCol), internalChangesPut_p(False),internalChangesGet_p(False), firstOneChangesPut_p(False),firstOneChangesGet_p(False){
 
+    init(ft);
+}
+
+void CubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels();
-
+  
   //if(sm_->getAlgorithm()=="MSMFS") 
   if(sm_->numberOfTaylorTerms()>1) 
-  {
-     nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
-  }
-
+    {
+      nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
+    }
+  
   //case of component ft only
   if(nmod==0)
     nmod=1;
   
   ftm_p.resize(nmod, True);
   iftm_p.resize(nmod, True);
-
+  
   //make a distinct ift_ as gridding and degridding can occur simultaneously
   if(ft.name() == "MosaicFT"){
     ft_=new MosaicFT(static_cast<MosaicFT &>(ft));
@@ -200,10 +200,12 @@ void  CubeSkyEquation::predict(Bool incremental) {
 
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
-  AlwaysAssert(vs_, AipsError);
+  //AlwaysAssert(vs_, AipsError);
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
+  if(noModelCol_p)
+        throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
   // Initialize 
-  VisIter& vi=vs_->iter();
+  VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
 			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
@@ -381,7 +383,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
   Bool changedVI=False; 
  // Initialize the gradients
   sm_->initializeGradients();
-  ROVisIter& vi(vs_->iter());
+  ROVisIter& vi(*rvi_p);
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
 			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
@@ -414,7 +416,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     vi.origin();
     vb.invalidate();
     Int cohDone=0;
-    ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+    ProgressMeter pm(1.0, Double(vi.numberCoh()),
 		     "Gridding weights for PSF",
 		     "", "", "", True);
       
@@ -508,7 +510,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
-  AlwaysAssert(vs_, AipsError);
+  //AlwaysAssert(vs_, AipsError);
   Bool initialized=False;
   Bool changedVI=False;
   
@@ -523,12 +525,12 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
 
   sm_->initializeGradients();
   // Initialize 
-  VisIter& vi=vs_->iter();
+  //ROVisIter& vi=*rvi_p;
   //Lets get the channel selection for later use
-  vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
+  rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
 			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
-  checkVisIterNumRows(vi);
-  VisBuffer vb(vi);
+  checkVisIterNumRows(*rvi_p);
+  VisBuffer vb(*rvi_p);
   /**** Do we need to do this
   if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
     // We are at the begining with an empty model as starting point
@@ -580,12 +582,12 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
     //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
     //Redo the channel selection in case of chunked cube to match
     //data needed for gridding.
-    changedVI= getFreqRange(vi, sm_->cImage(0).coordinates(),
+    changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
 			    cubeSlice, nCubeSlice) || changedVI;
       
-    vi.originChunks();
-    vi.origin();
-    Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+    rvi_p->originChunks();
+    rvi_p->origin();
+    Bool useCorrected= !(rvi_p->msColumns().correctedData().isNull());
 
     vb.invalidate();
     if(!isEmpty){
@@ -593,21 +595,21 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
     }
     initializePutSlice(vb, cubeSlice, nCubeSlice);
     Int cohDone=0;
-    ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+    ProgressMeter pm(1.0, Double(rvi_p->numberCoh()),
 		     "Gridding residual",
 		     "", "", "", True);
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-      for (vi.origin(); vi.more(); vi++) {
+    for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
+      for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 	if(!incremental && !predictedComp) {
           //This here forces the modelVisCube shape and prevents reading model column
 	  vb.setModelVisCube(Complex(0.0,0.0));
 	}
-	  // get the model visibility and write it to the model MS
+	// get the model visibility and write it to the model MS
 	if(!isEmpty)
 	  getSlice(vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
-	//this need to be done only when saving the model
+	//saving the model for self-cal most probably
         if(commitModel && !noModelCol_p)
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	  wvi_p->setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	// Now lets grid the -ve of residual
         // use visCube if there is no correctedData
         if(!useCorrected){
@@ -641,7 +643,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
   this->fixImageScale();
   //lets return original selection back to iterator
   if(changedVI)
-    vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
+    rvi_p->selectChannel(blockNumChanGroup_p, blockChanStart_p, 
 		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
 
   

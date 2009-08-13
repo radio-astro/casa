@@ -1204,14 +1204,24 @@ Set the atmosphere.
      <choice>''</choice>
      </param>
 
-     <param type="double" name="timescale">
-     <description>timescale for atmospheric variations</description>
-     <value>10.0</value>
+     <param type="double" name="pwv">
+     <description>total precipitable water vapour in mm</description>
+     <value>3.0</value>
      </param>
 
-     <param type="double" name="rms">
-     <description>amplitude scale for atmospheric variations</description>
-     <value>1.0</value>
+     <param type="double" name="deltapwv">
+     <description>RMS PWV fluctuations in mm (typically about 15% of total PWV)</description>
+     <value>0.5</value>
+     </param>
+
+     <param type="double" name="beta">
+     <description>exponent of fractional brownian motion</description>
+     <value>1.1</value>
+     </param>
+
+     <param type="double" name="windspeed">
+     <description>wind speed for screen type corruption (m/s)</description>
+     <value>7.</value>
      </param>
 
 </input>

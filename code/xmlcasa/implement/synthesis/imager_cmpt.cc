@@ -696,7 +696,12 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
 	delete itsImager;
 	itsImager=new Imager();
       }
-      itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
+      if(useScratch){
+	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
+      }
+      else{
+	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+      }
       // itsImager = new Imager(*itsMS, compress);
       AlwaysAssert(itsMS, AipsError);
       rstat = itsImager->open(*itsMS, compress, useScratch);
@@ -1492,6 +1497,25 @@ imager::setscales(const std::string& scalemethod, const int nscales, const std::
    
 }
 
+bool 
+imager::setsmallscalebias(const float inbias)
+{
+  Bool rstat(False);
+  if(hasValidMS_p){
+
+     try {
+       rstat = itsImager->setSmallScaleBias(inbias);
+     } catch  (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       RETHROW(x);
+     }
+     
+   } else {
+     *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+   }
+   return rstat;
+}
+  
 bool
 imager::settaylorterms(const int ntaylorterms, const double reffreq)
 {

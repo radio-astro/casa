@@ -48,7 +48,8 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
 
                     if ( antennaname == 'GBT'):
                             if (fluxunit_now == ''):
-                                    print "No fluxunit in the data. Set to Kelvin."
+                                    #print "No fluxunit in the data. Set to Kelvin."
+                                    casalog.post( "No fluxunit in the data. Set to Kelvin." )
                                     scanlist[i].set_fluxunit('K')
                                     fluxunit_now = scanlist[i].get_fluxunit()
                     #print "Current fluxunit = "+fluxunit_now
@@ -88,82 +89,103 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
                     if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                     	if ( fluxunit != '' ):
                             if ( fluxunit == fluxunit_now ):
-                                print "No need to change default fluxunits"
+                                #print "No need to change default fluxunits"
+                                casalog.post( "No need to change default fluxunits" )
                             else:
                                 scanlist[i].set_fluxunit(fluxunit)
-                                print "Reset default fluxunit to "+fluxunit
+                                #print "Reset default fluxunit to "+fluxunit
+                                casalog.post( "Reset default fluxunit to "+fluxunit )
                                 fluxunit_now = scanlist[i].get_fluxunit()
                         else:
-                            print "Warning - no fluxunit for set_fluxunit"
+                            #print "Warning - no fluxunit for set_fluxunit"
+                            casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' ) 
 
                     elif ( fluxunit=='' or fluxunit==fluxunit_now ):
                         if ( fluxunit==fluxunit_now ):
-                            print "No need to convert fluxunits"
+                            #print "No need to convert fluxunits"
+                            casalog.post( "No need to convert fluxunits" )
 
                     elif ( type(telescopeparm) == list ):
                         # User input telescope params
                         if ( len(telescopeparm) > 1 ):
                             D = telescopeparm[0]
                             eta = telescopeparm[1]
-                            print "Use phys.diam D = %5.1f m" % (D)
-                            print "Use ap.eff. eta = %5.3f " % (eta)
+                            #print "Use phys.diam D = %5.1f m" % (D)
+                            #print "Use ap.eff. eta = %5.3f " % (eta)
+                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                            casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
                             scanlist[i].convert_flux(eta=eta,d=D)
                         elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
-                            print "Use gain = %6.4f Jy/K " % (jypk)
+                            #print "Use gain = %6.4f Jy/K " % (jypk)
+                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
                             scanlist[i].convert_flux(jyperk=jypk)
                         else:
-                            print "Empty telescope list"
+                            #print "Empty telescope list"
+                            casalog.post( "Empty telescope list" )
 
                     elif ( telescopeparm=='' ):
                         if ( antennaname == 'GBT'):
                             # needs eventually to be in ASAP source code
-                            print "Convert fluxunit to "+fluxunit
+                            #print "Convert fluxunit to "+fluxunit
+                            casalog.post( "Convert fluxunit to "+fluxunit )
                             # THIS IS THE CHEESY PART
                             # Calculate ap.eff eta at rest freq
                             # Use Ruze law
                             #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
                             # with
-                            print "Using GBT parameters"
+                            #print "Using GBT parameters"
+                            casalog.post( "Using GBT parameters" )
                             eps = 0.390  # mm
                             eta_0 = 0.71 # at infinite wavelength
                             # Ideally would use a freq in center of
                             # band, but rest freq is what I have
                             rf = scanlist[i].get_restfreqs()[0][0]*1.0e-9 # GHz
                             eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            print "Calculated ap.eff. eta = %5.3f " % (eta)
-                            print "At rest frequency %5.3f GHz" % (rf)
+                            #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                            #print "At rest frequency %5.3f GHz" % (rf)
+                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
-                            print "Assume phys.diam D = %5.1f m" % (D)
+                            #print "Assume phys.diam D = %5.1f m" % (D)
+                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
                             scanlist[i].convert_flux(eta=eta,d=D)
 
-                            print "Successfully converted fluxunit to "+fluxunit
+                            #print "Successfully converted fluxunit to "+fluxunit
+                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
                         elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
                             scanlist[i].convert_flux()
 
                         else:
                             # Unknown telescope type
-                            print "Unknown telescope - cannot convert"
+                            #print "Unknown telescope - cannot convert"
+                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
             merged=sd.merge(scanlist)
-            print "Coadded %s" % sdfilelist
+            #print "Coadded %s" % sdfilelist
+            casalog.post( "Coadded %s" % sdfilelist )
             if (nrow>merged.nrow()): 
-                print "WARNING: Actual number of rows is less than the number of rows expected in merged data."
-                print "         Possibly, there are conformance error among the input data."
+                #print "WARNING: Actual number of rows is less than the number of rows expected in merged data."
+                #print "         Possibly, there are conformance error among the input data."
+                casalog.post( "Actual number of rows is less than the number of rows expected in merged data.", priority = 'WARN' )
+                casalog.post( "Possibly, there are conformance error among the input data.", priority = 'WARN' )
             
             # Average in time if desired
             if ( timeaverage ):
                 stave=sd.average_time(merged,weight='tintsys')
-                print "Averaged scans in time"
+                #print "Averaged scans in time"
+                casalog.post( "Averaged scans in time" )
                 # Now average over polarizations;Tsys-weighted (1/Tsys**2) average
                 if ( polaverage ):
                     np = stave.npol()
                     if ( np > 1 ):
                         spave=stave.average_pol(weight='tsys')
-                        print "Averaged polarization"
+                        #print "Averaged polarization"
+                        casalog.post( "Averaged polarization" )
                     else:
                         # only single polarization
-                        print "Single polarization data - no need to average"
+                        #print "Single polarization data - no need to average"
+                        casalog.post( "Single polarization data - no need to average" )
                         spave=stave.copy()
                 else:
                     spave=stave.copy()
@@ -174,10 +196,12 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
                     np = merged.npol()
                     if ( np > 1 ):
                         spave=merged.average_pol(weight='tsys')
-                        print "Averaged polarization"
+                        #print "Averaged polarization"
+                        casalog.post( "Averaged polarization" )
                     else:
                         # only single polarization
-                        print "Single polarization data - no need to average"
+                        #print "Single polarization data - no need to average"
+                        casalog.post( "Single polarization data - no need to average" )
                         spave=merged.copy()
                 else:
                     spave=merged.copy()
@@ -201,13 +225,16 @@ def sdcoadd(sdfilelist, fluxunit, telescopeparm, specunit, frame, doppler, scana
                os.system('rm -rf %s' % outfilename) 
       
             spave.save(outfile,outform,overwrite)
-            if outform!='ASCII': print "Wrote output "+outform+" file "+outfile
+            if outform!='ASCII':
+                    #print "Wrote output "+outform+" file "+outfile
+                    casalog.post( "Wrote output "+outform+" file "+outfile )
 
             # Clean up scantable
             del merged, spave, scanlist
             # DONE
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 

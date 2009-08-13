@@ -84,13 +84,20 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 FTMachine& ift)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(0), ej_(0), dj_(0), 
     tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), noModelCol_p(False), isBeginingOfSkyJonesCache_p(True)
-{};
+{
+  rvi_p=&(vs_->iter());
+  wvi_p=&(vs_->iter());
+};
 
 //----------------------------------------------------------------------
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ft), cft_(0), ej_(0), dj_(0), 
     tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False), isBeginingOfSkyJonesCache_p(True)
-{};
+{
+  rvi_p=&(vs_->iter());
+  wvi_p=&(vs_->iter());
+
+};
 
 //----------------------------------------------------------------------
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
@@ -98,6 +105,9 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(&cft), ej_(0),
     dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False),isBeginingOfSkyJonesCache_p(True)
 {
+  rvi_p=&(vs_->iter());
+  wvi_p=&(vs_->iter());
+
  };
 
 //----------------------------------------------------------------------
@@ -107,7 +117,28 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
     dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
     noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True)
 {
+
+  rvi_p=&(vs_->iter());
+  wvi_p=&(vs_->iter());
+  
+
 };
+
+SkyEquation::SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
+			 ComponentFTMachine& cft, Bool noModelCol)
+  : sm_(&sm), ft_(&ft), ift_(&ft), cft_(&cft), ej_(0),
+    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
+    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True){
+
+
+  //visiter is read only
+  rvi_p=&vi;
+  if(!noModelCol)
+    wvi_p=static_cast<VisibilityIterator *>(&vi);
+  else
+    wvi_p=NULL;
+
+}
 
 //----------------------------------------------------------------------
 SkyEquation::~SkyEquation() {
@@ -126,6 +157,8 @@ SkyEquation& SkyEquation::operator=(const SkyEquation& other)
     dj_=other.dj_;
     tj_=other.tj_;
     fj_=other.fj_;
+    rvi_p=other.rvi_p;
+    wvi_p=other.wvi_p;
   };
   return *this;
 };
@@ -159,20 +192,23 @@ void SkyEquation::setSkyJones(SkyJones& j) {
 // Predict the Sky coherence
 void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
   // Initialize 
-  VisIter& vi=vs_->iter();
-  checkVisIterNumRows(vi);
-  VisBuffer vb(vi);
+  
+  
    // Do the component model only if this is not an incremental update;
   if(sm_->hasComponentList() &&  !incremental ) {
     if(noModelCol_p)
         throw(AipsError("Cannot deal with componentlists without using scratch columns yet"));
+    VisIter& vi=*wvi_p;
+    checkVisIterNumRows(vi);
+    VisBuffer vb(vi);
+
     // Reset the various SkyJones
     resetSkyJones();
 
     // Loop over all visibilities
 
     Int cohDone=0;
-    ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+    ProgressMeter pm(1.0, Double(vi.numberCoh()),
 		     "Predicting component coherences",
 		     "", "", "", True);
 
@@ -199,12 +235,16 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
 
 void SkyEquation::predict(Bool incremental) {
 
+
+
+  if(noModelCol_p)
+        throw(AipsError("Cannot predict model vis without using scratch columns yet"));
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
-  AlwaysAssert(vs_, AipsError);
+  //AlwaysAssert(vs_, AipsError);
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
   // Initialize 
-  VisIter& vi=vs_->iter();
+  VisIter& vi= *wvi_p;
   checkVisIterNumRows(vi);
   VisBuffer vb(vi);
 
@@ -254,7 +294,7 @@ void SkyEquation::predict(Bool incremental) {
       
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : predicting coherences";
-      ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+      ProgressMeter pm(1.0, Double(vi.numberCoh()),
 		       modelName, "", "", "", True);
       // Loop over all visibilities
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -337,7 +377,7 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental) {
   // Initialize the gradients
   sm_->initializeGradients();
 
-  ROVisIter& vi(vs_->iter());
+  ROVisIter& vi(*rvi_p);
 
   // Loop over all models in SkyModel
   for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -372,7 +412,7 @@ void SkyEquation::fullGradientsChiSquared(Bool incremental) {
       
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : transforming residuals";
-      ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+      ProgressMeter pm(1.0, Double(vi.numberCoh()),
 		       modelName, "", "", "", True);
       // Loop over the visibilities, putting VisBuffers
       
@@ -412,7 +452,7 @@ void SkyEquation::incrementGradientsChiSquared() {
   // Check to see if we need to make the XFRs
   if(!sm_->hasXFR(0)) makeComplexXFRs();
 
-  ROVisIter& vi(vs_->iter());
+  ROVisIter& vi(*rvi_p);
 
   // Reset the various SkyJones
   resetSkyJones();
@@ -465,7 +505,7 @@ void SkyEquation::makeComplexXFRs()
 
   AlwaysAssert(ok(),AipsError);
 
-  ROVisIter& vi(vs_->iter());
+  ROVisIter& vi(*rvi_p);
 
   // Loop over all models in SkyModel
   for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -496,7 +536,7 @@ void SkyEquation::makeComplexXFRs()
       
       ostringstream modelName;modelName<<"Model "<<model+1
 				    <<" : transforming to PSF";
-      ProgressMeter pm(1.0, Double(vs_->numberCoh()),
+      ProgressMeter pm(1.0, Double(vi.numberCoh()),
 		       modelName, "", "", "", True);
       // Loop over the visibilities, putting VisBuffers
       
@@ -534,7 +574,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   AlwaysAssert(ok(), AipsError);
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
-  AlwaysAssert(vs_, AipsError);
+  //AlwaysAssert(vs_, AipsError);
   
   ft_->setNoPadding(noModelCol_p);
 
@@ -545,7 +585,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
     doPSF=False;
     resetSkyJones();
     
-    VisIter& vi(vs_->iter());
+    VisIter& vi(*wvi_p);
     checkVisIterNumRows(vi);
     // Loop over all visibilities and pixels
     VisBuffer vb(vi);
@@ -594,7 +634,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   sm_->initializeGradients();
   
 
-  ROVisIter& vi(vs_->iter());
+  ROVisIter& vi(*rvi_p);
   
   // Reset the various SkyJones
   resetSkyJones();
@@ -1232,9 +1272,10 @@ void SkyEquation::applySkyJonesSquare(const VisBuffer& vb, Int row,
 Bool SkyEquation::ok() {
 
   AlwaysAssert(sm_,AipsError);
-  AlwaysAssert(vs_,AipsError);
+  //AlwaysAssert(vs_,AipsError);
   AlwaysAssert(ft_,AipsError);
   AlwaysAssert(ift_,AipsError);
+  AlwaysAssert(rvi_p, AipsError);
 
   return(True);
 }
@@ -1458,7 +1499,7 @@ void SkyEquation::fixImageScale()
 
 void SkyEquation::checkVisIterNumRows(ROVisibilityIterator& vi){
 
-  Int nAnt=vs_->numberAnt();
+  Int nAnt=vi.numberAnt();
   VisBuffer vb(vi);
   vi.originChunks();
   vi.origin();

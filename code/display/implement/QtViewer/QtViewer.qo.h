@@ -28,7 +28,6 @@
 
 #ifndef QTVIEWER_H
 #define QTVIEWER_H
-
 #include <display/QtViewer/QtViewerBase.qo.h>
 
 #include <graphics/X11/X_enter.h>
@@ -39,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class QtDataManager;
 class QtDataOptionsPanel;
-
+class QtDBusViewerAdaptor;
 
 // <summary>
 // Qt implementation of main viewer supervisory object -- Gui level.
@@ -109,7 +108,8 @@ class QtViewer : public QtViewerBase {
  
   QtDataManager* qdm_;		//# The window for loading data.
   QtDataOptionsPanel* qdo_;	//# The window for controlling data display.
-  
+
+  QtDBusViewerAdaptor* dbus_;
  
  public:
  

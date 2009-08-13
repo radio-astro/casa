@@ -708,7 +708,6 @@ namespace casa{
 
   Int getVLABandID(Double& freq,String&telescopeName)
   {
-    /*
     if (telescopeName=="VLA")
       {
 	if ((freq >=1.34E9) && (freq <=1.73E9))
@@ -727,25 +726,24 @@ namespace casa{
 	  return BeamCalc_VLA_4;
       }
     else 
-    */
-      if (telescopeName=="VLA")
+      if (telescopeName=="EVLA")
       {
-	if ((freq >=0.6E9) && (freq <=2.5E9))
-	  return BeamCalc_VLA_L;
+	if ((freq >=0.6E9) && (freq <=2.0E9))
+	  return BeamCalc_EVLA_L;
 	else if ((freq >=2.0E9) && (freq <=4.0E9))
 	  return BeamCalc_EVLA_S;
 	else if ((freq >=4.0E9) && (freq <=8.0E9))
-	  return BeamCalc_VLA_C;
+	  return BeamCalc_EVLA_C;
 	else if ((freq >=8.0E9) && (freq <=12.0E9))
-	  return BeamCalc_VLA_X;
+	  return BeamCalc_EVLA_X;
 	else if ((freq >=12.0E9) && (freq <=18.0E9))
-	  return BeamCalc_VLA_U;
+	  return BeamCalc_EVLA_U;
 	else if ((freq >=18.0E9) && (freq <=26.5E9))
-	  return BeamCalc_VLA_K;
+	  return BeamCalc_EVLA_K;
 	else if ((freq >=26.5E9) && (freq <=40.8E9))
-	  return BeamCalc_VLA_K;
+	  return BeamCalc_EVLA_A;
 	else if ((freq >=4.0E9) && (freq <=50.0E9))
-	  return BeamCalc_VLA_Q;
+	  return BeamCalc_EVLA_Q;
       }
     ostringstream mesg;
     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";

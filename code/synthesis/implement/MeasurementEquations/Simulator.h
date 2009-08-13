@@ -199,8 +199,10 @@ public:
 
   Bool settrop(const String& mode, 
 	       const String& table,
-	       const Float timescale,
-	       const Float rms);
+	       const Float pwv,
+	       const Float deltapwv,
+	       const Float beta,
+	       const Float windspeed);
 
   // Apply antenna pointing and squint errors
   Bool setpointingerror(const String& epJTableName,
@@ -285,10 +287,10 @@ private:
   
   // Arrange to corrupt with simulated calibration
   //   (cf Calibrater setapply)
-  VisCal *createcorrupt(const Record& simpar);
+  SolvableVisCal *create_corrupt(const Record& simpar);
 
   // calculate the corruption terms and save in a caltable
-  Bool calc_corrupt(VisCal *vc, const Record& simpar);
+  Bool calc_corrupt(SolvableVisCal *svc, const Record& simpar);
 
   // Prints an error message if the newsimulator DO is detached and returns True.
   Bool detached() const;

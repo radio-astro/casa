@@ -278,8 +278,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+VisSet::VisSet(ROVisibilityIterator& vi){
 
-
+  ///Valid for single ms iterators 
+  ms_p=vi.ms();
+  blockOfMS_p= new Block<MeasurementSet> ();
+  blockOfMS_p->resize(1);
+  (*blockOfMS_p)[0]=ms_p;
+  multims_p=False;
+  Block<Int> columns(0);
+  Double timeInterval=0.0;
+  iter_p=new VisIter(ms_p,columns,timeInterval);
+  Block<Vector<Int> > ngroup;
+  Block<Vector<Int> > start;
+  Block<Vector<Int> > width;
+  Block<Vector<Int> > incr;
+  Block<Vector<Int> > spws;
+  vi.getChannelSelection(ngroup,start,width,incr,spws);
+  iter_p->selectChannel(ngroup,start,width,incr,spws);
+  
+}
 
 VisSet::VisSet(MeasurementSet& ms, const Matrix<Int>& chanSelection, 
 	       Double timeInterval)
@@ -496,7 +514,7 @@ void VisSet::selectAllChans() {
   message.message(os);
   logSink.post(message);
 
-  MSSpWindowColumns msSpW(ms_p.spectralWindow());
+  ROMSSpWindowColumns msSpW(ms_p.spectralWindow());
   Int nSpw=msSpW.nrow();
   if(nSpw==0)
     throw(AipsError(String("There is no valid spectral windows in "+ms_p.tableName())));
@@ -572,7 +590,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   const ColumnDesc& cdesc = td[data->columnDesc().name()];
   String dataManType = cdesc.dataManagerType();
   String dataManGroup = cdesc.dataManagerGroup();
-  cout << "VISSET: dataManType " << dataManType << endl;
 
   IPosition dataTileShape;
   Bool tiled = (dataManType.contains("Tiled"));
@@ -600,12 +617,10 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
   };
 
 
-  cout << "Tiled " << tiled << " " << simpleTiling << " compress " << compress <<endl;
 
   if (!tiled || !simpleTiling) {
     // Untiled, or tiled at a higher than expected dimensionality
     // Use a canonical tile shape of 128 kB size
-    cout << "VisSet: untiled or not simple tiling" << endl;
 
     Int maxNchan = max (numberChan());
     Int tileSize = maxNchan/10 + 1;
@@ -638,7 +653,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
     ms.addColumn(tdModel, *ccModel);
 
   } else {
-    cout << "model tshape " << modelTileShape << endl;
     MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
     //MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
     TiledShapeStMan modelStMan("ModelTiled", modelTileShape);

@@ -36,7 +36,7 @@
 namespace casa {
 
 //# Forward declarations
-class PlotRangeWidget;
+class PlotMSAxisWidget;
 
 
 // Subclass of PlotMSPlotSubtab that manages plot axes parameters.
@@ -44,8 +44,8 @@ class PlotMSAxesTab : public PlotMSPlotSubtab, Ui::AxesTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent plotter.
-    PlotMSAxesTab(PlotMSPlotter* parent);
+    // Constructor which takes the parent tab and plotter.
+    PlotMSAxesTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSAxesTab();
@@ -67,8 +67,8 @@ public:
     void update(const PlotMSPlot& plot);
     
 private:
-    // Widgets for the range for the x axis and y axis, respectively.
-    PlotRangeWidget* itsXRangeWidget_, *itsYRangeWidget_;
+    // Widgets for the x axis and y axis, respectively.
+    PlotMSAxisWidget* itsXWidget_, *itsYWidget_;
 };
 
 }

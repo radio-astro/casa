@@ -41,8 +41,11 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             s=sd.scantable(sdfile,False)
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
-                    print "Initial Raw Scantable:"
-                    print s
+                    #print "Initial Raw Scantable:"
+                    #print s
+                    casalog.post( "Initial Raw Scantable:" )
+                    casalog.post( s._summary() )
+                    casalog.post( "--------------------------------------------------------------------------------" )
             
             # check if the data contains spectra
             if (s.nchan()==1):
@@ -58,11 +61,13 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             fluxunit_now = s.get_fluxunit()
             if ( antennaname == 'GBT'):
                             if (fluxunit_now == ''):
-                                    print "No fluxunit in the data. Set to Kelvin."
+                                    #print "No fluxunit in the data. Set to Kelvin."
+                                    casalog.post( "No fluxunit in the data. Set to Kelvin." )
                                     s.set_fluxunit('K')
                                     fluxunit_now = s.get_fluxunit()
 
-            print "Current fluxunit = "+fluxunit_now
+            #print "Current fluxunit = "+fluxunit_now
+            casalog.post( "Current fluxunit = "+fluxunit_now )
 
             # convert flux
             # set flux unit string (be more permissive than ASAP)
@@ -75,63 +80,78 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                             if ( fluxunit != '' ):
                                     if ( fluxunit == fluxunit_now ):
-                                            print "No need to change default fluxunits"
+                                            #print "No need to change default fluxunits"
+                                            casalog.post( "No need to change default fluxunits" )
                                     else:
                                             s.set_fluxunit(fluxunit)
-                                            print "Reset default fluxunit to "+fluxunit
+                                            #print "Reset default fluxunit to "+fluxunit
+                                            casalog.post( "Reset default fluxunit to "+fluxunit )
                                             fluxunit_now = s.get_fluxunit()
                             else:
-                                    print "Warning - no fluxunit for set_fluxunit"
+                                    #print "Warning - no fluxunit for set_fluxunit"
+                                    casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
 
 
             elif ( fluxunit=='' or fluxunit==fluxunit_now ):
                     if ( fluxunit==fluxunit_now ):
-                            print "No need to convert fluxunits"
+                            #print "No need to convert fluxunits"
+                            casalog.post( "No need to convert fluxunits" )
 
             elif ( type(telescopeparm) == list ):
                     # User input telescope params
                     if ( len(telescopeparm) > 1 ):
                             D = telescopeparm[0]
                             eta = telescopeparm[1]
-                            print "Use phys.diam D = %5.1f m" % (D)
-                            print "Use ap.eff. eta = %5.3f " % (eta)
+                            #print "Use phys.diam D = %5.1f m" % (D)
+                            #print "Use ap.eff. eta = %5.3f " % (eta)
+                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                            casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
                             s.convert_flux(eta=eta,d=D)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
-                            print "Use gain = %6.4f Jy/K " % (jypk)
+                            #print "Use gain = %6.4f Jy/K " % (jypk)
+                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
                             s.convert_flux(jyperk=jypk)
                     else:
-                            print "Empty telescope list"
+                            #print "Empty telescope list"
+                            casalog.post( "Empty telescope list" )
 
             elif ( telescopeparm=='' ):
                     if ( antennaname == 'GBT'):
                             # needs eventually to be in ASAP source code
-                            print "Convert fluxunit to "+fluxunit
+                            #print "Convert fluxunit to "+fluxunit
+                            casalog.post( "Convert fluxunit to "+fluxunit )
                             # THIS IS THE CHEESY PART
                             # Calculate ap.eff eta at rest freq
                             # Use Ruze law
                             #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
                             # with
-                            print "Using GBT parameters"
+                            #print "Using GBT parameters"
+                            casalog.post( "Using GBT parameters" )
                             eps = 0.390  # mm
                             eta_0 = 0.71 # at infinite wavelength
                             # Ideally would use a freq in center of
                             # band, but rest freq is what I have
                             rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
                             eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            print "Calculated ap.eff. eta = %5.3f " % (eta)
-                            print "At rest frequency %5.3f GHz" % (rf)
+                            #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                            #print "At rest frequency %5.3f GHz" % (rf)
+                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
-                            print "Assume phys.diam D = %5.1f m" % (D)
+                            #print "Assume phys.diam D = %5.1f m" % (D)
+                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
                             s.convert_flux(eta=eta,d=D)
 
-                            print "Successfully converted fluxunit to "+fluxunit
+                            #print "Successfully converted fluxunit to "+fluxunit
+                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
                             s.convert_flux()
 
                     else:
                             # Unknown telescope type
-                            print "Unknown telescope - cannot convert"
+                            #print "Unknown telescope - cannot convert"
+                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
 
             # set default spectral axis unit
@@ -142,7 +162,8 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             if ( frame != '' ):
                     s.set_freqframe(frame)
             else:
-                    print 'Using current frequency frame'
+                    #print 'Using current frequency frame'
+                    casalog.post( 'Using current frequency frame' )
 
             if ( doppler != '' ):
                     if ( doppler == 'radio' ):
@@ -156,7 +177,8 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
 
                     s.set_doppler(ddoppler)
             else:
-                    print 'Using current doppler convention'
+                    #print 'Using current doppler convention'
+                    casalog.post( 'Using current doppler convention' )
 
             # Select scan and field
             sel = sd.selector()
@@ -202,19 +224,24 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
                 #Apply the selection
                 s.set_selection(sel)
             except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
             del sel
 
             scanns = s.getscannos()
             sn=list(scanns)
-            print "Number of scans to be processed:", len(sn)
+            #print "Number of scans to be processed:", len(sn)
+            casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
 
 	    # Warning for multi-IF data
-	    if len(s.getifnos()) > 1:
-		print '\nWarning - The scantable contains multiple IF data.'
-		print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
-		print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
+	    if ( len(s.getifnos()) > 1 and not blmode == 'auto' ):
+		#print '\nWarning - The scantable contains multiple IF data.'
+		#print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
+		#print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
+		casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
+		casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
+		casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (s.getif(0)), priority = 'WARN' )
 
             # do opacity (atmospheric optical depth) correction
             if ( tau > 0.0 ):
@@ -318,9 +345,11 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
 		    del new_mask
 		    msks=s.get_masklist(msk)
 		    if len(msks) < 1:
-			    print 'No channel is selected. Exit without baselining.'
+			    #print 'No channel is selected. Exit without baselining.'
+                            casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )
 			    return
-		    print 'final mask list ('+s._getabcissalabel()+') =',msks
+		    #print 'final mask list ('+s._getabcissalabel()+') =',msks
+                    casalog.post( 'final mask list ('+s._getabcissalabel()+') ='+str(msks) )
 		    header += "   Fit Range: "+str(msks)+"\n"
 		    # Calculate base-line RMS
 		    if len(msks) > 0:
@@ -371,7 +400,9 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             # to apply data selections by selector, make copy
             tmpscn=s.copy()
             tmpscn.save(spefile,outform,overwrite)
-            if outform!='ASCII':print "Wrote output "+outform+" file "+spefile
+            if outform!='ASCII':
+                    #print "Wrote output "+outform+" file "+spefile
+                    casalog.post( "Wrote output "+outform+" file "+spefile )
 
 	    # Save parameters of baseline fit
 	    blfile=project+'_blparam.txt'
@@ -387,7 +418,8 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
             del s, tmpscn
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 
@@ -396,19 +428,23 @@ def _format_output(scan=None,pars=None,rms=None,masklists=None):
 	out = ""
 	# Check input scantable
 	if not isinstance(scan, Scantable):
-		print "Error: Data is not scantable"
+		#print "Error: Data is not scantable"
+                casalog.post( "Data is not scantable", priority = 'ERROR' )
 		return
 	# Check baseline fit parameters
 	if not isinstance(pars,list):
-		print "Error: Invalid baseline parameters."
+		#print "Error: Invalid baseline parameters."
+                casalog.post( "Invalid baseline parameters.", priority = 'ERROR' )
 		return
 	elif scan.nrow() != len(pars):
-		print "Error: Number of rows != baseline params sets."
+		#print "Error: Number of rows != baseline params sets."
+                casalog.post( "Number of rows != baseline params sets.", priority = 'ERROR' )
 		return
         # Check rms data
         if isinstance(rms,list) and len(rms) == scan.nrow(): sflag=True
         else: 
-		print "Error: Invalid rms data"
+		#print "Error: Invalid rms data"
+                casalog.post( "Invalid rms data", priority = 'ERROR' )
 		return
         # Check masklists data
         mflag=False
@@ -416,7 +452,8 @@ def _format_output(scan=None,pars=None,rms=None,masklists=None):
         elif isinstance(masklists,list) and len(masklists) == scan.nrow():
 		mflag=True
         else: 
-		print "Error: Invalid masklists"
+		#print "Error: Invalid masklists"
+                casalog.post( "Invalid masklists", priority = 'ERROR' )
 		return
 
 	# Format data output

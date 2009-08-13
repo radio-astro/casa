@@ -47,6 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisSet;
 class VisBuffer;
+class ROVisibilityIterator;
 class UVWMachine;
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
@@ -181,7 +182,11 @@ public:
 			 VisSet& vs,
 			 ImageInterface<Complex>& image,
 			 Matrix<Float>& weight);
-
+  // Make the entire image using a ROVisIter
+  virtual void makeImage(FTMachine::Type type,
+			 ROVisibilityIterator& vi,
+			 ImageInterface<Complex>& image,
+			 Matrix<Float>& weight);
   // Rotate the uvw from the observed phase center to the
   // desired phase center.
   void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,

@@ -47,8 +47,8 @@ class PlotMSDataTab : public PlotMSPlotSubtab, Ui::MSDataTab {
     Q_OBJECT
     
 public:    
-    // Constructor which takes the parent plotter.
-    PlotMSDataTab(PlotMSPlotter* parent);
+    // Constructor which takes the parent tab and plotter.
+    PlotMSDataTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSDataTab();

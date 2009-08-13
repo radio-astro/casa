@@ -9,7 +9,7 @@
         <shortdescription> All purpose flagging task based on selections</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, and autocorrelation flagging, or flagging
+        quacking, clipping, autocorrelation flagging, or flagging
         of shadowed antennas. Unflagging is also available.
 
         In a dual polarization data set, each polarization can be flagged
@@ -129,9 +129,21 @@
                 </param>
 
                 <param type="any" name="quackinterval" subparam="true">
-                        <description>Quack n seconds from scan beginning</description>
+                        <description>Quack n seconds from scan beginning/end</description>
                         <any type="variant" limittypes="double doubleArray"/>
                         <value type="double">0.0</value>
+                </param>
+
+                <param type="any" name="quackmode" subparam="true">
+                       <description>Quack mode. \'beg\' ==> beginning of scan. \'endb\' ==> end of scan. \'end\' ==> all but end of scan. \'tail\' ==> all but beginning of scan</description>
+                       <any type="variant" limittypes="string stringArray"/>
+                       <value type="string">beg</value>
+                </param>
+
+                <param type="any" name="quackincrement" subparam="true">
+                       <description>Flag incrementally in time?</description>
+                       <any type="variant" limittypes="bool boolArray"/>
+                       <value type="bool">False</value>
                 </param>
 
                 <param type="any" name="autocorr" subparam="true">
@@ -274,6 +286,8 @@
                                         <default param="autocorr"><value type="bool">False</value></default>
                                         <default param="unflag"><value type="bool">False</value></default>
                                         <default param="quackinterval"><value type="double">0.0</value></default>
+                                        <default param="quackmode"><value type="string">beg</value></default>
+                                        <default param="quackincrement"><value type="bool">False</value></default>
                                 </equals>
                                 <equals value="summary"/>
                                 <equals value="shadow">
@@ -322,13 +336,13 @@
             manualflag = flagging based on specific selection parameter
                          plus clipping and flagging autcorrelations
             summary    = report the amount of flagged data
-            quack      = remove specific time range at scan beginning
+            quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
             alma       = ALMA pipeline auto-flagging
             rfi        = Radio Frequency Interference auto-flagging
             autoflag   = experimental auto-flagging outliers
 
-        Unflagging is also available with all options (except shadowing)
+        Unflagging is also available with options manualflag and quack.
 
         Note: I a dual polarization data set, each polarization can be flagged
         separately.  However, at present the calibration and imaging will
@@ -370,8 +384,20 @@
                 default: False (i.e. flag); example: unflag=True
               
         quack: option to remove specified part of scan beginning
-           quackinterval -- Time in seconds from scan beginning to flag
-                Make time slightly small than desired time
+           quackinterval -- Time in seconds from scan beginning/end to flag
+                Make time slightly smaller than the desired time
+           quackmode -- Quack mode
+                default: 'beg'
+                    'beg'  ==> beginning of scan
+                    'endb' ==> end of scan. 
+                    'tail' ==> all but beginning of scan
+                    'end'  ==> all but end of scan.
+           quackincrement -- Quack incrementally in time?
+                default: False
+                    True   ==> the quack interval is counted from the
+                               beginning of the scan
+                    False  ==> the quack interval is counted from the
+                               first unflagged data in the scan
            unflag -- Unflag the data
                 default =&gt; False (quack as indicated)
                            True (unquack)

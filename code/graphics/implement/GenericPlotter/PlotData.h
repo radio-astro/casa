@@ -212,6 +212,36 @@ INHERITANCE_POINTER(PlotErrorData, PlotErrorDataPtr, PlotPointData,
                     PlotDataPtr, PlotData, PlotDataPtr)
 
 
+// Data that differentiates different points into different "bins" on top of
+// normal point data functionality.
+class PlotBinnedData : public virtual PlotPointData {
+public:
+    // Constructor.
+    PlotBinnedData() { }
+    
+    // Destructor.
+    virtual ~PlotBinnedData() { }    
+    
+    
+    // ABSTRACT METHODS //
+    
+    // Returns the total number of bins that the data is in.
+    virtual unsigned int numBins() const = 0;
+    
+    // Returns the bin index number for the given index.  MUST be between 0 and
+    // numBins().
+    virtual unsigned int binAt(unsigned int i) const = 0;
+    
+    
+    // IMPLEMENTED METHODS //
+    
+    // Returns true if the data is binned, false otherwise.
+    virtual bool isBinned() const { return numBins() > 1; }
+};
+INHERITANCE_POINTER(PlotBinnedData, PlotBinnedDataPtr, PlotPointData,
+                    PlotDataPtr, PlotData, PlotDataPtr)
+
+
 // Data for raster plots, which can be thought of as three-dimensional.  Used
 // for images, with the values being in one of the givne formats.
 class PlotRasterData : public virtual PlotData {

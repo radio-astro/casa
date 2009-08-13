@@ -363,7 +363,7 @@ int NROOTFDataset::fillHeader( int sameEndian )
     os << LogIO::WARN << "Error while reading data SWMOD." << LogIO::POST ;
     return -1 ;
   }
-  SWMOD = string( c8 ) ;
+  SWMOD = string( c8 ) + "::OTF" ;
   // DEBUG
   //cout << "SWMOD = " << SWMOD << endl ;
   //

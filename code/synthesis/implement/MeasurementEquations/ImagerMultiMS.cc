@@ -72,6 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vs_p=0;
     ft_p=0;
     cft_p=0;
+    rvi_p=wvi_p=0;
     
   }
 
@@ -126,8 +127,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockSpw_p.resize(numMS_p);
       //Using autolocking here 
       //Will need to rethink this when in parallel mode with multi-cpu access
-      thisms=MeasurementSet(msname, TableLock(TableLock::AutoLocking), 
-			    Table::Update);
+      if(useModelCol_p)
+	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Update);
+      else
+	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Old);
       blockMSSel_p[numMS_p-1]=thisms;
       //breaking reference
       if(ms_p == 0)
@@ -155,13 +160,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //I don't think i need this if statement
     //   if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
       os << "Performing selection on MeasurementSet" << LogIO::POST;
-      if(vs_p) delete vs_p; vs_p=0;
+      //if(vs_p) delete vs_p; vs_p=0;
+      if(rvi_p) delete rvi_p;
+      rvi_p=0; wvi_p=0;
       if(mssel_p) delete mssel_p; mssel_p=0;
       
       // check that sorted table exists (it should), if not, make it now.
-      this->makeVisSet(thisms);
-      
-      MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
+      //this->makeVisSet(thisms);
+
+      //if you want to use scratch col...make sure they are there
+      if(useModelCol_p){
+	Block<Int> sort(0);
+	Matrix<Int> noselection;
+	VisSet(thisms,sort,noselection);
+      }
+      //MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
       
       
       //Some MSSelection 
@@ -207,7 +220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //***************
 
-      TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+      TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
       //if(exprNode.isNull())
       //	throw(AipsError("Selection failed...review ms and selection parameters"));
       datafieldids_p.resize();
@@ -258,11 +271,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Now remake the selected ms
       if(!(exprNode.isNull())){
-	mssel_p = new MeasurementSet(sorted(exprNode));
+	mssel_p = new MeasurementSet(thisms(exprNode));
       }
       else{
 	// Null take all the ms ...setdata() blank means that
-	mssel_p = new MeasurementSet(sorted);
+	mssel_p = new MeasurementSet(thisms);
       } 
       AlwaysAssert(mssel_p, AipsError);
       if(mssel_p->nrow()==0) {
@@ -274,7 +287,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blockStart_p.resize(numMS_p, True);
 	blockStep_p.resize(numMS_p, True);
 	blockSpw_p.resize(numMS_p, True);
-	mssel_p=new MeasurementSet(sorted);	
+	mssel_p=new MeasurementSet(thisms);	
 	os << "Selection is empty: you may want to review this MSs selection"
 	   << LogIO::EXCEPTION;
       }
@@ -296,8 +309,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Block<Matrix<Int> > noChanSel;
       noChanSel.resize(numMS_p);
       Block<Int> sort(0);
-      if(vs_p) delete vs_p; vs_p=0;
-      vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
+      //if(vs_p) delete vs_p; vs_p=0;
+      if(rvi_p) delete rvi_p;
+      rvi_p=0;
+      wvi_p=0;
+
+      //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
+      if(!useModelCol_p){
+	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
+      }
+      else{
+	wvi_p=new VisibilityIterator(blockMSSel_p, sort);
+	rvi_p=wvi_p;    
+      }
+  
+
+
       selectDataChannel();
       dataSet_p=True;
       
@@ -372,7 +399,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
     {
       //Fill default numChan for now
       
-      MSSpWindowColumns msSpW(ms_p->spectralWindow());
+      ROMSSpWindowColumns msSpW(ms_p->spectralWindow());
       Vector<Int> numChan=msSpW.numChan().getColumn(); 
       for (uInt k=0; k < dataspectralwindowids_p.nelements(); ++k){
 	blockNChan_p[numMS_p-1][k]=numChan[dataspectralwindowids_p[k]];
@@ -477,70 +504,74 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
        blockGroup[k].set(1);
      }
 
-     vs_p->iter().selectChannel(blockGroup, blockStart_p, blockNChan_p, 
-				blockStep_p, blockSpw_p);
-    return True;
+     rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p, 
+			  blockStep_p, blockSpw_p);
+     return True;
   }
 
   Bool ImagerMultiMS::openSubTables(){
 
     antab_p=Table(ms_p->antennaTableName(),
 		  TableLock(TableLock::AutoNoReadLocking));
- datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-	       TableLock(TableLock::AutoNoReadLocking));
- feedtab_p=Table(ms_p->feedTableName(),
-		 TableLock(TableLock::AutoNoReadLocking));
- fieldtab_p=Table(ms_p->fieldTableName(),
-		  TableLock(TableLock::AutoNoReadLocking));
- obstab_p=Table(ms_p->observationTableName(),
-		TableLock(TableLock::AutoNoReadLocking));
- poltab_p=Table(ms_p->polarizationTableName(),
-		TableLock(TableLock::AutoNoReadLocking));
- proctab_p=Table(ms_p->processorTableName(),
-		TableLock(TableLock::AutoNoReadLocking));
- spwtab_p=Table(ms_p->spectralWindowTableName(),
-		TableLock(TableLock::AutoNoReadLocking));
- statetab_p=Table(ms_p->stateTableName(),
-		TableLock(TableLock::AutoNoReadLocking));
-
- if(Table::isReadable(ms_p->dopplerTableName()))
-   dopplertab_p=Table(ms_p->dopplerTableName(),
-		      TableLock(TableLock::AutoNoReadLocking));
-
- if(Table::isReadable(ms_p->flagCmdTableName()))
-   flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-		      TableLock(TableLock::AutoNoReadLocking));
- if(Table::isReadable(ms_p->freqOffsetTableName()))
-   freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			 TableLock(TableLock::AutoNoReadLocking));
-
- if(!(Table::isReadable(ms_p->historyTableName()))){
-   // setup a new table in case its not there
-   TableRecord &kws = ms_p->rwKeywordSet();
-   SetupNewTable historySetup(ms_p->historyTableName(),
-			      MSHistory::requiredTableDesc(),Table::New);
-   kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-   
- }
- historytab_p=Table(ms_p->historyTableName(),
-		    TableLock(TableLock::AutoNoReadLocking), Table::Update);
- if(Table::isReadable(ms_p->pointingTableName()))
-   pointingtab_p=Table(ms_p->pointingTableName(), 
-		       TableLock(TableLock::AutoNoReadLocking));
-
- if(Table::isReadable(ms_p->sourceTableName()))
-   sourcetab_p=Table(ms_p->sourceTableName(),
+    datadesctab_p=Table(ms_p->dataDescriptionTableName(),
+			TableLock(TableLock::AutoNoReadLocking));
+    feedtab_p=Table(ms_p->feedTableName(),
+		    TableLock(TableLock::AutoNoReadLocking));
+    fieldtab_p=Table(ms_p->fieldTableName(),
 		     TableLock(TableLock::AutoNoReadLocking));
-
- if(Table::isReadable(ms_p->sysCalTableName()))
- syscaltab_p=Table(ms_p->sysCalTableName(),
+    obstab_p=Table(ms_p->observationTableName(),
 		   TableLock(TableLock::AutoNoReadLocking));
- if(Table::isReadable(ms_p->weatherTableName()))
-   weathertab_p=Table(ms_p->weatherTableName(),
-		      TableLock(TableLock::AutoNoReadLocking));
+    poltab_p=Table(ms_p->polarizationTableName(),
+		   TableLock(TableLock::AutoNoReadLocking));
+    proctab_p=Table(ms_p->processorTableName(),
+		    TableLock(TableLock::AutoNoReadLocking));
+    spwtab_p=Table(ms_p->spectralWindowTableName(),
+		   TableLock(TableLock::AutoNoReadLocking));
+    statetab_p=Table(ms_p->stateTableName(),
+		     TableLock(TableLock::AutoNoReadLocking));
+    
+    if(Table::isReadable(ms_p->dopplerTableName()))
+      dopplertab_p=Table(ms_p->dopplerTableName(),
+			 TableLock(TableLock::AutoNoReadLocking));
+    
+    if(Table::isReadable(ms_p->flagCmdTableName()))
+      flagcmdtab_p=Table(ms_p->flagCmdTableName(),
+			 TableLock(TableLock::AutoNoReadLocking));
+    if(Table::isReadable(ms_p->freqOffsetTableName()))
+      freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
+			    TableLock(TableLock::AutoNoReadLocking));
+    
+    if(ms_p->isWritable()){
+      if(!(Table::isReadable(ms_p->historyTableName()))){
+	// setup a new table in case its not there
+	TableRecord &kws = ms_p->rwKeywordSet();
+	SetupNewTable historySetup(ms_p->historyTableName(),
+				   MSHistory::requiredTableDesc(),Table::New);
+	kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+	
+      }
+      historytab_p=Table(ms_p->historyTableName(),
+			 TableLock(TableLock::AutoNoReadLocking), Table::Update);
+    }
+    if(Table::isReadable(ms_p->pointingTableName()))
+      pointingtab_p=Table(ms_p->pointingTableName(), 
+			  TableLock(TableLock::AutoNoReadLocking));
+    
+    if(Table::isReadable(ms_p->sourceTableName()))
+      sourcetab_p=Table(ms_p->sourceTableName(),
+			TableLock(TableLock::AutoNoReadLocking));
 
- hist_p= new MSHistoryHandler(*ms_p, "imager");
-
+    if(Table::isReadable(ms_p->sysCalTableName()))
+      syscaltab_p=Table(ms_p->sysCalTableName(),
+			TableLock(TableLock::AutoNoReadLocking));
+    if(Table::isReadable(ms_p->weatherTableName()))
+      weathertab_p=Table(ms_p->weatherTableName(),
+			 TableLock(TableLock::AutoNoReadLocking));
+    
+    if(ms_p->isWritable()){
+      hist_p= new MSHistoryHandler(*ms_p, "imager");
+    }
+    
 return True;
 
   

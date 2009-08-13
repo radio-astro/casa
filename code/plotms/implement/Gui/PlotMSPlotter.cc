@@ -171,9 +171,10 @@ void PlotMSPlotter::releaseDrawing() {
 }
 
 bool PlotMSPlotter::allDrawingHeld() const {
+    if(itsPlotter_.null() || itsPlotter_->canvasLayout().null()) return false;
     vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
     for(unsigned int i = 0; i < canvases.size(); i++)
-        if(!canvases[i]->drawingIsHeld()) return false;
+        if(!canvases[i].null() && !canvases[i]->drawingIsHeld()) return false;
     return true;
 }
 

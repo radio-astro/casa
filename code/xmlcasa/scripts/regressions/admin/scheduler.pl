@@ -157,6 +157,7 @@ if ($load_average_15 < $la_limit) {
             }
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
             if ($opcontrol) {
+                system("$opcontrol --dump") == 0 or die $!;
                 system("$opcontrol --stop") == 0 or die $!;
                 system("opreport -clf image-exclude:/no-vmlinux | $admin_dir/gprof2dot.py -e0 -n0.1 -f oprofile > $runcasa_profile");
             }

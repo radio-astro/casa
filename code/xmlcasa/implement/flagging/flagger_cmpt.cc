@@ -107,7 +107,7 @@ flagger::setdata(
 
 bool
 flagger::setmanualflags(
-    const std::string& field, 
+    const std::string& field,
     const std::string& spw, 
     const std::string& array, 
     const std::string& feed, 
@@ -115,14 +115,16 @@ flagger::setmanualflags(
     const std::string& baseline, 
     const std::string& uvrange, 
     const std::string& time, 
-    const std::string& correlation,
+    const std::string& correlation, 
     const bool autocorrelation, 
     const bool unflag, 
     const std::string& clipexpr, 
-    const std::vector<double>& cliprange, 
+    const std::vector<double>& cliprange,
     const std::string& clipcolumn, 
     const bool outside, 
-    const double quackinterval)
+    const double quackinterval, 
+    const std::string& quackmode, 
+    const bool quackincrement)
 {
     try	{
 	Vector<Double> l_cliprange(cliprange.size());
@@ -144,7 +146,8 @@ flagger::setmanualflags(
 		ret = flagger_p->setmanualflags(
 		    Bool(autocorrelation), Bool(unflag),
 		    String(clipexpr), l_cliprange, String(clipcolumn), Bool(outside),
-		    quackinterval, String("FLAG"));
+		    quackinterval, String(quackmode), Bool(quackincrement),
+                    String("FLAG"));
 	    }
 	    
 	    return ret;
@@ -240,7 +243,9 @@ flagger::setflagsummary(const std::string& field, const std::string& spw, const 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(False,False,
 						String(""),Vector<Double>(),String(""),
-						False, 0.0,String("SUMMARY"));
+						False, 
+                                                0.0, String("beg"), False,
+                                                String("SUMMARY"));
 	    }
 	    
 	    return true;
@@ -279,7 +284,9 @@ flagger::setshadowflags(const std::string& field,
 		ret = flagger_p->setmanualflags(
 		    False, False,
 		    String(""), Vector<Double>(), String(""),
-		    False, 0.0, String("SHADOW"), diameter);
+		    False,
+                    0.0, String("beg"), False,
+                    String("SHADOW"), diameter);
 	    }
 	    
 	    return true;

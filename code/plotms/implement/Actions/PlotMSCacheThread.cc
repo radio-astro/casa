@@ -37,14 +37,14 @@ namespace casa {
 // PLOTMSCACHETHREAD DEFINITIONS //
 ///////////////////////////////////
 
-PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
-        const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& data,
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
+        const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& dataCols,
         const PlotMSAveraging& averaging, bool setupPlot,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsLoad_(true),
-        itsAxes_(axes), itsAxesData_(data), itsAveraging_(averaging),
+        itsData_(data), itsVisSet_(plot->visSet()), itsLoad_(true),
+        itsAxes_(axes), itsAxesData_(dataCols), itsAveraging_(averaging),
         itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())

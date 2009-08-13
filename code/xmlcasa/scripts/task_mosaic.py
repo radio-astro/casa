@@ -53,7 +53,7 @@ def mosaic(vis,imagename,mode,alg,imsize,cell,phasecenter,stokes,niter,gain,thre
 
 		fieldindex=ms.msseltoindex(vis,field=field)['field'].tolist()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        imMos.open(vis)
+                        imMos.open(vis, usescratch=mosweight)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 		imMos.setvp(dovp=True)

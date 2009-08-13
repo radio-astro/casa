@@ -186,7 +186,7 @@ void SDGrid::init() {
 
   logIO() << LogOrigin("SDGrid", "init")  << LogIO::NORMAL;
 
-  pfile = fopen("ptdata.txt","w");
+  //pfile = fopen("ptdata.txt","w");
 
   ok();
 
@@ -274,7 +274,7 @@ void SDGrid::init() {
 
 // This is nasty, we should use CountedPointers here.
 SDGrid::~SDGrid() {
-  fclose(pfile);
+  //fclose(pfile);
   if(imageCache) delete imageCache; imageCache=0;
   if(arrayLattice) delete arrayLattice; arrayLattice=0;
   if(wImage) delete wImage; wImage=0;
@@ -1102,7 +1102,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     Vector<Double> newdirv = newdir.getAngle("rad").getValue();
     //cerr<<"dir0="<<newdirv(0)<<endl;
    
-    fprintf(pfile,"%.8f %.8f \n", newdirv(0), newdirv(1));
+    //fprintf(pfile,"%.8f %.8f \n", newdirv(0), newdirv(1));
     //printf("%lf %lf \n", newdirv(0), newdirv(1));
   }
   else {

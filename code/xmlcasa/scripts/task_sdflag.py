@@ -51,8 +51,11 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
 
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
-                    print "Initial Scantable:"
-                    print s
+                    #print "Initial Scantable:"
+                    #print s
+                    casalog.post( "Initial Scantable:" )
+                    casalog.post( s._summary() )
+                    casalog.post( '--------------------------------------------------------------------------------' )
 
             # Default file name
             #if ( outfile == '' ):
@@ -119,7 +122,8 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                 #Apply the selection
                 s.set_selection(sel)
             except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
             # flag mode
@@ -140,13 +144,15 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             sn=list(scanns)
             nr=s.nrow()
             #print "Number of scans to be flagged:", len(sn)
-            print "Number of spectra to be flagged:", nr
+            #print "Number of spectra to be flagged:", nr
+            casalog.post( "Number of spectra to be flagged: %d" % (nr) )
 
             if (len(maskflag) == 0):
                     raise Exception, 'maskflag is undefined'
 
             masks = s.create_mask(maskflag)
-            print "Applying channel flagging..."
+            #print "Applying channel flagging..."
+            casalog.post( "Applying channel flagging..." )
 
             #sc=s.copy()
             # Plot final spectrum
@@ -165,9 +171,11 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             else:
                     nrow=4
                     ncol=4
-            print "nrow,ncol=", nrow, ncol
+            #print "nrow,ncol=", nrow, ncol
+            casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
             if nr >16:
-                    print "Only first 16 spectra is plotted."
+                    #print "Only first 16 spectra is plotted."
+                    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
                     if not myp or myp.is_dead:
@@ -243,7 +251,8 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                     else:
                         return
                     #Plot the result
-                    print "Showing only the first spectrum..."
+                    #print "Showing only the first spectrum..."
+                    casalog.post( "Showing only the first spectrum..." )
                     row=rowlist[0]
                     if not myp or myp.is_dead:
                         if sd.rcParams['plotter.gui']:
@@ -323,7 +332,9 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             #put back original spectral unit
             s.set_unit(unit_in) 
             s.save(spefile,outform,overwrite)
-            if outform!='ASCII': print "Wrote output "+outform+" file "+spefile
+            if outform!='ASCII':
+                    #print "Wrote output "+outform+" file "+spefile
+                    casalog.post( "Wrote output "+outform+" file "+spefile )
             #if outfile!= 'none' or ( outfile=='none' and outform!='ASAP') :
             #        print "Wrote output "+outform+" file "+spefile
             #else:
@@ -333,7 +344,8 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
 
             # DONE
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
 
         finally:
                 casalog.post('')
@@ -343,10 +355,14 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
 ### show_flag_history
 def show_flag_history( scan ):
         hist=scan._gethistory()
-        print ''
-        print '--------------------------------------------------'
-        print 'History of channel flagging:'
-        print '--------------------------------------------------'
+        #print ''
+        #print '--------------------------------------------------'
+        #print 'History of channel flagging:'
+        #print '--------------------------------------------------'
+        casalog.post( '' )
+        casalog.post( '--------------------------------------------------' )
+        casalog.post( 'History of channel flagging:' )
+        casalog.post( '--------------------------------------------------' )
         for i in xrange(len(hist)):
                 hists=hist[i].split('##')
                 if ( len(hists) <= 1 ):
@@ -377,8 +393,10 @@ def show_flag_history( scan ):
                         out+='MODE=\''+mode+'\' '
                         out+='MASK='+maskflag
                         out+='\n'
-                        print out
-        print '--------------------------------------------------'
+                        #print out
+                        casalog.post( out )
+        #print '--------------------------------------------------'
+        casalog.post( '--------------------------------------------------' )
 
 
 ### restore_flag
@@ -403,7 +421,8 @@ def restore_flag( scan ):
                         mask.append([nu,i])
                 out='SCAN[%d] IF[%d] POL[%d]: ' %(scan.getscan(irow), scan.getif(irow), scan.getpol(irow))
                 out+='Current mask is '
-                print out, mask
+                #print out, mask
+                casalog.post( out+str(mask) )
 
                 masks.append(mask)
                 

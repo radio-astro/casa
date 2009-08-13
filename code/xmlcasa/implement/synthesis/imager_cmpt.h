@@ -142,6 +142,7 @@ class imager
                    const int nscales = 5,
                    const std::vector<double>& uservector = ::casac::initialize_vector( 3, (double) 0.0, (double) 3.0, (double) 10.0 ));
 
+    bool setsmallscalebias(const float inbias = 0.6);
     bool settaylorterms(const int ntaylorterms = 2, const double reffreq = 1.4e+09);
 
     bool setsdoptions(const double scale = 1.0, const double weight = 1.0, const int convsupport = -1, const std::string& pointingcolumntouse = "DIRECTION");

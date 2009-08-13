@@ -690,6 +690,72 @@ Bool FTMachine::fromRecord(String& error, const RecordInterface& inRecord) {
   return False;
 };
 
+// Make a plain straightforward honest-to-FSM image. This returns
+// a complex image, without conversion to Stokes. The representation
+// is that required for the visibilities.
+//----------------------------------------------------------------------
+void FTMachine::makeImage(FTMachine::Type type, 
+		       ROVisibilityIterator& vi,
+		       ImageInterface<Complex>& theImage,
+		       Matrix<Float>& weight) {
+
+
+  logIO() << LogOrigin("FTMachine", "makeImage0") << LogIO::NORMAL;
+
+  // Loop over all visibilities and pixels
+  VisBuffer vb(vi);
+  
+  // Initialize put (i.e. transform to Sky) for this model
+  vi.origin();
+
+  if(vb.polFrame()==MSIter::Linear) {
+    StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+  }
+  else {
+    StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+  }
+  
+  initializeToSky(theImage,weight,vb);
+  Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+  if((type==FTMachine::CORRECTED) && (!useCorrected))
+    type=FTMachine::OBSERVED;
+  // Loop over the visibilities, putting VisBuffers
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+    for (vi.origin(); vi.more(); vi++) {
+      
+      switch(type) {
+      case FTMachine::RESIDUAL:
+	vb.visCube()=vb.correctedVisCube();
+	vb.visCube()-=vb.modelVisCube();
+        put(vb, -1, False);
+        break;
+      case FTMachine::MODEL:
+	put(vb, -1, False, FTMachine::MODEL);
+        break;
+      case FTMachine::CORRECTED:
+        put(vb, -1, False, FTMachine::CORRECTED);
+        break;
+      case FTMachine::PSF:
+	vb.visCube()=Complex(1.0,0.0);
+        put(vb, -1, True);
+        break;
+      case FTMachine::COVERAGE:
+	vb.visCube()=Complex(1.0);
+        put(vb, -1, True);
+        break;
+      case FTMachine::OBSERVED:
+      default:
+        put(vb, -1, False);
+        break;
+      }
+    }
+  }
+  finalizeToSky();
+  // Normalize by dividing out weights, etc.
+  getImage(weight, True);
+}
+
+
 // Make a plain straightforward honest-to-God image. This returns
 // a complex image, without conversion to Stokes. The representation
 // is that required for the visibilities. This version always works

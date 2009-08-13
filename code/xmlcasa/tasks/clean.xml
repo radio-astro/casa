@@ -68,7 +68,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 
     <param type="string" name="mode">
-	    <description>Type of selection (mfs, channel, velocity, frequency)</description>
+	    <description> Type of selection (mfs, channel, velocity,frequency)</description>
 	    <value>mfs</value>
 	    <allowed kind="enum">
 	    <value>mfs</value>
@@ -129,6 +129,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      <value></value>
 	      <value>csclean</value>
 	      <value>mosaic</value>
+	      <value>multiscale</value>
+	      <value>desquint</value>
+	      <value>ms</value>
+	      <value>msmfs</value>
+	      <value>advanced</value>
       </allowed>
 
 
@@ -141,6 +146,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      <value>ft</value>
 	      <value>sd</value>
 	      <value>both</value>
+	      <value>pbwproject</value>
+	      <value>pbmosaic</value>
 	    </allowed>
 	    
     </param>
@@ -159,7 +166,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
 
-    <param type="intArray" name="multiscale">
+    <param type="intArray" name="multiscale" subparam="true">
       <description>deconvolution scales (pixels); [] = default standard clean</description>
       <value type="vector">
 	<value></value>
@@ -173,7 +180,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      
 
     </param>
+    <param type="double" name="smallscalebias" subparam="true">
+      <description>a bias to give more weight toward smaller scales</description>
+      
+      <value>0.6</value>
+     
 
+    </param>
 
     <param type="bool" name="interactive">
 	    <description>use interactive clean (with GUI viewer)</description>
@@ -264,7 +277,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 
-    <param type="double" name="robust" subparam='true'>
+    <param type="double" name="robust" subparam="true">
 	    <description>Briggs robustness parameter</description>
 	    <value>0.0</value>
 	    <allowed kind="range">
@@ -313,34 +326,56 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>False</value>
     </param>
 
-    <param type="any" name="noise"  subparam='true'>
+    <param type="any" name="noise"  subparam="true">
 	    <description>noise parameter for briggs abs mode weighting</description>
 	    <any type="variant"/>
 	    <value type="string">1.0Jy</value>	    
     </param>
 
-    <param type="int" name="npixels" subparam='true'>
+    <param type="int" name="npixels" subparam="true">
 	    <description>number of pixels for superuniform or briggs weighting</description>
 	    <value>0</value>
     </param>
 
 
 
-    <param type="int" name="npercycle" subparam='true'>
+    <param type="int" name="npercycle" subparam="true">
 	    <description>Clean iterations before interactive prompt (can be changed)</description>
 	    <value>100</value>
     </param>
-    <param type="double" name="cyclefactor" subparam='true'>
+    <param type="double" name="cyclefactor" subparam="true">
       <description>change depth in between of  csclean cycle</description>
       <value>1.5</value>
     </param>
-    <param type="int" name="cyclespeedup" subparam='true'>
+    <param type="int" name="cyclespeedup" subparam="true">
 	    <description>Cycle threshold doubles in this number of iteration</description>
 	    <value>-1</value>
     </param>
     
 
-    
+    <param type="string" name="cfcache" subparam="true">
+	    <description>Name of the convolution function cache directory (required only for the \'pbwproject\' FTMachine)</description>
+	    <value>cfcache.dir</value>
+    </param>
+
+    <param type="double" name="painc" subparam="true">
+	    <description>Parallactic angle increment (in degree) used to compute new convolution function (required only for the \'pbwproject\' FTMachine)</description>
+	    <value>360.0</value>
+    </param>
+
+    <param type="string" name="epjtable" subparam="true">
+	    <description>Table of EP-Jones parameters (userful only for the \'pbwproject\' FTMachine)</description>
+	    <value></value>
+    </param>
+
+    <param type="int" name="nterms" subparam="true">
+	    <description>Number of taylor terms to use for modeling the sky frequency dependence</description>
+	    <value>1</value>
+    </param>
+    <param type="double" name="reffreq" subparam="true">
+	    <description>Reference frequency for MFS (in GHz)</description>
+	    <value>1.4</value>
+    </param>
 
     <constraints>
             <when param="selectdata">
@@ -356,12 +391,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		    </default>
 	        </equals>
             </when>
-	    <when param="multiscale">
-		  <notequals type="vector" value="[]" > 
-		    <default param="negcomponent"><value>-1</value>
-		    </default>
-	        </notequals>
-            </when>
+<!-- 	    <when param="multiscale"> -->
+<!-- 		  <notequals type="vector" value="[]" >  -->
+<!-- 		    <default param="negcomponent"><value>-1</value> -->
+<!-- 		    </default> -->
+<!-- 	        </notequals> -->
+<!--             </when> -->
 	    <when param="mode">
 		<equals value="mfs"/>
 		<equals value="channel">
@@ -442,6 +477,44 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="cyclefactor"><value>1.5</value></default>
 			<default param="cyclespeedup"><value>-1</value></default>
 	        </equals>
+                <equals value="multiscale">
+                        <default param="ftmachine"><value type="string">ft</value></default>
+                        <default param="multiscale"><value type="intArray">0</value></default>
+                        <default param="smallscalebias"><value>0.6</value></default>
+                        <default param="negcomponent"><value>-1</value></default>
+                </equals>
+                <equals value="desquint">
+                        <default param="ftmachine"><value type="string">pbwproject</value></default>
+                        <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                        <default param="painc"><value type="double">360.0</value></default>
+                </equals>
+                <equals value="ms">
+                        <default param="multiscale"><value type="intArray">0</value></default>
+                        <default param="smallscalebias"><value>0.6</value></default>
+                        <default param="negcomponent"><value>-1</value></default>
+                </equals>
+                <equals value="msmfs">
+                        <default param="multiscale"><value type="intArray">0</value></default>
+                        <default param="smallscalebias"><value>0.6</value></default>
+                        <default param="negcomponent"><value>-1</value></default>
+                        <default param="nterms"><value type="int">2</value></default>
+                        <default param="reffreq"><value type="double">1.4</value></default>
+                        <default param="ftmachine"><value type="string">ft</value></default>
+                        <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                        <default param="painc"><value type="double">360.0</value></default>
+                </equals>
+                <equals value="advanced">
+                        <default param="ftmachine"><value type="string">pbwproject</value></default>
+                        <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                        <default param="painc"><value type="double">360.0</value></default>
+                        <default param="epjtable"><value type="string">""</value></default>
+                        <default param="multiscale"><value type="intArray">0</value></default>
+                        <default param="smallscalebias"><value>0.6</value></default>
+                        <default param="negcomponent"><value>-1</value></default>
+                        <default param="nterms"><value type="int">1</value></default>
+                        <default param="reffreq"><value type="double">1.4</value></default>
+                </equals>
+
             </when>
 <!--Get rid of that soon
 	    <when param="mosaicmode">
@@ -674,13 +747,88 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                is 10" and cell=2", try multscale = [0,5,15]. Note,
                multiscale is currently a bit slow.
  	       default: multiscale=[] (standard CLEAN using psfmode algorithm,
+               no multi-scale). Example:  multiscale = [0,5,15] 
+
+  &gt;&gt;&gt; imagermode='multiscale' expandable parameter(s): 
+       Image using the multi-scale clean algorithm.
+
+       ftmachine -- The method used for forward and reverse transforms
+       multiscale -- set of scales to use in deconvolution.  If set,
+               cleans with several resolutions using hobgom clean. The
+               scale sizes are in units of cellsize.  So if
+               cell='2arcsec', a multiscale scale=10 = 20arcsec.  First
+               scale should always be 0 (point), we suggest second on
+               the order of synthesized beam, third 3-5 times
+               synthesized beam, etc. For example if synthesized beam
+               is 10" and cell=2", try multscale = [0,5,15]. Note,
+               multiscale is currently a bit slow.
+ 	       default: multiscale=[] (standard CLEAN using psfmode algorithm,
                no multi-scale). Example:  multscale = [0,5,15] 
+       negcomponent -- Stop component search when the largest scale has
+               found this number of negative components; -1 means continue
+               component search even if the largest component is
+               negative.  default: -1; example: negcomponent=50
+             
+  &gt;&gt;&gt; imagermode='desquint' expandable parameter(s): 
+       Algorithm to correct for EVLA polarization squint.
+
+       ftmachine -- This is set to \"pbwproject\" which corrects for PB
+       effects during forward and reverse transforms
+       cfcache -- The director name for the caching the convolution
+       functions.  Convolution functions are computed when the
+       Parallactic Angle changes by more than a user defined
+       parallactic angle increment (see below).  Once a function is
+       computed and entered into the cache, it can be reused in later runs.
+       painc -- The value of the Parallactic Angle increment (in
+       degree) after which a new convolution function is computed and cached.
+
+  &gt;&gt;&gt; imagermode='ms' expandable parameter(s): 
+       Image using the multi-scale clean algorithm.
+
+       multiscale -- [See the explaination for the "multiscale" option above]
+       negcomponent -- [See the explaination for the "multiscale"
+       option above]
+
+  &gt;&gt;&gt; imagermode='msmfs' expandable parameter(s): 
+       Image using the multi-scale multi-frequency synthesis (MS-MFS) clean algorithm.
+
+       multiscale -- [See the explaination for the "multiscale" option above]
+       negcomponent -- [See the explaination for the "multiscale"
+       option above]
+       nterms -- The number of Taylor terms used to model the sky
+       frequency dependence.  nterms=2 is equivalent to the SW MFS algorithm.
+       reffreq --  The reference frequency, in GHz, for the MFS
+       ftmachine -- Set this to \'pbwproject\' if frequecy dependence of
+       the PB is considered important.
+       cfcache -- [See the explaination above]
+       painc -- [See the explaination above]
+
+  &gt;&gt;&gt; imagermode='advanced' expandable parameter(s): 
+       The advanced mode for imaging.
+
+       ftmachine -- Set this to \'pbwproject\' if frequecy dependence of
+       the PB is considered important.
+       cfcache -- [See the explaination above]
+       painc -- [See the explaination above]
+       epjones -- Table of EP-Jones parameters
+       multiscale -- [See the explaination for the "multiscale" option above]
+       negcomponent -- [See the explaination for the "multiscale"
+       option above]
+       nterms -- The number of Taylor terms used to model the sky
+       frequency dependence.  nterms=2 is equivalent to the SW MFS algorithm.
+       reffreq --  The reference frequency, in GHz, for the MFS
 
   &gt;&gt;&gt; multiscale expandable parameter(s): 
        negcomponent -- Stop component search when the largest scale has
                found this number of negative components; -1 means continue
                component search even if the largest component is
                negative.  default: -1; example: negcomponent=50
+       smallscalebias -- A bias toward smaller scales. 
+               The peak flux found at each scale is weighted by 
+               a factor = 1 - smallscalebias*scale/max_scale, so
+               that Fw = F*factor.
+               Typically the values range from 0.2 to 1.0.
+               default=0.6
        imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
                default = [256,256]; example: imsize=[350,350]
                imsize = 500 is equivalent to [500,500]

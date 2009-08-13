@@ -149,7 +149,9 @@ public:
   VisSet(MeasurementSet & ms, const Matrix<Int>& chanSelection, 
 	 Double timeInterval=0);
 
-
+  //Constructor from visibility iterator ....a temporary fix 
+  //as EPJones as Imager stops using VisSet 
+  VisSet(ROVisibilityIterator& vi);
   // Construct from an existing VisSet, this references the underlying
   // MeasurementSet(s) but allows a new iteration order and time interval
   // to be specified.

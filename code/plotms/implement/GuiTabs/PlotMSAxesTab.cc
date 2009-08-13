@@ -27,7 +27,7 @@
 #include <plotms/GuiTabs/PlotMSAxesTab.qo.h>
 
 #include <casaqt/QtUtilities/QtUtilities.h>
-#include <plotms/Gui/PlotRangeWidget.qo.h>
+#include <plotms/Gui/PlotMSAxisWidget.qo.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
@@ -37,62 +37,35 @@ namespace casa {
 // PLOTMSAXESTAB DEFINITIONS //
 ///////////////////////////////
 
-PlotMSAxesTab::PlotMSAxesTab(PlotMSPlotter* parent): PlotMSPlotSubtab(parent) {
+PlotMSAxesTab::PlotMSAxesTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
+        PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
     
-    // Setup axes choices.
-    const vector<String>& axes = PMS::axesStrings();
-    String xs = PMS::axis(PMS::DEFAULT_XAXIS),
-           ys = PMS::axis(PMS::DEFAULT_YAXIS);
-    unsigned int xdef = axes.size(), ydef = axes.size();
-    for(unsigned int i = 0; i < axes.size(); i++) {
-        xChooser->addItem(axes[i].c_str());
-        yChooser->addItem(axes[i].c_str());
-        if(axes[i] == xs) xdef = i;
-        if(axes[i] == ys) ydef = i;
-    }
-    if(xdef < axes.size()) xChooser->setCurrentIndex(xdef);
-    if(ydef < axes.size()) yChooser->setCurrentIndex(ydef);
-    
-    // Setup data column choices.
-    const vector<String>& data = PMS::dataColumnStrings();
-    xs = PMS::dataColumn(PMS::DEFAULT_DATACOLUMN);
-    xdef = data.size();
-    for(unsigned int i = 0; i < data.size(); i++) {
-        xDataChooser->addItem(data[i].c_str());
-        yDataChooser->addItem(data[i].c_str());
-        if(data[i] == xs) xdef = i;
-    }
-    if(xdef < data.size()) {
-        xDataChooser->setCurrentIndex(xdef);
-        yDataChooser->setCurrentIndex(ydef);
-    }
-    
-    // Setup range widgets.
-    itsXRangeWidget_ = new PlotRangeWidget(true);
-    itsYRangeWidget_ = new PlotRangeWidget(true);
-    QtUtilities::putInFrame(xRangeFrame, itsXRangeWidget_);
-    QtUtilities::putInFrame(yRangeFrame, itsYRangeWidget_);
+    // Setup axes widgets.
+    itsXWidget_ = new PlotMSAxisWidget(PMS::DEFAULT_XAXIS, X_BOTTOM | X_TOP);
+    itsYWidget_ = new PlotMSAxisWidget(PMS::DEFAULT_YAXIS, Y_LEFT | Y_RIGHT);
+    QtUtilities::putInFrame(xFrame, itsXWidget_);
+    QtUtilities::putInFrame(yFrame, itsYWidget_);
     
     // Insert label defaults.
     itsLabelDefaults_.insert(xLabel, xLabel->text());
-    itsLabelDefaults_.insert(xDataLabel, xDataLabel->text());
-    itsLabelDefaults_.insert(xAttachLabel, xAttachLabel->text());
-    itsLabelDefaults_.insert(xRangeLabel, xRangeLabel->text());
+    itsLabelDefaults_.insert(itsXWidget_->dataLabel(),
+                             itsXWidget_->dataLabel()->text());
+    itsLabelDefaults_.insert(itsXWidget_->attachLabel(),
+                             itsXWidget_->attachLabel()->text());
+    itsLabelDefaults_.insert(itsXWidget_->rangeLabel(),
+                             itsXWidget_->rangeLabel()->text());
     itsLabelDefaults_.insert(yLabel, yLabel->text());
-    itsLabelDefaults_.insert(yDataLabel, yDataLabel->text());
-    itsLabelDefaults_.insert(yAttachLabel, yAttachLabel->text());
-    itsLabelDefaults_.insert(yRangeLabel, yRangeLabel->text());
+    itsLabelDefaults_.insert(itsYWidget_->dataLabel(),
+                             itsYWidget_->dataLabel()->text());
+    itsLabelDefaults_.insert(itsYWidget_->attachLabel(),
+                             itsYWidget_->attachLabel()->text());
+    itsLabelDefaults_.insert(itsYWidget_->rangeLabel(),
+                             itsYWidget_->rangeLabel()->text());
     
     // Connect widgets.
-    connect(xChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
-    connect(xDataChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
-    connect(xAttachBottom, SIGNAL(toggled(bool)), SIGNAL(changed()));
-    connect(itsXRangeWidget_, SIGNAL(changed()), SIGNAL(changed()));
-    connect(yChooser,SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
-    connect(yDataChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
-    connect(yAttachLeft, SIGNAL(toggled(bool)), SIGNAL(changed()));
-    connect(itsYRangeWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(itsXWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(itsYWidget_, SIGNAL(changed()), SIGNAL(changed()));
 }
 
 PlotMSAxesTab::~PlotMSAxesTab() { }
@@ -100,46 +73,34 @@ PlotMSAxesTab::~PlotMSAxesTab() { }
 
 void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
     PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
-    PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>();
+    PMS_PP_Axes* a = params.typedGroup<PMS_PP_Axes>();
     if(c == NULL) {
         params.setGroup<PMS_PP_Cache>();
         c = params.typedGroup<PMS_PP_Cache>();
     }
-    if(cv == NULL) {
-        params.setGroup<PMS_PP_Canvas>();
-        cv = params.typedGroup<PMS_PP_Canvas>();
+    if(a == NULL) {
+        params.setGroup<PMS_PP_Axes>();
+        a = params.typedGroup<PMS_PP_Axes>();
     }
     
-    c->setXAxis(PMS::axis(xChooser->currentText().toStdString()),
-                PMS::dataColumn(xDataChooser->currentText().toStdString()));
-    cv->setXAxis(xAttachBottom->isChecked() ? X_BOTTOM : X_TOP);
-    cv->setXRange(itsXRangeWidget_->isCustom(), itsXRangeWidget_->getRange());
+    c->setXAxis(itsXWidget_->axis(), itsXWidget_->data());
+    a->setXAxis(itsXWidget_->attachAxis());
+    a->setXRange(itsXWidget_->rangeCustom(), itsXWidget_->range());
     
-    c->setYAxis(PMS::axis(yChooser->currentText().toStdString()),
-                PMS::dataColumn(yDataChooser->currentText().toStdString()));
-    cv->setYAxis(yAttachLeft->isChecked() ? Y_LEFT : Y_RIGHT);
-    cv->setYRange(itsYRangeWidget_->isCustom(), itsYRangeWidget_->getRange());
+    c->setYAxis(itsYWidget_->axis(), itsYWidget_->data());
+    a->setYAxis(itsYWidget_->attachAxis());
+    a->setYRange(itsYWidget_->rangeCustom(), itsYWidget_->range());
 }
 
 void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
-    const PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>();
-    if(c == NULL || cv == NULL) return; // shouldn't happen
+    const PMS_PP_Axes* a = params.typedGroup<PMS_PP_Axes>();
+    if(c == NULL || a == NULL) return; // shouldn't happen
     
-    PMS::Axis xAxis = c->xAxis(), yAxis = c->yAxis();
-    setChooser(xChooser, PMS::axis(xAxis));
-    setChooser(xDataChooser, PMS::dataColumn(c->xDataColumn()));
-    if(cv->xAxis() == X_BOTTOM) xAttachBottom->setChecked(true);
-    else                        xAttachTop->setChecked(true);
-    itsXRangeWidget_->setRange(PMS::axisType(xAxis) == PMS::TTIME,
-            cv->xRangeSet(), cv->xRange().first, cv->xRange().second);
-    
-    setChooser(yChooser, PMS::axis(yAxis));
-    setChooser(yDataChooser, PMS::dataColumn(c->yDataColumn()));
-    if(cv->yAxis() == Y_LEFT) yAttachLeft->setChecked(true);
-    else                      yAttachRight->setChecked(true);
-    itsYRangeWidget_->setRange(PMS::axisType(yAxis) == PMS::TTIME,
-            cv->yRangeSet(), cv->yRange().first, cv->yRange().second);
+    itsXWidget_->setValue(c->xAxis(), c->xDataColumn(), a->xAxis(),
+            a->xRangeSet(), a->xRange());
+    itsYWidget_->setValue(c->yAxis(), c->yDataColumn(), a->yAxis(),
+            a->yRangeSet(), a->yRange());
 }
 
 void PlotMSAxesTab::update(const PlotMSPlot& plot) {
@@ -147,42 +108,49 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     PlotMSPlotParameters newParams(params);
     getValue(newParams);
     
+    const PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>();
     const PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
                       *c2 = newParams.typedGroup<PMS_PP_Cache>();
-    const PMS_PP_Canvas* cv = params.typedGroup<PMS_PP_Canvas>(),
-                       *cv2 = newParams.typedGroup<PMS_PP_Canvas>();
+    const PMS_PP_Axes* a = params.typedGroup<PMS_PP_Axes>(),
+                     *a2 = newParams.typedGroup<PMS_PP_Axes>();
     
     // shouldn't happen
-    if(c == NULL || c2 == NULL || cv == NULL || cv2 == NULL) return;
+    if(d == NULL || c == NULL || c2 == NULL || a == NULL || a2 == NULL) return;
     
-    // Update widgets.
+    // Update "in cache" for widgets.
     vector<pair<PMS::Axis,unsigned int> > laxes = plot.data().loadedAxes();
     bool found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++)
         if(laxes[i].first == c2->xAxis()) found = true;
-    xInCache->setChecked(found);
-    xDataFrame->setVisible(PMS::axisIsData(c2->xAxis()));
+    itsXWidget_->setInCache(found);
     
     found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++)
         if(laxes[i].first == c2->yAxis()) found = true;
-    yInCache->setChecked(found);
-    yDataFrame->setVisible(PMS::axisIsData(c2->yAxis()));
+    itsYWidget_->setInCache(found);
     
     // Update labels.
-    changedText(xLabel, c->xAxis() != c2->xAxis() || (xDataFrame->isVisible()&&
-                c->xDataColumn() != c2->xDataColumn()));
-    changedText(xDataLabel, c->xDataColumn() != c2->xDataColumn());
-    changedText(xAttachLabel, cv->xAxis() != cv2->xAxis());
-    changedText(xRangeLabel, cv->xRangeSet() != cv2->xRangeSet() ||
-                (cv->xRangeSet() && cv->xRange() != cv2->xRange()));
+    changedText(xLabel, d->isSet() && (c->xAxis() != c2->xAxis() ||
+                (PMS::axisIsData(c->xAxis()) &&
+                 c->xDataColumn() != c2->xDataColumn())));
+    changedText(itsXWidget_->dataLabel(), d->isSet() &&
+                c->xDataColumn() != c2->xDataColumn());
+    changedText(itsXWidget_->attachLabel(), d->isSet() &&
+                a->xAxis() != a2->xAxis());
+    changedText(itsXWidget_->rangeLabel(), d->isSet() &&
+                (a->xRangeSet() != a2->xRangeSet() ||
+                (a->xRangeSet() && a->xRange() != a2->xRange())));
     
-    changedText(yLabel, c->yAxis() != c2->yAxis() || (yDataFrame->isVisible()&&
-                c->yDataColumn() != c2->yDataColumn()));
-    changedText(yDataLabel, c->yDataColumn() != c2->yDataColumn());
-    changedText(yAttachLabel, cv->yAxis() != cv2->yAxis());
-    changedText(yRangeLabel, cv->yRangeSet() != cv2->yRangeSet() ||
-                (cv->yRangeSet() && cv->yRange() != cv2->yRange()));
+    changedText(yLabel, d->isSet() && (c->yAxis() != c2->yAxis() ||
+                (PMS::axisIsData(c->yAxis()) &&
+                 c->yDataColumn() != c2->yDataColumn())));
+    changedText(itsYWidget_->dataLabel(), d->isSet() &&
+                c->yDataColumn() != c2->yDataColumn());
+    changedText(itsYWidget_->attachLabel(), d->isSet() &&
+                a->yAxis() != a2->yAxis());
+    changedText(itsYWidget_->rangeLabel(), d->isSet() &&
+                (a->yRangeSet() != a2->yRangeSet() ||
+                (a->yRangeSet() && a->yRange() != a2->yRange())));
 }
 
 }

@@ -88,7 +88,7 @@ class RFChunkStats : public FlaggerEnums
 protected:
   VisibilityIterator &visiter;
   VisBuffer          &visbuf;
-  Flagger         &flagger;
+  Flagger            &flagger;
   
   IPosition visshape;  
   uInt counts[Num_StatEnums];
@@ -108,7 +108,14 @@ protected:
   Cube<uInt> nf_chan_ifr_time;
   
   PGPlotterInterface *pgp_screen,*pgp_report;
+
+  std::vector<double> scan_start;      /* first time stamp in scan */
+  std::vector<double> scan_start_flag; /* first time stamp with any 
+                                          unflagged data in scan*/
+  std::vector<double> scan_end, scan_end_flag; /* as above */
   
+
+
 public:
 // constructor
   RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf,
@@ -125,6 +132,24 @@ public:
   const String msName () const;
 // returns antenna names
   const Vector<String>  & antNames () const;
+
+  // scan start/end times
+  double get_scan_start(unsigned scan) const
+    { return scan_start[scan]; }
+
+  double get_scan_end(unsigned scan) const
+    { return scan_end[scan]; }
+
+  // scan start/end times for unflagged data
+  //
+  // returns: time stamps of first/last unflagged
+  // data in the given scan, or a negative number 
+  // if there's no unflagged data in the scan.
+  double get_scan_start_unflagged(unsigned scan) const
+    { return scan_start_flag[scan]; }
+
+  double get_scan_end_unflagged(unsigned scan) const
+    { return scan_end_flag[scan]; }
 
 // accessors to plotters
   PGPlotterInterface & pgpscr() const;

@@ -72,8 +72,10 @@ def sdsave(sdfile, scanlist, field, iflist, pollist, scanaverage, timeaverage, t
                 s.set_selection(sel)
                 del sel
             except Exception, instance:
-                print '***Error***',instance
-                print 'No output written.'
+                #print '***Error***',instance
+                #print 'No output written.'
+                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( 'No output written.', priority = 'ERROR' )
                 return
    
 
@@ -132,7 +134,8 @@ def sdsave(sdfile, scanlist, field, iflist, pollist, scanaverage, timeaverage, t
             # DONE
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 

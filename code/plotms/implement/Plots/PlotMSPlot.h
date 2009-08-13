@@ -77,26 +77,24 @@ public:
     // unique.
     virtual String name() const = 0;
     
-    // Returns the total number of canvases required by this plot.
-    virtual unsigned int layoutNumCanvases() const = 0;
+    // Returns the plots assigned to this plot.
+    virtual vector<MaskedScatterPlotPtr> plots() const = 0;
     
-    // Returns the number of pages required by this plot.
-    virtual unsigned int layoutNumPages() const = 0;
-    
-    // Generates canvases that this plot will be using, with the given
-    // PlotMSPages object, and returns them.
-    virtual vector<PlotCanvasPtr> generateCanvases(PlotMSPages& pages) = 0;
+    // Returns the canvases that have been assigned to this plot.
+    virtual vector<PlotCanvasPtr> canvases() const = 0;
     
     // Sets up subtabs for the given plot tab, using the add/insert subtab
     // methods.
     virtual void setupPlotSubtabs(PlotMSPlotTab& tab) const = 0;
     
-    // Returns all selected regions on all canvases associated with this plot.
-    virtual PlotMSRegions selectedRegions() const = 0;
+    // Attaches/Detaches internal plot objects to their assigned canvases.
+    // <group>
+    virtual void attachToCanvases() = 0;
+    virtual void detachFromCanvases() = 0;
+    // </group>
     
-    // Returns selected regions on all visible canvases (accessible via
-    // PlotMSPlotter::currentCanvases()) associated with this plot.
-    virtual PlotMSRegions visibleSelectedRegions() const = 0;
+    // Called when the GUI settings in the plot tab have changed.
+    virtual void plotTabHasChanged(PlotMSPlotTab& tab) = 0;
     
     
     // IMPLEMENTED METHODS //
@@ -107,12 +105,16 @@ public:
     virtual PlotMSPlotParameters& parameters();
     // </group>
     
-    // Returns the canvases that have been assigned to this plot.
-    virtual vector<PlotCanvasPtr> canvases() const;
-    
     // Returns the visible canvases (accessible via
     // PlotMSPlotter::currentCanvases()) associated with this plot.
     virtual vector<PlotCanvasPtr> visibleCanvases() const;
+    
+    // Returns all selected regions on all canvases associated with this plot.
+    virtual PlotMSRegions selectedRegions() const;
+    
+    // Returns selected regions on all visible canvases (accessible via
+    // PlotMSPlotter::currentCanvases()) associated with this plot.
+    virtual PlotMSRegions visibleSelectedRegions() const;
     
     // Initializes the plot with the given canvases.  Initializes any internal
     // plot objects via the protected initializePlot() method, then assigns
@@ -120,13 +122,7 @@ public:
     // method, then calls parametersUpdated() to properly set the plot.
     // Drawing is held before these operations, and then released afterwards.
     // Returns true if all operations succeeded; false if at least one failed.
-    virtual bool initializePlot(const vector<PlotCanvasPtr>& canvases);
-    
-    // Attaches/Detaches internal plot objects to their assigned canvases.
-    // <group>
-    virtual void attachToCanvases();
-    virtual void detachFromCanvases();
-    // </group>
+    virtual bool initializePlot(PlotMSPages& pages);
     
     // Gets the plot's data source.
     // <group>
@@ -172,24 +168,29 @@ public:
 protected:
     // ABSTRACT METHODS //
     
+    // Generates and assigns canvases that this plot will be using, with the
+    // given PlotMSPages object.  This is called when the plot is first
+    // created, and can be called by the plot itself if its canvas layout
+    // has changed (in which case this method should check for the canvases
+    // that have already been assigned to it in the page).
+    virtual bool assignCanvases(PlotMSPages& pages) = 0;
+    
     // Initializes any internal plot objects, but does NOT set parameters or
     // attach to canvases.  Will only be called ONCE, before assignCanvases and
     // parametersUpdated, as long as the public initializePlot method is not
     // overridden.  Returns true for success, false for failure.
     virtual bool initializePlot() = 0;
     
-    // Assigns internal plot objects to the canvases held in the itsCanvases_
-    // member, but does NOT set parameters.  Will only be called ONCE, after
-    // initializePlot and before parametersUpdated, as long as the public
-    // initializePlot method is not overridden.  Returns true for success,
-    // false for failure.
-    virtual bool assignCanvases() = 0;
-    
     // Updates plot members for parameters specific to the child plot type.
     // Returns true if the drawing should be released right away; if false is
     // returned, the child class is expect to release drawing when finished.
     virtual bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
             int updateFlag, bool releaseWhenDone) = 0;
+    
+    // Helper method for selectedRegions() and visibleSelectedRegions() that
+    // returns the selected regions for plots in the given canvases.
+    virtual PlotMSRegions selectedRegions(
+            const vector<PlotCanvasPtr>& canvases) const = 0;
     
     
     // IMPLEMENTED METHODS //
@@ -233,15 +234,6 @@ protected:
     
     // Data.
     PlotMSData itsData_;
-    
-    // Plot objects.
-    vector<MaskedScatterPlotPtr> itsPlots_;
-    
-    // Plot canvases.
-    vector<PlotCanvasPtr> itsCanvases_;
-    
-    // Mapping of which plot objects are on which canvas.
-    map<MaskedScatterPlot*, PlotCanvasPtr> itsCanvasMap_;
     
 private:
     // Disable copy constructor and operator for now.

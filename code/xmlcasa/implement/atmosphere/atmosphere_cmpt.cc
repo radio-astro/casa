@@ -16,10 +16,8 @@
 #include <iostream>
 using namespace std;
 
-#ifdef AIPS_USEATM
-#include <ATM/ATMSkyStatus.h>
+#include <ATMSkyStatus.h>
 using namespace atm;
-#endif
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
@@ -48,7 +46,6 @@ atmosphere::atmosphere()
 
 atmosphere::~atmosphere()
 {
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile != 0) {
       delete pAtmProfile;
@@ -60,17 +57,12 @@ atmosphere::~atmosphere()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
 }
 
 std::vector<std::string>
 atmosphere::listAtmosphereTypes()
 {
   std::vector<std::string> rtn;
-#ifdef AIPS_USEATM
   try {
     int i = 0;
     while (AtmosphereType::name(i) != "") {
@@ -85,10 +77,6 @@ atmosphere::listAtmosphereTypes()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -102,7 +90,6 @@ atmosphere::initAtmProfile(const Quantity& altitude,
 			   const Quantity& h0, const int atmtype)
 {
   string rtn;
-#ifdef AIPS_USEATM
 
   try {
     Length       Alt((casaQuantity(altitude)).getValue("m"),"m");
@@ -143,10 +130,6 @@ atmosphere::initAtmProfile(const Quantity& altitude,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -157,7 +140,6 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 			     const Quantity& dTem_dh, const Quantity& h0)
 {
   string rtn;
-#ifdef AIPS_USEATM
   try {
     Length       Alt((casaQuantity(altitude)).getValue("m"),"m");
     Pressure       P((casaQuantity(pressure)).getValue("mbar"),"mb");
@@ -192,10 +174,6 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -207,7 +185,6 @@ atmosphere::getBasicAtmParms(Quantity& altitude, Quantity& temperature,
 			     std::string& atmType)
 {
   string rtn("");
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       altitude.value.resize(1);
@@ -263,10 +240,6 @@ atmosphere::getBasicAtmParms(Quantity& altitude, Quantity& temperature,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -274,7 +247,6 @@ int
 atmosphere::getNumLayers()
 {
   int rtn(-1);
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       rtn = pAtmProfile->getNumLayer();
@@ -288,10 +260,6 @@ atmosphere::getNumLayers()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -299,7 +267,6 @@ int
 atmosphere::getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx)
 {
   int rtn(-1);
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       rtn = pAtmProfile->getArraySize();
@@ -321,10 +288,6 @@ atmosphere::getAtmTypeHPT(Quantity& Hx, Quantity& Px, Quantity& Tx)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -332,7 +295,6 @@ Quantity
 atmosphere::getGroundWH2O()
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       atm::Length gw = pAtmProfile->getGroundWH2O();
@@ -350,10 +312,6 @@ atmosphere::getGroundWH2O()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -364,7 +322,6 @@ atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
 		       Quantity& CO, Quantity& N2O)
 {
   std::string rtn("");
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       int nl = pAtmProfile->getNumLayer();
@@ -415,10 +372,6 @@ atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
 
@@ -427,7 +380,6 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 		       const Quantity& fWidth, const Quantity& fRes)
 {
   int rstat(-1);
-#ifdef AIPS_USEATM
   try {
     if (pAtmProfile) {
       vector<double> fC = fCenter.value;
@@ -481,10 +433,6 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -493,7 +441,6 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 		       const Quantity& fWidth, const Quantity& fRes)
 {
   int rstat(-1);
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       Unit ufC(fCenter.units);
@@ -524,10 +471,6 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -535,7 +478,6 @@ int
 atmosphere::getNumSpectralWindows()
 {
   int rstat(-1);
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       rstat = pSpectralGrid->getNumSpectralWindow();
@@ -549,10 +491,6 @@ atmosphere::getNumSpectralWindows()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -560,7 +498,6 @@ int
 atmosphere::getNumChan(const int spwId)
 {
   int rstat(-1);
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       rstat = pSpectralGrid->getNumChan(spwId);
@@ -574,10 +511,6 @@ atmosphere::getNumChan(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -585,7 +518,6 @@ int
 atmosphere::getRefChan(const int spwId)
 {
   int rstat(-1);
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       rstat = pSpectralGrid->getRefChan(spwId);
@@ -599,10 +531,6 @@ atmosphere::getRefChan(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -610,7 +538,6 @@ Quantity
 atmosphere::getRefFreq(const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -628,10 +555,6 @@ atmosphere::getRefFreq(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -639,7 +562,6 @@ Quantity
 atmosphere::getChanSep(const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -658,17 +580,12 @@ atmosphere::getChanSep(const int spwId)
     RETHROW(x);
   }
   return q;
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
 }
 
 Quantity
 atmosphere::getChanFreq(const int chanNum, const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -686,10 +603,6 @@ atmosphere::getChanFreq(const int chanNum, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -697,7 +610,6 @@ Quantity
 atmosphere::getSpectralWindow(const int spwId)
 {
   Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       q.value = pSpectralGrid->getSpectralWindow(spwId);
@@ -712,10 +624,6 @@ atmosphere::getSpectralWindow(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -723,7 +631,6 @@ double
 atmosphere::getChanNum(const Quantity& freq, const int spwId)
 {
   double rstat(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       rstat = pSpectralGrid->getChanNum(spwId,
@@ -738,10 +645,6 @@ atmosphere::getChanNum(const Quantity& freq, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -749,7 +652,6 @@ Quantity
 atmosphere::getBandwidth(const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -767,10 +669,6 @@ atmosphere::getBandwidth(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -778,7 +676,6 @@ Quantity
 atmosphere::getMinFreq(const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -796,10 +693,6 @@ atmosphere::getMinFreq(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -807,7 +700,6 @@ Quantity
 atmosphere::getMaxFreq(const int spwId)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSpectralGrid) {
       std::vector<double> qvalue(1);
@@ -825,10 +717,6 @@ atmosphere::getMaxFreq(const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -836,7 +724,6 @@ double
 atmosphere::getDryOpacity(const int nc, const int spwId)
 {
   double dryOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -855,10 +742,6 @@ atmosphere::getDryOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dryOpacity;
 }
 
@@ -866,7 +749,6 @@ double
 atmosphere::getDryContOpacity(const int nc, const int spwId)
 {
   double dryContOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -885,10 +767,6 @@ atmosphere::getDryContOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dryContOpacity;
 }
 
@@ -897,7 +775,6 @@ double
 atmosphere::getO2LinesOpacity(const int nc, const int spwId)
 {
   double o2LinesOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -916,10 +793,6 @@ atmosphere::getO2LinesOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return o2LinesOpacity;
 }
 
@@ -928,7 +801,6 @@ double
 atmosphere::getO3LinesOpacity(const int nc, const int spwId)
 {
   double o3LinesOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -947,10 +819,6 @@ atmosphere::getO3LinesOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return o3LinesOpacity;
 }
 
@@ -959,7 +827,6 @@ double
 atmosphere::getCOLinesOpacity(const int nc, const int spwId)
 {
   double coLinesOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -978,10 +845,6 @@ atmosphere::getCOLinesOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return coLinesOpacity;
 }
 
@@ -990,7 +853,6 @@ double
 atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
 {
   double n2oLinesOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -1009,10 +871,6 @@ atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return n2oLinesOpacity;
 }
 
@@ -1021,7 +879,6 @@ Quantity
 atmosphere::getWetOpacity(const int nc, const int spwId)
 {
   ::casac::Quantity wetOpacity;
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -1032,6 +889,7 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
       wetOpacity.value.resize(1);
       wetOpacity.units = "neper";
       wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
+      cout << "rip: " << wetOpacity.value[0] << " " << wetOpacity.units << " " << chan << endl;
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1042,10 +900,6 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return wetOpacity;
 }
 
@@ -1054,7 +908,6 @@ double
 atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 {
   double h2oLinesOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -1073,10 +926,6 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return h2oLinesOpacity;
 }
 
@@ -1085,7 +934,6 @@ double
 atmosphere::getH2OContOpacity(const int nc, const int spwId)
 {
   double h2oContOpacity(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       int chan;
@@ -1104,10 +952,6 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return h2oContOpacity;
 }
 
@@ -1116,7 +960,6 @@ int
 atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwId)
 {
   int nchan(-1);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       nchan = pSpectralGrid->getNumChan(spwId);
@@ -1135,10 +978,6 @@ atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return nchan;
 }
 
@@ -1146,7 +985,6 @@ int
 atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 {
   int nchan(-1);
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       nchan = pSpectralGrid->getNumChan(spwId);
@@ -1166,10 +1004,6 @@ atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return nchan;
 }
 
@@ -1177,7 +1011,6 @@ Quantity
 atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
 {
   ::casac::Quantity dpd;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       int chan;
@@ -1199,10 +1032,6 @@ atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dpd;
 }
 
@@ -1210,9 +1039,8 @@ Quantity
 atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 {
   ::casac::Quantity dwpd;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1220,7 +1048,7 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       dwpd.value.resize(1);
       std::string units("deg");
-      dwpd.value[0] = pSkyStatus->getDispersiveWetPhaseDelay(spwId,chan).get(units);
+      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveWetPhaseDelay(spwId,chan).get(units);
       dwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1232,10 +1060,6 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dwpd;
 }
 
@@ -1243,9 +1067,8 @@ Quantity
 atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 {
   ::casac::Quantity ndwpd;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1253,7 +1076,7 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       ndwpd.value.resize(1);
       std::string units("deg");
-      ndwpd.value[0] = pSkyStatus->getNonDispersiveWetPhaseDelay(spwId,chan).get(units);
+      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveWetPhaseDelay(spwId,chan).get(units);
       ndwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1265,10 +1088,6 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return ndwpd;
 }
 
@@ -1276,9 +1095,8 @@ Quantity
 atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
 {
   ::casac::Quantity nddpd;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1286,7 +1104,7 @@ atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       nddpd.value.resize(1);
       std::string units("deg");
-      nddpd.value[0] = pSkyStatus->getNonDispersiveDryPhaseDelay(spwId,chan).get(units);
+      nddpd.value[0] = pRefractiveIndexProfile->getNonDispersiveDryPhaseDelay(spwId,chan).get(units);
       nddpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1298,10 +1116,6 @@ atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return nddpd;
 }
 
@@ -1309,7 +1123,6 @@ Quantity
 atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
 {
   ::casac::Quantity ndpd;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       int chan;
@@ -1331,10 +1144,6 @@ atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return ndpd;
 }
 
@@ -1343,7 +1152,6 @@ Quantity
 atmosphere::getDispersivePathLength(const int nc, const int spwId)
 {
   ::casac::Quantity dpl;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       int chan;
@@ -1352,9 +1160,15 @@ atmosphere::getDispersivePathLength(const int nc, const int spwId)
       else
 	chan = nc;
       dpl.value.resize(1);
-      std::string units("m");
+      std::string units("m");      
       dpl.value[0] = pSkyStatus->getDispersivePathLength(spwId,chan).get(units);
+      // Remy's test:
+      //      std::string units("neper");      
+      //      dpl.value[0] = pSkyStatus->getWetOpacity(chan).get(units);
+
       dpl.units = units;
+      //      cout << "sst: " << dpl.value[0] << " " << dpl.units << " " << chan << endl;
+
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -1365,10 +1179,6 @@ atmosphere::getDispersivePathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dpl;
 }
 
@@ -1376,9 +1186,8 @@ Quantity
 atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity dwpl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1386,7 +1195,7 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       dwpl.value.resize(1);
       std::string units("m");
-      dwpl.value[0] = pSkyStatus->getDispersiveWetPathLength(spwId,chan).get(units);
+      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveWetPathLength(spwId,chan).get(units);
       dwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1398,10 +1207,6 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return dwpl;
 }
 
@@ -1409,9 +1214,8 @@ Quantity
 atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity ndwpl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1419,7 +1223,7 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       ndwpl.value.resize(1);
       std::string units("m");
-      ndwpl.value[0] = pSkyStatus->getNonDispersiveWetPathLength(spwId,chan).get(units);
+      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveWetPathLength(spwId,chan).get(units);
       ndwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1431,10 +1235,6 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return ndwpl;
 }
 
@@ -1442,9 +1242,8 @@ Quantity
 atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity nddpl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1452,7 +1251,7 @@ atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
 	chan = nc;
       nddpl.value.resize(1);
       std::string units("m");
-      nddpl.value[0] = pSkyStatus->getNonDispersiveDryPathLength(spwId,chan).get(units);
+      nddpl.value[0] = pRefractiveIndexProfile->getNonDispersiveDryPathLength(spwId,chan).get(units);
       nddpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1464,10 +1263,6 @@ atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return nddpl;
 }
 
@@ -1476,9 +1271,8 @@ Quantity
 atmosphere::getO2LinesPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity o2pl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1486,7 +1280,7 @@ atmosphere::getO2LinesPathLength(const int nc, const int spwId)
 	chan = nc;
       o2pl.value.resize(1);
       std::string units("m");
-      o2pl.value[0] = pSkyStatus->getO2LinesPathLength(spwId,chan).get(units);
+      o2pl.value[0] = pRefractiveIndexProfile->getO2LinesPathLength(spwId,chan).get(units);
       o2pl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1498,10 +1292,6 @@ atmosphere::getO2LinesPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return o2pl;
 }
 
@@ -1509,9 +1299,8 @@ Quantity
 atmosphere::getO3LinesPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity o3pl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1519,7 +1308,7 @@ atmosphere::getO3LinesPathLength(const int nc, const int spwId)
 	chan = nc;
       o3pl.value.resize(1);
       std::string units("m");
-      o3pl.value[0] = pSkyStatus->getO3LinesPathLength(spwId,chan).get(units);
+      o3pl.value[0] = pRefractiveIndexProfile->getO3LinesPathLength(spwId,chan).get(units);
       o3pl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1531,10 +1320,6 @@ atmosphere::getO3LinesPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return o3pl;
 }
 
@@ -1542,9 +1327,8 @@ Quantity
 atmosphere::getCOLinesPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity COpl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1552,7 +1336,7 @@ atmosphere::getCOLinesPathLength(const int nc, const int spwId)
 	chan = nc;
       COpl.value.resize(1);
       std::string units("m");
-      COpl.value[0] = pSkyStatus->getCOLinesPathLength(spwId,chan).get(units);
+      COpl.value[0] = pRefractiveIndexProfile->getCOLinesPathLength(spwId,chan).get(units);
       COpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1564,10 +1348,6 @@ atmosphere::getCOLinesPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return COpl;
 }
 
@@ -1575,9 +1355,8 @@ Quantity
 atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
 {
   ::casac::Quantity N2Opl;
-#ifdef AIPS_USEATM
   try {
-    if (pSkyStatus) {
+    if (pRefractiveIndexProfile) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -1585,7 +1364,7 @@ atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
 	chan = nc;
       N2Opl.value.resize(1);
       std::string units("m");
-      N2Opl.value[0] = pSkyStatus->getN2OLinesPathLength(spwId,chan).get(units);
+      N2Opl.value[0] = pRefractiveIndexProfile->getN2OLinesPathLength(spwId,chan).get(units);
       N2Opl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1597,10 +1376,6 @@ atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return N2Opl;
 }
 
@@ -1609,7 +1384,6 @@ Quantity
 atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
 {
   ::casac::Quantity ndpl;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       int chan;
@@ -1631,10 +1405,6 @@ atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return ndpl;
 }
 
@@ -1643,7 +1413,6 @@ Quantity
 atmosphere::getAbsH2OLines(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1658,10 +1427,6 @@ atmosphere::getAbsH2OLines(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1670,7 +1435,6 @@ Quantity
 atmosphere::getAbsH2OCont(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1685,10 +1449,6 @@ atmosphere::getAbsH2OCont(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1697,7 +1457,6 @@ Quantity
 atmosphere::getAbsO2Lines(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1712,10 +1471,6 @@ atmosphere::getAbsO2Lines(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1724,7 +1479,6 @@ Quantity
 atmosphere::getAbsDryCont(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1739,10 +1493,6 @@ atmosphere::getAbsDryCont(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1751,7 +1501,6 @@ Quantity
 atmosphere::getAbsO3Lines(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1766,10 +1515,6 @@ atmosphere::getAbsO3Lines(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1778,7 +1523,6 @@ Quantity
 atmosphere::getAbsCOLines(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1793,10 +1537,6 @@ atmosphere::getAbsCOLines(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1805,7 +1545,6 @@ Quantity
 atmosphere::getAbsN2OLines(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1820,10 +1559,6 @@ atmosphere::getAbsN2OLines(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1832,7 +1567,6 @@ Quantity
 atmosphere::getAbsTotalDry(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1847,10 +1581,6 @@ atmosphere::getAbsTotalDry(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1859,7 +1589,6 @@ Quantity
 atmosphere::getAbsTotalWet(int nl, int nf, const int spwid)
 {
   Quantity rtn(std::vector<double> (1,-1.0), "");
-#ifdef AIPS_USEATM
   try {
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
@@ -1874,10 +1603,6 @@ atmosphere::getAbsTotalWet(int nl, int nf, const int spwid)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rtn;
 }
   
@@ -1886,7 +1611,6 @@ bool
 atmosphere::setUserWH2O(const Quantity& wh2o)
 {
   bool rstat(false);
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       Length new_wh2o(wh2o.value[0],wh2o.units);
@@ -1902,10 +1626,6 @@ atmosphere::setUserWH2O(const Quantity& wh2o)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -1913,7 +1633,6 @@ Quantity
 atmosphere::getUserWH2O()
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       q.value.resize(1);
@@ -1930,10 +1649,6 @@ atmosphere::getUserWH2O()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -1941,7 +1656,6 @@ bool
 atmosphere::setAirMass(const double airmass)
 {
   bool rstat(false);
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       pSkyStatus->setAirMass(airmass);
@@ -1956,10 +1670,6 @@ atmosphere::setAirMass(const double airmass)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -1967,7 +1677,6 @@ double
 atmosphere::getAirMass()
 {
   double m(-1.0);
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       m=pSkyStatus->getAirMass();
@@ -1981,10 +1690,6 @@ atmosphere::getAirMass()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return m;
 }
 
@@ -1992,7 +1697,6 @@ bool
 atmosphere::setSkyBackgroundTemperature(const Quantity& tbgr)
 {
   bool rstat(false);
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       Temperature new_tbgr(tbgr.value[0],tbgr.units);
@@ -2008,10 +1712,6 @@ atmosphere::setSkyBackgroundTemperature(const Quantity& tbgr)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return rstat;
 }
 
@@ -2019,7 +1719,6 @@ Quantity
 atmosphere::getSkyBackgroundTemperature()
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       q.value.resize(1);
@@ -2036,10 +1735,6 @@ atmosphere::getSkyBackgroundTemperature()
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -2047,7 +1742,6 @@ Quantity
 atmosphere::getAverageTebbSky(const int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       q.value.resize(1);
@@ -2069,10 +1763,6 @@ atmosphere::getAverageTebbSky(const int spwid, const Quantity& wh2o)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 
@@ -2080,7 +1770,6 @@ Quantity
 atmosphere::getTebbSky(const int nc, const int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
-#ifdef AIPS_USEATM
   try {
     if (pSkyStatus) {
       q.value.resize(1);
@@ -2108,10 +1797,6 @@ atmosphere::getTebbSky(const int nc, const int spwid, const Quantity& wh2o)
 	    << LogIO::POST;
     RETHROW(x);
   }
-#else
-  *itsLog << LogIO::WARN << "ATM Not present, method not available!"
-	  << LogIO::POST;
-#endif
   return q;
 }
 

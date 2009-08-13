@@ -3942,6 +3942,33 @@ it would be  equivalent to a Hogbom clean.
 </method>
 
 
+   <method type="function" name="setsmallscalebias">
+   <shortdescription>Set bias toward smaller scales for  MultiScale Clean</shortdescription>
+
+<description>
+
+</description>
+
+<input>
+
+     <param type="float" name="inbias">
+     <description>small scale bias</description>
+     <value>0.6</value>
+     </param>
+
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- im.setsmallscalebias(inbias=0.6);
+\end{verbatim}
+
+
+</example>
+
+</method>
+
+
    <method type="function" name="settaylorterms">
    <shortdescription>Set the number of Taylor series terms for Multi-Frequency Clean</shortdescription>
    

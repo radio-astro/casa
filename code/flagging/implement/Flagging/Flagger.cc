@@ -743,16 +743,24 @@ namespace casa {
 				 String clipcolumn, 
 				 Bool outside, 
 				 Double quackinterval, 
+                                 String quackmode,
+                                 Bool quackincrement,
                                  String opmode,
                                  Double diameter)
     {
-     if (dbg)   cout << "setmanualflags: "
-                     << "autocorr=" << autocorr
-                     << " unflag=" << unflag
-                     << " clipexpr=" << clipexpr << " cliprange=" << cliprange
-                     << " clipcolumn=" << clipcolumn << " outside=" << outside
-             << " quackinterval=" << quackinterval << " opmode=" << opmode
-             << endl;
+     if (dbg) 
+       cout << "setmanualflags: "
+            << "autocorr=" << autocorr
+            << " unflag=" << unflag
+            << " clipexpr=" << clipexpr
+            << " cliprange=" << cliprange
+            << " clipcolumn=" << clipcolumn
+            << " outside=" << outside
+            << " quackinterval=" << quackinterval
+            << " quackmode=" << quackmode
+            << " quackincrement=" << quackincrement
+            << " opmode=" << opmode
+            << endl;
 
     LogIO os(LogOrigin("Flagger", "setmanualflags()", WHERE));
     if (ms.isNull()) {
@@ -959,31 +967,38 @@ namespace casa {
 		
 	    }
 	    
-	/* Quack ! */
-	if (quackinterval>0.0)
-	    {
-		//Reset the Visiter to have SCAN on top of sort
-		Block<int> sort2(5);
-		sort2[0] = MS::SCAN_NUMBER;
-		sort2[1]= MS::ARRAY_ID;
-		sort2[2]= MS::FIELD_ID;
-		sort2[3]= MS::DATA_DESC_ID;
-		sort2[4] = MS::TIME;
-		Double timeInterval = 7.0e9; //a few thousand years
-		
-		vs_p->resetVisIter(sort2, timeInterval);
-		//lets make sure the data channel selection is done
-		selectDataChannel();
-		
-		RecordDesc flagDesc;       
-		flagDesc.addField(RF_QUACK, TpArrayDouble);
-		Record flagRec(flagDesc);  
-		Vector<Double> quackparams(2);
-		quackparams[0] = quackinterval;
-		quackparams[1] = 0.0;
-		flagRec.define(RF_QUACK, quackparams);
-		selrec.mergeField(flagRec, RF_QUACK, RecordInterface::OverwriteDuplicates);
-	    }
+	/* Quack! */
+	if (quackinterval > 0.0) {
+            //Reset the Visiter to have SCAN on top of sort
+            Block<int> sort2(5);
+            sort2[0] = MS::SCAN_NUMBER;
+            sort2[1] = MS::ARRAY_ID;
+            sort2[2] = MS::FIELD_ID;
+            sort2[3] = MS::DATA_DESC_ID;
+            sort2[4] = MS::TIME;
+            Double timeInterval = 7.0e9; //a few thousand years
+            
+            vs_p->resetVisIter(sort2, timeInterval);
+            //lets make sure the data channel selection is done
+            selectDataChannel();
+            
+            RecordDesc flagDesc;       
+            flagDesc.addField(RF_QUACK, TpArrayDouble);
+            flagDesc.addField(RF_QUACKMODE, TpString);
+            flagDesc.addField(RF_QUACKINC, TpBool);
+            
+            Vector<Double> quackparams(2);
+            quackparams[0] = quackinterval;
+            quackparams[1] = 0.0;
+            
+            Record flagRec(flagDesc);
+            flagRec.define(RF_QUACK, quackparams);
+            flagRec.define(RF_QUACKMODE, quackmode);
+            flagRec.define(RF_QUACKINC, quackincrement);
+            selrec.mergeField(flagRec, RF_QUACK    , RecordInterface::OverwriteDuplicates);
+            selrec.mergeField(flagRec, RF_QUACKMODE, RecordInterface::OverwriteDuplicates);
+            selrec.mergeField(flagRec, RF_QUACKINC , RecordInterface::OverwriteDuplicates);
+        }
 	/* end if opmode = ... */
 	
 	/* Add this agent to the list */
@@ -995,7 +1010,7 @@ namespace casa {
   
   Bool Flagger::applyFlags(const std::vector<FlagIndex> &fi) {
   
-    Record agent(defaultAgents().asRecord("applyflags") );
+    Record agent(defaultAgents().asRecord("applyflags"));
     
     //cerr << __FILE__ << __LINE__ << "the hello agent = " << hello << endl;
     
@@ -1886,9 +1901,8 @@ namespace casa {
 
 		  Bool anyActive = False;
 		  anyActive=False;
-		  for( uInt i = 0; i<acc.nelements(); i++ ) 
-		    {
-		      //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
+		  for( uInt i = 0; i<acc.nelements(); i++ ) {
+                    //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
 			if ((acc[i]->getID() != "FlagExaminer") && 
 			    active_init(i))
 			    anyActive=True;

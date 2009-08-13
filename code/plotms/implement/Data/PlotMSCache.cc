@@ -29,6 +29,8 @@
 #include <casa/OS/Timer.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/Sort.h>
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeFFT.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -40,7 +42,7 @@ const PMS::Axis PlotMSCache::METADATA[] =
     { PMS::TIME, PMS::TIME_INTERVAL, PMS::FIELD, PMS::SPW, PMS::SCAN,
       PMS::ANTENNA1, PMS::ANTENNA2, PMS::CHANNEL, PMS::CORR, PMS::FREQUENCY,
       PMS::FLAG, PMS::FLAG_ROW };
-const unsigned int PlotMSCache::N_METADATA = 11;
+const unsigned int PlotMSCache::N_METADATA = 12;
 
 bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
     for(unsigned int i = 0; i < N_METADATA; i++)
@@ -67,7 +69,7 @@ PlotMSCache::PlotMSCache(PlotMS* parent):
   spw_(),
   scan_(),
   dataLoaded_(false),
-  currentSet_(false)
+  axesSet_(false)
 {
 
     // Set up loaded axes to be initially empty, and set up data columns for
@@ -199,7 +201,6 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
   // Remember how many antennas there are
   nAnt_ = visSet.numberAnt();
 
-
   // Check if scr cols present
   Bool scrcolOk(False);
   {
@@ -302,6 +303,8 @@ void PlotMSCache::load(VisSet& visSet, const vector<PMS::Axis>& axes,
     if(loadAxes.size() == 0) return; // nothing to be loaded
     
     // Load data.
+
+    // TBD: Consolidate count/loadChunks methods?
 
     Vector<Int> nIterPerAve;
     if ( (averaging.time() && averaging.timeValue()>0.0) ||
@@ -810,18 +813,14 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
         
         if(dataLoaded_ && axisIsMetaData(axes[i])) dataLoaded_ = false;
         
-        if((dataLoaded_ || currentSet_) &&
+        if((dataLoaded_ || axesSet_) &&
            (currentX_ == axes[i] || currentY_ == axes[i])) {
             dataLoaded_ = false;
-            currentSet_ = false;
+            axesSet_ = false;
         }
     }
     
-    if(!dataLoaded_ || !currentSet_) nChunk_ = 0;
-}
-
-bool PlotMSCache::readyForPlotting() const {
-    return dataLoaded_ && currentSet_;
+    if(!dataLoaded_ || !axesSet_) nChunk_ = 0;
 }
 
 void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
@@ -912,9 +911,12 @@ void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
 
 
   currentX_ = xAxis; currentY_ = yAxis;
-  currentSet_ = true;
 
+  // Compute the axes ranges
   computeRanges();
+
+  // Plot axes and ranges are now set 
+  axesSet_ = true;
 
 }
 
@@ -1112,10 +1114,13 @@ Double PlotMSCache::get(PMS::Axis axis) {
 
 
 void PlotMSCache::getRanges(Double& minX, Double& maxX, Double& minY,
-        Double& maxY) {
-    if(!currentSet_) return;
-    minX = minX_; maxX = maxX_;
-    minY = minY_; maxY = maxY_;
+			    Double& maxY) {
+
+  // Return what was sent if none available here
+  if(!axesSet_) return;
+  
+  minX = minX_; maxX = maxX_;
+  minY = minY_; maxY = maxY_;
 }
 
 
@@ -1440,7 +1445,7 @@ void PlotMSCache::setPlotMask(Int chunk) {
   
   
   if (netAxesMask_(3) && !netAxesMask_(2)) {
-    nsh(2)=nAnt_;
+    nsh(2)=iantmax_(chunk);
     plmask_[chunk]->resize(nsh);
     plmask_[chunk]->set(True);
   }
@@ -1731,7 +1736,7 @@ void PlotMSCache::deleteCache() {
     release(PMS::axes());
 }
 
-void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
+void PlotMSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			   PMS::DataColumn data) {    
 
     switch(axis) {
@@ -1759,7 +1764,7 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
     case PMS::CHANNEL:
         *chan_[vbnum] = vb.channel(); 
 	break;
-        
+
     case PMS::FREQUENCY:
         *freq_[vbnum] = vb.frequency()/1.0e9; 
 	break;
@@ -1818,8 +1823,41 @@ void PlotMSCache::loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
     case PMS::AMP: {
       switch(data) {
       case PMS::DATA: {
+
 	*amp_[vbnum] = amplitude(vb.visCube());
+
+	// TEST fft on freq axis to get delay
+	if (False) {
+
+	  // Only transform frequency axis
+	  //   (Should avoid cross-hand data, too?)
+	  Vector<Bool> ax(3,False);
+	  ax(1)=True;
+	  
+	  // Support padding for higher delay resolution
+	  Int fact(4);
+	  IPosition ip=vb.visCube().shape();
+	  Int nch=ip(1);
+	  ip(1)*=fact;
+	  
+	  Slicer sl(Slice(),Slice(nch*(fact-1)/2,nch,1),Slice());
+	  
+	  Array<Complex> vpad(ip);
+	  vpad.set(Complex(0.0));
+	  vpad(sl)=vb.visCube();
+	  
+	  
+	  cout << "Starting ffts..." << flush;
+	  
+	  ArrayLattice<Complex> c(vpad);
+	  LatticeFFT::cfft(c,ax);	 
+	  
+	  cout << "done." << endl;
+	  
+	  *amp_[vbnum] = amplitude(vpad(sl));
+	}
 	break;
+
       }
       case PMS::MODEL: {
 	*amp_[vbnum] = amplitude(vb.modelVisCube());
@@ -2081,12 +2119,12 @@ void PlotMSCache::computeRanges() {
 
 	  switch(plaxes(ix)) {
 	  case PMS::SCAN:
-	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
+	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic))-0.5);
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic))+0.5);
 	    break;
 	  case PMS::FIELD:
-	    limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
+	    limits(2*ix)=min(limits(2*ix),Double(field_(ic))-0.5);
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic))+0.5);
 	    break;
 	  case PMS::TIME:
 	    limits(2*ix)=min(limits(2*ix),time_(ic));
@@ -2097,8 +2135,8 @@ void PlotMSCache::computeRanges() {
 	    limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
 	    break;
 	  case PMS::SPW:
-	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
+	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic))-0.5);
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic))+0.5);
 	    break;
 	  case PMS::FREQUENCY:
 	    if (freq_[ic]->nelements()>0) {
@@ -2108,38 +2146,38 @@ void PlotMSCache::computeRanges() {
 	    break;
 	  case PMS::CHANNEL:
 	    if (chan_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	  case PMS::CORR:
 	    if (corr_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	  case PMS::ROW:
 	    if (row_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	  case PMS::ANTENNA1:
 	    if (antenna1_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	  case PMS::ANTENNA2:
 	    if (antenna2_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	  case PMS::BASELINE:
 	    if (baseline_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic])(collmask))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic])(collmask))));
+	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic])(collmask)))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic])(collmask)))+0.5);
 	    }
 	    break;
 	    
@@ -2208,8 +2246,8 @@ void PlotMSCache::computeRanges() {
 	    break;
 	  case PMS::ANTENNA:
 	    if (antenna_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic])));
+	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic]))-0.5);
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic]))+0.5);
 	    }
 	    break;
 	  case PMS::AZIMUTH:

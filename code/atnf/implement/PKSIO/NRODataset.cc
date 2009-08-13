@@ -33,7 +33,6 @@
 #include <atnf/PKSIO/NRODataset.h>
 #include <casa/OS/Time.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
-#include <casa/Logging/LogOrigin.h>
 
 #include <math.h>
 #include <fstream>
@@ -654,16 +653,56 @@ vector<double> NRODataset::getFrequencies( int i )
   //uInt ib = atoi( sbeamno.c_str() ) - 1 ; 
   uInt ib = getArrayId( arryt ) ;
 
-  int ia ;
+  int ia = -1 ;
+  bool isAOS = false ;
   //cout << "NRODataset::getFrequencies()  record->ARRYT=" << record->ARRYT << endl ;
   //cout << "NRODataset::getFrequencies()  ib = " << ib << endl ;
 
-  if ( strncmp( record->ARRYT, "X", 1 ) == 0 )
-    ia = 1 ;  // FX
+  if ( strncmp( record->ARRYT, "X", 1 ) == 0 ) {
+    // FX
+    if ( strncmp( (record->ARRYT)+1, "1", 1 ) == 0 
+         || strncmp( (record->ARRYT)+1, "3", 1 ) ) {
+      // FX1, 3
+      ia = 2 ;
+    }
+    else {
+      // FX2, 4
+      ia = 1 ;
+    }
+  }
   else if ( strncmp( record->ARRYT, "A", 1 ) == 0 )
     ia = 2 ;  // AC
-  else 
-    ia = 3 ;  // AOS
+  else if ( strncmp( record->ARRYT, "W", 1 ) == 0 ) {
+    // AOS-W    
+    ia = 2 ;  
+    isAOS = true ;
+  }
+  else if ( strncmp( record->ARRYT, "U", 1 ) == 0 ) {
+    // AOS-U
+    ia = 2 ;  
+    isAOS = true ;
+  }
+  else if ( strncmp( record->ARRYT, "H", 1 ) == 0 ) {
+    // AOS-H
+    isAOS = true ;
+    //cout << record->ARRYT << " " <<  strlen(record->ARRYT) << endl ;
+    //cout << (record->ARRYT)+1 << endl ;
+    if ( strncmp( (record->ARRYT)+2, " ", 1 ) == 0 ) {
+      // H1-9
+      if ( strncmp( (record->ARRYT)+1, "9", 1 ) == 0 ) {
+        // H9
+        ia = 2 ;
+      }
+      else {
+        // H1-8
+        ia = 1 ;
+      }
+    }
+    else {
+      // H10-16
+      ia = 2 ;
+    }
+  }
 
   int iu ;
   if ( record->FQIF1 > 0 )
@@ -687,83 +726,30 @@ vector<double> NRODataset::getFrequencies( int i )
   //double fq0 = record->FQTRK ;
 
   int ncal = getNFCAL()[ib] ;
-  double freqs[ncal] ;
+  vector<double> freqs( ncal ) ;
   double cw = 0.0 ;
-
   vector<double> fqcal = getFQCAL()[ib] ;
   vector<double> chcal = getCHCAL()[ib] ;
 
-  // for AOS, spline fitting is needed
-  if ( ia == 3 ) {
-//     cout << "NRODataset::getFrequencies()  ncal = " << ncal << endl ;
-    while ( ncal < fqcal.size() ) {
-      fqcal.pop_back() ;
-      chcal.pop_back() ;
-    }
-//     cout << "NRODataset::getFrequencies()  fqcal = [" ;
-//     for ( uInt i = 0 ; i < fqcal.size()-1 ; i++ )
-//       cout << fqcal[i] << "," ;
-//     cout << fqcal[fqcal.size()-1] << "]" << endl ;
-//     cout << "NRODataset::getFrequencies()  chcal = [" ;
-//     for ( uInt i = 0 ; i < chcal.size()-1 ; i++ )
-//       cout << chcal[i] << "," ;
-//     cout << chcal[chcal.size()-1] << "]" << endl ;
-    Vector<Double> xin( chcal ) ;
-    Vector<Double> yin( fqcal ) ;
-//     cout << "NRODataset::getFrequencies()  yin = [" ;
-//     for ( int i = 0 ; i < yin.size()-1 ; i++ )
-//       cout << yin[i] << "," ;
-//     cout << yin[yin.size()-1] << "]" << endl ;
-//     cout << "NRODataset::getFrequencies()  xin = [" ;
-//     for ( int i = 0 ; i < xin.size()-1 ; i++ )
-//       cout << xin[i] << "," ;
-//     cout << xin[xin.size()-1] << "]" << endl ;
-    Vector<Double> xout( getNUMCH() ) ;
-    indgen( xout ) ;
-    Vector<Double> yout ;
-    InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
-//     ofstream ofs( "spgrid.dat" ) ;
-//     for ( int i = 0 ; i < getNUMCH() ; i++ ) 
-//       ofs << xout[i] << "," ;
-//     ofs << endl ;
-//     for ( int i = 0 ; i < getNUMCH() ; i++ ) 
-//       ofs << yout[i] << "," ;
-//     ofs << endl ;
-//     ofs.close() ;
-    for ( int ii = 0 ; ii < ncal ; ii++ ) {
-      //freqs[ii] = getFQCAL()[ib][ii] ;
-      freqs[ii] = yout[ii] ;
-      chcal[ii] = (double)( ii + 1 ) ;
-      freqs[ii] -= getF0CAL()[ib] ;
+  for ( int ii = 0 ; ii < ncal ; ii++ ) {
+    freqs[ii] = fqcal[ii] ;
+    freqs[ii] -= getF0CAL()[ib] ;
+    if ( ia == 1 ) {
       if ( iu == 1 ) {
         freqs[ii] = fq0 + freqs[ii] ;
       }
       else if ( iu == 2 ) {
         freqs[ii] = fq0 - freqs[ii] ;
       }
-    } 
-    cw = getBEBW()[ib] / getNUMCH() ;
-  }
-  else {
-    for ( int ii = 0 ; ii < ncal ; ii++ ) {
-      freqs[ii] = fqcal[ii] ;
-      freqs[ii] -= getF0CAL()[ib] ;
-      if ( ia == 1 ) {
-        if ( iu == 1 ) {
-          freqs[ii] = fq0 + freqs[ii] ;
-        }
-        else if ( iu == 2 ) {
-          freqs[ii] = fq0 - freqs[ii] ;
-        }
+    }
+    else if ( ia == 2 ) {
+      if ( iu == 1 ) {
+        freqs[ii] = fq0 - freqs[ii] ;
       }
-      else if ( ia == 2 ) {
-        if ( iu == 1 ) {
-          freqs[ii] = fq0 - freqs[ii] ;
-        }
-        else if ( iu == 2 ) {
-          freqs[ii] = fq0 + freqs[ii] ;
-        }
-      }     
+      else if ( iu == 2 ) {
+        freqs[ii] = fq0 + freqs[ii] ;
+      }
+    }     
 //       if ( ivdef == 0 ) {
 //         double factor = 1.0 / ( 1.0 - vel / cvel ) ;
 //         freqs[ii] = freqs[ii] * factor - record->FQTRK * ( factor - 1.0 ) ;
@@ -772,19 +758,42 @@ vector<double> NRODataset::getFrequencies( int i )
 //         double factor = vel / cvel ;
 //         freqs[ii] = freqs[ii] * ( 1.0 + factor ) - record->FQTRK * factor ;
 //       }
-    }
-    cw = getBERES()[ib] ;
   }
 
-  if ( cw == 0.0 ) {
-    cw = ( freqs[1] - freqs[0] ) 
-      / ( chcal[1] - chcal[0] ) ;
-//     if ( cw < 0.0 ) 
-//       cw = - cw ;
+  if ( isAOS ) {
+    // regridding
+    while ( ncal < (int)chcal.size() ) {
+      chcal.pop_back() ;
+    }
+    Vector<Double> xin( chcal ) ;
+    Vector<Double> yin( freqs ) ;
+    int nchan = getNUMCH() ;
+    Vector<Double> xout( nchan ) ;
+    indgen( xout ) ;
+    Vector<Double> yout ;
+    InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
+    Double bw = abs( yout[nchan-1] - yout[0] ) ;
+    bw += 0.5 * abs( yout[nchan-1] - yout[nchan-2] + yout[1] - yout[0] ) ;
+    Double dz = bw / (Double) nchan ;
+    if ( yout[0] > yout[1] ) 
+      dz = - dz ;
+    v[0] = 0 ;
+    v[1] = yout[0] ;
+    v[2] = dz ;
   }
-  v[0] = chcal[0] - 1 ; // 0-base
-  v[1] = freqs[0] ;
-  v[2] = cw ;
+  else {
+    cw = getBERES()[ib] ;
+    
+    if ( cw == 0.0 ) {
+      cw = ( freqs[1] - freqs[0] ) 
+        / ( chcal[1] - chcal[0] ) ;
+//           if ( cw < 0.0 ) 
+//             cw = - cw ;
+    }
+    v[0] = chcal[0] - 1 ; // 0-base
+    v[1] = freqs[0] ;
+    v[2] = cw ;
+  }
 
   return v ;
 }

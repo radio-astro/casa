@@ -37,11 +37,13 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             fluxunit_now = s.get_fluxunit()
             if ( antennaname == 'GBT'):
                             if (fluxunit_now == ''):
-                                    print "No fluxunit in the data. Set to Kelvin."
+                                    #print "No fluxunit in the data. Set to Kelvin."
+                                    casalog.post( "No fluxunit in the data. Set to Kelvin." )
                                     s.set_fluxunit('K')
                                     fluxunit_now = s.get_fluxunit()
 
-            print "Current fluxunit = "+fluxunit_now
+            #print "Current fluxunit = "+fluxunit_now
+            casalog.post( "Current fluxunit = "+fluxunit_now )
 
             # set default spectral axis unit
             if ( specunit != '' ):
@@ -54,7 +56,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             if ( frame != '' ):
                     s.set_freqframe(frame)
             else:
-                    print 'Using current frequency frame'
+                    #print 'Using current frequency frame'
+                    casalog.post( 'Using current frequency frame' )
 
             if ( doppler != '' ):
                     if ( doppler == 'radio' ):
@@ -68,7 +71,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
 
                     s.set_doppler(ddoppler)
             else:
-                    print 'Using current doppler convention'
+                    #print 'Using current doppler convention'
+                    casalog.post( 'Using current doppler convention' )
 
             # Select scan and field
             sel = sd.selector()
@@ -114,7 +118,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                # Apply the selection (if any)
                     s.set_selection(sel)
             except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
             del sel
 
@@ -129,63 +134,78 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                             if ( fluxunit != '' ):
                                     if ( fluxunit == fluxunit_now ):
-                                            print "No need to change default fluxunits"
+                                            #print "No need to change default fluxunits"
+                                            casalog.post( "No need to change default fluxunits" )
                                     else:
                                             s.set_fluxunit(fluxunit)
-                                            print "Reset default fluxunit to "+fluxunit
+                                            #print "Reset default fluxunit to "+fluxunit
+                                            casalog.post( "Reset default fluxunit to "+fluxunit )
                                             fluxunit_now = s.get_fluxunit()
                             else:
-                                    print "Warning - no fluxunit for set_fluxunit"
+                                    #print "Warning - no fluxunit for set_fluxunit"
+                                    casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
 
 
             elif ( fluxunit=='' or fluxunit==fluxunit_now ):
                     if ( fluxunit==fluxunit_now ):
-                            print "No need to convert fluxunits"
+                            #print "No need to convert fluxunits"
+                            casalog.post( "No need to convert fluxunits" )
 
             elif ( type(telescopeparm) == list ):
                     # User input telescope params
                     if ( len(telescopeparm) > 1 ):
                             D = telescopeparm[0]
                             eta = telescopeparm[1]
-                            print "Use phys.diam D = %5.1f m" % (D)
-                            print "Use ap.eff. eta = %5.3f " % (eta)
+                            #print "Use phys.diam D = %5.1f m" % (D)
+                            #print "Use ap.eff. eta = %5.3f " % (eta)
+                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                            casalog.post(  "Use ap.eff. eta = %5.3f " % (eta) )
                             s.convert_flux(eta=eta,d=D)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
-                            print "Use gain = %6.4f Jy/K " % (jypk)
+                            #print "Use gain = %6.4f Jy/K " % (jypk)
+                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
                             s.convert_flux(jyperk=jypk)
                     else:
-                            print "Empty telescope list"
+                            #print "Empty telescope list"
+                            casalog.post( "Empty telescope list" )
 
             elif ( telescopeparm=='' ):
                     if ( antennaname == 'GBT'):
                             # needs eventually to be in ASAP source code
-                            print "Convert fluxunit to "+fluxunit
+                            #print "Convert fluxunit to "+fluxunit
+                            casalog.post( "Convert fluxunit to "+fluxunit )
                             # THIS IS THE CHEESY PART
                             # Calculate ap.eff eta at rest freq
                             # Use Ruze law
                             #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
                             # with
-                            print "Using GBT parameters"
+                            #print "Using GBT parameters"
+                            casalog.post( "Using GBT parameters" )
                             eps = 0.390  # mm
                             eta_0 = 0.71 # at infinite wavelength
                             # Ideally would use a freq in center of
                             # band, but rest freq is what I have
                             rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
                             eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            print "Calculated ap.eff. eta = %5.3f " % (eta)
-                            print "At rest frequency %5.3f GHz" % (rf)
+                            #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                            #print "At rest frequency %5.3f GHz" % (rf)
+                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
-                            print "Assume phys.diam D = %5.1f m" % (D)
+                            #print "Assume phys.diam D = %5.1f m" % (D)
+                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
                             s.convert_flux(eta=eta,d=D)
 
-                            print "Successfully converted fluxunit to "+fluxunit
+                            #print "Successfully converted fluxunit to "+fluxunit
+                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
                             s.convert_flux()
 
                     else:
                             # Unknown telescope type
-                            print "Unknown telescope - cannot convert"
+                            #print "Unknown telescope - cannot convert"
+                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
             # Make line region masks and list of line regions
             if ( fitmode == 'list' ):
@@ -225,7 +245,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             doguess = True
                             domask = False
 
-                    print "Identified ",nlines," regions for fitting"
+                    #print "Identified ",nlines," regions for fitting"
+                    casalog.post( "Identified %d regions for fitting" % (nlines) )
                     if ( doguess ):
                             "Will use these as starting guesses"
                     else:
@@ -233,7 +254,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
 
             else:
                     # Fit mode AUTO and in channel mode
-                    print "Trying AUTO mode - find line channel regions"
+                    #print "Trying AUTO mode - find line channel regions"
+                    casalog.post( "Trying AUTO mode - find line channel regions" )
                     if ( len(maskline) > 0 ):
                             # There is a user-supplied channel mask for lines
                             linemask=s.create_mask(maskline,invert=invertmask)
@@ -243,7 +265,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             domask = False
 
                     # Use linefinder to find lines
-                    print "Using linefinder"
+                    #print "Using linefinder"
+                    casalog.post( "Using linefinder" )
                     fl=sd.linefinder()
                     fl.set_scan(s)
                     # This is the tricky part
@@ -265,10 +288,12 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                         ptout="SCAN[%d] IF[%d] POL[%d]: " %(s.getscan(irow), s.getif(irow), s.getpol(irow))
                         if ( nlines[irow] > 0 ):
                                 ll = fl.get_ranges()
-                                print ptout, "Found ", nlines[irow], " lines at ", ll
+                                #print ptout, "Found ", nlines[irow], " lines at ", ll
+                                casalog.post( ptout+"Found %d lines at %s" % (nlines[irow], str(ll) ) )
                         else:
                                 ll = ()
-                                print ptout, "Nothing found."
+                                #print ptout, "Nothing found."
+                                casalog.post( ptout+"Nothing found.", priority = 'WARN' )
 
                         # This is a linear list of pairs of values, so turn these into a list of lists
                         llisttmp = []
@@ -282,7 +307,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             llisttmp = llisttmp + [[lo,up]]
                         linelist.append(llisttmp)
                     # Done with linefinder
-                    print "Finished linefinder."
+                    #print "Finished linefinder."
+                    casalog.post( "Finished linefinder." )
                     #print "Finished linefinder, found ",nlines,"lines"
                     doguess = True
                     del fl
@@ -294,7 +320,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             if ( doguess ):
                     # For each line get guess of max, cen and estimated equivalent width (sum/max)
                     for irow in range(s.nrow()):
-                        print "start ", irow
+                        #print "start ", irow
+                        casalog.post( "start row %d" % (irow) )
                         if( fitmode=='auto' ):
                                 # in auto mode, linelist will be determined
                                 # for each spectra
@@ -308,7 +335,12 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             eqwt=[]
                             cent=[]
                             for x in llist:
-                                    print x
+                                    if ( x[0] > x[1] ):
+                                            tmp=x[0]
+                                            x[0]=x[1]
+                                            x[1]=tmp
+                                    #print x
+                                    casalog.post( "detected line: "+str(x) ) 
                                     msk = s.create_mask(x, row=irow)
                                     #maxl = s.stats('max',msk)[irow]
                                     #suml = s.stats('sum',msk)[irow]
@@ -398,7 +430,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                             for i in range(numlines):
                                     comps += [1]
 
-                    print "Will fit ",ncomps," components in ",numfit," regions"
+                    #print "Will fit ",ncomps," components in ",numfit," regions"
+                    casalog.post( "Will fit %d components in %d regions" % (ncomps, numfit) )
 
                     if (numfit > 0):
                             # Fit the line using numfit gaussians
@@ -427,7 +460,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                                             n = n + comps[i]
                             else:
                                     # No guesses
-                                    print "Fitting lines without starting guess"
+                                    #print "Fitting lines without starting guess"
+                                    casalog.post( "Fitting lines without starting guess" )
 
                             # Now fit
                             f.fit(row=irow)
@@ -466,23 +500,32 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                                     # Did not converge
                                     retValue['nfit'] += [-ncomps]
                                     fitparams.append([[0,0,0]])
-                                    print 'Fitting:'
-                                    print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
-                                    print "   Fit failed to converge"
+                                    #print 'Fitting:'
+                                    #print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
+                                    #print "   Fit failed to converge"
+                                    casalog.post( 'Fitting:' )
+                                    casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
+                                    casalog.post( "   Fit failed to converge", priority = 'WARN' )
                             # Clean up
                             #del f
                     else:
                             fitparams.append([[0,0,0]])
                             retValue['nfit']+=[-1]
-                            print 'Fitting:'
-                            print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
-                            print '   Fit failed.'
+                            #print 'Fitting:'
+                            #print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
+                            #print '   Fit failed.'
+                            casalog.post( 'Fitting:' )
+                            casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
+                            casalog.post( '   Fit failed.', priority = 'WARN' )
                 else:
                     fitparams.append([[0,0,0]])
                     retValue['nfit']+=[-1]
-                    print 'Fitting:'
-                    print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
-                    print '   No lines detected.'
+                    #print 'Fitting:'
+                    #print 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow))
+                    #print '   No lines detected.'
+                    casalog.post( 'Fitting:' )
+                    casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
+                    casalog.post( '   No lines detected.', priority = 'WARN' )
 
                 # plot
                 if ( abs(plotlevel) > 0 ):
@@ -505,7 +548,8 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
             # DONE
 
         except Exception, instance:
-                print '***Error***', instance
+                #print '***Error***', instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
         finally:
@@ -520,7 +564,8 @@ def store_fit(func, fitfile, value, scan, overwrite):
                 if overwrite:
                         os.system('rm '+outname)
                 else:
-                        print fitfile+' already exists.'
+                        #print fitfile+' already exists.'
+                        casalog.post( fitfile+' already exists.' )
                         return
                 
         outfile=file(outname, 'w')
@@ -586,9 +631,11 @@ def init_plot( fitter, n ):
         else:
                 nrow=4
                 ncol=4
-        print 'nrow,ncol=', nrow, ',', ncol
+        #print 'nrow,ncol=', nrow, ',', ncol
+        casalog.post( 'nrow,ncol= %d,%d' % (nrow, ncol ) )
         if n > 16:
-                print 'Only first 16 results are plotted.'
+                #print 'Only first 16 results are plotted.'
+                casalog.post( 'Only first 16 results are plotted.', priority = 'WARN' )
         
         # initialize plotter
         fitter._p

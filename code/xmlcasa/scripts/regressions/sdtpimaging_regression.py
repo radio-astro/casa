@@ -153,6 +153,7 @@ try:
     default(sdtpimaging)
     sdfile=testdata
     calmode='baseline'
+    stokes='XX'
     createimage=False
     masklist=[50,50]
     bpoly=1
@@ -171,6 +172,10 @@ try:
     cell=['0.2arcmin','0.2arcmin']
     phasecenter="AZEL 187d54m22s 41d03m0s"
     ephemsrcname='Moon'
+    pointingcolumn='direction'
+    # didnot work well if gridfunction='BOX' or 'PB'
+    # is chosen.
+    gridfunction='SF'
     for i in antids:
         print "create an image for", i
 	imagename=imagenames[int(i)]

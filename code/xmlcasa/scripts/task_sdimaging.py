@@ -16,7 +16,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                 tbkeys=tb.getkeywords()
                 tb.close()
                 if any(key=='MS_VERSION' for key in tbkeys):
-                    print 'MS format'
+                    casalog.post( 'MS format' )
                 else:
                     msg='sdfile must be in MS format'
                     raise Exception, msg

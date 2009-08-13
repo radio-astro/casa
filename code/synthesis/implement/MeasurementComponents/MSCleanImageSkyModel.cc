@@ -49,16 +49,16 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales)
-: method_p(NSCALES), nscales_p(nscales), progress_p(0)
+MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales, const Float& smallScaleBias)
+: method_p(NSCALES), nscales_p(nscales), smallScaleBias_p(smallScaleBias), progress_p(0)
 {
   modified_p=True;
   donePSF_p=False;
 
 };
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes)
-: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), progress_p(0)
+MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, const Float& smallScaleBias)
+: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), smallScaleBias_p(smallScaleBias), progress_p(0)
 {
   modified_p=True;
   donePSF_p=False;
@@ -238,6 +238,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  } else {
 	    cleaner.setscales(scaleSizes);   
 	  }
+          cleaner.setSmallScaleBias(smallScaleBias_p);
 	  cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
 			     Quantity(threshold(), "Jy"), True);
 	  

@@ -16,7 +16,8 @@ if homedir == None :
    exit(1)
 
 casa = { 'helpers': {
-             'logger': 'casalogger'
+             'logger': 'casalogger',
+             'viewer': 'casaviewer'
          },
          'dirs': {
              'rc': homedir + '/.casa'
@@ -43,6 +44,7 @@ while len(a) > 0:
 if os.uname()[0]=='Darwin' :
     casa_path = os.environ['CASAPATH'].split()
     casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
+    casa['helpers']['viewer'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casaviewer'
 #           from Carbon.CoreFoundation import kCFURLPOSIXPathStyle
 #           kLSUnknownCreator = '\x00\x00\x00\x00'
 #           fsRef, cfURL = LSFindApplicationForInfo(kLSUnknownCreator, None, "casalogger.app")

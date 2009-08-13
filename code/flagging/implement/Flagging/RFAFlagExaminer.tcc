@@ -38,8 +38,8 @@
 #include <casa/stdio.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  
-    Bool dbg3 = False;
+
+  const Bool dbg3 = False;
   
   // -----------------------------------------------------------------------
   // RFAFlagExaminer constructor
@@ -82,6 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
   
+  // jmlarsen: gets called
   void RFAFlagExaminer::initialize()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -99,39 +100,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	outTotalRowFlags = 0;
   }
 
+  // jmlarsen: doesn't get called (?)
   void RFAFlagExaminer::finalize()
   {
-    if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
+    //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
     return;
-    // because the following seems to be old code...
-
-    Double ffrac=0.0,rffrac=0.0;
-    if(accumTotalCount) ffrac = accumTotalFlags*100.0/accumTotalCount;
-    if(accumTotalRowCount) rffrac = accumTotalRowFlags*100.0/accumTotalRowCount;
-    
-    os << "Field = " << chunk.visBuf().fieldId() << " , Spw Id : " << chunk.visBuf().spectralWindow() << endl;
-    //     os << accumTotalRowFlags << " out of " << accumTotalRowCount << " (" << rffrac << "%) rows are flagged." 
-    //        << endl;
-    os << inTotalRowFlags << " out of " << inTotalRowCount << " (" << rffrac << "%) rows are flagged." 
-       << endl;
-    //    os << accumTotalFlags << " out of " << accumTotalCount << " (" << ffrac << "%) data points are flagged." << endl;
-    //     os << inTotalFlags << " " << inTotalCount << " " << inTotalRowFlags << " " << inTotalRowCount << endl;
-    //     os << outTotalFlags << " " << outTotalCount << " " << outTotalRowFlags << " " << outTotalRowCount << endl;
-
-    os << inTotalFlags << " out of " << inTotalCount << " (" << ffrac << "%) data points are flagged." << endl;
-    os << "Fraction of data flagged in this run = " << (outTotalFlags-inTotalFlags)*100.0/inTotalFlags << "%"
-       << " ("<<outTotalFlags-inTotalFlags<< " new flags)." << endl;
-    os << "Fraction of rows flagged in this run = " 
-       << (outTotalRowFlags-inTotalRowFlags)*100.0/inTotalRowFlags<<"%" 
-       << " ("<<outTotalRowFlags-inTotalRowFlags<< " new row-flags).";
-
-    os << LogIO::POST;
   }
   // -----------------------------------------------------------------------
   // processRow
   // Raises/clears flags for a single row, depending on current selection
   // -----------------------------------------------------------------------
+  // jmlarsen: gets called
   void RFAFlagExaminer::processRow(uInt ifr, uInt it)
   {
       // called often... if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -139,10 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return;
   }
   
-  
-  // -----------------------------------------------------------------------
-  // startFlag
-  // -----------------------------------------------------------------------
+  // jmlarsen: gets called
   void RFAFlagExaminer::startFlag ()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -165,6 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   }
   
+  // jmlarsen: gets called
   void RFAFlagExaminer::initializeIter (uInt it) 
   {
       //    totalflags = totalcount = totalrowflags = totalrowcount = 0;
@@ -194,9 +172,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     inTotalRowCount += totalrowcount;
   }
   
+  // jmlarsen: doesn't get called (?)
   void RFAFlagExaminer::finalizeIter (uInt it) 
   {
-      if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
+    //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
     outTotalRowCount += chunk.visBuf().flagRow().nelements();
 
@@ -228,34 +207,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     outTotalRowCount += totalrowcount;
     //    cerr << outTotalRowCount << " " << inTotalRowCount << " " << outTotalRowCount-inTotalRowCount << endl;
   }
-  
-  // -----------------------------------------------------------------------
-  // iterFlag
-  // -----------------------------------------------------------------------
+
+  // jmlarsen: gets called
   void RFAFlagExaminer::iterFlag(uInt it)
       //Bool resetFlags
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
     // Set the flags and count them up.
-    //    if (resetFlags) 
     RFAFlagCubeBase::iterFlag(it);
     
     // count if within specific timeslots
     const Vector<Double> &times( chunk.visBuf().time() );
     Double t0 = times(it);
     
-    Bool flagall = True;
+    Bool within_time_slot = True;
     
     if (sel_time.ncolumn()) {
 
 	if( anyEQ(sel_timerng.row(0) <= t0 && 
 		  sel_timerng.row(1) >= t0, True) )
-	    flagall = True;
-	else flagall = False;
+	    within_time_slot = True;
+	else within_time_slot = False;
     }
     
-    if (flagall) {
+    if (within_time_slot) {
 
 	// More counting and fill up final display variables.
 	const Vector<Int> &ifrs( chunk.ifrNums() );
@@ -291,9 +267,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      totalrowflags++;
 		  totalrowcount++;
 		
-		for( uInt ich=0; ich<chunk.num(CHAN); ich++ ) {
+		for (uInt ich=0; 
+                     ich < chunk.num(CHAN); 
+                     ich++ ) {
 
-		    if(!flagchan.nelements() || flagchan[ich]) {
+		    if (flagchan.nelements() == 0 || 
+                        flagchan[ich]) {
 			
 			totalflags += chunk.nfChanIfrTime(ich, ifrs(i), it);
 			totalcount += chunk.num(CORR);
@@ -301,13 +280,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      }
 	}
-    }// end of flagall
+    }
     
     return;
   }
-  // -----------------------------------------------------------------------
-  // endFlag
-  // -----------------------------------------------------------------------
+
+  // jmlarsen: gets called
   void RFAFlagExaminer::endFlag ()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
@@ -382,10 +360,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     accumTotalRowFlags += totalrowflags;
     accumTotalRowCount += totalrowcount;
     
-    cerr << "accumTotalFlags " << accumTotalFlags -totalflags
-         << " + " << totalflags << " -> " << accumTotalFlags << endl;
-    cerr << "accumTotalCount " << accumTotalCount -totalcount
-         << " + " << totalcount << " -> " << accumTotalCount << endl;
+    if (0) {
+      cerr << "accumTotalFlags " << accumTotalFlags -totalflags
+           << " + " << totalflags << " -> " << accumTotalFlags << endl;
+      cerr << "accumTotalCount " << accumTotalCount -totalcount
+           << " + " << totalcount << " -> " << accumTotalCount << endl;
+    }
 
     return;
   }
@@ -404,150 +384,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return r;
     }
 
-#if 0
-  String RFAFlagExaminer::getDesc ()
-  {
-    return desc_str+" "+RFAFlagCubeBase::getDesc();
-  }
-  
-  const RecordInterface & RFAFlagExaminer::getDefaults ()
-  {
-    static Record rec;
-    // create record description on first entry
-    if( !rec.nfields() )
-      {
-	rec = RFAFlagCubeBase::getDefaults();
-	rec.removeField(RF_FIGNORE); // fignore is meaningless
-	rec.define(RF_NAME,"flagexaminer"); 
-	// TODO : use these selection params for "extend along"...
-	rec.define(RF_SPWID,False); 
-	rec.define(RF_FIELD,False);
-	rec.define(RF_CHANS,False);
-	rec.define(RF_CORR,False);
-	rec.define(RF_BASELINE,False);
-	rec.define(RF_TIMERANGE,False);
-	rec.define(RF_TIMEDELTA,False);
-	rec.define(RF_AUTOCORR,False);
-	rec.define(RF_SCAN,False);
-	rec.define(RF_ARRAY,False);
-	rec.define(RF_FEED,False);
-	rec.define(RF_UVRANGE,False);
-        
-	rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
-	rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");
-	rec.setComment(RF_CHANS,"Restrict flagging to specific channels (2,N array of integers)");
-	rec.setComment(RF_CORR,"Restrict flagging to specific correlations (array of strings)");
-	rec.setComment(RF_BASELINE,"Restrict flagging to specific baselines (array of strings, e.g., 'A1-A2','A1-*', or 2,N array of integers [[A1,A2],[B1,B2],...])");
-	rec.setComment(RF_TIMERANGE,"Restrict flagging to specific time ranges (2,N array of strings or MJDs");
-	rec.setComment(RF_TIMEDELTA,String("Time delta for ")+RF_CENTERTIME+", in seconds");
-	rec.setComment(RF_AUTOCORR,"Flag autocorrelations (F/T)");
-	rec.setComment(RF_SCAN,"Restrict flagging to specific scans (integers)");
-	rec.setComment(RF_ARRAY,"Restrict flagging to specific array ids (integers)");
-	rec.setComment(RF_FEED,"Restrict flagging to specific feeds (2,N array of integers)");
-	rec.setComment(RF_UVRANGE,"Restrict flagging to specific uv-distance ranges in meters (2,N array of doubles )");
-      }
-    return rec;
-  }
-  
-  // -----------------------------------------------------------------------
-  // parseParm
-  // -----------------------------------------------------------------------
-  bool RFAFlagExaminer::parseParm (const RecordInterface &parm)
-  {
-    char s[200];
-    // parse input arguments: channels
-    if( parseRange(sel_chan,parm,RF_CHANS) )
-      {
-	String sch;
-	for( uInt i=0; i<sel_chan.ncolumn(); i++ )
-	  {
-	    sprintf(s,"%d:%d",sel_chan(0,i),sel_chan(1,i));
-	    addString(sch,s,",");
-	  }
-	addString(desc_str,String(RF_CHANS)+"="+sch);
-	sel_chan(sel_chan>=0) += -(Int)indexingBase();
-      }
-    
-    // parse input arguments: correlations
-    if( fieldType(parm,RF_CORR,TpString,TpArrayString))
-      {
-	String ss;
-	Vector<String> scorr( parm.asArrayString(RF_CORR) );
-	sel_corr.resize( scorr.nelements() );
-	for( uInt i=0; i<scorr.nelements(); i++ )
-	  {
-	    sel_corr(i) = Stokes::type( scorr(i) );
-	    if( sel_corr(i) == Stokes::Undefined )
-	      os<<"Illegal correlation "<<scorr(i)<<endl<<LogIO::EXCEPTION;
-	    addString(ss,scorr(i),",");
-	  }
-	addString(desc_str,String(RF_CORR)+"="+ss);
-      }
-    
-    return True;
-  }
-  
-  
-  // -----------------------------------------------------------------------
-  // reformRange
-  // Reforms an array of 2N elements into a [2,N] matrix
-  // -----------------------------------------------------------------------
-  template<class T> Bool RFAFlagExaminer::reformRange( Matrix<T> &rng,const Array<T> &arr )
-  {
-    if( arr.ndim()>2 || (arr.nelements()%2) !=0 )
-      return False;
-    rng = arr.reform(IPosition(2,2,arr.nelements()/2));
-    return True;
-  }
-  
-  template<class T> Array<T> fieldToArray( const RecordInterface &parm,const String &id );
-  
-  /*
-    template<> Array<Int> fieldToArray<Int>( const RecordInterface &parm,const String &id )
-    { return parm.toArrayInt(id); }
-    template<> Array<Double> fieldToArray<Double>( const RecordInterface &parm,const String &id )
-    { return parm.toArrayDouble(id); }
-    template<> Array<String> fieldToArray<String>( const RecordInterface &parm,const String &id )
-    { return parm.toArrayString(id); }
-  */
-  
-  
-  // -----------------------------------------------------------------------
-  // RFAFlagExaminer::parseRange
-  // Returns a record field of 2N elements as a [2,N] matrix
-  // -----------------------------------------------------------------------
-  template<class T> Bool RFAFlagExaminer::parseRange( Matrix<T> &rng,const RecordInterface &parm,const String &id )
-  {
-    if( isFieldSet(parm,id) )
-      {
-	try 
-	  {
-	    Array<T> arr( fieldToArray<T>(parm,id) );
-	    if( !reformRange(rng,arr) )
-	      throw( AipsError("") );
-	    return True;
-	  } 
-	catch( AipsError x ) 
-	  {
-	    os<<"Illegal \""<<id<<"\" array\n"<<LogIO::EXCEPTION;
-	  }
-      }
-    return False;
-  }
-  
-  
-  // -----------------------------------------------------------------------
-  // addString
-  // Helper method to build up description strings
-  // -----------------------------------------------------------------------
-  void RFAFlagExaminer::addString( String &str,const String &s1,const char *sep )
-  {
-    if( str.length() )
-      str += sep;
-    str += s1;
-  }
-  
-#endif
   
 } //# NAMESPACE CASA - END
 

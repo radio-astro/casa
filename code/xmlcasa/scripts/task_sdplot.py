@@ -45,10 +45,12 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
             fluxunit_now = s.get_fluxunit()
             if ( antennaname == 'GBT'):
                             if (fluxunit_now == ''):
-                                    print "no fluxunit in the data. Set to Kelvin."
+                                    #print "no fluxunit in the data. Set to Kelvin."
+                                    casalog.post( "no fluxunit in the data. Set to Kelvin." )
                                     s.set_fluxunit('K')
                                     fluxunit_now = s.get_fluxunit()
-            print "Current fluxunit = "+fluxunit_now
+            #print "Current fluxunit = "+fluxunit_now
+            casalog.post( "Current fluxunit = "+fluxunit_now )
 
             # set flux unit string (be more permissive than ASAP)
             if ( fluxunit == 'k' ):
@@ -60,68 +62,84 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
             if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                             if ( fluxunit != '' ):
                                     if ( fluxunit == fluxunit_now ):
-                                            print "No need to change default fluxunits"
+                                            #print "No need to change default fluxunits"
+                                            casalog.post( "No need to change default fluxunits" )
                                     else:
                                             s.set_fluxunit(fluxunit)
-                                            print "Reset default fluxunit to "+fluxunit
+                                            #print "Reset default fluxunit to "+fluxunit
+                                            casalog.post( "Reset default fluxunit to "+fluxunit )
                                             fluxunit_now = s.get_fluxunit()
                             else:
-                                    print "Warning - no fluxunit for set_fluxunit"
+                                    #print "Warning - no fluxunit for set_fluxunit"
+                                    casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
 
 
             elif ( fluxunit=='' or fluxunit==fluxunit_now ):
                     if ( fluxunit==fluxunit_now ):
-                            print "No need to convert fluxunits"
+                            #print "No need to convert fluxunits"
+                            casalog.post( "No need to convert fluxunits" )
 
             elif ( type(telescopeparm) == list ):
                     # User input telescope params
                     if ( len(telescopeparm) > 1 ):
                             D = telescopeparm[0]
                             eta = telescopeparm[1]
-                            print "Use phys.diam D = %5.1f m" % (D)
-                            print "Use ap.eff. eta = %5.3f " % (eta)
+                            #print "Use phys.diam D = %5.1f m" % (D)
+                            #print "Use ap.eff. eta = %5.3f " % (eta)
+                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                            casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
                             s.convert_flux(eta=eta,d=D)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
-                            print "Use gain = %6.4f Jy/K " % (jypk)
+                            #print "Use gain = %6.4f Jy/K " % (jypk)
+                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
                             s.convert_flux(jyperk=jypk)
                     else:
-                            print "Empty telescope list"
+                            #print "Empty telescope list"
+                            casalog.post( "Empty telescope list" )
 
             elif ( telescopeparm=='' ):
                     if ( antennaname == 'GBT'):
                             # needs eventually to be in ASAP source code
-                            print "Convert fluxunit to "+fluxunit
+                            #print "Convert fluxunit to "+fluxunit
+                            casalog.post( "Convert fluxunit to "+fluxunit )
                             # THIS IS THE CHEESY PART
                             # Calculate ap.eff eta at rest freq
                             # Use Ruze law
                             #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
                             # with
-                            print "Using GBT parameters"
+                            #print "Using GBT parameters"
+                            casalog.post( "Using GBT parameters" )
                             eps = 0.390  # mm
                             eta_0 = 0.71 # at infinite wavelength
                             # Ideally would use a freq in center of
                             # band, but rest freq is what I have
                             rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
                             eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            print "Calculated ap.eff. eta = %5.3f " % (eta)
-                            print "At rest frequency %5.3f GHz" % (rf)
+                            #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                            #print "At rest frequency %5.3f GHz" % (rf)
+                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
-                            print "Assume phys.diam D = %5.1f m" % (D)
+                            #print "Assume phys.diam D = %5.1f m" % (D)
+                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
                             s.convert_flux(eta=eta,d=D)
 
-                            print "Successfully converted fluxunit to "+fluxunit
+                            #print "Successfully converted fluxunit to "+fluxunit
+                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
                             s.convert_flux()
 
                     else:
                             # Unknown telescope type
-                            print "Unknown telescope - cannot convert"
+                            #print "Unknown telescope - cannot convert"
+                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
 
             # set spectral axis unit
             if ( specunit != '' ):
-                    print "Changing spectral axis to "+specunit
+                    #print "Changing spectral axis to "+specunit
+                    casalog.post( "Changing spectral axis to "+specunit )
                     s.set_unit(specunit)
 
             # set rest frequency
@@ -146,15 +164,18 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                             else:
                                     #Hz
                                     fval = float(rf)
-                    print 'Set rest frequency to ', fval, ' Hz'
+                    #print 'Set rest frequency to ', fval, ' Hz'
+                    casalog.post( 'Set rest frequency to %d Hz' %(fval) )
                     s.set_restfreqs(freqs=fval)
 
             # reset frame and doppler if needed
             if ( frame != '' ):
-                    print "Changing frequency frame to "+frame
+                    #print "Changing frequency frame to "+frame
+                    casalog.post( "Changing frequency frame to "+frame )
                     s.set_freqframe(frame)
             else:
-                    print 'Using current frequency frame'
+                    #print 'Using current frequency frame'
+                    casalog.post( 'Using current frequency frame' )
 
             if ( doppler != '' ):
                     if ( doppler == 'radio' ):
@@ -168,7 +189,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
                     s.set_doppler(ddoppler)
             else:
-                    print 'Using current doppler convention'
+                    #print 'Using current doppler convention'
+                    casalog.post( 'Using current doppler convention' )
 
             # Prepare a selection
             sel=sd.selector()
@@ -213,7 +235,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                 #Apply the selection
                 s.set_selection(sel)
             except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
             del sel
 
@@ -223,10 +246,16 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 	    oldpanel = sd.plotter._panelling
 	    oldstack = sd.plotter._stacking
 	    oldhist = sd.plotter._hist
-	    # line properties
+	    # Line properties
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
 	    linewidthold=pl.rcParams['lines.linewidth']
+
+	    # Reload plotter if necessary
+	    if not sd.plotter._plotter or sd.plotter._plotter.is_dead:
+		    sd.plotter._plotter = sd.plotter._newplotter()
+
+	    # The new toolbar
 	    if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
 		    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
 
@@ -270,7 +299,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                                             spave=stave.average_pol(weight=pweight)
                                     else:
                                             # only single polarization
-                                            print "Single polarization data - no need to average"
+                                            #print "Single polarization data - no need to average"
+                                            casalog.post( "Single polarization data - no need to average" )
                                             spave=stave.copy()
                             else:
                                     spave=stave.copy()
@@ -285,7 +315,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                                             spave=scave.average_pol(weight=pweight)
                                     else:
                                             # only single polarization
-                                            print "Single polarization data - no need to average"
+                                            #print "Single polarization data - no need to average"
+                                            casalog.post( "Single polarization data - no need to average" )
                                             spave=scave.copy()
                             else:
                                     spave=scave.copy()
@@ -295,7 +326,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
                     if kernel == '': kernel = 'none'
                     if ( kernel != 'none' and (not (kwidth<=0 and kernel!='hanning'))):
-                            print "Smoothing spectrum with kernel "+kernel
+                            #print "Smoothing spectrum with kernel "+kernel
+                            casalog.post( "Smoothing spectrum with kernel "+kernel )
                             spave.smooth(kernel,kwidth)
 
                     # Plot final spectrum
@@ -328,18 +360,21 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 		    if isinstance(linewidth,int) or isinstance (linewidth,float):
 			    lwidth = linewidth
 		    else:
-			    print "WARNING: Invalid linewidth. linewidth is ignored and set to 1."
+			    #print "WARNING: Invalid linewidth. linewidth is ignored and set to 1."
+                            casalog.post( "Invalid linewidth. linewidth is ignored and set to 1.", priority = 'WARN' )
 			    lwidth = 1
 
 		    # set plot colors
 		    if colmap is not None:
 			    if ncolor > 1 and lines is not None:
-				    print "WARNING: 'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'."
+				    #print "WARNING: 'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'."
+                                    casalog.post( "'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'.", priority = 'WARN' )
 			    sd.plotter.set_colors(colmap)
 		    else:
 			    if lines is not None:
 				    tmpcol="black"
-				    print "INFO: plot colour is set to '",tmpcol,"'"
+				    #print "INFO: plot colour is set to '",tmpcol,"'"
+                                    casalog.post( "plot colour is set to '"+tmpcol+"'" )
 				    sd.plotter.set_colors(tmpcol)
 		    # set linestyles and/or linewidth
 		    # so far, linestyles can be specified only if a color is assigned
@@ -351,8 +386,12 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                     # sd.plotter.axhline(color='r',linewidth=2)
 
                     # Set axis ranges (if requested)
-                    if len(flrange)==1: print "flrange needs 2 limits - ignoring"
-                    if len(sprange)==1: print "sprange needs 2 limits - ignoring"
+                    if len(flrange)==1:
+                            #print "flrange needs 2 limits - ignoring"
+                            casalog.post( "flrange needs 2 limits - ignoring" )
+                    if len(sprange)==1:
+                            #print "sprange needs 2 limits - ignoring"
+                            casalog.post( "sprange needs 2 limits - ignoring" )
                     if ( len(sprange) > 1 ):
                             if ( len(flrange) > 1 ):
                                     sd.plotter.set_range(sprange[0],sprange[1],flrange[0],flrange[1])
@@ -388,15 +427,18 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
                                     linc=sd.linecatalog(catname)
                                     dolinc=True
                             except:
-                                    print "Could not find catalog at "+catname
+                                    #print "Could not find catalog at "+catname
+                                    casalog.post( "Could not find catalog at "+catname, priority = False )
                                     dolinc=False
                             if ( dolinc ):
                                     if ( len(sprange)>1 ):
                                             if ( specunit=='GHz' or specunit=='MHz' ):
                                                     linc.set_frequency_limits(sprange[0],sprange[1],specunit)
                                             else:
-                                                    print "ERROR: sd.linecatalog.set_frequency_limits accepts onlyGHz and MHz"
-                                                    print "continuing without sprange selection on catalog"
+                                                    #print "ERROR: sd.linecatalog.set_frequency_limits accepts onlyGHz and MHz"
+                                                    #print "continuing without sprange selection on catalog"
+                                                    casalog.post( "sd.linecatalog.set_frequency_limits accepts onlyGHz and MHz", priority = 'WARN' )
+                                                    casalog.post( "continuing without sprange selection on catalog", priority = 'WARN' )
                                     if ( linecat != 'all' and linecat != 'ALL' ):
                                             # do some molecule selection
                                             linc.set_name(linecat)
@@ -459,7 +501,8 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
             # DONE
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 ########################################
@@ -724,7 +767,8 @@ class mask_selection:
 		self._update_mask()
 		########## ADDED - 2009.04.01 kana
 		masklist=self.scan.get_masklist(mask=self.mask)
-		print 'stat region:', masklist
+		#print 'stat region:', masklist
+                casalog.post( 'stat region: '+str(masklist) )
 		# Call sdstat()
 		invertmask=False
 		interactive=False
@@ -759,7 +803,8 @@ class mask_selection:
 		elif self.rect['button'] == 3:
 			invmask=True
 			mflg='UNmask'
-		print mflg+': ',newlist
+		#print mflg+': ',newlist
+                casalog.post( mflg+': '+str(newlist) )
 		newmask=self.scan.create_mask(newlist,invert=invmask)
 		# Logic operation to update mask
 		if invmask:

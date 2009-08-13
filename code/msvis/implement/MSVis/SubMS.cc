@@ -126,11 +126,8 @@ namespace casa {
   
   
   void SubMS::selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
-			Vector<Int> step, const Bool averchan) {
-    
-    
-
-
+			Vector<Int> step, const Bool averchan)
+  {
     spw_p.resize();
     spw_p=spw;
     
@@ -165,12 +162,12 @@ namespace casa {
     
     
     nchan_p.resize();
-    nchan_p=nchan;
+    nchan_p = nchan;
     chanStart_p.resize();
-    chanStart_p=start;
+    chanStart_p = start;
     chanStep_p.resize();
-    chanStep_p=step;
-    averageChannel_p=averchan;
+    chanStep_p = step;
+    averageChannel_p = averchan;
     // check for defaults
     if(nchan_p[0]<=0 || (nchan_p.nelements() != spw_p.nelements())){
       nchan_p.resize(spw_p.nelements());
@@ -194,13 +191,8 @@ namespace casa {
       }
       else{
 	chanStep_p.set(step[0]);
-      }
-      
-      
-    }
-
-    
-    
+      } 
+    }    
   }
   
   void SubMS::setmsselect(const String& spw, const String& field, 
@@ -512,7 +504,7 @@ namespace casa {
     copySource();
 
     copyAntenna();
-    copyFeed();    // Feed table writing has to be after antenna 
+    copyFeed();         // Feed table writing has to be after antenna 
     copyObservation();
     copyPointing();
     
@@ -525,15 +517,15 @@ namespace casa {
     else{
       if(!sameShape_p){
 	os << LogIO::WARN 
-	   << "Time averaging of varying spw shapes is not handled yet"
+	   << "Time averaging of differing spw shapes is not handled yet."
 	   << LogIO::POST;
 	os << LogIO::WARN
-	   << "Work around: split-average different shape spw separately and then concatenate " << LogIO::POST;
+	   << "Work around: split-average different shape spws separately and then concatenate." 
+           << LogIO::POST;
 	return False;
       }
       else{
 	fillAverMainTable(colname);
-	
       }
     }
     return True;
@@ -1074,7 +1066,7 @@ namespace casa {
     return  (allCols && inputImgWtsExist);
   }
 
-  Int SubMS::cvel(const String& field,
+  Int SubMS::cvel(String& regridMessage,
 		  const String& outframe,
 		  const String& regridQuant,
 		  const Double regridVeloRestfrq,
@@ -1089,32 +1081,12 @@ namespace casa {
     Int rval = -1; // return values: -1 = MS not modified, 1 = MS modified and OK, 
                    // 0 = MS modified but not OK 
 
-    // Determine the highest data_desc_id from the DATA_DESCRIPTION table (= number of rows).
-    MSDataDescription ddtable=ms_p.dataDescription();
-    Int origNumDataDescs = ddtable.nrow();
-    Int nextDataDescId = origNumDataDescs - 1;
-    Int numNewDataDesc = 0;
-
-    // Determine the highest spw_id in the SPW table
-    MSSpectralWindow spwtable=ms_p.spectralWindow();
-    Int origNumSPWs = spwtable.nrow();
-    Int nextSPWId = origNumSPWs - 1;
-    Int numNewSPWIds = 0;
-
-    // Determine the highest row number in the SOURCE table
-    Int nextSourceRow = -1;
-    Int numNewSourceRows = 0;
-    MSSource* p_sourcetable = NULL;
-    MSSourceColumns* p_sourceCol = NULL;
-    if(Table::isReadable(ms_p.sourceTableName())){
-      p_sourcetable = &(ms_p.source());
-      p_sourceCol = new MSSourceColumns(*p_sourcetable);
-      nextSourceRow = p_sourcetable->nrow() - 1;
-    }
-    else { // there is no source table
-      os << LogIO::NORMAL2 << "Note: MS contains no SOURCE table ..." << LogIO::POST;
-      nextSourceRow = -1;
-    }
+    // get the original table description of the MS 
+    TableDesc origMSTD(ms_p.actualTableDesc());
+    if(!origMSTD.isColumn("CORRECTED_DATA") &&  !origMSTD.isColumn("DATA") 
+       && !origMSTD.isColumn("FLOAT_DATA") && !origMSTD.isColumn("MODEL_DATA")){ 
+      os << LogIO::WARN << "MS has no DATA columns. Nothing to regrid." << LogIO::POST;
+    }	  
 
     // Set up a little database to keep track of which pairs (FieldId, SPWId) have already
     // been dealt with and what paramters were used
@@ -1122,12 +1094,7 @@ namespace casa {
     vector<Int> oldSpwId;
     vector<Int> oldFieldId;
     vector<Int> newDataDescId;
-    vector<Bool> trafoNonlin;
     vector<Bool> regrid;
-    vector<MFrequency::Types> oldRefFrame;
-    vector<MDirection> fieldDir;
-    vector<MEpoch> obsTime;
-    vector<MPosition> obsPos; 
     vector< Vector<Double> > xout; 
     vector< Vector<Double> > xin; 
     //    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
@@ -1135,605 +1102,415 @@ namespace casa {
     vector< InterpolateArray1D<Float,Complex>::InterpolationMethod > method;
     vector< InterpolateArray1D<Double,Float>::InterpolationMethod > methodF;
 
-    // administrational columns needed from the main table
+
+    Bool msModified = False;
+
+    // Loop 1: Verify the input parameters, no modification of the MS
+    if(!setRegridParameters(oldSpwId,
+			    oldFieldId,
+			    newDataDescId,
+			    regrid,
+			    xout, 
+			    xin, 
+			    method,
+			    methodF,
+			    msModified,
+			    outframe,
+			    regridQuant,
+			    regridVeloRestfrq,
+			    regridInterpMeth,
+			    regridCenter, 
+			    regridBandwidth, 
+			    regridChanWidth,
+			    False, // <-----
+			    os,
+			    regridMessage
+			    )){ // an error occured
+      return -1;
+    }
+
+    // Loop 2: Write modified DD, SPW, and SOURCE tables
+
+    if(!setRegridParameters(oldSpwId,
+			    oldFieldId,
+			    newDataDescId,
+			    regrid,
+			    xout, 
+			    xin, 
+			    method,
+			    methodF,
+			    msModified,
+			    outframe,
+			    regridQuant,
+			    regridVeloRestfrq,
+			    regridInterpMeth,
+			    regridCenter, 
+			    regridBandwidth, 
+			    regridChanWidth,
+			    True, // <-----
+			    os,
+			    regridMessage
+			    )){ // an error occured
+      if(msModified){
+	return 0;
+      }
+      else{
+	return -1;
+      }
+    }
+    
+    if(!msModified){ // nothing to be done
+      return -1;
+    }
+    
+    // now we need to modify the main table ...
+
+    Bool needRegridding = False;
+    for(uInt i=0; i<regrid.size(); i++){
+      if(regrid[i]){
+	needRegridding = True;
+      }
+    }
+
+    
+
+    if(needRegridding){
+
+      cout << "Main table data array columns will be rewritten." << endl;
+
+      // create the "partner" columns, i.e. rename the old array columns to old...
+      // and create new empty columns with the original names to hold the regridded values
+
+      IPosition tileShape = MSTileLayout::tileShape(IPosition(2,1,xout[0].size()));
+
+      createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShape);
+      createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShape);
+      createPartnerColumn(origMSTD, "FLOAT_DATA", "oldFLOAT_DATA", 3, tileShape);
+      createPartnerColumn(origMSTD, "IMAGING_WEIGHT", "oldIMAGING_WEIGHT", 3, tileShape);
+      createPartnerColumn(origMSTD, "LAG_DATA", "oldLAG_DATA", 3, tileShape);
+      createPartnerColumn(origMSTD, "MODEL_DATA", "oldMODEL_DATA", 3, tileShape);
+      createPartnerColumn(origMSTD, "SIGMA_SPECTRUM", "oldSIGMA_SPECTRUM", 3, tileShape);
+      createPartnerColumn(origMSTD, "WEIGHT_SPECTRUM", "oldWEIGHT_SPECTRUM", 3, tileShape);
+      createPartnerColumn(origMSTD, "FLAG", "oldFLAG", 3, tileShape);
+
+      createPartnerColumn(origMSTD, "FLAG_CATEGORY", "oldFLAG_CATEGORY", 4,
+			  IPosition(4,tileShape(0),tileShape(1),1, tileShape(2)));
+    }
 
     MSMainColumns mainCols(ms_p);
-    ScalarColumn<Int> fieldIdCol = mainCols.fieldId();
-    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
 
     // columns which depend on the number of frequency channels and may need to be regridded:
     // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
     // WEIGHT_SPECTRUM, FLAG, and FLAG_CATEGORY    
     ArrayColumn<Complex> CORRECTED_DATACol =  mainCols.correctedData();
+    ArrayColumn<Complex>*  oldCORRECTED_DATAColP;
     ArrayColumn<Complex>  DATACol =  mainCols.data();
+    ArrayColumn<Complex>*  oldDATAColP;
     ArrayColumn<Float> FLOAT_DATACol =  mainCols.floatData();
+    ArrayColumn<Float>*  oldFLOAT_DATAColP;
     ArrayColumn<Float> IMAGING_WEIGHTCol =  mainCols.imagingWeight();
+    ArrayColumn<Float>*  oldIMAGING_WEIGHTColP;
     ArrayColumn<Complex> LAG_DATACol =  mainCols.lagData();
+    ArrayColumn<Complex>*  oldLAG_DATAColP;
     ArrayColumn<Complex> MODEL_DATACol =  mainCols.modelData();
+    ArrayColumn<Complex>*  oldMODEL_DATAColP;
     ArrayColumn<Float> SIGMA_SPECTRUMCol =  mainCols.sigmaSpectrum();
+    ArrayColumn<Float>*  oldSIGMA_SPECTRUMColP;
     ArrayColumn<Float> WEIGHT_SPECTRUMCol =  mainCols.weightSpectrum();
+    ArrayColumn<Float>*  oldWEIGHT_SPECTRUMColP;
     ArrayColumn<Bool> FLAGCol =  mainCols.flag();
+    ArrayColumn<Bool>*  oldFLAGColP;
     ArrayColumn<Bool> FLAG_CATEGORYCol =  mainCols.flagCategory();
+    ArrayColumn<Bool>*  oldFLAG_CATEGORYColP;
 
-    // other administrational tables
+    if(needRegridding){
+      TableDesc modMSTD2(ms_p.actualTableDesc());
+      // (create column objects for all "partners" of the array columns to be modified)
+      if(!CORRECTED_DATACol.isNull()){
+	oldCORRECTED_DATAColP = new ArrayColumn<Complex>(ms_p, "oldCORRECTED_DATA");
+      }
+      if(!DATACol.isNull()){
+	oldDATAColP = new ArrayColumn<Complex>(ms_p, "oldDATA");
+      }
+      if(!FLOAT_DATACol.isNull()){
+	oldFLOAT_DATAColP = new ArrayColumn<Float>(ms_p, "oldFLOAT_DATA");
+      }
+      if(!IMAGING_WEIGHTCol.isNull()){
+      oldIMAGING_WEIGHTColP = new ArrayColumn<Float>(ms_p, "oldIMAGING_WEIGHT");
+      }
+      if(!LAG_DATACol.isNull()){
+	oldLAG_DATAColP = new ArrayColumn<Complex>(ms_p, "oldLAG_DATA");
+      }
+      if(!MODEL_DATACol.isNull()){
+	oldMODEL_DATAColP = new ArrayColumn<Complex>(ms_p, "oldMODEL_DATA");
+      }
+      if(!SIGMA_SPECTRUMCol.isNull()){
+	oldSIGMA_SPECTRUMColP = new ArrayColumn<Float>(ms_p, "oldSIGMA_SPECTRUM");
+      }
+      if(!WEIGHT_SPECTRUMCol.isNull()){
+	oldWEIGHT_SPECTRUMColP = new ArrayColumn<Float>(ms_p, "oldWEIGHT_SPECTRUM");
+      }
+      if(!FLAGCol.isNull()){
+	oldFLAGColP = new ArrayColumn<Bool>(ms_p, "oldFLAG"); 
+      }
+      if(!FLAG_CATEGORYCol.isNull()){
+	oldFLAG_CATEGORYColP = new ArrayColumn<Bool>(ms_p, "oldFLAG_CATEGORY");
+      }
+    } // end if needRegridding
 
+    // administrational columns needed from the main table
+    ScalarColumn<Int> fieldIdCol = mainCols.fieldId();
+    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
+    
+    // columns needed from subtables
+    MSDataDescription ddtable=ms_p.dataDescription();
     MSDataDescColumns DDCols(ddtable);
     ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId(); 
-
-    MSSpWindowColumns SPWCols(spwtable);
-    ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
-    ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
-    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
-    ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
-    ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
-    ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
-    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
-    ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
-    ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
-
-    MSField fieldtable = ms_p.field();
-    MSFieldColumns FIELDCols(fieldtable);
-    //ArrayMeasColumn<MDirection> referenceDirMeasCol = FIELDCols.referenceDirMeasCol(); 
-    ScalarMeasColumn<MEpoch>& timeMeasCol = FIELDCols.timeMeas();
-    ScalarColumn<Int> FIELDsourceIdCol = FIELDCols.sourceId(); 
-
-    // calculate mean antenna position for TOPO transformation
-    MSAntenna anttable = ms_p.antenna();
-    ROMSAntennaColumns ANTCols(anttable);
-    ROScalarMeasColumn<MPosition> ANTPositionMeasCol = ANTCols.positionMeas(); 
-    ROScalarColumn<Bool> ANTflagRowCol = ANTCols.flagRow();
-    Int nAnt = 0;
-    Vector<Double> pos(3); pos=0;
-    for (uInt i=0; i<anttable.nrow(); i++) {
-      if(!ANTflagRowCol(i)){
-	pos+=ANTPositionMeasCol(i).getValue().get();
-	nAnt++;
-      }
-    }
-    if(nAnt>0){
-      pos/=Double(nAnt);
-    }
-    else {
-      os << LogIO::WARN << "No unflagged antennas in this MS. Cannot proceed with cvel ..." 
-	 << LogIO::POST;
-      return rval; 
-    }
-    MPosition mObsPos = ANTPositionMeasCol(0); // transfer reference frame
-    mObsPos.set(MVPosition(pos)); // set coordinates
-
- 
-    //  The transformation is performed by looping over all MAIN table rows
-
-    Bool msModified = False;
-
+    
+    // Loop 3: Apply to MAIN table rows
+    
+    cout << "Modifying main table ..." << endl;
+    
     for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+      
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
       Int theFieldId = fieldIdCol(mainTabRow);
       Int theDataDescId = DDIdCol(mainTabRow);
       // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
-      Int theSPWId = -2;
-      if (theDataDescId < origNumDataDescs){
-	theSPWId = SPWIdCol(theDataDescId);
-      }
-      else {
-	os << LogIO::SEVERE << "Incoherent MS: Found at main table row " << mainTabRow
-	   << " reference to non-existing DATA_DESCRIPTION table entry << ..." << theDataDescId
-	   << LogIO::POST;
-	if(msModified){
-	  rval = 0;
-	}
-	return rval;
-      }
-
-      // variables saying what has to be done for this row
-      Bool needTransform = False;
-      Bool doRegrid = False;
-      Bool isNonLin = False;
-
+      Int theSPWId = SPWIdCol(theDataDescId);
+      
       //  The pair (theFieldId, theSPWId) is looked up in the "done table". 
-      Bool alreadyDone = False;
       Int iDone = -1;
       for (uInt i=0; i<oldSpwId.size(); i++){
 	if(oldSpwId[i]==theSPWId && oldFieldId[i]==theFieldId){
-	  alreadyDone = True;
 	  iDone = i;
+	  break;
 	}
       }
+      if(iDone<0){ // should not occur
+	os << LogIO::SEVERE << "Internal error: Did not find regrid parameters for field ==" 
+	   << theFieldId << " spw ==" <<  theSPWId << LogIO::POST;
+	return 0;
+      }
       
-      if(!alreadyDone){ // this (theFieldId, theSPWId) pair was not yet encountered 
-
-	// Determine information for new row in "done" table
-	//   The information necessary for the transformation is extracted:  
-	//   1) center frequency of each channel (taken from the CHAN_FREQ cell corresponding to
-	//     theSPWId in the SPW table)
-	Vector<Double> newXin;
-	newXin.assign(chanFreqCol(theSPWId));
-	//      -> store in  xin (further below)
-	//   2) reference frame for these frequencies (taken from the MEAS_FREQ_REF cell 
-        //      corresponding to theSPWId in the SPW table)
-//	IPosition ipfirst(1,0);
-//	MFrequency mcf = chanFreqMeasCol(theSPWId)(ipfirst);
-//	MFrequency::Types theOldRefFrame = MFrequency::castType(mcf.myType());
-	MFrequency::Types theOldRefFrame = MFrequency::castType(measFreqRefCol(theSPWId));
-	//      -> store in oldRefFrame[numNewDataDesc] (further below)
-	//   3) direction of the field (taken from the REFERENCE_DIR cell corresponding to 
-        //      theFieldId in the FIELD table)
-	MDirection theFieldDir =  FIELDCols.referenceDirMeas(theFieldId); 
-	//      -> store in fieldDir[numNewDataDesc] (further below)
-	//   4) in case either the original or the destination reference frame is TOPO or GEO, 
-        //      we need the observation time
-	//      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
-	MEpoch theObsTime = timeMeasCol(theFieldId);
-	//      -> store in obsTime[numNewDataDesc] (further below)
-	//   5) in case either the original or the destination reference frame (but not both) 
-        //      are TOPO, we need the observatory position
-	//      (from the mean antenna position calculated above) 
-	//      -> store in obsPos[numNewDataDesc] (further below)
-
-	// Determine if a reference frame transformation is necessary
-	// Bool 	getType (MFrequency::Types &tp, const String &in)
-	needTransform = True;
-	MFrequency::Types theFrame;
-	if(outframe==""){ // no ref frame given 
-	  // keep the reference frame as is
-	  theFrame = theOldRefFrame;
-	  needTransform = False;
-	}
-	else if(!MFrequency::getType(theFrame, outframe)){
-	  os << LogIO::SEVERE << "Parameter \"outframe\" value " << outframe << " is invalid." 
-	     << LogIO::POST;
-	  if(msModified){
-	    rval = 0; // should not occur
-	  }
-	  return rval;
-	}
-
-	// Perform the pure frequency transformation (no regridding yet)
-	Vector<Double> transNewXin;
-	// also take care of the other parameters of the spectral window
-	Int oldNUM_CHAN = numChanCol(theSPWId); 
-	Vector<Double> oldCHAN_WIDTH = chanWidthCol(theSPWId);
-	MFrequency oldREF_FREQUENCY = refFrequencyMeasCol(theSPWId);
-	Double oldTOTAL_BANDWIDTH = totalBandwidthCol(theSPWId);
-	Vector<Double> oldEFFECTIVE_BW = effectiveBWCol(theSPWId);   
-	Vector<Double> oldRESOLUTION = resolutionCol(theSPWId);
-
-	// storage for values with pure freq trafo applied
-	Vector<Double> transCHAN_WIDTH(oldNUM_CHAN);
-	MFrequency transREF_FREQUENCY;
-	Double transTOTAL_BANDWIDTH;
-	Vector<Double> transRESOLUTION(oldNUM_CHAN);;
-
-	if(needTransform){
-	  // set up conversion
-	  MFrequency::Ref fromFrame;
-	  if(theOldRefFrame == MFrequency::TOPO){ 
-	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
-	  }
-	  else if(theOldRefFrame == MFrequency::GEO){ 
-	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos));
-	  }
-	  else {
-	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir));
-	  }
-
-	  MFrequency::Ref toFrame;
-	  if(theFrame == MFrequency::TOPO){ 
-	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
-	  }
-	  else if(theFrame == MFrequency::GEO){ 
-	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos));
-	  }
-	  else {
-	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir));
-	  }
-	  Unit unit(String("Hz"));
-	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
-
-	  for(Int i=0; i<oldNUM_CHAN; i++){
-	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
-	    transCHAN_WIDTH[i] =  freqTrans(newXin[i]+oldCHAN_WIDTH[i]/2.).get(unit).getValue()
-	      - freqTrans(newXin[i]-oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
-	    transRESOLUTION[i] = freqTrans(newXin[i]+oldRESOLUTION[i]/2.).get(unit).getValue() 
-	      - freqTrans(newXin[i]-oldRESOLUTION[i]/2.).get(unit).getValue(); // eliminate possible offsets
-	  }
-	  transREF_FREQUENCY = freqTrans(oldREF_FREQUENCY);
-	  transTOTAL_BANDWIDTH = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]
-	    -  transNewXin[0]+transCHAN_WIDTH[0];
-	}
-	else {
-	  // just copy
-	  transNewXin.assign(newXin);
-	  transCHAN_WIDTH.assign(oldCHAN_WIDTH);
-	  transRESOLUTION.assign(oldRESOLUTION);
-	  transREF_FREQUENCY = oldREF_FREQUENCY;
-	  transTOTAL_BANDWIDTH = oldTOTAL_BANDWIDTH;
-	}
-
-	// (reference frame transformation completed)
-
-	// Determine if regridding is necessary and set the parameters
-        // (at the same time, determine if the transformation is non-linear. If so set trafoNonlin (further below).)
-
-	// storage for values with complete freq trafo + regridding applied
-	// (set to default values for the case of no regridding)
-	Vector<Double> newXout(transNewXin);
-	Int newNUM_CHAN = oldNUM_CHAN;
-	Vector<Double> newCHAN_WIDTH(transCHAN_WIDTH);
-	MFrequency newREF_FREQUENCY = transREF_FREQUENCY;
-	Vector<Double> newRESOLUTION(transRESOLUTION);
-	Double newTOTAL_BANDWIDTH = transTOTAL_BANDWIDTH;
-	Vector<Double> newEFFECTIVE_BW(oldEFFECTIVE_BW);
-
-	//	InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
-	// This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	InterpolateArray1D<Float,Complex>::InterpolationMethod theMethod;
-	InterpolateArray1D<Double,Float>::InterpolationMethod theMethodF;
-
-	string regridMessage;
-
-	if(regridQuant==""){
-	  // No regridding will take place.
-	  // Set the interpol methods to some dummy value
-	  //	  theMethod = InterpolateArray1D<Double,Complex>::nearestNeighbour;
-	  // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	  theMethod = InterpolateArray1D<Float,Complex>::nearestNeighbour;
-	  theMethodF = InterpolateArray1D<Double,Float>::nearestNeighbour;
-	}
-	else { // a regrid quantity was chosen
-	  // determine interpolation method (this is common for all possible values of regridQuant)
-	  String meth=regridInterpMeth;
-	  meth.downcase();
-	  if(meth.contains("linear")){
-	    //	    theMethod = InterpolateArray1D<Double,Complex>::linear;
-	    // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	    theMethod = InterpolateArray1D<Float,Complex>::linear;
-	    theMethodF = InterpolateArray1D<Double,Float>::linear;
-	  }
-	  else if(meth.contains("splin")){
-	    //	    theMethod = InterpolateArray1D<Double,Complex>::spline;
-	    theMethod = InterpolateArray1D<Float,Complex>::spline;
-	    theMethodF = InterpolateArray1D<Double,Float>::spline;
-	  }	    
-	  else if(meth.contains("cub")){
-	    //	    theMethod = InterpolateArray1D<Double,Complex>::cubic;
-	    theMethod = InterpolateArray1D<Float,Complex>::cubic;
-	    theMethodF = InterpolateArray1D<Double,Float>::cubic;
-	  }
-	  else {
-	    if(!meth.contains("near")){
-	      os << LogIO::WARN << "Parameter \"regrid_interp_meth\" value " << meth << " is invalid. Will use NEAR ..." 
-		 << LogIO::POST;
-	    }
-	    // 
-	    // theMethod = InterpolateArray1D<Double,Complex>::nearestNeighbour;
-	    // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	    theMethod = InterpolateArray1D<Float,Complex>::nearestNeighbour;
-	    theMethodF = InterpolateArray1D<Double,Float>::nearestNeighbour;
-	  }
-
-	  Vector<Double> newChanLoBound; 
-	  Vector<Double> newChanHiBound;
-
-	  if(!regridChanBounds(newChanLoBound, 
-			       newChanHiBound,
-			       regridCenter,  
-			       regridBandwidth, 
-			       regridChanWidth, 
-			       regridVeloRestfrq,
-			       regridQuant,
-			       transNewXin, 
-			       transCHAN_WIDTH,
-			       regridMessage
-			       )
-	     ){ // there was an error
-	    os << LogIO::SEVERE << regridMessage << LogIO::POST;
-	    if(msModified){
-	      rval = 0; 
-	    }
-	    return rval;
-	  }
-	  
-	  // we have a useful set of channel boundaries
-	  newNUM_CHAN = newChanLoBound.size();
-	  
-	  os << LogIO::NORMAL << "Regridded spectral window " << nextSPWId << " will be created with parameters " 
-	     << regridMessage << LogIO::POST;
-	  
-	  // complete the calculation of the new spectral window parameters
-	  // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
-	  newXout.resize(newNUM_CHAN);
-	  newCHAN_WIDTH.resize(newNUM_CHAN);
-	  for(Int i=0; i<newNUM_CHAN; i++){
-	    newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
-	    newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
-	    newRESOLUTION[i] = newCHAN_WIDTH[i]; //???????????
-	  }
-	  // set the reference frequency to the lower edge of the new spw, keeping the already changed frame 
-	  MVFrequency mvf(newChanLoBound[0]);
-	  newREF_FREQUENCY.set(mvf);
-	  
-	  // trivial definition of the bandwidth
-	  newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
-	  
-	  // effective bandwidth needs to be interpolated in quadrature
-	  newEFFECTIVE_BW.resize(newNUM_CHAN);
-	  Vector<Double> newEffBWSquared(newNUM_CHAN);
-	  Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
-	  for(Int i=0; i<oldNUM_CHAN; i++){
-	    oldEffBWSquared[i] *= oldEffBWSquared[i];
-	  }
-	  InterpolateArray1D<Double, Double>::interpolate(newEffBWSquared, newXout, transNewXin, 
-							  oldEffBWSquared, InterpolateArray1D<Double,Double>::linear);
-	  for(Int i=0; i<newNUM_CHAN; i++){
-	    newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
-	  }
-
-	  if(!allEQ(newXout, transNewXin)){ // grids are different
-	    doRegrid = True;
-	  }
-
-	} // end if (regridQuant=="") 
-
-	if(needTransform || doRegrid){ // new SPW table row needs to be created
       
-	  // Create new row in the SPW table (with ID nextSPWId) by copying all information from row theSPWId 
-	  if(!spwtable.canAddRow()){
-	    os << LogIO::WARN << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with cvel ..." 
-	       << LogIO::POST;
-	    if(msModified){
-	      rval = 0;
-	    }
-	    return rval; 
-	  }
-	  numNewSPWIds++;
-	  nextSPWId++;
-	  spwtable.addRow();
-	  TableRow SPWRow(spwtable);
-	  TableRecord spwRecord = SPWRow.get(theSPWId);
-	  // TODO       Tell the user that a regridding is taking place!
-	  //            Warn if the original channels are not contiguous or overlap!
-	  SPWRow.putMatchingFields(nextSPWId, spwRecord);
-
-	  // and replacing the following columns with updated information:
-	  // a) MEAS_FREQ_REF - replace by new reference frame code
-	  measFreqRefCol.put(nextSPWId, (Int)theFrame);
-	  // b) Store xout as new value of CHAN_FREQ.
-	  chanFreqCol.put(nextSPWId, newXout);
-	  //   c) also write the other new values 
-	  numChanCol.put(nextSPWId, newNUM_CHAN);
-	  chanWidthCol.put(nextSPWId,  newCHAN_WIDTH);
-	  refFrequencyMeasCol.put(nextSPWId, newREF_FREQUENCY);
-	  totalBandwidthCol.put(nextSPWId, newTOTAL_BANDWIDTH);
-	  effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
-	  resolutionCol.put(theSPWId, newRESOLUTION);
-
-	  msModified = True;
-	  	
-	  //   Create a new row in the DATA_DESCRIPTION table and enter nextSPWId in the SPW_ID column, 
-          //   copy the polarization id and the flag_row content from the old  DATA_DESCRIPTION row.
-	  if(!ddtable.canAddRow()){
-	    os << LogIO::WARN << "Unable to add new row to DATA_DESCRIPTION table. Cannot proceed with cvel ..." 
-	       << LogIO::POST;
-	    return 0; 
-	  }
-	  numNewDataDesc++;
-	  nextDataDescId++;
-	  ddtable.addRow();
-	  TableRow DDRow(ddtable);
-	  TableRecord DDRecord = DDRow.get(theDataDescId);
-	  DDRow.putMatchingFields(nextDataDescId, DDRecord);
-	  SPWIdCol.put(nextDataDescId, nextSPWId);
-  
-	  //   Write the value of nextDataDescId into the DATA_DESC_ID cell of the present MAIN table row.
-	  DDIdCol.put(mainTabRow, nextDataDescId);
-	  
-	  // Add a row to the SOURCE table by copying the contents from the row identified by the SOURCE_ID cell in the row theFieldId
-	  // from the FIELD table. Set the value of the cell SPECTRAL_WINDOW_ID in this new row to the value nextSPWId column.
-	  if(nextSourceRow>=0){ // there is a source table
-	    if(!p_sourcetable->canAddRow()){
-	      os << LogIO::WARN << "Unable to add new row to SOURCE table. Cannot proceed with cvel ..." 
-		 << LogIO::POST;
-	      return 0; 
-	    }
-	    numNewSourceRows++;
-	    nextSourceRow++;
-	    // find the row in the SOURCE table which has SOURCE_ID==theSOURCEId and SPW_ID==theSPWId
-	    Int theSOURCEId = FIELDsourceIdCol(theFieldId);
-	    ScalarColumn<Int> SOURCEsourceIdCol = p_sourceCol->sourceId();
-	    ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
-	    Int foundRow = -1;
-	    for(int i=0; i<nextSourceRow; i++){
-	      if(SOURCEsourceIdCol(i) == theSOURCEId && SOURCESPWIdCol(i)==theSPWId){
-		foundRow = i;
-		break;
-	      }
-	    }
-	    if(foundRow<0){ 
-	      	os << LogIO::SEVERE << "Incoherent MS: Did not find SOURCE table entry with SOURCE_ID == " 
-		   << theSOURCEId << " and  SPECTRAL_WINDOW_ID == " << theSPWId << endl
-		   <<" even though the FIELD and the DATA_DESCRIPTION table entries for main table row " 
-		   << mainTabRow << " refer to it." 
-		   << LogIO::POST;
-		return 0;
-	    }
-	    else { // found matching row
-	      p_sourcetable->addRow();
-	      TableRow SOURCERow(*p_sourcetable);
-	      TableRecord SOURCERecord = SOURCERow.get(foundRow);
-	      SOURCERow.putMatchingFields(nextSourceRow, DDRecord);
-	      SOURCESPWIdCol.put(nextSourceRow, nextSPWId);
-	    }
-	    
-	  } // end if there is a source table
-
-	  theDataDescId = nextDataDescId;
-
-	} // end if(needTransform || doRegrid)
-
-	//Put a new row into the "done" table.
-	// (do all the push_backs in one place)
-	newDataDescId.push_back(theDataDescId);
-	oldSpwId.push_back(theSPWId);
-	oldFieldId.push_back(theFieldId);
-	xin.push_back(transNewXin);
-	xout.push_back(newXout);
-	oldRefFrame.push_back(theOldRefFrame);
-	fieldDir.push_back(theFieldDir);
-	obsTime.push_back(theObsTime);
-	obsPos.push_back(mObsPos);
-	method.push_back(theMethod);
-	methodF.push_back(theMethodF);
-	regrid.push_back(doRegrid);
-	trafoNonlin.push_back(isNonLin);
-	
-	// and set iDone to the new index
-	iDone = xin.size() - 1;
-	
-      } // end if(!alreadyDone)
-      // reference frame transformation and regridding of channel definition completed
-      ////////////////////
-
       if (DDIdCol(mainTabRow)!=newDataDescId[iDone]){
-      // If the data description actually changed, then DATA_DESC_ID 
-      //	of this main table row is set to the new value given in the "done" table
+	// If the data description actually changed, then DATA_DESC_ID 
+	//	of this main table row is set to the new value given in the "done" table
 	DDIdCol.put(mainTabRow, newDataDescId[iDone]);
-
+	
       }
-
+      
       //Furthermore, if regrid[iDone] is true, the visibilities and all 
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 	// regrid the complex columns
 	Array<Complex> yout;
 	Array<Bool> youtFlags;
+	Bool youtFlagsWritten(False);
 	Array<Complex> yin;
-	Array<Bool> yinFlags(FLAGCol(mainTabRow));
-
+	Array<Bool> yinFlags((*oldFLAGColP)(mainTabRow));
+	
 	// Note: to use a  Vector<Float> here instead of the original Vector<Double>
 	// is a temporary fix until InterpolateArray1D<Double, Complex> works.
 	Vector<Float> xinff(xin[iDone].size());
 	Vector<Float> xoutff(xout[iDone].size());
-	for(Int i=0; i<xin[iDone].size(); i++){
+	for(uInt i=0; i<xin[iDone].size(); i++){
 	  xinff[i] = xin[iDone][i];
 	}
-	for(Int i=0; i<xout[iDone].size(); i++){
+	for(uInt i=0; i<xout[iDone].size(); i++){
 	  xoutff[i] = xout[iDone][i];
 	}
-
+	
 	if(!CORRECTED_DATACol.isNull()){
-	  yin.assign(CORRECTED_DATACol(mainTabRow));
+	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, // the new visibilities
-							   youtFlags, // the new flags
-							   xoutff, // the new channel centers
-							   xinff, // the old channel centers
-							   yin, // the old visibilities 
-							   yinFlags,// the old flags
-							   method[iDone], // the interpol method
-							   False, // for flagging: good is not true
-							   False // do not extrapolate
-							   );
+							  youtFlags, // the new flags
+							  xoutff, // the new channel centers
+							  xinff, // the old channel centers
+							  yin, // the old visibilities 
+							  yinFlags,// the old flags
+							  method[iDone], // the interpol method
+							  False, // for flagging: good is not true
+							  False // do not extrapolate
+							  );
 	  CORRECTED_DATACol.put(mainTabRow, yout);
+	  if(!youtFlagsWritten){ 
+	    FLAGCol.put(mainTabRow, youtFlags);
+	    youtFlagsWritten = True;
+	  }
 	}
 	if(!DATACol.isNull()){
-	  yin.assign(DATACol(mainTabRow));
+	  yin.assign((*oldDATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							   yin, yinFlags, method[iDone], False, False);
-	  
+							  yin, yinFlags, method[iDone], False, False);
 	  DATACol.put(mainTabRow, yout);
+	  if(!youtFlagsWritten){ 
+	    FLAGCol.put(mainTabRow, youtFlags);
+	    youtFlagsWritten = True;
+	  }	  
 	}
 	if(!LAG_DATACol.isNull()){
-	  yin.assign(LAG_DATACol(mainTabRow));
+	  yin.assign((*oldLAG_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							   yin, yinFlags, method[iDone], False, False);
-	  
+							  yin, yinFlags, method[iDone], False, False);
 	  LAG_DATACol.put(mainTabRow, yout);
 	}
 	if(!MODEL_DATACol.isNull()){
-	  yin.assign(MODEL_DATACol(mainTabRow));
+	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							   yin, yinFlags, method[iDone], False, False);
-	  
+							  yin, yinFlags, method[iDone], False, False);
 	  MODEL_DATACol.put(mainTabRow, yout);
+	  if(!youtFlagsWritten){ 
+	    FLAGCol.put(mainTabRow, youtFlags);
+	    youtFlagsWritten = True;
+	  }
 	}
-	if(youtFlags.size()>0){ // one of the above columns should have been non-empty and filled youtFlags
-	  FLAGCol.put(mainTabRow, youtFlags);
-	}
-
+	
 	// regrid the Float columns
 	Array<Float> yinf;
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
-	  yinf.assign(FLOAT_DATACol(mainTabRow));
+	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
 							 yinf, yinFlags, methodF[iDone], False, False);
-	  
 	  FLOAT_DATACol.put(mainTabRow, youtf);
+	  if(!youtFlagsWritten){ 
+	    FLAGCol.put(mainTabRow, youtFlags);
+	    youtFlagsWritten = True;
+	  }
 	}
 	if(!IMAGING_WEIGHTCol.isNull()){
-	  yinf.assign(IMAGING_WEIGHTCol(mainTabRow));
+	  yinf.assign((*oldIMAGING_WEIGHTColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
 							 yinf, yinFlags, methodF[iDone], False, False);
-	  
 	  IMAGING_WEIGHTCol.put(mainTabRow, youtf);
 	}
 	if(!SIGMA_SPECTRUMCol.isNull()){
-	  yinf.assign(SIGMA_SPECTRUMCol(mainTabRow));
+	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
 							 yinf, yinFlags, methodF[iDone], False, False);
-	  
 	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf);
 	}
 	if(!WEIGHT_SPECTRUMCol.isNull()){
-	  yinf.assign(WEIGHT_SPECTRUMCol(mainTabRow));
+	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
 							 yinf, yinFlags, methodF[iDone], False, False);
-	  
 	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf);
 	}
 	
 	// deal with FLAG_CATEGORY
-	Array<Bool> flagCat(FLAG_CATEGORYCol(mainTabRow));  // note: FLAG_CATEGORY is a required column
-	IPosition flagCatShape = flagCat.shape();
-	Int nCorrelators = flagCatShape(0); // get the dimension of the first axis
-	Int nChannels = flagCatShape(1); // get the dimension of the second axis
-	Int nCat = flagCatShape(2); // the dimension of the third axis == number of categories
-	Int nOutChannels = xout[iDone].size();
-
-	Vector<Float> dummyYin(nChannels);
-	Vector<Float> dummyYout(nOutChannels);
-	Array<Bool> flagCatOut(IPosition(3, nCorrelators, nOutChannels, nCat)); 
- 
-	for(Int i=0; i<nCat; i++){
-	  IPosition start(0,0,i), length (nCorrelators,nChannels,i), stride (1,1,0);
-	  Slicer slicer (start, length, stride, Slicer::endIsLast);
-	  yinFlags.assign(flagCat(slicer));
-	  InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags, xout[iDone], xin[iDone], 
-							 dummyYin, yinFlags, methodF[iDone], False, False);
-	  // write the slice to the array flagCatOut
-	  for(Int j=0; j<nCorrelators; j++){
-	    for(Int k=0; k<nOutChannels; k++){
-	      flagCatOut(IPosition(3, j, k, i)) = youtFlags(IPosition(2,j,k));
+	// note: FLAG_CATEGORY is a required column, but it can be undefined (empty)
+	
+	if(FLAG_CATEGORYCol.isDefined(mainTabRow)){
+	  Array<Bool> flagCat((*oldFLAG_CATEGORYColP)(mainTabRow));  
+	  IPosition flagCatShape = (*oldFLAG_CATEGORYColP).shape(mainTabRow);
+	  Int nCorrelators = flagCatShape(0); // get the dimension of the first axis
+	  Int nChannels = flagCatShape(1); // get the dimension of the second axis
+	  Int nCat = flagCatShape(2); // the dimension of the third axis == number of categories
+	  Int nOutChannels = xout[iDone].size();
+	  
+	  Vector<Float> dummyYin(nChannels);
+	  Vector<Float> dummyYout(nOutChannels);
+	  Array<Bool> flagCatOut(IPosition(3, nCorrelators, nOutChannels, nCat)); 
+	  
+	  for(Int i=0; i<nCat; i++){
+	    IPosition start(0,0,i), length (nCorrelators,nChannels,i), stride (1,1,0);
+	    Slicer slicer (start, length, stride, Slicer::endIsLast);
+	    yinFlags.assign(flagCat(slicer));
+	    InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags, xout[iDone], xin[iDone], 
+							   dummyYin, yinFlags, methodF[iDone], False, False);
+	    // write the slice to the array flagCatOut
+	    for(Int j=0; j<nCorrelators; j++){
+	      for(Int k=0; k<nOutChannels; k++){
+		flagCatOut(IPosition(3, j, k, i)) = youtFlags(IPosition(2,j,k));
+	      }
 	    }
 	  }
+	  
+	  FLAG_CATEGORYCol.put(mainTabRow, flagCatOut);
+	  
 	}
-
-	FLAG_CATEGORYCol.put(mainTabRow, flagCatOut);
-
+	
 	msModified = True;
-
+	
       } // end if regridding necessary
-
+      
     } // end loop over main table rows
 
     if(msModified){
-      os << LogIO::NORMAL << "Added " << numNewDataDesc << " rows to the DATA_DESCRIPTION table," << endl
-	 << numNewSPWIds << " rows to the SPECTRAL_WINDOW table, and " << endl 
-	 << numNewSourceRows << " rows to the SOURCE table." <<  LogIO::POST;
+      if(needRegridding){
+
+	// remove the "partner" columns
+	// rename hypercolumns
+	if(!CORRECTED_DATACol.isNull()){
+	  ms_p.removeColumn("oldCORRECTED_DATA");
+	}
+	if(!DATACol.isNull()){
+	  ms_p.removeColumn("oldDATA");
+	}
+	if(!FLOAT_DATACol.isNull()){
+	  ms_p.removeColumn("oldFLOAT_DATA");
+	}
+	if(!IMAGING_WEIGHTCol.isNull()){
+	  ms_p.removeColumn("oldIMAGING_WEIGHT");
+	}
+	if(!LAG_DATACol.isNull()){
+	  ms_p.removeColumn("oldLAG_DATA");
+	}
+	if(!MODEL_DATACol.isNull()){
+	  ms_p.removeColumn("oldMODEL_DATA");
+	}
+	if(!SIGMA_SPECTRUMCol.isNull()){
+	  ms_p.removeColumn("oldSIGMA_SPECTRUM");
+	}
+	if(!WEIGHT_SPECTRUMCol.isNull()){
+	  ms_p.removeColumn("oldWEIGHT_SPECTRUM");
+	}
+	if(!FLAGCol.isNull()){
+	  ms_p.removeColumn("oldFLAG");
+	} 
+	if(!FLAG_CATEGORYCol.isNull()){
+	  ms_p.removeColumn("oldFLAG_CATEGORY");
+	}
+      }
+
+      ms_p.flush();
       rval = 1; // successful modification
     }
     return rval;
 
+  }
+
+
+  Bool SubMS::createPartnerColumn(TableDesc& modMSTD,
+				  const String& oldName, 
+				  const String& newName,
+				  const Int& hypercolumnDim,
+				  const IPosition& tileShape
+				  ){
+    Bool rval = False;
+    if(modMSTD.isColumn(oldName)){
+      // get the old column desc
+      ColumnDesc myColDesc(modMSTD.columnDesc(oldName));
+      // move the column away
+      ms_p.renameColumn(newName, oldName);
+      // rename the hypercolumn
+      String hcName(myColDesc.dataManagerGroup());
+      String oldHcName = hcName;
+      String newHcName = hcName + "B";
+      ms_p.renameHypercolumn(newHcName, oldHcName);
+      // rename the datamanager
+      DataManager* myDM = ms_p.findDataManager(oldHcName);
+      ((TiledStMan*) myDM)->setDataManagerName(newHcName);
+      // create new hypercolumn and a new column with new data manager
+      TiledShapeStMan*  tiledStMan = new TiledShapeStMan(oldHcName, tileShape);
+      ms_p.addColumn(myColDesc, *tiledStMan);
+      modMSTD.defineHypercolumn(oldHcName, hypercolumnDim, stringToVector(oldName));
+
+      rval = True;
+    }
+    return rval;
   }
 
 
@@ -1746,7 +1523,7 @@ namespace casa {
 			       const String regridQuant,
 			       const Vector<Double>& transNewXin, 
 			       const Vector<Double>& transCHAN_WIDTH,
-			       string& message
+			       String& message
 			       ){
     ostringstream oss;
 
@@ -1761,7 +1538,7 @@ namespace casa {
       Int regridBandwidthChan = -1;
       Int regridChanWidthChan = -1;
 
-      if(regridCenter<-1E99){ // not set
+      if(regridCenter<-1E30){ // not set
 	// find channel center closest to center of bandwidth
 	Double BWCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	for(Int i=0; i<oldNUM_CHAN; i++){
@@ -1787,70 +1564,103 @@ namespace casa {
       else{
 	regridBandwidthChan = (Int) floor(regridBandwidth);
       }
-      if(regridCenterChan-regridBandwidthChan/2 < 0) { // center too close to lower edge
-	regridBandwidthChan = 2 * regridCenterChan;
-      }
-      if( oldNUM_CHAN-1 < regridCenterChan+regridBandwidthChan/2){  // center to close to upper edge
-	regridBandwidthChan = 2*(oldNUM_CHAN-1 - regridCenterChan);
-      } 
-      if(regridBandwidthChan != floor(regridBandwidth)){
-	oss << "Adjusted output bandwidth to " << regridBandwidthChan << " original channels." << endl;
-      } 
 
+      if(regridCenterChan-regridBandwidthChan/2 < 0) { // center too close to lower edge
+	regridBandwidthChan = 2 * regridCenterChan + 1;
+      }
+      if( oldNUM_CHAN < regridCenterChan+regridBandwidthChan/2){  // center too close to upper edge
+	regridBandwidthChan = 2*(oldNUM_CHAN - regridCenterChan);
+      } 
+      
       if(regridChanWidth < 1.){
 	regridChanWidthChan = 1;
       }
       else if(regridChanWidth > Double(regridBandwidthChan)){
 	regridChanWidthChan = regridBandwidthChan; // i.e. SPW = a single channel
-	oss << "Adjusted output channel width to " << regridChanWidthChan << " original channels, the total bandwidth." << endl;
       }
       else { // valid input
 	regridChanWidthChan = (Int) floor(regridChanWidth);
       }
       
+      if(regridBandwidthChan != floor(regridBandwidth)){
+	oss << " Adjusted output bandwidth to " << regridBandwidthChan << " original channels." << endl;
+      } 
+      
       // calculate newChanLoBound and newChanHiBound from regridCenterChan, regridBandwidthChan, and regridChanWidthChan
-      Int bwLowerEndChan = regridCenterChan-regridBandwidthChan/2;
-      Int bwUpperEndChan = regridCenterChan+regridBandwidthChan/2;
-      // Need to accomodate the possibility that the original channels are not contiguous!
-      vector<Int> loNCBup; // the numbers of the Channels from which the lower bounds will be taken for the new channels 
-                           // starting from the central channel going up
-      vector<Int> hiNCBup; // the numbers of the Channels from which the high bounds will be taken for the new channels 
-                           // starting from the central channel going up
-      vector<Int> loNCBdown; // the numbers of the Channels from which the lower bounds will be taken for the new channels 
-                           // starting from the central channel going down
-      vector<Int> hiNCBdown; // the numbers of the Channels from which the high bounds will be taken for the new channels 
-                           // starting from the central channel going down
-      for(Int i=regridCenterChan; i<=bwUpperEndChan; i+=regridChanWidthChan-1){ // upper half
-	loNCBup.push_back(i);
-	if(i+regridChanWidthChan-1<=bwUpperEndChan){ // can go one more normal step up
-	  hiNCBup.push_back(i+regridChanWidthChan-1);
+      Int bwLowerEndChan = regridCenterChan - regridBandwidthChan/2;
+      Int bwUpperEndChan = bwLowerEndChan + regridBandwidthChan - 1;
+      Int numNewChanDown = 0;
+      Int numNewChanUp = 0;
+      
+      if(regridChanWidthChan == regridBandwidthChan){ // only one new channel
+	newChanLoBound.resize(1);
+	newChanHiBound.resize(1);
+	newChanLoBound[0] = transNewXin[bwLowerEndChan]-transCHAN_WIDTH[bwLowerEndChan]/2.;
+	newChanHiBound[0] = transNewXin[bwUpperEndChan]+transCHAN_WIDTH[bwUpperEndChan]/2.;
+	numNewChanUp = 1;
+      }
+      else { // have more than one new channel
+	// Need to accomodate the possibility that the original channels are not contiguous!
+	vector<Int> loNCBup; // the numbers of the Channels from which the lower bounds will be taken for the new channels 
+	// starting from the central channel going up
+	vector<Int> hiNCBup; // the numbers of the Channels from which the high bounds will be taken for the new channels 
+	// starting from the central channel going up
+	vector<Int> loNCBdown; // the numbers of the Channels from which the lower bounds will be taken for the new channels 
+	// starting from the central channel going down
+	vector<Int> hiNCBdown; // the numbers of the Channels from which the high bounds will be taken for the new channels 
+	// starting from the central channel going down
+	//    Want to keep the center of the center channel at the center of the new center channel if the bandwidth is 
+        //    an odd multiple of the new channel width or the regridCenter was explicitely given, 
+	//    otherwise the center channel is the lower edge of the new center channel
+	Int startChan;
+	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
+	if(tnumChan/2 != tnumChan/2. || regridCenter>-1E30){ // odd multiple or center channel given by user 
+	  startChan = regridCenterChan-regridChanWidthChan/2;
 	}
 	else{
-	  hiNCBup.push_back(bwUpperEndChan);
+	  startChan = regridCenterChan;
 	}
-      }
-      for(Int i=regridCenterChan-1; i>=bwLowerEndChan; i-=regridChanWidthChan-1){ // lower half
-	hiNCBdown.push_back(i);
-	if(i-regridChanWidthChan+1>=bwLowerEndChan){ // can go one more normal step down
-	  loNCBdown.push_back(i-regridChanWidthChan+1);
+	for(Int i=startChan; i<=bwUpperEndChan; i+=regridChanWidthChan){ // upper half
+	  loNCBup.push_back(i);
+	  if(i+regridChanWidthChan-1<=bwUpperEndChan){ // can go one more normal step up
+	    hiNCBup.push_back(i+regridChanWidthChan-1);
+	  }
+	  else{
+	    hiNCBup.push_back(bwUpperEndChan); // create narrower channels at the edges if necessary
+	  }
 	}
-	else{
-	  loNCBdown.push_back(bwLowerEndChan);
+	for(Int i=startChan - 1; i>=bwLowerEndChan; i-=regridChanWidthChan){ // lower half
+	  hiNCBdown.push_back(i);
+	  if(i-regridChanWidthChan+1>=bwLowerEndChan){ // can go one more normal step down
+	    loNCBdown.push_back(i-regridChanWidthChan+1);
+	  }
+	  else{
+	    loNCBdown.push_back(bwLowerEndChan); // create narrower channels at the edges if necessary
+	  }
 	}
-      }
-      Int numNewChanDown = loNCBdown.size(); // the number of channels below the central one
-      Int numNewChanUp = loNCBup.size(); // the number of channels above and including the central one
-      newChanLoBound.resize(numNewChanDown+numNewChanUp);
-      newChanHiBound.resize(numNewChanDown+numNewChanUp);
-      for(Int i=0; i<numNewChanDown; i++){
-	Int k = numNewChanDown-i; // need to assign in reverse
-	newChanLoBound[i] = transNewXin[loNCBdown[k]]-transCHAN_WIDTH[loNCBdown[k]]; 
-	newChanHiBound[i] = transNewXin[hiNCBdown[k]]+transCHAN_WIDTH[hiNCBdown[k]];
-      }
-      for(Int i=0; i<numNewChanUp; i++){
-	newChanLoBound[i+numNewChanDown] = transNewXin[loNCBup[i]]-transCHAN_WIDTH[loNCBup[i]];
-	newChanHiBound[i+numNewChanDown] = transNewXin[hiNCBup[i]]+transCHAN_WIDTH[hiNCBup[i]];
-      }
+	numNewChanDown = loNCBdown.size(); // the number of channels below the central one
+	numNewChanUp = loNCBup.size(); // the number of channels above and including the central one
+	newChanLoBound.resize(numNewChanDown+numNewChanUp);
+	newChanHiBound.resize(numNewChanDown+numNewChanUp);
+	for(Int i=0; i<numNewChanDown; i++){
+	  Int k = numNewChanDown-i-1; // need to assign in reverse
+	  newChanLoBound[i] = transNewXin[loNCBdown[k]]-transCHAN_WIDTH[loNCBdown[k]]/2.; 
+	  newChanHiBound[i] = transNewXin[hiNCBdown[k]]+transCHAN_WIDTH[hiNCBdown[k]]/2.;
+	}
+	for(Int i=0; i<numNewChanUp; i++){
+	  newChanLoBound[i+numNewChanDown] = transNewXin[loNCBup[i]]-transCHAN_WIDTH[loNCBup[i]]/2.;
+	  newChanHiBound[i+numNewChanDown] = transNewXin[hiNCBup[i]]+transCHAN_WIDTH[hiNCBup[i]]/2.;
+	}
+      } // end if 
+
+      oss << " New channels defined based on original channels" << endl
+	  << " Central channel contains original channel " <<  regridCenterChan << endl 
+	  << " Channel width = " << regridChanWidthChan << " original channels (edge channels can be more narrow)" << endl
+	  << " Total bandwidth = " <<  regridBandwidthChan << " original channels == " 
+	  << numNewChanDown + numNewChanUp << " new channels" << endl;
+
+      //      cout << "lo " << newChanLoBound << endl;
+      //      cout << "hi " << newChanHiBound << endl;
 
       message = oss.str();
       return True;
@@ -1865,33 +1675,47 @@ namespace casa {
       if(regridQuant=="vrad"){ ///////////////
 	// radio velocity ...
 	// need restfrq
-	if(regridVeloRestfrq<-1E99){ // means "not set"
+	if(regridVeloRestfrq<-1E30){ // means "not set"
 	  oss <<"Parameter \"regrid_velo_restfrq\" needs to be set if regrid_quantity==vrad. Cannot proceed with cvel ..."; 
 	  message = oss.str();
 	  return False;
 	}
-	else if(regridVeloRestfrq<0. || regridVeloRestfrq>9E99){
+	else if(regridVeloRestfrq<0. || regridVeloRestfrq>1E30){
 	  oss << "Parameter \"regrid_velo_restfrq\" value " << regridVeloRestfrq << " is invalid.";
 	  message = oss.str();
 	  return False;
 	}	  
-	regridCenterF = freq_from_vrad(regridCenter,regridVeloRestfrq); // (we deal with invalid values later)
-	regridBandwidthF = freq_from_vrad(regridBandwidth,regridVeloRestfrq); // (we deal with invalid values later)
-	regridChanWidthF = freq_from_vrad(regridChanWidth,regridVeloRestfrq); // (we deal with invalid values later)
+	Double regridCenterVel; 
+	if(regridCenter>-C::c){
+	  regridCenterF = freq_from_vrad(regridCenter,regridVeloRestfrq); // (we deal with invalid values later)
+	  regridCenterVel = regridCenter;
+	}
+	else{ // center was not specified
+	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
+	  regridCenterVel = vrad(regridCenterF,regridVeloRestfrq);
+	}
+	if(regridBandwidth>0.){ 
+	  Double bwUpperEndF =  freq_from_vrad( regridCenterVel - regridBandwidth/2., regridVeloRestfrq);
+	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
+	}
+	if(regridChanWidth>0.){
+	  Double chanUpperEdgeF = freq_from_vrad( regridCenterVel - regridChanWidth/2., regridVeloRestfrq);
+	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	}
       }
       else if(regridQuant=="vopt"){ ///////////
 	// optical velocity ...
 	// need restfrq
-	if(regridVeloRestfrq<-1E99){ // means "not set"
+	if(regridVeloRestfrq<-1E30){ // means "not set"
 	  oss << "Parameter \"regrid_velo_restfrq\" needs to be set if regrid_quantity==vopt. Cannot proceed with cvel ...";
 	  message = oss.str();
 	  return False;
 	}
-	else if(regridVeloRestfrq<=0. || regridVeloRestfrq>9E99){
+	else if(regridVeloRestfrq<=0. || regridVeloRestfrq>1E30){
 	  oss << "Parameter \"regrid_velo_restfrq\" value " << regridVeloRestfrq << " is invalid."; 
 	  message = oss.str();
 	  return False;
-	}	  
+	}
 	Double regridCenterVel; 
 	if(regridCenter>-C::c){
 	  regridCenterF = freq_from_vopt(regridCenter,regridVeloRestfrq); // (we deal with invalid values later)
@@ -1901,11 +1725,11 @@ namespace casa {
 	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vopt(regridCenterF,regridVeloRestfrq);
 	}
-	if(regridBandwidth>0. && regridBandwidth/2.< regridCenterVel){
+	if(regridBandwidth>0.){
 	  Double bwUpperEndF =  freq_from_vopt( regridCenterVel - regridBandwidth/2., regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
 	}
-	if(regridChanWidth>0. && regridChanWidth/2.< regridCenterVel){
+	if(regridChanWidth>0.){
 	  Double chanUpperEdgeF = freq_from_vopt( regridCenterVel - regridChanWidth/2., regridVeloRestfrq);
 	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	}
@@ -1936,7 +1760,7 @@ namespace casa {
 	}
       }
       else{
-	oss << "Invalid value " << regridQuant << " for parameter \"regridQuant\".";
+	oss << "Invalid value " << regridQuant << " for parameter \"regrid_quantity\".";
 	message = oss.str();
 	return False;
       }
@@ -1992,7 +1816,7 @@ namespace casa {
 	}
 	else{ // check if too small
 	  // determine smallest channel width in the new band
-	  Double smallestChanWidth = 9E99;
+	  Double smallestChanWidth = 1E30;
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    if( theRegridCenterF-theRegridBWF/2. < transNewXin[i] && transNewXin[i] < theRegridCenterF+theRegridBWF/2. 
 		&& transCHAN_WIDTH[i]<smallestChanWidth){ 
@@ -2008,9 +1832,10 @@ namespace casa {
 	  }
 	}   	    
       }
-      oss << "Central frequency = " <<  theRegridCenterF << " Hz" << endl 
-	  << "Width of central channel = " << theCentralChanWidthF << " Hz" << endl
-	  << "Total bandwidth = " << theRegridBWF << " Hz" << endl;
+      oss << " Channels equidistant in " << regridQuant << endl
+	  << " Central frequency (in output frame) = " <<  theRegridCenterF << " Hz" << endl 
+	  << " Width of central channel (in output frame) = " << theCentralChanWidthF << " Hz" << endl
+	  << " Total bandwidth (in output frame) = " << theRegridBWF << " Hz" << endl;
       
       // now calculate newChanLoBound, and newChanHiBound from theRegridCenterF, theRegridBWF, theCentralChanWidthF
       vector<Double> loFBup; // the lower bounds for the new channels 
@@ -2026,30 +1851,54 @@ namespace casa {
 	// regridding in radio velocity ...
 	
 	// create freq boundaries equidistant and contiguous in radio velocity
-	Double upperEndF = theRegridCenterF + theRegridBWF;
-	Double lowerEndF = theRegridCenterF + theRegridBWF;
+	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
+	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
 	Double upperEndV = vrad(upperEndF,regridVeloRestfrq);
 	Double lowerEndV = vrad(lowerEndF,regridVeloRestfrq);
 	Double velLo;
 	Double velHi;
 
-	loFBup.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+
+	//    Want to keep the center of the center channel at the center of the new center channel if the bandwidth is 
+        //    an odd multiple of the new channel width or the regridCenter was explicitely given, 
+	//    otherwise the center channel is the lower edge of the new center channel
+	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
+	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){ // odd multiple or center channel given by user 
+	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	}
+	else{
+	  loFBup.push_back(theRegridCenterF);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	  loFBdown.push_back(theRegridCenterF);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
+	}
+
 	if(theChanWidthX<0){ // cannot use original channel width in velocity units
 	  // need to calculate back from central channel width in Hz
-	  theChanWidthX = vrad(hiFBup[0],regridVeloRestfrq) - vrad(loFBup[0],regridVeloRestfrq);
+	  theChanWidthX = vrad(loFBup[0],regridVeloRestfrq) - vrad(hiFBup[0],regridVeloRestfrq);
 	}
 	// calc velocity corresponding to the upper end (in freq) of the last added channel
 	// which is the lower end of the next channel
 	velLo = vrad(hiFBup[0],regridVeloRestfrq);
 	// calc velocity corresponding to the upper end (in freq) of the next channel
 	velHi = velLo - theChanWidthX; // vrad goes down as freq goes up!
-	while(velHi > lowerEndV){
+	while(upperEndV - theChanWidthX/10. < velHi){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_vrad(velHi,regridVeloRestfrq);
 	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
+	  }
+	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	    loFBup.push_back(hiFBup.back());
+	    hiFBup.push_back(upperEndF);
+	    break;
+	  }
+	  else{
+	    break;
 	  }
 	  // calc velocity corresponding to the upper end (in freq) of the added channel
 	  velLo = vrad(hiFBup.back(),regridVeloRestfrq);
@@ -2057,54 +1906,83 @@ namespace casa {
 	  velHi = velLo - theChanWidthX; // vrad goes down as freq goes up
 	}
 
-	loFBdown.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
 	// calc velocity corresponding to the lower end (in freq) of the last added channel
 	// which is the upper end of the next channel
 	velHi = vrad(loFBdown[0],regridVeloRestfrq);
 	// calc velocity corresponding to the lower end (in freq) of the next channel
 	velLo = velHi + theChanWidthX; // vrad goes up as freq goes down!
-	while(velLo < upperEndV){
+	while(velLo < lowerEndV + theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_vrad(velLo,regridVeloRestfrq);
 	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  // calc velocity corresponding to the lower end (in freq) of the last added channel
-	  velLo = vrad(loFBdown.back(),regridVeloRestfrq);
+	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	    hiFBdown.push_back(loFBdown.back());
+	    loFBdown.push_back(lowerEndF);
+	    break;
+	  }
+	  else {
+	    break;
+	  }
 	  // calc velocity corresponding to the upper end of the next channel
-	  velHi = velLo - theChanWidthX; // vrad goes down as freq goes up
+	  velHi = vrad(loFBdown.back(),regridVeloRestfrq);
+	  // calc velocity corresponding to the lower end (in freq) of the next channel
+	  velLo = velHi + theChanWidthX; // vrad goes up as freq goes down
 	}	  
       }
       else if(regridQuant=="vopt"){
 	// regridding in optical velocity ...
 	
 	// create freq boundaries equidistant and contiguous in radio velocity
-	Double upperEndF = theRegridCenterF + theRegridBWF;
-	Double lowerEndF = theRegridCenterF + theRegridBWF;
+	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
+	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
 	Double upperEndV = vopt(upperEndF,regridVeloRestfrq);
 	Double lowerEndV = vopt(lowerEndF,regridVeloRestfrq);
 	Double velLo;
 	Double velHi;
 
-	loFBup.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	//    Want to keep the center of the center channel at the center of the new center channel if the bandwidth is 
+        //    an odd multiple of the new channel width or the regridCenter was explicitely given, 
+	//    otherwise the center channel is the lower edge of the new center channel
+	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
+	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){ // odd multiple or center channel given by user 
+	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	}
+	else{
+	  loFBup.push_back(theRegridCenterF);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	  loFBdown.push_back(theRegridCenterF);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
+	}
+
 	if(theChanWidthX<0){ // cannot use original channel width in velocity units
 	  // need to calculate back from central channel width in Hz
-	  theChanWidthX = vopt(hiFBup[0],regridVeloRestfrq) - vopt(loFBup[0],regridVeloRestfrq);
+	  theChanWidthX = vopt(loFBup[0],regridVeloRestfrq) - vopt(hiFBup[0],regridVeloRestfrq);
 	}
 	// calc velocity corresponding to the upper end (in freq) of the last added channel
 	// which is the lower end of the next channel
 	velLo = vopt(hiFBup[0],regridVeloRestfrq);
 	// calc velocity corresponding to the upper end (in freq) of the next channel
 	velHi = velLo - theChanWidthX; // vopt goes down as freq goes up!
-	while(velHi > lowerEndV){
+	while(upperEndV - velHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_vopt(velHi,regridVeloRestfrq);
 	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
+	  }
+	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	    loFBup.push_back(hiFBup.back());
+	    hiFBup.push_back(upperEndF);
+	    break;
+	  }
+	  else{
+	    break;
 	  }
 	  // calc velocity corresponding to the upper end (in freq) of the added channel
 	  velLo = vopt(hiFBup.back(),regridVeloRestfrq);
@@ -2112,35 +1990,56 @@ namespace casa {
 	  velHi = velLo - theChanWidthX; // vopt goes down as freq goes up
 	}
 
-	loFBdown.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
 	// calc velocity corresponding to the lower end (in freq) of the last added channel
 	// which is the upper end of the next channel
 	velHi = vopt(loFBdown[0],regridVeloRestfrq);
 	// calc velocity corresponding to the lower end (in freq) of the next channel
 	velLo = velHi + theChanWidthX; // vopt goes up as freq goes down!
-	while(velLo < upperEndV){
+	while(velLo - lowerEndV < theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_vopt(velLo,regridVeloRestfrq);
 	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  // calc velocity corresponding to the lower end (in freq) of the last added channel
-	  velLo = vopt(loFBdown.back(),regridVeloRestfrq);
+	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	    hiFBdown.push_back(loFBdown.back());
+	    loFBdown.push_back(lowerEndF);
+	    break;
+	  }
+	  else {
+	    break;
+	  }
 	  // calc velocity corresponding to the upper end of the next channel
-	  velHi = velLo - theChanWidthX; // vopt goes down as freq goes up
+	  velHi = vopt(loFBdown.back(),regridVeloRestfrq);
+	  // calc velocity corresponding to the lower end (in freq) of the next channel
+	  velLo = velHi + theChanWidthX; // vopt goes up as freq goes down
 	}	  
       }
       else if(regridQuant=="freq"){
 	// regridding in frequency  ...
 	
 	// create freq boundaries equidistant and contiguous in frequency
-	Double upperEndF = theRegridCenterF + theRegridBWF;
-	Double lowerEndF = theRegridCenterF + theRegridBWF;
+	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
+	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
 
-	loFBup.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	//    Want to keep the center of the center channel at the center of the new center channel if the bandwidth is 
+        //    an odd multiple of the new channel width or the regridCenter was explicitely given, 
+	//    otherwise the center channel is the lower edge of the new center channel
+	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){ // odd multiple or center channel given by user 
+	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	}
+	else{
+	  loFBup.push_back(theRegridCenterF);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	  loFBdown.push_back(theRegridCenterF);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
+	}
+
 	while(hiFBup.back()< upperEndF){
 	  // calc frequency of the upper end of the next channel
 	  Double freqHi = hiFBup.back() + theCentralChanWidthF;
@@ -2148,10 +2047,11 @@ namespace casa {
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
 	  }
+	  else{
+	    break;
+	  }
 	}
 
-	loFBdown.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
 	while(loFBdown.back() > lowerEndF){
 	  // calc frequency of the lower end of the next channel
 	  Double freqLo = loFBdown.back() - theCentralChanWidthF;
@@ -2159,36 +2059,62 @@ namespace casa {
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
+	  else {
+	    break;
+	  }
 	}	  
       }
       else if(regridQuant=="wave"){
 	// regridding in wavelength  ...
 	
 	// create freq boundaries equidistant and contiguous in wavelength
-	Double upperEndF = theRegridCenterF + theRegridBWF;
-	Double lowerEndF = theRegridCenterF + theRegridBWF;
+	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
+	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
 	Double upperEndL = lambda(upperEndF);
 	Double lowerEndL = lambda(lowerEndF);
 	Double lambdaLo;
 	Double lambdaHi;
 
-	loFBup.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	//    Want to keep the center of the center channel at the center of the new center channel if the bandwidth is 
+        //    an odd multiple of the new channel width or the regridCenter was explicitely given, 
+	//    otherwise the center channel is the lower edge of the new center channel
+	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
+	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){ // odd multiple or center channel given by user 
+	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF/2.);
+	}
+	else{
+	  loFBup.push_back(theRegridCenterF);
+	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF);
+	  loFBdown.push_back(theRegridCenterF);
+	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
+	}
+
 	if(theChanWidthX<0){ // cannot use original channel width in wavelength units
 	  // need to calculate back from central channel width in Hz
-	  theChanWidthX = lambda(hiFBup[0]) - lambda(loFBup[0]);
+	  theChanWidthX = lambda(loFBup[0]) - lambda(hiFBup[0]);
 	}
 	// calc wavelength corresponding to the upper end (in freq) of the last added channel
 	// which is the lower end of the next channel
 	lambdaLo = lambda(hiFBup[0]);
 	// calc wavelength corresponding to the upper end (in freq) of the next channel
 	lambdaHi = lambdaLo - theChanWidthX; // lambda goes down as freq goes up!
-	while(lambdaHi > lowerEndL){
+	while(upperEndL - lambdaHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_lambda(lambdaHi);
 	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
+	  }
+	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	    loFBup.push_back(hiFBup.back());
+	    hiFBup.push_back(upperEndF);
+	    break;
+	  }
+	  else{
+	    break;
 	  }
 	  // calc wavelength corresponding to the upper end (in freq) of the added channel
 	  lambdaLo = lambda(hiFBup.back());
@@ -2196,29 +2122,35 @@ namespace casa {
 	  lambdaHi = lambdaLo - theChanWidthX; // lambda goes down as freq goes up
 	}
 
-	loFBdown.push_back(theRegridCenterF-theCentralChanWidthF);
-	hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
 	// calc wavelength corresponding to the lower end (in freq) of the last added channel
 	// which is the upper end of the next channel
 	lambdaHi = lambda(loFBdown[0]);
 	// calc wavelength corresponding to the lower end (in freq) of the next channel
 	lambdaLo = lambdaHi + theChanWidthX; // lambda goes up as freq goes down!
-	while(lambdaLo < upperEndL){
+	while(lambdaLo - lowerEndL < theChanWidthX/10.){  // (preventing accuracy problems) 
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_lambda(lambdaLo);
 	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  // calc wavelength corresponding to the lower end (in freq) of the last added channel
-	  lambdaLo = lambda(loFBdown.back());
+	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	    hiFBdown.push_back(loFBdown.back());
+	    loFBdown.push_back(lowerEndF);
+	    break;
+	  }
+	  else {
+	    break;
+	  }
 	  // calc wavelength corresponding to the upper end of the next channel
-	  lambdaHi = lambdaLo - theChanWidthX; // lambda goes down as freq goes up
+	  lambdaHi = lambda(loFBdown.back());
+	  // calc wavelength corresponding to the lower end (in freq) of the next channel
+	  lambdaLo = lambdaHi + theChanWidthX; // wavelength goes up as freq goes down
 	}	  
 
       }
       else{ // should not get here
-	oss << "Invalid value " << regridQuant << " for parameter \"regridQuant\".";
+	oss << "Invalid value " << regridQuant << " for parameter \"regrid_quantity\".";
 	message = oss.str();
 	return False;
       }
@@ -2228,7 +2160,7 @@ namespace casa {
       newChanLoBound.resize(numNewChanDown+numNewChanUp - 1 ); // central channel contained in both vectors
       newChanHiBound.resize(numNewChanDown+numNewChanUp - 1 );
       for(Int i=0; i<numNewChanDown; i++){ 
-	Int k = numNewChanDown-i; // need to assign in reverse
+	Int k = numNewChanDown-i-1; // need to assign in reverse
 	newChanLoBound[i] = loFBdown[k];
 	newChanHiBound[i] = hiFBdown[k];
       }
@@ -2243,6 +2175,585 @@ namespace casa {
     } // end if (regridQuant=="chan")
 
   }
+
+
+  Bool SubMS::setRegridParameters(vector<Int>& oldSpwId,
+				  vector<Int>& oldFieldId,
+				  vector<Int>& newDataDescId,
+				  vector<Bool>& regrid,
+				  vector< Vector<Double> >& xout, 
+				  vector< Vector<Double> >& xin, 
+				  // This is a temporary fix until InterpolateArray1D<Double, Complex>& works.
+				  vector< InterpolateArray1D<Float,Complex>::InterpolationMethod >& method,
+				  vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
+				  Bool& msModified,
+				  const String& outframe,
+				  const String& regridQuant,
+				  const Double regridVeloRestfrq,
+				  const String& regridInterpMeth,
+				  const Double regridCenter, 
+				  const Double regridBandwidth, 
+				  const Double regridChanWidth,
+				  const Bool writeTables,
+				  LogIO& os,
+				  String& regridMessage
+				  ){
+    Bool rval = True;
+
+    // reset the "done" table.
+    newDataDescId.resize(0);
+    oldSpwId.resize(0);
+    oldFieldId.resize(0);
+    xin.resize(0);
+    xout.resize(0);
+    method.resize(0);
+    methodF.resize(0);
+    regrid.resize(0);	
+    
+
+    // Determine the highest data_desc_id from the DATA_DESCRIPTION table (= number of rows).
+    MSDataDescription ddtable=ms_p.dataDescription();
+    Int origNumDataDescs = ddtable.nrow();
+    Int nextDataDescId = origNumDataDescs - 1;
+    Int numNewDataDesc = 0;
+
+    // Determine the highest spw_id in the SPW table
+    MSSpectralWindow spwtable=ms_p.spectralWindow();
+    Int origNumSPWs = spwtable.nrow();
+    Int nextSPWId = origNumSPWs - 1;
+    Int numNewSPWIds = 0;
+
+    // Determine the highest row number in the SOURCE table
+    Int origNumSourceRows = 0;
+    Int nextSourceRow = -1;
+    Int numNewSourceRows = 0;
+    MSSource* p_sourcetable = NULL;
+    MSSourceColumns* p_sourceCol = NULL;
+    if(Table::isReadable(ms_p.sourceTableName())){
+      p_sourcetable = &(ms_p.source());
+      p_sourceCol = new MSSourceColumns(*p_sourcetable);
+      origNumSourceRows = p_sourcetable->nrow();
+      nextSourceRow = origNumSourceRows - 1;
+    }
+    else if(!writeTables) { // there is no source table
+      os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
+      nextSourceRow = -1;
+    }
+
+    MSMainColumns mainCols(ms_p);
+    ScalarColumn<Int> fieldIdCol = mainCols.fieldId();
+    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
+
+    // other administrational tables
+
+    MSDataDescColumns DDCols(ddtable);
+    ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId(); 
+
+    MSSpWindowColumns SPWCols(spwtable);
+    ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
+    ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
+    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
+    ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
+    ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
+    ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
+    ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
+    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
+    ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
+    ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+
+    MSField fieldtable = ms_p.field();
+    MSFieldColumns FIELDCols(fieldtable);
+    //ArrayMeasColumn<MDirection> referenceDirMeasCol = FIELDCols.referenceDirMeasCol(); 
+    ScalarMeasColumn<MEpoch>& timeMeasCol = FIELDCols.timeMeas();
+    ScalarColumn<Int> FIELDsourceIdCol = FIELDCols.sourceId(); 
+
+    // calculate mean antenna position for TOPO transformation
+    MSAntenna anttable = ms_p.antenna();
+    ROMSAntennaColumns ANTCols(anttable);
+    ROScalarMeasColumn<MPosition> ANTPositionMeasCol = ANTCols.positionMeas(); 
+    ROScalarColumn<Bool> ANTflagRowCol = ANTCols.flagRow();
+    Int nAnt = 0;
+    Vector<Double> pos(3); pos=0;
+    for (uInt i=0; i<anttable.nrow(); i++) {
+      if(!ANTflagRowCol(i)){
+	pos+=ANTPositionMeasCol(i).getValue().get();
+	nAnt++;
+      }
+    }
+    if(nAnt>0){
+      pos/=Double(nAnt);
+    }
+    else {
+      os << LogIO::WARN << "No unflagged antennas in this MS. Cannot proceed with cvel ..." 
+	 << LogIO::POST;
+      return rval; 
+    }
+
+    if(!writeTables){
+      cout << "Verifying parameters and MS ..." << endl;
+    }
+    else {
+      cout << "Writing modified spectral window parameters ..." << endl;
+    }
+
+    MPosition mObsPos = ANTPositionMeasCol(0); // transfer reference frame
+    mObsPos.set(MVPosition(pos)); // set coordinates
+    
+    for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+    
+      // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
+      Int theFieldId = fieldIdCol(mainTabRow);
+      Int theDataDescId = DDIdCol(mainTabRow);
+      // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
+      Int theSPWId = -2;
+      if (theDataDescId < origNumDataDescs){
+	theSPWId = SPWIdCol(theDataDescId);
+      }
+      else {
+	os << LogIO::SEVERE << "Incoherent MS: Found at main table row " << mainTabRow
+	   << " reference to non-existing DATA_DESCRIPTION table entry << ..." << theDataDescId
+	   << LogIO::POST;
+	rval = False;
+	return rval;
+      }
+
+      // variables saying what has to be done for this row
+      Bool needTransform = False;
+      Bool doRegrid = False;
+      Int equivalentSpwFieldPair = -1;
+
+      String message;
+
+      //  The pair (theFieldId, theSPWId) is looked up in the "done table". 
+      Int iDone = -1;
+      for (uInt i=0; i<oldSpwId.size(); i++){
+	if(oldSpwId[i]==theSPWId && oldFieldId[i]==theFieldId){
+	  iDone = i;
+	  break;
+	}
+      }
+
+      if(iDone<0){ // this (theFieldId, theSPWId) pair was not yet encountered 
+
+	// Determine information for new row in "done" table
+	//   The information necessary for the transformation is extracted:  
+	//   1) center frequency of each channel (taken from the CHAN_FREQ cell corresponding to
+	//     theSPWId in the SPW table)
+	Vector<Double> newXin;
+	newXin.assign(chanFreqCol(theSPWId));
+	//      -> store in  xin (further below)
+	//   2) reference frame for these frequencies (taken from the MEAS_FREQ_REF cell 
+        //      corresponding to theSPWId in the SPW table)
+	MFrequency::Types theOldRefFrame = MFrequency::castType(measFreqRefCol(theSPWId));
+	//      -> store in oldRefFrame[numNewDataDesc] (further below)
+	//   3) direction of the field (taken from the REFERENCE_DIR cell corresponding to 
+        //      theFieldId in the FIELD table)
+	MDirection theFieldDir =  FIELDCols.referenceDirMeas(theFieldId); 
+	//      -> store in fieldDir[numNewDataDesc] (further below)
+	//   4) in case either the original or the destination reference frame is TOPO or GEO, 
+        //      we need the observation time
+	//      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
+	MEpoch theObsTime = timeMeasCol(theFieldId);
+	//      -> store in obsTime[numNewDataDesc] (further below)
+	//   5) in case either the original or the destination reference frame (but not both) 
+        //      are TOPO, we need the observatory position
+	//      (from the mean antenna position calculated above) 
+	//      -> store in obsPos[numNewDataDesc] (further below)
+
+	// Determine if a reference frame transformation is necessary
+	// Bool 	getType (MFrequency::Types &tp, const String &in)
+	needTransform = True;
+	MFrequency::Types theFrame;
+	if(outframe==""){ // no ref frame given 
+	  // keep the reference frame as is
+	  theFrame = theOldRefFrame;
+	  needTransform = False;
+	}
+	else if(!MFrequency::getType(theFrame, outframe)){
+	  os << LogIO::SEVERE << "Parameter \"outframe\" value " << outframe << " is invalid." 
+	     << LogIO::POST;
+	  return False;
+	}
+	else if (theFrame == theOldRefFrame){
+	  needTransform = False;
+	}
+
+	// Perform the pure frequency transformation (no regridding yet)
+	Vector<Double> transNewXin;
+	// also take care of the other parameters of the spectral window
+	Int oldNUM_CHAN = numChanCol(theSPWId); 
+	Vector<Double> oldCHAN_WIDTH = chanWidthCol(theSPWId);
+	MFrequency oldREF_FREQUENCY = refFrequencyMeasCol(theSPWId);
+	Double oldTOTAL_BANDWIDTH = totalBandwidthCol(theSPWId);
+	Vector<Double> oldEFFECTIVE_BW = effectiveBWCol(theSPWId);   
+	Vector<Double> oldRESOLUTION = resolutionCol(theSPWId);
+
+	// storage for values with pure freq trafo applied
+	Vector<Double> transCHAN_WIDTH(oldNUM_CHAN);
+	MFrequency transREF_FREQUENCY;
+	Double transTOTAL_BANDWIDTH;
+	Vector<Double> transRESOLUTION(oldNUM_CHAN);;
+
+	if(needTransform){
+
+	  transNewXin.resize(oldNUM_CHAN);
+	  // set up conversion
+	  MFrequency::Ref fromFrame;
+	  if(theOldRefFrame == MFrequency::TOPO){ 
+	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  }
+	  else if(theOldRefFrame == MFrequency::GEO){ 
+	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, theObsTime));
+	  }
+	  else {
+	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir));
+	  }
+
+	  MFrequency::Ref toFrame;
+	  if(theFrame == MFrequency::TOPO){ 
+	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  }
+	  else if(theFrame == MFrequency::GEO){ 
+	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, theObsTime));
+	  }
+	  else {
+	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir));
+	  }
+	  Unit unit(String("Hz"));
+	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
+
+	  for(Int i=0; i<oldNUM_CHAN; i++){
+	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
+	    transCHAN_WIDTH[i] =  freqTrans(newXin[i]+oldCHAN_WIDTH[i]/2.).get(unit).getValue()
+	      - freqTrans(newXin[i]-oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
+	    transRESOLUTION[i] = freqTrans(newXin[i]+oldRESOLUTION[i]/2.).get(unit).getValue() 
+	      - freqTrans(newXin[i]-oldRESOLUTION[i]/2.).get(unit).getValue(); // eliminate possible offsets
+	  }
+	  transREF_FREQUENCY = freqTrans(oldREF_FREQUENCY);
+	  transTOTAL_BANDWIDTH = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]
+	    -  transNewXin[0]+transCHAN_WIDTH[0];
+	}
+	else {
+	  // just copy
+	  transNewXin.assign(newXin);
+	  transCHAN_WIDTH.assign(oldCHAN_WIDTH);
+	  transRESOLUTION.assign(oldRESOLUTION);
+	  transREF_FREQUENCY = oldREF_FREQUENCY;
+	  transTOTAL_BANDWIDTH = oldTOTAL_BANDWIDTH;
+	}
+
+	// (reference frame transformation completed)
+
+
+	// storage for values with complete freq trafo + regridding applied
+	// (set to default values for the case of no regridding)
+	Vector<Double> newXout(transNewXin);
+	Int newNUM_CHAN = oldNUM_CHAN;
+	Vector<Double> newCHAN_WIDTH(transCHAN_WIDTH);
+	MFrequency newREF_FREQUENCY = transREF_FREQUENCY;
+	Vector<Double> newRESOLUTION(transRESOLUTION);
+	Double newTOTAL_BANDWIDTH = transTOTAL_BANDWIDTH;
+	Vector<Double> newEFFECTIVE_BW(oldEFFECTIVE_BW);
+	//	InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
+	// This is a temporary fix until InterpolateArray1D<Double, Complex> works.
+	InterpolateArray1D<Float,Complex>::InterpolationMethod theMethod;
+	InterpolateArray1D<Double,Float>::InterpolationMethod theMethodF;
+
+	// check if theSPWId was already handled
+	Int iDone2 = -1;
+	for (uInt i=0; i<oldSpwId.size(); i++){
+	  if(oldSpwId[i]==theSPWId){
+	    iDone2 = i;
+	    break;
+	  }
+	}
+	equivalentSpwFieldPair = iDone2;
+
+	if(equivalentSpwFieldPair>=0 && !needTransform){  // a transformation was not needed, i.e. the operation on this SPW is independent of the FIELD
+	  // and (since equivalentSpwFieldPair>=0) this SPW was already processed
+	  // so we can reuse a previous SpwFieldPair
+
+	  // get the parameters from the "done table"
+	  theSPWId = oldSpwId[equivalentSpwFieldPair];
+	  // don't get the field id!
+	  theDataDescId = newDataDescId[equivalentSpwFieldPair] + origNumDataDescs; 
+	  transNewXin.assign(xin[equivalentSpwFieldPair]);
+	  newXout.assign(xout[equivalentSpwFieldPair]);
+	  theMethod = method[equivalentSpwFieldPair];
+	  theMethodF = methodF[equivalentSpwFieldPair];
+	  doRegrid = regrid[equivalentSpwFieldPair];
+
+	}
+	else {
+	  // Determine if regridding is necessary and set the parameters
+	  // (at the same time, determine if the transformation is non-linear. If so set trafoNonlin (further below).)  
+	  
+	  String methodName;
+	  
+	  if(regridQuant=="" ||
+	     (regridCenter<-1E30 &&  regridBandwidth <= 0. && regridChanWidth <= 1. 
+	      && (regridQuant=="chan" || regridQuant=="freq"))
+	     ){
+	    // No regridding will take place.
+	    // Set the interpol methods to some dummy value
+	    //	  theMethod = InterpolateArray1D<Double,Complex>::linear;
+	    // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
+	    theMethod = InterpolateArray1D<Float,Complex>::linear;
+	    theMethodF = InterpolateArray1D<Double,Float>::linear;
+	    methodName = "linear";
+	  }
+	  else { // a regrid quantity was chosen
+	    // determine interpolation method (this is common for all possible values of regridQuant)
+	    String meth=regridInterpMeth;
+	    meth.downcase();
+	    if(meth.contains("nearest")){
+	      //	    theMethod = InterpolateArray1D<Double,Complex>::linear;
+	      // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
+	      theMethod = InterpolateArray1D<Float,Complex>::nearestNeighbour;
+	      theMethodF = InterpolateArray1D<Double,Float>::nearestNeighbour;
+	      methodName = "nearestNeighbour";
+	    }
+	    else if(meth.contains("splin")){
+	      //	    theMethod = InterpolateArray1D<Double,Complex>::spline;
+	      theMethod = InterpolateArray1D<Float,Complex>::spline;
+	      theMethodF = InterpolateArray1D<Double,Float>::spline;
+	      methodName = "spline";
+	    }	    
+	    else if(meth.contains("cub")){
+	      //	    theMethod = InterpolateArray1D<Double,Complex>::cubic;
+	      theMethod = InterpolateArray1D<Float,Complex>::cubic;
+	      theMethodF = InterpolateArray1D<Double,Float>::cubic;
+	      methodName = "cubic spline";
+	    }
+	    else {
+	      if(!meth.contains("linear") && meth!=""){
+		os << LogIO::WARN << "Parameter \"regrid_interp_meth\" value \"" << meth << "\" is invalid." 
+		   << LogIO::POST;
+		return False;
+	      }
+	      // theMethod = InterpolateArray1D<Double,Complex>::linear;
+	      // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
+	      theMethod = InterpolateArray1D<Float,Complex>::linear;
+	      theMethodF = InterpolateArray1D<Double,Float>::linear;
+	      methodName = "linear";
+	    }
+	    
+	    Vector<Double> newChanLoBound; 
+	    Vector<Double> newChanHiBound;
+	    
+	    if(!regridChanBounds(newChanLoBound, 
+				 newChanHiBound,
+				 regridCenter,  
+				 regridBandwidth, 
+				 regridChanWidth, 
+				 regridVeloRestfrq,
+				 regridQuant,
+				 transNewXin, 
+				 transCHAN_WIDTH,
+				 message
+				 )
+	       ){ // there was an error
+	      os << LogIO::SEVERE << message << LogIO::POST;
+	      return False;
+	    }
+	    
+	    // we have a useful set of channel boundaries
+	    newNUM_CHAN = newChanLoBound.size();
+	    
+	    message = " output frame = " + MFrequency::showType(theFrame) + "\n" + message 
+	      + " Interpolation Method = " + methodName;
+	    
+	    
+	    // complete the calculation of the new spectral window parameters
+	    // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
+	    newXout.resize(newNUM_CHAN);
+	    newCHAN_WIDTH.resize(newNUM_CHAN);
+	    for(Int i=0; i<newNUM_CHAN; i++){
+	      newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
+	      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
+	      newRESOLUTION[i] = newCHAN_WIDTH[i]; //???????????
+	    }
+	    // set the reference frequency to the lower edge of the new spw, keeping the already changed frame 
+	    MVFrequency mvf(newChanLoBound[0]);
+	    newREF_FREQUENCY.set(mvf);
+	    
+	    // trivial definition of the bandwidth
+	    newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
+	    
+	    // effective bandwidth needs to be interpolated in quadrature
+	    newEFFECTIVE_BW.resize(newNUM_CHAN);
+	    Vector<Double> newEffBWSquared(newNUM_CHAN);
+	    Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
+	    for(Int i=0; i<oldNUM_CHAN; i++){
+	      oldEffBWSquared[i] *= oldEffBWSquared[i];
+	    }
+	    InterpolateArray1D<Double, Double>::interpolate(newEffBWSquared, newXout, transNewXin, 
+							    oldEffBWSquared, InterpolateArray1D<Double,Double>::linear);
+	    for(Int i=0; i<newNUM_CHAN; i++){
+	      newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
+	    }
+	    
+	    if(!allEQ(newXout, transNewXin)){ // grids are different
+	      doRegrid = True;
+	    }
+	    
+	  } // end if (regridQuant=="" ... 
+	  
+	  if(writeTables && (needTransform || doRegrid)){ // new SPW amd DD table rows may need to be created
+	    
+	    // Create new row in the SPW table (with ID nextSPWId) by copying all information from row theSPWId 
+	    if(!spwtable.canAddRow()){
+	      os << LogIO::WARN << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with cvel ..." 
+		 << LogIO::POST;
+	      return False; 
+	    }
+	    
+	    numNewSPWIds++;
+	    nextSPWId++;
+	    
+	    os << LogIO::NORMAL << "Regridded spectral window " << nextSPWId - origNumSPWs << " will be created with parameters " << endl 
+	       << message << LogIO::POST;
+	    
+	    // prepare parameter string for later entry into MS history
+	    {    
+	      ostringstream param;
+	      param  << "Regridded SPW " << nextSPWId - origNumSPWs << " created with parameters " << endl
+		     << message << endl;
+	      regridMessage += param.str(); // append
+	    }
+	    
+	    spwtable.addRow();
+	    TableRow SPWRow(spwtable);
+	    TableRecord spwRecord = SPWRow.get(theSPWId);
+	    // TODO        Warn if the original channels are not contiguous or overlap!
+	    SPWRow.putMatchingFields(nextSPWId, spwRecord);
+	    
+	    // and replacing the following columns with updated information:
+	    // Store xout as new value of CHAN_FREQ.
+	    chanFreqCol.put(nextSPWId, newXout);
+	    numChanCol.put(nextSPWId, newNUM_CHAN);
+	    chanWidthCol.put(nextSPWId,  newCHAN_WIDTH);
+	    refFrequencyCol.put(nextSPWId, newREF_FREQUENCY.getValue());
+	    measFreqRefCol.put(nextSPWId, (Int)theFrame);
+	    totalBandwidthCol.put(nextSPWId, newTOTAL_BANDWIDTH);
+	    effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
+	    resolutionCol.put(nextSPWId, newRESOLUTION);
+	    
+	    msModified = True;
+	    //   Create a new row in the DATA_DESCRIPTION table and enter nextSPWId in the SPW_ID column, 
+	    //   copy the polarization id and the flag_row content from the old  DATA_DESCRIPTION row.
+	    if(!ddtable.canAddRow()){
+	      os << LogIO::WARN << "Unable to add new row to DATA_DESCRIPTION table. Cannot proceed with cvel ..." 
+		 << LogIO::POST;
+	      return False; 
+	    }
+	    numNewDataDesc++;
+	    nextDataDescId++;
+	    ddtable.addRow();
+	    TableRow DDRow(ddtable);
+	    TableRecord DDRecord = DDRow.get(theDataDescId);
+	    DDRow.putMatchingFields(nextDataDescId, DDRecord);
+	    SPWIdCol.put(nextDataDescId, nextSPWId - origNumSPWs); // anticipate the deletion of the original SPW table rows
+	    
+	    // writing the value of nextDataDescId into the DATA_DESC_ID cell of the present MAIN table row.
+	    // will be done in the main cvel method
+	  
+	    theDataDescId = nextDataDescId;
+	  
+	  } // end if(writeTables && (needTransform || doRegrid)
+
+	} // end if there is a reusable SPW row
+
+	if(writeTables && (needTransform || doRegrid)){ // a new SOURCE table row has to be created
+	  // Add a row to the SOURCE table by copying the contents from the row identified by the SOURCE_ID cell in the row theFieldId
+	  // from the FIELD table. Set the value of the cell SPECTRAL_WINDOW_ID in this new row to the value nextSPWId column.
+	  if(nextSourceRow>=0){ // there is a source table
+	    if(!p_sourcetable->canAddRow()){
+	      os << LogIO::WARN << "Unable to add new row to SOURCE table. Cannot proceed with cvel ..." 
+		 << LogIO::POST;
+	      return False; 
+	    }
+	    numNewSourceRows++;
+	    nextSourceRow++;
+	    // find the row in the SOURCE table which has SOURCE_ID==theSOURCEId and SPW_ID==theSPWId
+	    Int theSOURCEId = FIELDsourceIdCol(theFieldId);
+	    ScalarColumn<Int> SOURCEsourceIdCol = p_sourceCol->sourceId();
+	    ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
+	    Int foundRow = -1;
+	    for(int i=0; i<nextSourceRow; i++){
+	      if(SOURCEsourceIdCol(i) == theSOURCEId && SOURCESPWIdCol(i)==theSPWId){
+		foundRow = i;
+		break;
+	      }
+	    }
+	    if(foundRow<0){ 
+	      os << LogIO::SEVERE << "Incoherent MS: Did not find SOURCE table entry with SOURCE_ID == " 
+		 << theSOURCEId << " and  SPECTRAL_WINDOW_ID == " << theSPWId << endl
+		 <<" even though the FIELD and the DATA_DESCRIPTION table entries for main table row " 
+		 << mainTabRow << " refer to it." 
+		 << LogIO::POST;
+	      return False;
+	    }
+	    else { // found matching row
+	      p_sourcetable->addRow();
+	      TableRow SOURCERow(*p_sourcetable);
+	      TableRecord SOURCERecord = SOURCERow.get(foundRow);
+	      SOURCERow.putMatchingFields(nextSourceRow, SOURCERecord);
+	      SOURCESPWIdCol.put(nextSourceRow, nextSPWId - origNumSPWs); // anticipate the deletion of the original SPW rows
+	    }
+	      
+	  } // end if there is a source table
+	}
+
+	//Put a new row into the "done" table.
+	// (do all the push_backs in one place)
+	oldSpwId.push_back(theSPWId);
+	oldFieldId.push_back(theFieldId);
+	newDataDescId.push_back(theDataDescId - origNumDataDescs); // anticipate the deletion of the original DD rows
+	xin.push_back(transNewXin);
+	xout.push_back(newXout);
+	method.push_back(theMethod);
+	methodF.push_back(theMethodF);
+	regrid.push_back(doRegrid);
+	
+      } // end if(!alreadyDone)
+      // reference frame transformation and regridding of channel definition completed
+      ////////////////////
+
+    } // end loop over main table
+
+    if(writeTables && msModified){
+      // delete the original rows in DD, SPW, and SOURCE if necessary
+      if(numNewDataDesc>0){
+	for(Int i=0; i<origNumDataDescs; i++){
+	  ddtable.removeRow(0);
+	}
+      }
+      if(numNewSPWIds>0){
+	for(Int i=0; i<origNumSPWs; i++){
+	  spwtable.removeRow(0);
+	}
+      }
+      if(numNewSourceRows>0){
+	for(Int i=0; i<origNumSourceRows; i++){
+	  p_sourcetable->removeRow(0);
+	}
+      }
+
+      // prepare parameter string for later entry into MS history
+      ostringstream param;
+      param  << "Added " << numNewDataDesc << " new rows to the DATA_DESCRIPTION table and deleted " << origNumDataDescs << " old ones." << endl
+	     << "Added " << numNewSPWIds << " rows to the SPECTRAL_WINDOW table and deleted " << origNumSPWs << " old ones." << endl
+	     << "Added " << numNewSourceRows << " rows to the SOURCE table and deleted " << origNumSourceRows << " old ones.";
+      regridMessage += param.str() + "\n"; // append
+
+      os << LogIO::NORMAL << param.str() <<  LogIO::POST;
+    }
+
+    return rval;
+  }
+
+
 
 
   const Vector<String>& SubMS::parseColumnNames(const String col)

@@ -540,11 +540,12 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
 
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
+  delete qdp_;	// (probably unnecessary because of Qt parenting...)
+		// (possibly wrong, for same reason?...).
+		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
   if(qpm_!=0) delete qpm_;
   if(qrm_!=0) delete qrm_;
   if(qsm_!=0) delete qsm_;
-  delete qdp_;	// (probably unnecessary because of Qt parenting...)
-		// (possibly wrong, for same reason?...).
 }
 
 

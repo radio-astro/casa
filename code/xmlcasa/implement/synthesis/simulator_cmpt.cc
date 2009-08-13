@@ -694,18 +694,19 @@ simulator::setapply(const std::string& type,
 
 
 
-// RI TODO make timescale and rms variants here and quantities in Simulator.cc
-// RI TODO add output table name - settrop writes table out, corrupt changes ms
+// RI TODO make pwv and windspeed variants here and quantities in Simulator.cc
+
 bool
 simulator::settrop(const std::string& mode, const std::string& table, 
-		   const double timescale, const double rms)
+		   const double pwv, const double deltapwv, 
+		   const double beta, const double windspeed)
 {
   Bool rstat(False);
   try {
     
     if(itsSim !=0){  
       //      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->settrop(mode, table, timescale, rms);
+      rstat=itsSim->settrop(mode, table, pwv, deltapwv, beta, windspeed);
     }
     // RI TODO interpolation params have to get to SolvableVisCal::setApply.
     // RI TODO do we make the user call sm.setapply to deal with that, 

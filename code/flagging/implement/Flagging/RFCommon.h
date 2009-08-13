@@ -103,7 +103,9 @@ const char
     RF_CENTERTIME[] = "timeslot",
     RF_TIMEDELTA[] = "dtime",
     
-    RF_QUACK[] = "quack",
+    RF_QUACK[]     = "quack",
+    RF_QUACKMODE[] = "quackmode",
+    RF_QUACKINC[]  = "quackinc",
 
     RF_NCHAN[] = "nchan",
     RF_START[] = "start",

@@ -3,12 +3,18 @@ from taskinit import *
 from cleanhelper import *
 
 
-def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, scan, mode,interpolation,niter,gain,threshold, psfmode, imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,interactive,mask, nchan,start,width,imsize,cell, phasecenter, restfreq, stokes,weighting,robust, uvtaper,outertaper,innertaper, modelimage,restoringbeam,pbcor, minpb,  calready, noise, npixels, npercycle, cyclefactor, cyclespeedup):
+def clean(vis,imagename,field, spw, selectdata, timerange, uvrange,antenna,
+	  scan, mode,interpolation,niter,gain,threshold, psfmode,imagermode,
+	  ftmachine, mosweight, scaletype, multiscale,negcomponent,smallscalebias,
+          interactive,mask,nchan,start,width,imsize,cell,phasecenter,restfreq, stokes,
+	  weighting,robust,uvtaper,outertaper,innertaper,modelimage,restoringbeam,
+	  pbcor, minpb,calready, noise, npixels, npercycle, cyclefactor, cyclespeedup,
+	  cfcache,painc,epjtable,nterms,reffreq):
 
 	#Python script
 
         casalog.origin('clean')
-
+	reffreq=reffreq*1e9;
 	maskimage=''
 	if((mask==[]) or (mask=='')):
 		mask=['']
@@ -19,7 +25,7 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 	#try:
 	if(1):
 		imCln=imtool.create()
-		imset=cleanhelper(imCln, vis)
+		imset=cleanhelper(imCln, vis, (calready or mosweight))
 		
 		if((len(imagename)==0) or (imagename.isspace())):
 			raise Exception, 'Cannot proceed with blank imagename'
@@ -50,18 +56,65 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		###define clean alg
 		alg=psfmode
 		if(multiscale==[0]):
-			multiscale=[]
+			multiscale=[];
 		if((type(multiscale)==list) and (len(multiscale)>0)):
-			alg='multiscale' 
+			alg='multiscale';
 			imCln.setscales(scalemethod='uservector',
-					uservector=multiscale)
+					uservector=multiscale);
+                        imCln.setsmallscalebias(smallscalebias)
 		if(imagermode=='csclean'):
-			alg='mf'+alg
-		if(imagermode=='mosaic'):
+			alg='mf'+alg;
+		elif(imagermode=='mosaic'):
 			if(alg.count('mf') <1):
-				alg='mf'+alg
-			imCln.setoptions(ftmachine=ftmachine, padding=1.0, freqinterp=interpolation)
-			imCln.setvp(dovp=True)
+				alg='mf'+alg;
+			imCln.setoptions(ftmachine=ftmachine, padding=1.0,
+					 freqinterp=interpolation);
+			imCln.setvp(dovp=True);
+		elif (imagermode=='multiscale'):
+			imCln.setoptions(ftmachine=ftmachine,
+					 freqinterp=interpolation);
+			if((type(multiscale)==list) and (len(multiscale)>0)):
+				alg='multiscale' 
+				imCln.setscales(scalemethod='uservector',
+						uservector=multiscale)
+                                imCln.setsmallscalebias(smallscalebias)
+		elif (imagermode=='desquint'):
+			alg='cs';
+			imCln.setoptions(ftmachine=ftmachine,
+					 cfcachedirname=cfcache,
+					 pastep=painc,
+					 epjtablename="",
+					 applypointingoffsets=False,
+					 dopbgriddingcorrections=True);
+		elif (imagermode=='msmfs'):
+			alg='multiscale';
+			if((type(multiscale)==list) and (len(multiscale)>0)):
+				alg='multiscale';
+				imCln.setscales(scalemethod='uservector',
+						uservector=multiscale);
+                                imCln.setsmallscalebias(smallscalebias)
+			imCln.setoptions(ftmachine=ftmachine,
+					 cfcachedirname=cfcache,
+					 pastep=painc,
+					 epjtablename="",
+					 applypointingoffsets=False,
+					 dopbgriddingcorrections=True);
+			imCln.settaylorterms(ntaylorterms = nterms,
+					     reffreq   = reffreq);
+		elif (imagermode=='advanced'):
+			if((type(multiscale)==list) and (len(multiscale)>0)):
+				alg='multiscale';
+				imCln.setscales(scalemethod='uservector',
+						uservector=multiscale);
+                                imCln.setsmallscalebias(smallscalebias)
+			imCln.setoptions(ftmachine=ftmachine,
+					 cfcachedirname=cfcache,
+					 pastep=painc,
+					 epjtablename=epjtable,
+					 applypointingoffsets=False,
+					 dopbgriddingcorrections=True);
+			imCln.settaylorterms(ntaylorterms = nterms,
+					     reffreq   = reffreq);
 		else:
 			imCln.setoptions(freqinterp=interpolation)
 
@@ -87,11 +140,20 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		###
 		if((imagermode=='mosaic')):
 			if(ftmachine=='ft'):
-				imCln.setmfcontrol(stoplargenegatives=negcomponent,scaletype=sclt,minpb=minpb, constpb=1.0, cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,fluxscale=[imagename+'.flux'])
+				imCln.setmfcontrol(stoplargenegatives=negcomponent,
+						   scaletype=sclt,minpb=minpb,constpb=1.0,
+						   cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,
+						   fluxscale=[imagename+'.flux'])
 			else:
-				imCln.setmfcontrol(stoplargenegatives=negcomponent,scaletype=sclt,minpb=minpb,cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,fluxscale=[imagename+'.flux'])
+				imCln.setmfcontrol(stoplargenegatives=negcomponent,
+						   scaletype=sclt,minpb=minpb,
+						   cyclefactor=cyclefactor,
+						   cyclespeedup=cyclespeedup,
+						   fluxscale=[imagename+'.flux'])
 		else:
-			imCln.setmfcontrol(stoplargenegatives=negcomponent,cyclefactor=cyclefactor,cyclespeedup=cyclespeedup, minpb=minpb)
+			imCln.setmfcontrol(stoplargenegatives=negcomponent,
+					   cyclefactor=cyclefactor,
+					   cyclespeedup=cyclespeedup, minpb=minpb)
 
 
 
@@ -100,7 +162,15 @@ def clean(vis,imagename,field, spw, selectdata, timerange, uvrange, antenna, sca
 		maskimage=imset.outputmask
 		
 			
-		imCln.clean(algorithm=alg,niter=niter,gain=gain,threshold=qa.quantity(threshold,'mJy'),model=[imagename+'.model'],residual=[imagename+'.residual'],image=[imagename+'.image'], psfimage=[imagename+'.psf'], mask=maskimage, interactive=interactive, npercycle=npercycle)
+		imCln.clean(algorithm=alg,niter=niter,gain=gain,
+			    threshold=qa.quantity(threshold,'mJy'),
+			    model=[imagename+'.model'],
+			    residual=[imagename+'.residual'],
+			    image=[imagename+'.image'],
+			    psfimage=[imagename+'.psf'],
+			    mask=maskimage,
+			    interactive=interactive,
+			    npercycle=npercycle)
 		imCln.close()
 		presdir=os.path.realpath('.')
 		newimage=imagename

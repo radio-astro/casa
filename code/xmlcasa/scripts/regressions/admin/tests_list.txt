@@ -49,6 +49,7 @@ ori_hc3n_regression             ttsutsum@aoc.nrao.edu
 ori_hc3n_task_regression        ttsutsum@aoc.nrao.edu
 ori_sio_regression              ttsutsum@aoc.nrao.edu
 ori_sio_task_regression         ttsutsum@aoc.nrao.edu
+orionmos4sim                    smyers@aoc.nrao.edu
 orionmosaic                     kgolap@aoc.nrao.edu
 plotxy_regression               hye@aoc.nrao.edu
 pointing_regression             sbhatnag@aoc.nrao.edu

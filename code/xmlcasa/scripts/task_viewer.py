@@ -2,9 +2,12 @@ import sys
 import os
 import inspect
 import string
+import time
 from taskinit import *
+from task_viewerconnection import viewerconnection
+from task_viewerconnection import dbus_connection
 
-def viewer(infile=None,displaytype=None):
+def viewer(infile=None,displaytype=None,connection=None):
 	""" The viewer will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
 	for spectral-line image cubes.  For measurement sets, many
@@ -68,17 +71,27 @@ def viewer(infile=None,displaytype=None):
 
 
 	#Python script
+	viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
 	if (os.uname()[0]=='Darwin'):
-		casa_path = os.environ['CASAPATH'].split()
-		viewer_path = logger_path = casa_path[0]+'/'+casa_path[1]+'/apps/casaviewer.app/Contents/MacOS/casaviewer'
 		if type(infile)==str: vwrpid=os.spawnvp(os.P_NOWAIT, viewer_path, [viewer_path, infile, displaytype])
 		if type(infile)==bool: vwrpid=os.spawnvp(os.P_NOWAIT, viewer_path, [viewer_path])
         	#logpid=os.system('open -a casalogger.app casapy.log')
 	elif (os.uname()[0]=='Linux'):
-		if type(infile)==str: vwrpid=os.spawnlp(os.P_NOWAIT,'casaviewer','casaviewer',infile,displaytype)
-        	if type(infile)==bool: vwrpid=os.spawnlp(os.P_NOWAIT,'casaviewer','casaviewer')
+		if type(infile)==str: vwrpid=os.spawnlp(os.P_NOWAIT,viewer_path,viewer_path,infile,displaytype)
+        	if type(infile)==bool: vwrpid=os.spawnlp(os.P_NOWAIT,viewer_path,viewer_path)
 	else:
         	print 'Unrecognized OS: No viewer available'
 
 	tb.clearlocks()
 	myf['vwrpid'] = vwrpid
+
+	if connection and dbus_connection( ) != None:
+		tries = 0
+		result = viewerconnection( "viewer_" + str(vwrpid), False )
+		while result == None and tries < 11:
+			tries += 1
+			time.sleep(1)
+			result = viewerconnection( "viewer_" + str(vwrpid), False )
+		return result
+
+	return None

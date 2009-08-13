@@ -31,9 +31,12 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/NROFITSDataset.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 
 #include <iostream>
+#include <fstream>
 #include <math.h>
+#include <iomanip.h>
 
 using namespace std ;
 
@@ -100,6 +103,9 @@ void NROFITSDataset::initialize()
   datasize_ = sizeof( int ) * chmax_ ;
   //record_->JDATA.resize( chmax_ ) ;
   JDATA.resize( chmax_ ) ;
+  // zero clear
+  for ( uInt i = 0 ; i < JDATA.size() ; i++ ) 
+    JDATA[i] = 0 ;
 
   RX.resize( ARYNM ) ;
   HPBW.resize( ARYNM ) ;
@@ -1457,16 +1463,193 @@ vector< vector<double> > NROFITSDataset::getSpectrum()
 vector<double> NROFITSDataset::getSpectrum( int i ) 
 {
   vector<double> spec( chmax_, 0.0 ) ;
+  vector<double> specout( chmax_, 0.0 ) ;
   NRODataRecord *record = getRecord( i ) ;
   double scale = record->SFCTR ;
   double offset = record->ADOFF ;
   double dscale = MLTSCF[getIndex( i )] ;
   //vector<int> ispec = record->JDATA ;
   vector<int> ispec = JDATA ;
-  for ( int i = 0 ; i < chmax_ ; i++ ) {
-    spec[i] = (double)( ispec[i] * scale + offset ) * dscale ;
+  for ( int ii = 0 ; ii < chmax_ ; ii++ ) {
+    spec[ii] = (double)( ispec[ii] * scale + offset ) * dscale ;
   }
-  return spec ;
+
+  // for AOS, re-gridding is needed
+  if ( strncmp( record->ARRYT, "H", 1 ) == 0 
+       || strncmp( record->ARRYT, "W", 1 ) == 0 
+       || strncmp( record->ARRYT, "U", 1 ) == 0 ) {
+
+    string arryt = string( record->ARRYT ) ;
+    uInt ib = getArrayId( arryt ) ;
+    vector<double> fqcal = getFQCAL()[ib] ;
+    vector<double> chcal = getCHCAL()[ib] ;
+    int ncal = getNFCAL()[ib] ;
+
+//     cout << "NRODataset::getFrequencies()  ncal = " << ncal << endl ;
+    while ( ncal < (int)fqcal.size() ) {
+      fqcal.pop_back() ;
+      chcal.pop_back() ;
+    }
+    Vector<Double> xin( chcal ) ;
+    Vector<Double> yin( fqcal ) ;
+    int nchan = getNUMCH() ;
+    Vector<Double> xout( nchan ) ;
+    indgen( xout ) ;
+    Vector<Double> yout ;
+    InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
+    // debug
+    //cout << "i=" << i << endl ;
+    if ( i == 16 ) {
+      ofstream ofs0( "spgrid0.dat" ) ;
+      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+        ofs0 << xout[ii] << "," ;
+      ofs0 << endl ;
+      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+        ofs0 << setprecision(16) << record->FREQ0+yout[ii] << "," ;
+      ofs0 << endl ;
+      ofs0.close() ;
+    }
+    //
+    Vector<Double> z( nchan ) ;
+    Double bw = abs( yout[nchan-1] - yout[0] ) ;
+    bw += 0.5 * abs( yout[nchan-1] - yout[nchan-2] + yout[1] - yout[0] ) ;
+    Double dz = bw / (Double)nchan ;
+    if ( yout[0] > yout[nchan-1] ) 
+      dz = - dz ; 
+    z[0] = yout[0] - 0.5 * ( yout[1] - yout[0] - dz ) ;
+    for ( int ii = 1 ; ii < nchan ; ii++ ) 
+      z[ii] = z[ii-1] + dz ;
+    Vector<Double> zi( nchan+1 ) ;
+    Vector<Double> yi( nchan+1 ) ;
+    zi[0] = z[0] - 0.5 * dz ;
+    zi[1] = z[0] + 0.5 * dz ;
+    yi[0] = yout[0] - 0.5 * ( yout[1] - yout[0] ) ;
+    yi[1] = yout[0] + 0.5 * ( yout[1] - yout[0] ) ;
+    for ( int ii = 2 ; ii < nchan ; ii++ ) {
+      zi[ii] = zi[ii-1] + dz ;
+      yi[ii] = yi[ii-1] + 0.5 * ( yout[ii] - yout[ii-2] ) ;
+    }
+    zi[nchan] = z[nchan-1] + 0.5 * dz ;
+    yi[nchan] = yout[nchan-1] + 0.5 * ( yout[nchan-1] - yout[nchan-2] ) ;
+//     // debug
+//     cout << "nchan=" << nchan << ", bw=" << bw << ", dz=" << dz 
+//          << ", y[1]-y[0]=" << yout[1]-yout[0] << endl ; 
+//     cout << "z: " << z[0] << " - " << z[nchan-1] 
+//          << ", zi: " << zi[0] << " - " << zi[nchan] << endl ;
+//     cout << "y: " << yout[0] << " - " << yout[nchan-1] 
+//          << ", yi: " << yi[0] << " - " << yi[nchan] << endl ;
+//     ofstream ofs1( "spgrid1.dat", ios::out | ios::app ) ;
+//     ofs1 << "spid=" << i << ", ARRYT=" << record->ARRYT << endl ;
+//     ofs1 << "z[0]=" << z[0] << ", yout[0]=" << yout[0] << endl ;
+//     for ( int ii = 1; ii < nchan ; ii++ ) {
+//       ofs1 << "               dz=" << z[ii]-z[ii-1] << ", dy=" << yout[ii]-yout[ii-1] << endl ;
+//       ofs1 << "z[" << ii << "]=" << z[ii] << ", yout[" << ii << "]=" << yout[ii] << endl ;
+//     }
+//     ofs1.close() ;
+//     ofstream ofs2( "spgrid2.dat", ios::out | ios::app ) ;
+//     ofs2 << "spid=" << i << ", ARRYT=" << record->ARRYT << endl ;
+//     for ( int ii = 0 ; ii < nchan+1 ; ii++ ) 
+//       ofs2 << "zi[" << ii << "]=" << zi[ii] << ", yi[" << ii << "]=" << yi[ii] << endl ;
+//     ofs2.close() ;
+//     //
+    int ichan = 0 ;
+    double wsum = 0.0 ; 
+    // debug
+    //ofstream ofs3( "spgrid3.dat", ios::out | ios::app ) ;
+    if ( dz > 0.0 ) {
+      for ( int ii = 0 ; ii < nchan ; ii++ ) {
+        double zl = zi[ii] ;
+        double zr = zi[ii+1] ;
+        for ( int j = ichan ; j < nchan ; j++ ) {
+          double yl = yi[j] ;
+          double yr = yi[j+1] ;
+          if ( yl <= zl ) {
+            if ( yr <= zl ) {
+              continue ;
+            }
+            else if ( yr <= zr ) {
+              specout[ii] += spec[j] * ( yr - zl ) ;
+              wsum += ( yr - zl ) ;
+            }
+            else {
+              specout[ii] += spec[j] * dz ;
+              wsum += dz ;
+              ichan = j ;
+              break ;
+            }
+          }
+          else if ( yl < zr ) {
+            if ( yr <= zr ) {
+              specout[ii] += spec[j] * ( yr - yl ) ;
+              wsum += ( yr - yl ) ;
+            }
+            else {
+              specout[ii] += spec[j] * ( zr - yl ) ;
+              wsum += ( zr - yl ) ;
+              ichan = j ;
+              break ;
+            }
+          }
+          else {
+            ichan = j - 1 ;
+            break ;
+          }
+        }
+        specout[ii] /= wsum ;
+        wsum = 0.0 ;
+      }
+    }
+    else if ( dz < 0.0 ) {
+      for ( int ii = 0 ; ii < nchan ; ii++ ) {
+        double zl = zi[ii] ;
+        double zr = zi[ii+1] ;
+        for ( int j = ichan ; j < nchan ; j++ ) {
+          double yl = yi[j] ;
+          double yr = yi[j+1] ;
+          if ( yl >= zl ) {
+            if ( yr >= zl ) {
+              continue ;
+            }
+            else if ( yr >= zr ) {
+              specout[ii] += spec[j] * abs( yr - zl ) ;
+              wsum += abs( yr - zl ) ;
+            }
+            else {
+              specout[ii] += spec[j] * abs( dz ) ;
+              wsum += abs( dz ) ;
+              ichan = j ;
+              break ;
+            }
+          }
+          else if ( yl > zr ) {
+            if ( yr >= zr ) {
+              specout[ii] += spec[j] * abs( yr - yl ) ;
+              wsum += abs( yr - yl ) ;
+            }
+            else {
+              specout[ii] += spec[j] * abs( zr - yl ) ;
+              wsum += abs( zr - yl ) ;
+              ichan = j ;
+              break ;
+            }
+          }
+          else {
+            ichan = j - 1 ;
+            break ;
+          }
+        }
+        specout[ii] /= wsum ;
+        wsum = 0.0 ;
+      }
+    }
+    //specout = spec ;
+    //ofs3.close() ;
+  }
+  else {
+    specout = spec ;
+  }
+
+  return specout ;
 }
 
 int NROFITSDataset::getIndex( int irow ) 

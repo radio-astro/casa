@@ -10,6 +10,8 @@
  ***/
 
 #include <iostream>
+#include <math.h>
+
 #include <xmlcasa/images/regionmanager_cmpt.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>
@@ -104,23 +106,95 @@ regionmanager::box(const std::vector<double>& blc, const std::vector<double>& tr
 	Vector<Double> dblc(blc);
 	Vector<Double> dtrc(trc);
 	Vector<Double> dinc(inc);
-	if(inc.size()==1 && inc[0]==1)
-	{
-	    dinc.resize(blc.size());
-	    dinc.set(1.0);
-	}
+	Bool useAllDefaults = False;
 
+	if( (dtrc.nelements()==1 && dtrc[0]<0) 
+                 && (dblc.nelements()==1 && dblc[0]<1) )
+	    useAllDefaults = True;
+	
 	if(dtrc.nelements()==1 && dtrc[0]<0)
 	{
 	    dtrc.resize();
 	}
-	Record* lebox=
-	    itsRegMan->box(dblc, dtrc, dinc, String(absrel), frac, String(comment));
-    
-	retval=fromRecord(*lebox);
+	if(dblc.nelements()==1 && dblc[0]<0)
+	{
+	    dblc.resize();
+	}
+	
+	Record* lebox;
+	if ( frac || useAllDefaults ) {
+	    if(inc.size()==1 && inc[0]==1)
+	    {
+		dinc.resize(blc.size());
+		dinc.set(1.0);
+	    }
+
+	    lebox= itsRegMan->box(dblc, dtrc, dinc, String(absrel), frac, String(comment));
+	} else {
+	    // ARG ARG ARG!!!
+	    // Since image analysis tool doesn't seem to be able to
+	    // hand LCBox regions this is temporarly the same as for
+	    // fractional boxes.  This requires a lot of reworking
+	    // of the Image Analysis, Region Manager, and likely
+	    // Imager code to get this working properly.
+	    if(inc.size()==1 && inc[0]==1)
+	    {
+		dinc.resize(blc.size());
+		dinc.set(1.0);
+	    }
+
+	    lebox= itsRegMan->box(dblc, dtrc, dinc, String(absrel), frac, String(comment));
+
+	    // This commented out section work, and creates an LCBox
+	    // to bad others don't know what to do about it.
+            /*
+            // Create the shape record and then the pixel box.
+	    if ( dblc.nelements() != dtrc.nelements() )
+		*itsLog << LogIO::SEVERE 
+			<< "When creating a pixel box region the bottom-left"
+			<< " corner(blc)\nand the top-right corner (trc)"
+			<< " must be specified."
+			<< LogIO::EXCEPTION;
+
+
+	    
+	    // If the blc is empty but we have trc value then we'll 
+	    // assume that the blc is the bottom most, right most position.
+	    if ( dblc.nelements() < 1 ) {
+		dblc.resize( dtrc.nelements() );
+		dblc.set( 0.0 );
+	    }
+	    
+	    // If we don't have any increment values assume 
+	    // it is 1 for all values.
+	    if(inc.size()==1 && inc[0]==1)
+	    {
+		dinc.resize(blc.size());
+		dinc.set(1.0);
+	    }
+	    // Create the shape vector.  The shape is the total under
+	    // of pixels divided by the increment.
+	    Vector<Int> shape(dinc.nelements());
+	    for ( uInt i=0; i<dinc.nelements(); i++ ) {
+		if ( dinc[i] < 1 )
+		    *itsLog << LogIO::SEVERE 
+			    << "Invalid increment given, " << dinc[i]
+			    << ". Increment values must be an integer"
+			    << " greater then 1."
+			    << LogIO::EXCEPTION;
+		
+		shape[i] = static_cast<Int>(ceil( ( dtrc[i] - dblc[i] + 1 ) / dinc[i] ) );	    
+	    }
+	    lebox = itsRegMan->box(dblc, dtrc, shape, String(comment));
+	    */
+	}
+	
+
 	if (lebox !=0){
+	    retval=fromRecord(*lebox);
 	    delete lebox;
 	}
+	
     } catch (AipsError x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " 
 		<< x.getMesg() << LogIO::POST;
@@ -129,6 +203,7 @@ regionmanager::box(const std::vector<double>& blc, const std::vector<double>& tr
   
     return retval;
 }
+    
 
 // Compute the complement of a region(s)
 // 

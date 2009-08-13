@@ -34,6 +34,8 @@
 #include <map>
 #include <vector>
 //#include <ms/MeasurementSets/MSColumns.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
+
 
 #ifndef MSVIS_SUBMS_H
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -188,12 +190,12 @@ class SubMS
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
   // 0 = MS modified but not OK (i.e. MS is probably damaged) 
-  Int cvel(const String& field="", // default = "all" 
+  Int cvel(String& message, // returns the MS history entry 
 	   const String& outframe="", // default = "keep the same"
-	   const String& regridQuant="freq",
-	   const Double regridVeloRestfrq=-9E99, // default = "not set" 
-	   const String& regridInterpMeth="NEAR",
-	   const Double regridCenter=-9E99, // default = "not set" 
+	   const String& regridQuant="chan",
+	   const Double regridVeloRestfrq=-3E30, // default = "not set" 
+	   const String& regridInterpMeth="LINEAR",
+	   const Double regridCenter=-3E30, // default = "not set" 
 	   const Double regridBandwidth=-1., // default = "not set" 
 	   const Double regridChanWidth=-1. // default = "not set" 
 	   );
@@ -208,6 +210,14 @@ class SubMS
   Double freq_from_lambda(const Double lambda){ return (C::c/lambda); };
   
   // Support method for cvel():
+  // results in the column oldName being renamed to newName, and a new column which is an empty copy of 
+  // oldName being created together with a TileShapeStMan data manager and hypercolumn (name copied from 
+  // the old hypercolumn) with given dimension, the old hypercolumn of name hypercolumnName is renamed 
+  // to  name+"B"
+  Bool createPartnerColumn(TableDesc& modMSTD, const String& oldName, const String& newName,
+			   const Int& hypercolumnDim, const IPosition& tileShape);
+
+  // Support method for cvel():
   // calculate the final new channel boundaries from the regridding parameters
   // and the old channel boundaries (already transformed to the desired reference frame);
   // returns False if input paramters were invalid and no useful boundaries could be created
@@ -220,9 +230,35 @@ class SubMS
 			const String regridQuant,
 			const Vector<Double>& transNewXin, 
 			const Vector<Double>& transCHAN_WIDTH,
-			string& message // message to the user, epsecially in case of error 
+			String& message // message to the user, epsecially in case of error 
 			);
 
+  // Support method for cvel():
+  // if writeTables is False, the (const) input parameters are only verified, nothing is written;
+  // return value is True if the parameters are OK.
+  // if writeTables is True, the vectors are filled and the SPW, DD, and SOURCE tables are modified;
+  // the return value in this case is True only if a successful modification (or none) took place
+  Bool setRegridParameters(vector<Int>& oldSpwId,
+			   vector<Int>& oldFieldId,
+			   vector<Int>& newDataDescId,
+			   vector<Bool>& regrid,
+			   vector< Vector<Double> >& xout, 
+			   vector< Vector<Double> >& xin, 
+			   // This is a temporary fix until InterpolateArray1D<Double, Complex>& works.
+			   vector< InterpolateArray1D<Float,Complex>::InterpolationMethod >& method,
+			   vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
+			   Bool& msMod,
+			   const String& outframe,
+			   const String& regridQuant,
+			   const Double regridVeloRestfrq,
+			   const String& regridInterpMeth,
+			   const Double regridCenter, 
+			   const Double regridBandwidth, 
+			   const Double regridChanWidth,
+			   const Bool writeTables,
+			   LogIO& os,
+			   String& regridMessage
+			   );
 
  private:
   // *** Private member functions ***

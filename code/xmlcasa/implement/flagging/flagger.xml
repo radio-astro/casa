@@ -248,6 +248,16 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>0.0</value>
      </param>
 
+     <param type="string" name="quackmode">
+     <description>Quack mode</description>
+     <value>beg</value>
+     </param>
+
+     <param type="bool" name="quackincrement">
+     <description>Quack incrementally?</description>
+     <value>false</value>
+     </param>
+
 </input>
 <returns type="bool"/>
 <example>

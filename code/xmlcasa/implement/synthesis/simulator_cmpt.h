@@ -94,7 +94,7 @@ class simulator
 
     bool setgain(const std::string& mode = "calculate", const std::string& table = "", const double timescale = 10.0, const double rms = 1.0);
 
-    bool settrop(const std::string& mode = "calculate", const std::string& table = "", const double timescale = 10.0, const double rms = 1.0);
+    bool settrop(const std::string& mode = "calculate", const std::string& table = "", const double pwv = 3.0, const double deltapwv = 0.5, const double beta = 2.6, const double windspeed = 7);
 
     bool setpointingerror(const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbcorrection = false);
 

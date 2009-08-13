@@ -93,7 +93,7 @@ class Imager
 
   // Utility function to do channel selection
 
-  Bool selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids, 
+  Bool selectDataChannel(Vector<Int>& spectralwindowids, 
 				 String& dataMode, 
 				 Vector<Int>& dataNchan, 
 				 Vector<Int>& dataStart, Vector<Int>& dataStep,
@@ -107,11 +107,11 @@ class Imager
   virtual void setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan); 
 
   //VisSet and resort 
-  virtual void makeVisSet(VisSet* & vs, MeasurementSet& ms, 
-			  Bool compress=False, Bool mosaicOrder=False);
-  //Just to create the SORTED_TABLE
   virtual void makeVisSet(MeasurementSet& ms, 
 			  Bool compress=False, Bool mosaicOrder=False);
+  //Just to create the SORTED_TABLE if one can
+  //virtual void makeVisSet(MeasurementSet& ms, 
+  //			  Bool compress=False, Bool mosaicOrder=False);
 
   virtual void writeHistory(LogIO& os);
 
@@ -246,6 +246,9 @@ class Imager
   Bool setscales(const String& scaleMethod,          // "nscales"  or  "uservector"
 		 const Int inscales,
 		 const Vector<Float>& userScaleSizes);
+  // set bias
+  Bool setSmallScaleBias(const Float inbias);
+
   // Set the number of taylor series terms in the expansion of the
   // image as a function of frequency.
   Bool settaylorterms(const Int intaylor, 
@@ -479,7 +482,7 @@ class Imager
 protected:
 
   MeasurementSet* ms_p;
-  MSHistoryHandler *hist_p;
+  CountedPtr<MSHistoryHandler> hist_p;
   Table antab_p;
   Table datadesctab_p;
   Table feedtab_p;
@@ -507,6 +510,8 @@ protected:
   String msname_p;
   MeasurementSet *mssel_p;
   VisSet *vs_p;
+  ROVisibilityIterator* rvi_p;
+  VisibilityIterator* wvi_p;
   FTMachine *ft_p;
   ComponentFTMachine *cft_p;
   SkyEquation* se_p;
@@ -522,7 +527,8 @@ protected:
   Int wprojPlanes_p;
   Quantity mcellx_p, mcelly_p;
   String stokes_p;
-  String dataMode_p, imageMode_p;
+  String dataMode_p;
+  String imageMode_p;           // channel, (optical)velocity, mfs, or frequency
   Vector<Int> dataNchan_p;
   Int imageNchan_p;
   Vector<Int> dataStart_p, dataStep_p;
@@ -662,7 +668,7 @@ protected:
   Double reffreq_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
-
+  Float smallScaleBias_p; //ms-clean
   Int nmodels_p;
   // Everything here must be a real class since we make, handle and
   // destroy these.

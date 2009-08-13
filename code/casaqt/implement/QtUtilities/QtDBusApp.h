@@ -46,7 +46,7 @@ namespace casa {
 	    static bool serviceIsAvailable(const std::string &service);
 	    virtual const QString &getName( ) const = 0;
 	    QtDBusApp( ) : service_name(0), object_name(0) { }
-	    ~QtDBusApp( );
+	    virtual ~QtDBusApp( );
 	private:
 	    static const QString &serviceBase( );
 	    static const QString &objectBase( );

@@ -35,6 +35,7 @@ static LogSinkInterface *thelogsink
   */
 static string theLogName;
 
+//logsink::logsink():thelogsink(0)
 logsink::logsink()
 {
   if(!theLogName.size()){
@@ -42,6 +43,7 @@ logsink::logsink()
      char *mybuff = getcwd(buff, MAXPATHLEN);
      theLogName = string(mybuff) + string("/casapy.log");
   }
+  //cout << "thelogsink=" << thelogsink << endl;
   thelogsink = new casa::TSLogSink();
   setlogfile(theLogName);
   itsorigin = new LogOrigin("casa");
@@ -81,6 +83,7 @@ bool logsink::origin(const std::string &fromwhere)
     }
     delete itsorigin;
     itsorigin = new LogOrigin("casa");
+    //String* taskname = new String(fromwhere);
     taskname = new String(fromwhere);
     itsorigin->taskName(*taskname);
     thelogsink->setTaskName(*taskname);
@@ -161,8 +164,11 @@ logsink::postLocally(const std::string& message,
     if(!itsorigin)
        itsorigin = new LogOrigin("casa");
     itsorigin->className(origin);
+    taskname = new String(origin);
+    //String* taskname = new String(origin);
+    //cout << "(*taskname==\"\")=" <<  (*taskname == "") << endl;
     thelogsink->setTaskName(*taskname);
-    LogSink().globalSink().setTaskName(*taskname);
+    //LogSink().globalSink().setTaskName(*taskname);
     if (priority == "DEBUG")
        messagePriority = LogMessage::DEBUGGING;
     else if (priority == "DEBUG1")
@@ -219,12 +225,19 @@ logsink::id()
 bool logsink::setglobal(const bool isglobal)
 {
    bool rstat(true);
+   
    if(isglobal){
+      //cout << "isglobal=" << isglobal << endl;
+      //cout << "thelogsink=" << thelogsink << endl;
       LogSink().globalSink(thelogsink);
       globalsink = isglobal;
+      //cout << "setglobal(True) ok" << endl;
    } else {
+      //cout << "isglobal=" << isglobal << endl;
       LogSinkInterface *dummy = new StreamLogSink(LogMessage::NORMAL, &cerr);
-      LogSink().globalSink(dummy);
+      //cout << "dummy==" << dummy << endl;
+      //LogSink().globalSink(dummy);
+      //cout << "setglobal(True) ok" << endl;
    }
    return rstat;
 }
@@ -237,6 +250,7 @@ bool logsink::setlogfile(const std::string& filename)
    else
       thelogsink = new NullLogSink();
       
+   //
    // Also set for any watchers.
    CasapyWatcher::logChanged_(filename);
       

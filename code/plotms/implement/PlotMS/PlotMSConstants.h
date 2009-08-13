@@ -204,6 +204,23 @@ public:
     // Returns true if the given Records are equals, false otherwise.
     static bool recEq(const Record& rec1, const Record& rec2);
     
+    // Converts the given templated vector to/from an int Vector.
+    // <group>
+    template <class T>
+    static Vector<int> toIntVector(const vector<T>& v) {
+        Vector<int> v2(v.size());
+        for(unsigned int i = 0; i < v.size(); i++) v2[i] = (int)v[i];
+        return v2;
+    }
+    
+    template <class T>
+    static vector<T> fromIntVector(const Vector<int>& v) {
+        vector<T> v2(v.size());
+        for(unsigned int i = 0; i < v.size(); i++) v2[i] = (T)v[i];
+        return v2;
+    }
+    // </group>
+    
     
     // Enum for the different MS summary types.
     // <group>
@@ -219,6 +236,12 @@ public:
               "Source", "Spectral Window", "Spectral Window and Polarization",
               "SysCal", "Weather")
     // </group>
+              
+              
+    // Colorizing Values //
+              
+    // Returns the list of unique colors used to colorize plots.
+    static const vector<String>& COLORS_LIST();
     
     
     // Default Parameter Values //
@@ -238,6 +261,7 @@ public:
     static const Axis DEFAULT_XAXIS;
     static const Axis DEFAULT_YAXIS;
     static const DataColumn DEFAULT_DATACOLUMN;
+    static const Axis DEFAULT_COLOR_AXIS;
     // </group>
     
     // Default values for PMS_PP_Canvas.

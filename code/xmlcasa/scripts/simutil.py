@@ -160,9 +160,10 @@ class simutil:
             l=ax.get_yticklabels()
             pl.setp(l,fontsize="x-small")
             pl.title(image,fontsize="x-small")
-            from matplotlib.font_manager import fontManager, FontProperties
-            font= FontProperties(size='x-small');
-            pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
+            # from matplotlib.font_manager import fontManager, FontProperties
+            # font= FontProperties(size='x-small');
+            # pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
+            pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e" % (im_min,im_max,im_rms),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
         ia.done()
         return im_min,im_max,im_rms
 

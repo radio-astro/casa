@@ -15,8 +15,9 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
         ### Now the actual task code
         ###
         retValue={}
-        stdsave=sys.stdout
-        bbb=False
+        usr = os.environ['USER']
+        tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+        resultstats = []
         try:
             if sdfile=='':
                 raise Exception, 'sdfile is undefined'
@@ -38,11 +39,13 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             fluxunit_now = s.get_fluxunit()
             if ( antennaname == 'GBT'):
                     if (fluxunit_now == ''):
-                           print "no fluxunit in the data. Set to Kelvin."
+                           #print "no fluxunit in the data. Set to Kelvin."
+                           casalog.post( "no fluxunit in the data. Set to Kelvin." )
                            s.set_fluxunit('K')
                            fluxunit_now = s.get_fluxunit()
 
-            print "Current fluxunit = "+fluxunit_now
+            #print "Current fluxunit = "+fluxunit_now
+            casalog.post( "Current fluxunit = "+fluxunit_now )
 
             # set flux unit string (be more permissive than ASAP)
             if ( fluxunit == 'k' ):
@@ -57,60 +60,75 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                             if ( fluxunit != '' ):
                                     if ( fluxunit == fluxunit_now ):
-                                            print "No need to change default fluxunits"
+                                            #print "No need to change default fluxunits"
+                                            casalog.post( "No need to change default fluxunits" )
                                     else:
                                             s.set_fluxunit(fluxunit)
-                                            print "Reset default fluxunit to "+fluxunit
+                                            #print "Reset default fluxunit to "+fluxunit
+                                            casalog.post( "Reset default fluxunit to "+fluxunit )
                                             fluxunit_now = s.get_fluxunit()
                             else:
-                                    print "Warning - no fluxunit for set_fluxunit"
+                                    #print "Warning - no fluxunit for set_fluxunit"
+                                    casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
 
             elif ( fluxunit=='' or fluxunit==fluxunit_now ):
-                    print "No need to convert fluxunits"
+                    #print "No need to convert fluxunits"
+                    casalog.post( "No need to convert fluxunits" )
             elif ( type(telescopeparm) == list ):
                     # User input telescope params
                     if ( len(telescopeparm) > 1 ):
                             D = telescopeparm[0]
                             eta = telescopeparm[1]
-                            print "Use phys.diam D = %5.1f m" % (D)
-                            print "Use ap.eff. eta = %5.3f " % (eta)
+                            #print "Use phys.diam D = %5.1f m" % (D)
+                            #print "Use ap.eff. eta = %5.3f " % (eta)
+                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                            casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
                             s.convert_flux(eta=eta,d=D)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
-                            print "Use gain = %6.4f Jy/K " % (jypk)
+                            #print "Use gain = %6.4f Jy/K " % (jypk)
+                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
                             s.convert_flux(jyperk=jypk)
                     else:
-                            print "Empty telescopeparm list"
+                            #print "Empty telescopeparm list"
+                            casalog.post( "Empty telescopeparm list" )
 
             elif (telescopeparm==''):
                     if ( antennaname == 'GBT'):
                             # needs eventually to be in ASAP source code
-                            print "Convert fluxunit to "+fluxunit
+                            #print "Convert fluxunit to "+fluxunit
+                            casalog.post( "Convert fluxunit to "+fluxunit )
                             # THIS IS THE CHEESY PART
                             # Calculate ap.eff eta at rest freq
                             # Use Ruze law
                             #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
                             # with
-                            print "Using GBT parameters"
+                            #print "Using GBT parameters"
+                            casalog.post( "Using GBT parameters" )
                             eps = 0.390  # mm
                             eta_0 = 0.71 # at infinite wavelength
                             # Ideally would use a freq in center of
                             # band, but rest freq is what I have
                             rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
                             eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            print "Calculated ap.eff. eta = %5.3f " % (eta)
-                            print "At rest frequency %5.3f GHz" % (rf)
+                            #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                            #print "At rest frequency %5.3f GHz" % (rf)
+                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
-                            print "Assume phys.diam D = %5.1f m" % (D)
+                            #print "Assume phys.diam D = %5.1f m" % (D)
+                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
                             s.convert_flux(eta=eta,d=D)
 
-                            print "Successfully converted fluxunit to "+fluxunit
+                            #print "Successfully converted fluxunit to "+fluxunit
+                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART'] ):
                             s.convert_flux()
 
                     else:
                             # Unknown telescope type
-                            print "Unknown telescope - cannot convert"
+                            #print "Unknown telescope - cannot convert"
+                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
 
             # set default spectral axis unit
@@ -121,7 +139,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             if ( frame != '' ):
                     s.set_freqframe(frame)
             else:
-                    print 'Using current frequency frame'
+                    #print 'Using current frequency frame'
+                    casalog.post( 'Using current frequency frame' )
 
             if ( doppler != '' ):
                     if ( doppler == 'radio' ):
@@ -135,7 +154,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
                     s.set_doppler(ddoppler)
             else:
-                    print 'Using current doppler convention'
+                    #print 'Using current doppler convention'
+                    casalog.post( 'Using current doppler convention' )
 
             # Prepare a selection
             sel=sd.selector()
@@ -183,14 +203,24 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                 s.set_selection(sel)
                 del sel
             except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 	    # Warning for multi-IF data
 	    if len(s.getifnos()) > 1:
-		print '\nWarning - The scantable contains multiple IF data.'
-		print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
-		print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
+		#print '\nWarning - The scantable contains multiple IF data.'
+		#print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
+		#print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
+		casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
+		casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
+		casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0)), priority='WARN' )
+
+            # If statfile is set, sd.rcParams['verbose'] must be True
+            verbsave=sd.rcParams['verbose']
+            if ( len(statfile) > 0 ):
+                    if ( not os.path.exists(statfile) or overwrite ):
+                            sd.rcParams['verbose']=True
 
             # Interactive mask
             if interactive:
@@ -206,31 +236,59 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    del new_mask
 		    msks=s.get_masklist(msk)
 		    if len(msks) < 1:
-			    print 'No channel is selected. Exit without calculation.'
-			    return
+			    #print 'No channel is selected. Exit without calculation.'
+                            raise Exception, 'No channel is selected. Exit without calculation.'
+			    #return
 		    lbl=s.get_unit()
-                    print 'final mask list ('+lbl+') =',msks
-
-		    # Output line statistics to file
-                    if ( len(statfile) > 0 ):
-                            if ( not os.path.exists(statfile) or overwrite ):
-                                    sys.stdout=open( statfile,'w' )
-                                    verbsave=sd.rcParams['verbose']
-                                    sd.rcParams['verbose']=True
-                                    bbb=True
-                            else:
-                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
+                    #print 'final mask list ('+lbl+') =',msks
+                    casalog.post( 'final mask list ('+lbl+') = '+str(msks) )
 
                     # Get statistic values
                     maxl=s.stats('max',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     minl=s.stats('min',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    maxabcl=s.stats('max_abc',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    minabcl=s.stats('min_abc',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     suml=s.stats('sum',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     meanl=s.stats('mean',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     medianl=s.stats('median',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     rmsl=s.stats('rms',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     stdvl=s.stats('stddev',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    del msk, msks
 
             # set the mask region
@@ -239,52 +297,106 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    msks=s.get_masklist(msk)
 		    if len(msks) < 1:
 			    del msk, msks
-			    print 'Selected mask lists are out of range. Exit without calculation.'
-			    return
+			    #print 'Selected mask lists are out of range. Exit without calculation.'
+                            raise Exception, 'Selected mask lists are out of range. Exit without calculation.'
+			    #return
 
-                    # Output line statistics to file
-                    if ( len(statfile) > 0 ):
-                            if ( not os.path.exists(statfile) or overwrite ):
-                                    sys.stdout=open( statfile,'w' )
-                                    verbsave=sd.rcParams['verbose']
-                                    sd.rcParams['verbose']=True
-                                    bbb=True
-                            else:
-                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
-                                    
                     maxl=s.stats('max',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     minl=s.stats('min',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    maxabcl=s.stats('max_abc',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    minabcl=s.stats('min_abc',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     suml=s.stats('sum',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     meanl=s.stats('mean',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     medianl=s.stats('median',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     rmsl=s.stats('rms',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     stdvl=s.stats('stddev',msk)
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     del msk, msks             
             else:
                     # Full region
-                    print 'Using full region'
-
-                    # Output line statistics to file
-                    if ( len(statfile) > 0 ):
-                            if ( not os.path.exists(statfile) or overwrite ):
-                                    sys.stdout=open( statfile,'w' )
-                                    verbsave=sd.rcParams['verbose']
-                                    sd.rcParams['verbose']=True
-                                    bbb=True
-                            else:
-                                    print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
+                    #print 'Using full region'
+                    casalog.post( 'Using full region' )
 
                     maxl=s.stats('max')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     minl=s.stats('min')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    maxabcl=s.stats('max_abc')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 		    minabcl=s.stats('min_abc')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     suml=s.stats('sum')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     meanl=s.stats('mean')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     medianl=s.stats('median')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     rmsl=s.stats('rms')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
                     stdvl=s.stats('stddev')
+                    if sd.rcParams['verbose']:
+                            f=open(tmpfile,'r')
+                            resultstats+=f.readlines()
+                            f.close()
 
 
             # Put into output dictionary
@@ -300,12 +412,14 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 	    if qa.check(abclbl):
 		    xunit = abclbl
 	    else:
-		    print "Undefined unit: '"+abclbl+"'...ignored"
+		    #print "Undefined unit: '"+abclbl+"'...ignored"
+                    casalog.post( "Undefined unit: '"+abclbl+"'...ignored", priority = 'WARN' )
 		    xunit = '_'
 	    if qa.check(ordlbl):
 		    intunit = ordlbl+'.'+abclbl
 	    else:
-		    print "Undifined unit: '"+ordlbl+"'...ignored"
+		    #print "Undifined unit: '"+ordlbl+"'...ignored"
+                    casalog.post( "Undifined unit: '"+ordlbl+"'...ignored", priority = 'WARN' )
 		    intunit = '_.'+abclbl
 
             ns = len(maxl)
@@ -327,9 +441,6 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 
 		    integratef=[]
 		    outp = ''
-                    print "--------------------------------------------------"
-		    print " ", "eqw [",abclbl,"]"
-                    print "--------------------------------------------------"
                     out = ''
                     for i in range(ns):
 			    #Get bin width
@@ -361,13 +472,36 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    outp += '= %3.3f\n' % (integratef[i])
 			    outp +=  "--------------------------------------------------\n"
 
-                    print out
+                    if sd.rcParams['verbose']:
+                            # Print equivalent width
+                            f = open(tmpfile,'w')
+                            print >> f, "--------------------------------------------------"
+                            print >> f, " ", "eqw [",abclbl,"]"
+                            print >> f, "--------------------------------------------------"
+                            print >> f, out
+                            print >> f, ''
+                            f.close()
+                            f = open(tmpfile,'r')
+                            rlines = f.readlines()
+                            f.close()
+                            resultstats += rlines
+                            for rl in rlines:
+                                    casalog.post( rl )
 
-		    # Print integrated flux
-		    print "--------------------------------------------------"
-		    print " ", "Integrated intensity [", intlbl, "]"
-		    print "--------------------------------------------------"
-		    print outp
+                            # Print integrated flux
+                            f = open(tmpfile,'w')
+                            print >> f,  "--------------------------------------------------"
+                            print >> f,  " ", "Integrated intensity [", intlbl, "]"
+                            print >> f, "--------------------------------------------------"
+                            print >> f, outp
+                            print >> f, ''
+                            f.close()
+                            f = open(tmpfile,'r')
+                            rlines = f.readlines()
+                            f.close()
+                            resultstats += rlines
+                            for rl in rlines:
+                                    casalog.post( rl )
 
 		    retValue['eqw']=qa.quantity(eqw,xunit)
 		    retValue['totint']=qa.quantity(integratef,intunit)
@@ -406,11 +540,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    out += '= %3.3f\n' % (eqw)
 
                     out +=  "--------------------------------------------------\n"
-                    print "--------------------------------------------------"
-		    print " ", "eqw [",abclbl,"]"
-                    print "--------------------------------------------------"
-                    print out
-
+                    
 		    # Construct integrated flux
 		    integratef = suml[0]*dabc
 		    outp += 'Scan[%d] (%s) ' % (s.getscan(0), s._getsourcename(0))
@@ -420,29 +550,51 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    if s.npol(-1) > 1: outp +=  ' Pol[%d] ' % (s.getpol(0))
 		    outp += '= %3.3f\n' % (integratef)
 		    outp +=  "--------------------------------------------------\n"
-		    # Print integrated flux
-		    print "--------------------------------------------------"
-		    print " ", "Integrated intensity [", intlbl, "]"
-		    print "--------------------------------------------------"
-		    print outp
 
+                    if sd.rcParams['verbose']:
+                            # Print equivalent width
+                            f = open(tmpfile,'w')
+                            print >> f,  "--------------------------------------------------"
+                            print >> f, " ", "eqw [",abclbl,"]"
+                            print >> f, "--------------------------------------------------"
+                            print >> f, out
+                            f.close()
+                            f = open(tmpfile,'r')
+                            rlines = f.readlines()
+                            f.close()
+                            resultstats += rlines
+                            for rl in rlines:
+                                    casalog.post( rl )
+                            # Print integrated flux
+                            f = open(tmpfile,'w')
+                            print >> f, "--------------------------------------------------"
+                            print >> f, " ", "Integrated intensity [", intlbl, "]"
+                            print >> f, "--------------------------------------------------"
+                            print >> f, outp
+                            f = open(tmpfile,'r')
+                            rlines = f.readlines()
+                            f.close()
+                            resultstats += rlines
+                            for rl in rlines:
+                                    casalog.post( rl )
+                            
 		    retValue['eqw']=qa.quantity(eqw,xunit)
 		    retValue['totint']=qa.quantity(integratef,intunit)
 
                     
             # Output to terminal if statfile is not empty
-            #if ( len(statfile) > 0 ):
-            #        if ( not os.path.exists(statfile) or overwrite ):
-            if bbb:
-                    sys.stdout.close()
-                    sys.stdout=stdsave
-                    if verbsave: 
-                            statout=open( statfile,'r' )
-                            linelist=statout.readlines()
-                            for i in range( len(linelist) ):
-                                    print linelist[i],
-                            statout.close()
-                    sd.rcParams['verbose']=verbsave
+            if ( len(statfile) > 0 ):
+                    if ( not os.path.exists(statfile) or overwrite ):
+                            #sys.stdout=open( statfile,'w' )
+                            f=open(statfile,'w')
+                            for xx in resultstats:
+                                    f.write( xx )
+                            f.close()
+                            sd.rcParams['verbose']=verbsave
+                            #bbb=True
+                    else:
+                            #print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
+                            casalog.post( 'File '+statfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
 
             # Final clean up
             del s
@@ -453,7 +605,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             # DONE
             
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
         finally:
                 casalog.post('')

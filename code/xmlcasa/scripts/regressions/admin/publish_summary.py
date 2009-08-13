@@ -575,11 +575,7 @@ class runTest:
             'casapyinfo --svnversion')
         if errorcode != 0 or \
                svnversion.find('casa') >= 0:  # or if an error happened but it didn't return non-zero
-            (errorcode, svnversion) = commands.getstatusoutput( \
-            'casapyinfo-test --svnversion')
-            if errorcode != 0 or \
-                   svnversion.find('casa') >= 0:
-                return myf['casalog'].version()
+            return myf['casalog'].version()
 
         return myf['casalog'].version() + \
                ' r' + svnversion

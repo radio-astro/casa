@@ -219,7 +219,7 @@ Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr) {
    //     << " quackinterval=" << quackinterval << " opmode=" << opmode
    //     << endl;
    return flagger.setmanualflags(autocorr, unflag, clipexpr, 
-        cliprange, clipcolumn, outside, quackinterval, opmode);
+        cliprange, clipcolumn, outside, quackinterval, "beg", false, opmode);
 }
 
 Bool ExtendFlagger::run(Bool trial, Bool reset) {

@@ -38,13 +38,17 @@ const String PMS_PP::UPDATE_REDRAW_NAME = "REDRAW";
 const int PMS_PP::UPDATE_REDRAW =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_REDRAW_NAME);
 
-const String PMS_PP::UPDATE_MSDATA_NAME = "MS_DATA";
+const String PMS_PP::UPDATE_MSDATA_NAME = "MSDATA";
 const int PMS_PP::UPDATE_MSDATA =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_MSDATA_NAME);
 
 const String PMS_PP::UPDATE_CACHE_NAME = "CACHE";
 const int PMS_PP::UPDATE_CACHE =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_CACHE_NAME);
+
+const String PMS_PP::UPDATE_AXES_NAME = "AXES";
+const int PMS_PP::UPDATE_AXES =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_AXES_NAME);
 
 const String PMS_PP::UPDATE_CANVAS_NAME = "CANVAS";
 const int PMS_PP::UPDATE_CANVAS =
@@ -53,14 +57,6 @@ const int PMS_PP::UPDATE_CANVAS =
 const String PMS_PP::UPDATE_DISPLAY_NAME = "DISPLAY";
 const int PMS_PP::UPDATE_DISPLAY =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_DISPLAY_NAME);
-
-const String PMS_PP::UPDATE_LOG_NAME = "LOG";
-const int PMS_PP::UPDATE_LOG =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_LOG_NAME);
-
-const String PMS_PP::UPDATE_PLOTMS_OPTIONS_NAME = "PLOTMS_OPTIONS";
-const int PMS_PP::UPDATE_PLOTMS_OPTIONS =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(UPDATE_PLOTMS_OPTIONS_NAME);
 
 
 ////////////
@@ -90,6 +86,27 @@ Record CLASS::toRecord() const {                                              \
 
 #define PMS_PP_TORECORD_DEF(KEY, VALUE)    rec.define(KEY, VALUE);
 #define PMS_PP_TORECORD_DEFREC(KEY, VALUE) rec.defineRecord(KEY, VALUE);
+
+#define PMS_PP_TORECORD_DEFVEC(KEY, VALUE) {                                  \
+    Record tmpRec;                                                            \
+    for(unsigned int i = 0; i < VALUE.size(); i++)                            \
+        tmpRec.define(i, VALUE[i]);                                           \
+    rec.defineRecord(KEY, tmpRec);                                            \
+}
+
+#define PMS_PP_TORECORD_DEFVECMETHOD(KEY, VALUE, VALUEMETHOD) {               \
+    Record tmpRec;                                                            \
+    for(unsigned int i = 0; i < VALUE.size(); i++)                            \
+        tmpRec.define(i, VALUE[i] VALUEMETHOD);                               \
+    rec.defineRecord(KEY, tmpRec);                                            \
+}
+
+#define PMS_PP_TORECORD_DEFVECRECMETHOD(KEY, VALUE, VALUEMETHOD) {            \
+    Record tmpRec;                                                            \
+    for(unsigned int i = 0; i < VALUE.size(); i++)                            \
+        tmpRec.defineRecord(i, VALUE[i] VALUEMETHOD);                         \
+    rec.defineRecord(KEY, tmpRec);                                            \
+}
 
 #define PMS_PP_TORECORD_END return rec; }
 // </group>
@@ -134,6 +151,54 @@ void CLASS::fromRecord(const Record& record) {                                \
         }                                                                     \
     }
 
+#define PMS_PP_FROMRECORD_VALINTARR(PARAM, KEY, TYPE)                         \
+    if(record.isDefined(KEY) && record.dataType(KEY) == TpArrayInt) {         \
+        vector<TYPE> tmp = PMS::fromIntVector<TYPE>(record.asArrayInt(KEY));  \
+        if(PARAM != tmp) {                                                    \
+            PARAM = tmp;                                                      \
+            valuesChanged = true;                                             \
+        }                                                                     \
+    }
+
+#define PMS_PP_FROMRECORD_VALTYPEARR(PARAM, KEY, TYPE, ASTYPE, PTYPE)         \
+    if(record.isDefined(KEY) && record.dataType(KEY) == TYPE) {               \
+        vector<PTYPE> tmp;                                                    \
+        record.ASTYPE(KEY).tovector(tmp);                                     \
+        if(PARAM != tmp) {                                                    \
+            PARAM = tmp;                                                      \
+            valuesChanged = true;                                             \
+        }                                                                     \
+    }
+
+#define PMS_PP_FROMRECORD_VEC(KEY, VALUE, TYPE, ASTYPE)                       \
+    if(record.isDefined(KEY) && record.dataType(KEY) == TpRecord) {           \
+        const Record& tmpRec = record.asRecord(KEY);                          \
+        VALUE.resize(tmpRec.nfields());                                       \
+        for(unsigned int i= 0; i < VALUE.size() && i < tmpRec.nfields(); i++){\
+            if(tmpRec.dataType(i) == TYPE && VALUE[i] != tmpRec.ASTYPE(i)) {  \
+                VALUE[i] = tmpRec.ASTYPE(i);                                  \
+                valuesChanged = true;                                         \
+            }                                                                 \
+        }                                                                     \
+    }
+
+#define PMS_PP_FROMRECORD_VECREF(KEY, VALUE, CLASS, FACTMETHOD)               \
+    if(record.isDefined(KEY) && record.dataType(KEY) == TpRecord) {           \
+        const Record& tmpRec = record.asRecord(KEY);                          \
+        VALUE.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ?                 \
+                     factory()->FACTMETHOD(*VALUE[0]) : NULL);                \
+        CLASS tmp= VALUE.size() > 0 ? factory()->FACTMETHOD(*VALUE[0]) : NULL;\
+        for(unsigned int i= 0; i < VALUE.size() && i < tmpRec.nfields(); i++){\
+            if(tmpRec.dataType(i) == TpRecord) {                              \
+                tmp->fromRecord(tmpRec.asRecord(i));                          \
+                if(*VALUE[i] != *tmp) {                                       \
+                    *VALUE[i] = *tmp;                                         \
+                    valuesChanged = true;                                     \
+                }                                                             \
+            }                                                                 \
+        }                                                                     \
+    }
+
 #define PMS_PP_FROMRECORD_END if(valuesChanged) updated(); }
 // </group>
 
@@ -146,6 +211,11 @@ PlotMSPlotParameters::Group& CLASS::operator=(const Group& other) {           \
 
 #define PMS_PP_COPYOP_PARAM(PARAM) PARAM = o->PARAM;
 #define PMS_PP_COPYOP_PARAMREF(PARAM) *PARAM = *o->PARAM;
+
+#define PMS_PP_COPYOP_PARAMVECREF(PARAM, FACTMETHOD)                          \
+    PARAM.resize(o->PARAM.size());                                            \
+    for(unsigned int i = 0; i < PARAM.size(); i++)                            \
+        PARAM[i] = factory()->FACTMETHOD(*o->PARAM[i]);
 
 #define PMS_PP_COPYOP_END                                                     \
         updated();                                                            \
@@ -162,10 +232,27 @@ bool CLASS::operator==(const Group& other) const {                            \
 
 #define PMS_PP_EQUALOP_PARAM(PARAM) if(PARAM != o->PARAM) return false;
 #define PMS_PP_EQUALOP_PARAMREF(PARAM) if(*PARAM != *o->PARAM) return false;
+#define PMS_PP_EQUALOP_PARAMVEC(PARAM)                                        \
+    if(PARAM.size() != o->PARAM.size()) return false;                         \
+    for(unsigned int i = 0; i < PARAM.size(); i++)                            \
+        if(*PARAM[i] != *o->PARAM[i]) return false;
+
 #define PMS_PP_EQUALOP_PARAMFLAG(FLAG, PARAM)                                 \
     if(FLAG != o->FLAG || (FLAG && PARAM != o->PARAM)) return false;
 #define PMS_PP_EQUALOP_PARAMFLAGREF(FLAG, PARAM)                              \
     if(FLAG != o->FLAG || (FLAG && *PARAM != *o->PARAM)) return false;
+
+#define PMS_PP_EQUALOP_PARAMFLAGVEC(FLAG, PARAM)                              \
+    if(FLAG.size() != o->FLAG.size() || PARAM.size() != o->PARAM.size() ||    \
+       FLAG.size() != PARAM.size()) return false;                             \
+    for(unsigned int i = 0; i < FLAG.size(); i++)                             \
+        if(FLAG[i] && PARAM[i] != o->PARAM[i]) return false;
+
+#define PMS_PP_EQUALOP_PARAMFLAGVECREF(FLAG, PARAM)                           \
+    if(FLAG.size() != o->FLAG.size() || PARAM.size() != o->PARAM.size() ||    \
+       FLAG.size() != PARAM.size()) return false;                             \
+    for(unsigned int i = 0; i < FLAG.size(); i++)                             \
+        if(FLAG[i] && *PARAM[i] != *o->PARAM[i]) return false;
 
 #define PMS_PP_EQUALOP_END return true; }
 // </group>
@@ -231,63 +318,193 @@ PMS_PP_SETDEFAULTS_END
 //////////////////////////////
 
 // PMS_PP_Cache record keys.
-PMS_PP_RECKEY(PMS_PP_Cache, REC_XAXIS,    "xaxis")
-PMS_PP_RECKEY(PMS_PP_Cache, REC_YAXIS,    "yaxis")
-PMS_PP_RECKEY(PMS_PP_Cache, REC_XDATACOL, "xdatacolumn")
-PMS_PP_RECKEY(PMS_PP_Cache, REC_YDATACOL, "ydatacolumn")
+PMS_PP_RECKEY(PMS_PP_Cache, REC_XAXES,     "xaxes")
+PMS_PP_RECKEY(PMS_PP_Cache, REC_YAXES,     "yaxes")
+PMS_PP_RECKEY(PMS_PP_Cache, REC_XDATACOLS, "xdatacolumns")
+PMS_PP_RECKEY(PMS_PP_Cache, REC_YDATACOLS, "ydatacolumns")
 
 // PMS_PP_Cache constructors/destructors.
 PMS_PP_CONSTRUCTORS(PMS_PP_Cache)
 
 // PMS_PP_Cache::toRecord().
 PMS_PP_TORECORD_START(PMS_PP_Cache)
-    PMS_PP_TORECORD_DEF(REC_XAXIS,    (int)itsXAxis_)
-    PMS_PP_TORECORD_DEF(REC_YAXIS,    (int)itsYAxis_)
-    PMS_PP_TORECORD_DEF(REC_XDATACOL, (int)itsXData_)
-    PMS_PP_TORECORD_DEF(REC_YDATACOL, (int)itsYData_)
+    PMS_PP_TORECORD_DEF(REC_XAXES,     PMS::toIntVector<PMS::Axis>(itsXAxes_))
+    PMS_PP_TORECORD_DEF(REC_YAXES,     PMS::toIntVector<PMS::Axis>(itsYAxes_))
+    PMS_PP_TORECORD_DEF(REC_XDATACOLS, PMS::toIntVector<PMS::DataColumn>(itsXData_))
+    PMS_PP_TORECORD_DEF(REC_YDATACOLS, PMS::toIntVector<PMS::DataColumn>(itsYData_))
 PMS_PP_TORECORD_END
 
 // PMS_PP_Cache::fromRecord().
 PMS_PP_FROMRECORD_START(PMS_PP_Cache)
-    PMS_PP_FROMRECORD_VALTYPE(itsXAxis_, REC_XAXIS, TpInt, asInt, PMS::Axis)
-    PMS_PP_FROMRECORD_VALTYPE(itsYAxis_, REC_YAXIS, TpInt, asInt, PMS::Axis)
-    PMS_PP_FROMRECORD_VALTYPE(itsXData_, REC_XDATACOL, TpInt, asInt, PMS::DataColumn)
-    PMS_PP_FROMRECORD_VALTYPE(itsYData_, REC_YDATACOL, TpInt, asInt, PMS::DataColumn)
+    PMS_PP_FROMRECORD_VALINTARR(itsXAxes_, REC_XAXES,     PMS::Axis)
+    PMS_PP_FROMRECORD_VALINTARR(itsYAxes_, REC_YAXES,     PMS::Axis)
+    PMS_PP_FROMRECORD_VALINTARR(itsXData_, REC_XDATACOLS, PMS::DataColumn)
+    PMS_PP_FROMRECORD_VALINTARR(itsYData_, REC_YDATACOLS, PMS::DataColumn)
 PMS_PP_FROMRECORD_END
 
 // PMS_PP_Cache::operator=().
 PMS_PP_COPYOP_START(PMS_PP_Cache)
-    PMS_PP_COPYOP_PARAM(itsXAxis_)
-    PMS_PP_COPYOP_PARAM(itsYAxis_)
+    PMS_PP_COPYOP_PARAM(itsXAxes_)
+    PMS_PP_COPYOP_PARAM(itsYAxes_)
     PMS_PP_COPYOP_PARAM(itsXData_)
     PMS_PP_COPYOP_PARAM(itsYData_)
 PMS_PP_COPYOP_END
 
 // PMS_PP_Cache::operator==().
 PMS_PP_EQUALOP_START(PMS_PP_Cache)
-    PMS_PP_EQUALOP_PARAM(itsXAxis_)
-    PMS_PP_EQUALOP_PARAM(itsYAxis_)
+    PMS_PP_EQUALOP_PARAM(itsXAxes_)
+    PMS_PP_EQUALOP_PARAM(itsYAxes_)
     PMS_PP_EQUALOP_PARAM(itsXData_)
     PMS_PP_EQUALOP_PARAM(itsYData_)
 PMS_PP_EQUALOP_END
 
 // PMS_PP_Cache::setDefaults().
 PMS_PP_SETDEFAULTS_START(PMS_PP_Cache)
-    PMS_PP_SETDEFAULTS_PARAM(itsXAxis_, PMS::DEFAULT_XAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsYAxis_, PMS::DEFAULT_YAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsXData_, PMS::DEFAULT_DATACOLUMN)
-    PMS_PP_SETDEFAULTS_PARAM(itsYData_, PMS::DEFAULT_DATACOLUMN)
+    PMS_PP_SETDEFAULTS_PARAM(itsXAxes_, vector<PMS::Axis>(1, PMS::DEFAULT_XAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsYAxes_, vector<PMS::Axis>(1, PMS::DEFAULT_YAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsXData_, vector<PMS::DataColumn>(1, PMS::DEFAULT_DATACOLUMN))
+    PMS_PP_SETDEFAULTS_PARAM(itsYData_, vector<PMS::DataColumn>(1, PMS::DEFAULT_DATACOLUMN))
 PMS_PP_SETDEFAULTS_END
 
+unsigned int PMS_PP_Cache::numXAxes() const { return itsXAxes_.size(); }
+unsigned int PMS_PP_Cache::numYAxes() const { return itsYAxes_.size(); }
+
 void PMS_PP_Cache::setAxes(const PMS::Axis& xAxis, const PMS::Axis& yAxis,
-        const PMS::DataColumn& xData, const PMS::DataColumn& yData) {
-    if(itsXAxis_ != xAxis || itsYAxis_ != yAxis || itsXData_ != xData ||
-       itsYData_ != yData) {
-        itsXAxis_ = xAxis;
-        itsYAxis_ = yAxis;
-        itsXData_ = xData;
-        itsYData_ = yData;
+        const PMS::DataColumn& xData, const PMS::DataColumn& yData,
+        unsigned int index) {
+    if(itsXAxes_[index] != xAxis || itsYAxes_[index] != yAxis ||
+       itsXData_[index] != xData || itsYData_[index] != yData) {
+        itsXAxes_[index] = xAxis;
+        itsYAxes_[index] = yAxis;
+        itsXData_[index] = xData;
+        itsYData_[index] = yData;
         updated();
+    }
+}
+
+
+/////////////////////////////
+// PMS_PP_AXES DEFINITIONS //
+/////////////////////////////
+
+// PMS_PP_Axes record keys.
+PMS_PP_RECKEY(PMS_PP_Axes, REC_XAXES,      "canvasXAxes")
+PMS_PP_RECKEY(PMS_PP_Axes, REC_YAXES,      "canvasYAxes")
+PMS_PP_RECKEY(PMS_PP_Axes, REC_XRANGESSET, "xRangesSet")
+PMS_PP_RECKEY(PMS_PP_Axes, REC_YRANGESSET, "yRangesSet")
+PMS_PP_RECKEY(PMS_PP_Axes, REC_XRANGES,    "xRanges")
+PMS_PP_RECKEY(PMS_PP_Axes, REC_YRANGES,    "yRanges")
+
+// PMS_PP_Axes constructors/destructors.
+PMS_PP_CONSTRUCTORS(PMS_PP_Axes)
+
+// PMS_PP_Axes::toRecord().
+PMS_PP_TORECORD_START(PMS_PP_Axes)
+    PMS_PP_TORECORD_DEF(REC_XAXES,      PMS::toIntVector<PlotAxis>(itsXAxes_))
+    PMS_PP_TORECORD_DEF(REC_YAXES,      PMS::toIntVector<PlotAxis>(itsYAxes_))
+    PMS_PP_TORECORD_DEF(REC_XRANGESSET, Vector<bool>(itsXRangesSet_))
+    PMS_PP_TORECORD_DEF(REC_YRANGESSET, Vector<bool>(itsYRangesSet_))
+    
+    vector<double> firsts(itsXRanges_.size()), seconds(itsXRanges_.size());
+    for(unsigned int i = 0; i < itsXRanges_.size(); i++) {
+        firsts[i] = itsXRanges_[i].first;
+        seconds[i] = itsXRanges_[i].second;
+    }
+    PMS_PP_TORECORD_DEFVEC(REC_XRANGES + ".first", firsts)
+    PMS_PP_TORECORD_DEFVEC(REC_XRANGES + ".second", seconds)
+    
+    firsts.resize(itsYRanges_.size()); seconds.resize(itsYRanges_.size());
+    for(unsigned int i = 0; i < itsYRanges_.size(); i++) {
+        firsts[i] = itsYRanges_[i].first;
+        seconds[i] = itsYRanges_[i].second;
+    }
+    PMS_PP_TORECORD_DEFVEC(REC_YRANGES + ".first", firsts)
+    PMS_PP_TORECORD_DEFVEC(REC_YRANGES + ".second", seconds)
+PMS_PP_TORECORD_END
+
+// PMS_PP_Axes::fromRecord().
+PMS_PP_FROMRECORD_START(PMS_PP_Axes)
+    PMS_PP_FROMRECORD_VALINTARR(itsXAxes_, REC_XAXES, PlotAxis)
+    PMS_PP_FROMRECORD_VALINTARR(itsYAxes_, REC_YAXES, PlotAxis)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsXRangesSet_, REC_XRANGESSET, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsYRangesSet_, REC_YRANGESSET, TpArrayBool, asArrayBool, bool)
+    
+    vector<double> firsts(itsXRanges_.size()), seconds(itsXRanges_.size());
+    for(unsigned int i = 0; i < itsXRanges_.size(); i++) {
+        firsts[i] = itsXRanges_[i].first;
+        seconds[i] = itsXRanges_[i].second;
+    }
+    PMS_PP_FROMRECORD_VEC(REC_XRANGES + ".first", firsts, TpDouble, asDouble)
+    PMS_PP_FROMRECORD_VEC(REC_XRANGES + ".second", seconds, TpDouble, asDouble)
+    itsXRanges_.resize(min((uInt)firsts.size(), (uInt)seconds.size()));
+    for(unsigned int i = 0; i < itsXRanges_.size(); i++) {
+        itsXRanges_[i].first = firsts[i];
+        itsXRanges_[i].second = seconds[i];
+    }
+    
+    firsts.resize(itsYRanges_.size()); seconds.resize(itsYRanges_.size());
+    for(unsigned int i = 0; i < itsYRanges_.size(); i++) {
+        firsts[i] = itsYRanges_[i].first;
+        seconds[i] = itsYRanges_[i].second;
+    }
+    PMS_PP_FROMRECORD_VEC(REC_YRANGES + ".first", firsts, TpDouble, asDouble)
+    PMS_PP_FROMRECORD_VEC(REC_YRANGES + ".second", seconds, TpDouble, asDouble)
+    itsYRanges_.resize(min((uInt)firsts.size(), (uInt)seconds.size()));
+    for(unsigned int i = 0; i < itsYRanges_.size(); i++) {
+        itsYRanges_[i].first = firsts[i];
+        itsYRanges_[i].second = seconds[i];
+    }
+PMS_PP_FROMRECORD_END
+
+// PMS_PP_Axes::operator=().
+PMS_PP_COPYOP_START(PMS_PP_Axes)
+    PMS_PP_COPYOP_PARAM(itsXAxes_)
+    PMS_PP_COPYOP_PARAM(itsYAxes_)
+    PMS_PP_COPYOP_PARAM(itsXRangesSet_)
+    PMS_PP_COPYOP_PARAM(itsYRangesSet_)
+    PMS_PP_COPYOP_PARAM(itsXRanges_)
+    PMS_PP_COPYOP_PARAM(itsYRanges_)
+PMS_PP_COPYOP_END
+
+// PMS_PP_Axes::operator==().
+PMS_PP_EQUALOP_START(PMS_PP_Axes)
+    PMS_PP_EQUALOP_PARAM(itsXAxes_)
+    PMS_PP_EQUALOP_PARAM(itsYAxes_)
+    PMS_PP_EQUALOP_PARAMFLAGVEC(itsXRangesSet_, itsXRanges_)
+    PMS_PP_EQUALOP_PARAMFLAGVEC(itsYRangesSet_, itsYRanges_)
+PMS_PP_EQUALOP_END
+
+// PMS_PP_Axes::setDefaults().
+PMS_PP_SETDEFAULTS_START(PMS_PP_Axes)
+    PMS_PP_SETDEFAULTS_PARAM(itsXAxes_, vector<PlotAxis>(1, PMS::DEFAULT_CANVAS_XAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsYAxes_, vector<PlotAxis>(1, PMS::DEFAULT_CANVAS_YAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsXRangesSet_, vector<bool>(1, false))
+    PMS_PP_SETDEFAULTS_PARAM(itsYRangesSet_, vector<bool>(1, false))
+    PMS_PP_SETDEFAULTS_PARAM(itsXRanges_, vector<prange_t>(1, prange_t(0.0, 0.0)))
+    PMS_PP_SETDEFAULTS_PARAM(itsYRanges_, vector<prange_t>(1, prange_t(0.0, 0.0)))
+PMS_PP_SETDEFAULTS_END
+
+unsigned int PMS_PP_Axes::numXAxes() const { return itsXAxes_.size(); }
+unsigned int PMS_PP_Axes::numYAxes() const { return itsYAxes_.size(); }
+
+void PMS_PP_Axes::setAxes(const PlotAxis& xAxis, const PlotAxis& yAxis,
+        unsigned int index) {
+    if(itsXAxes_[index] != xAxis || itsYAxes_[index] != yAxis) {
+        itsXAxes_[index] = xAxis;
+        itsYAxes_[index] = yAxis;
+        updated();
+    }
+}
+
+void PMS_PP_Axes::setRanges(const bool& xSet, const bool& ySet,
+        const prange_t& xRange, const prange_t& yRange, unsigned int index) {
+    if(itsXRangesSet_[index] != xSet || itsYRangesSet_[index] != ySet ||
+       (xSet && itsXRanges_[index] != xRange) ||
+       (ySet && itsYRanges_[index] != yRange)) {
+        itsXRangesSet_[index] = xSet;
+        itsYRangesSet_[index] = ySet;
+        itsXRanges_[index] = xRange;
+        itsYRanges_[index] = yRange;
     }
 }
 
@@ -297,162 +514,133 @@ void PMS_PP_Cache::setAxes(const PMS::Axis& xAxis, const PMS::Axis& yAxis,
 ///////////////////////////////
 
 // PMS_PP_Canvas record keys.
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_XAXIS,       "canvasXAxis")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_YAXIS,       "canvasYAxis")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_XRANGESET,   "xRangeSet")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_YRANGESET,   "yRangeSet")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_XRANGE,      "xRange")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_YRANGE,      "yRange")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_XLABEL,      "xLabelFormat")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_YLABEL,      "yLabelFormat")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWXAXIS,   "showXAxis")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWYAXIS,   "showYAxis")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWLEGEND,  "showLegend")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_LEGENDPOS,   "legendPosition")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_TITLE,       "canvasTitleFormat")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWGRIDMAJ, "showGridMajor")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWGRIDMIN, "showGridMinor")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_GRIDMAJLINE, "gridMajorLine")
-PMS_PP_RECKEY(PMS_PP_Canvas, REC_GRIDMINLINE, "gridMinorLine")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_XLABELS,      "xLabelFormats")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_YLABELS,      "yLabelFormats")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWXAXES,    "showXAxes")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWYAXES,    "showYAxes")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWLEGENDS,  "showLegends")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_LEGENDSPOS,   "legendPositions")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_TITLES,       "canvasTitleFormats")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWGRIDMAJS, "showGridMajors")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_SHOWGRIDMINS, "showGridMinors")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_GRIDMAJLINES, "gridMajorLines")
+PMS_PP_RECKEY(PMS_PP_Canvas, REC_GRIDMINLINES, "gridMinorLines")
 
 // PMS_PP_Canvas constructors/destructors.
 PMS_PP_CONSTRUCTORS(PMS_PP_Canvas)
 
 // PMS_PP_Canvas::toRecord().
 PMS_PP_TORECORD_START(PMS_PP_Canvas)
-    PMS_PP_TORECORD_DEF(REC_XAXIS, (int)itsXAxis_)
-    PMS_PP_TORECORD_DEF(REC_YAXIS, (int)itsYAxis_)
-    PMS_PP_TORECORD_DEF(REC_XRANGESET, itsXRangeSet_)
-    PMS_PP_TORECORD_DEF(REC_YRANGESET, itsYRangeSet_)
-    PMS_PP_TORECORD_DEF(REC_XRANGE + ".first", itsXRange_.first)
-    PMS_PP_TORECORD_DEF(REC_XRANGE + ".second", itsXRange_.second)
-    PMS_PP_TORECORD_DEF(REC_YRANGE + ".first", itsYRange_.first)
-    PMS_PP_TORECORD_DEF(REC_YRANGE + ".second", itsYRange_.second)
-    PMS_PP_TORECORD_DEF(REC_XLABEL, itsXLabel_.format)
-    PMS_PP_TORECORD_DEF(REC_YLABEL, itsYLabel_.format)
-    PMS_PP_TORECORD_DEF(REC_SHOWXAXIS, itsXAxisShown_)
-    PMS_PP_TORECORD_DEF(REC_SHOWYAXIS, itsYAxisShown_)
-    PMS_PP_TORECORD_DEF(REC_SHOWLEGEND, itsLegendShown_)
-    PMS_PP_TORECORD_DEF(REC_LEGENDPOS, (int)itsLegendPos_)
-    PMS_PP_TORECORD_DEF(REC_TITLE, itsTitle_.format)
-    PMS_PP_TORECORD_DEF(REC_SHOWGRIDMAJ, itsGridMajShown_)
-    PMS_PP_TORECORD_DEF(REC_SHOWGRIDMIN, itsGridMinShown_)
-    PMS_PP_TORECORD_DEFREC(REC_GRIDMAJLINE, itsGridMajLine_->toRecord())
-    PMS_PP_TORECORD_DEFREC(REC_GRIDMINLINE, itsGridMinLine_->toRecord())
+    PMS_PP_TORECORD_DEFVECMETHOD(REC_XLABELS, itsXLabels_, .format)
+    PMS_PP_TORECORD_DEFVECMETHOD(REC_YLABELS, itsYLabels_, .format)
+    PMS_PP_TORECORD_DEF(REC_SHOWXAXES, Vector<bool>(itsXAxesShown_))
+    PMS_PP_TORECORD_DEF(REC_SHOWYAXES, Vector<bool>(itsYAxesShown_))
+    PMS_PP_TORECORD_DEF(REC_SHOWLEGENDS, Vector<bool>(itsLegendsShown_))
+    PMS_PP_TORECORD_DEF(REC_LEGENDSPOS, PMS::toIntVector<PlotCanvas::LegendPosition>(itsLegendsPos_))
+    PMS_PP_TORECORD_DEFVECMETHOD(REC_TITLES, itsTitles_, .format)
+    PMS_PP_TORECORD_DEF(REC_SHOWGRIDMAJS, Vector<bool>(itsGridMajsShown_))
+    PMS_PP_TORECORD_DEF(REC_SHOWGRIDMINS, Vector<bool>(itsGridMinsShown_))
+    PMS_PP_TORECORD_DEFVECRECMETHOD(REC_GRIDMAJLINES, itsGridMajLines_, ->toRecord())
+    PMS_PP_TORECORD_DEFVECRECMETHOD(REC_GRIDMINLINES, itsGridMinLines_, ->toRecord())
 PMS_PP_TORECORD_END
 
 // PMS_PP_Canvas::fromRecord().
-PMS_PP_FROMRECORD_START(PMS_PP_Canvas)    
-    PMS_PP_FROMRECORD_VALTYPE(itsXAxis_, REC_XAXIS, TpInt, asInt, PlotAxis)
-    PMS_PP_FROMRECORD_VALTYPE(itsYAxis_, REC_YAXIS, TpInt, asInt, PlotAxis)
-    PMS_PP_FROMRECORD_VAL(itsXRangeSet_, REC_XRANGESET, TpBool, asBool)
-    PMS_PP_FROMRECORD_VAL(itsYRangeSet_, REC_YRANGESET, TpBool, asBool)
-    PMS_PP_FROMRECORD_VAL(itsXRange_.first, REC_XRANGE + ".first", TpDouble, asDouble)
-    PMS_PP_FROMRECORD_VAL(itsXRange_.second, REC_XRANGE + ".second", TpDouble, asDouble)
-    PMS_PP_FROMRECORD_VAL(itsYRange_.first, REC_YRANGE + ".first", TpDouble, asDouble)
-    PMS_PP_FROMRECORD_VAL(itsYRange_.second, REC_YRANGE + ".second", TpDouble, asDouble)    
-    PMS_PP_FROMRECORD_VAL(itsXLabel_.format, REC_XLABEL, TpString, asString)
-    PMS_PP_FROMRECORD_VAL(itsYLabel_.format, REC_YLABEL, TpString, asString)
-    PMS_PP_FROMRECORD_VAL(itsXAxisShown_, REC_SHOWXAXIS, TpBool, asBool)
-    PMS_PP_FROMRECORD_VAL(itsYAxisShown_, REC_SHOWYAXIS, TpBool, asBool)
-    PMS_PP_FROMRECORD_VAL(itsLegendShown_, REC_SHOWLEGEND, TpBool, asBool)
-    PMS_PP_FROMRECORD_VALTYPE(itsLegendPos_, REC_LEGENDPOS, TpInt, asInt, PlotCanvas::LegendPosition)
-    PMS_PP_FROMRECORD_VAL(itsTitle_.format, REC_TITLE, TpString, asString)
-    PMS_PP_FROMRECORD_VAL(itsGridMajShown_, REC_SHOWGRIDMAJ, TpBool, asBool)
-    PMS_PP_FROMRECORD_VAL(itsGridMinShown_, REC_SHOWGRIDMIN, TpBool, asBool)
-    PMS_PP_FROMRECORD_VALREF(itsGridMajLine_, REC_GRIDMAJLINE, PlotLinePtr, line)
-    PMS_PP_FROMRECORD_VALREF(itsGridMinLine_, REC_GRIDMINLINE, PlotLinePtr, line)
+PMS_PP_FROMRECORD_START(PMS_PP_Canvas)
+    PMS_PP_FROMRECORD_VEC(REC_XLABELS, itsXLabels_, TpString, asString)
+    PMS_PP_FROMRECORD_VEC(REC_YLABELS, itsYLabels_, TpString, asString)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsXAxesShown_, REC_SHOWXAXES, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsYAxesShown_, REC_SHOWYAXES, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsLegendsShown_, REC_SHOWLEGENDS, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALINTARR(itsLegendsPos_, REC_LEGENDSPOS, PlotCanvas::LegendPosition)
+    PMS_PP_FROMRECORD_VEC(REC_TITLES, itsTitles_, TpString, asString)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsGridMajsShown_, REC_SHOWGRIDMAJS, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsGridMinsShown_, REC_SHOWGRIDMINS, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VECREF(REC_GRIDMAJLINES, itsGridMajLines_, PlotLinePtr, line)
+    PMS_PP_FROMRECORD_VECREF(REC_GRIDMINLINES, itsGridMinLines_, PlotLinePtr, line)
 PMS_PP_FROMRECORD_END
 
 // PMS_PP_Canvas::operator=().
 PMS_PP_COPYOP_START(PMS_PP_Canvas)
-    PMS_PP_COPYOP_PARAM(itsXAxis_)
-    PMS_PP_COPYOP_PARAM(itsYAxis_)
-    PMS_PP_COPYOP_PARAM(itsXRangeSet_)
-    PMS_PP_COPYOP_PARAM(itsYRangeSet_)
-    PMS_PP_COPYOP_PARAM(itsXRange_)
-    PMS_PP_COPYOP_PARAM(itsYRange_)
-    PMS_PP_COPYOP_PARAM(itsXLabel_)
-    PMS_PP_COPYOP_PARAM(itsYLabel_)
-    PMS_PP_COPYOP_PARAM(itsXAxisShown_)
-    PMS_PP_COPYOP_PARAM(itsYAxisShown_)
-    PMS_PP_COPYOP_PARAM(itsLegendShown_)
-    PMS_PP_COPYOP_PARAM(itsLegendPos_)
-    PMS_PP_COPYOP_PARAM(itsTitle_)
-    PMS_PP_COPYOP_PARAM(itsGridMajShown_)
-    PMS_PP_COPYOP_PARAM(itsGridMinShown_)
-    PMS_PP_COPYOP_PARAMREF(itsGridMajLine_)
-    PMS_PP_COPYOP_PARAMREF(itsGridMinLine_)
+    PMS_PP_COPYOP_PARAM(itsXLabels_)
+    PMS_PP_COPYOP_PARAM(itsYLabels_)
+    PMS_PP_COPYOP_PARAM(itsXAxesShown_)
+    PMS_PP_COPYOP_PARAM(itsYAxesShown_)
+    PMS_PP_COPYOP_PARAM(itsLegendsShown_)
+    PMS_PP_COPYOP_PARAM(itsLegendsPos_)
+    PMS_PP_COPYOP_PARAM(itsTitles_)
+    PMS_PP_COPYOP_PARAM(itsGridMajsShown_)
+    PMS_PP_COPYOP_PARAM(itsGridMinsShown_)    
+    PMS_PP_COPYOP_PARAMVECREF(itsGridMajLines_, line)
+    PMS_PP_COPYOP_PARAMVECREF(itsGridMinLines_, line)
 PMS_PP_COPYOP_END
 
 // PMS_PP_Canvas::operator==().
 PMS_PP_EQUALOP_START(PMS_PP_Canvas)
-    PMS_PP_EQUALOP_PARAM(itsXAxis_)
-    PMS_PP_EQUALOP_PARAM(itsYAxis_)
-    PMS_PP_EQUALOP_PARAMFLAG(itsXRangeSet_, itsXRange_)
-    PMS_PP_EQUALOP_PARAMFLAG(itsYRangeSet_, itsYRange_)
-    PMS_PP_EQUALOP_PARAM(itsXLabel_)
-    PMS_PP_EQUALOP_PARAM(itsYLabel_)
-    PMS_PP_EQUALOP_PARAM(itsXAxisShown_)
-    PMS_PP_EQUALOP_PARAM(itsYAxisShown_)
-    PMS_PP_EQUALOP_PARAMFLAG(itsLegendShown_, itsLegendPos_)
-    PMS_PP_EQUALOP_PARAM(itsTitle_)
-    PMS_PP_EQUALOP_PARAMFLAGREF(itsGridMajShown_, itsGridMajLine_)
-    PMS_PP_EQUALOP_PARAMFLAGREF(itsGridMinShown_, itsGridMinLine_)
+    PMS_PP_EQUALOP_PARAM(itsXLabels_)
+    PMS_PP_EQUALOP_PARAM(itsYLabels_)
+    PMS_PP_EQUALOP_PARAM(itsXAxesShown_)
+    PMS_PP_EQUALOP_PARAM(itsYAxesShown_)
+    PMS_PP_EQUALOP_PARAMFLAGVEC(itsLegendsShown_, itsLegendsPos_)
+    PMS_PP_EQUALOP_PARAM(itsTitles_)
+    PMS_PP_EQUALOP_PARAMFLAGVECREF(itsGridMajsShown_, itsGridMajLines_)
+    PMS_PP_EQUALOP_PARAMFLAGVECREF(itsGridMinsShown_, itsGridMinLines_)
 PMS_PP_EQUALOP_END
 
 // PMS_PP_Canvas::setDefaults().
 PMS_PP_SETDEFAULTS_START(PMS_PP_Canvas)
-    PMS_PP_SETDEFAULTS_PARAM(itsXAxis_, PMS::DEFAULT_CANVAS_XAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsYAxis_, PMS::DEFAULT_CANVAS_YAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsXRangeSet_, false)
-    PMS_PP_SETDEFAULTS_PARAM(itsYRangeSet_, false)
-    PMS_PP_SETDEFAULTS_PARAM(itsXRange_, prange_t(0.0, 0.0))
-    PMS_PP_SETDEFAULTS_PARAM(itsYRange_, prange_t(0.0, 0.0))
-    PMS_PP_SETDEFAULTS_PARAM(itsXLabel_, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT))
-    PMS_PP_SETDEFAULTS_PARAM(itsYLabel_, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT))
-    PMS_PP_SETDEFAULTS_PARAM(itsXAxisShown_, PMS::DEFAULT_SHOWAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsYAxisShown_, PMS::DEFAULT_SHOWAXIS)
-    PMS_PP_SETDEFAULTS_PARAM(itsLegendShown_, PMS::DEFAULT_SHOWLEGEND)
-    PMS_PP_SETDEFAULTS_PARAM(itsLegendPos_, PMS::DEFAULT_LEGENDPOSITION)
-    PMS_PP_SETDEFAULTS_PARAM(itsTitle_, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT))
-    PMS_PP_SETDEFAULTS_PARAM(itsGridMajShown_, PMS::DEFAULT_SHOW_GRID)
-    PMS_PP_SETDEFAULTS_PARAM(itsGridMinShown_, PMS::DEFAULT_SHOW_GRID)
-    PMS_PP_SETDEFAULTS_PARAM(itsGridMajLine_, PMS::DEFAULT_GRID_LINE(factory()))
-    PMS_PP_SETDEFAULTS_PARAM(itsGridMinLine_, PMS::DEFAULT_GRID_LINE(factory()))
+    PMS_PP_SETDEFAULTS_PARAM(itsXLabels_, vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT)))
+    PMS_PP_SETDEFAULTS_PARAM(itsYLabels_, vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT)))
+    PMS_PP_SETDEFAULTS_PARAM(itsXAxesShown_, vector<bool>(1, PMS::DEFAULT_SHOWAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsYAxesShown_, vector<bool>(1, PMS::DEFAULT_SHOWAXIS))
+    PMS_PP_SETDEFAULTS_PARAM(itsLegendsShown_, vector<bool>(1, PMS::DEFAULT_SHOWLEGEND))
+    PMS_PP_SETDEFAULTS_PARAM(itsLegendsPos_, vector<PlotCanvas::LegendPosition>(1, PMS::DEFAULT_LEGENDPOSITION))
+    PMS_PP_SETDEFAULTS_PARAM(itsTitles_, vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT)))
+    PMS_PP_SETDEFAULTS_PARAM(itsGridMajsShown_, vector<bool>(1, PMS::DEFAULT_SHOW_GRID))
+    PMS_PP_SETDEFAULTS_PARAM(itsGridMinsShown_, vector<bool>(1, PMS::DEFAULT_SHOW_GRID))
+    PMS_PP_SETDEFAULTS_PARAM(itsGridMajLines_, vector<PlotLinePtr>(1, PMS::DEFAULT_GRID_LINE(factory())))
+    PMS_PP_SETDEFAULTS_PARAM(itsGridMinLines_, vector<PlotLinePtr>(1, PMS::DEFAULT_GRID_LINE(factory())))
 PMS_PP_SETDEFAULTS_END
 
-void PMS_PP_Canvas::setRanges(const bool& xSet, const bool& ySet,
-        const prange_t& xRange, const prange_t& yRange) {
-    if(itsXRangeSet_ != xSet || (xSet && itsXRange_ != xRange) ||
-       itsYRangeSet_ != ySet || (ySet && itsYRange_ != yRange)) {
-        itsXRangeSet_ = xSet;
-        itsYRangeSet_ = ySet;
-        itsXRange_ = xRange;
-        itsYRange_ = yRange;
+unsigned int PMS_PP_Canvas::numCanvases() const { return itsXLabels_.size(); }
+
+void PMS_PP_Canvas::setLabelFormats(const PlotMSLabelFormat& xFormat,
+        const PlotMSLabelFormat& yFormat, unsigned int index) {
+    if(itsXLabels_[index] != xFormat || itsYLabels_[index] != yFormat) {
+        itsXLabels_[index] = xFormat;
+        itsYLabels_[index] = yFormat;
+        updated();
+    }
+}
+
+void PMS_PP_Canvas::showAxes(const bool& xShow, const bool& yShow,
+        unsigned int index) {
+    if(itsXAxesShown_[index] != xShow || itsYAxesShown_[index] != yShow) {
+        itsXAxesShown_[index] = xShow;
+        itsYAxesShown_[index] = yShow;
         updated();
     }
 }
 
 void PMS_PP_Canvas::showLegend(const bool& show,
-        const PlotCanvas::LegendPosition& position) {
-    if(itsLegendShown_ != show || (show && itsLegendPos_ != position)) {
-        itsLegendShown_ = show;
-        itsLegendPos_ = position;
+        const PlotCanvas::LegendPosition& pos, unsigned int index) {
+    if(itsLegendsShown_[index]!= show|| (show && itsLegendsPos_[index]!= pos)){
+        itsLegendsShown_[index] = show;
+        itsLegendsPos_[index] = pos;
         updated();
     }
 }
 
 void PMS_PP_Canvas::showGrid(const bool& showMajor, const bool& showMinor,
-        const PlotLinePtr& majorLine, const PlotLinePtr& minorLine) {
-    if(itsGridMajShown_ != showMajor ||
-       (showMajor && *itsGridMajLine_ != *majorLine) ||
-       itsGridMinShown_ != showMinor ||
-       (showMinor && *itsGridMinLine_ != *minorLine)) {
-        itsGridMajShown_ = showMajor;
-        itsGridMinShown_ = showMinor;
-        *itsGridMajLine_ = *majorLine;
-        *itsGridMinLine_ = *minorLine;
+        const PlotLinePtr& majorLine, const PlotLinePtr& minorLine,
+        unsigned int index) {
+    if(itsGridMajsShown_[index] != showMajor ||
+       (showMajor && *itsGridMajLines_[index] != *majorLine) ||
+       itsGridMinsShown_[index] != showMinor ||
+       (showMinor && *itsGridMinLines_[index] != *minorLine)) {
+        itsGridMajsShown_[index] = showMajor;
+        itsGridMinsShown_[index] = showMinor;
+        *itsGridMajLines_[index] = *majorLine;
+        *itsGridMinLines_[index] = *minorLine;
         updated();
     }
 }
@@ -463,46 +651,82 @@ void PMS_PP_Canvas::showGrid(const bool& showMajor, const bool& showMinor,
 ////////////////////////////////
 
 // PMS_PP_Display record keys.
-PMS_PP_RECKEY(PMS_PP_Display, REC_UNFLAGGED, "unflagged")
-PMS_PP_RECKEY(PMS_PP_Display, REC_FLAGGED,   "flagged")
-PMS_PP_RECKEY(PMS_PP_Display, REC_TITLE,      "title")
+PMS_PP_RECKEY(PMS_PP_Display, REC_UNFLAGGEDS, "unflaggedSymbols")
+PMS_PP_RECKEY(PMS_PP_Display, REC_FLAGGEDS,   "flaggedSymbols")
+PMS_PP_RECKEY(PMS_PP_Display, REC_TITLES,     "titles")
+PMS_PP_RECKEY(PMS_PP_Display, REC_COLFLAGS,   "colorizeFlags")
+PMS_PP_RECKEY(PMS_PP_Display, REC_COLAXES,    "colorizeAxes")
 
 // PMS_PP_Display constructors/destructors.
 PMS_PP_CONSTRUCTORS(PMS_PP_Display)
 
 // PMS_PP_Display::toRecord().
 PMS_PP_TORECORD_START(PMS_PP_Display)
-    PMS_PP_TORECORD_DEFREC(REC_UNFLAGGED, itsUnflaggedSymbol_->toRecord())
-    PMS_PP_TORECORD_DEFREC(REC_FLAGGED, itsFlaggedSymbol_->toRecord())
-    PMS_PP_TORECORD_DEF(REC_TITLE, itsTitleFormat_.format)
+    PMS_PP_TORECORD_DEFVECRECMETHOD(REC_UNFLAGGEDS, itsUnflaggedSymbols_, ->toRecord())
+    PMS_PP_TORECORD_DEFVECRECMETHOD(REC_FLAGGEDS, itsFlaggedSymbols_, ->toRecord())
+    PMS_PP_TORECORD_DEFVECMETHOD(REC_TITLES, itsTitleFormats_, .format)
+    PMS_PP_TORECORD_DEF(REC_COLFLAGS, Vector<bool>(itsColorizeFlags_))
+    PMS_PP_TORECORD_DEF(REC_COLAXES,  PMS::toIntVector<PMS::Axis>(itsColorizeAxes_))
 PMS_PP_TORECORD_END
 
 // PMS_PP_Display::fromRecord().
 PMS_PP_FROMRECORD_START(PMS_PP_Display)
-    PMS_PP_FROMRECORD_VALREF(itsUnflaggedSymbol_, REC_UNFLAGGED, PlotSymbolPtr, symbol)
-    PMS_PP_FROMRECORD_VALREF(itsFlaggedSymbol_, REC_FLAGGED, PlotSymbolPtr, symbol)
-    PMS_PP_FROMRECORD_VAL(itsTitleFormat_.format, REC_TITLE, TpString, asString)
+    PMS_PP_FROMRECORD_VECREF(REC_UNFLAGGEDS, itsUnflaggedSymbols_, PlotSymbolPtr, symbol)
+    PMS_PP_FROMRECORD_VECREF(REC_FLAGGEDS, itsFlaggedSymbols_, PlotSymbolPtr, symbol)
+    PMS_PP_FROMRECORD_VEC(REC_TITLES, itsTitleFormats_, TpString, asString)
+    PMS_PP_FROMRECORD_VALTYPEARR(itsColorizeFlags_, REC_COLFLAGS, TpArrayBool, asArrayBool, bool)
+    PMS_PP_FROMRECORD_VALINTARR(itsColorizeAxes_, REC_COLAXES, PMS::Axis)
 PMS_PP_FROMRECORD_END
 
 // PMS_PP_Display::operator=().
 PMS_PP_COPYOP_START(PMS_PP_Display)
-    PMS_PP_COPYOP_PARAMREF(itsUnflaggedSymbol_)
-    PMS_PP_COPYOP_PARAMREF(itsFlaggedSymbol_)
-    PMS_PP_COPYOP_PARAM(itsTitleFormat_)
+    PMS_PP_COPYOP_PARAMVECREF(itsUnflaggedSymbols_, symbol)
+    PMS_PP_COPYOP_PARAMVECREF(itsFlaggedSymbols_, symbol)
+    PMS_PP_COPYOP_PARAM(itsTitleFormats_)
+    PMS_PP_COPYOP_PARAM(itsColorizeFlags_)
+    PMS_PP_COPYOP_PARAM(itsColorizeAxes_)
 PMS_PP_COPYOP_END
 
 // PMS_PP_Display::operator==().
 PMS_PP_EQUALOP_START(PMS_PP_Display)
-    PMS_PP_EQUALOP_PARAMREF(itsUnflaggedSymbol_)
-    PMS_PP_EQUALOP_PARAMREF(itsFlaggedSymbol_)
-    PMS_PP_EQUALOP_PARAM(itsTitleFormat_)
+    PMS_PP_EQUALOP_PARAMVEC(itsUnflaggedSymbols_)
+    PMS_PP_EQUALOP_PARAMVEC(itsFlaggedSymbols_)
+    PMS_PP_EQUALOP_PARAM(itsTitleFormats_)
+    PMS_PP_EQUALOP_PARAMFLAGVEC(itsColorizeFlags_, itsColorizeAxes_)
 PMS_PP_EQUALOP_END
 
 // PMS_PP_Display::setDefaults().
 PMS_PP_SETDEFAULTS_START(PMS_PP_Display)
-    PMS_PP_SETDEFAULTS_PARAM(itsUnflaggedSymbol_, PMS::DEFAULT_UNFLAGGED_SYMBOL(factory()))
-    PMS_PP_SETDEFAULTS_PARAM(itsFlaggedSymbol_, PMS::DEFAULT_FLAGGED_SYMBOL(factory()))
-    PMS_PP_SETDEFAULTS_PARAM(itsTitleFormat_, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT))
+    PMS_PP_SETDEFAULTS_PARAM(itsUnflaggedSymbols_, vector<PlotSymbolPtr>(1, PMS::DEFAULT_UNFLAGGED_SYMBOL(factory())))
+    PMS_PP_SETDEFAULTS_PARAM(itsFlaggedSymbols_, vector<PlotSymbolPtr>(1, PMS::DEFAULT_FLAGGED_SYMBOL(factory())))
+    PMS_PP_SETDEFAULTS_PARAM(itsTitleFormats_, vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT)))
+    PMS_PP_SETDEFAULTS_PARAM(itsColorizeFlags_, vector<bool>(1, false))
+    PMS_PP_SETDEFAULTS_PARAM(itsColorizeAxes_, vector<PMS::Axis>(1, PMS::DEFAULT_COLOR_AXIS))
 PMS_PP_SETDEFAULTS_END
+
+void PMS_PP_Display::setColorize(const bool& colorize, const PMS::Axis& axis,
+        unsigned int index) {
+    if(itsColorizeFlags_[index]!= colorize || itsColorizeAxes_[index]!= axis) {
+        itsColorizeFlags_[index] = colorize;
+        itsColorizeAxes_[index] = axis;
+        updated();
+    }
+}
+
+void PMS_PP_Display::resizeVectors(unsigned int newSize) {
+    if(newSize == 0) newSize = 1;
+    itsUnflaggedSymbols_.resize(newSize);
+    itsFlaggedSymbols_.resize(newSize);
+    itsTitleFormats_.resize(newSize, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT));
+    itsColorizeFlags_.resize(newSize, false);
+    itsColorizeAxes_.resize(newSize, PMS::DEFAULT_COLOR_AXIS);
+    
+    for(unsigned int i = 0; i < newSize; i++) {
+        if(itsUnflaggedSymbols_[i].null())
+            itsUnflaggedSymbols_[i] = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
+        if(itsFlaggedSymbols_[i].null())
+            itsFlaggedSymbols_[i] = PMS::DEFAULT_FLAGGED_SYMBOL(factory());
+    }
+}
 
 }

@@ -93,14 +93,16 @@ public:
   // hit consecutively before we stop that cycle (-1 ==> don't stop)
   MFMSCleanImageSkyModel(const Int nscales,
 			 const Int stoplargenegatives=2,
-			 const Int stoppointmode=-1);
+			 const Int stoppointmode=-1,
+                         const Float smallScaleBias=0.6);
 
   // Create a MFMSCleanImageSkyModel, you provide the scale sizes, IN PIXELS
   // for example:  Vector<Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
   // scales(2) = 10.0;  scales(3) = 30.0; 
   MFMSCleanImageSkyModel(const Vector<Float>& useScaleSize,
 			 const Int stoplargenegatives=2,
-			 const Int stoppointmode=-1);
+			 const Int stoppointmode=-1,
+                         const Float smallScaleBias=0.6);
 
   // destructor
   ~MFMSCleanImageSkyModel();
@@ -117,6 +119,7 @@ private:
   Scale_Method method_p;
 
   Int nscales_p;
+  Float smallScaleBias_p;
   Vector<Float> userScaleSizes_p;
 
   LatticeCleanProgress *progress_p;

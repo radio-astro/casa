@@ -43,6 +43,11 @@
 			<value>raster</value>
 		</param>
 
+		<param type="bool" name="connection">
+			<description> (Optional)  Return a connection object for the newly opened viewer.</description>
+			<value>False</value>
+		</param>
+
                 <constraints>
                 </constraints>
 	</input>

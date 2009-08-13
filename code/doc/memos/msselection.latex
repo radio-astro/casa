@@ -43,7 +43,7 @@ semi-colon separated list of specifications.  Except channel
 selection, the final product of parsing the expressions is a Table
 Expression Node (TEN) which can be used to construct a selected
 Measurement Set.  Higher level global methods to return a selected MS,
-given the user supplied expressions are also provided as part of the
+given the user supplied expressions, are also provided as part of the
 {\tt MSSelection} module.
 
 Error handling is done via the C++ exception handling mechanism.  The
@@ -198,7 +198,7 @@ part of the name.  Hence
 
 Time selection expression is a comma separated list of time
 specifications. Time can be specified in the format
-YYYYY/MM/DD/HH:MM:SS.FF.  Fields (i.e., YYYY, MM, DD, HH, MM, SS and
+YYYY/MM/DD/HH:MM:SS.FF.  Fields (i.e., YYYY, MM, DD, HH, MM, SS and
 FF), starting from left to right, can be omitted.  Omitted fields will
 be replaced by context sensitive defaults as explained below.
 
@@ -284,7 +284,7 @@ Operator can be one, two or three ampersands ({\tt '\&'}) -- {\tt
 '\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
 selection cross- {\it and} auto-correlation baselines and {\tt
 '\&\&\&'} selection {\it only} auto-correlation baselines.  Formally,
-baseline specification is of the form {\tt ANT[$<$OP$>$][ANT]} (where
+baseline specification is of the form {\tt ANT[$<$OP$>$[ANT]]} (where
 the parts in square brackets are optional and {\tt $<$OP$>$} can be {\tt
 '\&', '\&\&'} or {\tt '\&\&\&'}).
 
@@ -317,6 +317,14 @@ ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines \\
 ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
        &antennas in ANT\\
 \hline
+!ANT  & Excludes all baselines involving antennas in ANT. ANT can be \\
+      & any of the above expressions \\
+\hline
+ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions. This\\
+             & selects only cross-correlation baselines between all the \\
+             & antennas in ANT1 and {\it all} other available antennas\\
+             & {\bf except} those involving antennas in ANT2. \\ 
+\hline
 \end{tabular}
 \end{center}
 \end{table}
@@ -325,25 +333,25 @@ ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
 
 The negation operator '!' can be used to exclude a baseline
 specification from the final selection. {\it Note that this is a
-baseline negation operator and not antenna negation operator}.  E.g.,
+baseline negation operator and not an antenna negation operator}.  The
+negation operator applies only to the baseline specification {\it
+immediately} following it.  E.g.,
 
 \begin{itemize}
-\item {\tt !15}  excludes all baselines with the antenna {\bf
-  named} ``15''
-\item {\tt !1$\sim$10} excludes all baselines involving the antennas
-  {\bf named} between ``1'' and ``10''
-\item {\tt !1,3,5,7,9}  excludes all baselines involving antennas {\bf named} ``1'',
-  ``3'', ``5'', ``7'' and ``9''
-\item {\tt 1~10;!5} selects all baselines involving antennas {\bf
-  named} between ``1'' and ``10'' {\it except} those involving antenna
-  {\bf named} ``5''.
+\item baseline={\tt !15} excludes all baselines with the antenna
+  {\bf named} "15"
+\item baseline={\tt!1$\sim$10} excludes {\bf all} baselines involving
+  the antennas {\bf named} between "1" and "10"
+\item  baseline={\tt !1,3,5,7,9} excludes all baselines involving
+  antennas {\bf named} "1", "3", "5", "7" and "9"
+\item  baseline={\tt 1$\sim$10;!5} selects all baselines
+  involving antennas {\bf named} between "1" and "10" {\it except}
+  those involving antenna {\bf named} "5".
 \end{itemize}
 
-Note that the negation operator applies to baseline specification {\it
-immediately} following it.  The negation operator {\tt cannot} be
-applied to individual members of the antenna specification/antenna
-list.  Hence, e.g. the expression {\tt ``1,2,!5,8''} is syntactically
-incorrect.
+Note that the negation operator {\it cannot} be applied to individual
+members of the antenna specification/antenna list.  E.g. the
+expression {\tt "1,2,!5,8"} is syntactically incorrect.
 
 \subsubsection{Examples}
 In the most comman usage, an atomic ANT selects all baselines
@@ -367,8 +375,8 @@ names:
                             antennas with names starting with "VLA:N"
                             and "VLA:E".
 \item baseline={\tt 21;!15} selects baselines between antenna {\bf
-  named} ``21'' and all other available antennas, {\it except} antenna
-  {\bf named} ``15''.  I.e, baseline ``21-15'' (or its conjugate, if
+  named} "21" and all other available antennas, {\it except} antenna
+  {\bf named} "15".  I.e, baseline "21-15" (or its conjugate, if
   present in the database) is excluded.
 \end{itemize}
 
@@ -712,8 +720,9 @@ specifications.  E.g.
 \item scan={\tt $<$5}       selects all scans less than 5
 \end{itemize}
 
-
-\section{General Error Handling}
+\newpage
+\appendix{}
+\section{Appendix: General Error Handling}
 
 The MSSelection sub-system reports errors via the C++ exception
 mechanism.  The objects thrown have the following inheritance
@@ -756,10 +765,7 @@ character.  E.g.
  Spw Expression: No match found for "LBAN" (near char. 4 in string "LBAN")
 
 \newpage
-\appendix{}
-\section{Appendix}
-\subsection{Examples}
-
+\section{Appendix: Examples}
 
 \begin{table}[h!]
 \caption{Summary of the MS used}
@@ -779,7 +785,7 @@ FIELDID & SPWID &  NChan & Pol & NRows   & Source Name\\
 \end{center}
 \end{table}
 
-\subsubsection{Example 1}
+\subsection{Example 1}
 \begin{verbatim}
 --------------------------------------------------------------------
 Select field IDs 0,1,2 and field Named KTIP
@@ -811,7 +817,7 @@ UV in meters = []
 Number selected rows: 99819
 \end{verbatim}
 
-\subsubsection{Example 2}
+\subsection{Example 2}
 
 \begin{verbatim}
 --------------------------------------------------------------------
@@ -844,7 +850,7 @@ UV in meters = []
 Number selected rows: 2376
 \end{verbatim}
 
-\subsubsection{Example 3}
+\subsection{Example 3}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -877,7 +883,7 @@ UV in meters = []
 Number selected rows: 0
 \end{verbatim}
 
-\subsubsection{Example 4}
+\subsection{Example 4}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -909,7 +915,7 @@ Number selected rows: 1188
 \end{verbatim}
 
 
-\subsubsection{Example 5}
+\subsection{Example 5}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -940,7 +946,7 @@ UV in meters = []
 Number selected rows: 198
 \end{verbatim}
 
-\subsubsection{Example 6}
+\subsection{Example 6}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -961,7 +967,7 @@ mssplit>go
 char. 7 in string "1~3 & $~6")
 \end{verbatim}
 
-\subsubsection{Example 7}
+\subsection{Example 7}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -990,9 +996,9 @@ Scan = []
 Array = []
 UVRange = [0, 5000] lambda
 Number selected rows: 33
-\end{verbatim>
+\end{verbatim}
 
-\subsubsection{Example 8}
+\subsection{Example 8}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -1024,7 +1030,7 @@ UVRange = [0, 5000] lambda
 Number selected rows: 33
 \end{verbatim}
 
-\subsubsection{Example 9}
+\subsection{Example 9}
 \begin{verbatim}
 -------------------------------------------------------------------
 Select field Named K* (wild card usage)
@@ -1050,12 +1056,13 @@ token '-' (near char. 12 in string "25/22:40:0 - 26/03:30:0")
 (Did you know we use "~" as the range operator (for a good reason)?)
 \end{verbatim}
 
-\subsection{Formal Grammar Specifications}
+\newpage
+\section{Appendix: Formal Grammar Specifications}
 
 {\tt TEN} in the following refers to the TableExprNode object of the
 {\tt Tables} module of CASA.
 
-\subsubsection{Baseline Selection Expression}
+\subsection{Baseline Selection Expression}
 
 \begin{verbatim}
 
@@ -1104,7 +1111,7 @@ indexlist: antidlist
 \end{verbatim}
 
 
-\subsubsection{Frequency Selection Expression}
+\subsection{Frequency Selection Expression}
 
 \begin{verbatim}
 
@@ -1172,7 +1179,7 @@ FullExpr: FullSpec
 \end{verbatim}
 
 
-\subsubsection{Field Selection Expression}
+\subsection{Field Selection Expression}
 
 \begin{verbatim}
 token SQUOTE
@@ -1224,7 +1231,7 @@ indexlist : fieldidlist
 \end{verbatim}
 
 
-\subsubsection{Scan/Sub-Array Selection Expression}
+\subsection{Scan/Sub-Array Selection Expression}
 
 \begin{verbatim}
 token IDENTIFIER  of type String
@@ -1267,7 +1274,7 @@ scanidrange: INT
 \end{verbatim}
 
 
-\subsubsection{Time Selection Expression}
+\subsection{Time Selection Expression}
 
 \begin{verbatim}
 token NUMBER  of type Integer
@@ -1332,7 +1339,7 @@ yeartimeexpr: WNUMBER SLASH WNUMBER SLASH WNUMBER SLASH WNUMBER
 
 \end{verbatim}
 
-\subsubsection{UV-distance Selection Expression}
+\subsection{UV-distance Selection Expression}
 
 \begin{verbatim}
 token UNIT     of type String

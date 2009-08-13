@@ -32,12 +32,15 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 if any(key=='MS_VERSION' for key in tbkeys):
                     if any(col=='FLOAT_DATA' for col in colnames):
                         fdataexist = True
-                        print "FLOAT_DATA exist"
+                        #print "FLOAT_DATA exist"
+                        casalog.post( "FLOAT_DATA exist" )
                     else:
-                        print "No FLOAT_DATA, DATA is used"
+                        #print "No FLOAT_DATA, DATA is used"
+                        casalog.post( "No FLOAT_DATA, DATA is used" )
                     if any(col=='CORRECTED_DATA' for col in colnames):
                         calibrated = True
-                        print "Calibrated data seems to exist"
+                        #print "Calibrated data seems to exist"
+                        casalog.post( "Calibrated data seems to exist" )
                 else:
                     msg='sdfile must be in MS format'
                     raise Exception, msg
@@ -52,7 +55,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     msg='Please specify a region to be fitted in masklist'
                     raise Exception, msg
             		
-                print "masklist...."
+                #print "masklist...."
+                casalog.post( "masklist...." )
                 if type(masklist)==int:
                     masklist=[masklist]
                 if type(masklist)==list or type(masklist)==tuple:
@@ -110,7 +114,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             corrtypestr = ([stokestypes[corrtype[i][0]] for i in range(npol)])
 
             #print corrtypestr
-            print "no. of polarization: %s" % npol
+            #print "no. of polarization: %s" % npol
+            casalog.post( "no. of polarization: %s" % npol )
             tb.close()
             selpol = 0
             selnpol = 0
@@ -123,16 +128,19 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                         for ct in corrtypestr:
                             if ct == 'XX' or ct == 'YY':
                                 selcorrtypeind.append(corrtypestr.index(ct))
-                        print "selected corr type indices: %s" % selcorrtypeind 
+                        #print "selected corr type indices: %s" % selcorrtypeind
+                        casalog.post( "selected corr type indices: %s" % selcorrtypeind ) 
                         #print "selected (%s,%s) data" % corrtypestr
                     elif set(corrtypestr).issuperset(set(("RR","LL"))):
                         for ct in corrtypestr:
                             if ct == 'RR' or ct == 'LL':
                                 selcorrtypeind.append(ct.index(ct))
-                        print "selected corr type indices: %s" % selcorrtypeind 
+                        #print "selected corr type indices: %s" % selcorrtypeind
+                        casalog.post( "selected corr type indices: %s" % selcorrtypeind )
                         #print "selected (%s,%s) data" % corrtypestr
                     else:
-                    	print "Cannot get Stokes I with the input (%s,%s) data" % corrtypestr
+                    	#print "Cannot get Stokes I with the input (%s,%s) data" % corrtypestr
+                        casalog.post( "Cannot get Stokes I with the input (%s,%s) data" % corrtypestr, priority='WARN' )
                     selnpol = len(selcorrtypeind)
                 else:            
                     if len(stokes) <= 2:
@@ -140,7 +148,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                             if stokes.upper()==corrtypestr[i]:
                                 selcorrtypeind.append(i)
                                 selpol = selcorrtypeind[0]
-                                print "selected %s data" % corrtypestr[i]
+                                #print "selected %s data" % corrtypestr[i]
+                                casalog.post( "selected %s data" % corrtypestr[i] )
                         selnpol=1 
                     else:
                         # try to identify multiple corrtypes in stokes parm.
@@ -250,7 +259,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             # assume each SUB_SCAN id represents each raster 'scan'
             nscan=tb.nrows()
             #if calmode=='none':
-            print "There are %s scans in the data." % nscan
+            #print "There are %s scans in the data." % nscan
+            casalog.post( "There are %s scans in the data." % nscan )
        	    tb.close()
 
             #print "calibration begins..."
@@ -259,7 +269,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             datalab='DATA'
             if calmode=='baseline':
                 if type(antid)==list and len(antid)>2:
-                    print "Assume the antenna selection is all..." 
+                    #print "Assume the antenna selection is all..."
+                    casalog.post( "Assume the antenna selection is all..." )
                 #if calibrated:
 	        #    docalib=raw_input('Do you want to proceed with calibration?(\'y\' or \'n\' will terminate the task, then you can re-run with calmode=\'none\')\n')
                 #    if docalib=='n':
@@ -292,7 +303,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
 		    pl.ylabel(datalab,fontsize='smaller')
 		    symbols=['b.','c.']
                  
-                    print "Arranging data by scans..."
+                    #print "Arranging data by scans..."
+                    casalog.post( "Arranging data by scans..." )
                 
                     data = []
                     ndat0 = 0
@@ -305,7 +317,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
 		       	subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && STATE_ID==%s' % (antid,antid, i))
 		       	datcol=subtb.getcol(datalab)
                        	if npol >1 and selnpol==1:
-                       	    print "select %s data..." % corrtypestr[selpol]
+                       	    #print "select %s data..." % corrtypestr[selpol]
+                            casalog.post( "select %s data..." % corrtypestr[selpol] )
 		            rdatcol=datcol[selpol].real
                         else:
 		            rdatcol=datcol[selcorrtypeind[np]].real
@@ -350,9 +363,11 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             
 		    f=sd.fitter()
 		    f.set_function(lpoly=blpoly)
-		    print "Processing %s %s scans" % (corrtypestr[np], nscan)
+		    #print "Processing %s %s scans" % (corrtypestr[np], nscan)
+                    casalog.post( "Processing %s %s scans" % (corrtypestr[np], nscan) )
 		    for i in range(nscan):
-		     	print "Processing Scan#=", i
+		     	#print "Processing Scan#=", i
+                        casalog.post( "Processing Scan#=%s" % i )
 		        x=range(len(data[i]))
 		        if abs(plotlevel) > 1:
 		            pl.subplot(312)
@@ -384,7 +399,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 else:
                     startrow=0
                     rowincr=1
-	       	print "Storing the corrected data to CORRECTED_DATA column in the MS..."
+	       	#print "Storing the corrected data to CORRECTED_DATA column in the MS..."
+                casalog.post( "Storing the corrected data to CORRECTED_DATA column in the MS..." )
 	       	cdatm=ndatcol.reshape(npol,1,len(cdat))
                 cdato=tb.getcol('CORRECTED_DATA')
 	        tb.putcol('CORRECTED_DATA', cdatm, startrow=startrow, rowincr=rowincr)
@@ -397,7 +413,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
 		cdatcol=subt.getcol('CORRECTED_DATA')
 		(l,m,n)=cdatcol.shape
 		tb.close()
-                print "plotting corrected data..."
+                #print "plotting corrected data..."
+                casalog.post( "plotting corrected data..." )
                 for np in range(selnpol):
                     pl.figure(np+1)
                     if selnpol==1:
@@ -420,7 +437,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     if plotlevel < 0:
                         outplfile=sdfile+'_scans.eps'
                         pl.savefig(outplfile,format='eps')
-                        print "Plot was written to %s" % outplfile 
+                        #print "Plot was written to %s" % outplfile
+                        casalog.post( "Plot was written to %s" % outplfile ) 
             else: # no calib, if requested plot raw/calibrated data 
                 if abs(plotlevel) > 0:
 		    tb.open(sdfile)
@@ -468,7 +486,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                         if plotlevel<0:
                             outplfile=sdfile+'_scans.eps'
                             pl.savefig(outplfile,format='eps')
-                            print "Plot  was written to %s" % outplfile 
+                            #print "Plot  was written to %s" % outplfile
+                            casalog.post( "Plot  was written to %s" % outplfile )
                    
             #flag scans
             if len(flaglist) > 0:
@@ -477,7 +496,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 fdatcol = subtb.getcol('FLAG')
                 (l,m,n) = fdatcol.shape
                 fdatcol.reshape(l,n)
-                print "Flag processing..."
+                #print "Flag processing..."
+                casalot.post( "Flag processing..." )
                 flagscanlist=[]
                 if type(antid) == int:
                     startrow=antid
@@ -515,7 +535,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 # need flip True -> 0
                 iw=numpy.array(-fdatacm[0].reshape(1,len(fdatac)), dtype=numpy.int64)
 	        tb.putcol('IMAGING_WEIGHT', iw, startrow=startrow, rowincr=rowincr)
-                print "Scans flagged: %s" % list(flagscanset)
+                #print "Scans flagged: %s" % list(flagscanset)
+                casalog.post( "Scans flagged: %s" % list(flagscanset) )
                 tb.close()
 
                       	
@@ -525,8 +546,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             if createimage:
                 #if pointingcolumn.upper()=="OFFSET":
                 #   pointingcolumn="POINTING_OFFSET"
-                print "pointingcolumn=",pointingcolumn
-                print "Imaging...."
+                #print "pointingcolumn=",pointingcolumn
+                #print "Imaging...."
+                casalog.post( "pointingcolumn used: %s" % pointingcolumn )
+                casalog.post( "Imaging...." )
                 im.open(sdfile)
                 im.selectvis(field=0, spw='', baseline=antenna)
                 im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
@@ -537,5 +560,6 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 im.close()
 
         except Exception, instance:
-            print '***Error***',instance
+            #print '***Error***',instance
+            casalog.post( instance.message, priority='ERROR' )
             return

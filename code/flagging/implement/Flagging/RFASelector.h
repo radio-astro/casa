@@ -123,7 +123,9 @@ protected:
   Block<ClipInfo> sel_clip,sel_clip_row;
   LogicalVector  sel_clip_active;
   Bool            sum_sel_clip_active;
-  Double        quack_si,quack_dt,scan_start,scan_end;
+  Double        quack_si, quack_dt;
+  String        quack_mode;
+  Bool          quack_increment;
   Vector<Int>   sel_scannumber,sel_arrayid;
   String        sel_column;
 

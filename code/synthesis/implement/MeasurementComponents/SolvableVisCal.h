@@ -52,12 +52,59 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
 // **********************************************************
 //  SolvableVisCal
 //
 
 // Forward
 class VisEquation;
+
+// for simulating corruptions
+class CalCorruptor {
+  
+ public:
+  
+  CalCorruptor(const Int nSim);
+  virtual ~CalCorruptor();
+  inline Int& nSim() { return nSim_; };
+  inline Bool& initialized() { return initialized_; };
+  inline Int& prtlev() { return prtlev_; };
+  inline Int& curr_slot() { return curr_slot_; };
+  inline Double& curr_time() { return curr_time_; };
+  inline Double& startTime() { return starttime_; };
+  inline Double& stopTime() { return stoptime_; };
+  inline Double& slot_time(const Int i) { return slot_times_(i); };
+  inline Double& slot_time() { return slot_times_(curr_slot()); };
+  inline Int& currAnt() { return curr_ant_; };
+  inline Int& currSpw() { return curr_spw_; };
+  inline Int& nAnt() { return nAnt_; };
+  inline Int& nSpw() { return nSpw_; };  
+  inline Int& currChan() { return curr_chan_; };  
+  inline Int& nChan() { return fnChan_[currSpw()]; };  
+  inline Vector<Float>& fRefFreq() { return fRefFreq_; };
+  inline Vector<Float>& fWidth() { return fWidth_; };
+  inline Vector<Int>& fnChan() { return fnChan_; };
+  virtual void initialize()=0;
+ 
+ protected:
+   
+   Int nSim_;
+   Bool initialized_;
+   Int prtlev_;
+   Int curr_slot_;
+   Int nAnt_,curr_ant_;
+   Int nSpw_,curr_spw_,curr_chan_;
+   Double curr_time_,starttime_,stoptime_;
+   Vector<Double> slot_times_;   
+   Vector<Float> fRefFreq_,fWidth_; // for each spw
+   Vector<Int> fnChan_;
+
+ private:
+
+};
+
+
 
 class SolvableVisCal : virtual public VisCal {
 public:
@@ -139,11 +186,6 @@ public:
   // Report solve info/params, e.g., for logging
   virtual String solveinfo();
 
-  // set general simulation information e.g. table name
-  virtual void setSimulate(const Record& simpar);
-
-  virtual String siminfo();
-
   // Arrange for accumulation
   virtual void setAccumulate(VisSet& vs,
 			     const String& table,
@@ -154,13 +196,6 @@ public:
   // Size up the solving arrays, etc.  (supports combine)
   Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
-  // Size up the simulate arrays, etc.  
-  // this may have to be specializable, but the general case of 
-  // just calling sizeUpSolve is a good place to start:
-  // I'm going to keep nSol around for use without sizing again.
-  inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
-    return sizeUpSolve(vs,nChunkPerSol) ; }
- 
   // Initialize internal shapes for solving
   void initSolve(VisSet& vs);
 
@@ -292,6 +327,36 @@ public:
 			     const Int fieldId, const Int spw, 
 			     const Int nSolutions);
   virtual void markTimer() {timer_p.mark();};
+
+
+  // -------------
+  // Set the simulation parameters
+  virtual void setSimulate(const Record& simpar);
+
+  // Set up simulated params wrt visset
+  virtual Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
+  // Calculate simulated parameters by some means 
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
+
+  // access to simulation variables that are general to all VisCals
+  inline String& simint() { return simint_; };
+
+  // Simulation info/params, suitable for logging
+  virtual String siminfo();
+
+  // Is this calibration simulated?
+  inline Bool isSimulated() {return simulated_;};
+
+  // object that can simulate the corruption terms
+  CalCorruptor *corruptor_p;
+
+  // RI TODO simplify? i.e. do we need full comb machinery?
+  Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+  //inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
+  //  return sizeUpSolve(vs,nChunkPerSol) ; }
+ 
+
 protected:
 
   // Set to-be-solved-for flag
@@ -357,6 +422,12 @@ protected:
   Float userPrintActivityInterval_p, userPrintActivityFraction_p;
   uInt caiRC_p, cafRC_p;
   Timer timer_p;
+
+  // Set state flag to simulate cal terms
+  inline void setSimulated(const Bool& flag) {simulated_=flag;};
+
+
+
 private:
 
   // Default ctor is private
@@ -431,6 +502,13 @@ private:
 
   // LogIO
   LogIO logsink_p;
+
+  // Simulation flag
+  Bool simulated_;
+
+  // simulation interval
+  String simint_;
+
 
 };
 

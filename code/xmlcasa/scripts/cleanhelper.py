@@ -18,21 +18,22 @@ iatool=casac.homefinder.find_home_by_name('imageHome')
 ia = iatool.create()
 
 class cleanhelper:
-    def __init__(self, imtool='', vis=''):
+    def __init__(self, imtool='', vis='', usescratch=False):
         """
         Contruct the cleanhelper object with an imager tool
         like so:
         a=cleanhelper(im, vis)
         """
         if((type(imtool) != str) and (len(vis) !=0)):
-            self.initsinglems(imtool, vis)
+            self.initsinglems(imtool, vis, usescratch)
         self.maskimages={}
+        self.usescratch=usescratch
         
-    def initsinglems(self, imtool, vis):
+    def initsinglems(self, imtool, vis, usescratch):
         self.im=imtool
         self.vis=vis
         if ((type(vis)==str) & (os.path.exists(vis))):
-            self.im.open(vis)
+            self.im.open(vis, usescratch=usescratch)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         self.phasecenter=''

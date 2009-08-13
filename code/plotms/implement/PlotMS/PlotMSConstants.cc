@@ -28,6 +28,7 @@
 
 #include <casa/OS/Time.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
+#include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
 #include <ctype.h>
 
@@ -176,6 +177,27 @@ bool PMS::recEq(const Record& rec1, const Record& rec2) {
 }
 
 
+const vector<String>& PMS::COLORS_LIST() {
+    static vector<String> colors;
+    if(colors.size() == 0) {
+        colors.resize(9);
+        
+        // TODO !colors
+        
+        colors[0] = "black";
+        colors[1] = "red";
+        colors[2] = "green";
+        colors[3] = "blue";
+        colors[4] = "orange";
+        colors[5] = "purple";
+        colors[6] = "yellow";
+        colors[7] = "darkCyan";
+        colors[8] = "magenta";
+    }
+    return colors;
+}
+
+
 const String PMS::DEFAULT_LOG_FILENAME = "";
 const int PMS::DEFAULT_LOG_EVENTS = PlotLogger::NO_EVENTS;
 const LogMessage::Priority PMS::DEFAULT_LOG_PRIORITY = LogMessage::DEBUGGING;
@@ -186,6 +208,7 @@ const int PMS::DEFAULT_CACHED_IMAGE_HEIGHT = -1;
 const PMS::Axis PMS::DEFAULT_XAXIS = TIME;
 const PMS::Axis PMS::DEFAULT_YAXIS = AMP;
 const PMS::DataColumn PMS::DEFAULT_DATACOLUMN = DATA;
+const PMS::Axis PMS::DEFAULT_COLOR_AXIS = SPW;
 
 const PlotAxis PMS::DEFAULT_CANVAS_XAXIS = X_BOTTOM;
 const PlotAxis PMS::DEFAULT_CANVAS_YAXIS = Y_LEFT;

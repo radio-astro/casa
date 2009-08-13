@@ -368,11 +368,11 @@ void RFFlagCube::getMSFlags()
 // ifrnums is a vector of IFR indices (derived from antenna indices)
 void RFFlagCube::setMSFlags(uInt itime)
 {
-        if(mdbg) 
-        {
-                cerr << "RFFlagCube :: setMSFlags for " ;
-                cerr << "itime : " << itime << endl;
-        }
+  if(mdbg) 
+    {
+      cerr << "RFFlagCube :: setMSFlags for " ;
+      cerr << "itime : " << itime << endl;
+    }
 // return if already done at this iterator position
   if( flag.position() <= pos_set_flag )
     return;

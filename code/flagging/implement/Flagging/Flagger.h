@@ -195,6 +195,8 @@ public:
                       String clipcolumn, 
                       Bool outside, 
                       Double quackinterval=0.0, 
+                      String quackmode=String("beg"),
+                      Bool quackincrement=Bool(false),
                       String opmode=String("flag"),
                       Double diameter = -1.0);
 

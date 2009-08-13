@@ -30,7 +30,8 @@ def flagdata(vis = None, mode = None,
              feed = None, array = None,
              clipexpr = None, clipminmax = None,
              clipcolumn = None, clipoutside = None,
-             quackinterval = None, autocorr = None,
+             quackinterval = None, quackmode = None, quackincrement = None,
+             autocorr = None,
              unflag = None, algorithm = None,
              recipe = None,
              column = None, expr = None,
@@ -101,7 +102,9 @@ def flagdata(vis = None, mode = None,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipminmax=[], clipoutside=False,
-                                         quackinterval=quackinterval, # quack only
+                                         quackinterval=quackinterval,   # quack only
+                                         quackmode=quackmode,           # quack only
+                                         quackincrement=quackincrement, # quack only
                                          spw=spw,
                                          field=field,
                                          antenna=antenna,
@@ -205,7 +208,7 @@ def flagdata(vis = None, mode = None,
                         # Tell the 'fg' tool which algorithm to use, and set the parameters.
                         # Note : Can set multiple instances of this (will be done one after the other)
                         #
-                        fg.setautoflag(algorithm='tfcrop',parameters=par)
+                        fg.setautoflag(algorithm='tfcrop', parameters=par)
 
                         fg.run()
 
@@ -266,6 +269,7 @@ def flagdata(vis = None, mode = None,
         except Exception, instance:
                 fg.done()
                 print '*** Error ***', instance
+                #raise
         fg.done()
 
 
@@ -370,10 +374,16 @@ def manualflag_quack(mode, selectdata, **params):
 
 
 
+# rename some parameters,
+# in order to match the interface of fg.tool
+#
+# validate parameter quackmode
 
 def rename_params(params):
-        # rename some parameters,
-        # in order to match the interface of fg.tool
+        if params.has_key('quackmode') and \
+          not params['quackmode'] in ['beg', 'endb', 'end', 'tail']:
+                raise Exception, "Illegal value '%s' of parameter quackmode, must be either 'beg', 'endb', 'end' or 'tail'" % (params['quackmode'])
+        
         params['baseline']        = params['antenna']     ; del params['antenna']
         params['time']            = params['timerange']   ; del params['timerange']
         params['autocorrelation'] = params['autocorr']    ; del params['autocorr']

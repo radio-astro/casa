@@ -188,7 +188,8 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Imager::Imager() 
-  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
+  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
+     cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
   lockCounter_p=0;
@@ -294,7 +295,8 @@ traceEvent(1,"Entering imager::defaults",25);
 
 
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
-: ms_p(0), msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
+  : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
+    ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
   lockCounter_p=0;
@@ -310,7 +312,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 
 Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
-: ms_p(0), msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
+  : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
   lockCounter_p=0;
@@ -326,7 +328,8 @@ Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
 }
 
 Imager::Imager(const Imager & other)
-  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), ft_p(0), cft_p(0), se_p(0),
+  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
+     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
 {
   operator=(other);
@@ -358,6 +361,14 @@ Imager &Imager::operator=(const Imager & other)
   }
   if (vs_p && this != &other) {
     *vs_p = *(other.vs_p);
+  }
+  if (wvi_p && this != &other) {
+    *wvi_p = *(other.wvi_p);
+    rvi_p=wvi_p;
+  }
+  else if(rvi_p && this != &other){
+    *rvi_p = *(other.rvi_p);
+    wvi_p=NULL;
   }
   if (ft_p && this != &other) {
     *ft_p = *(other.ft_p);
@@ -403,6 +414,10 @@ Imager::~Imager()
     if (vs_p) {
       delete vs_p;
     }
+    if(rvi_p)
+      delete rvi_p;
+    rvi_p=wvi_p=0;
+
     vs_p = 0;
     if (ft_p) {
       delete ft_p;
@@ -414,6 +429,7 @@ Imager::~Imager()
       delete cft_p;
     }
     cft_p = 0;
+
   }
   catch (AipsError x){
     String mess=x.getMesg();
@@ -483,8 +499,14 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     
     Bool initialize=(!ms_p->tableDesc().isColumn("CORRECTED_DATA"));
     
-    if(vs_p) {
+    /*if(vs_p) {
       delete vs_p; vs_p=0;
+    }
+    */
+    if(rvi_p){
+      delete rvi_p;
+      rvi_p=0;
+      wvi_p=0;
     }
     
     // Now open the selected MeasurementSet to be initially the
@@ -494,11 +516,11 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     useModelCol_p=useModelCol;
     
     // Now create the VisSet
-    this->makeVisSet(vs_p, *mssel_p);
-    AlwaysAssert(vs_p, AipsError);
+    this->makeVisSet(*mssel_p);
+    AlwaysAssert(rvi_p, AipsError);
     
     // Polarization
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     Vector<String> polType=msc.feed().polarizationType()(0);
     if (polType(0)!="X" && polType(0)!="Y" &&
 	polType(0)!="R" && polType(0)!="L") {
@@ -515,7 +537,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
 	 << "Initializing natural weights"
 	 << LogIO::POST;
       Double sumwt=0.0;
-      VisSetUtil::WeightNatural(*vs_p, sumwt);
+      VisSetUtil::WeightNatural(*wvi_p, sumwt);
     }
     this->unlock();
 
@@ -553,6 +575,9 @@ Bool Imager::close()
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
   if(vs_p) delete vs_p; vs_p = 0;
+  if(rvi_p) delete rvi_p; 
+  rvi_p=0;
+  wvi_p=0;
   if(mssel_p) delete mssel_p; mssel_p = 0;
   if(ms_p) delete ms_p; ms_p = 0;
 
@@ -582,7 +607,7 @@ String Imager::imageName()
   try {
     lock();
     String name(msname_p);
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     if(datafieldids_p.shape() !=0) {
       name=msc.field().name()(datafieldids_p(0));
     }
@@ -635,7 +660,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   deltas(0)=-mcellx_p.get("rad").getValue();
   deltas(1)=mcelly_p.get("rad").getValue();
   
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   MFrequency::Types obsFreqRef=MFrequency::DEFAULT;
   ROScalarColumn<Int> measFreqRef(ms_p->spectralWindow(),
 				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
@@ -1205,7 +1230,7 @@ String Imager::state()
       os << "  Beam fit is not valid" << endl;
     }
     
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     MDirection mDesiredCenter;
     if(setimaged_p) {
       os << "Image definition settings: "
@@ -1766,7 +1791,7 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
     Double sum = 0.0;
 
     this->lock();
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -1903,7 +1928,7 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
 	}
       }
 
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     if(datafieldids_p.shape()!=0){
       //If setdata has been used prior to this
     phaseCenter=msc.field().phaseDirMeas(datafieldids_p(0));
@@ -2030,13 +2055,15 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     
     os << "Performing selection on MeasurementSet" << LogIO::POST;
-    if(vs_p) delete vs_p; vs_p=0;
+    if(rvi_p) delete rvi_p; 
+    rvi_p=0;
+    wvi_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;
     
     // check that sorted table exists (it should), if not, make it now.
-    this->makeVisSet(*ms_p);
+    //this->makeVisSet(*ms_p);
     
-    MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
+    //MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
     
     
     //Some MSSelection 
@@ -2097,7 +2124,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     //***************
     
-    TableExprNode exprNode=thisSelection.toTableExprNode(&sorted);
+    TableExprNode exprNode=thisSelection.toTableExprNode(ms_p);
     //TableExprNode exprNode=thisSelection.getTEN();
     //if(exprNode.isNull()){
       //      throw(AipsError("Selection failed...review ms and selection parameters"));
@@ -2150,11 +2177,11 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       }
     }
     if(!(exprNode.isNull())){
-      mssel_p = new MeasurementSet(sorted(exprNode));
+      mssel_p = new MeasurementSet((*ms_p)(exprNode));
     }
     else{
       // Null take all the ms ...setdata() blank means that
-      mssel_p = new MeasurementSet(sorted);
+      mssel_p = new MeasurementSet(*ms_p);
     }
     AlwaysAssert(mssel_p, AipsError);
     if(mssel_p->nrow()==0) {
@@ -2162,7 +2189,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << LogIO::WARN
 	 << "Selection is empty: reverting to sorted MeasurementSet"
 	 << LogIO::POST;
-      mssel_p=new MeasurementSet(sorted);
+      mssel_p=new MeasurementSet(*ms_p);
       nullSelect_p=True;
     }
     else {
@@ -2179,36 +2206,6 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	multiFields_p = False;
       }
     }
-    /* This is not needed 
-
-    Int len = msSelect.length();
-    Int nspace = msSelect.freq (' ');
-    Bool nullSelect=(msSelect.empty() || nspace==len);
-    if (!nullSelect) {
-      MeasurementSet* mssel_p2;
-      // Apply the TAQL selection string, to remake the selected MS
-      String parseString="select from $1 where " + msSelect;
-      mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
-      AlwaysAssert(mssel_p2, AipsError);
-      // Rename the selected MS as *SELECTED_TABLE2
-      mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
-      if (mssel_p2->nrow()==0) {
-	os << LogIO::WARN
-	   << "Selection string results in empty MS: "
-	   << "reverting to sorted MeasurementSet"
-	   << LogIO::POST;
-	delete mssel_p2;
-      } else {
-	if (mssel_p) {
-	  delete mssel_p; 
-	  mssel_p=mssel_p2;
-	  mssel_p->flush();
-	}
-      }
-    } else {
-      os << "No selection string given" << LogIO::POST;
-    }
-    */
     if(mssel_p->nrow()!=ms_p->nrow()) {
       os << "By selection " << ms_p->nrow() << " rows are reduced to "
 	 << mssel_p->nrow() << LogIO::POST;
@@ -2219,19 +2216,19 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     //    }
     
     // Now create the VisSet
-    this->makeVisSet(vs_p, *mssel_p); 
-    AlwaysAssert(vs_p, AipsError);
+    this->makeVisSet(*mssel_p); 
+    AlwaysAssert(rvi_p, AipsError);
     
     // Now we do a selection to cut down the amount of information
     // passed around.
     
-    this->selectDataChannel(*vs_p, dataspectralwindowids_p, dataMode_p,
+    this->selectDataChannel(dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
                             mDataStart_p, mDataStep_p);
     ///Tell iterator to use on the fly imaging weights if scratch columns is not in use
     if(!useModelCol_p){
         VisImagingWeight imwgt("natural");
-        vs_p->iter().useImagingWeight(imwgt);
+        rvi_p->useImagingWeight(imwgt);
     }
 
     // Guess that the beam is no longer valid
@@ -3315,7 +3312,7 @@ Bool Imager::linearmosaic(const String& mosaic,
   numerator.set(0.0);
 
   ImageRegrid<Float> regridder;
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   for (uInt i=0; i < images.nelements(); ++i) {
     if(!Table::isReadable(images(i))) {   
       os << LogIO::SEVERE << "Image " << images(i) << 
@@ -3513,7 +3510,7 @@ Bool Imager::weight(const String& type, const String& rmode,
     if (type=="natural") {
       os << "Natural weighting" << LogIO::POST;
       if(useModelCol_p)
-	VisSetUtil::WeightNatural(*vs_p, sumwt);
+	VisSetUtil::WeightNatural(*wvi_p, sumwt);
       else{
 	imwgt_p=VisImagingWeight("natural");
       }
@@ -3527,13 +3524,13 @@ Bool Imager::weight(const String& type, const String& rmode,
 	 << -actualNpix 
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
       if(useModelCol_p){
-	VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, nx_p,
+	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, nx_p,
 				  ny_p,
 				  mcellx_p, mcelly_p, sumwt, actualNpix, 
 				  actualNpix);
       }
       else{
-	imwgt_p=VisImagingWeight(vs_p->iter(), rmode, noise, robust, nx_p, 
+	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
 				 ny_p, mcellx_p, mcelly_p, actualNpix, 
 				 actualNpix);
 
@@ -3575,13 +3572,13 @@ Bool Imager::weight(const String& type, const String& rmode,
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
       if(useModelCol_p){
-	VisSetUtil::WeightUniform(*vs_p, rmode, noise, robust, actualNPixels,
+	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, actualNPixels,
 				  actualNPixels,
 				  actualCellSize, actualCellSize, sumwt);
       }
       else{
 
-	imwgt_p=VisImagingWeight(vs_p->iter(), rmode, noise, robust, 
+	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
 				 actualNPixels, actualNPixels, actualCellSize, 
 				 actualCellSize, 0, 0);
 
@@ -3591,7 +3588,7 @@ Bool Imager::weight(const String& type, const String& rmode,
     else if (type=="radial") {
       os << "Radial weighting" << LogIO::POST;
       if(useModelCol_p){
-	VisSetUtil::WeightRadial(*vs_p, sumwt);
+	VisSetUtil::WeightRadial(*wvi_p, sumwt);
       }
       else{
 	imwgt_p=VisImagingWeight("radial");
@@ -3617,7 +3614,7 @@ Bool Imager::weight(const String& type, const String& rmode,
       }
     }
     else{
-      vs_p->iter().useImagingWeight(imwgt_p);
+      rvi_p->useImagingWeight(imwgt_p);
 
     }
     
@@ -3659,7 +3656,7 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     
     if(useModelCol_p){
       os << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
-      VisSetUtil::Filter(*vs_p, type, bmaj, bmin, bpa, sumwt, minfilter,
+      VisSetUtil::Filter(*wvi_p, type, bmaj, bmin, bpa, sumwt, minfilter,
 			 maxfilter);
       
       if(sumwt>0.0) {
@@ -3675,7 +3672,7 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     else{
        os << "Imaging weights will be tapered" << LogIO::POST;
       imwgt_p.setFilter(type, bmaj, bmin, bpa);
-      vs_p->iter().useImagingWeight(imwgt_p);
+      rvi_p->useImagingWeight(imwgt_p);
 
     }
     
@@ -3740,7 +3737,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
      MSSpectralWindow msspw(tableCommand(spwsel.str(), 
 					 mssel_p->spectralWindow()));
-     MSSpWindowColumns spwc(msspw);
+     ROMSSpWindowColumns spwc(msspw);
 
      // This averaging scheme will work even if the spectral windows are
      // of different sizes.  Note, however, that using an average wavelength
@@ -3783,7 +3780,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
      mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
      AlwaysAssert(mssel_p2, AipsError);
      // Rename the selected MS as */SELECTED_UVRANGE
-     mssel_p2->rename(msname_p+"/SELECTED_UVRANGE", Table::Scratch);
+     //mssel_p2->rename(msname_p+"/SELECTED_UVRANGE", Table::Scratch);
       
      if (mssel_p2->nrow()==0) {
 	 os << LogIO::WARN
@@ -3801,12 +3798,12 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
      }
       
      
-     this->makeVisSet(vs_p, *mssel_p);
-     AlwaysAssert(vs_p, AipsError);
+     this->makeVisSet(*mssel_p);
+     AlwaysAssert(rvi_p, AipsError);
 
-     // NOW WE HAVE TO REDO THE VELOCITY INFO FOR VS_P AS IN SETDATA
+     // NOW WE HAVE TO REDO THE VELOCITY INFO FOR visiter AS IN SETDATA
 
-     this->selectDataChannel(*vs_p, dataspectralwindowids_p, dataMode_p,
+     this->selectDataChannel(dataspectralwindowids_p, dataMode_p,
 				  dataNchan_p, dataStart_p, dataStep_p,
 				  mDataStart_p, mDataStep_p);
 
@@ -3838,7 +3835,7 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
     os << "(assuming that SIGMA column is correct, otherwise scale appropriately)" << LogIO::POST;
     
     this->lock();
-    VisSetUtil::Sensitivity(*vs_p, pointsourcesens, relativesens, sumwt);
+    VisSetUtil::Sensitivity(*rvi_p, pointsourcesens, relativesens, sumwt);
     os << "RMS Point source sensitivity  : "
        << pointsourcesens.get("Jy").getValue() << " Jy/beam"
        << LogIO::POST;
@@ -3905,7 +3902,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 	 << LogIO::POST;
     }
     else if (type=="model") {
-      if(vs_p->iter().msColumns().modelData().isNull())
+      if(rvi_p->msColumns().modelData().isNull())
 	os << "Cannot make model image without scratch model-data column "
 	   << LogIO::EXCEPTION;
       seType=FTMachine::MODEL;
@@ -3919,14 +3916,14 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
     else if (type=="psf") {
       seType=FTMachine::PSF;
-      if(vs_p->iter().msColumns().modelData().isNull())
+      if(rvi_p->msColumns().modelData().isNull())
 	os << "Cannot make psf image without scratch model-data column for now"
 	   << LogIO::EXCEPTION;
       os << "Making point spread function "
 	 << LogIO::POST;
     }
     else if (type=="residual") {
-      if(vs_p->iter().msColumns().modelData().isNull())
+      if(rvi_p->msColumns().modelData().isNull())
 	os << "Cannot make residual image without scratch model-data column "
 	   << LogIO::EXCEPTION;
       seType=FTMachine::RESIDUAL;
@@ -4085,7 +4082,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     
     // Now make the required image
     Matrix<Float> weight;
-    ft_p->makeImage(seType, *vs_p, cImageImage, weight);
+    ft_p->makeImage(seType, *rvi_p, cImageImage, weight);
     StokesImageUtil::To(imageImage, cImageImage);
     imageImage.setUnits(Unit("Jy/beam"));
     cImageImage.setUnits(Unit("Jy/beam"));
@@ -4286,7 +4283,7 @@ Bool Imager::residual(const Vector<String>& model,
       }
       if(!clone(theModels(thismodel), imageNames(thismodel))) return False;
     }
-    
+    destroySkyEquation();
     if(!createSkyEquation(theModels, complist)) return False;
     
     addResidualsToSkyEquation(imageNames);
@@ -4625,9 +4622,9 @@ Bool Imager::clean(const String& algorithm,
 	  return False;
 	}
 	if (scaleMethod_p=="uservector") {	
-	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p);
+	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p,smallScaleBias_p);
 	} else {
-	  sm_p = new MSCleanImageSkyModel(nscales_p);
+	  sm_p = new MSCleanImageSkyModel(nscales_p, smallScaleBias_p);
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
@@ -4667,11 +4664,13 @@ Bool Imager::clean(const String& algorithm,
 	if (scaleMethod_p=="uservector") {
 	  sm_p = new MFMSCleanImageSkyModel(userScaleSizes_p, 
 					    stoplargenegatives_p, 
-					    stoppointmode_p);
+					    stoppointmode_p,
+                                            smallScaleBias_p);
 	} else {
 	  sm_p = new MFMSCleanImageSkyModel(nscales_p, 
 					    stoplargenegatives_p, 
-					    stoppointmode_p);
+					    stoppointmode_p,
+                                            smallScaleBias_p);
 	}
 	//	if(ftmachine_p=="mosaic"|| ftmachine_p=="wproject")
 	// For some reason  this does not seem to work without full
@@ -4879,11 +4878,11 @@ Bool Imager::clean(const String& algorithm,
   
   catch (exception &x) { 
     for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
-	 if (!images_p[thismodel].null()) {
+      if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
              images_p[thismodel]->table().relinquishAutoLocks(True);
              images_p[thismodel]->table().unlock();
 	 }
-	 if (residuals_p[thismodel]->ok()) {
+      if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
              residuals_p[thismodel]->table().relinquishAutoLocks(True);
              residuals_p[thismodel]->table().unlock();
 	 }
@@ -5655,7 +5654,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     String fluxScaleName;
     Bool matchedScale=False;
     Int spwid, fldid;
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
     for (uInt kk=0; kk<fldids.nelements(); ++kk) {
@@ -5907,7 +5906,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     String fluxScaleName;
     Bool matchedScale=False;
     Int spwid, fldid;
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
     for (uInt kk=0; kk<fldids.nelements(); ++kk) {
@@ -6341,6 +6340,12 @@ Bool Imager::setscales(const String& scaleMethod,
   return True;
 };
 
+Bool Imager::setSmallScaleBias(const Float inbias)
+{ 
+  smallScaleBias_p = inbias;
+  return True;
+}
+
 // Added for wb algo.
 Bool Imager::settaylorterms(const Int intaylor,const Double inreffreq)
 {
@@ -6435,7 +6440,7 @@ Bool Imager::plotuv(const Bool rotate)
   try {
     os << "Plotting uv coverage for currently selected data" << LogIO::POST;
     
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
     Int nVis=0;
@@ -6595,7 +6600,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
     os << "Plotting Stokes I visibility for currently selected data"
        << LogIO::POST;
     
-    MSColumns msc(*mssel_p);
+    ROMSColumns msc(*mssel_p);
     Bool twoPol=True;
     Vector<String> polType=msc.feed().polarizationType()(0);
     if (polType(0)!="X" && polType(0)!="Y" &&
@@ -6603,7 +6608,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
       twoPol=False;
     }
     
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
     Int nVis=0;
@@ -6839,7 +6844,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
     
     os << "Plotting IMAGING_WEIGHT column for currently selected data" << LogIO::POST;
     
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
     Char** lala=0;
@@ -7054,8 +7059,12 @@ Bool Imager::clipvis(const Quantity& threshold)
     
     os << "Clipping visibilities where residual visibility > "
        << thres << " Jy" << LogIO::POST;
-    
-    VisIter& vi(vs_p->iter());
+    if(!wvi_p){
+      os << "Cannot clip visibilities in read only mode of ms" 
+	 << LogIO::WARN << LogIO::POST;
+      return False;
+    }
+    VisIter& vi(*wvi_p);
     VisBuffer vb(vi);
     
 
@@ -7116,7 +7125,7 @@ Bool Imager::plotsummary()
   try {
     os << "Plotting field and spectral window ids for currently selected data" << LogIO::POST;
     
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
     Int nVis=0;
@@ -7159,7 +7168,7 @@ Bool Imager::plotsummary()
       timeFloat(i)=Float(t(i)-tStart);
     }
     
-    MSColumns msc(*ms_p);
+    ROMSColumns msc(*ms_p);
     PGPlotter plotter=getPGPlotter();
     plotter.subp(1, 2);
     plotter.page();
@@ -7289,7 +7298,7 @@ Bool Imager::createFTMachine()
     }
     ft_p->setPointingDirColumn(pointingDirCol_p);
 
-    VisIter& vi(vs_p->iter());
+    ROVisIter& vi(*rvi_p);
     // Get bigger chunks o'data: this should be tuned some time
     // since it may be wrong for e.g. spectral line
     vi.setRowBlocking(100);
@@ -7374,7 +7383,8 @@ Bool Imager::createFTMachine()
         try
           {
 	    //            epJ = new EPJones(*vs_p, *ms_p);
-            epJ = new EPJones(*vs_p);
+	    VisSet elVS(*rvi_p);
+            epJ = new EPJones(elVS);
             RecordDesc applyRecDesc;
             applyRecDesc.addField("table", TpString);
             applyRecDesc.addField("interp",TpString);
@@ -7444,7 +7454,8 @@ Bool Imager::createFTMachine()
 	    // Warn users we are have temporarily disabled pointing cal
 	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
 	    //  TBD: Bring this up-to-date with new VisCal mechanisms
-	    epJ = new EPJones(*vs_p, *ms_p);
+	    VisSet elVS(*rvi_p);
+	    epJ = new EPJones(elVS, *ms_p);
 	    RecordDesc applyRecDesc;
 	    applyRecDesc.addField("table", TpString);
 	    applyRecDesc.addField("interp",TpString);
@@ -7504,10 +7515,10 @@ Bool Imager::createFTMachine()
 			gridfunction_p, "SF", padding,
 			sdScale_p, sdWeight_p);
     
-    VisIter& vi(vs_p->iter());
+    //VisIter& vi(vs_p->iter());
     // Get bigger chunks o'data: this should be tuned some time
     // since it may be wrong for e.g. spectral line
-    vi.setRowBlocking(100);
+    rvi_p->setRowBlocking(100);
     
     AlwaysAssert(ft_p, AipsError);
     
@@ -7740,7 +7751,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   
   // Now set up the SkyEquation
   AlwaysAssert(sm_p, AipsError);
-  AlwaysAssert(vs_p, AipsError);
+  // AlwaysAssert(vs_p, AipsError);
+  AlwaysAssert(rvi_p, AipsError);
   AlwaysAssert(ft_p, AipsError);
   AlwaysAssert(cft_p, AipsError);
 
@@ -7867,8 +7879,8 @@ Bool Imager::assertDefinedImageParameters() const
 {
   LogIO os(LogOrigin("imager", "if(!assertDefinedImageParameters()", WHERE));
   if(!setimaged_p) { 
-    os << LogIO::SEVERE << "Image parameters not yet set: use setimage "
-      "in Function Group <setup> " << LogIO::POST;
+    os << LogIO::SEVERE << "Image parameters not yet set: use im.defineimage."
+       << LogIO::POST;
     return False;
   }
   return True;
@@ -7886,8 +7898,8 @@ Bool Imager::valid() const {
        << LogIO::POST;
     return False;
   }
-  if(!vs_p) {
-    os << LogIO::SEVERE << "Program logic error: VisSet pointer vs_p not yet set"
+  if(!rvi_p) {
+    os << LogIO::SEVERE << "Program logic error: VisibilityIterator not yet set"
        << LogIO::POST;
     return False;
   }
@@ -8135,20 +8147,22 @@ Bool Imager::openSubTables(){
    freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
 			 TableLock(TableLock::UserNoReadLocking));
 
- if(!(Table::isReadable(ms_p->historyTableName()))){
-   // setup a new table in case its not there
-   TableRecord &kws = ms_p->rwKeywordSet();
-   SetupNewTable historySetup(ms_p->historyTableName(),
-			      MSHistory::requiredTableDesc(),Table::New);
-   kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-   
+ if(ms_p->isWritable()){
+   if(!(Table::isReadable(ms_p->historyTableName()))){
+     // setup a new table in case its not there
+     TableRecord &kws = ms_p->rwKeywordSet();
+     SetupNewTable historySetup(ms_p->historyTableName(),
+				MSHistory::requiredTableDesc(),Table::New);
+     kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+     
+   }
+   historytab_p=Table(ms_p->historyTableName(),
+		      TableLock(TableLock::UserNoReadLocking), Table::Update);
  }
- historytab_p=Table(ms_p->historyTableName(),
-		    TableLock(TableLock::UserNoReadLocking), Table::Update);
  if(Table::isReadable(ms_p->pointingTableName()))
    pointingtab_p=Table(ms_p->pointingTableName(), 
 		       TableLock(TableLock::UserNoReadLocking));
-
+ 
  if(Table::isReadable(ms_p->sourceTableName()))
    sourcetab_p=Table(ms_p->sourceTableName(),
 		     TableLock(TableLock::UserNoReadLocking));
@@ -8159,9 +8173,9 @@ Bool Imager::openSubTables(){
  if(Table::isReadable(ms_p->weatherTableName()))
    weathertab_p=Table(ms_p->weatherTableName(),
 		      TableLock(TableLock::UserNoReadLocking));
-
- hist_p= new MSHistoryHandler(*ms_p, "imager");
-
+ if(ms_p->isWritable()){
+   hist_p= new MSHistoryHandler(*ms_p, "imager");
+ }
 return True;
 
 }
@@ -8241,7 +8255,7 @@ Bool Imager::unlock(){
   return True ; 
 }
 
-Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids, 
+Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids, 
 			       String& dataMode, 
 			       Vector<Int>& dataNchan, 
 			       Vector<Int>& dataStart, Vector<Int>& dataStep,
@@ -8302,6 +8316,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	Int nch=0;
 	for(uInt i=0;i<spectralwindowids.nelements();++i) {
 	  Int spwid=spectralwindowids(i);
+	  Int numberChan=rvi_p->msColumns().spectralWindow().numChan()(spwid);
 	  if(dataStart[i]<0) {
 	    os << LogIO::SEVERE << "Illegal start pixel = " 
 	       << dataStart[i]  << " for spw " << spwid
@@ -8312,19 +8327,19 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	  if(dataNchan[i]<=0){ 
 	    if(dataStep[i] <= 0)
 	      dataStep[i]=1;
-	    nch=(vs.numberChan()(spwid)-dataStart[i])/Int(dataStep[i])+1;
+	    nch=(numberChan-dataStart[i])/Int(dataStep[i])+1;
 	  }
 	  else nch = dataNchan[i];
-	  while((nch*dataStep[i]+dataStart[i]) > vs.numberChan()(spwid)){
+	  while((nch*dataStep[i]+dataStart[i]) > numberChan){
 	    --nch;
 	  }
 	  Int end = Int(dataStart[i]) + Int(nch-1) * Int(dataStep[i]);
-	  if(end < 0 || end > (vs.numberChan()(spwid))-1) {
+	  if(end < 0 || end > (numberChan)-1) {
 	    os << LogIO::SEVERE << "Illegal step pixel = " << dataStep[i]
 	       << " for spw " << spwid
 	       << "\n end channel " << end 
 	       << " is out of range " << dataStart[i] << " to " 
-	       << (vs.numberChan()(spwid)-1)
+	       << (numberChan-1)
 	       << LogIO::POST;
 	    return False;
 	  }
@@ -8332,26 +8347,27 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	     << " channels, starting at visibility channel "
 	     << dataStart[i]  << " stepped by "
 	     << dataStep[i] << " for spw " << spwid << LogIO::POST;
-	  vs.iter().selectChannel(1, Int(dataStart[i]), Int(nch),
+	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
 	}
       }	else {
+	Int numberChan=rvi_p->msColumns().spectralWindow().numChan()(0);
 	if(dataNchan[0]<=0){
 	  if(dataStep[0] <=0)
 	    dataStep[0]=1;
-	  dataNchan[0]=(vs.numberChan()(0)-dataStart[0])/Int(dataStep[0])+1;
+	  dataNchan[0]=(numberChan-dataStart[0])/Int(dataStep[0])+1;
 	  
 	}
-	while((dataNchan[0]*dataStep[0]+dataStart[0]) > vs.numberChan()(0))
+	while((dataNchan[0]*dataStep[0]+dataStart[0]) > numberChan)
 	  --dataNchan[0];
 
 	Int end = Int(dataStart[0]) + Int(dataNchan[0]-1) 
 	  * Int(dataStep[0]);
-	if(end < 0 || end > (vs.numberChan()(0))-1) {
+	if(end < 0 || end > (numberChan)-1) {
 	  os << LogIO::SEVERE << "Illegal step pixel = " << dataStep[0]
 	     << "\n end channel " << end << " is out of range 1 to " 
-	     << (vs.numberChan()(0)-1)
+	     << (numberChan-1)
 	     << LogIO::POST;
 	  return False;
 	}
@@ -8370,7 +8386,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	 << " channels, starting at radio velocity " << mvStart
 	 << " stepped by " << mvStep << ", reference frame is "
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      vs.iter().selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
+      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
 				  vType, MDoppler::RADIO);
   }
   else if (dataMode=="opticalvelocity") {
@@ -8382,7 +8398,7 @@ Bool Imager::selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids,
 	 << " channels, starting at optical velocity " << mvStart
 	 << " stepped by " << mvStep << ", reference frame is "
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      vs.iter().selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
+      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
 				  vType, MDoppler::OPTICAL);
   }
 
@@ -8445,12 +8461,13 @@ void Imager::setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan){
 
 }
 
-void Imager::makeVisSet(VisSet* & vs, MeasurementSet& ms, 
+void Imager::makeVisSet(MeasurementSet& ms, 
 			Bool compress, Bool mosaicOrder){
 
-  if(vs) {
-    delete vs;
-    vs=0;
+  if(rvi_p) {
+    delete rvi_p;
+    rvi_p=0;
+    wvi_p=0;
   }
 
   Block<Int> sort(0);
@@ -8472,9 +8489,20 @@ void Imager::makeVisSet(VisSet* & vs, MeasurementSet& ms,
   }
   Matrix<Int> noselection;
   Double timeInterval=0;
-  vs = new VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
-
+  //if you want to use scratch col...make sure they are there
+  if(useModelCol_p)
+    VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
+  
+  if(!useModelCol_p){
+    rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
+  }
+  else{
+    wvi_p=new VisibilityIterator(ms, sort, timeInterval);
+    rvi_p=wvi_p;    
+  }
+  
 }
+/*
 void Imager::makeVisSet(MeasurementSet& ms, 
 			Bool compress, Bool mosaicOrder){
 
@@ -8502,6 +8530,7 @@ void Imager::makeVisSet(MeasurementSet& ms,
   VisSet vs(ms,sort,noselection,useModelCol_p,timeInterval,compress);
 
 }
+*/
 
 void Imager::writeHistory(LogIO& os){
 
@@ -8509,7 +8538,8 @@ void Imager::writeHistory(LogIO& os){
   try{
 
     os.postLocally();
-    hist_p->addMessage(os);
+    if(!hist_p.null())
+      hist_p->addMessage(os);
   }catch (AipsError x) {
     oslocal << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	    << LogIO::POST;
@@ -8521,7 +8551,8 @@ void Imager::writeCommand(LogIO& os){
   LogIO oslocal(LogOrigin("Imager", "writeCommand"));
   try{
     os.postLocally();
-    hist_p->cliCommand(os);
+    if(!hist_p.null())
+      hist_p->cliCommand(os);
   }catch (AipsError x) {
     oslocal << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	    << LogIO::POST;
@@ -8669,7 +8700,7 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
   modelImage.table().markForDelete();
     
   // Fill in miscellaneous information needed by FITS
-  MSColumns msc(*ms_p);
+  ROMSColumns msc(*ms_p);
   Record info;
   String object=msc.field().name()(fieldID)
 ;  //defining object name
@@ -8778,7 +8809,7 @@ void Imager::setSkyEquation(){
 //     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
 //    }
 //  else
-    se_p = new CubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p); 
+  se_p = new CubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p, !useModelCol_p);
   return;
 }
 

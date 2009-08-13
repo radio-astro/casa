@@ -43,7 +43,7 @@ ASTEFXReader::ASTEFXReader( string name )
   : ASTEReader( name )
 {
   // DEBUG
-  cout << "ASTEFXReader::ASTEFXReader()" << endl ;
+  //cout << "ASTEFXReader::ASTEFXReader()" << endl ;
   //
 }
 

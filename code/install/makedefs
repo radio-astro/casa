@@ -172,6 +172,21 @@ PGPLOTINCD  = $(PGPLOTROOT)/include
 PGPLOTLIBD  = $(PGPLOTROOT)/lib
 PGPLOTLIB  := -lcpgplot -lpgplot
 
+# ATM libraries & include
+ATMROOT = /usr
+ATMINCD = $(ATMROOT)/include/ATM
+ATMLIBD = $(ATMROOT)/lib
+ATMLIB :=  -laatm
+
+# C++DBUS (C++ binding for DBUS).
+C++DBUSROOT := /usr
+C++DBUSDEFS :=
+C++DBUSINCD  = $(C++DBUSROOT)/include/dbus-c++-1
+C++DBUSLIBD  = $(C++DBUSROOT)/lib
+C++DBUSLIB  := -ldbus-c++-1
+DBUSXML2CPP = $(C++DBUSROOT)/bin/dbusxx-xml2cpp
+
+
 # The preprocessor variable NEED_FORTRAN_UNDERSCORES is used by
 # aipsview to link against PGPLOT.
 # Define it as 1 if the Fortran function names in the PGPLOT library
@@ -433,15 +448,16 @@ XLIBLIST_shared_ionosphere  := CORE LAPACK F77
 XLIBLIST_shared_flagging    := CORE LAPACK F77
 XLIBLIST_shared_dish        := CORE WCSLIB LAPACK F77 CFITSIO
 XLIBLIST_shared_simulators  := CORE LAPACK F77
-XLIBLIST_shared_synthesis   := CORE LAPACK F77 PGPLOT X11 CFITSIO
+XLIBLIST_shared_synthesis   := CORE LAPACK F77 PGPLOT X11 CFITSIO ATM
 XLIBLIST_shared_plotms      := CORE QT4 XERCES LAPACK F77 PGPLOT X11 CFITSIO
-XLIBLIST_shared_casaqt      := CORE QT4 XERCES
-XLIBLIST_shared_display := QT4 CORE CFITSIO X11 MIRLIB WCSLIB LAPACK F77
+XLIBLIST_shared_casaqt      := CORE QT4 XERCES C++DBUS
+XLIBLIST_shared_display := QT4 CORE CFITSIO ATM X11 MIRLIB WCSLIB LAPACK F77
 XLIBLIST_shared_alma  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_atnf  := CORE RPFITS MIRLIB WCSLIB CFITSIO LAPACK F77
 XLIBLIST_shared_nfra  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_nrao  := $(XLIBLIST_shared_synthesis)
-XLIBLIST_shared_xmlcasa := CORE WCSLIB CFITSIO CCMTOOLS XERCES READLINE QT4
+XLIBLIST_shared_xmlcasa := CORE WCSLIB CFITSIO CCMTOOLS XERCES READLINE QT4 ATM
+XLIBLIST_shared_casadbus := C++DBUS
 
 # The shared library list may be defined in the including makefile either
 # before or after makedefs is included.
@@ -490,7 +506,7 @@ CPP       = $(C++) -E
 #Seems we have an unknown issue with the unlock, so commented out for now
 #
 #CPPSTD   := -DCASACORE_NEEDS_RETHROW -DCASACORE_UNLOCK_TABLE_ON_DESTRUCT
-CPPSTD   := -DCASACORE_NEEDS_RETHROW  -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB  -DAIPS_HAS_QWT
+CPPSTD    := -DCASACORE_NEEDS_RETHROW -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB -DAIPS_HAS_QWT -DAIPS_USEATM
 CPPDBG    = $(CPPSTD) -DAIPS_DEBUG -DAIPS_ARRAY_INDEX_CHECK
 CPPOPT    = $(CPPSTD)
 
@@ -620,13 +636,14 @@ LIBnral       = defeat defeat defeat defeat defeat defeat
 LIBnrao       = defeat shatic defeat defeat defeat defeat
 LIBtifr       = defeat defeat defeat defeat defeat defeat
 LIBxmlcasa     := defeat shatic defeat defeat defeat defeat
+LIBcasadbus       := defeat shatic defeat defeat defeat defeat
 
 # Control variables for constructing AIPS++ library link lists.  These consist
 # of a list of AIPS++ package names, the current package should be first with
 # "aips" last.  These variables describe dependencies between standard AIPS++
 # packages and should not need to be redefined in the site makedefs.
 LINKtableplot      := graphics 
-LINKcasaqt      := casaqt graphics 
+LINKcasaqt      := casaqt graphics
 LINKmsvis       := msvis
 LINKcalibration := calibration msvis tableplot graphics 
 LINKionosphere  := ionosphere tableplot graphics 
@@ -638,6 +655,7 @@ LINKplotms      :=  plotms casaqt synthesis calibration graphics msvis tableplot
 LINKxmlcasa     := xmlcasa nrao display casaqt synthesis calibration graphics msvis tableplot flagging plotms
 LINKgraphics    := graphics 
 LINKatmosphere  := atmosphere 
+LINKcasadbus     := casadbus
 
 
 LINKdemo := graphics synthesis simulators dish flagging ionosphere calibration tableplot msvis 
@@ -736,12 +754,12 @@ DOCDOXY   := docdoxy
 PACKAGES  := graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis demo
 
 
-SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa
+SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa casadbus
 
 CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis plotms
 
 # What auxiliary packages to build
-AUXILIARY := casaqt display plotms 
+AUXILIARY := casaqt display plotms casadbus
 
 # What consortium packages to build (atnf bima hia nfra nral nrao tifr).
 CONSORTIA := nrao atnf alma xmlcasa 
@@ -1113,6 +1131,8 @@ else
    QTMOCS    := $(patsubst %.qo.h,%.moc.cc,$(QTMOCS))
    QTQRCS    := $(wildcard $(CODEDIR)/*/*.qrc)
    QTQRCS    := $(patsubst %.qrc,%.qrc.cc,$(QTQRCS))
+   DBUSPROXY   := $(wildcard $(CODEDIR)/*/*.dbusproxy.xml)
+   DBUSPROXY   := $(patsubst %.dbusproxy.xml,%.dbusproxy.h,$(DBUSPROXY))
    C++       += -DHAVE_QT4
    LDSTD     += $(QT4LDSTD)
    endif
@@ -1172,6 +1192,7 @@ export LDSOPTS  := $(LDSOPTS)
 export SFXSTAT  := $(SFXSTAT)
 export SFXSHAR  := $(SFXSHAR)
 export LIBxmlcasa     := $(LIBxmlcasa)
+export LIBcasadbus     := $(LIBcasadbus)
 export LIBtableplot      := $(LIBtableplot)
 export LIBgraphics    := $(LIBgraphics)
 export LIBmsvis       := $(LIBmsvis)
@@ -1329,7 +1350,12 @@ ifdef SUBDIRS
 	$(RCC4) -name $(word $(words $(subst /, ,$(dir $(dir $@)))),$(subst /, ,$(dir $(dir $@)))) -o $@ $<
    endif
 
-   $(CODESUBS) : $(QTUIS) $(QTMOCS) $(QTQRCS) FORCE
+   ifneq "$(DBUSPROXY)" ""
+   %.dbusproxy.h : %.dbusproxy.xml
+	$(DBUSXML2CPP) $< --proxy=$@
+   endif
+
+   $(CODESUBS) : $(QTUIS) $(QTMOCS) $(QTQRCS) $(DBUSPROXY) FORCE
 	 @ if [ ! -d $@ ] ; then \
 	      amkdir $@ ; \
 	      chmod ug=rwx,g+s,o=rx $@ ; \

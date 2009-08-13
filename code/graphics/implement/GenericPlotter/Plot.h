@@ -435,6 +435,36 @@ public:
 };
 
 
+// An color plot is a scatter plot with differentiated colors for points in
+// different bins.  It is expected to consist of PlotBinnedData.
+class ColoredPlot : public virtual ScatterPlot {
+public:
+    // Constructor.
+    ColoredPlot() { }
+    
+    // Destructor.
+    virtual ~ColoredPlot() { }
+
+    
+    // Overrides ScatterPlot::pointData().
+    virtual PlotPointDataPtr pointData() const { return binnedColorData(); }
+    
+    
+    // ABSTRACT METHODS //
+    
+    // Returns the binned data used for this plot.
+    virtual PlotBinnedDataPtr binnedColorData() const = 0;
+    
+    // Returns the color to use for the bin at the given index.  The color
+    // applies to the symbol fill color.
+    virtual PlotColorPtr colorForBin(unsigned int bin) const = 0;
+    
+    // Sets the color to use for the bin at the given index.  The color applies
+    // to the symbol fill color.
+    virtual void setColorForBin(unsigned int bin, const PlotColorPtr color) = 0;
+};
+
+
 // Bar plot abstract class.  It is expected to take data in the form of
 // PlotPointData.  The line methods in Plot are used for the bar outlines.
 class BarPlot : public virtual Plot {
@@ -561,6 +591,8 @@ INHERITANCE_POINTER(ScatterPlot, ScatterPlotPtr, Plot, PlotPtr, PlotItem,
 INHERITANCE_POINTER(MaskedScatterPlot, MaskedScatterPlotPtr, ScatterPlot,
                     ScatterPlotPtr, PlotItem, PlotItemPtr)
 INHERITANCE_POINTER(ErrorPlot, ErrorPlotPtr, ScatterPlot, ScatterPlotPtr,
+                    PlotItem, PlotItemPtr)
+INHERITANCE_POINTER(ColoredPlot, ColoredPlotPtr, ScatterPlot, ScatterPlotPtr,
                     PlotItem, PlotItemPtr)
 INHERITANCE_POINTER(BarPlot, BarPlotPtr, Plot, PlotPtr, PlotItem, PlotItemPtr)
 INHERITANCE_POINTER(RasterPlot, RasterPlotPtr, Plot, PlotPtr, PlotItem,

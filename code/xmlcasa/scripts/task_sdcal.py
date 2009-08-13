@@ -87,7 +87,8 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
               if polaverage == True and pweight == 'none':
                  raise Exception, 'Specify weighting type of polarization average'
                    
-            print "*** sdaverage stage ***";
+            #print "*** sdaverage stage ***";
+            casalog.post( "*** sdaverage stage ***" )
             if calmode != 'none':
               tmpoutfile = sdaverageout
               sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
@@ -104,8 +105,10 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
             
             # scanlist, iflist needed to be reset since created scantable (calibration reduces scans,
             # also generated scantable renumbered scan numbers, etc.)
-            print ""
-            print "*** sdsmooth stage ***";
+            #print ""
+            #print "*** sdsmooth stage ***";
+            casalog.post( "" )
+            casalog.post( "*** sdsmooth stage ***" )
             if kernel != 'none':
               sdsmooth.defaults()
               tmpoutfile = sdsmoothout 
@@ -116,29 +119,37 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
                 m = "No output file found. Error occurred at sdsmooth stage"
                 raise Exception, m
             else:
-              print "No smoothing was applied..."
+              #print "No smoothing was applied..."
+              casalog.post( "No smoothing was applied..." )
 
-            print ""
-            print "*** sdbaseline stage ***";
+            #print ""
+            #print "*** sdbaseline stage ***";
+            casalog.post( "" )
+            casalog.post( "*** sdbaseline stage ***")
             if blmode != 'none':
               tmpoutfile = sdbaselineout
               sdbaseline.defaults()
 #              sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
               sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,verify=verify,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
-              print "No baseline subtraction was applied..."
-              print ""
+              #print "No baseline subtraction was applied..."
+              #print ""
+              casalog.post( "No baseline subtraction was applied..." )
+              casalog.post( "" )
             # to restore original input paramters
             _reset_inputs()
             # clean up tmp files
             if len(tmpfilelist)!=0:
-              print ""
-              print "Deleting the temporary files, %s ..." % tmpfilelist
+              #print ""
+              #print "Deleting the temporary files, %s ..." % tmpfilelist
+              casalog.post( "" )
+              casalog.post( "Deleting the temporary files, %s ..." % (tmpfilelist) )
               cmd='rm -rf '+tmpfilelist 
               os.system(cmd) 
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 

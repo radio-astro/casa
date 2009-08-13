@@ -50,6 +50,23 @@ class PlotMSTab : public QWidget, public PlotMSParametersWatcher {
     Q_OBJECT
     
 public:
+    // Static //
+    
+    // Convenience methods for setting the current value of the given QComboBox
+    // to the given.
+    // <group>
+    static bool setChooser(QComboBox* chooser, const QString& value);
+    static bool setChooser(QComboBox* chooser, const String& value) {
+        QString str(value.c_str());
+        return setChooser(chooser, str); }
+    static bool setChooser(QComboBox* chooser, const char* value) {
+        QString str(value);
+        return setChooser(chooser, str); }
+    // </group>
+    
+    
+    // Non-Static //
+    
     // Constructor that takes the parent plotter for this tab.
     PlotMSTab(PlotMSPlotter* parent);
     
@@ -96,18 +113,6 @@ protected:
     static QString changedText(const char* text, bool changed) {
         QString str(text);
         return changedText(str, changed); }
-    // </group>
-    
-    // Convenience methods for setting the current value of the given QComboBox
-    // to the given.
-    // <group>
-    static bool setChooser(QComboBox* chooser, const QString& value);
-    static bool setChooser(QComboBox* chooser, const String& value) {
-        QString str(value.c_str());
-        return setChooser(chooser, str); }
-    static bool setChooser(QComboBox* chooser, const char* value) {
-        QString str(value);
-        return setChooser(chooser, str); }
     // </group>
 };
 

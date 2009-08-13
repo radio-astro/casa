@@ -54,6 +54,10 @@ ErrorPlotPtr PlotFactory::errorPlot(PlotErrorDataPtr data,
         const String& title, bool smartDelete) const {
     return scatterPlot(data, title, smartDelete); }
 
+ColoredPlotPtr PlotFactory::coloredPlot(PlotBinnedDataPtr data,
+        const String& title, bool smartDelete) const {
+    return scatterPlot(data, title, smartDelete); }
+
 BarPlotPtr PlotFactory::histogramPlot(PlotSingleDataPtr data,
         unsigned int numBins, const String& title, bool smartDelete) const {
     return barPlot(new PlotHistogramData(data, numBins), title, smartDelete); }
