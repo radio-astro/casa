@@ -488,7 +488,7 @@ void MSFitsInput::getPrimaryGroupAxisInfo()
 
   }
   //epoch_p = (kwp=priGroup_p.kw(FITS::EPOCH)) ? kwp->asFloat() : 2000.0;
-
+  epochRef_p = getDirectionFrame(epoch_p);
 
   // Get the spectral information
   freqsys_p = MFrequency::TOPO;
@@ -661,6 +661,10 @@ void MSFitsInput::setupMeasurementSet(const String& MSFileName, Bool useTSM,
 
   ms_p=ms;
   msc_p=new MSColumns(ms_p);
+  msc_p->setDirectionRef(epochRef_p); // Does the subtables.
+
+  // UVW is the only Direction type Measures column in the main table.
+  msc_p->setUVWRef(Muvw::castType(epochRef_p));
 }
 
 void MSFitsInput::fillObsTables() {
@@ -1732,6 +1736,19 @@ void MSFitsInput::fillSpectralWindowTable()
   msSpW.measFreqRef().put(spw,freqsys_p);
 }
 
+// Returns the Direction Measure reference for UVW and other appropriate columns
+// in msc_p (which must exist but have empty columns before you can set it!).
+MDirection::Types MSFitsInput::getDirectionFrame(Double epoch)
+{
+  itsLog << LogOrigin("MSFitsInput", "getDirectionFrame");
+  
+  MDirection::Types epochRef = MDirection::J2000;
+  if(nearAbs(epoch, 1950.0, 0.01))
+    epochRef = array_p == "VLA" ? MDirection::B1950_VLA : MDirection::B1950;
+
+  return epochRef;
+}
+
 void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField)
 {
   itsLog << LogOrigin("MSFitsInput", "fillFieldTable");
@@ -1775,16 +1792,13 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField)
   //   THE D.M. REFERENCE WILL BE J2000, WHICH MAY NOT BE CORRECT
   //   FOR THE PLANETS IN THE LIST (see defect 3636).
 
-  MDirection::Types epochRefZero=MDirection::J2000;
-  if (nearAbs(epoch(0),1950.0,0.01)) {
-    if(array_p=="VLA"){
-      epochRefZero=MDirection::B1950_VLA;
-    }
-    else{
-      epochRefZero=MDirection::B1950;
-    }
-  }
-  msc_p->setDirectionRef(epochRefZero);
+  MDirection::Types epochRefZero = getDirectionFrame(epoch(0));
+  if(epochRefZero != epochRef_p)
+    itsLog << LogIO::WARN
+           << "The direction measure reference code, " << epochRefZero << "\n"
+           << "for the first field does not match the one from the FITS header, "
+           << epochRef_p << ".\nThis might cause a problem for the reference frame"
+           << " of the output's UVW column." << LogIO::POST;
   
   for (Int inRow=0; inRow<(Int)suTab.nrow(); inRow++) {
     Int fld = id(inRow)-1;
@@ -1875,12 +1889,6 @@ void MSFitsInput::fillFieldTable(Int nField)
   if (nField>1) {
     msc_p->fieldId().fillColumn(0);
   }
-  // set the DIRECTION MEASURE REFERENCE for appropriate columns
-  MDirection::Types epochRef=MDirection::J2000;
-  if (nearAbs(epoch_p,1950.0,0.01)) epochRef=MDirection::B1950;
-  if((epochRef==MDirection::B1950) && (array_p=="VLA"))
-    epochRef=MDirection::B1950_VLA;
-  msc_p->setDirectionRef(epochRef);
 
   MSFieldColumns& msField(msc_p->field());
   ms_p.field().addRow();
@@ -1891,7 +1899,7 @@ void MSFitsInput::fillFieldTable(Int nField)
   Vector<MDirection> radecMeas(1);
   radecMeas(0).set(MVDirection(refVal_p(getIndex(coordType_p,"RA"))*C::degree,
 			       refVal_p(getIndex(coordType_p,"DEC"))*
-			       C::degree), MDirection::Ref(epochRef));
+			       C::degree), MDirection::Ref(epochRef_p));
 
   msField.numPoly().put(fld,0);
   msField.delayDirMeasCol().put(fld,radecMeas);
@@ -2079,6 +2087,7 @@ void MSFitsInput::fixEpochReferences() {
       itsLog << LogIO::SEVERE << "Unhandled time reference frame: "<<timsys_p<<LogIO::POST;
   }
 }
+
 void MSFitsInput::setFreqFrameVar(BinaryTable& binTab) {
  
   ConstFitsKeywordList kwlist=binTab.kwlist();
