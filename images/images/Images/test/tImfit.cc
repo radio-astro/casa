@@ -36,6 +36,8 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
+#include <casa/Quanta/MVAngle.h>
+#include <casa/Quanta/MVTime.h>
 #include <components/ComponentModels/Flux.h>
 
 #include <casa/Arrays/ArrayUtil.h>
@@ -54,8 +56,12 @@
 
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SkyComponent.h>
-
+#include <components/ComponentModels/ComponentShape.h>
 #include <casa/namespace.h>
+
+#include <components/ComponentModels/GaussianShape.h>
+#include <components/ComponentModels/DiskShape.h>
+#include <components/ComponentModels/PointShape.h>
 
 
 
@@ -185,9 +191,41 @@ bool _processInputs(Int argc, char *argv[]) {
         flux = skyComp.flux();
         cout << "flux val " << flux.value(Stokes::I) << endl;
     }
-     
-    
-    
+    Vector<Quantity> fluxQuant;
+    compList.getFlux(fluxQuant, 0);
+    cout << " flux from comp list " << fluxQuant << endl;
+    Vector<String> polarization = compList.getStokes(0);
+    cout << "stokes from comp list " << polarization << endl;
+    const ComponentShape* compShape = compList.getShape(0);
+    String compType = ComponentType::name(compShape->type());
+    cout << "component type " << compType << endl;
+
+    MDirection mdir = compList.getRefDirection(0);
+    Quantity lat = mdir.getValue().getLat("rad");
+    Quantity longitude = mdir.getValue().getLong("rad");
+
+    Quantity elat = compShape->refDirectionErrorLat();
+    Quantity elong = compShape->refDirectionErrorLong();
+    cout << " RA " << MVTime(lat).string(MVTime::TIME, 11) << " DEC "
+        << MVAngle(longitude).string(MVAngle::ANGLE_CLEAN, 11) << endl;
+    cout << "RA error " << MVTime(elat).string(MVTime::TIME, 11) << " Dec error " 
+        << MVAngle(elong).string(MVAngle::ANGLE, 11) << endl;
+
+    cout << "RA error rads" << elat << " Dec error rad " << elong << endl;
+
+
+
+    if (compShape->type() == ComponentType::GAUSSIAN) {
+        // print gaussian stuff
+        Quantity bmaj = (static_cast<const GaussianShape *>(compShape))->majorAxis();
+        Quantity bmin = (static_cast<const GaussianShape *>(compShape))->minorAxis();
+        Quantity bpa  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
+        Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
+        Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
+        Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
+        cout << "bmaj " << bmaj << " bmin " << bmin << " bpa " << bpa << endl;
+        cout << "emaj " << emaj << " emin " << emin << " epa " << epa << endl;
+    } 
     
     // this needs to be cleaned up, it was done as an intro to the casa dev system
 
