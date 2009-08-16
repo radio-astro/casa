@@ -13,6 +13,7 @@
 #include <images/Images/ImageInfo.h>            // to FTMachine.
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
+#include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator.h>
@@ -29,8 +30,8 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   nsel_p(0),
   nAllFields_p(1),
   npix_p(32),
-  cimageShape_p(4, npix_p, npix_p, 4, npix_p), // Can we get away with
-  tileShape_p(4, npix_p, npix_p, 4, npix_p),   // (0, 0, 0, 0)?  Does it matter?
+  cimageShape_p(4, npix_p, npix_p, 1, 1), // Can we get away with
+  tileShape_p(4, npix_p, npix_p, 1, 1),   // (1, 1, 1, 1)?  Does it matter?
   tiledShape_p(cimageShape_p, tileShape_p),
   antennaSel_p(false),
   freqFrameValid_p(false)
@@ -41,6 +42,23 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   distances_p.resize();
   dataColNames_p = SubMS::parseColumnNames(dataColName);
   nDataCols_p = dataColNames_p.nelements();
+
+  // To use FTMachine, the image has to be set up with coordinates, even
+  // though no image will be made.
+	  
+  //imageNchan_p = 1;        // for MFS.
+  //imageStart_p = 0
+  //imageStep_p  = 1
+  //destroySkyEquation();    
+  // npol_p = 1;
+
+  // nchan we need to get rid of one of these variables 
+  nchan_p = 1; // imageNchan_p;
+
+  spectralwindowids_p.resize(ms_p.spectralWindow().nrow());
+  indgen(spectralwindowids_p);
+
+  lockCounter_p = 0;
 }
   
 // // Assignment (only copies reference to MS, need to reset selection etc)
@@ -181,9 +199,24 @@ Bool FixVis::calc_uvw(const String& refcode)
     }
     
     try{
-      MSUVWGenerator uvwgen(ms_p, bltype, uvwtype);
-  
+      MSUVWGenerator uvwgen(ms_p, bltype, uvwtype);  
       retval = uvwgen.make_uvws(FieldIds_p);
+
+      // Update HISTORY table
+      LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
+      localLogSink.clearLocally();
+      LogIO os(LogOrigin("im", "calcuvw()", WHERE), localLogSink);
+      
+      os << "UVWs regenerated for field";
+      if(FieldIds_p.nelements() > 1)
+        os << "s";
+      os << " " << FieldIds_p
+        //<< ", proj=" << proj
+         << LogIO::POST;
+      ms_p.lock();
+      MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
+      mhh.addMessage(os);
+      ms_p.unlock();      
     }
     catch(AipsError x){
       logSink() << LogIO::SEVERE
@@ -202,13 +235,11 @@ Bool FixVis::calc_uvw(const String& refcode)
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
 Bool FixVis::fixvis(const String& refcode, const String& dataColName)
 {
-  logSink() << LogOrigin("FixVis", "fixvis") << LogIO::NORMAL;
+  logSink() << LogOrigin("FixVis", "fixvis");
 
+  Bool retval = false;
   if(nsel_p > 0){
     if(phaseDirs_p.nelements() == static_cast<uInt>(nsel_p)){
-      // To use FTMachine, the image has to be set up with coordinates, even
-      // though no image will be made.
-	  
       // First calculate new UVWs for the selected fields?
       // calc_uvw(refcode);
 
@@ -217,14 +248,22 @@ Bool FixVis::fixvis(const String& refcode, const String& dataColName)
       Int selectedField;
       for(uInt fldCounter = 0; fldCounter < nsel_p; ++fldCounter){
         selectedField = FieldIds_p[fldCounter];
-        if(makeSelection(selectedField))
+        setImageField(selectedField);
+        if(makeSelection(selectedField)){
           processSelected(fldCounter);
-        else
+
+	  // Update FIELD (and/or optional tables SOURCE, OBSERVATION, but not
+	  // POINTING?) to new PTC.
+
+          retval = true;
+        }
+        else{
           logSink() << LogIO::SEVERE
                     << "Field " << selectedField
                     << " could not be selected for phase tracking center or"
                     << " distance adjustment."
                     << LogIO::POST;
+        }
       }
     }
     else if(phaseDirs_p.nelements() > 0){
@@ -238,24 +277,76 @@ Bool FixVis::fixvis(const String& refcode, const String& dataColName)
   }
   else{
     logSink() << LogIO::SEVERE << "No fields are selected." << LogIO::POST;
-    return false;
   }  
-  return true;
+  return retval;
 }
+
+// void FixVis::destroySkyEquation() 
+// {
+//   // if(se_p) delete se_p; se_p = 0;
+//   //redoSkyModel_p = True;
+// }
+
+Bool FixVis::setImageField(const Int fieldid,
+                           const Bool dotrackDir //, const MDirection& trackDir
+                           )
+{
+  logSink() << LogOrigin("FixVis", "setImageField()");
+//   ostringstream clicom;
+//   clicom << " phaseCenter='" << phaseCenter;
+//   os << String(clicom) << LogIO::POST;  
+  try{
+    //this->lock();
+
+    doTrackSource_p = dotrackDir;
+    //trackDir_p      = trackDir;
+
+    fieldid_p = fieldid;
+    //facets_p = 1;
+
+    //ROMSFieldColumns msfield(ms_p->field());
+    //phaseCenter_p = msfield.phaseDirMeas(fieldid_p);
+
+    //this->unlock();
+    return True;
+  }
+  catch(AipsError x){
+    this->unlock();
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::EXCEPTION;
+    return False;
+  } 
+  return True;
+}
+
+Bool FixVis::lock()
+{
+  Bool ok = true;
+
+  if(lockCounter_p == 0)
+    ok = ms_p.lock();
+  ++lockCounter_p;
+
+  return ok;
+}
+
+void FixVis::unlock()
+{
+  if(lockCounter_p == 1)
+    ms_p.unlock();
+
+  if(lockCounter_p > 0)
+    --lockCounter_p;
+}
+
 
 Bool FixVis::makeSelection(const Int selectedField)
 {
   logSink() << LogOrigin("FixVis", "makeSelection()");
     
-  //VisSet/MSIter will check if SORTED exists and resort if necessary.
-  {
-    Matrix<Int> noselection;
-    VisSet vs(ms_p, noselection);
-  }
-  const MeasurementSet sorted = ms_p.keywordSet().asTable("SORTED_TABLE");
-    
+  //VisSet/MSIter will check if SORTED_TABLE exists and resort if necessary.
   MSSelection thisSelection;
-  if(selectedField > 0){
+  if(selectedField >= 0 && nAllFields_p > 1){
     Vector<Int> wrapper;
     wrapper.resize(1);
     wrapper[0] = selectedField;
@@ -268,15 +359,15 @@ Bool FixVis::makeSelection(const Int selectedField)
       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antennaSelStr_p));
   }
     
-  TableExprNode exprNode = thisSelection.toTableExprNode(&sorted);    
+  TableExprNode exprNode = thisSelection.toTableExprNode(&ms_p);    
     
   // Now remake the selected ms
   if(!(exprNode.isNull())){
-    mssel_p = MeasurementSet(sorted(exprNode));
+    mssel_p = MeasurementSet(ms_p(exprNode));
   }
   else if(selectedField < 0 || nsel_p == nAllFields_p){
     // Null take all the ms ...setdata() blank means that
-    mssel_p = MeasurementSet(sorted);
+    mssel_p = MeasurementSet(ms_p);
   }
   else{
     logSink() << LogIO::SEVERE
@@ -558,9 +649,21 @@ void FixVis::processSelected(uInt numInSel)
     }
   }
   vs.flush();
+
+  // Update HISTORY table
+  LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
+  localLogSink.clearLocally();
+  LogIO os(LogOrigin("FixVis", "processSelected()", WHERE), localLogSink);
+      
+  os << "Processed field " << FieldIds_p[numInSel] << LogIO::POST;
+  ms_p.lock();
+  MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
+  mhh.addMessage(os);
+  ms_p.unlock();
 }
   
-void FixVis::put(const VisBuffer& vb, Int row)
+void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type, 
+                 const Matrix<Float>& imweight)
 {
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())

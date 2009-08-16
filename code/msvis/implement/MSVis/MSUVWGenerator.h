@@ -106,8 +106,8 @@ public:
   //	   @param ant1   Row number in the ANTENNA table of the 2nd antenna.
   //	   @param feed2  Row number in the FEED    table of the 2nd feed.
   //       @param uvw    The returned UVW coordinates.
-  void uvw_bl(const uInt ant1, const uInt feed1, const uInt ant2, const uInt feed2,
-	      Array<Double>& uvw);
+  void uvw_bl(const uInt ant1, const uInt feed1,
+              const uInt ant2, const uInt feed2, Array<Double>& uvw);
 
   // Calculate the uvws for the field IDs in flds that are not -1, and set
   // those phase directions according to phaseDirs.

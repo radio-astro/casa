@@ -491,6 +491,16 @@ namespace casa {
     //LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     LogIO os(LogOrigin("SubMS", "fillAllTables()"));
     
+    // Should take care of Measures frames for all the time type columns below.
+    msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()));
+
+    // UVW is the only other Measures column in the main table.  We are avoiding
+    // the empty table check (with false) since this is explicitly a case of
+    // a column full of numbers that should be in the right reference frame,
+    // but the column could have, or end up with, the wrong reference code if
+    // nothing is done.
+    msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()), false);
+
     // fill or update
     if(!fillDDTables()){
       return False;
@@ -2928,7 +2938,11 @@ namespace casa {
     msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
     msc_p->time().putColumn(mscIn_p->time());
     msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
+
+    // ScalarMeasColumn doesn't have a putColumn() for some reason.
+    //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
     msc_p->uvw().putColumn(mscIn_p->uvw());
+
     msc_p->weight().putColumn(mscIn_p->weight());
     msc_p->sigma().putColumn(mscIn_p->sigma());
 
@@ -4228,6 +4242,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 
   msc_p->uvw().putColumn(outUVW);
   outUVW.resize();			// Free some memory
+
   msc_p->flag().putColumn(outFlag);
   outFlag.resize();
   msc_p->weight().putColumn(outRowWeight);

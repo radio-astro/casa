@@ -3,7 +3,11 @@ from vishead_util import *
 import re
 import shutil
 
-def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
+def fixvis(vis, outputvis, fldids=None, refcode=None
+           #, proj=None, ptcs=None
+           ):
+    proj=None
+    ptcs=None
     casalog.origin('fixvis')
     for arg in ('vis', 'outputvis', 'fldids', 'refcode', 'proj', 'ptcs'):
         casalog.post("parameter %9s: %s" % (arg, eval(arg)), 'DEBUG1')
@@ -19,6 +23,8 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
                 casalog.post("refcode %s is invalid" % refcode, 'SEVERE')
                 casalog.post("Valid codes are %s" % refcodes, 'NORMAL')
                 badcsys = True
+            else:
+                casalog.post("Make sure refcode matches the reference frame of the field centers in outputvis.  Otherwise imaging will not work properly!", 'WARNING')
 
         if proj:
             projs = csys.projection('all')['types']

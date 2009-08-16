@@ -20,7 +20,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        \item calculating (u, v, w) coordinates,
 <!--        \item changing the phase tracking center(s),
        \item correcting for differential aberration,  -->
-       \item changing the refcode (i.e. B1950 to J2000 or 2006.78),
+       \item changing the refcode (i.e. B1950 to J2000, etc.),
 <!--        \item changing the projection, as in (-)NCP to SIN,  -->
        \item refocusing (Not yet incorporated).
      \end{itemize}
@@ -43,9 +43,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>""</value>
     </param>
     <param type="string" name="refcode">
-        <description>Reference frame to use for the output.  Blank = use the frame of vis.</description>
-        <value></value>
-        <example>refcode = 'J2000'</example>
+        <description>Reference frame to use for the generated (u, v, w)s.  WARNING: clean and the im tool ignore the reference frame claimed by the UVW column (it is often mislabelled) and instead assume the (u, v, w)s are in the same frame as the phase tracking center.  fixvis does not yet force the UVW column and field centers to use the same reference frame!  Blank = use the frame of vis.</description>
+        <value>J2000</value>
+        <example>refcode = 'B1950_VLA'</example>
     </param>
 <!--     <param type="string" name="proj">
         <description>Projection code to use for the output.</description>
@@ -65,46 +65,60 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- <description> -->
 <example>
 
-This task
-   calculates (u, v, w) coordinates,
-   changes the reference frame (i.e. B1950 to J2000 or 2006.78 and back),
-   and/or the projection (not well tested).
+This task calculates (u, v, w) coordinates, and optionally changes the
+reference frame (i.e. B1950 to J2000 and back).
 
 Not yet implemented, or incorporated in this task, are:
    changing the phase tracking center(s),
+   changing the projection (i.e SIN to or from (-)NCP).
    correcting for differential aberration,
    adjusting antenna positions,
+   fixing clock errors,
    and refocusing to a finite distance.
 
 Input Parameters:
 
-vis       --- Name of input visibility file
+vis       --- Name of input measurement set.
               ex: vis='my.ms'
 
-outputvis --- Name of the output visibility set.  (Can be the same as vis.)
+outputvis --- Name of the output measurement set.  (Can be the same as vis.)
               ex: outputvis = 'myrefocused.ms'
 
 fields    --- Selection string for the fields to operate on.  '' = all.
 
-refcode   --- Reference frame to use for the output, i.e. 'J2000', 'B1950',
-              'GALACTIC', etc..  A full list of codes can be gotten from
-              'csys = cs.newcoordsys(True);csys.referencecode('dir', True);csys.done()'
-              Cannot be changed when only some of the fields are selected.
-              Default '' = refcode of input ms.
-              ex: refcode = 'J2000'
+refcode   --- Reference frame to use for the generated (u, v, w)s,
+              i.e. 'J2000', 'B1950', 'GALACTIC', etc..  A full list of
+              codes can be gotten from
+              'csys=cs.newcoordsys(True);csys.referencecode('dir',True);csys.done()'
 
-proj      --- Projection code to use for the output.  A list of codes can be
+              The reference frame cannot be changed when only some of the
+              fields are selected.
+
+              Default: 'J2000'.
+              '' means use the reference frame of the UVW column in the
+              input ms.
+
+              ex: refcode = 'B1950_VLA'
+
+              WARNING: clean and the im tool ignore the reference frame
+              claimed by the UVW column (it is often mislabelled) and
+              instead assume the (u, v, w)s are in the same frame as the
+              phase tracking center(s) of the MS.  fixvis does not yet
+              force the UVW column and field centers to use the same
+              reference frame!
+
+<!-- proj       Projection code to use for the output.  A list of codes can be
               gotten from 'csys = cs.newcoordsys(True);csys.projection('all');csys.done()'
               Cannot be changed when only some of the fields are selected.
               Default '' = projection of input ms.
-              ex: proj = 'TAN'
+              ex: proj = 'TAN' -->
 
 <!-- </description> -->
 
 <!-- <example> -->
 Example:
 
-fixvis(vis='my.ms', outputvis='myrefocused.ms', '')
+fixvis(vis='my.ms', outputvis='myrefocused.ms', 'J2000')
 
 </example>
 
