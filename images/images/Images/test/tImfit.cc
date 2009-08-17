@@ -73,7 +73,7 @@ Double _stringToDouble(String& string) {
 }
 
 
-// process the 'box' command line arguement and return the associated region as
+// process the 'box' command line argument and return the associated region as
 // a record.
 ImageRegion _processBox(const ImageInterface<Float>& image, const String& box) {
     Vector<String> boxParts = stringToVector(box);
@@ -160,7 +160,7 @@ bool _processInputs(Int argc, char *argv[]) {
 
     Int ngauss = input.getInt("ngauss");
     // input.getInt() will default to 0 if param not specified
-    Int chan = input.getInt("chan"); 
+    Int chan = input.getInt("chan");
 
     cout << "ngauss " << ngauss << endl;
     ComponentList compList;
