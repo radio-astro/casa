@@ -65,6 +65,43 @@ public:
 
 };
 
+
+// Additive noise
+// In practice, this is not really solvable, but it
+//   is a SVM because we need access to general simulation methods
+class ANoise : public SolvableVisMueller {
+public:
+
+  // Constructor
+  ANoise(VisSet& vs);
+  ANoise(const Int& nAnt);
+
+  virtual ~ANoise();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::A; };
+
+  // Return type name as string
+  virtual String typeName()     { return "A Noise"; };
+  virtual String longTypeName() { return "A Noise (baseline-based)"; };
+
+  // Algebraic type of Mueller matrix 
+  //  (this is the key distinguishing characteristic)
+  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag; };
+
+  // Overide solvability
+  virtual Bool isSolvable() { return False; };
+
+  // Insert noise generation method (per VisBuffer?) here, and
+  //   implement it in AMueller.cc
+  //   Is this simPar?
+
+  // Also need setSimPar, etc., I think
+
+  //  Not clear to me if we also need an "ANoiseCorruptor"....?  Probably do.
+
+};
+
 } //# NAMESPACE CASA - END
 
 #endif
