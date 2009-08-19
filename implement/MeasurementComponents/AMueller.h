@@ -79,7 +79,7 @@ public:
   virtual ~ANoise();
 
   // Return the type enum
-  virtual Type type() { return VisCal::A; };
+  virtual Type type() { return VisCal::ANoise; };
 
   // Return type name as string
   virtual String typeName()     { return "A Noise"; };
