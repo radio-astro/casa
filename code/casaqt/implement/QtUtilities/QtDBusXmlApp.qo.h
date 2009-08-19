@@ -243,14 +243,6 @@ private:
     void dbusSlot(QtDBusXML& xml);
     
     
-    // Private Static Members //
-    
-    // Constants for DBus names.
-    // <group>
-    static const QString DBUS_INTERFACE_NAME;
-    static const QString DBUS_MESSAGE_SLOT;
-    // </group>
-    
     // Private Static Methods //
     
     // Helper method for calling remote methods.
@@ -267,7 +259,7 @@ class QtDBusXmlAppAdaptor : public QDBusAbstractAdaptor {
     
     // Interface name definition.
     // <group>
-    #define CASA_DBUS_INTERFACE "edu.nrao.casa.QtDBusXmlApp"
+    #define CASA_DBUS_XML_INTERFACE "edu.nrao.casa.QtDBusXmlApp"
     Q_CLASSINFO("D-Bus Interface", "edu.nrao.casa.QtDBusXmlApp")
     // </group>
     

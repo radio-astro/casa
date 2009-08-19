@@ -67,8 +67,7 @@ DBA_CHELPER(Record, TpRecord, asRecord)
 
 // Private Static //
 
-const QString QtDBusXmlApp::DBUS_INTERFACE_NAME = CASA_DBUS_INTERFACE;
-const QString QtDBusXmlApp::DBUS_MESSAGE_SLOT   = "xmlSlot";
+#define CASA_DBUS_XML_SLOT "xmlSlot"
 
 bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
         const String& methodName, bool methodIsAsync,
@@ -79,17 +78,17 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
         QtDBusXML xml = QtDBusXML::constructXML(from, to, methodName,
                                                 methodIsAsync, parameters);
 
-        QDBusInterface iface(to.c_str(),serviceOwner(to),DBUS_INTERFACE_NAME,connection());
+        QDBusInterface iface(to.c_str(),serviceOwner(to),CASA_DBUS_XML_INTERFACE,connection());
 
         if(methodIsAsync) {
-            iface.call(QDBus::NoBlock, DBUS_MESSAGE_SLOT, xml.toXMLQString());
+            iface.call(QDBus::NoBlock, CASA_DBUS_XML_SLOT, xml.toXMLQString());
 
         } else {
             if(retValue == NULL)
-                iface.call(DBUS_MESSAGE_SLOT, xml.toXMLQString());
+                iface.call(CASA_DBUS_XML_SLOT, xml.toXMLQString());
             else {
-                QDBusReply<QString> reply = iface.call(DBUS_MESSAGE_SLOT,
-                                            xml.toXMLQString());
+		QString slot(CASA_DBUS_XML_SLOT);
+                QDBusReply<QString> reply = iface.call(slot,xml.toXMLQString());
                 if(reply.isValid())
                     *retValue = QtDBusXML::fromString(
                                 reply.value()).returnedValue();

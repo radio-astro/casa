@@ -68,27 +68,53 @@ void QtDBusXML::extractXML(const QtDBusXML& xml, QString* time, QString* from,
 
 // Private Static //
 
-const QString QtDBusXML::XML_DOCNAME       = "casa-dbus";
-const QString QtDBusXML::XML_TIME          = "time";
-const QString QtDBusXML::XML_FROM          = "from";
-const QString QtDBusXML::XML_TO            = "to";
-const QString QtDBusXML::XML_METHOD        = "method";
-const QString QtDBusXML::XML_METHOD_NAME   = "name";
-const QString QtDBusXML::XML_METHOD_ASYNC  = "async";
-const QString QtDBusXML::XML_METHOD_PARAM  = "param";
-const QString QtDBusXML::XML_METHOD_TYPE   = "type";
-const QString QtDBusXML::XML_RETURNED      = "returned";
-const QString QtDBusXML::XML_RETURNED_TYPE = "type";
-const QString QtDBusXML::XML_RECORD_ENTRY  = "entry";
-const QString QtDBusXML::XML_RECORD_KEY    = "key";
-const QString QtDBusXML::XML_RECORD_TYPE   = "type";
+#define XML_DOCNAME       "casa-dbus"
+#define XML_TIME          "time"
+#define XML_FROM          "from"
+#define XML_TO            "to"
+#define XML_METHOD        "method"
+#define XML_METHOD_NAME   "name"
+#define XML_METHOD_ASYNC  "async"
+#define XML_METHOD_PARAM  "param"
+#define XML_METHOD_TYPE   "type"
+#define XML_RETURNED      "returned"
+#define XML_RETURNED_TYPE "type"
+#define XML_RECORD_ENTRY  "entry"
+#define XML_RECORD_KEY    "key"
+#define XML_RECORD_TYPE   "Type"
 
-const QString QtDBusXML::TYPE_BOOL   = "bool";
-const QString QtDBusXML::TYPE_INT    = "int";
-const QString QtDBusXML::TYPE_UINT   = "uint";
-const QString QtDBusXML::TYPE_DOUBLE = "double";
-const QString QtDBusXML::TYPE_STRING = "string";
-const QString QtDBusXML::TYPE_RECORD = "record";
+#define TYPE_BOOL         "bool"
+#define TYPE_INT          "int"
+#define TYPE_UINT         "uint"
+#define TYPE_DOUBLE       "double"
+#define TYPE_STRING       "string"
+#define TYPE_RECORD       "record"
+
+
+
+bool QtDBusXML::methodParamIsBool(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_BOOL; }
+bool QtDBusXML::methodParamIsInt(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_INT; }
+bool QtDBusXML::methodParamIsUInt(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_UINT; }
+bool QtDBusXML::methodParamIsDouble(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_DOUBLE; }
+bool QtDBusXML::methodParamIsString(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_STRING; }
+bool QtDBusXML::methodParamIsRecord(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_RECORD; }
+
+
+
+bool QtDBusXML::returnedIsBool() const { return qreturnedType() == TYPE_BOOL; }
+bool QtDBusXML::returnedIsInt() const { return qreturnedType() == TYPE_INT; }
+bool QtDBusXML::returnedIsUInt() const { return qreturnedType() == TYPE_UINT; }
+bool QtDBusXML::returnedIsDouble() const { return qreturnedType() == TYPE_DOUBLE; }
+bool QtDBusXML::returnedIsString() const { return qreturnedType() == TYPE_STRING; }
+bool QtDBusXML::returnedIsRecord() const { return qreturnedType() == TYPE_RECORD; }
+
+
 
 
 bool QtDBusXML::qstringToBool(const QString& value) {

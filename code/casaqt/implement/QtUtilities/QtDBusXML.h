@@ -164,18 +164,12 @@ public:
     // Returns whether the method parameter with the given name is the
     // specified type or not.
     // <group>
-    bool methodParamIsBool(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_BOOL; }
-    bool methodParamIsInt(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_INT; }
-    bool methodParamIsUInt(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_UINT; }
-    bool methodParamIsDouble(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_DOUBLE; }
-    bool methodParamIsString(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_STRING; }
-    bool methodParamIsRecord(const String& paramName) const {
-        return qmethodParamType(QString(paramName.c_str())) == TYPE_RECORD; }
+    bool methodParamIsBool(const String& paramName) const;
+    bool methodParamIsInt(const String& paramName) const;
+    bool methodParamIsUInt(const String& paramName) const;
+    bool methodParamIsDouble(const String& paramName) const;
+    bool methodParamIsString(const String& paramName) const;
+    bool methodParamIsRecord(const String& paramName) const;
     // </group>
     
     // Returns the value of the method parameter with the given name as the
@@ -243,12 +237,12 @@ public:
     
     // Returns whether the returned value is the specified type or not.
     // <group>
-    bool returnedIsBool() const { return qreturnedType() == TYPE_BOOL; }
-    bool returnedIsInt() const { return qreturnedType() == TYPE_INT; }
-    bool returnedIsUInt() const { return qreturnedType() == TYPE_UINT; }
-    bool returnedIsDouble() const { return qreturnedType() == TYPE_DOUBLE; }
-    bool returnedIsString() const { return qreturnedType() == TYPE_STRING; }
-    bool returnedIsRecord() const { return qreturnedType() == TYPE_RECORD; }
+    bool returnedIsBool() const;
+    bool returnedIsInt() const;
+    bool returnedIsUInt() const;
+    bool returnedIsDouble() const;
+    bool returnedIsString() const;
+    bool returnedIsRecord() const;
     // </group>
     
     // Returns the returned value as the specified type.  Is invalid if that
@@ -337,18 +331,6 @@ private:
     
     
     // Static //
-    
-    // XML String constants.
-    static const QString XML_DOCNAME, XML_TIME, XML_FROM, XML_TO, XML_METHOD,
-                         XML_METHOD_NAME, XML_METHOD_ASYNC, XML_METHOD_PARAM,
-                         XML_METHOD_TYPE, XML_RETURNED, XML_RETURNED_TYPE,
-                         XML_RECORD_ENTRY, XML_RECORD_KEY, XML_RECORD_TYPE;
-    
-    // Method parameter types.
-    // bool, int, uInt, double, String
-    static const QString TYPE_BOOL, TYPE_INT, TYPE_UINT, TYPE_DOUBLE,
-                         TYPE_STRING, TYPE_RECORD;
-    
     
     // Converts between QStrings and bools.
     // <group>
