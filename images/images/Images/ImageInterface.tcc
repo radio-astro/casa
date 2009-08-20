@@ -327,14 +327,66 @@ Bool ImageInterface<T>::fromRecord(String& error, const RecordInterface& inRec) 
 }
 
 template<class T> uInt ImageInterface<T>::spectralAxisNumber() const {
-    const CoordinateSystem& coordSys = coordinates();
-    Int specIndex = coordSys.findCoordinate(Coordinate::SPECTRAL);
-    return coordSys.pixelAxes(specIndex)[0];
+    Int specIndex = coordinates().findCoordinate(Coordinate::SPECTRAL);
+    return coordinates().pixelAxes(specIndex)[0];
 }    
 
 template<class T> uInt ImageInterface<T>::nChannels() const {
-    // number of channels
     return shape()[spectralAxisNumber()];
+}
+
+template<class T> Bool ImageInterface<T>::isChannelNumberValid(const uInt chan) const {
+    return (chan < nChannels());
+}
+
+template<class T> uInt ImageInterface<T>::polarizationCoordinateNumber() const {
+    return coordinates().findCoordinate(Coordinate::STOKES);
+}
+
+template<class T> uInt ImageInterface<T>::polarizationAxisNumber() const {
+    return coordinates().pixelAxes(polarizationCoordinateNumber())[0];
+}    
+
+template<class T> StokesCoordinate ImageInterface<T>::stokesCoordinate() const {
+    return coordinates().stokesCoordinate(polarizationCoordinateNumber());
+}
+
+template<class T> Int ImageInterface<T>::stokesPixelNumber(const String& stokesString) const {
+    Int stokesPix;
+    stokesCoordinate().toPixel(stokesPix, Stokes::type(stokesString));
+    return stokesPix;
+}
+
+template<class T> uInt ImageInterface<T>::nStokes() const {
+    return shape()[polarizationAxisNumber()];
+}
+
+template<class T> Bool ImageInterface<T>::isStokesValid(const String& stokesString) const {
+    Int stokesPixNum = stokesPixelNumber(stokesString);
+    return stokesPixNum >= 0 && stokesPixNum < nStokes(); 
+}
+
+template<class T> Bool ImageInterface<T>::areChannelAndStokesValid(
+    String& message, const uInt chan, const String& stokesString
+) const {
+    ostringstream os;
+    Bool areValid = True;
+    if (! isChannelNumberValid(chan)) {
+        os << "Zero-based channel number " << chan << " is too large. There are only "
+            << nChannels() << " spectral channels in this image.";
+        areValid = False;
+    }    
+    if (! isStokesValid(stokesString)) {
+        if (! areValid) {
+            os << " and ";
+        }
+        os << "Stokes parameter " << stokesString << " is not in image";
+        areValid = False;
+    }
+    if (! areValid) {
+        message = os.str();
+    }    
+    return areValid;
 }
 
 } //# NAMESPACE CASA - END
