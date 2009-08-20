@@ -117,6 +117,7 @@ bool _processInputs(Int argc, char *argv[]) {
     input.create("region");
     input.create("ngauss");
     input.create("chan");
+    input.create("stokes");
     input.readArguments(argc, argv);
     String imagename = input.getString("imagename");
     if (imagename.size() == 0) {
@@ -167,7 +168,10 @@ bool _processInputs(Int argc, char *argv[]) {
     Array<Float> residPixels;
     Array<Bool> residMask;
     Bool converged;
-    String stokesString = "I";
+    String stokesString = input.getString("stokes");
+    if (stokesString == "") {
+        stokesString = "I";
+    }
     String mask;
     // make this ngauss when we get that far
     Vector<String> models(1);
