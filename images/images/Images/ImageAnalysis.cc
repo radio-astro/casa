@@ -2355,24 +2355,21 @@ Record ImageAnalysis::fitsky(Array<Float>& residPixels, Array<Bool>& residMask,
 	return outrec;
 }
 
-void ImageAnalysis::fitsky(Array<Float>& residPixels, Array<Bool>& residMask,
-		ComponentList& cl, Bool& converged, Record& Region, const uInt& chan,
-		const String& stokesString, const String& mask,
-		const Vector<String>& models, Record& Estimate,
-		const Vector<String>& fixed, const Vector<Float>& includepix,
-		const Vector<Float>& excludepix, const Bool fitIt,
-		const Bool deconvolveIt, const Bool list) {
+void ImageAnalysis::fitsky(
+    Array<Float>& residPixels, Array<Bool>& residMask,
+    ComponentList& cl, Bool& converged, Record& Region, const uInt& chan,
+	const String& stokesString, const String& mask,
+	const Vector<String>& models, Record& Estimate,
+	const Vector<String>& fixed, const Vector<Float>& includepix,
+	const Vector<Float>& excludepix, const Bool fitIt,
+	const Bool deconvolveIt, const Bool list
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
-    uInt nchan = pImage_p->nChannels();
-    if (chan >= nchan) {
-        ostringstream os;
-        os << "Zero-based channel number " << chan << " is too large. There are only "
-            << nchan << " spectral channels in this image.";
-        throw(AipsError(os.str()));
-	}
-
 	String error;
+    if (! pImage_p->areChannelAndStokesValid(error, chan, stokesString)) {
+        throw(AipsError(error, __FILE__, __LINE__));
+	}
 
 	Vector<SkyComponent> estimate;
 
@@ -2429,9 +2426,6 @@ void ImageAnalysis::fitsky(Array<Float>& residPixels, Array<Bool>& residMask,
 
 	const CoordinateSystem &cSys1 = pImage_p->coordinates();
 
-	Int stokesIndex = cSys1.findCoordinate(Coordinate::STOKES);
-	Vector<Int> stokesPixIdx = cSys1.pixelAxes(stokesIndex);
-
     Int specIndex = cSys1.findCoordinate(Coordinate::SPECTRAL);
     Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
 
@@ -2459,13 +2453,12 @@ void ImageAnalysis::fitsky(Array<Float>& residPixels, Array<Bool>& residMask,
 	// TODO if just direction axes in images, bypass all this and go directly to
 	// fitting.
 
-	StokesCoordinate stokesCoord = cSys1.stokesCoordinate(stokesIndex);
-	Int stokesPix;
-	if (!stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))) {
-		throw(AipsError("Stokes parameter " + stokesString + " is not in image"));
-	}
-	startPos[stokesPixIdx[0]] = stokesPix;
-	endPos[stokesPixIdx[0]] = stokesPix;
+	uInt stokesCoordinateNumber = pImage_p->polarizationCoordinateNumber();
+    uInt stokesAxisNumber = pImage_p->polarizationAxisNumber();
+
+
+	startPos[stokesAxisNumber] = pImage_p->stokesPixelNumber(stokesString);
+	endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 	Slicer sl(startPos, endPos, stride, Slicer::endIsLast);
 	SubImage<Float> subImageTmp(*pImage_p, sl, False);
 
