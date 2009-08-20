@@ -188,6 +188,18 @@ class ImageAnalysis
                             const Int maxiter = 256, 
                             const Double convcriteria = 0.0001);
 
+   Matrix<Float> decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& region, const String& mask, 
+			    const Bool simple = false, 
+			    const Double threshold = -1, 
+			    const Int ncontour = 11, 
+			    const Int minrange = 1, 
+			    const Int naxis = 2, 
+			    const Bool fit = True, 
+			    const Double maxrms = -1, 
+			    const Int maxretry = -1, 
+			    const Int maxiter = 256, 
+			    const Double convcriteria = 0.0001);
+
     Record deconvolvecomponentlist(Record& complist);
 
     Bool remove();
