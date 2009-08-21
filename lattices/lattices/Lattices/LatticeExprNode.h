@@ -563,7 +563,7 @@ public:
    LatticeExprNode (Int64 constant);
    LatticeExprNode (Int constant);
    LatticeExprNode (uInt constant);
-   LatticeExprNode (ssize_t constant);
+   LatticeExprNode (Long constant);
    LatticeExprNode (Float constant);
    LatticeExprNode (Double constant);
    LatticeExprNode (const Complex& constant);

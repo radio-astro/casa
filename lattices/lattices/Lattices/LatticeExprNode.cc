@@ -254,7 +254,7 @@ LatticeExprNode::LatticeExprNode (uInt constant)
 #endif
 }
 
-LatticeExprNode::LatticeExprNode (ssize_t constant) 
+LatticeExprNode::LatticeExprNode (Long constant) 
 : donePrepare_p   (False),
   dtype_p         (TpFloat),
   isInvalid_p     (False),
