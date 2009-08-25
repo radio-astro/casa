@@ -2388,12 +2388,34 @@ void ImageAnalysis::fitsky(
 	const Bool deconvolveIt, const Bool list
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-
+    Bool pa = pImage_p->hasPolarizationAxis();
 	String error;
-    if (! pImage_p->areChannelAndStokesValid(error, chan, stokesString)) {
-        throw(AipsError(error, __FILE__, __LINE__));
-	}
-
+    String imagename = pImage_p->name();
+    if (pImage_p->hasPolarizationAxis() && pImage_p->hasSpectralAxis()) {
+        if (! pImage_p->areChannelAndStokesValid(error, chan, stokesString)) {
+            throw(AipsError(error, __FILE__, __LINE__));
+	    }
+    }
+    if (! pImage_p->hasPolarizationAxis()) {
+        *itsLog << LogIO::WARN << imagename 
+            << " has no polarization axis, ignoring stokes parameter."
+            << LogIO::POST;
+    }
+    else if ( ! pImage_p->isStokesValid(stokesString)) {
+        *itsLog << "Specified stokes "<< stokesString
+            << " is not valid in " << imagename << ". "
+            << LogIO::EXCEPTION; 
+    }
+    if (! pImage_p->hasSpectralAxis()) {
+        *itsLog << LogIO::WARN << imagename 
+            << " has no spectral axis, ignoring chan parameter."
+            << LogIO::POST;
+    }
+    else if (! pImage_p->isChannelNumberValid(chan)) {
+        *itsLog << "Specified 0-based channel number "<< chan
+            << " is not valid. " << imagename << " has only "
+            << pImage_p->nChannels() << "." << LogIO::EXCEPTION; 
+    }
 	Vector<SkyComponent> estimate;
 
 	ComponentList compList;
@@ -2428,7 +2450,6 @@ void ImageAnalysis::fitsky(
 		*itsLog << "Parameter estimates are only available for a single model"
 				<< LogIO::EXCEPTION;
 	}
-	//
 
 	for (uInt i = 0; i < nModels; i++) {
 		/*
@@ -2438,20 +2459,13 @@ void ImageAnalysis::fitsky(
 		 }
 		 */
 	}
-	//
-	//
 	Bool doInclude = (includepix.nelements() > 0);
 	Bool doExclude = (excludepix.nelements() > 0);
 	if (doInclude && doExclude) {
 		*itsLog << "You cannot give both an include and an exclude pixel range"
 				<< LogIO::EXCEPTION;
 	}
-
 	const CoordinateSystem &cSys1 = pImage_p->coordinates();
-
-    Int specIndex = cSys1.findCoordinate(Coordinate::SPECTRAL);
-    Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
-
 
     IPosition imShape = pImage_p->shape();
 
@@ -2464,10 +2478,14 @@ void ImageAnalysis::fitsky(
 	IPosition endPos(imShape - 1);
 	tmpVector.set(1);
 	IPosition stride(tmpVector);
-    uInt spectralAxisNumber = pImage_p->spectralAxisNumber();
-	startPos[spectralAxisNumber] = chan;
-	endPos[spectralAxisNumber] = chan;
 
+    if (pImage_p->hasSpectralAxis()) {
+        Int specIndex = cSys1.findCoordinate(Coordinate::SPECTRAL);
+        Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
+        uInt spectralAxisNumber = pImage_p->spectralAxisNumber();
+	    startPos[spectralAxisNumber] = chan;
+	    endPos[spectralAxisNumber] = chan;
+    }
 	// TODO: check that chan passed in is within bounds
 
 	// TODO: check if image has stokes axis, if not bypass this doing the
