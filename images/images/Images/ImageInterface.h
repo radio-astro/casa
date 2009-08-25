@@ -35,6 +35,7 @@
 #include <images/Images/ImageInfo.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <tables/LogTables/LoggerHolder.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Quanta/Unit.h>
@@ -341,14 +342,27 @@ public:
 	Bool fromRecord(String& error, const RecordInterface& inRec);
 
     // Get the axis number of the spectral axis of this image (0-based).
-    uInt spectralAxisNumber() const; 
+    Int spectralAxisNumber() const; 
 
     // Get the number of channels in this image.
 	uInt nChannels() const;
 
     // Is the specified channel number valid for this image?
     Bool isChannelNumberValid(const uInt chan) const;
-    
+
+    // Get the coordinate number of the spectral axis of this image (0-based). This
+    // is generally not the same as the axis number because the direction (eg RA, Dec)
+    // coordinate counts as only one coordinate, not two. Yes I know its confusing.
+    // Here's an example, say you have an image with axes, RA, Dec, Stokes, Frequency.
+    // The spectral coordinate number would be 2 since RA, Dec make up a single
+    // direction coordinate. But, the spectral axis number would be 3, because RA
+    // and Dec are counted seperately in this case. Its important (and very confusing)
+    // to be clear about this difference or things will break.
+    Int spectralCoordinateNumber() const;
+
+    // Does this image have a spectral (frequency) axis?
+    Bool hasSpectralAxis() const;
+
     // Get the coordinate number of the polarization axis of this image (0-based). This
     // is generally not the same as the axis number because the direction (eg RA, Dec)
     // coordinate counts as only one coordinate, not two. Yes I know its confusing.
@@ -356,19 +370,24 @@ public:
     // The polarization coordinate number would be 1 since RA, Dec make up a single
     // direction coordinate. But, the polarization axis number would be 2, because RA
     // and Dec are counted seperately in this case. Its important (and very confusing)
-    // to be clear about this difference or things will break.
-    uInt polarizationCoordinateNumber() const;
+    // to be clear about this difference or things will break. Return -1
+    // if this image does not have a polarization axis.
+ 
+    Int polarizationCoordinateNumber() const;
 
-    // Get the axis number of the polarization axis of this image (0-based).
-    uInt polarizationAxisNumber() const;
+    // Get the axis number of the polarization axis of this image (0-based). Return -1
+    // if this image does not have a polarization axis.
+    Int polarizationAxisNumber() const;
 
-    // Get the Stokes Coordinate for this image
-    StokesCoordinate stokesCoordinate() const;
+    // Does this image have a polarization axis?
+    Bool hasPolarizationAxis() const;
 
     // Get the pixel number on the polarization axis of the specified stokes parameter.
     // If the specified stokes parameter does not exist in the image, the value returned
     // is not gauranteed to be anything other than outside the range of 0 to nStokes-1
-    // inclusive.
+    // inclusive. Return -1 if the specified stokes parameter is not present or
+    // if this image does not have a polarization axis.
+ 
     Int stokesPixelNumber(const String& stokesString) const;
 
     // Get the number of stokes parameters in this image.

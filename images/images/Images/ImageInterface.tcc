@@ -30,8 +30,6 @@
 #include <casa/Arrays/Vector.h> // Put these early to work around g++ bug
 #include <casa/Arrays/Matrix.h>
 
-#include <coordinates/Coordinates/StokesCoordinate.h>
-
 #include <images/Images/ImageInterface.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Regions/ImageRegion.h>
@@ -326,42 +324,81 @@ Bool ImageInterface<T>::fromRecord(String& error, const RecordInterface& inRec) 
 	return True;
 }
 
-template<class T> uInt ImageInterface<T>::spectralAxisNumber() const {
+template<class T> Bool ImageInterface<T>::hasSpectralAxis() const {
+    uInt spectralCoordNum = spectralCoordinateNumber();
+    return (spectralCoordNum >= 0 && spectralCoordNum < coordinates().nCoordinates());
+} 
+
+template<class T> Int ImageInterface<T>::spectralAxisNumber() const {
+    if (! hasSpectralAxis()) {
+        return -1;
+    }
     Int specIndex = coordinates().findCoordinate(Coordinate::SPECTRAL);
     return coordinates().pixelAxes(specIndex)[0];
 }    
 
 template<class T> uInt ImageInterface<T>::nChannels() const {
+    if (! hasSpectralAxis()) {
+        return 0;
+    }
     return shape()[spectralAxisNumber()];
 }
 
 template<class T> Bool ImageInterface<T>::isChannelNumberValid(const uInt chan) const {
+    if (! hasSpectralAxis()) {
+        return False;
+    }
     return (chan < nChannels());
 }
 
-template<class T> uInt ImageInterface<T>::polarizationCoordinateNumber() const {
+template<class T> Int ImageInterface<T>::spectralCoordinateNumber() const {
+    // don't do a hasSpectralAxis() check or you will go down an infinite recursion path
+    return coordinates().findCoordinate(Coordinate::SPECTRAL);
+}
+
+template<class T> Bool ImageInterface<T>::hasPolarizationAxis() const {
+    uInt polarizationCoordNum = polarizationCoordinateNumber();
+    return (
+        polarizationCoordNum >= 0 
+        && polarizationCoordNum < coordinates().nCoordinates()
+    );
+} 
+
+template<class T> Int ImageInterface<T>::polarizationCoordinateNumber() const {
+    // don't do hasPolarizationAxis check or you will go down an infinite recursion path :)
     return coordinates().findCoordinate(Coordinate::STOKES);
 }
 
-template<class T> uInt ImageInterface<T>::polarizationAxisNumber() const {
+template<class T> Int ImageInterface<T>::polarizationAxisNumber() const {
+    if (! hasPolarizationAxis()) {
+        return -1;
+    }
     return coordinates().pixelAxes(polarizationCoordinateNumber())[0];
 }    
 
-template<class T> StokesCoordinate ImageInterface<T>::stokesCoordinate() const {
-    return coordinates().stokesCoordinate(polarizationCoordinateNumber());
-}
-
 template<class T> Int ImageInterface<T>::stokesPixelNumber(const String& stokesString) const {
+    if (! hasPolarizationAxis()) {
+        return -1;
+    }
+    CoordinateSystem coordSys = coordinates();
+    Int polCoordNum = polarizationCoordinateNumber();
+    StokesCoordinate stokesCoord = coordSys.stokesCoordinate(polCoordNum);
     Int stokesPix;
-    stokesCoordinate().toPixel(stokesPix, Stokes::type(stokesString));
+    stokesCoord.toPixel(stokesPix, Stokes::type(stokesString));
     return stokesPix;
 }
 
 template<class T> uInt ImageInterface<T>::nStokes() const {
+    if (! hasPolarizationAxis()) {
+        return 0;
+    }
     return shape()[polarizationAxisNumber()];
 }
 
 template<class T> Bool ImageInterface<T>::isStokesValid(const String& stokesString) const {
+    if (! hasPolarizationAxis()) {
+        return False;
+    }
     Int stokesPixNum = stokesPixelNumber(stokesString);
     return stokesPixNum >= 0 && stokesPixNum < nStokes(); 
 }
