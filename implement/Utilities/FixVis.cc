@@ -110,7 +110,7 @@ uInt FixVis::setFields(const Vector<Int>& fieldIds)
 }
 
 void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
-                            const Vector<Int>& fieldIds)
+                          const Vector<Int>& fieldIds)
 {
   phaseDirs_p = phaseDirs;
 
@@ -139,6 +139,113 @@ void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
                 << LogIO::POST;
   }
 }
+
+// const ROArrayMeasColumn<MDirection>& FixVis::getPhaseDirs() const
+// {
+//   ROMSFieldColumns msField(msc_p->field());
+
+//   return msField.phaseDirMeasCol();
+// }
+
+
+void FixVis::convertPhaseDirs(const MDirection::Types outType)
+{
+  logSink() << LogOrigin("FixVis", "convertPhaseDirs");
+
+  // Note that the each direction column in the FIELD table only allows one
+  // reference frame for the entire column, but polynomials can be assigned on
+  // a row-wise basis for objects moving in that frame.
+
+  MSColumns msc(ms_p);
+  MSFieldColumns& msfcs(msc.field());
+  ArrayMeasColumn<MDirection> msPhaseDirCol(msfcs.phaseDirMeasCol());
+
+  // There is no physical or known programming need to change the delay and
+  // reference direction frames as well, but for aesthetic reasons we keep them
+  // all in the same frame if they start in the same frame.
+  ArrayMeasColumn<MDirection> msDelayDirCol(msfcs.delayDirMeasCol());
+  ArrayMeasColumn<MDirection> msReferenceDirCol(msfcs.referenceDirMeasCol());
+  Bool doAll3 = (msPhaseDirCol.getMeasRef() == msDelayDirCol.getMeasRef()
+                 && msPhaseDirCol.getMeasRef() == msReferenceDirCol.getMeasRef());
+  
+  // Setup conversion machines.
+  // Set the frame - choose the first antenna. For e.g. VLBI, we
+  // will need to reset the frame per antenna
+  mLocation_p = msc.antenna().positionMeas()(0);
+
+  // Expect problems if a moving object is involved!
+  mFrame_p = MeasFrame(msfcs.timeMeas()(0), mLocation_p);
+
+  //MDirection::Ref startref(msPhaseDirCol.getMeasRef());
+  // If the either of the start or destination frames refers to a finite
+  // distance, then the conversion has to be done in two steps:
+  // MDirection::Convert start2app(msPhaseDirCol(0), MDirection::APP);
+  // 
+  // Otherwise the conversion can be done directly.
+  Bool haveMovingFrame = (msPhaseDirCol.getMeasRef().getType() > MDirection::N_Types ||
+                          outType > MDirection::N_Types);
+
+  const MDirection::Ref newFrame(haveMovingFrame ? MDirection::APP : outType,
+                                 mFrame_p);
+
+  convertFieldCols(msPhaseDirCol, newFrame, doAll3, msDelayDirCol, msReferenceDirCol,
+                   msfcs.nrow());
+  
+  if(haveMovingFrame){
+    // Since ArrayMeasCol most likely uses one frame for the whole column, do
+    // the second half of the conversion with a second pass through the column
+    // instead of on a row-by-row basis.
+    logSink() << LogIO::WARN
+              << "Switching to or from accelerating frames is not well tested."
+              << LogIO::POST;
+
+    // Using msPhaseDirCol(0)[0] to initialize converter will only work if
+    // msPhaseDirCol's type has been set to APP.
+    const MDirection::Ref newerFrame(outType, mFrame_p);
+
+    convertFieldCols(msPhaseDirCol, newerFrame, doAll3, msDelayDirCol,
+                     msReferenceDirCol, msfcs.nrow());
+  }
+
+  // Update the reference frame label.
+  //msfcs.phaseDir()
+}
+
+
+void FixVis::convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
+                              const MDirection::Ref& newFrame,
+                              const Bool doAll3,
+                              ArrayMeasColumn<MDirection>& ddc,
+                              ArrayMeasColumn<MDirection>& rdc,
+                              uInt nrows)
+{
+  // Unfortunately ArrayMeasColumn::doConvert() is private, which squashes the
+  // point of making a conversion machine here.
+//   Vector<MDirection> dummyV;
+//   dummyV.assign(pdc(0));
+//   MDirection::Convert *converter = new MDirection::Convert(dummyV[0],
+//                                                            newFrame);
+//   if(!converter)
+//     logSink() << "Cannot make direction conversion machine"
+//               << LogIO::EXCEPTION;
+
+  // Convert each phase tracking center.  This will make them numerically
+  // correct in the new frame, but will the column will still be labelled with the
+  // old frame?
+  for(uInt i = 0; i < nrows; ++i){
+    //pdc.put(i, pdc.doConvert(i, *converter));
+    pdc.put(i, pdc.convert(i, newFrame));
+
+    if(doAll3){
+      //ddc.put(i, ddc.doConvert(i, *converter));
+      ddc.put(i, ddc.convert(i, newFrame));
+      //rdc.put(i, rdc.doConvert(i, *converter));
+      rdc.put(i, rdc.convert(i, newFrame));
+    }
+  }
+  //delete converter;
+}
+
 
 void FixVis::setDistances(const Vector<Double>& distances)
 {
