@@ -230,8 +230,8 @@ class ImageAnalysis
                                          Record& region, const String& mask, 
                                          const bool overwrite = false);
 
-    void fitsky(Array<Float>& pixels, Array<Bool>& pixelmask,
-            ComponentList& cl, Bool& converged, Record& region,
+    ComponentList fitsky(Array<Float>& pixels, Array<Bool>& pixelmask,
+            Bool& converged, Record& region,
             const uInt& chan, const String& stokesString,
             const String& mask, 
             const Vector<String>& models, Record& estimate, 
@@ -240,17 +240,6 @@ class ImageAnalysis
             const Vector<Float>& excludepix, 
             const Bool fit = True, 
             const Bool deconvolve = False, const Bool list = True);
-
-    Record fitsky(Array<Float>& pixels, Array<Bool>& pixelmask, 
-                   Bool& converged, Record& region,
-           const Int& chan, const String& stokesString,
-           const String& mask, 
-                   const Vector<String>& models, Record& estimate, 
-                   const Vector<String>& fixedparams, 
-                   const Vector<Float>& includepix, 
-                   const Vector<Float>& excludepix, 
-                   const Bool fit = True, 
-                   const Bool deconvolve = False, const Bool list = True);
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
                   const Vector<Int>& blc, const Vector<Int>& trc, 

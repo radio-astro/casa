@@ -163,7 +163,6 @@ bool _processInputs(Int argc, char *argv[]) {
     // input.getInt() will default to 0 if param not specified
     Int chan = input.getInt("chan");
 
-    ComponentList compList;
     Array<Float> residPixels;
     Array<Bool> residMask;
     Bool converged;
@@ -179,9 +178,8 @@ bool _processInputs(Int argc, char *argv[]) {
     Record estimate; 
     Vector<Float> includepix, excludepix;
     ImageAnalysis myImage(&image);
-    myImage.fitsky(
-        residPixels, residMask, compList, converged,
-        rec,
+    ComponentList compList = myImage.fitsky(
+        residPixels, residMask, converged, rec,
         chan, stokesString, mask, models,
         estimate, fixedparams, includepix, excludepix
     );   
