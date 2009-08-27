@@ -139,7 +139,7 @@ class fitter:
             msg = "Fitter not yet initialised. Please set data & fit function"
             if rcParams['verbose']:
                 #print msg
-                from asap import asaplog
+		from asap import asaplog
                 asaplog.push(msg)
                 print_log('ERROR')
                 return

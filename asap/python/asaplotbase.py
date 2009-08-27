@@ -297,9 +297,7 @@ class asaplotbase:
         """
 
         def region_start(event):
-            height = self.canvas.figure.bbox.height()
-            self.rect = {'fig': None, 'height': height,
-                         'x': event.x, 'y': height - event.y,
+            self.rect = {'x': event.x, 'y': event.y,
                          'world': [event.xdata, event.ydata,
                                    event.xdata, event.ydata]}
             self.register('button_press', None)
@@ -307,21 +305,18 @@ class asaplotbase:
             self.register('button_release', region_disable)
 
         def region_draw(event):
-            self.canvas._tkcanvas.delete(self.rect['fig'])
-            self.rect['fig'] = self.canvas._tkcanvas.create_rectangle(
-                                self.rect['x'], self.rect['y'],
-                                event.x, self.rect['height'] - event.y)
-
+            self.figmgr.toolbar.draw_rubberband(event, event.x, event.y,
+                                                self.rect['x'], self.rect['y'])
+            
         def region_disable(event):
             self.register('motion_notify', None)
             self.register('button_release', None)
-
-            self.canvas._tkcanvas.delete(self.rect['fig'])
 
             self.rect['world'][2:4] = [event.xdata, event.ydata]
             print '(%.2f, %.2f)  (%.2f, %.2f)' % (self.rect['world'][0],
                 self.rect['world'][1], self.rect['world'][2],
                 self.rect['world'][3])
+            self.figmgr.toolbar.release(event)
 
         self.register('button_press', region_start)
 

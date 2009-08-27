@@ -453,7 +453,11 @@ class scantable(Scantable):
 
         if rcParams['verbose']:
             import os
-            usr=os.environ['USER']
+            if os.environ.has_key( 'USER' ):
+                usr=os.environ['USER']
+            else:
+                import commands
+                usr=commands.getoutput( 'whoami' )
             tmpfile='/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
             f=open(tmpfile,'w')
             print >> f, "--------------------------------------------------"

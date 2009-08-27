@@ -400,12 +400,21 @@ if rcParams['useplotter']:
         asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2009-08-05 23:48:39 -0600 (Wed, 05 Aug 2009) $'.split()[1]
+__date__ = '$Date: 2009-08-21 13:54:39 -0600 (Fri, 21 Aug 2009) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '
 casapath=os.environ["CASAPATH"].split()
-revinfo=casapath[0]+'/'+casapath[1]+'/python/2.5/asap/svninfo.txt'
+#svninfo.txt path 
+if os.path.isdir(casapath[0]+'/'+casapath[1]+'/python/2.5/asap'):
+    # for casa developer environment (linux or darwin)
+    revinfo=casapath[0]+'/'+casapath[1]+'/python/2.5/asap/svninfo.txt'
+else:
+    # for end-user environments
+    if casapath[1]=='darwin':
+        revinfo=casapath[0]+'/Resources/python/asap/svninfo.txt'
+    else:
+        revinfo=casapath[0]+'/lib/python2.5/asap/svninfo.txt'
 if os.path.isfile(revinfo):
     f = file(revinfo)
     f.readline()
