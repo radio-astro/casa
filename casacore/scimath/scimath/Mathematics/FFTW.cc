@@ -112,7 +112,7 @@ namespace casa {
   void FFTW::plan_r2c(const IPosition &size, Float *in, Complex *out) 
   {
     itsPlanR2Cf = fftwf_plan_dft_r2c(size.nelements(),
-				     size.storage(),
+				     size.asVector().data(),
 				     in,
 				     reinterpret_cast<fftwf_complex *>(out), 
 				     flags);
@@ -121,7 +121,7 @@ namespace casa {
   void FFTW::plan_r2c(const IPosition &size, Double *in, DComplex *out) 
   {
     itsPlanR2C = fftw_plan_dft_r2c(size.nelements(),
-				   size.storage(),
+				   size.asVector().data(),
 				   in,
 				   reinterpret_cast<fftw_complex *>(out), 
 				   flags);
@@ -129,7 +129,7 @@ namespace casa {
 
   void FFTW::plan_c2r(const IPosition &size, Complex *in, Float *out) {
     itsPlanC2Rf = fftwf_plan_dft_c2r(size.nelements(),
-				     size.storage(),
+				     size.asVector().data(),
 				     reinterpret_cast<fftwf_complex *>(in),
 				     out, 
 				     flags);
@@ -138,7 +138,7 @@ namespace casa {
 
   void FFTW::plan_c2r(const IPosition &size, DComplex *in, Double *out) {
     itsPlanC2R = fftw_plan_dft_c2r(size.nelements(),
-				   size.storage(),
+				   size.asVector().data(),
 				   reinterpret_cast<fftw_complex *>(in), 
 				   out,
 				   flags);
@@ -146,7 +146,7 @@ namespace casa {
 
   void FFTW::plan_c2c_forward(const IPosition &size, DComplex *in) {
     itsPlanC2CF = fftw_plan_dft(size.nelements(),
-				size.storage(),
+				size.asVector().data(),
 				reinterpret_cast<fftw_complex *>(in), 
 				reinterpret_cast<fftw_complex *>(in), 
 				FFTW_FORWARD, flags);
@@ -155,7 +155,7 @@ namespace casa {
     
   void FFTW::plan_c2c_forward(const IPosition &size, Complex *in) {
     itsPlanC2CFf = fftwf_plan_dft(size.nelements(),
-				  size.storage(),
+				  size.asVector().data(),
 				  reinterpret_cast<fftwf_complex *>(in), 
 				  reinterpret_cast<fftwf_complex *>(in), 
 				  FFTW_FORWARD, flags);
@@ -163,7 +163,7 @@ namespace casa {
 
   void FFTW::plan_c2c_backward(const IPosition &size, DComplex *in) {
     itsPlanC2CB = fftw_plan_dft(size.nelements(),
-				size.storage(),
+				size.asVector().data(),
 				reinterpret_cast<fftw_complex *>(in), 
 				reinterpret_cast<fftw_complex *>(in), 
 				FFTW_BACKWARD, flags);
@@ -172,7 +172,7 @@ namespace casa {
     
   void FFTW::plan_c2c_backward(const IPosition &size, Complex *in) {
     itsPlanC2CBf = fftwf_plan_dft(size.nelements(),
-				  size.storage(),
+				  size.asVector().data(),
 				  reinterpret_cast<fftwf_complex *>(in), 
 				  reinterpret_cast<fftwf_complex *>(in), 
 				  FFTW_BACKWARD, flags);

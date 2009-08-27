@@ -97,6 +97,7 @@ public:
   // <group>
   AipsError (const Char *str, Category c = GENERAL);
   AipsError (const String &str, Category c = GENERAL);
+  AipsError (const String &msg, const String& filename, const uInt lineNumber, Category c = GENERAL);
   AipsError (Category c = GENERAL) : message(), category(c) {};
   // </group>
 

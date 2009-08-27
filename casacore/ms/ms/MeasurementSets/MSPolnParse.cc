@@ -76,28 +76,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const TableExprNode *MSPolnParse::selectFromIDList(const Vector<Int>& ddIDs)
   {
     TableExprNode condition;
-    Int n=ddIDs.nelements();
-    const String DATA_DESC_ID = MS::columnName(MS::DATA_DESC_ID);
+    if (ddIDs.nelements() > 0)
+      condition = ms()->col(MS::columnName(MS::DATA_DESC_ID)).in(ddIDs);
 
-    if (n > 0)
-      {
-	for(Int i=0; i<n; i++)
-	  if (condition.isNull())
-	    condition = ((ms()->col(DATA_DESC_ID)==ddIDs[i]));
-	  else
-	    condition = condition || ((ms()->col(DATA_DESC_ID)==ddIDs[i]));
-      }
+    // Int n=ddIDs.nelements();
+    // const String DATA_DESC_ID = MS::columnName(MS::DATA_DESC_ID);
+    // if (n > 0)
+    //   {
+    // 	for(Int i=0; i<n; i++)
+    // 	  if (condition.isNull())
+    // 	    condition = ((ms()->col(DATA_DESC_ID)==ddIDs[i]));
+    // 	  else
+    // 	    condition = condition || ((ms()->col(DATA_DESC_ID)==ddIDs[i]));
+    //   }
 
     if (condition.isNull()) 
-      {
-	ostringstream Mesg;
-	Mesg << "No match for the [SPW:]POLN specifications ";
-	throw(MSSelectionPolnError(Mesg.str()));
-      }
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+      throw(MSSelectionPolnError(String("No match for the [SPW:]POLN specifications ")));
+
+    if(node_p->isNull()) *node_p = condition;
+    else                 *node_p = *node_p || condition;
     
     return node_p;
   }
@@ -218,10 +215,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     polnIDs.resize(0); polnIDs=validPolIDs;
     polnIndices.resize(0); polnIndices=validPolIndices;
-    // for(uInt p=0; p<polnIDs.nelements(); p++)
-    //   setIDLists((Int)polnIDs[p],0,polnIndices);
-    //    cout << "VPolIDs = " << polnIDs << endl;
-    //    cout << "VPolIndices " << polnIndices << endl;
     return ddIDs;
   }
   //
@@ -452,7 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     {
       //
-      // Remove entries which did map to any DD ID(s)
+      // Remove entries which did not map to any DD ID(s)
       //
       MapIter<Int, Vector<Vector<Int> > > omi(setupMap_p);
       for(omi.toStart(); !omi.atEnd(); omi++)

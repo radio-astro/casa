@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& spwExpr="",
 		  const String& uvDistExpr="",
 		  const String& taQLExpr="",
-		  const String& corrExpr="",
+		  const String& polnExpr="",
 		  const String& scanExpr="",
 		  const String& arrayExpr=""
 		  );
