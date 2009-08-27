@@ -38,6 +38,8 @@
 #include <scimath/Mathematics/FFTServer.h>
 
 using namespace std;
+
+#ifndef CASA_STANDALONE
 #include <ATMRefractiveIndexProfile.h>
 #include <ATMPercent.h>
 #include <ATMPressure.h>
@@ -59,6 +61,25 @@ using namespace std;
 #include <ATMSkyStatus.h>
 #include <ATMTypeName.h>
 #include <ATMAngle.h>
+#else
+//#ATM Not available; mimic the classes and functions used
+namespace atm{
+class Angle
+{
+public:
+  double get(string) const {return 0.0;}
+};
+class RefractiveIndexProfile
+{
+public:
+  Angle getDispersiveWetPhaseDelay(int,int) const {return Angle();}
+};
+class AtmProfile;
+class SkyStatus;
+class SpectralGrid;
+
+}
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -171,6 +192,7 @@ class TJonesCorruptor : public CalCorruptor {
    atm::RefractiveIndexProfile *itsRIP;
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
+
    PtrBlock<Vector<Float>*> pwv_p;
    Vector<Float> antx_,anty_;   
 };

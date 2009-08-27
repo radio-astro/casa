@@ -75,7 +75,6 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#include <fstream.h>
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
