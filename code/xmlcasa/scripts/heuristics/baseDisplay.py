@@ -142,8 +142,11 @@ class BaseDisplay:
         result = result.replace(' ', '')
         result = result.replace('-', '')
         result = result.replace(':', '')
+        result = result.replace(';', '')
         result = result.replace('{', '')
         result = result.replace('}', '')
+        result = result.replace('[', '')
+        result = result.replace(']', '')
         result = result.replace(',', '')
         result = result.replace("'", "")
         result = result.replace('\n', '')
@@ -174,7 +177,7 @@ class BaseDisplay:
 # brief description
 
         stageName = stageDescription['name']
-        dataView.writeGeneralHTMLDescription(stageName)
+        viewMessage = dataView.writeGeneralHTMLDescription(stageName)
         if dataOperator != None:
             dataOperator.writeGeneralHTMLDescription(stageName)
         self.writeGeneralHTMLDescription(stageName)
@@ -184,13 +187,13 @@ class BaseDisplay:
 # flagging stats
         
         flagMessage = None
-        colour = None
+        flagMessageColour = None
         if dataOperator != None:
-            flagMessage,colour = dataView.writeFlaggingStatistics(
+            flagMessage,flagMessageColour = dataView.writeFlaggingStatistics(
              stageDescription, dataOperator.rules(),
              dataOperator.potentiallyFlaggedTargetIDs())
 
-        return flagMessage, colour
+        return flagMessage, flagMessageColour
 
 
     def writeBaseHTMLDescriptionTail(self, stageDescription, dataView,

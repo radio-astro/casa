@@ -493,11 +493,10 @@ def sdplot(sdfile, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, 
 
 	    # Define Pick event
 	    if sd.plotter._visible:
-		    if sd.plotter._plotter.events['button_press'] is not None:
-			    sd.plotter._plotter.canvas.mpl_disconnect(sd.plotter._plotter.events['button_press'])
-			    sd.plotter._plotter.events['button_press']=None
+		    sd.plotter._plotter.register('button_press',None)
 		    if plottype=='spectra':
-			    sd.plotter._plotter.events['button_press']=sd.plotter._plotter.canvas.mpl_connect('button_press_event',_event_switch)
+			    sd.plotter._plotter.register('button_press',_event_switch)
+
             # DONE
 
         except Exception, instance:
@@ -663,154 +662,41 @@ def _select_spectrum(event):
         # Disconnect from mouse events
         def discon(event):
 		#naviwin.window.destroy()
-		thecanvas.mpl_disconnect(theplot.events['motion_notify'])
-		theplot.events['motion_notify']=None
+		theplot.register('motion_notify',None)
+		# Re-activate the default motion_notify_event
 		thetoolbar._idDrag=thecanvas.mpl_connect('motion_notify_event', thetoolbar.mouse_move)
-		thecanvas.mpl_disconnect(theplot.events['button_release'])
-		theplot.events['button_release']=None
+		theplot.register('button_release',None)
 		return
         #------------------------------------------------------#
         # Show data value along with mouse movement
-        theplot.events['motion_notify']=thecanvas.mpl_connect('motion_notify_event',spec_data)
+	theplot.register('motion_notify',spec_data)
         # Finish events when mouse button is released
-        theplot.events['button_release']=thecanvas.mpl_connect('button_release_event',discon)
+        theplot.register('button_release',discon)
 
 
 ### Calculate statistics of the selected area. 
 def _single_mask(event):
-	if event.button ==1: baseval=False
-	elif event.button == 3: baseval=True
+	if event.button ==1: baseinv=True
+	elif event.button == 3: baseinv=False
 	else: return
 
-	mask_sel=mask_selection()
-	mask_sel.scan=sd.plotter._data
-	mask_sel._p=sd.plotter._plotter
-	# Create initial mask
-	mask_sel.mask=sd._n_bools(mask_sel.scan.nchan(),baseval)
+	def _calc_stats():
+		msk=mymask.get_mask()
+		mymask.scan.stats(stat='max',mask=msk)
+		mymask.scan.stats(stat='min',mask=msk)
+		mymask.scan.stats(stat='sum',mask=msk)
+		mymask.scan.stats(stat='mean',mask=msk)
+		mymask.scan.stats(stat='median',mask=msk)
+		mymask.scan.stats(stat='rms',mask=msk)
+		mymask.scan.stats(stat='stddev',mask=msk)
+
+	# Interactive mask definition
+ 	mymask=sd.interactivemask(plotter=sd.plotter,scan=sd.plotter._data)
+ 	# Create initial mask
+ 	mymask.set_basemask(invert=baseinv)
+	# Inherit event
+	mymask.set_startevent(event)
+	# Set callback func
+	mymask.set_callback(_calc_stats)
 	# Selected mask
-	mask_sel._region_start(event)
-
-
-class mask_selection:
-	
-	def __init__(self):
-		"""
-		Create a interactive masking object
-		"""
-		self.scan=None
-		self.rect={}
-		self.xold=None
-		self.yold=None
-		self.xdataold=None
-		self.ydataold=None
-		self.mask=None
-		self._polygons=[]
-		self._p=None
-
-	def _region_start(self,event):
-		# Do not fire event when in zooming/panning mode
-		mode = self._p.figmgr.toolbar.mode
-		if not mode =='':
-			return
-		# Return if selected point is out of panel
-		if event.inaxes == None: return
-		# Select mask/unmask region with mask
-		height = self._p.canvas.figure.bbox.height()
-		self.rect = {'button': event.button, 'axes': event.inaxes,
-			     'fig': None, 'height': height,
-			     'x': event.x, 'y': height - event.y,
-			     'world': [event.xdata, event.ydata,
-				       event.xdata, event.ydata],
-			     'pixel': [event.x, height - event.y,
-				       event.x, height -event.y]}
-		self._p.register('motion_notify', self._region_draw)
-		self._p.register('button_release', self._region_end)
-
-	def _region_draw(self,event):
-		self._p.canvas._tkcanvas.delete(self.rect['fig'])
-		sameaxes=(event.inaxes == self.rect['axes'])
-		if sameaxes: 
-			xnow=event.x
-			ynow=event.y
-			self.xold=xnow
-			self.yold=ynow
-			self.xdataold=event.xdata
-			self.ydataold=event.ydata
-		else:
-			xnow=self.xold
-			ynow=self.yold
-			
-		self.rect['fig'] = self._p.canvas._tkcanvas.create_rectangle(
-			self.rect['x'], self.rect['y'],
-			xnow, self.rect['height'] - ynow)
-
-	def _region_end(self,event):
-		height = self._p.canvas.figure.bbox.height()
-		self._p.register('motion_notify', None)
-		self._p.register('button_release', None)
-		
-		self._p.canvas._tkcanvas.delete(self.rect['fig'])
-                
-		if event.inaxes == self.rect['axes']: 
-			xend=event.x
-			yend=event.y
-			xdataend=event.xdata
-			ydataend=event.ydata
-		else:
-			xend=self.xold
-			yend=self.yold
-			xdataend=self.xdataold
-			ydataend=self.ydataold
-			
-		self.rect['world'][2:4] = [xdataend, ydataend]
-		self.rect['pixel'][2:4] = [xend, height - yend]
-		self._update_mask()
-		########## ADDED - 2009.04.01 kana
-		masklist=self.scan.get_masklist(mask=self.mask)
-		#print 'stat region:', masklist
-                casalog.post( 'stat region: '+str(masklist) )
-		# Call sdstat()
-		invertmask=False
-		interactive=False
-		statfile=''
-		self.scan.stats(stat='max',mask=self.mask)
-		self.scan.stats(stat='min',mask=self.mask)
-		self.scan.stats(stat='sum',mask=self.mask)
-		self.scan.stats(stat='mean',mask=self.mask)
-		self.scan.stats(stat='median',mask=self.mask)
-		self.scan.stats(stat='rms',mask=self.mask)
-		self.scan.stats(stat='stddev',mask=self.mask)
-		#if len(self._polygons)>0:
-		#	# Remove old polygons
-		#	for polygon in self._polygons: polygon.remove()
-		#	self._polygons=[]
-		#        #mask_sel._p.canvas.draw()
-
-		########## ADDED
-
-	def _update_mask(self):
-		from asap import mask_and, mask_or
-		# Min and Max for new mask
-		xstart=self.rect['world'][0]
-		xend=self.rect['world'][2]
-		if xstart <= xend: newlist=[xstart,xend]
-		else: newlist=[xend,xstart]
-		# Mask or unmask
-		invmask=None
-		if self.rect['button'] == 1:
-			invmask=False
-			mflg='Mask'
-		elif self.rect['button'] == 3:
-			invmask=True
-			mflg='UNmask'
-		#print mflg+': ',newlist
-                casalog.post( mflg+': '+str(newlist) )
-		newmask=self.scan.create_mask(newlist,invert=invmask)
-		# Logic operation to update mask
-		if invmask:
-			self.mask=mask_and(self.mask,newmask)
-		else:
-			self.mask=mask_or(self.mask,newmask)
-		# Plot masked regions
-		#self._plot_mask()
-
+	mymask.select_mask(once=True,showmask=False)

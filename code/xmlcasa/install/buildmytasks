@@ -81,6 +81,8 @@ do
    xmlgenpy $xmlfile
    ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
    sed -i .bak -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py
+   sed -i .bak -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_cli.py
+   sed -i .bak -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py
    if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
       mv ${xmlfile}.py ${INSTALLDIR}
       mv ${xmlfile}_cli.py ${INSTALLDIR}

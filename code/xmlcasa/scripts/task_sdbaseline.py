@@ -334,11 +334,13 @@ def sdbaseline(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanli
 
 	    elif ( blmode == 'interact'):
                     # Interactive masking
-		    new_mask=sd.interactivemask()
+		    new_mask=sd.interactivemask(scan=s)
 		    if (len(masklist) > 0):
-			    new_mask.select_mask(s,masklist)
-		    else:
-			    new_mask.select_mask(s)
+		            new_mask.set_basemask(masklist=masklist,invert=False)
+		    new_mask.select_mask(once=False,showmask=True)
+		    # Wait for user to finish mask selection
+		    finish=raw_input("Press return to calculate statistics.\n")
+		    new_mask.finish_selection()
 
 		    # Get final mask list
 		    msk=new_mask.get_mask()

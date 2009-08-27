@@ -11,6 +11,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release, more efficient.
 
 # package modules
 
@@ -104,218 +105,286 @@ class ClosureError(BaseData):
             results['parameters']['history'] = self._fullStageName
             results['parameters']['dependencies']['view'] = view_parameters
 
-# loop through data_desc_id and field_id
+# read into a dictionary all the data for the measured spw/fields - do it
+# this way because reading it in piecemeal for each spw/field can be slow
+# as the flagversion gets changed several times for each little bit.
 
             self._ms.open(thems=self._msName)
 
-            for key in self._target_field_spw:
-                field_id = key[0]
-                data_desc_id = key[1]
+# set the flag states we want to look at, then read in data for each
 
-                self._ms.selectinit(reset=True)
-                self._ms.selectinit(datadescid = data_desc_id)
-                query = "FIELD_ID==%s AND (ANTENNA1!=ANTENNA2)" % (field_id)
-                rtn = self._ms.selecttaql(msselect = query)
-                if self._ms.nrow(selected = True) == 0:
-                    self._log('..no data for field_id %s data_desc_id %s' %
-                     (field_id, data_desc_id))
-                    continue
+            flagVersions = ['BeforeHeuristics', 'StageEntry',
+             'CleanImageCalibration', 'Current']
+            if not self._first:
+                flagVersions.append('PreviousClosureError')
 
-                self._log('..looking at field_id %s data_desc_id %s' %
-                 (field_id, data_desc_id))
+            field_spw_chunks = []
+            fw_chunk = []
+            for kk in self._target_field_spw:
+                fw_chunk.append(kk)
+                if len(fw_chunk)>20 or kk==self._target_field_spw[-1]:
+                    field_spw_chunks.append(fw_chunk)
+                    fw_chunk = []
 
-# get the 'corrected' and 'model' data for the flag states of interest
+            for fw_chunk in field_spw_chunks:
+                print 'fw_chunk', fw_chunk
+                data_in = {}
 
-                flagVersions = ['BeforeHeuristics', 'StageEntry',
-                 'CleanImageCalibration', 'Current']
-                if not self._first:
-                    flagVersions.append('PreviousClosureError') 
+                for fv,flagVersion in enumerate(flagVersions):
+                    print flagVersion
+                    for kk in fw_chunk:
+                        key = tuple(kk)
+                        print 'getting data', key
+                        field_id = key[0]
+                        data_desc_id = key[1]
+                        if fv == 0:
 
-                corr_axis, chan_freq, times, chunks, antenna1, \
-                 antenna2, corrected_real, corrected_imag, corrected_flag,\
-                 corrected_flag_row = \
-                 self._getBaselineData(field_id, data_desc_id, 
-                 self._antennaRange, 'corrected', flagVersions)
+# get the 'corrected' and 'model' data and first flagVersion
 
-                corr_axis, chan_freq, times, chunks, antenna1, \
-                 antenna2, model_real, model_imag, model_flag, \
-                 model_flag_row = \
-                 self._getBaselineData(field_id, data_desc_id,
-                 self._antennaRange, 'model', flagVersions)
+                            data_in[key] = {}
+                            corr_axis, chan_freq, times, chunks, antenna1,\
+                             antenna2, corrected_real, corrected_imag,\
+                             corrected_flag, corrected_flag_row = \
+                             self._getBaselineData(field_id,
+                             data_desc_id, self._antennaRange, 'corrected',
+                             [flagVersion])
+
+                            corr_axis, chan_freq, times, chunks, antenna1,\
+                             antenna2, model_real, model_imag,\
+                             model_flag, model_flag_row = \
+                             self._getBaselineData(field_id,
+                             data_desc_id, self._antennaRange, 'model',
+                             [flagVersion])
+
+                            data_in[key]['corr_axis'] = corr_axis
+                            data_in[key]['chan_freq'] = chan_freq
+                            data_in[key]['times'] = times
+                            data_in[key]['chunks'] = chunks
+                            data_in[key]['antenna1'] = antenna1
+                            data_in[key]['antenna2'] = antenna2
+                            data_in[key]['corrected_real'] = corrected_real
+                            data_in[key]['corrected_imag'] = corrected_imag
+                            data_in[key]['corrected_flag'] = corrected_flag
+                            data_in[key]['corrected_flag_row'] = corrected_flag_row
+                            data_in[key]['model_real'] = model_real
+                            data_in[key]['model_imag'] = model_imag
+                            data_in[key]['model_flag'] = model_flag
+                            data_in[key]['model_flag_row'] = model_flag_row
+                        else:
+
+# get flags only for subsequent flagversions
+
+                            corrected_flag, corrected_flag_row = \
+                             self._getBaselineData(
+                             field_id, data_desc_id, self._antennaRange,
+                             'corrected', [flagVersion], flagsOnly=True)
+
+                            model_flag, model_flag_row = \
+                             self._getBaselineData(
+                             field_id, data_desc_id, self._antennaRange,
+                             'model', [flagVersion], flagsOnly=True)
+
+                            data_in[key]['corrected_flag'] += corrected_flag
+                            data_in[key]['corrected_flag_row'] += corrected_flag_row
+                            data_in[key]['model_flag'] += model_flag
+                            data_in[key]['model_flag_row'] += model_flag_row
+
+# now do the calculations
+
+                for kk in fw_chunk:
+                    key = tuple(kk)
+                    field_id = key[0]
+                    data_desc_id = key[1]
+                    print 'processing data', key
+
+                    corr_axis = data_in[key]['corr_axis']
+                    chan_freq = data_in[key]['chan_freq']
+                    times = data_in[key]['times']
+                    chunks = data_in[key]['chunks']
+                    antenna1 = data_in[key]['antenna1']
+                    antenna2 = data_in[key]['antenna2']
+                    corrected_real = data_in[key]['corrected_real']
+                    corrected_imag = data_in[key]['corrected_imag']
+                    corrected_flag = data_in[key]['corrected_flag']
+                    corrected_flag_row = data_in[key]['corrected_flag_row']
+                    model_real = data_in[key]['model_real']
+                    model_imag = data_in[key]['model_imag']
+                    model_flag = data_in[key]['model_flag']
+                    model_flag_row = data_in[key]['model_flag_row']
 
 # if this is not the first iteration, have any flags changed since the last
 
-                current = flagVersions.index('Current')
-                calibration = flagVersions.index('CleanImageCalibration')
+                    current = flagVersions.index('Current')
+                    calibration = flagVersions.index('CleanImageCalibration')
 
-                calculate = True
-                if not self._first:
-                    previous = flagVersions.index('PreviousClosureError')
+                    calculate = True
+                    if not self._first:
+                        previous = flagVersions.index('PreviousClosureError')
 
-                    if all(corrected_flag_row[previous] == \
-                     corrected_flag_row[current]) and \
-                     all(corrected_flag[previous] == \
-                     corrected_flag[current]):
-                        calculate = False
+                        if all(corrected_flag_row[previous] == \
+                         corrected_flag_row[current]) and \
+                         all(corrected_flag[previous] == \
+                         corrected_flag[current]):
+                            calculate = False
 
-                if calculate:
+                    if calculate:
 
 # declare arrays
 
-                    ncorr = len(shape(corr_axis))
-                    closure_error = zeros([ncorr, max(self._antennaRange)+1,
-                     len(times), max(self._antennaRange)+1], float)
-                    closure_error_flag = []
-                    for fi,fs in enumerate(flagVersions):
-                        closure_error_flag.append(
-                         ones([ncorr, max(self._antennaRange)+1,
-                         len(times), max(self._antennaRange)+1], int))
-                    no_data_flag = ones([ncorr, max(self._antennaRange)+1,
-                     len(times), max(self._antennaRange)+1], int)
+                        ncorr = len(shape(corr_axis))
+                        closure_error = zeros([ncorr, max(self._antennaRange)+1,
+                         len(times), max(self._antennaRange)+1], float)
+                        closure_error_flag = []
+                        for fi,fs in enumerate(flagVersions):
+                            closure_error_flag.append(
+                             ones([ncorr, max(self._antennaRange)+1,
+                             len(times), max(self._antennaRange)+1], int))
+                        no_data_flag = ones([ncorr, max(self._antennaRange)+1,
+                         len(times), max(self._antennaRange)+1], int)
 
-                    mad_floor = zeros([ncorr, max(self._antennaRange)+1,
-                     len(times), max(self._antennaRange)+1], float)
-                    new_values = zeros([ncorr, max(self._antennaRange)+1,
-                     len(times), max(self._antennaRange)+1], bool)
+                        mad_floor = zeros([ncorr, max(self._antennaRange)+1,
+                         len(times), max(self._antennaRange)+1], float)
+                        new_values = zeros([ncorr, max(self._antennaRange)+1,
+                         len(times), max(self._antennaRange)+1], bool)
 
 # loop through antennas and for each build up 'baseline v time'
 # closure error
 
-                    for antenna in self._antennaRange:
-                        ifr_range = arange(len(antenna1))
-                        ifr_range = compress(antenna1==antenna, ifr_range)
+                        for antenna in self._antennaRange:
+                            ifr_range = arange(len(antenna1))
+                            ifr_range = compress(antenna1==antenna, ifr_range)
 
-                        for corr in range(ncorr):
-                            for ifr in ifr_range:
-                                other_ant = antenna2[ifr]
+                            for corr in range(ncorr):
+                                for ifr in ifr_range:
+                                    other_ant = antenna2[ifr]
 
-                                for t in range(len(times)):
+                                    for t in range(len(times)):
  
 # set flags
 
-                                    no_data_flag[corr,antenna,t,other_ant] = \
-                                     no_data_flag[corr,other_ant,t,antenna] = \
-                                     False
+                                        no_data_flag[corr,antenna,t,other_ant] = \
+                                         no_data_flag[corr,other_ant,t,antenna] = \
+                                         False
 
 # idea here is that closure_error_flag is set for all levels 'beyond' that where
 # it is first set. This caters for the fact that cleanImageCalibration may be set
 # even when the later 'Current' flag is not; in this case we want both levels of
 # closure_error_flag to be set.
 
-                                    for fi,fs in enumerate(flagVersions):
-                                        if corrected_flag_row[fi][ifr,t] or \
-                                         all(corrected_flag[fi][corr,:,ifr,t]) or \
-                                         model_flag_row[fi][ifr,t] or \
-                                         all(model_flag[fi][corr,:,ifr,t]):
-                                            break
+                                        for fi,fs in enumerate(flagVersions):
+                                            if corrected_flag_row[fi][ifr,t] or \
+                                             all(corrected_flag[fi][corr,:,ifr,t]) or \
+                                             model_flag_row[fi][ifr,t] or \
+                                             all(model_flag[fi][corr,:,ifr,t]):
+                                                break
 
-                                        closure_error_flag[fi][corr,antenna,t,other_ant] = \
-                                        closure_error_flag[fi][corr,other_ant,t,antenna] = \
-                                         False
+                                            closure_error_flag[fi][corr,antenna,t,other_ant] = \
+                                            closure_error_flag[fi][corr,other_ant,t,antenna] = \
+                                             False
 
 # nothing to do if 'current' flag is True or if 'CleanImageCalibration' is True
 
-                                    if closure_error_flag[current]\
-                                     [corr,antenna,t,other_ant]:
-                                        continue
+                                        if closure_error_flag[current]\
+                                         [corr,antenna,t,other_ant]:
+                                            continue
 
-                                    if closure_error_flag[calibration]\
-                                     [corr,antenna,t,other_ant]:
-                                        continue
+                                        if closure_error_flag[calibration]\
+                                         [corr,antenna,t,other_ant]:
+                                            continue
 
-                                    valid_corrected_real = compress(logical_not(
-                                     corrected_flag[current][corr,:,ifr,t]),
-                                     corrected_real[corr,:,ifr,t])
-                                    if len(valid_corrected_real) > 0:
-                                        median_corrected_real = median(
-                                         valid_corrected_real)
-                                        valid_corrected_imag = compress(
-                                         logical_not(
+                                        valid_corrected_real = compress(logical_not(
                                          corrected_flag[current][corr,:,ifr,t]),
-                                         corrected_imag[corr,:,ifr,t])
-                                        median_corrected_imag = median(
-                                         valid_corrected_imag)
-                                        median_model_real = median(compress(
-                                         logical_not(
-                                         model_flag[current][corr,:,ifr,t]),
-                                         model_real[corr,:,ifr,t]))
-                                        median_model_imag = median(compress(
-                                         logical_not(
-                                         model_flag[current][corr,:,ifr,t]),
-                                         model_imag[corr,:,ifr,t]))
+                                         corrected_real[corr,:,ifr,t])
+                                        if len(valid_corrected_real) > 0:
+                                            median_corrected_real = median(
+                                             valid_corrected_real)
+                                            valid_corrected_imag = compress(
+                                             logical_not(
+                                             corrected_flag[current][corr,:,ifr,t]),
+                                             corrected_imag[corr,:,ifr,t])
+                                            median_corrected_imag = median(
+                                             valid_corrected_imag)
+                                            median_model_real = median(compress(
+                                             logical_not(
+                                             model_flag[current][corr,:,ifr,t]),
+                                             model_real[corr,:,ifr,t]))
+                                            median_model_imag = median(compress(
+                                             logical_not(
+                                             model_flag[current][corr,:,ifr,t]),
+                                             model_imag[corr,:,ifr,t]))
 
 # divide data by model, store amplitude or phase of result
 
-                                        corrected_complex = complex(
-                                         median_corrected_real,
-                                         median_corrected_imag)
-                                        model_complex = complex(
-                                         median_model_real,
-                                         median_model_imag)
+                                            corrected_complex = complex(
+                                             median_corrected_real,
+                                             median_corrected_imag)
+                                            model_complex = complex(
+                                             median_model_real,
+                                             median_model_imag)
 
-                                        try:
-                                            closure = corrected_complex /\
-                                             model_complex
+                                            try:
+                                                closure = corrected_complex /\
+                                                 model_complex
  
-                                            if self._errorType == 'magnitude':
-                                                error = \
-                                                 closure_error[corr,antenna,t,other_ant] = \
-                                                 closure_error[corr,other_ant,t,antenna] = \
-                                                 abs(closure - 1.0)
+                                                if self._errorType == 'magnitude':
+                                                    error = \
+                                                     closure_error[corr,antenna,t,other_ant] = \
+                                                     closure_error[corr,other_ant,t,antenna] = \
+                                                     abs(closure - 1.0)
 
 # mad floor not calculate correctly for 'magnitude'
 
-                                                mad_floor[corr,antenna,t,other_ant] = \
-                                                 mad_floor[corr,other_ant,t,antenna] = 0.0
-                                            elif self._errorType == 'amplitude':
-                                                error = \
-                                                 closure_error[corr,antenna,t,other_ant] = \
-                                                 closure_error[corr,other_ant,t,antenna] = \
-                                                 abs(closure)
+                                                    mad_floor[corr,antenna,t,other_ant] = \
+                                                     mad_floor[corr,other_ant,t,antenna] = 0.0
+                                                elif self._errorType == 'amplitude':
+                                                    error = \
+                                                     closure_error[corr,antenna,t,other_ant] = \
+                                                     closure_error[corr,other_ant,t,antenna] = \
+                                                     abs(closure)
 
 # mad floor not calculate correctly for 'amplitude'
 
-                                                mad_floor[corr,antenna,t,other_ant] = \
-                                                 mad_floor[corr,other_ant,t,antenna] = 0.0
-                                            elif self._errorType == 'phase':
-                                                phase = \
-                                                 closure_error[corr,antenna,t,other_ant] = \
-                                                 closure_error[corr,other_ant,t,antenna] = \
-                                                 arctan2(closure.imag, closure.real)
+                                                    mad_floor[corr,antenna,t,other_ant] = \
+                                                     mad_floor[corr,other_ant,t,antenna] = 0.0
+                                                elif self._errorType == 'phase':
+                                                    phase = \
+                                                     closure_error[corr,antenna,t,other_ant] = \
+                                                     closure_error[corr,other_ant,t,antenna] = \
+                                                     arctan2(closure.imag, closure.real)
 
 # and a measure of the scatter of points about the 'receiver' position,
 # with sky variation removed. This is the noise 'floor' of the measurement.
 
-                                                corrected_complex_array = zeros(
-                                                 [len(valid_corrected_real)], complex)
-                                                corrected_complex_array.real = \
-                                                 valid_corrected_real
-                                                corrected_complex_array.imag = \
-                                                 valid_corrected_imag
-                                                closure_array = \
-                                                 corrected_complex_array /\
-                                                model_complex
+                                                    corrected_complex_array = zeros(
+                                                     [len(valid_corrected_real)], complex)
+                                                    corrected_complex_array.real = \
+                                                     valid_corrected_real
+                                                    corrected_complex_array.imag = \
+                                                     valid_corrected_imag
+                                                    closure_array = \
+                                                     corrected_complex_array /\
+                                                     model_complex
 
-                                                relative_real = closure_array.real * \
-                                                 cos(phase) + closure_array.imag * \
-                                                 sin(phase)
-                                                relative_imag = -closure_array.real * \
-                                                 sin(phase) + closure_array.imag * \
-                                                 cos(phase)
+                                                    relative_real = closure_array.real * \
+                                                     cos(phase) + closure_array.imag * \
+                                                     sin(phase)
+                                                    relative_imag = -closure_array.real * \
+                                                     sin(phase) + closure_array.imag * \
+                                                     cos(phase)
 
-                                                relative_phase = arctan2(relative_imag,
-                                                 relative_real)
-                                                relative_phase_mad = median(abs(
-                                                 relative_phase))
+                                                    relative_phase = arctan2(relative_imag,
+                                                     relative_real)
+                                                    relative_phase_mad = median(abs(
+                                                     relative_phase))
 
-                                                nchannels = len(relative_phase)
-                                                mad_floor[corr,antenna,t,other_ant] = \
-                                                 mad_floor[corr,other_ant,t,antenna] = \
-                                                 relative_phase_mad / sqrt(float(nchannels))
-                                            else:
-                                                raise NameError, 'bad errorType: %s' % self._errorType
+                                                    nchannels = len(relative_phase)
+                                                    mad_floor[corr,antenna,t,other_ant] = \
+                                                     mad_floor[corr,other_ant,t,antenna] = \
+                                                     relative_phase_mad / sqrt(float(nchannels))
+                                                else:
+                                                    raise NameError, 'bad errorType: %s' % self._errorType
 
-                                        except ZeroDivisionError:
+                                            except ZeroDivisionError:
 
 # there is a possible issue with the flagging of closure error results. Any flags
 # put on the data as the calibration was applied will have been removed by the
@@ -323,86 +392,88 @@ class ClosureError(BaseData):
 # flags propagating. However, the corrected data will still be no good - here 
 # we depend on such data being identically zero.
 
-                                            closure_error_flag[current]\
-                                             [corr,antenna,t,other_ant] = \
-                                             closure_error_flag[current]\
-                                             [corr,other_ant,t,antenna] = True
+                                                closure_error_flag[current]\
+                                                 [corr,antenna,t,other_ant] = \
+                                                 closure_error_flag[current]\
+                                                 [corr,other_ant,t,antenna] = True
 
-                    for antenna in self._antennaRange:
-                        for corr in range(ncorr):
-                            description = {}
-                            if self._errorType == 'magnitude':
-                                description['TITLE'] = \
-                                 'Closure error magnitude - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
-                                 self._pad(antenna), self._fieldName[field_id], 
-                                 self._pad(data_desc_id), corr_axis[corr])
-                            elif self._errorType == 'amplitude':
-                                description['TITLE'] = \
-                                 'Closure amplitude - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
-                                 self._pad(antenna), self._fieldName[field_id], 
-                                 self._pad(data_desc_id), corr_axis[corr])
-                            elif self._errorType == 'phase':
-                                description['TITLE'] = \
-                                 'Closure phase (deg) - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
-                                 self._pad(antenna), self._fieldName[field_id], 
-                                 self._pad(data_desc_id), corr_axis[corr])
-                            description['DATA_DESC_ID'] = int(data_desc_id)
-                            description['FIELD_ID'] = int(field_id)
-                            description['FIELD_NAME'] = self._fieldName[
-                             int(field_id)]
-                            description['FIELD_TYPE'] = self._fieldType[
-                             int(field_id)]
-                            description['POLARIZATION_ID'] = corr_axis[corr]
-                            description['ANTENNA1'] = int(antenna)
+                        for antenna in self._antennaRange:
+                            for corr in range(ncorr):
+                                description = {}
+                                if self._errorType == 'magnitude':
+                                    description['TITLE'] = \
+                                     'Closure error magnitude - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
+                                     self._pad(antenna), self._fieldName[field_id], 
+                                     self._pad(data_desc_id), corr_axis[corr])
+                                elif self._errorType == 'amplitude':
+                                    description['TITLE'] = \
+                                     'Closure amplitude - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
+                                     self._pad(antenna), self._fieldName[field_id], 
+                                     self._pad(data_desc_id), corr_axis[corr])
+                                elif self._errorType == 'phase':
+                                    description['TITLE'] = \
+                                     'Closure phase (deg) - Antenna1:%s Field:%s Spw:%s Corr:%s' % (
+                                     self._pad(antenna), self._fieldName[field_id], 
+                                     self._pad(data_desc_id), corr_axis[corr])
+                                description['DATA_DESC_ID'] = int(data_desc_id)
+                                description['FIELD_ID'] = int(field_id)
+                                description['FIELD_NAME'] = self._fieldName[
+                                 int(field_id)]
+                                description['FIELD_TYPE'] = self._fieldType[
+                                 int(field_id)]
+                                description['POLARIZATION_ID'] = corr_axis[corr]
+                                description['ANTENNA1'] = int(antenna)
 
-                            if calculate:
+                                if calculate:
 
 # store new data
-                                result = {}
-                                result['dataType'] = 'closure %s' % self._errorType
-                                result['xtitle'] = 'ANTENNA2'
-                                result['x'] = arange(max(self._antennaRange)+1) 
-                                result['ytitle'] = 'TIME'
-                                result['y'] = times
-                                result['chunks'] = chunks
-                                if self._errorType == 'magnitude':
-                                    result['data'] = closure_error[corr,antenna]
-                                    result['mad_floor'] =  mad_floor[corr,antenna]
-                                    result['dataUnits'] = 'ratio'
-                                if self._errorType == 'amplitude':
-                                    result['data'] = closure_error[corr,antenna]
-                                    result['mad_floor'] =  mad_floor[corr,antenna]
-                                    result['dataUnits'] = 'ratio'
-                                elif self._errorType == 'phase':
-                                    result['data'] = closure_error[corr,antenna] * (180.0 / math.pi)
-                                    result['mad_floor'] =  mad_floor[corr,antenna] * (180.0 / math.pi)
-                                    result['dataUnits'] = 'degrees'
 
-                                flagsToStore = ['BeforeHeuristics', 'StageEntry',
-                                 'Current']
-                                temp_flag = []
-                                flagVersionsStored = []
-                                for f in flagsToStore:
-                                    if flagVersions.count(f) == 0:
-                                        continue
-                                    fi = flagVersions.index(f)
-                                    temp_flag.append(closure_error_flag[fi]
-                                     [corr,antenna])
-                                    flagVersionsStored.append(f)
-                                temp_flag.append(no_data_flag[corr,antenna])
-                                flagVersionsStored.append('NoData')
-                                result['flag'] = temp_flag
-                                result['flagVersions'] = flagVersionsStored
-                            else:
+                                    result = {}
+                                    result['dataType'] = 'closure %s' % self._errorType
+                                    result['xtitle'] = 'ANTENNA2'
+                                    result['x'] = arange(max(self._antennaRange)+1) 
+                                    result['ytitle'] = 'TIME'
+                                    result['y'] = times
+                                    result['chunks'] = chunks
+                                    if self._errorType == 'magnitude':
+                                        result['data'] = closure_error[corr,antenna]
+                                        result['mad_floor'] =  mad_floor[corr,antenna]
+                                        result['dataUnits'] = 'ratio'
+                                    if self._errorType == 'amplitude':
+                                        result['data'] = closure_error[corr,antenna]
+                                        result['mad_floor'] =  mad_floor[corr,antenna]
+                                        result['dataUnits'] = 'ratio'
+                                    elif self._errorType == 'phase':
+                                        result['data'] = closure_error[corr,antenna] * (180.0 / math.pi)
+                                        result['mad_floor'] =  mad_floor[corr,antenna] * (180.0 / math.pi)
+                                        result['dataUnits'] = 'degrees'
 
-# now new data were calculated
+                                    flagsToStore = ['BeforeHeuristics', 'StageEntry',
+                                     'Current']
+                                    temp_flag = []
+                                    flagVersionsStored = []
+                                    for f in flagsToStore:
+                                        if flagVersions.count(f) == 0:
+                                            continue
+                                        fi = flagVersions.index(f)
+                                        temp_flag.append(closure_error_flag[fi]
+                                         [corr,antenna])
+                                        flagVersionsStored.append(f)
+                                    temp_flag.append(no_data_flag[corr,antenna])
+                                    flagVersionsStored.append('NoData')
+                                    result['flag'] = temp_flag
+                                    result['flagVersions'] = flagVersionsStored
+                                else:
 
-                                result['dataType'] = 'copy'
+# no new data were calculated
+
+                                    result['dataType'] = 'copy'
  
-                            pickled_description = pickle.dumps(description)
-                            results['data'][pickled_description] = result
+                                pickled_description = pickle.dumps(description)
+                                results['data'][pickled_description] = result
 
             success = self._ms.close()
+            self._msFlagger.setFlagState('Current')
             self._msFlagger.saveFlagState('PreviousClosureError')
             self._first = False
 
@@ -475,15 +546,18 @@ class ClosureError(BaseData):
 
         if self._description != None:
             self._htmlLogger.logHTML('<p> %s' % self._description)
+        else:
 
-        self._htmlLogger.logHTML("""
-         <p>The data view is a list of 2-d arrays, one for each
-         value of ANTENNA1 in the MeasurementSet. Each array has axes 
-         ANTENNA2 and TIME.
-         Each pixel is the %s of the result of the complex
-         division 'corrected data'/'model data' for that time/baseline.
-         For multi-channel spectral windows the median is taken of the data 
-         across the channels.""" % self._errorType)
+# 'built in' description
+
+            self._htmlLogger.logHTML("""
+             <p>The data view is a list of 2-d arrays, one for each 
+             value of ANTENNA1 in the MeasurementSet. Each array has axes 
+             ANTENNA2 and TIME.
+             Each pixel is the %s of the result of the complex
+             division 'corrected data'/'model data' for that time/baseline.
+             For multi-channel spectral windows the median is taken of the data 
+             across the channels.""" % self._errorType)
 
 
     def writeDetailedHTMLDescription(self, stageName, topLevel,
@@ -504,16 +578,24 @@ class ClosureError(BaseData):
             self._htmlLogger.logHTML("""
              <h3>Data View</h3>""")
 
-        self._htmlLogger.logHTML("""
-         <p>The data view is a list of 2-d arrays, one for each
-         value of ANTENNA1 in the MeasurementSet. Each array has axes 
-         ANTENNA2 and TIME.
-         Each pixel is the %s of the result of the complex
-         division 'corrected data'/'model data' for that time/baseline.
-         For multi-channel spectral windows the median is taken of the data 
-         across the channels.
+# write any description given as part of the recipe.
 
-         <h5>The Model that is compared to the Data</h5>""" % self._errorType)
+            if self._description != None:
+                self._htmlLogger.logHTML('<p> %s' % self._description)
+            else:
+
+# 'built in' description
+                self._htmlLogger.logHTML("""
+                 <p>The data view is a list of 2-d arrays, one for each
+                 value of ANTENNA1 in the MeasurementSet. Each array has axes 
+                 ANTENNA2 and TIME.
+                 Each pixel is the %s of the result of the complex
+                 division 'corrected data'/'model data' for that time/baseline.
+                 For multi-channel spectral windows the median is taken of the
+                 data across the channels.""" % self._errorType)
+
+        self._htmlLogger.logHTML("""
+         <h5>The Clean Model that is compared to the Data</h5>""")
 
         self._view.writeDetailedHTMLDescription(stageName, False, parameters=
          parameters['dependencies']['view'])

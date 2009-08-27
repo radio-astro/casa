@@ -233,16 +233,17 @@ class HTMLLogger:
         noEntry.close()
 
 
-    def appendNode(self, linkName, linkFile):
+    def appendNode(self, linkName, linkFile, highlight=False):
         """Each 'node' in the html structure is a file. This method appends
         a new link to another file ('node') to a list of them that will be
         written to the current html file.
 
         Keyword arguments:
-        linkName -- the name to be given to the link.
-        linkFile -- the file to be linked to.
+        linkName  -- the name to be given to the link.
+        linkFile  -- the file to be linked to.
+        highlight -- True if link to be highlighted.
         """
-        self._nodeList.append([linkName, linkFile])
+        self._nodeList.append([linkName, linkFile, highlight])
  
 
     def closeNode(self):
@@ -279,8 +280,13 @@ class HTMLLogger:
             if item[1] != None:
                 fullName = item[1]
                 relName = os.path.basename(fullName)
-                self.logHTML('<li><a href="%s.html">%s</a></li>' % (relName,
-                 item[0]))
+                if item[2]:
+                    self.logHTML("""<li><a href="%s.html"><font color="red">
+                     %s</font></a></li>""" % (relName,
+                     item[0]))
+                else:
+                    self.logHTML('<li><a href="%s.html">%s</a></li>' % (relName,
+                     item[0]))
                 link = open('%s.html' % fullName, 'w')
 
 # make up button

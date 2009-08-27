@@ -21,6 +21,7 @@
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
 
 # package modules
 
@@ -225,9 +226,10 @@ class GainCalibration(BaseData):
                     self._ms.open(self._msName)
                     self._ms.selectinit(datadescid=data_desc_id)
                     query = "FIELD_ID==%s AND (ANTENNA1!=ANTENNA2)" % (field_id)
-                    rtn = self._ms.selecttaql(msselect = query)
+                    self._ms.selecttaql(msselect = query)
                     times = self._ms.range(['times'])['times']
                     chunks = self._findChunks(times)
+                    self._ms.close()
                 else:
 
 # for other timesol, use the 'on entry' time column, building array of
@@ -251,7 +253,7 @@ class GainCalibration(BaseData):
 
                 npol = 2
                 try:
-                    if alltrue(cal_flag[1,:,:]):
+                    if alltrue(cal_flag_original[1,:,:]):
                         npol = 1
                 except:
                     print 'exception'
@@ -397,7 +399,7 @@ class GainCalibration(BaseData):
                      self._fieldName[int(field_id)],
                      self._fieldType[int(field_id)], self._pad(data_desc_id),
                      p, requiredDataType)
-
+              
                     result = {}
                     result['dataType'] = 'gain calibration %s' % (
                      requiredDataType)
@@ -492,8 +494,6 @@ class GainCalibration(BaseData):
             field_ids = []
             field_names = self._results['summary']['field_names']
 
-            self._imager.open(thems=self._msName, compress=False)
-
             for spw in data_desc_ids:
                 commands[spw] = ["""imager.open(thems='%s', compress=False)""" %
                  self._msName]
@@ -572,26 +572,6 @@ class GainCalibration(BaseData):
  
                             commands[spw] += new_commands
 
-                print 'checking cal setup'
-
-# make sure CORRECTED_DATA columns are set to same as DATA - managed without
-# doing this for a long time so perhaps it is being done somewhere else too.
-
-                self._table.open(self._msName, nomodify=False)
-
-                for field in new_field_ids:
-                    for spw in data_desc_ids:
-                        s = self._table.query('FIELD_ID==%s && DATA_DESC_ID==%s' % 
-                         (field, spw))
-                        data_col = s.getcol('DATA')
-                        corrected_data_col = s.getcol('CORRECTED_DATA')
-                        if not all(abs(data_col - corrected_data_col) < 1.0e-7):
-                            print 'calibrator discrepency fixed', field, spw
-
-                self._table.close()
-                print 'finished checking'
-            self._imager.close()
-
 # save the on-entry flag state if will be flagging edges
 
             if self._bandpassFlaggingStage != None:
@@ -631,43 +611,23 @@ class GainCalibration(BaseData):
 
 # calculate the gains
 
-                    gtab = '%s.gtab.spw%s.fm%s' % (self._base_msName,
+                    gtab = 'gain.%s.spw%s.fm%s' % (self._base_msName,
                      data_desc_id, flag_marks)
                     if input_flag_marks != None:
                         append = True
                     else:
                         append = False
 
-                    try:
-                        if self._bpCal != None:
-                            self._bpCal.setapply(spw=data_desc_id,
-                             field=field_ids)
-                        new_commands = self._msCalibrater.solve(field=field_ids,
-                         spw=data_desc_id, type='G', t=self._timesol,
-                         combine='scan', table=gtab, append=append, apmode='AP',
-                         solnorm=False, minsnr = 0.0)
+                    if self._bpCal != None:
+                        self._bpCal.setapply(spw=data_desc_id, field=field_ids)
+                    new_commands,error = self._msCalibrater.solve(
+                     field=field_ids, spw=data_desc_id, type='G',
+                     t=self._timesol, combine='scan', table=gtab,
+                     append=append, apmode='AP', solnorm=False, minsnr = 0.0)
 
-                        commands[data_desc_id] += new_commands
+                    commands[data_desc_id] += new_commands
 
-                    except KeyboardInterrupt:
-                        raise
-                    except:
-                        error_report = self._htmlLogger.openNode('exception',
-                         '%s.gain_cal_exception' % (self._stageName), True,
-                         stringOutput = True)
-        
-                        self._htmlLogger.logHTML('Exception details<pre>')
-                        traceback.print_exc()
-                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
-                        self._htmlLogger.logHTML('</pre>')
-                        self._htmlLogger.closeNode()
-
-                        error_report += 'during gain calibration'
-
-                        parameters['data'][data_desc_id]['error'] = \
-                         error_report
-                        print 'exception', sys.exc_info()
-
+                    parameters['data'][data_desc_id]['error'] = error
                     parameters['data'][data_desc_id]['table'] = gtab 
                     parameters['data'][data_desc_id]['type'] = 'G' 
                     parameters['data'][data_desc_id]['field_id'] = field_ids 
@@ -876,7 +836,7 @@ class GainCalibration(BaseData):
             <th>Field</th>
             <th>t</th>
             <th>apmode</th>
-            <th>BP table</th>
+            <th>Bandpass table</th>
             <th>Channel Flags</th>
             <th>Apply Table</th>
             <th>Apply Type</th>
@@ -921,7 +881,7 @@ class GainCalibration(BaseData):
            <li>'t' is the time resolution of the gain calibration.
            <li>'apmode' specifies whether amplitude (A), phase (P) or both
                (AP) are to be calculated.
-           <li>'BP Table' is the name of the file containing the bandpass
+           <li>'Bandpass Table' is the name of the file containing the bandpass
                correction applied to the data before the gain calculation.
            <li>'channel flags' gives the name of the stage that specified
                the channels to be flagged before solving, if any.

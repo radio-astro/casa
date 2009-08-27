@@ -7856,22 +7856,23 @@ void Imager::destroySkyEquation()
   if(gvp_p) delete gvp_p; gvp_p=0;
   
   if(componentList_p) delete componentList_p; componentList_p=0;
-  /*
+  
   for (Int model=0;model<Int(nmodels_p); ++model) {
+    //As these are CountedPtrs....just assigning them to NULL 
+    //get the objects out of context
+    if(!images_p[model].null())  
+      images_p[model]=0;
     
-    //if(images_p[model]) delete images_p[model]; images_p[model]=0;
+    if(!masks_p[model].null()) 
+      masks_p[model]=0;
+ 
+   if(!fluxMasks_p[model].null()) 
+     fluxMasks_p[model]=0;
     
-    cout << "image " <<  " destroyed "<< endl; 
-   if(masks_p[model]) delete masks_p[model]; masks_p[model]=0;
-   cout << "mask " <<   " destroyed "<< endl; 
-    if(fluxMasks_p[model]) delete fluxMasks_p[model]; fluxMasks_p[model]=0;
-    cout << "fluxmask " <<   " destroyed "<< endl; 
-    
-    //cout << "ok residual " << &(*residuals_p[model]) << endl;
-    //    if(residuals_p[model]) delete residuals_p[model]; residuals_p[model]=0;
-    
+   if(!residuals_p[model].null()) 
+     residuals_p[model]=0;
   }
-  */
+  
   redoSkyModel_p=True;
 }
 

@@ -25,6 +25,7 @@ import math
 import matplotlib.dates as mdates
 import re
 import string
+import traceback
 
 # package modules
 
@@ -224,7 +225,6 @@ class CheckMS:
                 pylab.clf()
                 pylab.subplot(1,1,1)
 
-                print 'shape', shape(uvw)
                 pylab.title(plotName)
                 if len(uvw) > 0:
                     pylab.scatter(uvw[0,:], uvw[1,:], facecolor='blue', 
@@ -279,11 +279,6 @@ class CheckMS:
 
         self._plot_uv_coverage()
 
-        for ifield in range(self._nfields):
-            self._htmlLogger.logHTML(
-             '<hr><h2 ALIGN="LEFT">  FIELD_ID = %s</h2>' % ifield)
-            self._fieldlist[ifield]._info2html(self._htmlLogger)
-
         self._htmlLogger.logHTML(
          '<hr><h2 ALIGN="LEFT">  SPECTRAL WINDOWS: </h2>')
         self._htmlLogger.logHTML('<table CELLPADDING="5" BORDER="1">')
@@ -295,7 +290,13 @@ class CheckMS:
         self._htmlLogger.logHTML("<td"+align+colspan+"> nchannels </td></tr>")
         for ispecw in range(self._nspecwin):           
            self._specwinlist[ispecw]._info2html(self._htmlLogger)
+        self._htmlLogger.logHTML("</table>")
         
+        for ifield in range(self._nfields):
+            self._htmlLogger.logHTML(
+             '<hr><h2 ALIGN="LEFT">  FIELD_ID = %s</h2>' % ifield)
+            self._fieldlist[ifield]._info2html(self._htmlLogger)
+
         self._htmlLogger.closeNode()        
         
 
@@ -312,9 +313,8 @@ class CheckMS:
         self._nfields = len(field_names)        
 
         # get field types (kind of calibrator or target)
-
+       
         source_types = list(util.util.get_source_types(self._table))
-
         if (len(source_types)) == 0:
            source_types = ["UNKNOWN"]*self._nfields
         
@@ -616,8 +616,29 @@ class CheckMS:
                    datemax = max(datemax,x1)
 
         datemin = datemin.replace(minute=0, second=0, microsecond=0)
-        datemax = datemax.replace(hour=datemax.hour + 1, minute=0, second=0,
-         microsecond=0)
+
+# beware problems with hour > 23, day > days in month etc.
+
+        try:
+            datemax = datemax.replace(hour=datemax.hour + 1, minute=0, second=0,
+             microsecond=0)
+        except:
+            print 'datetime hour exception'
+#            traceback.print_exc()
+            try:
+                datemax = datemax.replace(day=datemax.day + 1, hour=0, minute=0,
+                 second=0, microsecond=0)
+            except:
+                print 'datetime day exception'
+                traceback.print_exc()
+                try:
+                    datemax = datemax.replace(month=datemax.month+1,
+                     day=0, hour=0, minute=0, second=0, microsecond=0)
+                except:
+                    print 'datetime month exception'
+                    traceback.print_exc()
+                    datemax = datemax.replace(year=datemax.year+1, month=0,
+                     day=0, hour=0, minute=0, second=0, microsecond=0)
 
 # next bit cribbed from date_demo pylab example
 # do not FIDDLE with this as it took ages to get it working. If it stops

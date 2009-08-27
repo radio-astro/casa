@@ -186,6 +186,7 @@ class ImageDisplay(BaseDisplay):
             plot_antenna = None
 
         sentinel_value = 10.0
+        pixelsFlagged = False
         for row,flag_row in enumerate(flagging):
             if not(flaggingApplied[row]):
                 continue
@@ -238,8 +239,9 @@ class ImageDisplay(BaseDisplay):
 
                         if flag_cmd.has_key('ANTENNA'):
                             flag_x = flag_cmd['ANTENNA']
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
                         if flag_cmd.has_key('ANTENNA1'):
                             flag_y = flag_cmd['ANTENNA1']
@@ -247,15 +249,17 @@ class ImageDisplay(BaseDisplay):
 
                             if list(flag_cmd['ANTENNA1']).count(plot_antenna) > 0:
                                 flag_x = flag_cmd['ANTENNA2']
-                                self._setSentinel(x_range, y_range, x, y, data,
+                                fset = self._setSentinel(x_range, y_range, x, y, data,
                                  flag_x, flag_y, flag_y_interval,
                                  sentinel_value) 
+                                pixelsFlagged = pixelsFlagged or fset
 
                             if list(flag_cmd['ANTENNA2']).count(plot_antenna) > 0:
                                 flag_x = flag_cmd['ANTENNA1']
-                                self._setSentinel(x_range, y_range, x, y, data,
+                                fset = self._setSentinel(x_range, y_range, x, y, data,
                                  flag_x, flag_y, flag_y_interval,
                                  sentinel_value) 
+                                pixelsFlagged = pixelsFlagged or fset
 
                     elif xtitle.upper() == 'ANTENNA2' and \
                      ytitle.upper() == "TIME":
@@ -273,21 +277,24 @@ class ImageDisplay(BaseDisplay):
 
                         if flag_cmd.has_key('ANTENNA'):
                             flag_x = flag_cmd['ANTENNA']
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
                         if flag_cmd.has_key('ANTENNA1'):
                             if list(flag_cmd['ANTENNA1']).count(plot_antenna) > 0:
                                 flag_x = flag_cmd['ANTENNA2']
-                                self._setSentinel(x_range, y_range, x, y, data,
-                                 flag_x, flag_y, flag_y_interval,
+                                fset = self._setSentinel(x_range, y_range, x, y,
+                                 data, flag_x, flag_y, flag_y_interval,
                                  sentinel_value) 
+                                pixelsFlagged = pixelsFlagged or fset
 
                             if list(flag_cmd['ANTENNA2']).count(plot_antenna) > 0:
                                 flag_x = flag_cmd['ANTENNA1']
-                                self._setSentinel(x_range, y_range, x, y, data,
-                                 flag_x, flag_y, flag_y_interval,
+                                fset = self._setSentinel(x_range, y_range, x, y,
+                                 data, flag_x, flag_y, flag_y_interval,
                                  sentinel_value) 
+                                pixelsFlagged = pixelsFlagged or fset
 
                     elif xtitle.upper() == 'CHANNEL' and ytitle.upper() == \
                      'ANTENNA2':
@@ -300,8 +307,9 @@ class ImageDisplay(BaseDisplay):
                             flag_x = list(flag_cmd['CHANNELS'])
                             flag_y = list(y)
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
 # all data for a range of antennas
 
@@ -309,8 +317,9 @@ class ImageDisplay(BaseDisplay):
                             flag_y = list(flag_cmd['ANTENNA'])
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
                             flag_x = list(x)
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
 # all data for some baselines
 
@@ -321,8 +330,9 @@ class ImageDisplay(BaseDisplay):
                                 flag_y = []
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
                             flag_x = list(x)
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
                         if flag_cmd.has_key('ANTENNA2'):
                             if list(flag_cmd['ANTENNA2']).count(plot_antenna) > 0:
@@ -331,8 +341,9 @@ class ImageDisplay(BaseDisplay):
                                 flag_y = []
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
                             flag_x = list(x)
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
                     elif xtitle.upper() == 'ANTENNA2' and ytitle.upper() == \
                      'ANTENNA1':
@@ -349,13 +360,16 @@ class ImageDisplay(BaseDisplay):
                             flag_x = flag_cmd['ANTENNA']
                             flag_y = y
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
+
                             flag_y = flag_cmd['ANTENNA']
                             flag_x = x
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
 # overplot baseline flags
 
@@ -364,14 +378,17 @@ class ImageDisplay(BaseDisplay):
                             flag_y = flag_cmd['ANTENNA1']
                             flag_x = flag_cmd['ANTENNA2']
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
 
                             flag_x = flag_cmd['ANTENNA1']
                             flag_y = flag_cmd['ANTENNA2']
                             flag_y_interval = ones(shape(flag_y), float) * 0.1
-                            self._setSentinel(x_range, y_range, x, y, data,
+                            fset = self._setSentinel(x_range, y_range, x, y, data,
                              flag_x, flag_y, flag_y_interval, sentinel_value) 
+                            pixelsFlagged = pixelsFlagged or fset
+
                             flag_x = []
                             flag_y = []
 
@@ -512,12 +529,13 @@ class ImageDisplay(BaseDisplay):
 
         pylab.axis(lims)
         self._htmlLogger.timing_stop('imageDisplay._plot_panel')
-        return
+        return pixelsFlagged
 
 
     def _setSentinel(self, x_range, y_range, x, y, data, flag_x, flag_y,
      flag_y_interval, sentinel_value): 
-        """Set pixels to sentinel value.
+        """Set pixels to sentinel value. Returns True if any values
+        are actually set.
 
         Keyword arguments:
         x_range         -- Precomputed range(len(x)). 
@@ -530,6 +548,7 @@ class ImageDisplay(BaseDisplay):
         flag_y_interval -- The 'width' in y of each measurement.
         sentinel_value  -- The sentinel value to set in the target data.
         """
+        sentinelSet = False
 
         for xval in flag_x:
             xf = compress(abs(xval-x) < 0.001, x_range)[0]
@@ -544,6 +563,9 @@ class ImageDisplay(BaseDisplay):
 
                 for yf in y_flag_indeces:
                     data[yf,xf] = sentinel_value
+                    sentinelSet = True
+
+        return sentinelSet
 
 
     def description(self):
@@ -634,6 +656,7 @@ class ImageDisplay(BaseDisplay):
 
 # iterate through collected items and display them in turn
 
+            flagsSet = False
             for index, result in enumerate(stages):
                 sub_title = ''
                 if nstages > 1:
@@ -658,7 +681,8 @@ class ImageDisplay(BaseDisplay):
                 dataUnits = result['dataUnits']
                 flag = result['flag']
                 flagVersions = result['flagVersions']
-                self._plot_panel(nstages+1, plot_number, description, 
+                flagsSet = self._plot_panel(nstages+1, plot_number,
+                 description, 
                  data, xtitle, x, ytitle, y, chunks, 
                  dataType, dataUnits, flag,
                  flagVersions, stage_flagging[index],
@@ -750,7 +774,7 @@ class ImageDisplay(BaseDisplay):
             pylab.savefig(os.path.join(self._plotDirectory, plotFile))
             plotName = title
             self._htmlLogger.appendNode(plotName, os.path.join(
-             self._plotDirectory, plotFile))
+             self._plotDirectory, plotFile), flagsSet)
 
             pylab.clf()
             pylab.close(1)

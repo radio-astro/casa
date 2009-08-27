@@ -10,6 +10,7 @@
 # 29-Jan-2009 jfl fixed? findsource by checking surface brightness.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
 
 # package modules
 
@@ -96,8 +97,8 @@ class CleanImageV2(BaseImage):
 
 
     def _clean(self, data_desc_id, field_id, nx, cell, mode, nchan, 
-     bmaj, bmin, bpa, boxes, modelName, cleanMapName,
-     residualMapName, integrated_rms=None, quarter_box=None):
+     bmaj, bmin, bpa, boxes, quarter_box, modelName, cleanMapName,
+     residualMapName, integrated_rms=None):
         """Private method to clean an image.
 
         Keyword arguments:
@@ -111,12 +112,12 @@ class CleanImageV2(BaseImage):
         bmin          -- minor axis of beam.
         bpa           -- position angle of beam major axis.
         boxes         -- list of clean boxes (corners, in pixels).
+        quarter_box   -- box with maximum extent of area to be cleaned
+                         (pixels).
         modelName     -- file to hold model.
         cleanMapName  -- file to hold clean map.
         residualMapName -- file to hold residuals.
         integrated_rms  -- rms of residual from pilot 'mfs' clean.
-        quarter_box   -- box with maximum extent of area to be cleaned
-                         (pixels).
         """
         commands = []
 
@@ -131,11 +132,12 @@ class CleanImageV2(BaseImage):
 
 # update commands list
 
-        commands.append('imager.open(%s)' % self._msName)
+        commands.append("imager.open('%s')" % self._msName)
         commands.append('imager.selectvis(field=int(%s), spw=int(%s))' % 
          (field_id, data_desc_id))
-        commands.append("""imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
-         stokes='I', phasecenter=int(%s), mode=%s, nchan=%s, spw=[int(%s)])""" % 
+        commands.append("""imager.defineimage(nx=%s, ny=%s, cellx='%s',
+         celly='%s', stokes='I', phasecenter=int(%s), mode='%s', nchan=%s,
+         spw=[int(%s)])""" % 
          (nx, nx, cell, cell, field_id, mode, nchan, data_desc_id))
 
 # make mask from boxes - do this using 'regions' as it seems easier than
@@ -146,12 +148,26 @@ class CleanImageV2(BaseImage):
         csys = self._image.coordsys()
         self._image.close()
 
-        commands.append('''# make cleaning mask, including clean boxes and maximum
-         possible extent''')
+        commands.append('''# make cleaning mask, including clean boxes and 
+         maximum possible extent. "empty_image" is created so that its
+         CoordSys can be used.''')
         commands.append("imager.make('empty_image')")
         commands.append("image.open('empty_image')")
         commands.append("csys=image.coordsys()")
         commands.append("image.close()")
+
+# construct a region covering the centre quarter
+
+        quarter_region = self._regionmanager.wbox(
+         blc='%spix %spix' % (quarter_box[0], quarter_box[1]),
+         trc='%spix %spix' % (quarter_box[2], quarter_box[3]),
+         pixelaxes=[0,1], csys=csys.torecord())
+        commands.append("""quarter_region=rg.wbox(blc='%spix %spix',
+         trc='%spix %spix', pixelaxes=[0,1], csys=csys.torecord())""" % (
+         quarter_box[0], quarter_box[1], quarter_box[2], quarter_box[3]))
+
+# make a union of the boxed sources, or just the centre quarter if no
+# boxes were found
 
         clean_regions = {}
         for i,box in enumerate(boxes):
@@ -164,39 +180,29 @@ class CleanImageV2(BaseImage):
 
             commands.append('# adding box %s' % i)
             commands.append("""boxregion=rg.wbox(blc='%spix %spix',
-             trc='%spix %spic', pixelaxes=[0,1], cys=csys.torecord())""" % (
+             trc='%spix %spix', pixelaxes=[0,1], csys=csys.torecord())""" % (
              box[0], box[1], box[2], box[3]))
             commands.append("clean_regions['%s'] = boxregion" % boxname)
 
-        if len(clean_regions) > 1:
-            clean_region_union = self._regionmanager.makeunion(clean_regions)
-            commands.append("clean_region_union=rg.makeunion(clean_regions)")
-        else:
+        if len(clean_regions) == 0:
+            clean_region_union = quarter_region
+            commands.append("clean_region_union=quarter_region")
+        elif len(clean_regions) == 1:
             clean_region_union = clean_regions['r0']
             commands.append("clean_region_union=clean_regions['r0']")
-
-# if necessary get the intersection of the boxes with the image quarter
-# that is the maximum area to be cleaned
-
-        if quarter_box != None:
-            quarter_region = self._regionmanager.wbox(
-            blc='%spix %spix' % (quarter_box[0], quarter_box[1]),
-            trc='%spix %spix' % (quarter_box[2], quarter_box[3]),
-            pixelaxes=[0,1], csys=csys.torecord())
-
-            clean_region = self._regionmanager.intersection(
-             {'r1':clean_region_union, 'r2':quarter_region})
-
-            commands.append("# add maximum clean extent")
-            commands.append("""clean_region=rg.wbox(blc='%spix %spix',
-             trc='%spix %spic', pixelaxes=[0,1], cys=csys.torecord())""" % (
-             quarter_box[0], quarter_box[1], quarter_box[2], quarter_box[3]))
-            commands.append("""clean_region=rg.intersection(
-             {'r1':clean_region_union, 'r2':quarter_region})""")
-         
         else:
-            clean_region = clean_region_union
+            clean_region_union = self._regionmanager.makeunion(clean_regions)
+            commands.append("clean_region_union=rg.makeunion(clean_regions)")
 
+# get the intersection of the boxes with the image quarter,
+# that is the maximum area to be cleaned. 
+
+        commands.append("# add maximum clean extent")
+        clean_region = self._regionmanager.intersection(
+         {'r1':clean_region_union, 'r2':quarter_region})
+        commands.append("""clean_region=rg.intersection(
+         {'r1':clean_region_union, 'r2':quarter_region})""")
+         
 # construct clean mask name, remove chars that confuse 'mask' parameter later
 
         cleanmaskName = 'cleanmask.%s' % cleanMapName
@@ -210,8 +216,23 @@ class CleanImageV2(BaseImage):
 
         if os.path.exists(cleanmaskName):
             self._rmall(cleanmaskName)
+            commands.append('# remove %s' % cleanmaskName)
 
-        self._imager.regionmask(mask=cleanmaskName, region=clean_region)
+# Generate a regionmask corresponding to the clean regions. This may trigger
+# an exception if there is a problem with the combination of the regions.
+# Any problem, just clean the centre quarter.
+
+        try:
+            self._imager.regionmask(mask=cleanmaskName, region=clean_region)
+            commands.append("imager.regionmask(mask='%s', region=clean_region)" %
+             cleanmaskName)
+        except:
+            if os.path.exists(cleanmaskName):
+                self._rmall(cleanmaskName)
+                commands.append('# remove %s' % cleanmaskName)
+            self._imager.regionmask(mask=cleanmaskName, region=quarter_region)
+            commands.append("imager.regionmask(mask='%s', region=quarter_region)" %
+             cleanmaskName)
 
 # set the beam parameters for the clean restoration
 
@@ -222,10 +243,7 @@ class CleanImageV2(BaseImage):
         if os.path.exists(modelName):
             self._rmall(modelName)
 
-        commands.append('# remove %s' % cleanmaskName)
-        commands.append("imager.regionmask(mask='%s', region=clean_region)" %
-         cleanmaskName)
-        commands.append('imager.setbeam(bmaj=%s, bmin=%s, bpa=%s)' %
+        commands.append("imager.setbeam(bmaj='%s', bmin='%s', bpa='%s')" %
          (bmaj, bmin, bpa)) 
         commands.append('# remove %s' % modelName)
 
@@ -331,34 +349,35 @@ class CleanImageV2(BaseImage):
 # update commands list
 
             commands.append('# cleaning to threshold %s' % threshold) 
-            commands.append("""imager.clean(algorithm=%s,
+            commands.append("""imager.clean(algorithm='%s',
              mask='%s', niter=1000,
              gain=0.2, threshold="%sJy",
              displayprogress=False,
-             model=%s, keepfixed=[False],
-             image=%s, 
-             residual=%s)""" % (self._algorithm, cleanmaskName, threshold,
+             model='%s', keepfixed=[False],
+             image='%s', 
+             residual='%s')""" % (self._algorithm, cleanmaskName, threshold,
              modelName, cleanMapName, residualMapName))
 
-            commands.append('image.open(infile=%s)' % modelName)
+            commands.append('# obtain image and residual stats') 
+            commands.append("image.open(infile='%s')" % modelName)
             commands.append("""rtn=image.statistics(mask='%s > 0.1', 
-             robust=False""" % cleanmaskName)
+             robust=False)""" % cleanmaskName)
             commands.append('image.close()')
             commands.append('..get model sum: %s' % newSum)
 
-            commands.append('image.open(infile=%s)' % residualMapName)
+            commands.append("image.open(infile='%s')" % residualMapName)
             commands.append("""rtn=image.statistics(mask='%s < 0.1', 
-             robust=False""" % cleanmaskName)
+             robust=False)""" % cleanmaskName)
             commands.append('..get rms outside cleaned area: %s' % newRms)
             commands.append("""rtn=image.statistics(mask='%s > 0.1', 
-             robust=False""" % cleanmaskName)
+             robust=False)""" % cleanmaskName)
             commands.append('..get rms inside cleaned area: %s' % newCleanRms)
             commands.append("""rtn=image.getchunk(axes=[3], blc=%s, trc=%s)"""
              % (blc, trc))
             commands.append('..get 2d rms from chunk: %s' % rms2d) 
             commands.append('image.close()')
 
-            commands.append('image.open(infile=%s)' % cleanMapName)
+            commands.append("image.open(infile='%s')" % cleanMapName)
             commands.append("""rtn=image.statistics()""")
             commands.append('..get clean image max: %s' % imMax)
             commands.append('image.close()')
@@ -430,12 +449,17 @@ class CleanImageV2(BaseImage):
                 sum = newSum
                 cleanRms = newCleanRms
 
-# remove temporary files
+# remove temporary files, finish up
 
         if os.path.exists('empty_image'):
             self._rmall('empty_image')
         if os.path.exists(cleanmaskName):
             self._rmall(cleanmaskName)
+
+        self._imager.close()
+
+        commands.append("# remove 'empty_image' and '%s'" % cleanmaskName)
+        commands.append('imager.close()')
 
         return threshold, newRms, newCleanRms, cleanRmsRecord, sum, \
          sumChange, rms2d, imMax, commands, endState
@@ -677,7 +701,6 @@ class CleanImageV2(BaseImage):
                 results = self._parameters['data']
 
             for fieldSpw in self._valid_field_spw:
-#            for fieldSpw in [(1,18)]:
                 field_id = fieldSpw[0]
                 data_desc_id = fieldSpw[1]
 
@@ -722,49 +745,45 @@ class CleanImageV2(BaseImage):
                  (data_desc_id, field_id))
                 commands.append("imager.weight(type='natural')")
 
-# apply the calibration, this may fail
-                    
-                try:    
-                    self._bpCal.setapply(spw=data_desc_id, field=field_id)
-                    self._gainCal.setapply(spw=data_desc_id, field=field_id)
-                    commands += self._msCalibrater.correct(spw=data_desc_id,
-                     field=field_id)
-                except KeyboardInterrupt:
-                    raise
-                except:
-                    error_report = self._htmlLogger.openNode('exception',
-                     '%s.cal_apply_exception' % (self._stageName), True,
-                     stringOutput = True)
+# apply the calibration - do this to all fields in each spw to be more
+# efficient; the msCalibrater object should prevent the calibration
+# being applied repeatedly.
+           
+                field_list = [field_id]
+                for fs in self._valid_field_spw:
+                    if (fs[1]==data_desc_id) and \
+                     (field_list.count(fs[0])==0):
+                        field_list.append(fs[0])
+          
+                self._bpCal.setapply(spw=data_desc_id, field=field_list)
+                self._gainCal.setapply(spw=data_desc_id, field=field_list)
+                newCommands,error = self._msCalibrater.correct(
+                 spw=data_desc_id, field=field_list)
 
-                    self._htmlLogger.logHTML('Exception details<pre>')
-                    traceback.print_exc()
-                    traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
-                    self._htmlLogger.logHTML('</pre>')
-                    self._htmlLogger.closeNode()
-
-                    error_report += 'during calibration apply'
+                commands += newCommands
+                if error != None:
                     results[(field_id,data_desc_id)]['error']['psf'] = \
-                     error_report
+                     error
                     results[(field_id,data_desc_id)]['error']['dirty_image'] = \
-                     error_report
+                     error
                     results[(field_id,data_desc_id)]['error']['pilot_clean'] = \
-                     error_report
+                     error
                     results[(field_id,data_desc_id)]['error']['final_clean'] = \
-                     error_report
+                     error
 
                     continue
 
 # calculate the cell and map sizes, using the advise method as a guide.
 
-                aipsfieldofview = '%4.1farcsec' % self._fieldofview[
-                 data_desc_id]
+                aipsfieldofview = '%4.1farcsec' % (4.0 * self._beamRadius[
+                 data_desc_id])
                 results[(field_id,data_desc_id)]['fov'] = aipsfieldofview
 
                 rtn = self._imager.advise(takeadvice=False,
-                 amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                 amplitudeloss=0.05, fieldofview=aipsfieldofview)
                 advised_cell = rtn['cell']
                 commands.append('''imager.advise(takeadvice=False,
-                 amplitudeloss=0.5, fieldofview=%s)''' % aipsfieldofview)
+                 amplitudeloss=0.05, fieldofview=%s)''' % aipsfieldofview)
 
 # get rounded values of cell size and npixels.
 
@@ -780,7 +799,7 @@ class CleanImageV2(BaseImage):
                     cellv = math.floor(cellv*1000.)/1000.
                 cell = '%sarcsec' % cellv
 
-                npix = self._fieldofview[data_desc_id] / cellv
+                npix = 4.0 * self._beamRadius[data_desc_id] / cellv
                 if self._maxPixels != None:
                     if npix > self._maxPixels:
                         print 'CleanImageV2: npix=%s, resetting to %s' % (
@@ -904,11 +923,12 @@ class CleanImageV2(BaseImage):
 # first make a clean integrated image and use it to find the sources
 # ..set the image parameters
 
-                start_boxes = [[nx/8, nx/8, 7*nx/8, 7*nx/8]]
+                start_boxes = [[nx/4, nx/4, 3*nx/4, 3*nx/4]]
+                quarter_box = [nx/4, nx/4, 3*nx/4, 3*nx/4]
 
 # do the cleaning, this may fail
 
-                try:    
+                try: 
                     integrated_threshold, integrated_rms,\
                      integrated_cleaned_rms, integrated_cleaned_rms_record,\
                      integrated_sum, integrated_sum_change, integrated_rms2d,\
@@ -916,6 +936,7 @@ class CleanImageV2(BaseImage):
                      integrated_endState = \
                      self._clean(data_desc_id, field_id, nx, cell,
                      'mfs', -1, bmaj, bmin, bpa, start_boxes,
+                     quarter_box,
                      cleanIntegratedModelName,
                      cleanIntegratedMapName,
                      cleanIntegratedResidualMapName)
@@ -961,6 +982,8 @@ class CleanImageV2(BaseImage):
                  integrated_max
                 results[(field_id,data_desc_id)]['integrated_endState'] = \
                  integrated_endState
+                results[(field_id,data_desc_id)]['integratedQuarterBox'] = \
+                 quarter_box
 
                 cutoff, nSource, sources, boxes, source_commands = \
                  self._findSourcesAndCleanBoxes(cleanIntegratedMapName,
@@ -1006,11 +1029,17 @@ class CleanImageV2(BaseImage):
 
                 try:    
                     print 'second clean'
+#                    print data_desc_id, field_id, nx, cell, self._mode
+#                    print nchan, bmaj, bmin, bpa, boxes, quarter_box
+#                    print cleanModelName
+#                    print cleanMapName
+#                    print cleanResidualMapName, integrated_rms
+
                     threshold, rms, cleaned_rms, cleaned_rms_record, sum,\
                      sum_change, rms2d, cleaned_max, finalCleanCommands,\
                      finalCleanEndState = self._clean(
                      data_desc_id, field_id, nx, cell, self._mode,
-                     nchan, bmaj, bmin, bpa, boxes,
+                     nchan, bmaj, bmin, bpa, boxes, quarter_box,
                      cleanModelName, cleanMapName, cleanResidualMapName,
                      integrated_rms=integrated_rms)
                 except KeyboardInterrupt:
@@ -1046,6 +1075,10 @@ class CleanImageV2(BaseImage):
                  finalCleanCommands
                 results[(field_id,data_desc_id)]['finalCleanEndState'] = \
                  finalCleanEndState
+                results[(field_id,data_desc_id)]['finalQuarterBox'] = \
+                 quarter_box
+
+#                break
 
 # store the object info in the BookKeeper.
 # copying by reference the history dictionaries may lead to problems.
@@ -1112,7 +1145,8 @@ class CleanImageV2(BaseImage):
              v, mapField='cleanMapName', cleanBoxField='boxes',
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
-             bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             bandpassFlaggingStageField='bandpassFlaggingStage',
+             quarterBoxField='finalQuarterBox',
              emptyChannelField='emptyChannels', error_key='final_clean')
 
             description = {}
@@ -1125,6 +1159,7 @@ class CleanImageV2(BaseImage):
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             quarterBoxField='finalQuarterBox',
              emptyChannelField='emptyChannels', error_key='final_clean')
 
             description = {}
@@ -1136,6 +1171,7 @@ class CleanImageV2(BaseImage):
              v, mapField='cleanIntegratedMapName', 
              cleanBoxField='integrated_boxes',
              thresholdField='integrated_threshold',
+             quarterBoxField='integratedQuarterBox',
              rms2dField='integrated_rms2d', error_key='pilot_clean')
 
             description = {}
@@ -1147,6 +1183,7 @@ class CleanImageV2(BaseImage):
              v, mapField='cleanIntegratedResidualMapName', 
              cleanBoxField='integrated_boxes', 
              thresholdField='integrated_threshold',
+             quarterBoxField='integratedQuarterBox',
              rms2dField='integrated_rms2d', error_key='pilot_clean')
 
             description = {}
@@ -1294,10 +1331,10 @@ class CleanImageV2(BaseImage):
             </pre>
              The number of pixels along each side of the
              square image to be produced was calculated so that 
-             with the adopted cell size it would cover the field of 
-             view of the primary beam, derived from:
+             with the adopted cell size it would cover a field 
+             with radius twice that of the primary beam, derived from:
             <pre>
-         fov = 2.0 * (1.22 * 3e8/frequency) / dish_diameter
+         fov = 2.0 * 2.0 * (1.22 * 3e8/frequency) / dish_diameter
             </pre>
              This number was reset to the next greater
              'composite' number to ensure the efficient operation
@@ -1341,13 +1378,13 @@ class CleanImageV2(BaseImage):
                 w = v['psfParameters']
                 cleanDescription += """
               <tr>
+               <td>%s (%s)</td>
                <td>%i</td>
-               <td>%i</td>
                <td>%s</td>
                <td>%s</td>
                <td>%s</td>
-               <td>%s</td>""" % (k[0], k[1], v['fov'], w['nx'], w['cell'],
-               w['mapName'])
+               <td>%s</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+               k[1], v['fov'], w['nx'], w['cell'], w['mapName'])
                 if w.has_key('bmaj'):
                     cleanDescription += """
                <td>%s</td>
@@ -1416,13 +1453,13 @@ class CleanImageV2(BaseImage):
                 w = v['dirtyImageParameters']
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
                <td>%i</td>
-               <td>%s</td>""" % (k[0], k[1], w['nx'], w['cell'], w['nchan'],
-               w['mapName'])
+               <td>%s</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+               k[1], w['nx'], w['cell'], w['nchan'], w['mapName'])
 
 # casapy calls in a separate node      
 
@@ -1545,7 +1582,7 @@ class CleanImageV2(BaseImage):
             if v['error']['pilot_clean'] == None:
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
@@ -1559,7 +1596,8 @@ class CleanImageV2(BaseImage):
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>""" % (
-                 k[0], k[1], v['nx'], v['cell'], v['integrated_threshold'],
+                 self._fieldName[k[0]], self._fieldType[k[0]], k[1], 
+                 v['nx'], v['cell'], v['integrated_threshold'],
                  v['integrated_endState'], v['integrated_rms'],
                  v['integrated_cleaned_rms'],
                  self._formatList(v['integrated_cleaned_rms_record'], '%.2g'),
@@ -1683,7 +1721,7 @@ class CleanImageV2(BaseImage):
             if v['error']['final_clean'] == None:
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
@@ -1695,9 +1733,9 @@ class CleanImageV2(BaseImage):
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>
-               <td>%.1e</td>""" % (k[0], k[1], v['nx'], v['cell'],
-                 v['threshold'], v['finalCleanEndState'], v['rms'],
-                 v['cleaned_rms'],
+               <td>%.1e</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+                 k[1], v['nx'], v['cell'], v['threshold'],
+                 v['finalCleanEndState'], v['rms'], v['cleaned_rms'],
                  self._formatList(v['cleaned_rms_record'], '%.2g'),
                  v['sum'], v['sum_change'], v['rms2d'], v['max'])
 

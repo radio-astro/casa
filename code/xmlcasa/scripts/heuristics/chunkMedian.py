@@ -216,14 +216,18 @@ class ChunkMedian(BaseDataModifier):
 
             if self._description != None:
                 self._htmlLogger.logHTML('<p> %s' % self._description)
+            else:
 
-        self._htmlLogger.logHTML("""
-         <p>The data view is calculated from the input data view described
-         below. Pixels along the TIME axis of the input are replaced by the
-         median value for the %s that they belong to.
+# last resort - offer the built in description
 
-         <h5>The Input Data View</h5>""" % 
-         self._htmlLogger.glossaryLink('chunk'))
+                self._htmlLogger.logHTML("""
+                 <p>The data view is calculated from the input data view
+                 described below. Pixels along the TIME axis of the input
+                 are replaced by the median value for the %s that they
+                 belong to.
+
+                 <h5>The Input Data View</h5>""" % 
+                 self._htmlLogger.glossaryLink('chunk'))
 
         self._view.writeDetailedHTMLDescription(stageName, False,
          parameters=parameters['dependencies']['view']) 

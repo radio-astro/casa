@@ -15,7 +15,11 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
         ### Now the actual task code
         ###
         retValue={}
-        usr = os.environ['USER']
+        if os.environ.has_key( 'USER' ):
+            usr = os.environ['USER']
+        else:
+            import commands
+            usr = commands.getoutput( 'whoami' )
         tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
         resultstats = []
         try:
@@ -225,11 +229,14 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
             # Interactive mask
             if interactive:
                     # Interactive masking
-		    new_mask=sd.interactivemask()
+		    new_mask=sd.interactivemask(scan=s)
 		    if (len(masklist) > 0):
-			    new_mask.select_mask(s,masklist)
-		    else:
-			    new_mask.select_mask(s)
+		            new_mask.set_basemask(masklist=masklist,invert=False)
+
+		    new_mask.select_mask(once=False,showmask=True)
+		    # Wait for user to finish mask selection
+		    finish=raw_input("Press return to calculate statistics.\n")
+		    new_mask.finish_selection()
 			    
 		    # Get final mask list
 		    msk=new_mask.get_mask()

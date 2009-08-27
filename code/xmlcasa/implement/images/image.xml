@@ -3299,7 +3299,7 @@ at a particular location at a particular time.
      <value>0.0001</value>
      </param>
 </input>
-<returns type="any"><any type="variant"/>Returns component list as a Matrix.</returns>
+<returns type="any"><any type="record"/>Returns a record that contains component list as a Matrix and blcs and trcs of regions found.</returns>
 
 <description>
 This function is an image decomposition tool that performs several tasks,
@@ -3327,6 +3327,14 @@ speed up calculations on very large images or if either primary method causes
 trouble, but in general this will impede the accuracy of the fit.
 
 The function works with both two and three dimensional images.
+
+The return value is a record (or dictionary) that has 3 keys: {\tt 'components', 'blc', 'trc'}.\\
+The {\tt 'components'} element is a matrix each row of which contains the gaussian parameters of the component fitted.\\
+The {\tt 'blc'} element is a matrix of the bottom left corners (blc) of the regions found. Each row correspond to a region blc.\\
+The {\tt 'trc'} element is a matrix of the top right corners (trc) of the regions found. Each row correspond to a region trc.\\
+{\bf Please Note} that the returned blc's and trc's are relative to {\tt region} defined by the user. A {\tt blc } of  [0,0] implies the bottom left of the region selected and not  the bottom left of the image. Obviously if no region is defined then it is the bottom left of the image. 
+ 
+
 </description>
 <example>
 \begin{verbatim}
@@ -3334,21 +3342,30 @@ The function works with both two and three dimensional images.
 #
 print "\t----\t decompose Ex 1 \t----"
 ia.maketestimage()
-print ia.decompose(threshold=2.5, maxrms=1.0)
-#Attempt 1: Converged after 22 iterations
-#Attempt 1: Converged after 16 iterations
+out=ia.decompose(threshold=2.5, maxrms=1.0)
+#Attempt 1: Converged after 21 iterations
+#Attempt 1: Converged after 15 iterations
 #1: Peak: 17.955  Mu: [0.000327928, 8.62573e-05]
 #               Axes: [0.00175981, 0.00142841]  Rotation: 1.29539
 #2: Peak: 19.8093  Mu: [1.67927e-06, -0.000374393]
 #                Axes: [0.00179054, 0.00132541]  Rotation: 1.78404
 #3: Peak: 10.1155  Mu: [6.28252, -7.09688e-05]
 #                Axes: [0.00180877, 0.00104523]  Rotation: 1.78847
+print out['components']
 #[[  1.79549522e+01   3.27928370e-04   8.62573434e-05   1.75980886e-03
 #    8.11686337e-01   1.29538655e+00]
 # [  1.98093319e+01   1.67927124e-06  -3.74393392e-04   1.79054437e-03
 #    7.40229547e-01   1.78403902e+00]
 # [  1.01155214e+01   6.28252172e+00  -7.09688029e-05   1.80877140e-03
 #    5.77867746e-01   1.78847444e+00]]
+print out['blc']
+#[[37 31]
+# [47 25]
+# [67 33]]
+print out['trc']
+#[[54 47]
+# [66 38]
+# [78 40]]
 ia.close()
 #
 """
@@ -4094,7 +4111,17 @@ tool attached to the residual (continuum subtracted) image.
      <description>The 2-D region of interest to fit. Default is whole image.</description>
      <value></value>
      </param>
-  
+
+     <param type="int" direction="in" name="chan">
+     <description>Spectral plane to use to fit gaussian(s)</description>
+     <value>0</value>
+     </param>
+
+     <param type="string" direction="in" name="stokes">
+     <description>Stokes (polarization) plane to use to fit gaussian(s).</description>
+     <value>I</value>
+     </param>
+   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
      <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>

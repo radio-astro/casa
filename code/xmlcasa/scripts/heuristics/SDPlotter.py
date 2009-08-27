@@ -1874,6 +1874,11 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
         N = 0
         ChanC = int(Lines[Nc][0] + 0.5)
         VelC = Abcissa[2][ChanC]
+        if ChanC > 0:
+            ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC - 1])
+        else:
+            ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC + 1])
+
         # 2007/9/13 Change the magnification factor 1.2 to your preference (to Dirk)
         # be sure the width of one channel map is integer
         ChanW = max(int(Lines[Nc][1] * 1.4 / NChannelMap + 0.5), 1)
@@ -1891,7 +1896,7 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
         # Draw Total Intensity Map
         for row in range(Nrow):
             if Table[row][6] > 0:
-                Total[int(Ymax-(Table[row][3]-Ymin))][int(Xmax-(Table[row][2]-Xmin))] = data[row][int(Lines[Nc][0]-Lines[Nc][1]/2):int(Lines[Nc][0]+Lines[Nc][1]/2)].sum()
+                Total[int(Ymax-(Table[row][3]-Ymin))][int(Xmax-(Table[row][2]-Xmin))] = data[row][int(Lines[Nc][0]-Lines[Nc][1]/2):int(Lines[Nc][0]+Lines[Nc][1]/2)].sum() * ChanVelWidth
             else:
                 Total[int(Ymax-1-(Table[row][3]-Ymin))][int(Xmax-1-(Table[row][2]-Xmin))] = 0.0
         PL.cla()
@@ -1935,7 +1940,7 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
                for t in cb.ax.get_yticklabels():
                    newfontsize = t.get_fontsize()*0.5
                    t.set_fontsize(newfontsize)
-               cb.ax.set_title('[K]')
+               cb.ax.set_title('[K km/s]')
                lab = cb.ax.title
                lab.set_fontsize(newfontsize)
 
@@ -2019,7 +2024,7 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
             Title.append('(Vel,Wid) = (%.1f, %.1f) (km/s)' % (V0, V1))
             NMap += 1
             for row in range(Nrow):
-                Intensity = data[row][C0:C1].sum()
+                Intensity = data[row][C0:C1].sum() * ChanVelWidth
                 if Table[row][6] > 0:
                     if N == 0: (Vmax0, Vmin0) = (Intensity, Intensity)
                     elif Intensity > Vmax0: Vmax0 = Intensity
@@ -2064,7 +2069,7 @@ def DrawImage(data, Table, Abcissa, Lines, beamsize=0, gridsize=1, scale_max=Fal
                     for t in cb.ax.get_yticklabels():
                         newfontsize = t.get_fontsize()*0.5
                         t.set_fontsize(newfontsize)
-                    cb.ax.set_title('[K]')
+                    cb.ax.set_title('[K km/s]')
                     lab=cb.ax.title
                     lab.set_fontsize(newfontsize)
 

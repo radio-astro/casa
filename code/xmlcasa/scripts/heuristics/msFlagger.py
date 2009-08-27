@@ -4,6 +4,7 @@
 # 21-Jan-2009 jfl ut4b release. Original version.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 20-Aug-2009 jfl __del__ method added, FLAG set with FLAG_ROW.
 
 # package modules
 
@@ -46,6 +47,8 @@ class MSFlagger:
         self._msName = msName
         self._msCalibrater = msCalibrater
         self._verbose = verbose
+#        self._verbose=True
+
 
 # create private copies of tools
 
@@ -108,7 +111,7 @@ class MSFlagger:
             self._flaggingState = {}
             self._flaggingState['Current'] = {
              'FLAG_MARK':-1, 
-             'FLAG_MARK_COL':-1 * ones(shape(self._all_field_ids))}
+             'FLAG_MARK_COL':-1 * ones(shape(self._all_field_ids), int)}
             
 # save it as 'BeforeHeuristics' to record state before anything has been done
  
@@ -141,15 +144,18 @@ class MSFlagger:
                  v['FLAG_MARK_COL']
 
 
+    def __del__(self):
+        """Destructor.
+        """
+        self._flagger.done()
+
+
     def _flagTable(self, flags, apply):
         """
         Method to set flags in the MS.
         """
         if self._verbose:
             print 'MSFlagger._flagTable called'
-
-        if self._verbose:
-            print 'start'
             for k,v in self._flaggingState.iteritems():
                 print '                  ', k, v['FLAG_MARK'],\
                  v['FLAG_MARK_COL']
@@ -241,8 +247,12 @@ class MSFlagger:
 # the 'apply' parameter here as in the case of bandpass edge flagging (where
 # apply is set False) we still want the view recalculated.
 
+
                         selected = self._table.query(taql)
                         selected_rows += selected.nrows()
+                        if self._verbose:
+                            print 'taql', taql
+                            print 'number of rows flagged', selected.nrows()
 
 # flag
 
@@ -266,12 +276,15 @@ class MSFlagger:
                         else:
                             flag_row = selected.getcol('FLAG_ROW')
                             flag_row[:] = 1
+                            flag = selected.getcol('FLAG')
+                            flag[:] = 1
 
                             if not flag_description.has_key('ROWS_SET'):
                                 flag_description['ROWS_SET'] = {}
 
                             if apply:
                                 selected.putcol('FLAG_ROW', flag_row)
+                                selected.putcol('FLAG', flag)
                                 flag_description['ROWS_SET'][(spw,field)] = \
                                  selected.nrows()
                             else:
@@ -313,7 +326,6 @@ class MSFlagger:
         temp = python_copy.deepcopy(self._flaggingState[self._flagVersion])
         self._flaggingState['Current'] = temp
         self._flagVersion = 'Current'
-#        print 'saveflagversion Current'
         self._flagger.saveflagversion('Current')
 
         if self._verbose:
@@ -416,9 +428,9 @@ class MSFlagger:
         if self._verbose:
             print 'MSFlagger.getFlags called'
 
-        pid = os.getpid()
-        a2 = os.popen('ps -p %d -o rss,vsz' % pid).readlines()
-        #print 'getflags start', a2[1]
+#        pid = os.getpid()
+#        a2 = os.popen('ps -p %d -o rss,vsz' % pid).readlines()
+#        print 'getflags start', a2[1]
 
         if self._flagVersion == 'msfCorrupt':
             raise NameError, 'MSFlagger is corrupt'
@@ -433,8 +445,6 @@ class MSFlagger:
             applied_column = self._applied_column
 
         else:
-
-            #print 'reading from file'
 
 # Read flags from file
 
@@ -461,9 +471,9 @@ class MSFlagger:
             self._getFlags_flag_mark = self._flaggingState[self._flagVersion]\
              ['FLAG_MARK']
 
-        pid = os.getpid()
-        a2 = os.popen('ps -p %d -o rss,vsz' % pid).readlines()
-        #print 'getflags end', a2[1]
+#        pid = os.getpid()
+#        a2 = os.popen('ps -p %d -o rss,vsz' % pid).readlines()
+#        print 'getflags end', a2[1]
 
         return flag_column, reason_column, applied_column
 
@@ -482,7 +492,6 @@ class MSFlagger:
 #            print 'no work required'
         else:
             self._flagVersion = self._memoryFlagVersion
-#            print 'restoreflagversion', self._flagVersion
             self._flagger.restoreflagversion(self._flagVersion)
         
         if self._verbose:
@@ -503,7 +512,6 @@ class MSFlagger:
 # if we are in 'Current' flag state, make sure that we save the ms flag version
 
         if self._flagVersion == 'Current':
-#            print 'saveflagversion Current'
             self._flagger.saveflagversion('Current')
 
         self._memoryFlagVersion = self._flagVersion
@@ -616,7 +624,6 @@ class MSFlagger:
             self._flaggingState = pickle.loads(pickledFlaggingState)
             self._table.close()
 
-#            print 'restoreflagversion', temp
             self._flagger.restoreflagversion(temp)
             self._flagVersion = temp
 
@@ -631,7 +638,6 @@ class MSFlagger:
                 if k != 'Current' and k != 'BeforeHeuristics' and \
                  v['FLAG_MARK'] >= current_flag_mark:
                     ignore = self._flaggingState.pop(k)
-#                    print 'deleteflagversion', k
                     self._flagger.deleteflagversion(k)
 
         if self._verbose:
@@ -688,7 +694,6 @@ class MSFlagger:
 
 # save the ms flagversion
 
-#            print 'saveflagversion', saveFlagVersion
             self._flagger.saveflagversion(saveFlagVersion)
 
 # store this info in the flaggingState dictionary
@@ -754,12 +759,10 @@ class MSFlagger:
 # the requested one
 
                 if self._flagVersion == 'Current':
-#                    print 'saveflagversion Current'
                     self._flagger.saveflagversion('Current')
                
 # restore flag version to ms
 
-#                print 'restoreflagversion', newFlagVersion
                 self._flagger.restoreflagversion(newFlagVersion)
                 if self._verbose:
                     print 'restoreflagversion', newFlagVersion
@@ -801,7 +804,7 @@ class MSFlagger:
 # 'Current'
 
         if self._flagVersion != 'Current':
-            raise NameError, "trying to flag MS in non 'Current' state"
+            raise Exception, "trying to flag MS in non 'Current' state"
                         
 # flag the table
                         

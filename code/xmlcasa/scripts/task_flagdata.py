@@ -5,12 +5,12 @@ from taskinit import *
 pathname = os.environ.get('CASAPATH').split()[0]
 arch     = os.environ.get('CASAPATH').split()[1]
 if pathname.find('lib') >= 0:
-   filepath = pathname+'/lib/python2.5/heuristics/'
+        filepath = pathname+'/lib/python2.5/heuristics/'
 else:
-   if pathname.find('Contents') >= 0:
-      filepath = pathname+ '/Resources/python/heuristics/'
+   if pathname.find('Contents') >= 0 :
+        filepath = pathname+'/Resources/python/heuristics/'
    else :
-      filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
+        filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
 
 sys.path.append(filepath)
 
@@ -37,6 +37,7 @@ def flagdata(vis = None, mode = None,
              column = None, expr = None,
              thr = None, window = None,
              diameter = None,
+             source = None,
              flux = None,
              bpass = None,
              gain = None,
@@ -60,14 +61,22 @@ def flagdata(vis = None, mode = None,
                 #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
 
                 sfir = sfiReducer.SFIReducer(vis, recipe=recipe)
-                #casalog.post('Invoking ' + str(recipe))
+                casalog.post('Invoking ' + str(recipe))
+                casalog.post('Source field(s)        = ' + str(source))
+                casalog.post('Flux     calibrator(s) = ' + str(flux))
+                casalog.post('Gain     calibrator(s) = ' + str(gain))
+                casalog.post('Bandpass calibrator(s) = ' + str(bpass))
                 #casalog.post('A log of the run is available in ./html/AAAROOT.html')
                 #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
-                sfir.reduce(flux=flux, gain=gain, bandpass=bpass)
-                #casalog.post(str(recipe) + ' done')
-                #casalog.post('A log of the run is available in ./html/AAAROOT.html')
-                return False
                 
+                sfir.reduce(source=source, flux=flux, gain=gain, bandpass=bpass)
+                
+                casalog.post(str(recipe) + ' done')
+                casalog.post('A log of the run is available in ./html/AAAROOT.html')
+                
+                return False
+
+        fg.done()
         fg.clearflagselection(0)
         
         try: 
@@ -125,7 +134,8 @@ def flagdata(vis = None, mode = None,
                                 baseline = antenna, \
                                 uvrange = uvrange, \
                                 time = timerange, \
-                                correlation = correlation)
+                                correlation = correlation, \
+                                diameter = diameter)
                         fg.run()
                 elif ( mode == 'autoflag' ):
                         fg.setdata(field = field, \
@@ -138,14 +148,15 @@ def flagdata(vis = None, mode = None,
                                    time = timerange, \
                                    correlation = correlation)
                         rec = fg.getautoflagparams(algorithm=algorithm)
-                        rec['expr'] = expr;
-                        rec['thr'] = thr;
+                        rec['expr'] = expr
+                        rec['thr'] = thr
                         #rec['rowthr'] = rowthr;
-                        rec['hw'] = window;
+                        rec['hw'] = window
                         #rec['rowhw'] = rowhw;
                         #if( algorithm == 'uvbin' ):
                         #     rec['nbins'] = nbins;
                         #     rec['minpop'] = minpop;
+                        rec['column'] = column
                         fg.setautoflag(algorithm = algorithm,
                                        parameters = rec)
                         fg.run()

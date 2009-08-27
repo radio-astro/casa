@@ -37,7 +37,7 @@
 
 #include <graphics/X11/X_enter.h>
 #include <QObject>
-//#include <QtGui>
+#include <QtGui>
 #include <graphics/X11/X_exit.h>
 
 namespace casa {

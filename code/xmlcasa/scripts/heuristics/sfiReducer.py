@@ -45,6 +45,7 @@ import bestMethod
 import bestMethodSelector
 import bookKeeper
 import buildImage
+import calplotDisplay
 import casapyTasks
 import checkMS
 import chunkMedian
@@ -58,6 +59,7 @@ import deviations
 import dirtyImageV2
 import fluxCalibration
 import gainCalibration
+import groupFluxCalibration
 import htmlLogger
 import imageDisplay
 import imageFlagger
@@ -77,6 +79,7 @@ import sliceDisplay
 import sourceSpectra
 import taqlFlagger
 import util
+
 
 class SFIReducer:
     """Class to reduce Single Field Interferometry data.
@@ -102,12 +105,7 @@ class SFIReducer:
         self._log['logTool'] = self._logTool.create()
         self._log['logTool'].origin('sfiReducer')
         if len(tasks) == 0:
-            # as workaround for CAS-1508 (crash in CASA's casalog component)
-            # this is disabled
-            #
             self._log['logTool'].setglobal(True)
-            #
-            pass
 
 # open the html log
 
@@ -259,7 +257,7 @@ class SFIReducer:
                 self._html.logHTML('<font color="red">Failed</font>')
 
 
-    def reduce(self, start=None, flux='', gain='', bandpass=''):
+    def reduce(self, start=None, source=[], flux=[], gain=[], bandpass=[]):
         """Method to reduce the MeasurementSet.
 
         Keyword arguments:
@@ -267,13 +265,14 @@ class SFIReducer:
                       begin.
         """
 
-# load the recipe.
+# remember calibration field IDs
 
-        #print "Initialize calibrators to gain='%s', flux='%s', bandpass='%s'" % \
-        # (gain, flux, bandpass)
         util.gaincal = gain
         util.fluxcal = flux
+        util.source = source
         util.bandpasscal = bandpass
+
+# load the recipe.
 
         recipeModule = __import__('heuristics.' + self._recipeName, fromlist=
          ['heuristics'])
@@ -351,3 +350,8 @@ class SFIReducer:
 # __del__ method caused problems.
 
         self._html.writeTiming()
+
+# set the flag version of the MS to 'Current' in case the last stage left it
+# in a funny state
+
+        self._msFlagger.setFlagState('Current')  

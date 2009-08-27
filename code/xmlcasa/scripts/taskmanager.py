@@ -51,7 +51,7 @@ class taskmanager(object):
                         log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][reciept]['result output']['stderr'].splitlines() )
                     return self.__hub['result map'][reciept]['result']
                 else:
-                    return None
+                    return { 'result': 'pending' }
         except:
             pass
 
@@ -98,7 +98,9 @@ class taskmanager(object):
         result_name = "result_%04d" % count
         engine['current task'] = taskname
         self.__hub['result map'][count] = { 'engine': engine,
-                                            'result': self.__hub['mec'].execute(result_name + " = " + taskname + "(*args,**kwargs)",block=False,targets=targets) }
+                                            'result': self.__hub['mec'].execute( "casalog.origin('taskmanager'); casalog.post('##### async task launch:     " + taskname + " ########################'); " + \
+                                                                                 result_name + " = " + taskname + "(*args,**kwargs); " + \
+                                                                                 "casalog.origin('taskmanager'); casalog.post('##### async task completion: " + taskname + " ########################')", block=False,targets=targets) }
         ## not sure if any pause is necessary or not...
         time.sleep(0.25)
         return count
@@ -244,6 +246,7 @@ class taskmanager(object):
                 x = self.__hub['mec'].execute("sys.path.insert(0,'" + p + "')",block=block,targets=targets)
             x = self.__hub['mec'].execute('import signal',block=block,targets=targets)
             x = self.__hub['mec'].execute("original_sigint_handler = signal.signal(signal.SIGINT,signal.SIG_IGN)",block=block,targets=targets)
+            x = self.__hub['mec'].execute('from taskinit import casalog',targets=targets)
             engine['setup'] = True
 
     def __init__(self,task_path=[''],engines={'localhost': 1}):

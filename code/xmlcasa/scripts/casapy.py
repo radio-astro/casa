@@ -44,11 +44,13 @@ while len(a) > 0:
 if os.uname()[0]=='Darwin' :
     casa_path = os.environ['CASAPATH'].split()
     casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
-    casa['helpers']['viewer'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casaviewer'
-#           from Carbon.CoreFoundation import kCFURLPOSIXPathStyle
-#           kLSUnknownCreator = '\x00\x00\x00\x00'
-#           fsRef, cfURL = LSFindApplicationForInfo(kLSUnknownCreator, None, "casalogger.app")
-#           casa['helpers']['logger'] = os.path.join(fsRef.as_pathname(), 'Contents', 'MacOS', 'casalogger')
+    casa['helpers']['viewer'] = casa_path[0]+'/'+casa_path[1]+'/apps/casaviewer.app/Contents/MacOS/casaviewer'
+#
+# In the distro of the app then the apps dir is not there and you find things in MacOS
+#
+    if not os.path.exists(casa['helpers']['viewer']) :
+	casa['helpers']['viewer'] = casa_path[0]+'/MacOS/casaviewer'
+	casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -98,7 +100,10 @@ def casalogger(logfile='casapy.log'):
     """
     pid=9999
     if (os.uname()[0]=='Darwin'):
-        pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+	if casa['flags'].has_key('--qtlogger') :
+           pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+        else :
+           os.system("open -a console " + logfile)
     elif (os.uname()[0]=='Linux'):
         pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
     else:
@@ -372,8 +377,13 @@ def update_params(func, printtext=True, ipython_globals=None):
 		pathname=myf['task_location'][myf['taskname']]
 	   else :
 	        pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
+                if not os.path.exists(pathname) :
+                   pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
+                
 	else :
 	   pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
+           if not os.path.exists(pathname) :
+              pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
         xmlfile=pathname+'/'+myf['taskname']+'.xml'
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://'+xmlfile);
@@ -864,6 +874,8 @@ casalog.version()
 import shutil
 if ipython:
     ipshell.mainloop( )
+    if(os.uname()[0] == 'Darwin') and not casa['flags'].has_key('--qtlogger') :
+           os.system("osascript -e 'tell application \"Console\" to quit'")
     for pid in logpid: 
         #print 'pid: ',pid
         os.kill(pid,9)

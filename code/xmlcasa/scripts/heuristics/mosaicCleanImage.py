@@ -7,6 +7,7 @@
 #  3-Nov-2008 jfl amalgamated stage release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
 
 # package modules
 
@@ -21,6 +22,63 @@ from cleanImageV2 import *
 class MosaicCleanImage(CleanImageV2):
     """Class to supply cleaned images.
     """
+
+    def _approximatePsf(self, data_desc_id, centre_measure, field_ids, nx, ny,
+     cell, psfName):
+        """Private method to calculate an approximate psf.
+
+        Keyword arguments:
+        data_desc_id   -- The SpW
+        centre_measure -- Direction Measure specifying centre of mosaic.
+        field_ids      -- Fields contributing to mosaic.
+        nx             -- Number of pixels in x.
+        ny             -- Number of pixels in y.
+        cell           -- cell size.
+        psfName        -- Name of file to contain psf.
+        """
+        commands = []
+
+        self._imager.open(thems=self._msName)
+        self._imager.selectvis(spw=int(data_desc_id), field=field_ids)
+
+# set the image parameters
+
+        self._imager.defineimage(nx=nx, ny=ny, cellx=cell, celly=cell,
+         stokes='I', phasecenter=centre_measure, spw=[int(data_desc_id)])
+
+# image weight
+
+        self._imager.weight('natural')
+
+# use the default primary beam correction for this telescope
+
+        self._imager.setvp(dovp=True, usedefaultvp=True)
+
+# set ftmachine following example
+
+        self._imager.setoptions(ftmachine='mosaic')
+
+# calculate the psf
+
+        self._imager.approximatepsf(psf=psfName)
+        self._imager.close()
+
+# update commands list
+
+        commands.append('imager.open(thems=%s)' % self._msName)
+        commands.append('imager.selectvis(spw=int(%s), field=%s)' % (
+         data_desc_id, field_ids))
+        commands.append("""imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
+         stokes='I', phasecenter=%s, spw=[int(%s)])""" % (nx, ny,
+         cell, cell, centre_measure, data_desc_id))
+        commands.append("imager.weight('natural')")
+        commands.append('imager.setvp(dovp=True, usedefaultvp=True)')
+        commands.append("imager.setoptions(ftmachine='mosaic')")
+        commands.append("imager.approximatepsf(psf='%s')" % psfName)
+        commands.append("imager.close()")
+
+        return commands
+
 
     def _clean(self, data_desc_id, centre_measure, field_ids, nx, ny, cell,
      mode, nchan, boxes, modelName, cleanMapName, residualMapName,
@@ -73,11 +131,11 @@ class MosaicCleanImage(CleanImageV2):
 
 # make mask from boxes
 
-## ..remove box.mask explicitly if it exists - I have the feeling that
-##   it does not get replaced if already present.
+# ..remove cleanmask explicitly if it exists - I have the feeling that
+#   it does not get replaced if already present.
 
-#        if os.path.exists('box.mask'):
-#            self._rmall('box.mask')
+        if os.path.exists(cleanmaskName):
+            self._rmall(cleanmaskName)
 
 # ensure box coords are int - some casapy versions complain if not
 
@@ -116,6 +174,7 @@ class MosaicCleanImage(CleanImageV2):
         cleaning = True
         nloop = 0
         cleanRmsRecord = []
+        endState = 'coding error'
         if integrated_rms == None:
             rms = 0.05
             cleanRms = 1e6
@@ -255,7 +314,7 @@ class MosaicCleanImage(CleanImageV2):
 # continue cleaning? End state is OK if cleaned flux is levelling off
             
             cleanRmsRecord.append(newCleanRms)
-            if (newSum < 1.03 * sum):
+            if (abs(newSum) < 1.03 * abs(sum)):
                 endState = 'OK'
                 break
 
@@ -279,6 +338,7 @@ class MosaicCleanImage(CleanImageV2):
                 break
 
             else:
+                endState = 'not finished'
 
 # we do need another bout of cleaning, set a new threshold.
 # Ideally set this from the rms of the non-cleaned area as this is
@@ -304,12 +364,15 @@ class MosaicCleanImage(CleanImageV2):
                 sum = newSum
                 cleanRms = newCleanRms
 
+        self._imager.close()
+
 # ..get the restoring beam from the image
 
         self._image.open(infile=cleanMapName)
         restoringBeam = self._image.restoringbeam()
         self._image.close()
 
+        commands.append('imager.close()')
         commands.append('..get restoring beam from clean image')
         commands.append('image.open(infile=%s)' % cleanMapName)
         commands.append('restoringBeam = image.restoringbeam()')
@@ -420,47 +483,31 @@ class MosaicCleanImage(CleanImageV2):
 
             results = {}
             for data_desc_id in self._data_desc_ids:
+
+# apply the calibration. Do it to all fields in each spw at once for
+# efficiency reasons
+
+# assemble field list for this spw
+
+                fields_to_calibrate = []
                 for field_id in self._target_field_ids:
-
-# ignore if a field/spw combination with no data
-
                     if self._valid_field_spw.count(
-                     [field_id,data_desc_id]) == 0:
-                        continue
+                     [field_id,data_desc_id]) > 0:
+                        fields_to_calibrate.append(field_id)
 
+                self._bpCal.setapply(spw=data_desc_id, field=fields_to_calibrate)
+                self._gainCal.setapply(spw=data_desc_id, field=fields_to_calibrate)
+                newCommands,error = self._msCalibrater.correct(
+                 spw=data_desc_id, field=fields_to_calibrate)
+
+# populate the results structure
+
+                for field_id in self._target_field_ids:
                     results[(field_id,data_desc_id)] = {
                      'fieldName':self._fieldName[field_id],
                      'DATA_DESC_ID':data_desc_id,
-                     'commands':[],
-                     'error':{'calibration':None}}
-
-# apply the calibration, this may fail
-
-                    commands = []
-                    try:
-                        self._bpCal.setapply(spw=data_desc_id, field=field_id)
-                        self._gainCal.setapply(spw=data_desc_id, field=field_id)
-                        commands += self._msCalibrater.correct(spw=data_desc_id,
-                         field=field_id)
-                    except KeyboardInterrupt:
-                        raise
-                    except:
-                        error_report = self._htmlLogger.openNode('exception',
-                         '%s.cal_apply_exception' % (self._stageName), True,
-                         stringOutput = True)
-                
-                        self._htmlLogger.logHTML('Exception details<pre>')
-                        traceback.print_exc()
-                        traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
-                        self._htmlLogger.logHTML('</pre>')
-                        self._htmlLogger.closeNode()
-                 
-                        error_report += 'during calibration apply'
-
-                        results[(field_id,data_desc_id)]['error']['calibration'] = \
-                         error_report
-
-                        continue
+                     'commands':newCommands,
+                     'error':{'calibration':error}}
 
 # iterate through data_descs, making a mosaic of all field_ids for each
 
@@ -489,7 +536,8 @@ class MosaicCleanImage(CleanImageV2):
                 for group,mosaic_field_ids in mosaic_groups.iteritems(): 
                     results[data_desc_id][group] = {
                      'commands':[],
-                     'error':{'pilot_clean':None, 'final_clean':None}}
+                     'error':{'psf':None, 'pilot_clean':None,
+                     'final_clean':None}}
 
                     commands = []
 
@@ -502,12 +550,13 @@ class MosaicCleanImage(CleanImageV2):
                         continue
 
 # use the imager.advise method to get the max cell size for each field, 
-# choose the minimum one, round it down.
+# choose the minimum one, round it down. The fieldofview does not need
+# to be the final value here.
 
                     self._imager.open(thems=self._msName)
                     commands.append('imager.open(thems=%s)' % self._msName)
 
-                    aipsfieldofview = '%4.1farcsec' % self._fieldofview[
+                    aipsfieldofview = '%4.1farcsec' % self._beamRadius[
                      data_desc_id]
                     advised_cell = []
 
@@ -548,8 +597,10 @@ class MosaicCleanImage(CleanImageV2):
                          phase_dir_keywords['QuantumUnits'][1]))
 
                         self._centre_field_id = mosaic_field_ids[0]
-                        nxpix = self._fieldofview[data_desc_id] / cellv
-                        nypix = self._fieldofview[data_desc_id] / cellv
+
+                        fieldofview = 4.0 * self._beamRadius[data_desc_id]
+                        nxpix = fieldofview / cellv
+                        nypix = fieldofview / cellv
                     else:
 
 # get field centres as measures
@@ -614,16 +665,18 @@ class MosaicCleanImage(CleanImageV2):
                         self._centre_measure = self._measures.direction(
                          ref, m0, m1)
 
-# set size of image to spread of field centres plus f.o.v./2
+# set size of image to spread of field centres plus a border of 0.75 * beam
+# radius (radius is to first null) wide
 
-                        nxpix = (self._fieldofview[data_desc_id] + \
+                        print 'beam radius', self._beamRadius[data_desc_id]
+                        nxpix = (1.5 * self._beamRadius[data_desc_id] + \
                          xspread) / cellv
-                        nypix = (self._fieldofview[data_desc_id] + \
+                        nypix = (1.5 * self._beamRadius[data_desc_id] + \
                          yspread) / cellv
 
                     nx = self._nextLargerCompositeNumber(int(nxpix))
                     ny = self._nextLargerCompositeNumber(int(nypix))
-                    if nx > self._maxPixels:
+                    if (self._maxPixels != None) and (nx > self._maxPixels):
                         print "..WARNING: the ideal number of x pixels (%s)" % (nx)
                         print "     is greater than the maximum allowed (%s)" % (
                          self._maxPixels)
@@ -632,7 +685,7 @@ class MosaicCleanImage(CleanImageV2):
                     print "..take cell= %s and nxpix= %s" % (cell, nx)
     
                     ny = self._nextLargerCompositeNumber(int(nypix))
-                    if ny > self._maxPixels:
+                    if (self._maxPixels != None) and (ny > self._maxPixels):
                         print "..WARNING: the ideal number of y pixels (%s)" % (ny)
                         print "     is greater than the maximum allowed (%s)" % (
                          self._maxPixels)
@@ -664,22 +717,43 @@ class MosaicCleanImage(CleanImageV2):
                             if noisy_channels != []:
                                 break
 
+# construct name of approximate psf
+        
+                    psfMapName = (
+                     'approximatePsf.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName, 
+                     self._cleanFieldName[self._centre_field_id], data_desc_id,
+                     flag_marks)).replace(' ','')
+
+                    results[data_desc_id][group]['approximatePsfMapName'] = \
+                     psfMapName
+
+                    psf_commands = self._approximatePsf(data_desc_id,
+                     self._centre_measure, mosaic_field_ids, nx, ny, cell,
+                     psfMapName)
+
+                    results[data_desc_id][group]['psf_commands'] = \
+                     psf_commands
+
 # construct names of integrated map
         
                     cleanIntegratedMapName = (
-                     'cleanIntegrated.%s.f%s.spw%s.fm%s' % (self._base_msName,
+                     'integratedMosaicClean.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName, 
                      self._cleanFieldName[self._centre_field_id], data_desc_id,
                      flag_marks)).replace(' ','')
                     cleanIntegratedModelName = (
-                     'integratedModel.%s.f%s.spw%s.fm%s' % (self._base_msName,
+                     'integratedMosaicModel.%s.f%s.spw%s.fm%s' % (self._base_msName,
                      self._cleanFieldName[self._centre_field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
                     cleanIntegratedResidualMapName = (
-                     'integratedResidual.%s.f%s.spw%s.fm%s' % (self._base_msName,
+                     'integratedMosaicResidual.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName,
                      self._cleanFieldName[self._centre_field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
                     cleanIntegratedFluxscaleMapName = (
-                     'integratedFluxscale.%s.f%s.spw%s.fm%s' % (self._base_msName,
+                     'integratedMosaicFluxscale.%s.f%s.spw%s.fm%s' % (
+                     self._base_msName,
                      self._cleanFieldName[self._centre_field_id], data_desc_id,
                      flag_marks)).replace(' ', '')
 
@@ -701,7 +775,7 @@ class MosaicCleanImage(CleanImageV2):
                     self._msFlagger.apply_bandpass_flags(data_desc_id,
                      mosaic_field_ids, noisy_channels)
 
-                    start_boxes = [[nx/8, ny/8, 7*nx/8, 7*ny/8]]
+                    start_boxes = [[nx/8, nx/8, 7*nx/8, 7*ny/8]]
 
 # do the cleaning, this may fail
 
@@ -784,17 +858,19 @@ class MosaicCleanImage(CleanImageV2):
 
 # construct names for clean maps, models, residuals
 
-                    cleanMapName = ('clean.%s.f%s.spw%s.fm%s' % (
+                    cleanMapName = ('mosaicClean.%s.f%s.spw%s.fm%s' % (
                      self._base_msName,
                      self._cleanFieldName[self._centre_field_id], data_desc_id, 
                      flag_marks)).replace(' ', '')
-                    cleanModelName = ('cleanModel.%s.f%s.spw%s.fm%s' % (
+                    cleanModelName = ('mosaicModel.%s.f%s.spw%s.fm%s' % (
                      self._base_msName, self._cleanFieldName[self._centre_field_id],
                      data_desc_id, flag_marks)).replace(' ', '')
-                    cleanResidualMapName = ('residual.%s.f%s.spw%s.fm%s' % (
+                    cleanResidualMapName = (
+                     'mosaicResidual.%s.f%s.spw%s.fm%s' % (
                      self._base_msName, self._cleanFieldName[self._centre_field_id],
                      data_desc_id, flag_marks)).replace(' ', '')
-                    cleanFluxscaleMapName = ('fluxscale.%s.f%s.spw%s.fm%s' % (
+                    cleanFluxscaleMapName = (
+                     'mosaicFluxscale.%s.f%s.spw%s.fm%s' % (
                      self._base_msName, self._cleanFieldName[self._centre_field_id],
                      data_desc_id, flag_marks)).replace(' ', '')
 
@@ -881,6 +957,8 @@ class MosaicCleanImage(CleanImageV2):
                     results[data_desc_id][group]['bmin'] = bmin
                     results[data_desc_id][group]['bpa'] = bpa
 
+#                break
+
 # store the object info in the BookKeeper.
 # copying by reference the history dictionaries may lead to problems.
 
@@ -892,6 +970,12 @@ class MosaicCleanImage(CleanImageV2):
              outputFiles=[],
              outputParameters=parameters,
              dependencies=inputs['dependencies'])
+
+# save the 'calibrated' flag state in case something else (e.g. ClosureError)
+# needs it
+
+            self._msFlagger.deleteFlagState('CleanImageCalibration')
+            self._msFlagger.saveFlagState('CleanImageCalibration')
 
 # restore the flag state on entry and adopt is as 'Current'
 
@@ -949,15 +1033,15 @@ class MosaicCleanImage(CleanImageV2):
 
                 description = {}
                 description['TITLE'] = \
-                 'SpW:%s Group:%s (b) Stokes:I - Clean fluxscale' % (
+                 'SpW:%s Group:%s (c) Stokes:I - Clean fluxscale' % (
                  self._pad(data_desc_id), k)
                 BaseImage._fillData(self, description, 'clean fluxscale',
                  v, mapField='cleanFluxscaleMapName', cleanBoxField='boxes',
-                 error_key='final_clean')
+                 error_key='final_clean', dataUnits='flux scale factor')
 
                 description = {}
                 description['TITLE'] = \
-                 'SpW:%s Group:%s (c) Stokes:I - Pilot integrated clean image' \
+                 'SpW:%s Group:%s (d) Stokes:I - Pilot integrated clean image' \
                  % (self._pad(data_desc_id), k)
                 BaseImage._fillData(self, description, 'clean integrated map',
                  v, mapField='cleanIntegratedMapName', 
@@ -968,7 +1052,7 @@ class MosaicCleanImage(CleanImageV2):
 
                 description = {}
                 description['TITLE'] = \
-                 'SpW:%s Group:%s (c) Stokes:I - Pilot integrated residual image' \
+                 'SpW:%s Group:%s (e) Stokes:I - Pilot integrated residual image' \
                  % (self._pad(data_desc_id), k)
                 BaseImage._fillData(self, description,
                  'residual integrated map',
@@ -980,13 +1064,22 @@ class MosaicCleanImage(CleanImageV2):
 
                 description = {}
                 description['TITLE'] = \
-                 'SpW:%s Group:%s (c) Stokes:I - Pilot integrated fluxscale image' \
+                 'SpW:%s Group:%s (f) Stokes:I - Pilot integrated fluxscale image' \
                  % (self._pad(data_desc_id), k)
                 BaseImage._fillData(self, description,
                  'residual integrated map',
                  v, mapField='cleanIntegratedFluxscaleMapName', 
                  cleanBoxField='integrated_boxes',
-                 error_key='pilot_clean')
+                 error_key='pilot_clean', dataUnits='flux scale factor')
+
+                description = {}
+                description['TITLE'] = \
+                 'SpW:%s Group:%s (g) Stokes:I - approximate psf' \
+                 % (self._pad(data_desc_id), k)
+                BaseImage._fillData(self, description,
+                 'approximate psf',
+                 v, mapField='approximatePsfMapName',
+                 error_key='psf', dataUnits='normalised')
 
 # return a copy of the data list, otherwise operating on it outside this class
 

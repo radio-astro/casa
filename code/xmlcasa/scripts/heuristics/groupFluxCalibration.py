@@ -2,22 +2,6 @@
 
 # History:
 #  6-Nov-2007 jfl Best bandpass release.
-# 28-Nov-2007 jfl Recipe release.
-# 17-Dec-2007 jfl Add calibration method info.
-# 20-Mar-2008 jfl BookKeeper release.
-# 10-Apr-2008 jfl F2F release.
-#  1-May-2008 jfl selectvis removed in setApply. This reset solutions to be
-#                 applied.
-# 13-May-2008 jfl 13 release.
-#  2-Jun-2008 jfl 2-jun release.
-# 25-Jun-2008 jfl regression release.
-# 14-Jul-2008 jfl last 4769 release.
-# 10-Sep-2008 jfl msCalibrater release.
-# 14-Nov-2008 jfl documentation upgrade release.
-# 12-Dec-2008 jfl 12-dec release.
-# 21-Jan-2009 jfl ut4b release.
-#  7-Apr-2009 jfl mosaic release.
-#  2-Jun-2009 jfl line and continuum release.
 
 # package modules
 
@@ -30,16 +14,15 @@ import pickle
 # alma modules
 
 from baseData import *
-from gainCalibration import * 
+from groupGainCalibration import * 
 
-class FluxCalibration(GainCalibration):
+class GroupFluxCalibration(GroupGainCalibration):
     """Class providing F calibration results.
     """
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
-     msName, stageName, gainSourceType='*GAIN*',
-     fluxSourceType='*FLUX*', timesol=300.0, dataType='complex',
-     bandpassCal=None, bandpassFlaggingStage=None):
+     msName, stageName, gainSourceType='*GAIN*', fluxSourceType='*FLUX*',
+     bandpassCal=None, bandpassFlaggingStage=None, dataType='complex'):
         """Constructor.
 
         Keyword arguments:
@@ -50,28 +33,20 @@ class FluxCalibration(GainCalibration):
         htmlLogger          -- Route for logging to html structure.
         msName              -- Name of MeasurementSet
         stageName           -- The name of the stage using the object.
-        bandpassCal         -- class to be used for the bandpass calibration.
         gainSourceType      -- Type of source to be used for the G calibration.
         fluxSourceType      -- Type of source to be used for the F calibration.
-        timesol             -- 'timesol' parameter passed to calibrater.
+        bandpassCal         -- ignored
+        bandpassFlaggingStage -- ignored
         dataType            -- The type of data to be returned by getdata;
                                'amplitude', 'phase', 'complex' or 'SNR'.
-        bandpassFlaggingStage -- Name of stage where bandpass edge channels
-                                 were detected. If not None then these
-                                 channels will be flagged in the FLUX and
-                                 GAIN calibrator
-                                 data before the gain calibrations are
-                                 calculated. The initial flag state of the
-                                 MS will be restored afterward.
         """
 
-        GainCalibration.__init__(self, tools, bookKeeper, msCalibrater,
-         msFlagger, htmlLogger, msName, stageName, bandpassCal=bandpassCal,
-         sourceTypes=[gainSourceType, fluxSourceType], timesol=timesol,
-         bandpassFlaggingStage=bandpassFlaggingStage)
+        GroupGainCalibration.__init__(self, tools, bookKeeper, msCalibrater,
+         msFlagger, htmlLogger, msName, stageName,
+         sourceTypes=[gainSourceType, fluxSourceType], bandpassCal=bandpassCal,
+         bandpassFlaggingStage=bandpassFlaggingStage, dataType=dataType)
         self._gainSourceType = gainSourceType
         self._fluxSourceType = fluxSourceType
-        self._timesol = timesol
         self._dataType = dataType
 
 
@@ -79,8 +54,40 @@ class FluxCalibration(GainCalibration):
         """Method to schedule the current calibration to be applied to the 
         specified spw and field.
         """
-        table = self._parameters['data'][spw]['table']
-        self._msCalibrater.setapply(type='G', table=table)
+        print 'GroupFluxCalibration.setapply', spw, field
+
+# locate the group_id asociated with this spw
+# first is it in a continuum group?
+
+        target_group = None
+        spwmap = None
+        for group_id in self._continuumGroups.keys():
+            if self._continuumGroups[group_id].count(spw) > 0:
+                target_group = group_id
+                break
+
+        if target_group == None:
+
+# is it in a line group?
+
+            for group_id in self._lineGroups.keys():
+                if self._lineGroups[group_id].count(spw) > 0:
+                    target_group = group_id
+
+# in this case also need to specify spwmap
+
+                    data_desc_ids = self._results['summary']['data_desc_range']
+                    max_spw = max(data_desc_ids)
+                    spwmap = zeros([max_spw+1], int)
+                    spwmap[spw] = self._continuumGroups[group_id][0]
+                    break
+
+        print 'spw, group and spwmap', spw, target_group, spwmap
+
+        if target_group != None:
+            table = self._parameters['data'][target_group]['table']
+            self._msCalibrater.setapply(type='GSPLINE', table=table,
+             spwmap=spwmap)
 
 
     def calculate(self):
@@ -88,10 +95,8 @@ class FluxCalibration(GainCalibration):
         file is output for each spw.
         """
 
-#        print 'FluxCalibration.calculate called'
-        self._htmlLogger.timing_start('FluxCalibration.calculate')
-
-        data_desc_ids = self._results['summary']['data_desc_range']
+        print 'GroupFluxCalibration.calculate called'
+        self._htmlLogger.timing_start('GroupFluxCalibration.calculate')
 
 # are the data already available
 
@@ -106,7 +111,7 @@ class FluxCalibration(GainCalibration):
         if entryID == None:
             self._htmlLogger.timing_start('FluxCalibration.calculateNew')
             parameters = {'history':self._fullStageName,
-             'data':{}, 'solve':{}, 'dependencies':{}}
+             'data':{}, 'commands':{}, 'dependencies':{}}
 
 # get ids and names of flux and gain calibrators
 
@@ -114,64 +119,39 @@ class FluxCalibration(GainCalibration):
             gain_field_ids = self.getFieldsOfType(self._gainSourceType)
 
             field_names = self._results['summary']['field_names']
+
             flux_field_names = []
             for field in flux_field_ids:
                 flux_field_names.append(field_names[field])
+
             gain_field_names = []
             for field in gain_field_ids:
                 gain_field_names.append(field_names[field])
 
 # calculate the gains for GAIN and FLUX sources into one file
 
-            gainCalParameters = GainCalibration.calculate(self)
-            parameters['solve']['gainCalParameters'] = gainCalParameters.copy()
+            gainCalParameters = GroupGainCalibration.calculate(self)
+            parameters['gainCalParameters'] = gainCalParameters
 
 # calculate flux G for each spw separately
 
-            parameters['solve']['fluxscale'] = {}
-            parameters['solve']['error'] = {}
-            valid_field_spw = self._msFlagger.getValidFieldSpw()
-
-            for data_desc_id in data_desc_ids:
-                parameters['data'][data_desc_id] = {}
-
-# sometimes get situation where not all spw are observed in all FLUX and GAIN
-# fields. Cut names down to ones that do apply to this spw.
-
-                spw_gain_field_ids = []
-                spw_flux_field_ids = []
-                spw_gain_field_names = []
-                spw_flux_field_names = []
-
-                for field in gain_field_ids:
-                    if valid_field_spw.count([field,data_desc_id]) > 0:
-                        spw_gain_field_ids.append(field)
-                        spw_gain_field_names.append(field_names[field])
-
-                for field in flux_field_ids:
-                    if valid_field_spw.count([field,data_desc_id]) > 0:
-                        spw_flux_field_ids.append(field)
-                        spw_flux_field_names.append(field_names[field])
+            for group_id,group_spw in enumerate(self._continuumGroups):
+                parameters['data'][group_id] = {}
+                commands = []
 
 # now transfer the flux calibration from the FLUX fields to the GAIN fields -
 # get names of gain calibrators.
 
-                ftab = 'flux.%s.spw%s.fm%s' % (self._base_msName, data_desc_id,
-                 flag_marks)
-                tablein = gainCalParameters['data'][data_desc_id]['table']
-
-                parameters['solve']['fluxscale'][data_desc_id] = \
-                 '''fluxscale(tablein=%s, reference=%s, tableout=%s,
-                 transfer=%s, append=False)''' % (
-                 gainCalParameters['data'][data_desc_id]
-                 ['table'], spw_flux_field_names, ftab, spw_gain_field_names)
-                parameters['solve']['error'][data_desc_id] = ''
+                ftab = 'ftab.%s.continuum%s.fm%s' % (self._base_msName,
+                 self._groupNames[group_id], flag_marks)
+                tablein = gainCalParameters['data'][group_id]['table']
 
                 try:
+                    print 'not running fluxscale'
                     self._rmall(ftab)
-                    fluxd = self._msCalibrater.fluxscale(tablein=tablein,
-                     reference=spw_flux_field_names, tableout=ftab, 
-                     transfer=spw_gain_field_names, append=False)
+#                    fluxd = self._msCalibrater.fluxscale(tablein=tablein,
+#                     reference=flux_field_names, tableout=ftab, 
+#                     transfer=gain_field_names, append=False)
                 except KeyboardInterrupt:
                     raise
                 except:
@@ -187,10 +167,14 @@ class FluxCalibration(GainCalibration):
 
                     error_report += 'during flux calibration transfer'
 
-                    parameters['solve']['error'][data_desc_id] = \
-                     error_report
+                finally:
+                    parameters['commands'][group_id] = commands
 
-                parameters['data'][data_desc_id]['table'] = ftab
+                print 'using gtab directly'
+                parameters['data'][group_id]['table'] = tablein
+                parameters['data'][group_id]['group_name'] = \
+                 self._groupNames[group_id]
+                parameters['data'][group_id]['group_spw'] = group_spw
 
 # store the object info in the BookKeeper
 
@@ -203,7 +187,7 @@ class FluxCalibration(GainCalibration):
              
         self._parameters = parameters
 
-        self._htmlLogger.timing_stop('FluxCalibration.calculate')
+        self._htmlLogger.timing_stop('GroupFluxCalibration.calculate')
         return parameters
 
 
@@ -211,8 +195,8 @@ class FluxCalibration(GainCalibration):
         """Public method to return the F calibration valuees.
         """
 
-#        print 'FluxCalibration.getData called'
-        self._htmlLogger.timing_start('FluxCalibration.getdata')
+#        print 'GroupFluxCalibration.getData called'
+        self._htmlLogger.timing_start('GroupFluxCalibration.getdata')
 
 # calculate the gains for flag states 'BeforeHeuristics', 'StageEntry' and
 # 'Current'
@@ -228,10 +212,27 @@ class FluxCalibration(GainCalibration):
 
         results = {}
         for k in originalGains['data'].keys():
-            self._read_results(gains['data'][k]['table'],
-             stageEntryGains['data'][k]['table'],
-             originalGains['data'][k]['table'], self._dataType, results)
-        self._level_results(results)
+            print 'key', k
+            print 'current', gains['data'][k]
+            print 'stage entry', stageEntryGains['data'][k]
+            print 'original', originalGains['data'][k]
+            description = {}
+            description['CALIBRATION_GROUP_ID'] = int(k)
+            description['CALIBRATION_GROUP_NAME'] = originalGains['data'][k]\
+             ['group_name']
+            description['CALIBRATION_GROUP_SPWS'] = originalGains['data'][k]\
+             ['group_spw']
+            description['TITLE'] = description['CALIBRATION_GROUP_NAME']
+            result = {}
+            result['dataType'] = 'Name of gain file'
+            result['data'] = [originalGains['data'][k]['table']]
+            result['data'].append(stageEntryGains['data'][k]['table'])
+            result['data'].append(gains['data'][k]['table'])
+            result['flagVersions'] = ['BeforeHeuristics', 'StageEntry',
+             'Current']
+
+            pickled_description = pickle.dumps(description)
+            results[pickled_description] = result
 
 # now add the latest results to the returned structure
 
@@ -254,7 +255,7 @@ class FluxCalibration(GainCalibration):
 
         temp = python_copy.deepcopy(self._results)
 
-        self._htmlLogger.timing_stop('FluxCalibration.getdata')
+        self._htmlLogger.timing_stop('GroupFluxCalibration.getdata')
         return temp
 
 
@@ -264,9 +265,9 @@ class FluxCalibration(GainCalibration):
         data_desc_ids = self._results['summary']['data_desc_range']
 
         result = {}
-        result['objectType'] = 'FluxCalibration'
+        result['objectType'] = 'GroupFluxCalibration'
         result['sourceType'] = [self._gainSourceType, self._fluxSourceType]
-        result['furtherInput'] = {'timesol':self._timesol}
+        result['furtherInput'] = {}
 
         flag_marks = {}
         ignore,flag_mark_col = self._msFlagger.getFlagMarkInfo()
@@ -289,7 +290,7 @@ class FluxCalibration(GainCalibration):
 
         result['flag_marks'] = flag_marks
         result['outputFiles'] = []
-        result['dependencies'] = [self._bpCal.inputs()]
+        result['dependencies'] = []
 
         return result
 
@@ -303,21 +304,17 @@ class FluxCalibration(GainCalibration):
 
         description = {}
 
-        description['bandpass calibration'] = \
-         self._bpCal.createGeneralHTMLDescription(stageName)\
-         ['bandpass calibration']
-
         fluxDescription = """
          The flux calibration was calculated:
          <ul>
           <li>The gains for both FLUX and GAIN calibraters were calculated."""
 
         fluxDescription += \
-         GainCalibration.createGeneralHTMLDescription(self, stageName)\
+         GroupGainCalibration.createGeneralHTMLDescription(self, stageName)\
           ['gain calibration']
 
         fluxDescription += """
-          <li>The flux scale was transferred from FLUX calibrater to GAIN.
+          <li>The flux scale was NOT transferred from FLUX calibrater to GAIN.
          </ul>"""
 
         description['gain calibration'] = fluxDescription
@@ -341,13 +338,7 @@ class FluxCalibration(GainCalibration):
 
         if parameters.has_key('separate node'):
             description['gain calibration'] = parameters['separate node']
-            description['bandpass calibration'] = 'no bandpass description'
             return description
-
-        description['bandpass calibration'] = \
-         self._bpCal.createDetailedHTMLDescription(stageName, parameters=
-         parameters['solve']['gainCalParameters']['dependencies']['bpCal'])\
-         ['bandpass calibration']
 
         fluxDescription = """
          The flux calibration was calculated:
@@ -355,105 +346,97 @@ class FluxCalibration(GainCalibration):
           <li>The gains for both FLUX and GAIN calibraters were calculated."""
 
         fluxDescription += \
-         GainCalibration.createDetailedHTMLDescription(self, stageName,
-         parameters=parameters['solve']['gainCalParameters'])\
+         GroupGainCalibration.createDetailedHTMLDescription(self, stageName,
+         parameters=parameters['gainCalParameters'])\
          ['gain calibration']
 
         fluxDescription += """
-          <li>The flux scale was transferred from FLUX calibrater to GAIN.
+          <li>The flux scale was NOT transferred from FLUX calibrater to GAIN.
 
-              <table CELLPADDING="5" BORDER="1"
-               <tr>
-                 <th>SpW</th>
-                 <th>Casapy Call</th>
-                 <th>Error?</th>
-               </tr>"""
+#              <table CELLPADDING="5" BORDER="1"
+#               <tr>
+#                 <th>SpW</th>
+#                 <th>Casapy Call</th>
+#                 <th>Error?</th>
+#               </tr>"""
 
 # use &nbsp; to make empty cell look good
 
-        for k,entry in parameters['solve']['fluxscale'].iteritems():
-            fluxDescription += '<tr>'
-            fluxDescription += '<td>%s</td>' % k
-            fluxDescription += '<td>%s</td>' % entry
-            error = parameters['solve']['error'][k]
-            if error == '':
-                fluxDescription += '<td>&nbsp;</td>'
-            else:
-                fluxDescription += '<td>%s</td>' % error
-            fluxDescription += '</tr>'
+#        for k,entry in parameters['solve']['fluxscale'].iteritems():
+#            fluxDescription += '<tr>'
+#            fluxDescription += '<td>%s</td>' % k
+#            fluxDescription += '<td>%s</td>' % entry
+#            error = parameters['solve']['error'][k]
+#            if error == '':
+#                fluxDescription += '<td>&nbsp;</td>'
+#            else:
+#                fluxDescription += '<td>%s</td>' % error
+#            fluxDescription += '</tr>'
 
-        fluxDescription += """
-              </table>
-         </ul>"""
-#         <p>The flux calibration was calculated by Python class 
-#         FluxCalibration."""
+#        fluxDescription += """
+#              </table>
+#         </ul>"""
+##         <p>The flux calibration was calculated by Python class 
+##         FluxCalibration."""
 
         description['gain calibration'] = fluxDescription
 
         if topLevel:
 
-# table of mean gain coefficient amplitudes for the first GAIN
-# calibrator found in the results
+# table of mean gain coefficient amplitudes
 
             meanAmplitudes = {}
          
-            gain_fields = self.getFieldsOfType('*GAIN*')
+#            for k,entry in self._results['data'].iteritems():
+#                desc = pickle.loads(k)
+#                spw = desc ['DATA_DESC_ID']
+#                meanAmplitudes[spw] = {'data':entry[-1]['meanAmplitude'],
+#                 'flag':entry[-1]['meanAmplitudeFlag']}            
 
-            for k,entry in self._results['data'].iteritems():
-                desc = pickle.loads(k)
-                spw = desc['DATA_DESC_ID']
-                pol = desc['POLARIZATION_ID']
-                if not meanAmplitudes.has_key((spw,pol)):
-                    field_id = desc['FIELD_ID']
-                    if gain_fields.count(field_id) > 0:
-                        meanAmplitudes[(spw,pol)] = {
-                         'data':entry[-1]['meanAmplitude'],
-                         'flag':entry[-1]['meanAmplitudeFlag']}            
+#            coefficients = """
+#          <table CELLPADDING="5" BORDER="1"
+#           <tr>
+#             <th>Antenna</th>"""
 
-            coefficients = """
-          <table CELLPADDING="5" BORDER="1"
-           <tr>
-             <th>Antenna</th>"""
+#            keys = meanAmplitudes.keys()
+#            keys.sort()
+#            for spw in keys:
+#               coefficients += """
+#             <th>SpW %s</th>""" % spw
 
-            keys = meanAmplitudes.keys()
-            keys.sort()
-            for spw_pol in keys:
-               coefficients += """
-             <th>SpW %s Pol %s</th>""" % (spw_pol[0], spw_pol[1])
+#            coefficients += """
+#           </tr>"""
 
-            coefficients += """
-           </tr>"""
+#            antenna = 0
+#            looping = True
+#            while looping:
+#                looping = False
+#                start = True
+#                for spw in keys:
+#                    if antenna < len(meanAmplitudes[spw]['data']):
+#                        looping = True
+#                        if start:
+#                            coefficients += """
+#           <tr>"""
+#                            coefficients += """
+#            <td>%s</td>""" % antenna
+#                            start = False
+#
+#                        if meanAmplitudes[spw]['flag'][antenna] == 0:
+#                            coefficients += """
+#            <td>%.2e</td>""" % (meanAmplitudes[spw]['data'][antenna])
+#                        else:
+#                            coefficients += """
+#            <td>-</td>"""
 
-            antenna = 0
-            looping = True
-            while looping:
-                looping = False
-                start = True
-                for spw_pol in keys:
-                    if antenna < len(meanAmplitudes[spw_pol]['data']):
-                        looping = True
-                        if start:
-                            coefficients += """
-           <tr>"""
-                            coefficients += """
-            <td>%s</td>""" % antenna
-                            start = False
+#                antenna += 1
+#                coefficients += """
+#           </tr>"""
 
-                        if meanAmplitudes[spw_pol]['flag'][antenna] == 0:
-                            coefficients += """
-            <td>%.2e</td>""" % (meanAmplitudes[spw_pol]['data'][antenna])
-                        else:
-                            coefficients += """
-            <td>-</td>"""
+#            coefficients += """
+#          </table>"""
 
-                antenna += 1
-                coefficients += """
-           </tr>"""
-
-            coefficients += """
-          </table>"""
-
-            description['mean gain coefficients'] = coefficients
+#            description['mean gain coefficients'] = coefficients
 
         return description
  
@@ -508,30 +491,31 @@ class FluxCalibration(GainCalibration):
                 info = """<p>The data view shows the %ss of the coefficients from
                  a flux calibration.""" % self._dataType
 
-            self._htmlLogger.logHTML("""
-             <h3>Data View</h3>
-                 %s The mean
-                 amplitudes (averaged over time) of the flux calibrated
-                 gain coefficients
-                 derived from the GAIN calibrator for each antenna are shown
-                 below:
-                 %s
-                 <p>The flux calibration was calculated as follows
-                 <ul>""" % (info, description['mean gain coefficients']))
+#            self._htmlLogger.logHTML("""
+#             <h3>Data View</h3>
+#                 %s The mean
+#                 amplitudes (averaged over time) for each antenna are shown below:
+#                 %s
+#                 <p>The flux calibration was calculated as follows
+#                 <ul>""" % (info, description['mean gain coefficients']))
 
             self._htmlLogger.logHTML("""
-                  <li>""" + description['bandpass calibration'] + """
+             <h3>Data View</h3>
+                 The flux calibration was calculated as follows:
+                 <ul>""")
+
+            self._htmlLogger.logHTML("""
                   <li>""" + description['gain calibration'] + """
                  </ul>""")
 
 
-class FluxCalibrationAmplitude(FluxCalibration):
+class GroupFluxCalibrationAmplitude(GroupFluxCalibration):
     """Class to get F calibration amplitudes.
     """
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
-     msName, stageName, bandpassCal, gainSourceType='*GAIN*',
-     fluxSourceType='*FLUX*', timesol=300.0, bandpassFlaggingStage=None):
+     msName, stageName, gainSourceType='*GAIN*',
+     fluxSourceType='*FLUX*'):
         """Constructor.
 
         Keyword arguments:
@@ -542,32 +526,22 @@ class FluxCalibrationAmplitude(FluxCalibration):
         htmlLogger          -- Route for logging to html structure.
         msName              -- Name of MeasurementSet
         stageName           -- Name of stage using this object.
-        bandpassCal         -- class to be used for the bandpass calibration.
         gainSourceType      -- Type of source to be used for the G calibration.
         fluxSourceType      -- Type of source to be used for the F calibration.
-        timesol             -- 'timesol' parameter passed to calibrater.
-        bandpassFlaggingStage -- Name of stage where bandpass edge channels
-                                 were detected. If not None then these
-                                 channels will be flagged in the FLUX and
-                                 GAIN calibrator
-                                 data before the gain calibrations are
-                                 calculated. The initial flag state of the
-                                 MS will be restored afterward.
         """
 
-        FluxCalibration.__init__(self, tools, bookKeeper, msCalibrater,
-         msFlagger, htmlLogger, msName, stageName, bandpassCal, gainSourceType,
-         fluxSourceType, timesol, dataType='amplitude', bandpassFlaggingStage=
-         bandpassFlaggingStage)
+        GroupFluxCalibration.__init__(self, tools, bookKeeper, msCalibrater,
+         msFlagger, htmlLogger, msName, stageName, gainSourceType,
+         fluxSourceType, dataType='amplitude')
 
 
-class FluxCalibrationPhase(FluxCalibration):
+class GroupFluxCalibrationPhase(GroupFluxCalibration):
     """Class to get F calibration phases.
     """
 
     def __init__(self, tools, bookKeeper, msCalibrater, msFlagger, htmlLogger,
-     msName, stageName, bandpassCal, gainSourceType='*GAIN*',
-     fluxSourceType='*FLUX*', timesol=300.0, bandpassFlaggingStage=None):
+     msName, stageName, gainSourceType='*GAIN*',
+     fluxSourceType='*FLUX*'):
         """Constructor.
 
         Keyword arguments:   
@@ -578,19 +552,9 @@ class FluxCalibrationPhase(FluxCalibration):
         htmlLogger          -- Route for logging to html structure.
         msName              -- Name of MeasurementSet
         stageName           -- Name of stage uisng this object.
-        bandpassCal         -- class to be used for the bandpass calibration.
         gainSourceType      -- Type of source to be used for the G calibration.
         fluxSourceType      -- Type of source to be used for the F calibration.
-        timesol             -- 'timesol' parameter passed to calibrater.
-        bandpassFlaggingStage -- Name of stage where bandpass edge channels
-                                 were detected. If not None then these
-                                 channels will be flagged in the FLUX and
-                                 GAIN calibrator
-                                 data before the gain calibrations are
-                                 calculated. The initial flag state of the
-                                 MS will be restored afterward.
         """
-        FluxCalibration.__init__(self, tools, bookKeeper, msCalibrater,
-         msFlagger, htmlLogger, msName, stageName, bandpassCal, gainSourceType,
-         fluxSourceType, timesol, dataType='phase', bandpassFlaggingStage=
-         bandpassFlaggingStage)
+        GroupFluxCalibration.__init__(self, tools, bookKeeper, msCalibrater,
+         msFlagger, htmlLogger, msName, stageName, gainSourceType,
+         fluxSourceType, dataType='phase')

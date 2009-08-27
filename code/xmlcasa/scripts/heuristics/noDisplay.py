@@ -61,8 +61,8 @@ class NoDisplay(BaseDisplay):
 
 # write descriptions of the data view, operation and display
 
-        flagMessage,colour = self.writeBaseHTMLDescriptionHead(stageDescription,
-         dataView, dataOperator)
+        flagMessage,colour = self.writeBaseHTMLDescriptionHead(
+         stageDescription, dataView, dataOperator)
         self.writeBaseHTMLDescriptionTail(stageDescription, dataView,
          dataOperator, logName)
 

@@ -22,6 +22,7 @@
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release, beamRadius used instead of FOV.
 
 # package modules
 
@@ -104,14 +105,14 @@ class BaseImage(BaseData):
 
 # get fields of view for each data_desc
 
-        self._fieldofview = {}
+        self._beamRadius = {}
         for data_desc_id in self._data_desc_ids:
 
 # use the smallest antenna diameter and the reference frequency to estimate the
-# field of view with FOV = 2*1.22*lambda/D
+# primary beam radius - radius of first null = 1.22*lambda/D
 
             freq = self._ref_frequency[self._spectral_window_id[data_desc_id]]
-            self._fieldofview[data_desc_id] = 2.0 * \
+            self._beamRadius[data_desc_id] = \
             (1.22 * (3.0e8/freq) / smallestDiameter) * \
             (180.0 * 3600.0 / math.pi)
 
@@ -157,7 +158,8 @@ class BaseImage(BaseData):
      error_key, cleanBoxField=None, quarterBoxField=None, thresholdField=None,
      rms2dField=None, 
      additional_info={}, noisyChannelField=None,
-     bandpassFlaggingStageField=None, emptyChannelField=None):
+     bandpassFlaggingStageField=None, emptyChannelField=None,
+     dataUnits='Jy/beam'):
         """Utility method to fill the results structure from the current 
         image.
 
@@ -172,6 +174,7 @@ class BaseImage(BaseData):
                              These will have been set to zero in the image.
                              Don't include them in calculating the integrated
                              map.
+        dataUnits         -- The units of the data.
         """
 
 #        print 'BaseImage._fillData() called', description['TITLE']
@@ -229,10 +232,6 @@ class BaseImage(BaseData):
             elif noisy_channels != None and empty_channels!=None:
                 flag_channels = list(noisy_channels) + list(empty_channels)
 
-            print 'edge channels', noisy_channels
-            print 'empty channels', empty_channels
-            print 'flag_channels', flag_channels
-
 # remove duplicate channels and sort
 
             temp = []
@@ -285,7 +284,7 @@ class BaseImage(BaseData):
 
             result = {}
             result['dataType'] = dataType
-            result['dataUnits'] = 'Jy/beam'
+            result['dataUnits'] = dataUnits
             result['xtitle'] = 'RA offset'
             result['x'] = (arange(shape(pixels)[0]) - crpix[0]) * \
              cdelt[0] * 180.0 * 3600.0 / math.pi

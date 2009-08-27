@@ -629,11 +629,11 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
 }
 
 bool
-ms::cvel(const ::casac::variant& field, 
-	 const std::string& outframe, 
+ms::cvel(const std::string& outframe, 
 	 const std::string& regrid_quantity, 
 	 const double regrid_velo_restfrq, 
 	 const std::string& regrid_interp_meth,
+	 const double regrid_start, 
 	 const double regrid_center, 
 	 const double regrid_bandwidth, 
 	 const double regrid_chan_width 
@@ -650,18 +650,46 @@ ms::cvel(const ::casac::variant& field,
        return False;
      }
 
+     double center = regrid_center;
+     if(center > -1E30 && regrid_start > -1E30){
+       Bool agree(False);
+       if( regrid_quantity == "chan" ){
+	 agree = (center == floor(regrid_bandwidth/2. + regrid_start));
+       }
+       else{
+	 agree = (center == regrid_bandwidth/2. + regrid_start);
+       }	 
+       if(!agree){ // start and center don't agree
+	 *itsLog << LogIO::SEVERE
+		 << "Please give only the start (lower endge) or the center of the new spectral window, not both."
+		 << LogIO::POST;
+       return False;       
+       }
+     }
+     else if(regrid_start > -1E30){ // only start given, need to calculate center
+       if( regrid_quantity == "chan" ){
+	 center = floor(regrid_bandwidth/2. + regrid_start);
+       }
+       else{
+	 center = regrid_bandwidth/2. + regrid_start;
+       }
+     } 
+     
      SubMS *subms = new SubMS(*itsMS);
      *itsLog << LogIO::NORMAL << "Starting spectral frame transformation / regridding ..." << LogIO::POST;
-     String t_field(m1toBlankCStr_(field));
      String t_outframe=toCasaString(outframe);
      String t_regridQuantity=toCasaString(regrid_quantity);
      String t_regridInterpMeth=toCasaString(regrid_interp_meth);
      Int rval;
-     if((rval = subms->cvel(t_field, t_outframe,
+     String regridMessage;
+
+
+     if((rval = subms->cvel(regridMessage,
+			    t_outframe,
 			    t_regridQuantity,
 			    Double(regrid_velo_restfrq),
 			    t_regridInterpMeth,
-			    Double(regrid_center), 
+			    Double(center), 
 			    Double(regrid_bandwidth),
 			    Double(regrid_chan_width)
 			    )
@@ -669,14 +697,8 @@ ms::cvel(const ::casac::variant& field,
        *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
    
        // Update HISTORY table of modfied MS
-       String message= "Frame transformed to " + t_outframe;
-       ostringstream param;
-       param << "fieldids=" << t_field << " regrid_quantity= " <<  t_regridQuantity
-	     << " regrid_center= " << regrid_center << " regrid_bandwidth=" << regrid_bandwidth
-	     << " regrid_chan_width= " << regrid_chan_width << " regrid_velo_restfrq= " << regrid_velo_restfrq 
-	     << " regrid_interp_meth= " << t_regridInterpMeth;
-       String paramstr=param.str();
-       writehistory(message,paramstr,"ms::cvel()", "", "ms"); // empty name writes to itsMS
+       String message= "Transformed/regridded with cvel";
+       writehistory(message, regridMessage, "ms::cvel()", "", "ms"); // empty name writes to itsMS
        rstat = True;
      }
      else if(rval==0) { // an unsuccessful modification of the MS took place
@@ -684,10 +706,10 @@ ms::cvel(const ::casac::variant& field,
        *itsLog << LogIO::WARN << message << LogIO::POST;
        // Update HISTORY table of the unsuccessfully modfied MS
        ostringstream param;
-       param << "fieldids=" << t_field << " regrid_quantity= " <<  t_regridQuantity
-	     << " regrid_center= " << regrid_center << " regrid_bandwidth=" << regrid_bandwidth
-	     << " regrid_chan_width= " << regrid_chan_width << " regrid_velo_restfrq= " << regrid_velo_restfrq 
-	     << " regrid_interp_meth= " << t_regridInterpMeth;
+       param << "Original input parameters: outframe=" << t_outframe << " mode= " <<  t_regridQuantity
+	     << " center= " << center << " bandwidth=" << regrid_bandwidth
+	     << " chanwidth= " << regrid_chan_width << " restfreq= " << regrid_velo_restfrq 
+	     << " interpolation= " << t_regridInterpMeth;
        String paramstr=param.str();
        writehistory(message,paramstr,"ms::cvel()", "", "ms"); // empty name writes to itsMS
      }

@@ -20,6 +20,7 @@
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release, more efficient.
 
 # package modules
 
@@ -69,7 +70,7 @@ class BaseData:
         self._description = description
         self._verbose = verbose
  
-        rtn = self._ms.open(self._msName)
+        self._ms.open(self._msName)
         msInfo = self._ms.range(['data_desc_id', 'field_id'])
         self._data_desc_ids = msInfo['data_desc_id']
         self._all_field_ids = msInfo['field_id']
@@ -77,10 +78,10 @@ class BaseData:
 
 # get names, types of fields
 
-        rtn = self._table.open(self._msName + '/FIELD')
+        self._table.open(self._msName + '/FIELD')
         self._fieldName = self._table.getcol('NAME')
         self._fieldType = util.util.get_source_types(self._table)
-        rtn = self._table.close()
+        self._table.close()
 
 # get some 'clean' field names, without chars that might cause trouble in
 # filenames
@@ -118,7 +119,7 @@ class BaseData:
                     antennas_used.append(ant)
             antennas_used.sort()
             self._antenna_dictionary[(field,spw)] = list(antennas_used)
-        rtn = self._table.close()
+        self._table.close()
 
 # basic data structure
 
@@ -196,7 +197,7 @@ class BaseData:
 
 
     def _getBaselineData(self, field_id, data_desc_id, antenna_range, dataType,
-     flagVersions):
+     flagVersions, flagsOnly=False):
         """Get data.
         """
 
@@ -206,40 +207,44 @@ class BaseData:
 
 # select subset of MS for this field 
 
-#        query = "FIELD_ID==%s AND (ANTENNA1!=ANTENNA2)" % (field_id)
         query = "FIELD_ID==%s" % (field_id)
         rtn = self._ms.selecttaql(msselect = query)
         if self._ms.nrow(selected = True) > 0:
-            if dataType == 'raw':
-                msInfo = self._ms.getdata(['real','imaginary'], ifraxis=True)
-                ifr_real = msInfo['real']
-                ifr_imag = msInfo['imaginary']
-            elif dataType == 'corrected':
-                msInfo = self._ms.getdata(['corrected_real',
-                 'corrected_imaginary'], ifraxis=True)
-                ifr_real = msInfo['corrected_real']
-                ifr_imag = msInfo['corrected_imaginary']
-            elif dataType == 'model':
-                msInfo = self._ms.getdata(['model_real','model_imaginary'],
-                 ifraxis=True)
-                ifr_real = msInfo['model_real']
-                ifr_imag = msInfo['model_imaginary']
-            else:
-                raise NameError, 'bad dataType: %s' % dataType
+            if not flagsOnly:
+                if dataType == 'raw':
+                    msInfo = self._ms.getdata(['real','imaginary'],
+                     ifraxis=True)
+                    ifr_real = msInfo['real']
+                    ifr_imag = msInfo['imaginary']
+                elif dataType == 'corrected':
+                    msInfo = self._ms.getdata(['corrected_real',
+                     'corrected_imaginary'], ifraxis=True)
+                    ifr_real = msInfo['corrected_real']
+                    ifr_imag = msInfo['corrected_imaginary']
+                elif dataType == 'model':
+                    msInfo = self._ms.getdata(['model_real',
+                     'model_imaginary'], ifraxis=True)
+                    ifr_real = msInfo['model_real']
+                    ifr_imag = msInfo['model_imaginary']
+                else:
+                    raise NameError, 'bad dataType: %s' % dataType
 
 # get ancillary data
 
-            msInfo = self._ms.getdata(['axis_info', 'antenna1', 'antenna2', 
-             'scan_number'], ifraxis=True)
-            antenna1 = msInfo['antenna1']
-            antenna2 = msInfo['antenna2']
-            corr_axis = msInfo['axis_info']['corr_axis']
-            times = msInfo['axis_info']['time_axis']['MJDseconds']
-            chan_freq = msInfo['axis_info']['freq_axis']['chan_freq']
-            scan = msInfo['scan_number']
+                msInfo = self._ms.getdata(['axis_info', 'antenna1',
+                 'antenna2', 'scan_number'], ifraxis=True)
+                antenna1 = msInfo['antenna1']
+                antenna2 = msInfo['antenna2']
+                corr_axis = msInfo['axis_info']['corr_axis']
+                times = msInfo['axis_info']['time_axis']['MJDseconds']
+                chan_freq = msInfo['axis_info']['freq_axis']['chan_freq']
+                scan = msInfo['scan_number']
 
-# use flagger tool to save flag state, replace them with the 'BeforeHeuristcs'
-# values, get the original version of the data.
+# identify chunks
+
+                chunks = self._findChunks(times)
+
+# use flagger tool to restore the demand flag states, then get the flags.
 
             ifr_flag = []
             ifr_flag_row = []
@@ -250,27 +255,29 @@ class BaseData:
                 ifr_flag.append(msInfo['flag'])
                 ifr_flag_row.append(msInfo['flag_row'])
 
-# now put the flags back as they were
+## now put the flags back as they were
 
-            self._msFlagger.setFlagState('Current')
+#            self._msFlagger.setFlagState('Current')
 
-# identify chunks
-
-            chunks = self._findChunks(times)
         else:
-            corr_axis = array(int)
-            chan_freq = array(float)
-            times = array(float)
-            chunks = array(int)
-            antenna1 = array(int)
-            antenna2 = array(int)
-            ifr_real = array(float)
-            ifr_imag = array(float)
+            if not flagsOnly:
+                corr_axis = array(int)
+                chan_freq = array(float)
+                times = array(float)
+                chunks = array(int)
+                antenna1 = array(int)
+                antenna2 = array(int)
+                ifr_real = array(float)
+                ifr_imag = array(float)
+
             ifr_flag = [array(bool)]
             ifr_flag_row = [array(bool)]
 
-        return corr_axis, chan_freq, times, chunks, antenna1, antenna2, \
-         ifr_real, ifr_imag, ifr_flag, ifr_flag_row
+        if flagsOnly:
+            return ifr_flag, ifr_flag_row
+        else:
+            return corr_axis, chan_freq, times, chunks, antenna1, antenna2, \
+             ifr_real, ifr_imag, ifr_flag, ifr_flag_row
 
  
     def _getSummary(self):
@@ -278,7 +285,7 @@ class BaseData:
         """
         self._results['summary'] = {}
 
-        success = self._ms.open(self._msName)
+        self._ms.open(self._msName)
         antenna_range = self._getAntennaRange()
         self._results['summary']['antenna_range'] = antenna_range
 
@@ -298,14 +305,14 @@ class BaseData:
              msInfo['axis_info']['freq_axis']['chan_freq']
         self._ms.close()
 
-        success = self._table.open(self._msName + '/OBSERVATION')
+        self._table.open(self._msName + '/OBSERVATION')
         telescope_name =  self._table.getcol('TELESCOPE_NAME')[0]
         self._table.close()
         self._results['summary']['telescope_name'] = telescope_name
 
 # general field info
            
-        success = self._table.open('%s/FIELD' % self._msName)
+        self._table.open('%s/FIELD' % self._msName)
         fieldNames = self._table.getcol('NAME')
         fieldTypes = util.util.get_source_types(self._table)
         self._table.close()
@@ -421,7 +428,7 @@ class BaseData:
 
 # Open the FIELD sub-Table and from it get the field type.
 
-            rtn = self._table.open(self._msName + '/FIELD')
+            self._table.open(self._msName + '/FIELD')
             source_type_col = util.util.get_source_types(self._table)
 
             for field_id in range(len(source_type_col)):

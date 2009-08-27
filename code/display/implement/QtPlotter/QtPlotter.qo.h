@@ -38,20 +38,20 @@
 #include <display/QtPlotter/QtCanvas.qo.h>
 
 
-//#include <graphics/X11/X_enter.h>
-//#include <QDir>
-//#include <QColor>
-//#include <QHash>
-//#include <QWidget>
-//#include <QMouseEvent>
+#include <graphics/X11/X_enter.h>
+#include <QDir>
+#include <QColor>
+#include <QHash>
+#include <QWidget>
+#include <QMouseEvent>
 #include <QToolButton>
-//#include <QDialog>
-//#include <QPixmap>
-//#include <QLineEdit>
-//#include <QComboBox>
+#include <QDialog>
+#include <QPixmap>
+#include <QLineEdit>
+#include <QComboBox>
 #include <map>
 #include <vector>
-//#include <graphics/X11/X_exit.h>
+#include <graphics/X11/X_exit.h>
 
 inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 

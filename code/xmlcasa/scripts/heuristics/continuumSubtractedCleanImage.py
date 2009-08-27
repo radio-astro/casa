@@ -4,6 +4,7 @@
 # 26-Sep-2008 jfl First version.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
 
 # package modules
 
@@ -94,22 +95,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
         maxMask = maskStats['max']
         minMask = maskStats['min']
 
-        print 'min, max', minMask, maxMask
-
         if maxMask[0] < 1.0e-7:
             raise RuntimeError, 'clean mask is empty'
-
-        print dirtyMapName
-        print psfMapName
-        self._image.open(cleanmaskName)
-        print 'mask shape', self._image.shape()
-        self._image.close()
-        self._image.open(infile=dirtyMapName)
-        print 'dirty shape', self._image.shape()
-        self._image.close()
-        self._image.open(infile=psfMapName)
-        print 'psf shape', self._image.shape()
-        self._image.close()
 
 # clean
 
@@ -346,7 +333,6 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
             results = {}
             for field_id in self._target_field_ids:
                 for data_desc_id in self._data_desc_ids:
-                    print field_id, data_desc_id
                     results[(field_id,data_desc_id)] = {
                      'fieldName':self._fieldName[field_id],
                      'DATA_DESC_ID':data_desc_id,
@@ -378,6 +364,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                         results[(field_id, data_desc_id)]['error']\
                          ['line_clean'] = 'continuum'
                         continue
+
                     elif nchan < 10 :
                         error = 'too few channels to fit continuum (%s)' % nchan
                         results[(field_id, data_desc_id)]['error']['psf'] = \
@@ -394,16 +381,17 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                          ['continuum_clean'] = error
                         results[(field_id, data_desc_id)]['error']\
                          ['line_clean'] = error
-
                         continue
 
                     self._imager.open(thems=self._msName)
-                    self._imager.selectvis(spw=data_desc_id, field=field_id)
+                    self._imager.selectvis(spw=int(data_desc_id), 
+                     field=int(field_id))
                     self._imager.weight(type='natural')
 
                     commands = []
                     commands.append('imager.open(thems=%s)' % self._msName)
-                    commands.append('imager.selectvis(spw=%s, field=%s)' % 
+                    commands.append(
+                     'imager.selectvis(spw=int(%s), field=int(%s))' % 
                      (data_desc_id, field_id))
                     commands.append("imager.weight(type='natural')")
 
@@ -448,15 +436,18 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 
 # calculate the cell and map sizes, using the advise method as a guide.
 
-                    aipsfieldofview = '%4.1farcsec' % self._fieldofview[
-                     data_desc_id]
+                    aipsfieldofview = '%4.1farcsec' % (4.0 * self._beamRadius[
+                     data_desc_id])
                     results[(field_id,data_desc_id)]['fov'] = aipsfieldofview
 
                     rtn = self._imager.advise(takeadvice=False,
                      amplitudeloss=0.5, fieldofview=aipsfieldofview)
                     advised_cell = rtn['cell']
+                    self._imager.close()
+
                     commands.append('''imager.advise(takeadvice=False,
                      amplitudeloss=0.5, fieldofview=%s)''' % aipsfieldofview)
+                    commands.append('imager.close()')
 
 # get rounded values of cell size and npixels.
 
@@ -472,7 +463,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                         cellv = math.floor(cellv*1000.)/1000.
                     cell = '%sarcsec' % cellv
 
-                    npix = self._fieldofview[data_desc_id] / cellv
+                    npix = 4.0 * self._beamRadius[data_desc_id] / cellv
                     if self._maxPixels != None:
                         if npix > self._maxPixels:
                             print 'ContinuumSubtractedCleanImage: npix=%s, resetting to %s' % (
@@ -494,10 +485,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                     results[(field_id, data_desc_id)]['psfParameters'] = \
                      psfParameters
                     psfMapName = psfParameters['mapName']
-                    psfCubeName = psfParameters['cubeName']
                     results[(field_id, data_desc_id)]['psfMapName'] = psfMapName
-                    results[(field_id, data_desc_id)]['psfCubeName'] = \
-                     psfCubeName
 
 # get the beam dimensions from the psf. Fit may have failed, if so
 # go to the next loop.
@@ -599,7 +587,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
 # first make a clean integrated image and use it to find the sources, this
 # may fail
 
-                    start_boxes = [[nx/8, nx/8, 7*nx/8, 7*nx/8]]
+                    start_boxes = [[nx/4, nx/4, 3*nx/4, 3*nx/4]]
+                    quarter_box = [nx/4, nx/4, 3*nx/4, 3*nx/4]
 
                     try:
                         integrated_threshold, integrated_rms,\
@@ -609,6 +598,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                          integrated_endState = \
                          self._clean(data_desc_id, field_id, nx, cell,
                          'mfs', -1, bmaj, bmin, bpa, start_boxes,
+                         quarter_box,
                          cleanIntegratedModelName, cleanIntegratedMapName,
                          cleanIntegratedResidualMapName)
                     except KeyboardInterrupt:
@@ -655,6 +645,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      integrated_max
                     results[(field_id,data_desc_id)]['integrated_endState'] = \
                      integrated_endState
+                    results[(field_id,data_desc_id)]['integratedQuarterBox'] = \
+                     quarter_box
 
                     cutoff, nSource, sources, boxes, source_commands = \
                      self._findSourcesAndCleanBoxes(cleanIntegratedMapName,
@@ -748,7 +740,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                          cleaned_max, finalCleanCommands, finalCleanEndState = \
                          self._clean(
                          data_desc_id, field_id, nx, cell, self._mode,
-                         nchan, bmaj, bmin, bpa, boxes, 
+                         nchan, bmaj, bmin, bpa, boxes, quarter_box,
                          cleanModelName, cleanMapName, cleanResidualMapName,
                          integrated_rms=integrated_rms)
                     except KeyboardInterrupt:
@@ -788,6 +780,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      finalCleanCommands
                     results[(field_id,data_desc_id)]['finalCleanEndState'] = \
                      finalCleanEndState
+                    results[(field_id,data_desc_id)]['finalQuarterBox'] = \
+                     quarter_box
 
 # now do image plane clean of continuum dirty image
 
@@ -810,8 +804,6 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                      ['continuumModelMapName'] = continuumModelMapName
                     results[(field_id, data_desc_id)]\
                      ['continuumResidualMapName'] = continuumResidualMapName
-
-                    quarter_box = [nx/4, nx/4, 3*nx/4, 3*nx/4]
 
                     print 'continuum clean', integrated_rms
                     try:
@@ -887,7 +879,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                         line_threshold, line_rms, line_cleaned_rms,\
                          line_rms2d, line_cleaned_max, lineCleanCommands, \
                          lineCleanEndState = \
-                         self._imagePlaneclean(lineDirtyMapName, psfCubeName,
+                         self._imagePlaneclean(lineDirtyMapName, psfMapName,
                          'channel', nchan, bmaj, bmin, bpa, boxes, quarter_box,
                          lineModelMapName, lineCleanMapName, lineResidualMapName,
                          target_rms=rms)
@@ -974,6 +966,12 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
             field_id = k[0]
             data_desc_id = k[1] 
 
+# for a continuum spw there will be no results
+
+            nchan = self._results['summary']['nchannels'][data_desc_id]
+            if nchan==1:
+                continue
+
             description = {}
             description['TITLE'] = \
              'Field:%s (%s) SpW:%s (a) Stokes:I - Standard clean image' % (
@@ -984,6 +982,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             quarterBoxField='finalQuarterBox',
              emptyChannelField='emptyChannels', error_key='standard_clean')
 
             description = {}
@@ -996,6 +995,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              thresholdField='threshold', rms2dField='rms2d',
              noisyChannelField='noisyChannels',
              bandpassFlaggingStageField = 'bandpassFlaggingStage',
+             quarterBoxField='finalQuarterBox',
              emptyChannelField='emptyChannels', error_key='standard_clean')
 
             description = {}
@@ -1055,6 +1055,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              v, mapField='cleanIntegratedMapName', 
              cleanBoxField='integrated_boxes',
              thresholdField='integrated_threshold',
+             quarterBoxField='integratedQuarterBox',
              rms2dField='integrated_rms2d', error_key='pilot_clean')
 
             description = {}
@@ -1066,6 +1067,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
              v, mapField='cleanIntegratedResidualMapName', 
              cleanBoxField='integrated_boxes', 
              thresholdField='integrated_threshold',
+             quarterBoxField='integratedQuarterBox',
              rms2dField='integrated_rms2d', error_key='pilot_clean')
 
             description = {}
@@ -1271,7 +1273,6 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>nx</td>
                <td>cell</td>
                <td>Map Name</td>
-               <td>Cube Name</td>
                <td>Bmaj</td>
                <td>Bmin</td>
                <td>Bpa</td>
@@ -1287,14 +1288,14 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                 w = v['psfParameters']
                 cleanDescription += """
               <tr>
+               <td>%s (%s)</td>
                <td>%i</td>
-               <td>%i</td>
                <td>%s</td>
                <td>%s</td>
                <td>%s</td>
-               <td>%s</td>
-               <td>%s</td>""" % (k[0], k[1], v['fov'], w['nx'], w['cell'],
-               w['mapName'], w['cubeName'])
+               <td>%s</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+               k[1], v['fov'], w['nx'], w['cell'],
+               w['mapName'])
                 if w.has_key('bmaj'):
                     cleanDescription += """
                <td>%s</td>
@@ -1333,7 +1334,6 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>&nbsp;</td>
                <td>&nbsp;</td>
                <td>&nbsp;</td>
-               <td>&nbsp;</td>
                <td>%s</td>
               </tr>""" % (k[0], k[1], v['error']['psf'])
         cleanDescription += """
@@ -1364,13 +1364,13 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                 w = v['dirtyImageParameters']
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
                <td>%i</td>
-               <td>%s</td>""" % (k[0], k[1], w['nx'], w['cell'], w['nchan'],
-               w['mapName'])
+               <td>%s</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+               k[1], w['nx'], w['cell'], w['nchan'], w['mapName'])
 
 # casapy calls in a separate node      
 
@@ -1434,13 +1434,14 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                 w = v['dirtyImageParameters']
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
                <td>%i</td>
                <td>%s</td>
-               <td>%s</td>""" % (k[0], k[1], w['nx'], w['cell'], w['nchan'],
+               <td>%s</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+               k[1], w['nx'], w['cell'], w['nchan'],
                v['continuumDirtyMapName'], v['lineDirtyMapName'])
 
 # casapy calls in a separate node      
@@ -1561,7 +1562,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
             if v['error']['pilot_clean'] == None:
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
@@ -1573,7 +1574,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>""" % (
-                 k[0], k[1], v['nx'], v['cell'], v['integrated_threshold'],
+                 self._fieldName[k[0]], self._fieldType[k[0]],
+                 k[1], v['nx'], v['cell'], v['integrated_threshold'],
                  v['integrated_endState'], v['integrated_rms'],
                  v['integrated_cleaned_rms'],
                  self._formatList(v['integrated_cleaned_rms_record'], '%.2g'),
@@ -1700,7 +1702,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
             if v['error']['line_clean'] == None:
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
@@ -1709,7 +1711,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>
-               <td>%.1e</td>""" % (k[0], k[1], v['nx'], v['cell'],
+               <td>%.1e</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+                      k[1], v['nx'], v['cell'],
                       v['line_threshold'], v['lineCleanEndState'], 
                       v['line_rms'], v['line_cleaned_rms'],
                       v['line_rms2d'], v['line_max'])
@@ -1785,7 +1788,7 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
             if v['error']['continuum_clean'] == None:
                 cleanDescription += """
               <tr>
-               <td>%i</td>
+               <td>%s (%s)</td>
                <td>%i</td>
                <td>%i</td>
                <td>%s</td>
@@ -1794,7 +1797,8 @@ class ContinuumSubtractedCleanImage(CleanImageV2):
                <td>%.1e</td>
                <td>%.1e</td>
                <td>%.1e</td>
-               <td>%.1e</td>""" % (k[0], k[1], v['nx'], v['cell'],
+               <td>%.1e</td>""" % (self._fieldName[k[0]], self._fieldType[k[0]],
+                      k[1], v['nx'], v['cell'],
                       v['continuum_threshold'],
                       v['continuumCleanEndState'],
                       v['continuum_rms'], v['continuum_cleaned_rms'],

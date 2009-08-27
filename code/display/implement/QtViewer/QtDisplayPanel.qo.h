@@ -497,6 +497,8 @@ class QtDisplayPanel : public QWidget,
   // (in particular) can respond by setting its own state from certain
   // elements of restoredoc.
   void restoring(QDomDocument* restoredoc);
+
+  void activate(Record);
   
  
  protected slots:
@@ -571,8 +573,7 @@ class QtDisplayPanel : public QWidget,
   // see operator()(WCMotionEvent) for that.) 
   virtual void refreshTracking_(QtDisplayData* qdd=0);
  
-
-   
+  void clicked(Record);
   
  protected:
   

@@ -67,7 +67,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
   
   qrm_ = new QtRegionManager(qdp_);
   
-  
   qsm_ = new QtRegionShapeManager(qdp_);
   qsm_->setVisible(false);  
   
@@ -523,9 +522,6 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
                    SLOT(restoreGuiState_(QDomDocument*)) );
 	// Sets gui state from QDomDocument (window size, esp.)
 
-	    
-  
-  
   // FINAL INITIALIZATIONS
   
   
@@ -704,6 +700,21 @@ void QtDisplayPanelGui::hideCanvasManager() {
 
 void QtDisplayPanelGui::showRegionManager() {
   if(qrm_==0) return;
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged(String, String, String)),
+                   qrm_, 
+                   SLOT(changeAxis(String, String, String)));
+        }
+      }
+  }
   qrm_->showNormal();
   qrm_->raise();  }
 
@@ -762,10 +773,6 @@ void QtDisplayPanelGui::showImageProfile() {
                         profile_, 
                      SLOT(changeAxis(String, String, String)));
 
-                connect(pdd, 
-                     SIGNAL(axisChanged(String, String, String)),
-                        qrm_, 
-                     SLOT(changeAxis(String, String, String)));
                 QtCrossTool *pos = (QtCrossTool*)
                       (ppd->getTool(QtMouseToolNames::POSITION));
                 if (pos) {

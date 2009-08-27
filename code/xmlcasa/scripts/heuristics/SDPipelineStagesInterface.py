@@ -466,7 +466,7 @@ class SDPipelineStagesInterface:
         BFlog0.close()
 
 
-    def readData(self,IF='all',POL='all',ROW='all',ROWbase='all',SCAN='all',SCANbase='all'):
+    def setupSDReducer(self,IF='all',POL='all',ROW='all',ROWbase='all',SCAN='all',SCANbase='all'):
 
         """
         Extract Information from the raw file into a data tableand setup a directory structure

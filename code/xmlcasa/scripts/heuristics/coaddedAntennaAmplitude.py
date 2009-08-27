@@ -9,6 +9,7 @@
 #  3-Nov-2008 jfl amalgamated stage release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+# 31-Jul-2009 jfl no maxPixels release, more efficient.
 
 # package modules
 
@@ -56,11 +57,12 @@ class CoaddedAntennaAmplitude(BaseData):
         self._amplitudeType = amplitudeType
 
         success = self._ms.open(self._msName)
-        self._field_ids = self.getFieldsOfType(self._sourceType)
+        self._target_field_ids = self.getFieldsOfType(self._sourceType)
         self._ms.close()
 
         self._getDataCalls = 0 
         self._first = True
+        self._next_target_field_spw = []
 
         if self._dataType == 'corrected':
             if len(bandpassCal) == 1:
@@ -120,189 +122,278 @@ class CoaddedAntennaAmplitude(BaseData):
                 results['parameters']['dependencies']['gainCal'] = \
                  gainCalParameters
                        
-# loop through data_desc_id, field_id
+# which data_desc_id/field_id combinations do we want to look through?
+        
+            if self._first: 
+               field_spw = self._valid_field_spw
+               target_field_spw = []
+               for key in self._valid_field_spw:
+                   field = key[0]
+                   if self._target_field_ids.count(field) > 0:
+                       target_field_spw.append(key)
+            else:
+               target_field_spw = list(self._next_target_field_spw)
+         
+            self._next_target_field_spw = []
+
+# build the results structure
+
+            for kk in target_field_spw:
+                field_id = kk[0]
+                data_desc_id = kk[1]
+                results['parameters'][(field_id,data_desc_id)] = {}
+
+            if self._dataType=='corrected':
+
+# first, make sure the data are calibrated with the up-to-date calibration, if
+# required
+
+                calibrated_field_spw = {}
+                for kk in target_field_spw:
+                    key = tuple(kk)
+                    if calibrated_field_spw.has_key(key):
+                        continue
+
+                    field_id = key[0]
+                    data_desc_id = key[1]
+
+# calibrate all fields for this spw at once - it is more efficient to use the
+# calibrater tool this way and msCalibrater will prevent the tool being used
+# when not necessary
+
+                    field_list = [field_id]
+                    for kktemp in target_field_spw:
+                        if (kktemp[1]==data_desc_id) and \
+                         (field_list.count(kktemp[0])==0): 
+                            field_list.append(kktemp[0])
+
+# apply the calibration
+
+                    self._bpCal.setapply(spw=data_desc_id, field=field_list)
+                    self._gainCal.setapply(spw=data_desc_id, field=field_list)
+                    newCommands,error = self._msCalibrater.correct(
+                     spw=data_desc_id, field=field_list)
+
+                    for temp_field in field_list:
+                        results['parameters'][(temp_field,data_desc_id)]\
+                         ['commands'] = newCommands
+                        results['parameters'][(temp_field,data_desc_id)]\
+                         ['error'] = error
+                        calibrated_field_spw[(temp_field,data_desc_id)] = True
+
+
+# read into a dictionary all the data for the measured spw/fields - do it
+# this way because reading it in piecemeal for each spw/field can be slow
+# as the flagversion gets changed several times for each little bit.
+
+# set the flag states we want to look at, then read in data for each
+
+            flagVersions = ['BeforeHeuristics', 'StageEntry', 'Current']
+            if not self._first:
+                flagVersions.append('PreviousIteration')
 
             self._ms.open(self._msName)
-            for data_desc_id in self._data_desc_ids:
-                for field_id in self._field_ids:
-                    results['parameters'][(field_id,data_desc_id)] = {
-                     'commands':[]}
+            data_in = {}
+            for fv,flagVersion in enumerate(flagVersions):
+                for kk in target_field_spw:
+                    key = tuple(kk)
+                    field_id = key[0]
+                    data_desc_id = key[1]
+                        
+                    if fv == 0:
 
-# set the flag states we want to look at
+# get the data and first flagVersion  
 
-                    flagVersions = ['BeforeHeuristics', 'StageEntry', 'Current']
-                    if not self._first:
-                        flagVersions.append('PreviousIteration')
- 
-                    if self._dataType=='corrected':
-                        try:
+                        data_in[key] = {}
+                        corr_axis, chan_freq, times, chunks, antenna1,\
+                         antenna2, ifr_real, ifr_imag, ifr_flag,\
+                         ifr_flag_row = self._getBaselineData(field_id,
+                         data_desc_id, antenna_range, self._dataType,
+                         [flagVersion])
 
-# apply the calibration, this may fail
+                        data_in[key]['corr_axis'] = corr_axis
+                        data_in[key]['chan_freq'] = chan_freq
+                        data_in[key]['times'] = times
+                        data_in[key]['chunks'] = chunks
+                        data_in[key]['antenna1'] = antenna1
+                        data_in[key]['antenna2'] = antenna2
+                        data_in[key]['ifr_real'] = ifr_real
+                        data_in[key]['ifr_imag'] = ifr_imag
+                        data_in[key]['ifr_flag'] = ifr_flag
+                        data_in[key]['ifr_flag_row'] = ifr_flag_row
+                    else:
 
-                            self._bpCal.setapply(spw=data_desc_id,
-                             field=field_id)
-                            self._gainCal.setapply(spw=data_desc_id,
-                             field=field_id)
-                            results['parameters'][(field_id,data_desc_id)]\
-                             ['commands'] += self._msCalibrater.correct(
-                             spw=data_desc_id, field=field_id)
+# get flags only for subsequent flagversions
 
-                        except KeyboardInterrupt:
-                            raise
-                        except:
-                            results['parameters'][(field_id,data_desc_id)]\
-                             ['error'] = 'failed to calibrate data'
-                            continue
+                        ifr_flag, ifr_flag_row = self._getBaselineData(
+                         field_id, data_desc_id, antenna_range,
+                         self._dataType, [flagVersion], flagsOnly=True)
 
-# get the current data
+                        data_in[key]['ifr_flag'] += ifr_flag
+                        data_in[key]['ifr_flag_row'] += ifr_flag_row
 
-                    corr_axis, chan_freq, times, chunks, antenna1, antenna2, \
-                     ifr_real, ifr_imag, ifr_flag, ifr_flag_row = \
-                     self._getBaselineData(field_id, data_desc_id, 
-                      antenna_range, self._dataType, flagVersions)
+            self._msFlagger.setFlagState('Current')
 
-                    for corr in range(len(corr_axis)):
+# now do the calculations
+
+            for kk in target_field_spw:
+                key = tuple(kk)
+                field_id = key[0]
+                data_desc_id = key[1]
+
+                corr_axis = data_in[key]['corr_axis']
+                chan_freq = data_in[key]['chan_freq']
+                times = data_in[key]['times']
+                chunks = data_in[key]['chunks']
+                antenna1 = data_in[key]['antenna1']
+                antenna2 = data_in[key]['antenna2']
+                ifr_real = data_in[key]['ifr_real']
+                ifr_imag = data_in[key]['ifr_imag']
+                ifr_flag = data_in[key]['ifr_flag']
+                ifr_flag_row = data_in[key]['ifr_flag_row']
+
+
+                for corr in range(len(corr_axis)):
 
 # declare arrays
 
-                        antenna_amplitude = zeros([len(times),
-                         max(antenna_range)+1], float)
-                        antenna_amplitude_std = zeros([len(times), 
-                         max(antenna_range)+1], float)
-                        antenna_amplitude_flag = []
-                        for fi,fs in enumerate(flagVersions):
-                            antenna_amplitude_flag.append(ones([len(times), 
-                             max(antenna_range)+1], int))
-                        no_data_flag = ones([len(times), max(antenna_range)+1], int)
-                        n_sample = zeros([len(times), max(antenna_range)+1],
-                         int)
-                        new_values = zeros([len(times), max(antenna_range)+1],
-                         bool)
+                    antenna_amplitude = zeros([len(times),
+                     max(antenna_range)+1], float)
+                    antenna_amplitude_std = zeros([len(times), 
+                     max(antenna_range)+1], float)
+                    antenna_amplitude_flag = []
+                    for fi,fs in enumerate(flagVersions):
+                        antenna_amplitude_flag.append(ones([len(times), 
+                         max(antenna_range)+1], int))
+                    no_data_flag = ones([len(times), max(antenna_range)+1], int)
+                    n_sample = zeros([len(times), max(antenna_range)+1], int)
+                    new_values = zeros([len(times), max(antenna_range)+1], bool)
 
 # loop through antennas and build up an amplitude 'antenna v time' image
 
-                        for antenna in antenna_range:
-                            ifr_range = range(len(antenna1))
-                            ifr_range = compress(logical_or((antenna1==antenna),
-                             (antenna2==antenna)), ifr_range)
+                    for antenna in antenna_range:
+                        ifr_range = range(len(antenna1))
+                        ifr_range = compress(logical_or((antenna1==antenna),
+                         (antenna2==antenna)), ifr_range)
 
 # get a list of amplitudes for each valid timestamp and ifr in the dataset
 
-                            for t in range(len(times)):
-                                current = flagVersions.index('Current')
-                                if not self._first:
+                        for t in range(len(times)):
+                            current = flagVersions.index('Current')
+                            if not self._first:
 
 # first time round, need to calculate all data. Otherwise,
-# have any flags in this chunk changed since the PreviousIteration?
+# have any flags in this timestamp changed since the PreviousIteration?
 
-                                    previous = flagVersions.index(
-                                     'PreviousIteration')
-                                    if all(ifr_flag_row[previous][:,t] == \
-                                     ifr_flag_row[current][:,t]) and \
-                                     all(ifr_flag[previous][corr,:,:,t] == \
-                                     ifr_flag[current][corr,:,:,t]):
-#                                        print 'no new flags corr, antenna', corr, antenna
-                                        continue
+                                previous = flagVersions.index(
+                                 'PreviousIteration')
+                                if all(ifr_flag_row[previous][:,t] == \
+                                 ifr_flag_row[current][:,t]) and \
+                                 all(ifr_flag[previous][corr,:,:,t] == \
+                                 ifr_flag[current][corr,:,:,t]):
+#                                     print 'no new flags corr, antenna', corr, antenna
+                                    continue
 
-                                new_values[t,antenna] = True
-                                t_amp_sample = []
-                                t_real_sample = []
-                                t_imag_sample = []
-                                for ifr in ifr_range:
-                                    no_data_flag[t,antenna] = False
-                                    for fi,fs in enumerate(flagVersions):
-                                        if not(ifr_flag_row[fi][ifr,t]) and \
-                                         not(alltrue(ifr_flag[fi]
-                                         [corr,:,ifr,t])):
-                                            antenna_amplitude_flag[fi]\
-                                             [t,antenna] = 0
+# 'next_target_field' indicates that we'll have to check the flags of these data
+# next time around as well
 
-                                    if not(ifr_flag_row[current][ifr,t]):
-                                        if self._amplitudeType == 'scalar':
-                                            t_amp = sqrt(
-                                             pow(ifr_real[corr,:,ifr,t],2) + 
-                                             pow(ifr_imag[corr,:,ifr,t],2))
-                                            valid_data = list(compress(
-                                             logical_not(ifr_flag[current]
-                                             [corr,:,ifr,t]), t_amp))
-                                            t_amp_sample += valid_data
-                                        elif self._amplitudeType == 'vector':
-                                            valid_data = list(compress(
-                                             logical_not(
-                                             ifr_flag[current][corr,:,ifr,t]),
-                                             ifr_real[corr,:,ifr,t]))
-                                            t_real_sample += valid_data
-                                            valid_data = list(compress(
-                                             logical_not(
-                                             ifr_flag[current][corr,:,ifr,t]),
-                                             ifr_imag[corr,:,ifr,t]))
-                                            t_imag_sample += valid_data
-                                        else:
-                                            raise NameError, \
-                                             'bad amplitude type: %s' % \
-                                             self._amplitudeType
+                            if self._next_target_field_spw.count([field_id,
+                             data_desc_id]) == 0:
+                                self._next_target_field_spw.append(
+                                 [field_id, data_desc_id])
+                            new_values[t,antenna] = True
+                            t_amp_sample = []
+                            t_real_sample = []
+                            t_imag_sample = []
+                            for ifr in ifr_range:
+                                no_data_flag[t,antenna] = False
+                                for fi,fs in enumerate(flagVersions):
+                                    if not(ifr_flag_row[fi][ifr,t]) and \
+                                     not(alltrue(ifr_flag[fi][corr,:,ifr,t])):
+                                        antenna_amplitude_flag[fi][t,antenna] = 0
 
-                                if len(t_amp_sample) > 0:
-                                    n_sample = len(t_amp_sample)
-                                    antenna_amplitude[t,antenna] = median(
-                                     t_amp_sample)
-                                    if len(t_amp_sample) > 1:
-                                        antenna_amplitude_std[t,antenna] = std(
-                                         t_amp_sample) / sqrt(n_sample-1)
-                                elif len(t_real_sample) > 0:
-                                    n_sample = len(t_real_sample)
-                                    antenna_amplitude[t,antenna] = sqrt(
-                                     pow(median(t_real_sample),2) + 
-                                     pow(median(t_imag_sample),2))
-                                    if len(t_real_sample) > 1:
-                                        t_real_std = std(t_real_sample) / sqrt(
-                                         n_sample-1)
-                                        t_imag_std = std(t_imag_sample) / sqrt(
-                                         n_sample-1)
-                                        antenna_amplitude_std[t,antenna] = sqrt(
-                                         pow(t_real_std,2) + pow(t_imag_std,2))
+                                if not(ifr_flag_row[current][ifr,t]):
+                                    if self._amplitudeType == 'scalar':
+                                        t_amp = sqrt(
+                                         pow(ifr_real[corr,:,ifr,t],2) + 
+                                         pow(ifr_imag[corr,:,ifr,t],2))
+                                        valid_data = list(compress(
+                                         logical_not(ifr_flag[current]
+                                         [corr,:,ifr,t]), t_amp))
+                                        t_amp_sample += valid_data
+                                    elif self._amplitudeType == 'vector':
+                                        valid_data = list(compress(
+                                         logical_not(
+                                         ifr_flag[current][corr,:,ifr,t]),
+                                         ifr_real[corr,:,ifr,t]))
+                                        t_real_sample += valid_data
+                                        valid_data = list(compress(
+                                         logical_not(
+                                         ifr_flag[current][corr,:,ifr,t]),
+                                         ifr_imag[corr,:,ifr,t]))
+                                        t_imag_sample += valid_data
+                                    else:
+                                        raise Exception, \
+                                         'bad amplitude type: %s' % \
+                                         self._amplitudeType
+
+                            if len(t_amp_sample) > 0:
+                                n_sample = len(t_amp_sample)
+                                antenna_amplitude[t,antenna] = median(t_amp_sample)
+                                if len(t_amp_sample) > 1:
+                                    antenna_amplitude_std[t,antenna] = std(
+                                     t_amp_sample) / sqrt(n_sample-1)
+                            elif len(t_real_sample) > 0:
+                                n_sample = len(t_real_sample)
+                                antenna_amplitude[t,antenna] = sqrt(
+                                 pow(median(t_real_sample),2) + 
+                                 pow(median(t_imag_sample),2))
+                                if len(t_real_sample) > 1:
+                                    t_real_std = std(t_real_sample) / sqrt(n_sample-1)
+                                    t_imag_std = std(t_imag_sample) / sqrt(n_sample-1)
+                                    antenna_amplitude_std[t,antenna] = sqrt(
+                                     pow(t_real_std,2) + pow(t_imag_std,2))
 
 # store the results in the output structure
 
-                        description = {}
-                        description['FIELD_ID'] = int(field_id)
-                        description['DATA_DESC_ID'] = int(data_desc_id)
-                        description['POLARIZATION_ID'] = corr_axis[corr]
-                        description['TITLE'] = \
-                         'Field:%s Spw:%s Pol:%s coadded %s amplitude' \
-                         % (self._fieldName[field_id], self._pad(data_desc_id),
-                         corr_axis[corr], self._dataType)
+                    description = {}
+                    description['FIELD_ID'] = int(field_id)
+                    description['DATA_DESC_ID'] = int(data_desc_id)
+                    description['POLARIZATION_ID'] = corr_axis[corr]
+                    description['TITLE'] = \
+                     'Field:%s Spw:%s Pol:%s coadded %s amplitude' \
+                     % (self._fieldName[field_id], self._pad(data_desc_id),
+                     corr_axis[corr], self._dataType)
 
-                        result = {}
-                        result['dataType'] = '%s coadded %s amplitude' % (
-                         self._dataType, self._amplitudeType)
-                        result['dataUnits'] = ''
-                        result['xtitle'] = 'ANTENNA'
-                        result['x'] = arange(max(antenna_range)+1)
-                        result['ytitle'] = 'TIME'
-                        result['y'] = times
-                        result['chunks'] = chunks
-                        result['new_values'] = new_values
+                    result = {}
+                    result['dataType'] = '%s coadded %s amplitude' % (
+                     self._dataType, self._amplitudeType)
+                    result['dataUnits'] = ''
+                    result['xtitle'] = 'ANTENNA'
+                    result['x'] = arange(max(antenna_range)+1)
+                    result['ytitle'] = 'TIME'
+                    result['y'] = times
+                    result['chunks'] = chunks
+                    result['new_values'] = new_values
 
-                        flagsToStore = ['BeforeHeuristics', 'StageEntry',
-                         'Current']
-                        temp_flag = []
-                        flagVersionsStored = []
-                        for f in flagsToStore:
-                            if flagVersions.count(f) == 0:
-                                continue
-                            fi = flagVersions.index(f)
-                            temp_flag.append(antenna_amplitude_flag[fi])
-                            flagVersionsStored.append(f)
-                        temp_flag.append(no_data_flag)
-                        flagVersionsStored.append('NoData')
-                        result['flag'] = temp_flag
-                        result['flagVersions'] = flagVersionsStored
-                        result['data'] = antenna_amplitude
-                        result['mad_floor'] =  antenna_amplitude_std
+                    flagsToStore = ['BeforeHeuristics', 'StageEntry', 'Current']
+                    temp_flag = []
+                    flagVersionsStored = []
+                    for f in flagsToStore:
+                        if flagVersions.count(f) == 0:
+                            continue
+                        fi = flagVersions.index(f)
+                        temp_flag.append(antenna_amplitude_flag[fi])
+                        flagVersionsStored.append(f)
+                    temp_flag.append(no_data_flag)
+                    flagVersionsStored.append('NoData')
+                    result['flag'] = temp_flag
+                    result['flagVersions'] = flagVersionsStored
+                    result['data'] = antenna_amplitude
+                    result['mad_floor'] =  antenna_amplitude_std
 
-                        pickled_description = pickle.dumps(description)
-                        results['data'][pickled_description] = result
+                    pickled_description = pickle.dumps(description)
+                    results['data'][pickled_description] = result
 
             self._ms.close()
             self._msFlagger.saveFlagState('PreviousIteration')
@@ -374,7 +465,7 @@ class CoaddedAntennaAmplitude(BaseData):
 
         flag_marks = {}
         ignore,flag_mark_col = self._msFlagger.getFlagMarkInfo()
-        for field_id in self._field_ids:
+        for field_id in self._target_field_ids:
             flag_marks[field_id] = flag_mark_col[field_id]
         flag_marks = str(flag_marks)
 

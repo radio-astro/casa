@@ -74,4 +74,28 @@ void AMueller::corrupt(VisBuffer& vb) {
 
 }
 
+
+ANoise::ANoise(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  SolvableVisMueller(vs)  // immediate parent
+{
+  if (prtlev()>2) cout << "ANoise::ANoise(vs)" << endl;
+}
+
+ANoise::ANoise(const Int& nAnt) :
+  VisCal(nAnt),
+  VisMueller(nAnt),
+  SolvableVisMueller(nAnt)
+{
+  if (prtlev()>2) cout << "ANoise::ANoise(nAnt)" << endl;
+}
+
+ANoise::~ANoise() {
+  if (prtlev()>2) cout << "ANoise::~ANoise()" << endl;
+}
+
+
+
+
 } //# NAMESPACE CASA - END

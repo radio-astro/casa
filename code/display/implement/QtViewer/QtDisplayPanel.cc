@@ -242,6 +242,12 @@ void QtDisplayPanel::setupMouseTools_() {
   connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
   
+  connect( rtregion_, SIGNAL(echoClicked(Record)),
+		        SLOT(clicked(Record)) );
+  
+  connect( ptregion_, SIGNAL(echoClicked(Record)),
+		        SLOT(clicked(Record)) );
+  
   QtMouseToolState* mBtns = v_->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
@@ -345,7 +351,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
      //because the bug that polygon tool prematurely
      //emit 'reagion ready'.
      //enable this after that bug cas-1393 fix
-     //resetPTRegion();
+     resetPTRegion();
     
     
     delete imReg;  }  }  
@@ -2420,6 +2426,10 @@ void QtDisplayPanel::extendRegion(
      String chans, String pols){
   extChan_ = chans;
   extPol_ = pols;
+}
+
+void QtDisplayPanel::clicked(Record rec) {
+  emit activate(rec);
 }
 
 

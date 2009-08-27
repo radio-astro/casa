@@ -15,6 +15,7 @@
 #  3-Nov-2008 jfl amalgamated stage release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
 
 recipe = [ 
          {'comment':'''Direct flagging; e.g. autocorrelations.'''},
@@ -63,7 +64,7 @@ recipe = [
                      sourceType=['*GAIN*'],
                      mode='mfs',
                      algorithm='hogbom',
-                     maxPixels = 200,
+                     maxPixels = 1000,
                      bandpassCal=[bandpassCalibration.BandpassCalibration],
                      bandpassCalDisplay=complexSliceDisplay.SliceX,
                      gainCal=fluxCalibration.FluxCalibration,
@@ -95,7 +96,7 @@ recipe = [
                   display=skyDisplay.SkyDisplay()"""
          },
 
-         {'comment':'Flag bad antennas in raw calibrater data.'},
+         {'comment':'Flag bad antennas in raw calibrator data.'},
 
          {'name':'Flag calibrator baselines with noisy amplitudes',
           'description':"""The aim of this stage is to flag baselines in
@@ -161,7 +162,7 @@ recipe = [
                        'colour':'crimson'},
                        {'rule':'too many flags', 'axis':'ANTENNA', 'limit':0.7,
                        'colour':'deeppink'},
-                       {'rule':'outlier', 'axis':'TIME', 'limit':10.0,
+                       {'rule':'outlier in chunk', 'axis':'TIME', 'limit':10.0,
                        'min_N':10, 'colour':'tomato'}]),
                   display=imageDisplay.ImageDisplay()"""
          },
@@ -188,8 +189,8 @@ recipe = [
                   view=deviations.RawAmplitudeDeviationPerBaseline(
                        sourceType=['*BANDPASS*','*FLUX*','*GAIN*']),
                   operator=sequenceFlagger.SequenceFlagger(rules=[
-                       {'axis':'TIME', 'rule':'outlier', 'colour':'crimson',
-                       'min_N':10, 'limit':10.0}]),
+                       {'axis':'TIME', 'rule':'outlier in chunk',
+                       'colour':'crimson', 'min_N':10, 'limit':10.0}]),
                   display=imageDisplay.ImageDisplay()"""
          },
 
@@ -229,14 +230,15 @@ recipe = [
           'stage':"""
                   view=bestMethodSelector.BestMethodSelector(
                        view=rangeTrial.RangeTrial(parameterRange=
-                        {'G_t':[20.0,80.0,160.0,320.0,3600.0],
+#                        {'G_t':[20.0,80.0,160.0,320.0,3600.0],
+                        {'G_t':[160.0],
                        'method':[{'mode':'CHANNEL'}],
                        'source_type':['*BANDPASS*'],
                        'bandpass_flagging_stage':['Detect BANDPASS edge'],
                        'test_source_type':['*GAIN*']},
                        viewClassList=[bandpassMerit.BandpassMerit,
                        bandpassCalibration.BandpassTestCalibratedAmplitude]),
-                       description='''The data view is a list of 2-d arrays,
+                       description='''The data view is a list of -d arrays,
                        one for each spectral window, with axes
                        ANTENNA1 and ANTENNA2. Each
                        pixel shows the 'merit' of the bandpass calibration
@@ -314,7 +316,7 @@ recipe = [
                        'colour':'crimson'},
                        {'rule':'too many flags', 'axis':'ANTENNA', 'limit':0.7,
                        'colour':'deeppink'},
-                       {'rule':'min abs', 'limit':10.0, 'colour':'brown'},
+#                       {'rule':'min abs', 'limit':10.0, 'colour':'brown'},
                        {'rule':'low outlier', 'limit':10.0, 'min_N':10,
                        'colour':'tomato'}]),
                   display=imageDisplay.ImageDisplay()"""
@@ -370,7 +372,6 @@ recipe = [
                   display=imageDisplay.ImageDisplay()"""
          },
 
-
          {'comment':'Flag data with large closure errors.'},
 
          {'name':'Flag GAIN closure magnitude',
@@ -397,7 +398,7 @@ recipe = [
                       sourceType='*GAIN*',
                       mode='mfs',
                       algorithm='hogbom',
-                      maxPixels=500,
+                      maxPixels=1000,
                       bandpassCal=[bestMethod.BestMethod,
                       bandpassCalibration.BandpassCalibration],
                       gainCal=fluxCalibration.FluxCalibration,
@@ -405,12 +406,51 @@ recipe = [
                       dirtyImage=dirtyImageV2.DirtyImageV2,
                       bandpassFlaggingStage='Detect BANDPASS edge'))))),
                   operator=imageFlagger.ImageFlagger(rules=[
-                       {'rule':'outlier', 'colour':'crimson', 'limit':5.0,
+                       {'rule':'high outlier', 'colour':'crimson', 'limit':10.0,
                        'min_N':10}
                        ]),
                   display=imageDisplay.ImageDisplay()"""
          },
 
+         {'name':'Flag TARGET closure magnitude',
+          'description':"""The aim of this stage is to flag
+                  TARGET data with unusually high closure errors.""",
+          'stage':"""
+                  view=buildImage.BuildImage(
+                      description='''This data view is a 2-d array.
+                      Each pixel is the median of the closure error
+                      of the clean image [closure error = abs{{corrected data / $
+                      - {1 + 0i}}] for that baseline. For multi-channel spectral
+                      windows the visibilities were averaged over the channels
+                      first.''',
+                      yAxis='ANTENNA1',
+                      view=medianAndMAD.MedianAndMAD(
+                      collapseAxis='TIME',
+                      view=chunkMedian.ChunkMedian(
+                      description='''This data view is a 2-d array.
+                      Each pixel is the median over time of the closure
+                      error magnitude [distance from 1 +0i] of the
+                      ratio between source model and data''',
+                      view=closureError.ClosureErrorMagnitude(
+                      view=mosaicCleanImage.MosaicCleanImage(
+                      sourceType='*SOURCE*',
+                      mode='mfs',
+                      algorithm='mfhogbom',
+                      maxPixels = 1000,
+                      bandpassCal=[bestMethod.BestMethod,
+                      bandpassCalibration.BandpassCalibration],
+                      bandpassCalDisplay=complexSliceDisplay.SliceX,
+                      gainCal=fluxCalibration.FluxCalibration,
+                      gainCalDisplay=complexSliceDisplay.SliceY,
+                      psf=psf.Psf,
+                      dirtyImage=dirtyImageV2.DirtyImageV2,
+                      bandpassFlaggingStage='Detect BANDPASS edge'))))),
+                  operator=imageFlagger.ImageFlagger(rules=[
+                       {'rule':'high outlier', 'colour':'crimson', 'limit':10.0,
+                       'min_N':10}
+                       ]),
+                  display=imageDisplay.ImageDisplay()"""
+         },
 
          {'comment':'Display flux calibrated antenna gain coefficients.'},
 
@@ -474,7 +514,7 @@ recipe = [
                      sourceType=['*GAIN*', '*FLUX*', '*BANDPASS*'],
                      mode='channel',
                      algorithm='hogbom',
-                     maxPixels = 200,
+                     maxPixels = 1000,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
                      bandpassCalDisplay=complexSliceDisplay.SliceX,
@@ -496,7 +536,7 @@ recipe = [
                      sourceType=['*GAIN*','*FLUX*','*BANDPASS*'],
                      mode='channel',
                      algorithm='hogbom',
-                     maxPixels = 200,
+                     maxPixels = 1000,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
                      gainCal=fluxCalibration.FluxCalibration,
@@ -518,7 +558,7 @@ recipe = [
                      sourceType='*SOURCE*',
                      mode='channel',
                      algorithm='mfhogbom',
-                     maxPixels = 500,
+                     maxPixels = 1000,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
                      bandpassCalDisplay=complexSliceDisplay.SliceX,
@@ -540,7 +580,7 @@ recipe = [
                      sourceType='*SOURCE*',
                      mode='channel',
                      algorithm='mfhogbom',
-                     maxPixels = 500,
+                     maxPixels = 1000,
                      bandpassCal=[bestMethod.BestMethod,
                      bandpassCalibration.BandpassCalibration],
                      gainCal=fluxCalibration.FluxCalibration,

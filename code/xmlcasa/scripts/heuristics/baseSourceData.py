@@ -33,29 +33,29 @@ class BaseSourceData(BaseData):
 
 # get range of data_desc_ids
 
-        success = self._ms.open(thems=self._msName)
+        self._ms.open(thems=self._msName)
         msInfo = self._ms.range(items=['data_desc_id'])
         self._data_desc_ids = msInfo['data_desc_id']
 
 # get map of data_desc_id to spectral_window_id
 
-        rtn = self._table.open(self._msName + '/DATA_DESCRIPTION')
+        self._table.open(self._msName + '/DATA_DESCRIPTION')
         self._spectral_window_id = self._table.getcol(columnname=
          'SPECTRAL_WINDOW_ID')
-        rtn = self._table.close()
+        self._table.close()
 
 # and reference frequencies for each spectral_window_id
 
-        rtn = self._table.open(self._msName + '/SPECTRAL_WINDOW')
+        self._table.open(self._msName + '/SPECTRAL_WINDOW')
         self._ref_frequency = self._table.getcol(columnname='REF_FREQUENCY')
         self._num_chan = self._table.getcol(columnname='NUM_CHAN')
-        rtn = self._table.close()
+        self._table.close()
 
 # get names of fields
 
-        rtn = self._table.open(self._msName + '/FIELD')
+        self._table.open(self._msName + '/FIELD')
         self._fieldName = self._table.getcol('NAME')
-        rtn = self._table.close()
+        self._table.close()
 
 # translate source type to field Ids
 
@@ -64,6 +64,6 @@ class BaseSourceData(BaseData):
 # get range of antennas
 
         self._antennaRange = self._getAntennaRange()
-        success = self._ms.close()
+        self._ms.close()
 
         self._htmlLogger.timing_stop('BaseSourceData.__init__')

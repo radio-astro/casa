@@ -89,6 +89,7 @@ class QtRTRegion: public QtMouseTool, public MWCRTRegion {
   // See regionReady() implementation for format of the record.  (For some
   // uses, a connecting slot may be able to do without the WCH* parameter).
   void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+  void echoClicked(Record);
 
  protected:
   
@@ -96,6 +97,11 @@ class QtRTRegion: public QtMouseTool, public MWCRTRegion {
   // called by base class in response to user selection with the mouse.
   // See implementation for format of the record.
   virtual void regionReady();
+
+  virtual void clicked(Int x, Int y); 
+  //virtual void rectangleReady(); 
+  //virtual void handleEvent(DisplayEvent& ev);
+  //virtual void keyPressed(const WCPositionEvent &ev);
   
   PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
 
@@ -130,6 +136,7 @@ class QtPTRegion: public QtMouseTool, public MWCPTRegion {
   // See regionReady() implementation for format of the record.  (For some
   // uses, a connecting slot may be able to do without the WCH* parameter).
   void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+  void echoClicked(Record);
 
  protected:
   
@@ -138,17 +145,25 @@ class QtPTRegion: public QtMouseTool, public MWCPTRegion {
   // below).  This implementation emits the Qt signal mouseRegionReady()
   // with an appropriate Record defining the user's polygon mouse selection.
   // See implementation for format of the record.
-    virtual void regionReady();
+  virtual void regionReady();
+  virtual void clicked(Int x, Int y);
+
+  //virtual void handleEvent(DisplayEvent& ev);
+  //virtual void keyPressed(const WCPositionEvent &ev);
   
+  ///////This is not correct !
+  //
   // This callback is invoked by the base when the polygon is first
   // defined (by a double-click at last point) or when the mouse is
   // released after a move/resize.  It was unused in glish.  For Qt,
   // this will also signal that the polygon region has been fully
   // 'selected/made ready' (which will preclude the need for the
   // user to double-click [again] inside the polygon to select it). 
-  virtual void polygonReady() { regionReady();  }
+  //virtual void polygonReady() { regionReady();  }
 
-    
+  // is this fix to 1393?
+  virtual void polygonReady() { }
+
   PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
 
 };

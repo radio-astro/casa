@@ -93,7 +93,7 @@ class image
 
     ::casac::record* coordmeasures(const std::vector<double>& pixel = std::vector<double> (1, -1));
 
-    ::casac::variant* decompose(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool simple = false, const double threshold = -1, const int ncontour = 11, const int minrange = 1, const int naxis = 2, const bool fit = true, const double maxrms = -1, const int maxretry = -1, const int maxiter = 256, const double convcriteria = 0.0001);
+    ::casac::record* decompose(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool simple = false, const double threshold = -1, const int ncontour = 11, const int minrange = 1, const int naxis = 2, const bool fit = true, const double maxrms = -1, const int maxretry = -1, const int maxiter = 256, const double convcriteria = 0.0001);
 
     ::casac::record* deconvolvecomponentlist(const ::casac::record& complist);
 
@@ -115,7 +115,7 @@ class image
 
     ::casac::image * fitpolynomial(const std::string& residfile = "", const std::string& fitfile = "", const std::string& sigmafile = "", const int axis = -1, const int order = 0, const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool overwrite = false);
 
-    ::casac::record* fitsky(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const std::vector<std::string>& models = std::vector<std::string> (1, "gaussian"), const ::casac::record& estimate = ::casac::initialize_record(""), const std::vector<std::string>& fixedparams = std::vector<std::string> (1, ""), const std::vector<double>& includepix = std::vector<double> (1, -1), const std::vector<double>& excludepix = std::vector<double> (1, -1), const bool fit = true, const bool deconvolve = false, const bool list = true);
+    ::casac::record* fitsky(const ::casac::record& region = ::casac::initialize_record(""), const int chan = 0, const std::string& stokes = "I", const ::casac::variant& mask = ::casac::initialize_variant(""), const std::vector<std::string>& models = std::vector<std::string> (1, "gaussian"), const ::casac::record& estimate = ::casac::initialize_record(""), const std::vector<std::string>& fixedparams = std::vector<std::string> (1, ""), const std::vector<double>& includepix = std::vector<double> (1, -1), const std::vector<double>& excludepix = std::vector<double> (1, -1), const bool fit = true, const bool deconvolve = false, const bool list = true);
 
     bool fromrecord(const ::casac::record& record, const std::string& outfile = "");
 

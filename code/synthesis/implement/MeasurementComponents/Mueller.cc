@@ -391,6 +391,54 @@ void AddMuellerDiag2::apply(VisVector& v) {
  
 }
 
+// Constructor
+AddMuellerDiag::AddMuellerDiag() : MuellerDiag() {}
+ 
+void AddMuellerDiag::invert() {
+
+  // "invert" means "negate" for additive term
+
+  if (!ok_) throw(AipsError("Illegal use of AddMuellerDiag2::invert."));
+
+  mi_=m_;
+  oki_=ok_;
+  for (Int i=0;i<4;++i,++mi_,++oki_) 
+    if ((*oki_))
+      (*mi_)*=-1.0;  // negate
+    else {
+      (*mi_) = Complex(0.0);
+      (*oki_) = False;
+    }
+  
+}
+
+// In-place add onto a VisVector: optimized Diag2 version
+void AddMuellerDiag::apply(VisVector& v) {
+
+  // "apply" means "add" for additive term
+
+  switch (v.type()) {
+  case VisVector::Four: 
+    // Direct apply of Mueller to VisVector 4-vector 
+    v.v_[0]+=m_[0];   // add
+    v.v_[1]+=m_[1];
+    v.v_[2]+=m_[2];
+    v.v_[3]+=m_[3];
+    break;
+  case VisVector::Two: 
+    // Element-by-element apply of Mueller corners to VisVector 2-vector
+    v.v_[0]+=m_[0]; // add
+    v.v_[1]+=m_[3]; // add
+    break;
+  case VisVector::One: {
+    // Mueller corner element used as scalar (pol-sensitivity TBD)
+    v.v_[0]+=m_[0];  // add
+    break;
+  }
+  }
+ 
+}
+
 
 
 
@@ -410,6 +458,9 @@ Mueller* createMueller(const Mueller::MuellerType& mtype) {
     break;
   case Mueller::AddDiag2:
     m = new AddMuellerDiag2();
+    break;
+  case Mueller::AddDiag:
+    m = new AddMuellerDiag();
     break;
   case Mueller::Scalar:
     m = new MuellerScal();
@@ -478,7 +529,7 @@ ostream& operator<<(ostream& os, const Mueller& mat) {
   mi=mat.m_;
 
   switch (mat.type()) {
-  case Mueller::General:
+  case Mueller::General: {
     cout << "General Mueller: " << endl;;
     for (Int i=0;i<4;++i) {
       cout << " [" << *mi++;
@@ -487,7 +538,8 @@ ostream& operator<<(ostream& os, const Mueller& mat) {
       if (i<3) cout << endl;
     }
     break;
-  case Mueller::Diagonal:
+  }
+  case Mueller::Diagonal: {
     cout << "Diagonal Mueller: " << endl;
     cout << " [";
     cout << *mi;
@@ -495,18 +547,35 @@ ostream& operator<<(ostream& os, const Mueller& mat) {
     for (Int i=1;i<4;++i,++mi) cout << ", " << *mi;
     cout << "]";
     break;
-  case Mueller::Diag2:
+  }
+  case Mueller::Diag2: {
     cout << "Diag2 Mueller: " << endl;
-    cout << " [" << *mi++ << ", " << *mi << "]";
+    cout << " [" << *mi << ", ";
+    ++mi;
+    cout << *mi << "]";
     break;
-  case Mueller::AddDiag2:
+  }
+  case Mueller::AddDiag: {
+    cout << "AddDiag Mueller: " << endl;
+    cout << " [";
+    cout << *mi;
+    ++mi;
+    for (Int i=1;i<4;++i,++mi) cout << ", " << *mi;
+    cout << "]";
+    break;
+  }
+  case Mueller::AddDiag2: {
     cout << "AddDiag2 Mueller: " << endl;
-    cout << " [" << *mi++ << ", " << *mi << "]";
+    cout << " [" << *mi << ", ";
+    ++mi;
+    cout << *mi << "]";
     break;
-  case Mueller::Scalar:
+  }
+  case Mueller::Scalar: {
     cout << "Scalar Mueller: " << endl;
     cout << " [ " << *mi << " ]";
     break;
+  }
   }
 
   return os;

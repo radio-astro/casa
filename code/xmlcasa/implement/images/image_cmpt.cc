@@ -914,14 +914,14 @@ image::coordmeasures(const std::vector<double>&pixel)
   return rstat;
 }
 
-::casac::variant*
+::casac::record*
 image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
 		 const bool simple, const double Threshold, const int nContour,
 		 const int minRange, const int nAxis, const bool fit,
 		 const double maxrms, const int maxRetry, const int maxIter,
 		 const double convCriteria)
 {
-  ::casac::variant *rstat = 0;
+  ::casac::record *rstat = 0;
   try {
     *itsLog << LogOrigin("image", "decompose");
     if (detached()) return rstat;
@@ -931,12 +931,15 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
     if(mask == "[]")
 	    mask = "";
 
-    Matrix<Float> cl= itsImage->decompose(*Region, mask, simple, Threshold, 
+    Matrix<Int> blcs;
+    Matrix<Int> trcs;
+
+    Matrix<Float> cl= itsImage->decompose(blcs, trcs, *Region, mask, simple, Threshold, 
 					  nContour, minRange, nAxis, fit,
 					  maxrms, maxRetry, maxIter, 
 					  convCriteria);
 
-    std::vector<float> cl_v;
+    /*std::vector<float> cl_v;
     cl.tovector(cl_v);
     int nelem = cl_v.size();
     std::vector<double> cl_dv(nelem);
@@ -946,6 +949,14 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
     std::vector<int> cl_shape;
     cl.shape().asVector().tovector(cl_shape);
     rstat = new ::casac::variant(cl_dv, cl_shape);
+    */
+    casa::Record outrec1;
+    outrec1.define("components", cl);
+    outrec1.define("blc", blcs);
+    outrec1.define("trc", trcs);
+    rstat = fromRecord(outrec1);
+
+
   } catch (AipsError x) {
         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1297,6 +1308,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 
 ::casac::record*
 image::fitsky(const ::casac::record& region,
+          const int chan, const std::string& stokes, 
 	      const ::casac::variant& vmask,
 	      const std::vector<std::string>& in_models,
 	      const ::casac::record& in_estimate,
@@ -1346,7 +1358,7 @@ image::fitsky(const ::casac::record& region,
     //call the fitsky
     Bool converged;
     Record outrec=itsImage->fitsky(residPixels, residMask, converged, *Region,
-				   mask, models, *Estimate, fixed, 
+				   chan, String(stokes), mask, models, *Estimate, fixed, 
 				   includepix, 
 				   excludepix, fitIt, deconvolveIt, list);
 

@@ -18,6 +18,7 @@
 # 21-Jan-2009 jfl ut4b release.
 #  2-Jun-2009 jfl line and continuum release.
 # 15-Jun-2009 jfl clean displays calibration internally.
+# 31-Jul-2009 jfl no maxPixels release.
 
 recipe = [ 
          {'comment':'''Direct flagging; e.g. autocorrelations.'''},
@@ -55,27 +56,27 @@ recipe = [
                   display=complexSliceDisplay.SliceY()"""
          },
 
-         {'name':'Initial GAIN and TARGET clean integrated maps',
-          'description':"""The aim of this stage is to show 
-                  cleaned images of the GAIN calibrator and target sources
-                  using a straightforward calibration method 
-                  before the data has undergone any significant flagging.
-                  The maps show the emission integrated over the
-                  spectral window""",
-          'stage':"""
-                  view=cleanImageV2.CleanImageV2(
-                     sourceType=['*GAIN*', '*SOURCE*', '*FLUX*'],
-                     mode='mfs',
-                     algorithm='hogbom',
-                     maxPixels = 500,
-                     bandpassCal=[bandpassCalibration.BandpassCalibration],
-                     bandpassCalDisplay=complexSliceDisplay.SliceX,
-                     gainCal=fluxCalibration.FluxCalibration,
-                     gainCalDisplay=complexSliceDisplay.SliceY,
-                     psf=psf.Psf,
-                     dirtyImage=dirtyImageV2.DirtyImageV2),
-                  display=skyDisplay.SkyDisplay()"""
-         },
+#          {'name':'Initial GAIN and TARGET clean integrated maps',
+#           'description':"""The aim of this stage is to show 
+#                   cleaned images of the GAIN calibrator and target sources
+#                   using a straightforward calibration method 
+#                   before the data has undergone any significant flagging.
+#                   The maps show the emission integrated over the
+#                   spectral window""",
+#           'stage':"""
+#                   view=cleanImageV2.CleanImageV2(
+#                      sourceType=['*GAIN*', '*SOURCE*', '*FLUX*'],
+#                      mode='mfs',
+#                      algorithm='hogbom',
+#                      maxPixels = 1000,
+#                      bandpassCal=[bandpassCalibration.BandpassCalibration],
+#                      bandpassCalDisplay=complexSliceDisplay.SliceX,
+#                      gainCal=fluxCalibration.FluxCalibration,
+#                      gainCalDisplay=complexSliceDisplay.SliceY,
+#                      psf=psf.Psf,
+#                      dirtyImage=dirtyImageV2.DirtyImageV2),
+#                   display=skyDisplay.SkyDisplay()"""
+#          },
 
          {'comment':'Flag bad antennas in raw calibrater data.'},
 
@@ -355,7 +356,7 @@ recipe = [
 
          {'comment':'Flag data with large closure errors.'},
 
-         {'name':'Flag GAIN closure magnitude.',
+         {'name':'Flag GAIN closure magnitude',
           'description':"""The aim of this stage is to flag 
                   data with unusually high closure errors.""",
           'stage':"""
@@ -377,9 +378,9 @@ recipe = [
                       view=closureError.ClosureErrorMagnitude(
                       view=cleanImageV2.CleanImageV2(
                       sourceType='*GAIN*',
-                      mode='channel',
+                      mode='mfs',
                       algorithm='hogbom',
-                      maxPixels=500,
+                      maxPixels=1000,
                       bandpassCal=[bestMethod.BestMethod,
                       bandpassCalibration.BandpassCalibration],
                       gainCal=fluxCalibration.FluxCalibration,
@@ -387,7 +388,7 @@ recipe = [
                       dirtyImage=dirtyImageV2.DirtyImageV2,
                       bandpassFlaggingStage='Detect BANDPASS edge'))))),
                   operator=imageFlagger.ImageFlagger(rules=[
-                       {'rule':'outlier', 'colour':'crimson', 'limit':5.0,
+                       {'rule':'high outlier', 'colour':'crimson', 'limit':10.0,
                        'min_N':10}
                        ]),
                   display=imageDisplay.ImageDisplay()"""
@@ -415,9 +416,9 @@ recipe = [
                       view=closureError.ClosureErrorMagnitude(
                       view=cleanImageV2.CleanImageV2(
                       sourceType='*SOURCE*',
-                      mode='channel',
+                      mode='mfs',
                       algorithm='hogbom',
-                      maxPixels = 500,
+                      maxPixels = 1000,
                       bandpassCal=[bestMethod.BestMethod,
                       bandpassCalibration.BandpassCalibration],
                       gainCal=fluxCalibration.FluxCalibration,
@@ -425,13 +426,25 @@ recipe = [
                       dirtyImage=dirtyImageV2.DirtyImageV2,
                       bandpassFlaggingStage='Detect BANDPASS edge'))))),
                   operator=imageFlagger.ImageFlagger(rules=[
-                       {'rule':'outlier', 'colour':'crimson', 'limit':5.0,
+                       {'rule':'high outlier', 'colour':'crimson', 'limit':10.0,
                        'min_N':10}
                        ]),
                   display=imageDisplay.ImageDisplay()"""
          },
 
          {'comment':'Display final flux calibrated gain coefficients.'},
+
+         {'name':'Final B calibration coefficients display',
+          'description':"""The aim of this stage is to show the
+                  bandpass calibration coefficients that
+                  are derived in a straightforward way from the
+                  MeasurementSet before it has undergone any significant
+                  flagging.""",
+          'stage':"""
+                  view=bestMethod.BestMethod(viewClassList=[
+                  bandpassCalibration.BandpassCalibration]),
+                  display=complexSliceDisplay.SliceX()"""
+         },
 
          {'name':'F calibration coefficient display',
           'description':"""The aim of this stage is to show the
@@ -480,9 +493,6 @@ recipe = [
                    bandpassFlaggingStage='Detect BANDPASS edge'),
                   display=imageDisplay.ImageDisplay()"""
          }
-  
-
-
 
 
 #          {'comment':'Cleaned calibrator images and spectra.'},
@@ -497,7 +507,7 @@ recipe = [
 #                      sourceType=['*GAIN*','*FLUX*','*BANDPASS*'],
 #                      mode='channel',
 #                      algorithm='hogbom',
-#                      maxPixels = 500,
+#                      maxPixels = 1000,
 #                      bandpassCal=[bestMethod.BestMethod,
 #                      bandpassCalibration.BandpassCalibration],
 #                      bandpassCalDisplay=complexSliceDisplay.SliceX,
@@ -519,7 +529,7 @@ recipe = [
 #                      sourceType=['*GAIN*','*FLUX*','*BANDPASS*'],
 #                      mode='channel',
 #                      algorithm='hogbom',
-#                      maxPixels = 500,
+#                      maxPixels = 1000,
 #                      bandpassCal=[bestMethod.BestMethod,
 #                      bandpassCalibration.BandpassCalibration],
 #                      gainCal=fluxCalibration.FluxCalibration,
@@ -541,7 +551,7 @@ recipe = [
 #                      sourceType='*SOURCE*',
 #                      mode='channel',
 #                      algorithm='hogbom',
-#                      maxPixels = 500,
+#                      maxPixels = 1000,
 #                      bandpassCal=[bestMethod.BestMethod,
 #                      bandpassCalibration.BandpassCalibration],
 #                      bandpassCalDisplay=complexSliceDisplay.SliceX,
@@ -565,7 +575,7 @@ recipe = [
 #                      sourceType='*SOURCE*',
 #                      mode='channel',
 #                      algorithm='hogbom',
-#                      maxPixels = 500,
+#                      maxPixels = 1000,
 #                      bandpassCal=[bestMethod.BestMethod,
 #                      bandpassCalibration.BandpassCalibration],
 #                      gainCal=fluxCalibration.FluxCalibration,
@@ -585,7 +595,7 @@ recipe = [
 #                      sourceType='*SOURCE*',
 #                      mode='channel',
 #                      algorithm='hogbom',
-#                      maxPixels = 500,
+#                      maxPixels = 1000,
 #                      bandpassCal=[bestMethod.BestMethod,
 #                      bandpassCalibration.BandpassCalibration],
 #                      gainCal=fluxCalibration.FluxCalibration,

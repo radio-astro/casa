@@ -105,7 +105,7 @@ class BandpassCalibration(BaseData):
 
 # solve
 
-        new_commands = self._msCalibrater.solve(field=field_id,
+        new_commands,error = self._msCalibrater.solve(field=field_id,
          spw=data_desc_id,
          type='B', t='inf', combine='scan',
          table=btab, append=False, apmode='AP', solnorm=True, minsnr=0.0)
@@ -133,7 +133,7 @@ class BandpassCalibration(BaseData):
 
 # solve
 
-        new_commmands = self._msCalibrater.solvebandpoly(field=field_id,
+        new_commmands,error = self._msCalibrater.solvebandpoly(field=field_id,
          spw=data_desc_id, table=btab, append=False, 
          degamp=degamp, degphase=degphase, visnorm=False, solnorm=True,
          maskcenter=0, maskedge=0)
@@ -233,9 +233,9 @@ class BandpassCalibration(BaseData):
 # get filenames for calibrations
 
                 flag_marks = self._msFlagger.getFlagMarkDict(field_id)
-                gtab = 'bandpass.gtab.f%s.spw%s.t%s.fm%s' % (field_id,
+                gtab = 'bandpass.phaseup.f%s.spw%s.t%s.fm%s' % (field_id,
                  data_desc_id, t, flag_marks)
-                btab = 'btab.%s.spw%s.t%s.fm%s' % (self._base_msName,
+                btab = 'bandpass.%s.spw%s.t%s.fm%s' % (self._base_msName,
                  data_desc_id, t, flag_marks)
 
                 parameters['data'][data_desc_id]['gtab'] = gtab
@@ -278,30 +278,13 @@ class BandpassCalibration(BaseData):
                 if self._results['summary']['telescope_name'] == 'VLA':
                     self._msCalibrater.setapply(type='GAINCURVE')
 
-                try:
-                    new_commands = self._msCalibrater.solve(field=field_id,
-                     spw=data_desc_id, type='G', t=t, combine='scan',
-                     apmode='P', table=gtab, append=False)
+                new_commands,error = self._msCalibrater.solve(field=field_id,
+                 spw=data_desc_id, type='G', t=t, combine='scan',
+                 apmode='P', table=gtab, append=False)
 
-                    command += new_commands
-
-                except KeyboardInterrupt:
-                    raise
-                except:
-                    error_report = self._htmlLogger.openNode('exception',
-                     '%s.phase_up_bandpass_exception' % (self._stageName), True,
-                     stringOutput = True)
-
-                    self._htmlLogger.logHTML('Exception details<pre>')
-                    traceback.print_exc()
-                    traceback.print_exc(file=self._htmlLogger._htmlFiles[-1][0])
-                    self._htmlLogger.logHTML('</pre>')
-                    self._htmlLogger.closeNode()
-
-                    error_report += ' while phasing up BANDPASS calibration data'
-
-                    parameters['data'][data_desc_id]['error'] = error_report
-                    command.append('...exception')
+                command += new_commands
+                parameters['data'][data_desc_id]['error'] = error
+                if error != None:
                     continue
 
 # check that derivation of G has not failed silently
@@ -408,13 +391,10 @@ class BandpassCalibration(BaseData):
 # calculate the G gains for 'BeforeHeuristics', 'StageEntry' and 'Current' -
 # 'BeforeHeuristics' assumes no bandpassFlaggingStage
 
-        print 'before'
         self._msFlagger.setFlagState('BeforeHeuristics')
         originalBP = self.calculate()
-        print 'stage entry'
         self._msFlagger.setFlagState('StageEntry')
         stageEntryBP = self.calculate()
-        print 'current'
         self._msFlagger.setFlagState('Current')
         currentBP = self.calculate()
 
@@ -599,7 +579,7 @@ class BandpassCalibration(BaseData):
                         if antenna not in antenna_range:
                             print \
                              'antenna1 %s from file %s is outside antenna range' % (
-                             antenna, bp['data'][data_desc_id]['table'])
+                             antenna, currentBP['data'][data_desc_id]['table'])
                             continue
 
                         if self._dataType == 'amplitude':
@@ -808,11 +788,8 @@ class BandpassCalibration(BaseData):
                   parameters['method'][i]['G_t'], 
                   parameters['method'][i]['method']['mode'])
 
-                if parameters['method'][i]['method']['mode'] == 'CHANNEL':
-                    description += '<td>None</td>'
-                else:
-                    description += '<td>%s</td>' % (
-                     parameters['method'][i]['bandpass_flagging_stage'])
+                description += '<td>%s</td>' % (
+                 parameters['method'][i]['bandpass_flagging_stage'])
 
 # apply parameters 
 
@@ -853,8 +830,12 @@ class BandpassCalibration(BaseData):
                itself is calculated.
               <li>Mode is the type of bandpass solution obtained; 'CHANNEL', 
                or 'POLYNOMIAL'.
-              <li>'Channel Flags' gives the name of the stage that specified the
-               channels to be flagged before solving, if any.
+              <li>'Channel Flags' gives the name of the stage that specifies the
+               channels to be flagged, if necessary, during the calculation
+               of the bandpass calibration. These channels are flagged
+               before the phase-only G calibration is performed, and before
+               a POLYNOMIAL bandpass solution is calculated. They are
+               unflagged before a CHANNEL bandpass solution is calculated.
               <li>'Apply Table' is the name of the file containing the bandpass
                solution.
               <li>'Apply Type' gives the casapy type of the bandpass solution.

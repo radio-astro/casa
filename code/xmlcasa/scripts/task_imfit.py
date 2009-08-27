@@ -147,6 +147,11 @@ go
                 else:
                     regions.append({})
         else:
+            if (len(box) == 0):
+                ia.open(imagename)
+                shape = ia.shape()
+                ia.close()
+                box = "0,0," + str(shape[0] - 1) + "," + str(shape[1] - 1)
             reg=imregion( imagename, '', '', box, '', '', True )
             regions.append(reg)
 

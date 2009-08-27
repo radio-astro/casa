@@ -7,6 +7,7 @@
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+#  7-Aug-2009 jfl psf cube removed.
 
 # package modules
 
@@ -99,30 +100,30 @@ class Psf(BaseData):
 
 # now construct the psf cube
 
-        self._imager.defineimage(nx=nx, ny=nx, cellx=cell, celly=cell,
-         stokes='I', phasecenter=int(field), mode='channel', 
-         nchan=self._results['summary']['nchannels'][spw], spw=[int(spw)])
-        self._imager.summary()
+#        self._imager.defineimage(nx=nx, ny=nx, cellx=cell, celly=cell,
+#         stokes='I', phasecenter=int(field), mode='channel', 
+#         nchan=self._results['summary']['nchannels'][spw], spw=[int(spw)])
+#        self._imager.summary()
 
-        commands.append('''imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
-         stokes='I', phasecenter=int(%s), mode='channel', nchan=%s,
-         spw=[int(%s)])''' % (nx, nx, cell, cell, field,
-         self._results['summary']['nchannels'][spw], spw))
-        commands.append('imager.summary()')
+#        commands.append('''imager.defineimage(nx=%s, ny=%s, cellx=%s, celly=%s,
+#         stokes='I', phasecenter=int(%s), mode='channel', nchan=%s,
+#         spw=[int(%s)])''' % (nx, nx, cell, cell, field,
+#         self._results['summary']['nchannels'][spw], spw))
+#        commands.append('imager.summary()')
 
 # compose output file name
 
-        flag_mark = self._msFlagger.getFlagMarkDict(field)
-        psfCubeName = 'psfCube.%s.f%s.spw%s.fm%s' % (self._base_msName, 
-         self._fieldName[field], spw, flag_mark)
-        psfCubeName.replace(' ', '')
+#        flag_mark = self._msFlagger.getFlagMarkDict(field)
+#        psfCubeName = 'psfCube.%s.f%s.spw%s.fm%s' % (self._base_msName, 
+#         self._fieldName[field], spw, flag_mark)
+#        psfCubeName.replace(' ', '')
 
 # compute the psf
 
-        self._imager.makeimage(type='psf', image=psfCubeName)
-        parameters['cubeName'] = psfCubeName
+#        self._imager.makeimage(type='psf', image=psfCubeName)
+#        parameters['cubeName'] = psfCubeName
 
-        commands.append("imager.makeimage(type='psf', image=%s)" % psfCubeName)
+#        commands.append("imager.makeimage(type='psf', image=%s)" % psfCubeName)
 
         self._imager.close()
         commands.append('imager.close()')

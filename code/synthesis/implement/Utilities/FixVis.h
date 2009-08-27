@@ -145,6 +145,23 @@ private:
 
   CoordinateSystem getCoords(uInt numInSel);
 
+  //const ROArrayMeasColumn<MDirection>& getPhaseDirs() const;
+  //ArrayMeasColumn<MDirection>& getPhaseDirs();
+
+  // Convert the phase tracking centers in the FIELD table to newFrame.
+  // Note that each direction column in the table only allows one
+  // reference frame for the entire column, so all fields must share the same
+  // frame.
+  void convertPhaseDirs(const MDirection::Types outType);
+
+  // Private worker function for convertPhaseDirs().
+  void convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
+                        const MDirection::Ref& newFrame,
+                        const Bool doAll3,
+                        ArrayMeasColumn<MDirection>& ddc,
+                        ArrayMeasColumn<MDirection>& rdc,
+                        uInt nrow);
+
   Bool makeSelection(const Int selectedField);
   
   // Does phase tracking center and distance adjustment for mssel_p.
@@ -227,15 +244,15 @@ private:
   uInt             lockCounter_p;
   
   // Not initialized in ctor.
-  MeasurementSet   mssel_p;             // The selected part of ms_p.
-  ObsInfo          latestObsInfo_p;  
-  Vector<Int> DDIds_p;			// DataDescription Ids to process
-  Vector<Int> FieldIds_p;		// Field Ids to process
-  Vector<MDirection> phaseDirs_p;	// new phase centers for each selected field
-  Int nSpw_p;				// Number of spws
-  MPosition mLocation_p;
-  Bool doTrackSource_p;
-  Int fieldid_p;
+  MeasurementSet     mssel_p;           // The selected part of ms_p.
+  ObsInfo            latestObsInfo_p;  
+  Vector<Int>        DDIds_p;	        // DataDescription Ids to process
+  Vector<Int>        FieldIds_p;        // Field Ids to process
+  Vector<MDirection> phaseDirs_p;       // new phase centers for each selected field
+  Int                nSpw_p;	        // Number of spws
+  MPosition          mLocation_p;
+  Bool               doTrackSource_p;
+  Int                fieldid_p;
 };
   
 } //# NAMESPACE CASA - END

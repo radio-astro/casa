@@ -82,8 +82,10 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
 	 Record *tlock = toRecord(lockoptions);
 	 //TableLock *itsLock = getLockOptions(tlock);
 	 if(nomodify){
+	     if(itsTable)close();
              itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
 	 } else {
+	     if(itsTable)close();
              itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
 	 }
 	 delete tlock;

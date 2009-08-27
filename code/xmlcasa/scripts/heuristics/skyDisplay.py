@@ -113,7 +113,8 @@ class SkyDisplay(BaseDisplay):
 
 # image reference pixel
                 
-                yoff = 0.20
+#                yoff = 0.20
+                yoff = 0.10
                 yoff = self._plotText(1.05, yoff, 'Reference position:', 40)
                 cname = ['RA:', 'Dec:', 'Stokes:', 'Freq:']
                 for i,k in enumerate(image_ref):
@@ -132,10 +133,13 @@ class SkyDisplay(BaseDisplay):
 # plot data
 
                 pylab.gray()
+#                pylab.imshow(data, interpolation='nearest', origin='lower',
+#                 extent=[x[0], x[-1], y[0], y[-1]])
                 pylab.imshow(data, interpolation='nearest', origin='lower',
-                 extent=[x[0], x[-1], y[0], y[-1]])
+                 aspect='equal', extent=[x[0], x[-1], y[0], y[-1]])
 
-                pylab.axis('auto')
+                pylab.axis('image')
+#                pylab.axis('auto')
                 lims = pylab.axis()
 
 # ..plot wedge

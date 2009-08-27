@@ -467,23 +467,19 @@ namespace casa {
       delete a;
     }
     
-    msOut_p= *outpointer;
-    msc_p=new MSColumns(msOut_p);
+    msOut_p = *outpointer;
+    msc_p = new MSColumns(msOut_p);
     
     if(!fillAllTables(colname)){
       delete outpointer;
-      outpointer=0;
-      ms_p=MeasurementSet();
+      outpointer = 0;
+      ms_p = MeasurementSet();
       return 0;
-      
     }
-    
     //Detaching the selected part
     ms_p=MeasurementSet();
     return outpointer;
-    
   }
-  
   
   
   Bool SubMS::fillAllTables(const String& colname)
@@ -492,14 +488,15 @@ namespace casa {
     LogIO os(LogOrigin("SubMS", "fillAllTables()"));
     
     // Should take care of Measures frames for all the time type columns below.
+    // It should be safe to avoid the empty table check (with false) since this
+    // is explicitly a case of a column full of numbers that should be in the
+    // right reference frame, but the column could have, or end up with, the
+    // wrong reference code if nothing is done.  However, the table is still
+    // empty if the reference codes are set up here.
     msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()));
 
-    // UVW is the only other Measures column in the main table.  We are avoiding
-    // the empty table check (with false) since this is explicitly a case of
-    // a column full of numbers that should be in the right reference frame,
-    // but the column could have, or end up with, the wrong reference code if
-    // nothing is done.
-    msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()), false);
+    // UVW is the only other Measures column in the main table.
+    msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
     // fill or update
     if(!fillDDTables()){
@@ -1562,7 +1559,7 @@ namespace casa {
 	regridCenterChan = (Int) floor(regridCenter);  
       }
       else { // invalid
-	oss << "Parameter \"regrid_center\" value " << regridCenter << " outside valid range which is "
+	oss << "Parameter \"center\" value " << regridCenter << " outside valid range which is "
 	    << 0 << " - " << oldNUM_CHAN-1 <<".";
 	message = oss.str();
 	return False;  
@@ -1686,12 +1683,12 @@ namespace casa {
 	// radio velocity ...
 	// need restfrq
 	if(regridVeloRestfrq<-1E30){ // means "not set"
-	  oss <<"Parameter \"regrid_velo_restfrq\" needs to be set if regrid_quantity==vrad. Cannot proceed with cvel ..."; 
+	  oss <<"Parameter \"restfreq\" needs to be set if regrid_quantity==vrad. Cannot proceed with cvel ..."; 
 	  message = oss.str();
 	  return False;
 	}
 	else if(regridVeloRestfrq<0. || regridVeloRestfrq>1E30){
-	  oss << "Parameter \"regrid_velo_restfrq\" value " << regridVeloRestfrq << " is invalid.";
+	  oss << "Parameter \"restfreq\" value " << regridVeloRestfrq << " is invalid.";
 	  message = oss.str();
 	  return False;
 	}	  
@@ -1717,12 +1714,12 @@ namespace casa {
 	// optical velocity ...
 	// need restfrq
 	if(regridVeloRestfrq<-1E30){ // means "not set"
-	  oss << "Parameter \"regrid_velo_restfrq\" needs to be set if regrid_quantity==vopt. Cannot proceed with cvel ...";
+	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vopt. Cannot proceed with cvel ...";
 	  message = oss.str();
 	  return False;
 	}
 	else if(regridVeloRestfrq<=0. || regridVeloRestfrq>1E30){
-	  oss << "Parameter \"regrid_velo_restfrq\" value " << regridVeloRestfrq << " is invalid."; 
+	  oss << "Parameter \"restfreq\" value " << regridVeloRestfrq << " is invalid."; 
 	  message = oss.str();
 	  return False;
 	}
@@ -1770,7 +1767,7 @@ namespace casa {
 	}
       }
       else{
-	oss << "Invalid value " << regridQuant << " for parameter \"regrid_quantity\".";
+	oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 	message = oss.str();
 	return False;
       }
@@ -2160,7 +2157,7 @@ namespace casa {
 
       }
       else{ // should not get here
-	oss << "Invalid value " << regridQuant << " for parameter \"regrid_quantity\".";
+	oss << "Invalid value " << regridQuant << " for parameter \"mode\".";
 	message = oss.str();
 	return False;
       }
@@ -2479,7 +2476,8 @@ namespace casa {
 	}
 	equivalentSpwFieldPair = iDone2;
 
-	if(equivalentSpwFieldPair>=0 && !needTransform){  // a transformation was not needed, i.e. the operation on this SPW is independent of the FIELD
+	if(equivalentSpwFieldPair>=0 && !needTransform){  // a transformation was not needed, 
+          // i.e. the operation on this SPW is independent of the FIELD
 	  // and (since equivalentSpwFieldPair>=0) this SPW was already processed
 	  // so we can reuse a previous SpwFieldPair
 
@@ -2537,7 +2535,7 @@ namespace casa {
 	    }
 	    else {
 	      if(!meth.contains("linear") && meth!=""){
-		os << LogIO::WARN << "Parameter \"regrid_interp_meth\" value \"" << meth << "\" is invalid." 
+		os << LogIO::WARN << "Parameter \"interpolation\" value \"" << meth << "\" is invalid." 
 		   << LogIO::POST;
 		return False;
 	      }

@@ -5,12 +5,15 @@
 #  3-Nov-2008 jfl amalgamated stage release.
 #  7-Apr-2009 jfl mosaic release.
 #  2-Jun-2009 jfl line and continuum release.
+# 31-Jul-2009 jfl no maxPixels release.
+#  7-Aug-2009 jfl spw and fields enclosed in int().
 
 # package modules
 
 import __builtin__
 from numpy import *
 import os.path
+import traceback
 import types
 
 # alma modules
@@ -85,7 +88,7 @@ class MSCalibrater:
                 self._calibrationApplied[(field_id,data_desc_id)] = None
 
         self._calibrationToApply = []
-
+        self._exceptionNumber = 1
 #        self._verbose = True
 
 
@@ -125,94 +128,128 @@ class MSCalibrater:
         and spw of the MS.
 
         Keyword arguments:
-        field -- The field of list of field ids to which the correction is to 
+        field -- The field or list of field ids to which the correction is to 
                  be applied.
         spw   -- The spectral window to which the calibration is to be
                  applied.
         """
-        self._verbose = True
         if self._verbose:
             print 'MSCalibrater.correct called'
 
         commands = []
+        error_report = None
 
         if len(self._calibrationToApply) < 1:
             raise RuntimeError, 'no calibrations to apply'
 
         if type(field) != types.ListType:
-            fieldList = [field]
+            fieldList = [int(field)]
         else:
-            fieldList = field
+            fieldList = []
+            for f in field:
+                fieldList.append(int(f))
 
-# loop through the fields
+        if type(spw) != types.ListType:
+            spwList = [int(spw)]
+        else:
+            spwList = []
+            for s in spw:
+                spwList.append(int(s))
 
+# loop through the fields to see if we need to apply the calibration
+
+        correct = False
         for field in fieldList:
             k = (field, spw)
+            print 'k', k
+            print self._calibrationApplied[k]
+            print self._calibrationToApply
+            if self._calibrationApplied[k] != self._calibrationToApply:
+                correct=True
 
+                if self._verbose:
+                    print '(field/spw) for calibration', field, spw
+                    print 'requested calibration', self._calibrationToApply
+                    print 'current calibration  ', self._calibrationApplied[k]
+                break
+
+        if not correct:
+            self._calibrationToApply = []
             if self._verbose:
-                print '(field/spw) for calibration', field, spw
-                print 'requested calibration', self._calibrationToApply
-                print 'current calibration  ', self._calibrationApplied[k]
+                print 'calibration already applied'
+        else:
+            if self._verbose:
+                print 'calibration will be applied'
 
-            if self._calibrationApplied[k] == self._calibrationToApply:
-                self._calibrationToApply = []
-                if self._verbose:
-                    print 'calibration already applied'
-            else:
-                if self._verbose:
-                    print 'calibration will be applied'
+            try:
+                self._calibrater.reset(apply=True, solve=True)
+                self._calibrater.selectvis(spw=spwList, field=fieldList)
+                commands.append('calibrater.reset(apply=True, solve=True)')
+                commands.append('calibrater.selectvis(spw=%s, field=%s)' % 
+                 (spwList, fieldList))
 
-                try:
-                    self._calibrater.reset(apply=True, solve=True)
-                    self._calibrater.selectvis(spw=spw, field=field)
-                    commands.append('calibrater.reset(apply=True, solve=True)')
-                    commands.append('calibrater.selectvis(spw=%s, field=%s)' % 
-                     (spw, field))
+                for cal in self._calibrationToApply:
+                    calType = cal[0]
+                    calTable = cal[1]
+                    spwmap = cal[2]
+                    if calType == 'failed':
+                        raise NameError, 'no calibration available'
 
-                    for cal in self._calibrationToApply:
-                        calType = cal[0]
-                        calTable = cal[1]
-                        spwmap = cal[2]
-                        if calType == 'failed':
-                            raise NameError, 'no calibration available'
-
-                        if calTable == None:
-                            self._calibrater.setapply(type=calType)
-                            commands.append("calibrater.setapply(type='%s')" %
-                             calType)
+                    if calTable == None:
+                        self._calibrater.setapply(type=calType)
+                        commands.append("calibrater.setapply(type='%s')" % calType)
+                    else:
+                        if spwmap==None:
+                            self._calibrater.setapply(type=calType, table=calTable)
+                            commands.append(
+                             "calibrater.setapply(type='%s', table='%s')" % 
+                             (calType, calTable))
                         else:
-                            if spwmap==None:
-                                self._calibrater.setapply(type=calType,
-                                 table=calTable)
-                                commands.append(
-                                 "calibrater.setapply(type='%s', table='%s')" % 
-                                 (calType, calTable))
-                            else:
-                                print \
-                                 'calibrater.setapply(type=%s, table=%s, spwmap=%s)' % \
-                                 (calType, calTable, spwmap)
+                            print \
+                             'calibrater.setapply(type=%s, table=%s, spwmap=%s)' % \
+                             (calType, calTable, spwmap)
 
-                                self._calibrater.setapply(type=calType,
-                                 table=calTable, spwmap=list(spwmap))
-                                commands.append(
-                                 "calibrater.setapply(type='%s', table='%s', spwmap=%s)" % 
-                                 (calType, calTable, spwmap))
+                            self._calibrater.setapply(type=calType,
+                             table=calTable, spwmap=list(spwmap))
+                            commands.append(
+                             "calibrater.setapply(type='%s', table='%s', spwmap=%s)" % 
+                             (calType, calTable, spwmap))
 
-                    self._calibrater.correct()
-                    commands.append('calibrater.correct()')
+                self._calibrater.correct()
+                commands.append('calibrater.correct()')
+
+                for field in fieldList:
+                    k = (field, spw)
                     self._calibrationApplied[k] = self._calibrationToApply
-                except:
-                    self._calibrationApplied[k] = 'failed'
-                    commands.append('...exception')
-                    raise
-                finally:
-                    self._calibrationToApply = []
+
+            except:
+                self._calibrationApplied[k] = 'failed'
+                commands.append('...exception')
+
+                error_report = self._html.openNode('exception',
+                 'cal_apply_exception.%s' % (self._exceptionNumber), True,
+                 stringOutput = True)
+
+                self._html.logHTML('Exception details<pre>')
+                traceback.print_exc()
+                traceback.print_exc(file=self._html._htmlFiles[-1][0])
+                self._html.logHTML('</pre>')
+                self._html.closeNode()
+
+                error_report += 'during calibration correct'
+                self._exceptionNumber += 1
+
+            finally:
+                self._calibrationToApply = []
+
         if self._verbose:
             for command in commands:
                 print command
-        self._verbose = False
 
-        return commands
+        for command in commands:
+            print command
+
+        return commands, error_report
 
 
     def fluxscale(self, tablein, reference, tableout, transfer, append):
@@ -253,17 +290,26 @@ class MSCalibrater:
 # __builtin__ to prevent name clash with parameter
 
         if __builtin__.type(field) != types.ListType:
-            fieldList = [field]
+            fieldList = [int(field)]
         else:
-            fieldList = field
+            fieldList = []
+            for f in field:
+                fieldList.append(int(f))
+
+        if __builtin__.type(spw) != types.ListType:
+            spwList = [int(spw)]
+        else:
+            spwList = []
+            for s in spw:
+                spwList.append(int(s))
 
 # OK, columns ready. Arrange to pre-apply calibrations before the solve 
 
         self._calibrater.reset(apply=True, solve=True)
-        self._calibrater.selectvis(spw=spw, field=fieldList)
+        self._calibrater.selectvis(spw=spwList, field=fieldList)
         commands.append('calibrater.reset(apply=True, solve=True)')
         commands.append('calibrater.selectvis(spw=%s, field=%s)' % (
-         spw, fieldList))
+         spwList, fieldList))
 
         try:
             for cal in self._calibrationToApply:
@@ -271,7 +317,7 @@ class MSCalibrater:
                 calTable = cal[1]
 
                 if calType == 'failed':
-                    raise NameError, 'calibration not available' 
+                    raise Exception, 'calibration not available' 
 
                 if calTable == None:
                     self._calibrater.setapply(type=calType)
@@ -344,7 +390,10 @@ class MSCalibrater:
         if self._verbose:
             print 'MSCalibrater.setApply called', type, table
 
-        self._calibrationToApply.append((type,table,spwmap))
+        temp = spwmap
+        if spwmap != None:
+            temp = list(spwmap)
+        self._calibrationToApply.append((type,table,temp))
 
 
     def setjy(self, field, spw, fluxdensity, standard):
@@ -424,21 +473,31 @@ class MSCalibrater:
             print 'MSCalibrater.solve called'
 
         commands = []
+        error_report = None
 
 # __builtin__ to prevent name clash with parameter
 
         if __builtin__.type(field) != types.ListType:
-            fieldList = [field]
+            fieldList = [int(field)]
         else:
-            fieldList = field
+            fieldList = []
+            for f in field:
+                fieldList.append(int(f))
+
+        if __builtin__.type(spw) != types.ListType:
+            spwList = [int(spw)]
+        else:
+            spwList = []
+            for s in spw:
+                spwList.append(int(s))
 
 # Arrange to pre-apply calibrations before the solve 
 
         self._calibrater.reset(apply=True, solve=True)
-        self._calibrater.selectvis(spw=spw, field=fieldList)
+        self._calibrater.selectvis(spw=spwList, field=fieldList)
         commands.append('calibrater.reset(apply=True, solve=True)')
         commands.append('calibrater.selectvis(spw=%s, field=%s)' % (
-         spw, fieldList))
+         spwList, fieldList))
 
         try:
             for cal in self._calibrationToApply:
@@ -446,7 +505,7 @@ class MSCalibrater:
                 calTable = cal[1]
 
                 if calType == 'failed':
-                    raise NameError, 'calibration not available' 
+                    raise Exception, 'calibration not available' 
 
                 if calTable == None:
                     self._calibrater.setapply(type=calType)
@@ -480,6 +539,20 @@ class MSCalibrater:
         except:
             commands.append('calibrater.solve()')
             commands.append('...exception')
+
+            error_report = self._html.openNode('exception',
+             'cal_solve_exception.%s' % (self._exceptionNumber), True,
+             stringOutput = True)
+
+            self._html.logHTML('Exception details<pre>')
+            traceback.print_exc()
+            traceback.print_exc(file=self._html._htmlFiles[-1][0])
+            self._html.logHTML('</pre>')
+            self._html.closeNode()
+
+            error_report += 'during calibration solve'
+            self._exceptionNumber += 1
+
         finally:
 
 # reset list of calibrations to apply
@@ -490,7 +563,7 @@ class MSCalibrater:
             for command in commands:
                 print command
 
-        return commands
+        return commands, error_report
 
 
     def solvebandpoly(self, field, spw, table, append, degamp, degphase, 
@@ -519,9 +592,18 @@ class MSCalibrater:
 # __builtin__ to prevent name clash with parameter
 
         if __builtin__.type(field) != types.ListType:
-            fieldList = [field]
+            fieldList = [int(field)]
         else:
-            fieldList = field
+            fieldList = []
+            for f in field:
+                fieldList.append(int(f))
+
+        if __builtin__.type(spw) != types.ListType:
+            spwList = [int(spw)]
+        else:
+            spwList = []
+            for s in spw:
+                spwList.append(int(s))
 
 # do we need to initalise the CORRECTED_DATA and MODEL_DATA columns?
 
@@ -549,9 +631,9 @@ class MSCalibrater:
 
 # OK, columns ready, arrange to pre-apply calibrations before the solve 
 
-        self._calibrater.selectvis(spw=spw, field=fieldList)
+        self._calibrater.selectvis(spw=spwList, field=fieldList)
         commands.append('calibrater.selectvis(spw=%s, field=%s)' % (
-         spw, fieldList))
+         spwList, fieldList))
 
         for cal in self._calibrationToApply:
             calType = cal[0]

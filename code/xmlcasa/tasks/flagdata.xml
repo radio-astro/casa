@@ -179,11 +179,11 @@
                 <param type="string" name="column" subparam="true">
                         <description>Data column to operate on.</description>
                         <value>DATA</value>
-                        <allowed kind="enum">
+                        <!-- <allowed kind="enum">
                         <value>DATA</value>
                         <value>CORRECTED</value>
                         <value>MODEL</value>
-                        </allowed>
+                        </allowed> -->
                 </param>
 
                 <param type="string" name="expr" subparam="true">
@@ -206,17 +206,22 @@
                         <value>-1.0</value>
                 </param>
 
-		<param type="string" name="flux" subparam="true">
-			<description>Flux calibrator field index number: flux=\'0\'</description>
-			<value></value>
+
+		<param type="stringArray" name="source" subparam="true">
+			<description>Source field index numbers: source=[\'1\',\'2\']</description>
+			<value type="stringArray"></value>
 		</param>
-		<param type="string" name="bpass" subparam="true">
-			<description>Bandpass calibrator field index number: bpass=\'0\'</description>
-			<value></value>
+		<param type="stringArray" name="flux" subparam="true">
+			<description>Flux calibrator field index number: flux=[\'0\']</description>
+			<value type="stringArray"></value>
 		</param>
-		<param type="string" name="gain" subparam="true">
-			<description>Gain calibrator field index number: gain=\'0\'</description>
-			<value></value>
+		<param type="stringArray" name="bpass" subparam="true">
+			<description>Bandpass calibrator field index number: bpass=[\'0\']</description>
+			<value type="stringArray"></value>
+		</param>
+		<param type="stringArray" name="gain" subparam="true">
+			<description>Gain calibrator field index number: gain=[\'0\']</description>
+			<value type="stringArray"></value>
                 </param>
 
 
@@ -295,9 +300,10 @@
                                 </equals>
                                 <equals value="alma">
                                         <default param="recipe"><value type="string">vla_recipe</value></default>
-                                        <default param="flux"><value type="string"></value></default>
-                                        <default param="gain"><value type="string"></value></default>
-                                        <default param="bpass"><value type="string"></value></default>
+                                        <default param="source"><value type="stringArray"></value></default>
+                                        <default param="flux"><value type="stringArray"></value></default>
+                                        <default param="gain"><value type="stringArray"></value></default>
+                                        <default param="bpass"><value type="stringArray"></value></default>
                                 </equals>
                                 <equals value="rfi">
                                         <default param="clipcolumn"><value type="string">DATA</value></default>
@@ -394,9 +400,9 @@
                     'end'  ==> all but end of scan.
            quackincrement -- Quack incrementally in time?
                 default: False
-                    True   ==> the quack interval is counted from the
-                               beginning of the scan
                     False  ==> the quack interval is counted from the
+                               beginning of the scan
+                    True   ==> the quack interval is counted from the
                                first unflagged data in the scan
            unflag -- Unflag the data
                 default =&gt; False (quack as indicated)
@@ -439,15 +445,27 @@
 
         alma: Automatic flagging algorithm from the ALMA heuristics pipeline.
            For more information, see ???
-           Note: selection parameters are *not* used in this mode. The algorithm
-           always run on the full MS.
+           Note: The selection parameters are *not* used in this mode. The
+           algorithm always run on the full MS.
 
            recipe -- which algorithm to use
                 default: 'vla_recipe'
                 options: 'vla_recipe', 'pdb_recipe' 
-           flux -- which field to use as flux calibrator
-           bpass -- which field to use as bandpass calibrator
-           gain -- which field to use as gain calibrator
+           flux -- which field(s) to use as flux calibrator
+           bpass -- which field(s) to use as bandpass calibrator
+           gain -- which field(s) to use as gain calibrator
+           source -- which field(s) are the sources
+
+           The source/flux/bpass/gain parameters must be vectors containing
+           the field IDs, not field names. For example:
+
+               flux   = ['0']
+               bpass  = ['1']
+               gain   = ['0']
+               source = ['2', '3']
+
+           if there are two source fields (2 and 3) and field='0' should be
+           used as both flux and gain calibrator.
 
 
         selectdata -- Other data selection parameters

@@ -72,7 +72,7 @@ class BookKeeper:
 
 # Open the FIELD sub-Table and from it get the field type.
 
-                rtn = self._table.open(self._msName + '/FIELD')
+                self._table.open(self._msName + '/FIELD')
                 source_type_col = util.util.get_source_types(self._table)
     
                 for field_id in range(len(source_type_col)):

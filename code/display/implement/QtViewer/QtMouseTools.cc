@@ -127,7 +127,60 @@ Bool QtRTRegion::getMouseRegion(Record& mouseRegion,
   return True;  }    
 
 
+//void QtRTRegion::handleEvent(DisplayEvent& ev) {
+//  cout << "QtRTRegion::handleEvent" << endl;
+//}
   
+//void QtRTRegion::keyPressed(const WCPositionEvent &ev) {
+//  cout << "QtRTRegion pressed========" << endl;
+//}
+
+//void QtRTRegion::rectangleReady() {
+//  cout << "QtRTRegion rectangle ready" << endl;
+//}
+
+void QtRTRegion::clicked(Int x, Int y) {
+   //cout << "QtPTRegion rectangle " << x << " " << y <<  endl;
+   if (itsCurrentWC==0) 
+      return ;
+   WorldCanvasHolder* wch = pd_->wcHolder(itsCurrentWC);
+   if (wch == 0) 
+     return ;
+
+   Vector<Double> pix(2), lin(2), wld(2);
+   pix(0) = x;
+   pix(1) = y;
+   //cout << "pix=(" << pix(0) << ", " << pix(1) << ")" <<  endl;
+   if (!itsCurrentWC->pixToLin(lin, pix))
+     return ;
+
+   //cout << "lin=(" << lin(0) << ", " << lin(1) << ")" <<  endl;
+   Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
+   //cout << "wldOk=" << wldOk << endl;
+   //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
+   Vector<String> unit;
+   unit = wch->worldAxisUnits();
+   //cout << "units=(" << unit(0) << ", " << unit(1) << ")" <<  endl;
+   unit.resize(2, true);
+   //cout << "units=" << unit <<  endl;
+
+   if (!wldOk) 
+      return;
+
+   Record clickPoint;
+   clickPoint.define("type", "click");
+   clickPoint.define("tool", "Rectangle");
+   Record pixel, linear, world;
+   pixel.define("pix", pix);
+   linear.define("lin", lin);
+   world.define("wld", wld);
+   world.define("units", unit);  
+   clickPoint.defineRecord("pixel", pixel);
+   clickPoint.defineRecord("linear", linear);
+   clickPoint.defineRecord("world", world);
+  
+   emit echoClicked(clickPoint); 
+}
   
   
 void QtPTRegion::regionReady() {
@@ -228,10 +281,62 @@ Bool QtPTRegion::getMouseRegion(Record& mouseRegion,
 	// it is outside world coordinate boundaries (a modest
 	// handwave toward support of all-sky images).
   
-    
+  //cout << "mouseRegion=" << mouseRegion << endl; 
   return True;  }
 
+//void QtPTRegion::handleEvent(DisplayEvent& ev) {
+//  cout << "QtPTRegion::handleEvent" << endl;
+//}
 
+//void QtPTRegion::keyPressed(const WCPositionEvent &ev) {
+//  cout << "QtPTRegion pressed======" << endl;
+//}
+
+//void QtPTRegion::polygonReady() {
+//  cout << "QtPTRegion polygon ready" << endl;
+//}
+
+void QtPTRegion::clicked(Int x, Int y) {
+   //cout << "QtPTRegion polygon " << x << " " << y <<  endl;
+   if (itsCurrentWC==0) 
+      return ;
+   WorldCanvasHolder* wch = pd_->wcHolder(itsCurrentWC);
+   if (wch == 0) 
+     return ;
+
+   Vector<Double> pix(2), lin(2), wld(2);
+   pix(0) = x;
+   pix(1) = y;
+   //cout << "pix=(" << pix(0) << ", " << pix(1) << ")" <<  endl;
+   if (!itsCurrentWC->pixToLin(lin, pix))
+     return ;
+
+   //cout << "lin=(" << lin(0) << ", " << lin(1) << ")" <<  endl;
+   Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
+   //cout << "wldOk=" << wldOk << endl;
+   //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
+   Vector<String> units;
+   units = wch->worldAxisUnits();
+   //cout << "units=(" << units(0) << ", " << units(1) << ")" <<  endl;
+   units.resize(2, true);
+
+   if (!wldOk) 
+      return;
+
+   Record clickPoint;
+   clickPoint.define("type", "click");
+   clickPoint.define("tool", "Polygon");
+   Record pixel, linear, world;
+   pixel.define("pix", pix);
+   linear.define("lin", lin);
+   world.define("wld", wld);
+   world.define("units", units);  
+   clickPoint.defineRecord("pixel", pixel);
+   clickPoint.defineRecord("linear", linear);
+   clickPoint.defineRecord("world", world);
+  
+   emit echoClicked(clickPoint); 
+}
   
 } //# NAMESPACE CASA - END
     

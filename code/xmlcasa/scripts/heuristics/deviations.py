@@ -12,6 +12,7 @@
 # 14-Nov-2008 jfl documentation upgrade release.
 # 21-Jan-2009 jfl ut4b release.
 #  7-Apr-2009 jfl mosaic release.
+# 31-Jul-2009 jfl no maxPixels release, more efficient.
 
 # package modules
 
@@ -132,7 +133,7 @@ class DataDeviationPerBaseline(BaseData):
                 results['parameters']['dependencies']['gainCal'] = \
                  gainCalParameters
 
-# loop through data_desc_id and field_id
+# which data_desc_id/field_id combinations do we want to look through?
 
             if self._first:
                field_spw = self._valid_field_spw
@@ -145,19 +146,17 @@ class DataDeviationPerBaseline(BaseData):
                target_field_spw = list(self._next_target_field_spw)
 
             self._next_target_field_spw = []
-
             self._ms.open(self._msName)
-            for key in target_field_spw:
+
+# first, make sure the data are calibrated with the up-to-date calibration, if
+# required
+
+            for kk in target_field_spw:
+                key = tuple(kk)
                 field_id = key[0]
                 data_desc_id = key[1]
 
                 results['parameters'][(field_id,data_desc_id)] = {}
-
-# set the flag states we want to look at 
-
-                flagVersions = ['BeforeHeuristics', 'StageEntry', 'Current']
-                if not self._first:
-                    flagVersions.append('PreviousIteration')
 
                 if self._dataType=='corrected':
                     try:
@@ -166,22 +165,88 @@ class DataDeviationPerBaseline(BaseData):
 
                         self._bpCal.setapply(spw=data_desc_id, field=field_id)
                         self._gainCal.setapply(spw=data_desc_id, field=field_id)
-                        commands += self._msCalibrater.correct(spw=data_desc_id,
-                         field=field_id)
+                        newCommands,error = self._msCalibrater.correct(
+                         spw=data_desc_id, field=field_id)
+
+                        results['parameters'][(field_id,data_desc_id)]\
+                         ['commands'] = newCommands
+                        results['parameters'][(field_id,data_desc_id)]\
+                         ['error'] = error
 
                     except KeyboardInterrupt:
                         raise
                     except:
                         results['parameters'][(field_id,data_desc_id)]\
                          ['error'] = 'failed to calibrate data'
-                        continue
 
-# get the current data
+# read into a dictionary all the data for the measured spw/fields - do it 
+# this way because reading it in piecemeal for each spw/field can be slow
+# as the flagversion gets changed several times for each little bit.
 
-                corr_axis, chan_freq, times, chunks, antenna1, antenna2, \
-                 ifr_real, ifr_imag, ifr_flag, ifr_flag_row = \
-                 self._getBaselineData(field_id, data_desc_id, 
-                 antenna_range, self._dataType, flagVersions)
+# set the flag states we want to look at, then read in data for each
+
+            flagVersions = ['BeforeHeuristics', 'StageEntry', 'Current']
+            if not self._first:
+                flagVersions.append('PreviousIteration')
+
+            data_in = {}
+            for fv,flagVersion in enumerate(flagVersions):
+                for kk in target_field_spw:
+                    key = tuple(kk)
+                    field_id = key[0]
+                    data_desc_id = key[1]
+
+                    if fv == 0:
+
+# get the data and first flagVersion
+
+                        data_in[key] = {} 
+                        corr_axis, chan_freq, times, chunks, antenna1,\
+                         antenna2, ifr_real, ifr_imag, ifr_flag,\
+                         ifr_flag_row = self._getBaselineData(field_id,
+                         data_desc_id, antenna_range, self._dataType,
+                         [flagVersion])
+
+                        data_in[key]['corr_axis'] = corr_axis
+                        data_in[key]['chan_freq'] = chan_freq
+                        data_in[key]['times'] = times
+                        data_in[key]['chunks'] = chunks
+                        data_in[key]['antenna1'] = antenna1
+                        data_in[key]['antenna2'] = antenna2
+                        data_in[key]['ifr_real'] = ifr_real
+                        data_in[key]['ifr_imag'] = ifr_imag
+                        data_in[key]['ifr_flag'] = ifr_flag
+                        data_in[key]['ifr_flag_row'] = ifr_flag_row
+                    else:
+
+# get flags only for subsequent flagversions
+
+                        ifr_flag, ifr_flag_row = self._getBaselineData(
+                         field_id, data_desc_id, antenna_range, 
+                         self._dataType, [flagVersion], flagsOnly=True)
+
+                        data_in[key]['ifr_flag'] += ifr_flag
+                        data_in[key]['ifr_flag_row'] += ifr_flag_row
+
+            self._msFlagger.setFlagState('Current')
+
+# now do the calculations
+
+            for kk in target_field_spw:
+                key = tuple(kk)
+                field_id = key[0]
+                data_desc_id = key[1]
+
+                corr_axis = data_in[key]['corr_axis']
+                chan_freq = data_in[key]['chan_freq']
+                times = data_in[key]['times']
+                chunks = data_in[key]['chunks']
+                antenna1 = data_in[key]['antenna1']
+                antenna2 = data_in[key]['antenna2']
+                ifr_real = data_in[key]['ifr_real']
+                ifr_imag = data_in[key]['ifr_imag']
+                ifr_flag = data_in[key]['ifr_flag']
+                ifr_flag_row = data_in[key]['ifr_flag_row']
 
 # declare arrays
 

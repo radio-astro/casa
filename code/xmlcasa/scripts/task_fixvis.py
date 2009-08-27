@@ -95,7 +95,11 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
                     fldids[i] = i
 
         casalog.post("fldid vector: " + str(fldids), 'DEBUG1' )
-        im.open(vis)
+
+        # We don't really want to create or use scratch columns, but im will
+        # open vis read-only unless usescratch is set to True.
+        im.open(vis, usescratch=True)
+        
         im.calcuvw(fldids, refcode)
         im.close()
     except Exception, instance:

@@ -115,9 +115,9 @@ class BestMethodSelector(BaseDataModifier):
            <th>Spw</th>
            <th>Corr</th>
            <th>Method</th>
-           <th>Merit mean</th>
-           <th>Merit std</th>
-           <th>Merit median</th>
+           <th>Merit Mean</th>
+           <th>Merit StD</th>
+           <th>Merit Median</th>
            </tr>"""
 
         for i,entry in enumerate(table_entries):

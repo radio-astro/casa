@@ -18,6 +18,7 @@
 
 import copy as python_copy
 from numpy import *
+import os.path
 import pickle
 import types
 
@@ -42,7 +43,8 @@ class SourceSpectra(BaseDataModifier):
 
 # were any sources found in this area
 
-        if v.has_key('sources') and len(v['sources']) > 0:
+        if v.has_key('sources') and len(v['sources']) > 0 and \
+         os.path.exists(v['cleanMapName']):
             self._image.open(infile=v['cleanMapName'])
             csys = self._image.coordsys()
             crpix = csys.referencepixel()['numeric'];
@@ -122,7 +124,8 @@ class SourceSpectra(BaseDataModifier):
 
 # were any sources found in this area
 
-        if v.has_key('sources') and len(v['sources']) > 0:
+        if v.has_key('sources') and len(v['sources']) > 0 and \
+         os.path.exists(v['cleanMapName']):
             self._image.open(infile=v['cleanMapName'])
             csys = self._image.coordsys()
             crpix = csys.referencepixel()['numeric'];

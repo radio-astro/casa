@@ -19,7 +19,6 @@ def test_eq(result, total, flagged):
 default(flagdata)
 
 vis = 'flagdatatest.ms'
-
 shutil.copytree(os.environ.get('CASAPATH').split()[0] +
                 "/data/regression/flagdata/" + vis,
                 vis)
@@ -33,6 +32,7 @@ inp(flagdata)
 flagdata()
        
 antenna = ['1', '2']
+clipcolumn = ['DATA', 'datA']
 
 inp(flagdata)
 flagdata()
@@ -91,10 +91,9 @@ test_eq(flagdata(vis=vis, mode='summary'), 2000700, 9142)
 test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 354)
 flagdata(vis=vis, unflag=true)
 
-
 # Test of mode = 'shadow'
 flagdata(vis=vis, mode='shadow', diameter=40)
-test_eq(flagdata(vis=vis, mode='summary'), 2000700, 15860) # doesn't work
+test_eq(flagdata(vis=vis, mode='summary'), 2000700, 38610)
 flagdata(vis=vis, unflag=true)
 
 flagdata(vis=vis, mode='shadow')
@@ -145,15 +144,14 @@ test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 148200)
 flagdata(vis=vis, unflag=true)
 
 
-
 # Test of mode = 'alma'
+vis='cwilson2.ms'
 for r in ['vla_recipe', 'pdb_recipe']:
-    os.system('rm -rf ' + vis)
-    importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                 '/data/regression/ngc5921/ngc5921.fits', \
-                 vis)
+    shutil.copytree(os.environ.get('CASAPATH').split()[0] +
+                    "/data/regression/flagdata/" + vis,
+                    vis)
     listobs(vis=vis, verbose=false)
     flagdata(vis=vis, unflag=true)
-    flagdata(vis=vis, mode='alma', recipe=r, gain='1', flux='0', bpass='0')
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 0)
-
+    flagdata(vis=vis, mode='alma', recipe=r, gain=['1'], flux=['0'], bpass=['0'], source=['2'])
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 261450, 89334)
+    # previous result with source=[]: 17388 / 261450 flags set
