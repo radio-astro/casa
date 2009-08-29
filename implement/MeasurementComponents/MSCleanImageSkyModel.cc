@@ -159,7 +159,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   
-  Bool converged=True;
+  Int converged=0;
   // Loop over all channels and polarizations
   for (Int chan=0; chan<nchan; chan++) {
 
