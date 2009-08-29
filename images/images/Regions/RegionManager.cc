@@ -579,6 +579,25 @@ namespace casa { //# name space casa begins
 
       return leRecord;
   }
+
+  Bool RegionManager::writeImageFile(const String& file, const String& regionname, const Record& regionRecord){
+
+    TableRecord regionTblRecord(regionRecord);
+    ImageRegion *imageReg=ImageRegion::fromRecord(regionTblRecord, "");
+     try{
+         AipsIO oos(file, ByteIO::NewNoReplace);
+         oos << imageReg->toRecord(regionname);  
+      }
+      catch(...) { 
+	throw(AipsError(String("Could not create the region file.\n Please check pathname and directory \n")+
+			String(" permissions and be sure the file \n does not already exist.")));
+      }
+
+     delete imageReg;
+     return True;
+
+  }
+
 	
   String RegionManager::imageRegionToTable(const String& tabName, const ImageRegion& imreg, const String& regName){
     tab_p=Table(tabName, Table::Update);
