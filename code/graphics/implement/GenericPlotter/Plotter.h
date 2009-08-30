@@ -47,6 +47,7 @@ public:
     // This enum should contain all known implementations.
     enum Implementation {
         QWT,
+	NONE,
         
         // Default plotter implementation is set here.
         DEFAULT = QWT
