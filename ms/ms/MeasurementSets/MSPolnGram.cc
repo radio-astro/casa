@@ -1,4 +1,4 @@
-//# MSPolnGram.cc: Grammar for spectral window expressions
+//# MSPolnGram.cc: Grammar for polarization selection expressions
 //# Copyright (C) 1998,1999,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -91,11 +91,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	parser.reset();
 	// parse command string
 	ret=parser.theParser(command);
-			     // selectedDDIDs,
-			     // selectedSpwPolnMap);
-	// selectedIDs = parser.selectedIDs();
-	// selectedChans = parser.selectedChanIDs();
-	node=(*(parser.node()));
+	//	node=(*(parser.node()));
+	node=((parser.node()));
 	selectedDDIDs = parser.selectedDDIDs();
 	selectedPolnMap = parser.selectedPolnMap();
 	selectedSetupMap = parser.selectedSetupMap();
