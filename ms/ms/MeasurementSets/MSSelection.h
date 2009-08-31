@@ -205,6 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     inline Matrix<Int> getChanList(const MeasurementSet* ms=NULL) 
     {if (chanIDs_p.nelements() <= 0) getTEN(ms); return chanIDs_p.copy();}
+
     
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
     {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p.copy();}
@@ -214,6 +215,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     inline OrderedMap<Int, Vector<Vector<Int> > > getCorrMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedSetupMap_p;};
+
+    void getChanSlices(Vector<Vector<Slice> >& chanslices, 
+		       const MeasurementSet* ms=NULL);
+
+    void getCorrSlices(Vector<Vector<Slice> >& corrslices,
+		       const MeasurementSet* ms=NULL);
     
     inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return scanIDs_p.copy();}
