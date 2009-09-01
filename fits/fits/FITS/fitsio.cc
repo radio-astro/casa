@@ -85,6 +85,7 @@ void readHeaderRecErrHandler(const char *errMessage, FITSError::ErrorLevel sever
 //=============================================================================================
 void FitsInput::errmsg(FitsErrs e, const char *s) {
     //cout<<"[FitsInput::errmsg] called."<<endl;
+    static char errMsg[180];
     ostringstream msgline;
     msgline << "FitsInput error:  ";
     if (m_fin.fname() == 0 || *m_fin.fname() == '\0') 
@@ -94,11 +95,9 @@ void FitsInput::errmsg(FitsErrs e, const char *s) {
     msgline << " Physical record " << m_fin.blockno()
 	    << " logical record " << m_fin.recno() << " --\n\t" << s << endl;
     m_err_status = e;
-    // all FitsIO messages are SEVERE
-    //const char * mptr = msgline.str().data();
-	 const char * mptr = msgline.str().c_str();
-    m_errfn(mptr, FITSError::SEVERE);
-    // delete [] mptr;
+    // all FitsIO messages are WARNINGS
+    strncpy(errMsg, msgline.str().c_str(), 179);
+    m_errfn(errMsg, FITSError::WARN);
 }
 //==========================================================================================
 // Implement skip function with cfitsio of NASA. GYL
