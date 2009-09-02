@@ -662,7 +662,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     Long npix=theIm.shape().product();
     Long memtot=HostInfo::memoryTotal();
     //check for 32 bit OS and limit it to 2Gbyte
-    if( ((signed Long)(4000000000)) < 0){
+    if( sizeof(void*) == 4){
       if(memtot > 2000000)
 	memtot=2000000;
     }

@@ -29,9 +29,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
-    <param type="string" name="imagename">
-	    <description>Pre-name of output images</description>
-	    <value></value>
+    <param type="any" name="imagename">
+      <description>Pre-name of output images</description>
+      <any type="variant"/>
+      <value type="string"></value>
+      <value></value>
+    </param>
+
+    <param type="string" name="outlierfile">
+      <description>Text file with image names, sizes, centers</description>
+      <value></value>
     </param>
 
     <param type="string" name="field">
@@ -559,6 +566,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  m2.model; image of clean components
                  m2.residual; image of residuals
                  m2.interactive.mask; image containing clean regions
+               To include outlier fields: 
+                 imagename=['n5921','outlier1','outlier2'] 
+       outlierfile --- Text file name which contains image names, sizes, field
+                       centers
        field -- Select fields in mosaic.  Use field id(s) or field name(s).
                   ['go listobs' to obtain the list id's or names]
               default: ''= all fields
@@ -832,6 +843,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
                default = [256,256]; example: imsize=[350,350]
                imsize = 500 is equivalent to [500,500]
+               If include outlier fields, e.g., [[400,400],[100,100]] or
+               use outlierfile.
                Avoid odd-numbered imsize.
        cell -- Cell size (x,y)
                default= '1.0arcsec';
@@ -842,6 +855,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        phasecenter -- direction measure  or fieldid for the mosaic center
                default: '' =&gt; first field selected ; example: phasecenter=6
                or phasecenter='J2000 19h30m00 -40d00m00'
+               If include outlier fields, 
+                e.g. ['J2000 19h30m00 -40d00m00',J2000 19h25m00 -38d40m00']
+               or use outlierfile.
        restfreq -- Specify rest frequency to use for output image
                default='' Occasionally it is necessary to set this (for
                example some VLA spectral line data).  For example for
@@ -881,7 +897,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	   interactive session can be used for a new execution. NOTE:
  	   the initial clean mask actually used is the union of what
  	   is specified in mask and &lt;imagename&gt;.mask default: [] (no
- 	   masking); Possible pecification types: (a) Explicit
+ 	   masking); Possible specification types: (a) Explicit
  	   cleanbox pixel ranges example: mask=[110,110,150,145] clean
  	   region with blc=110,100; trc=150,145 (pixel values) (b)
  	   Filename with cleanbox pixel values with ascii format:
@@ -894,6 +910,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	   example: mask='myregion.rgn' (e) Combinations of any of the
  	   above example: mask=[[110,110,150,145],'mycleanbox.txt',
  	   'myimage.mask','myregion.rgn']
+           If include outlier fields, then mask need to be spefied in
+           nested lists: e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
+           (A clean box with [110,110,150,145] and a image mask for main field, 
+            no mask for 1st outlier field, 1 clean box for second outlier field.)
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 
@@ -979,7 +999,58 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   		    default = False; do not run asychronously
 
 
+        ======================================================================
 
+                             HINTS ON CLEAN WITH FLANKING FIELDS
+
+              1. Decide if the images will be specified directly in the
+                 inputs or with an outlier file.  For more than a few fields,
+                 an outlier file more convenient.
+
+                Direct Method:
+
+                   cell = ['1.0arcsec', '1.0arcsec']
+                   imagename = ['M1_0','M1_1','M1_2]
+                   imsize = [[1024,1024],[128,128],[128,128]]
+                   phasecenter = ['J2000 13h27m20.98 43d26m28.0',
+                             'J2000 13h30m52.159 43d23m08.02', 'J2000 13h24m08.16 43d09m48.0']
+
+                 Text file method  (in outlier.txt)
+
+                   imagename = 'M1'
+                   outlierfile = 'outlier.txt'
+                      [phasecenter, imsize ignored]
+
+                   Contents of outlier.txt 
+                   C 0   1024 1024   13 27 20.98     43 26 28.0
+                   C 1    128  128   13 30 52.158    43 23 08.00
+                   C 2    128  128   13 24 08.163    43 09 48.00
+
+                In both cases the following images will be made:
+                    M1_0.image, M1_1.image, M1_2.image     cleaned images
+                    M1.0.model, M1_1.model, M1_2.model     model images
+                    M1.0.residual, M1_1.residual, M1_2.residual     residual images
+
+              2. Masks for flanking fields are specified in same way as 
+                 in the single output field case, but need extra '[ ]' to
+                 distinguish each field. 
+                    mask=[['myregion.rg',[100,100,150,150]],['myimage1.mask'],[]]
+                    would apply masks:
+                    for the first field (main field),
+                      myregion.rg and a box defined by [100,100,150,150] in pixels
+                    for the seconf field (first outlier), myimage1.mask 
+                    for the third field (second outlier), no mask (produce a mask for
+                    whole field) 
+                 However, if boxfiles are given, ids in the first column of the files
+                 are used to match with fields (using order given imagename or
+                 outlierfile. 
+                 So, if the content of  a boxfile looks like this,
+ 	                 0 45 66 123 124 
+ 	                 1 23 100 300 340
+                         2 20 20 40 40
+                 then [45 66 123 124] is assigned to first field (imagename[0], or first line
+                 of outlierfile).
+                
   </example>
 
 </task>

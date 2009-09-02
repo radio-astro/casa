@@ -29,7 +29,6 @@
 #include <synthesis/MeasurementComponents/SteepestDescentSolver.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <casa/Arrays/MatrixMath.h>
-#include <strstream>
 namespace casa {
 
   SteepestDescentSolver::SteepestDescentSolver(Int nParams,Vector<Int> polMap,

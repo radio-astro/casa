@@ -123,7 +123,7 @@ class cleanhelper:
 
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
                           nchan, start, width, restfreq, field, phasecenters,
-                          names=[], facets=1):
+                          names=[], facets=1, makepbim=False):
         #will do loop in reverse assuming first image is main field
         self.nimages=len(imsizes)
         if((len(imsizes)<=2) and (type(imsizes[0])==int)):
@@ -137,6 +137,8 @@ class cleanhelper:
         #imageids is to tag image to mask in aipsbox style file 
         self.imageids={}
         if(type(phasecenters) == str):
+            phasecenters=[phasecenters]
+        if(type(phasecenters) == int):
             phasecenters=[phasecenters]
         if((self.nimages==1) and (type(names)==str)):
             names=[names]
@@ -160,10 +162,13 @@ class cleanhelper:
             ###otherwise i guess you want to continue a clean
             if(not os.path.exists(self.imagelist[n])):
                 self.im.make(self.imagelist[n])
-        
-        
-
-
+	    if(makepbim and n==0):
+    		##make .flux image 
+                # for now just make for a main field 
+		self.im.setvp(dovp=True)
+                self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux')
+		self.im.setvp(dovp=False)
+    
     def makemultifieldmask(self, maskobject=''):
         """
         This function assumes that the function definemultiimages has been run and thus
@@ -225,7 +230,141 @@ class cleanhelper:
                     ia.open(self.maskimages[self.imagelist[k]])
                     ia.set(pixels=1.0)
                     ia.done()
-                   
+
+    def makemultifieldmask2(self, maskobject=''):
+        """
+        New makemultifieldmask to accomodate different kinds of masks supported
+        in clean with flanking fields (added by TT)
+        required: definemultiimages has already run so that imagelist is defined 
+        """
+        if((len(self.maskimages)==(len(self.imagelist)))):
+            if(not self.maskimages.has_key(self.imagelist[0])):
+                self.maskimages={}
+        else:
+            self.maskimages={}
+
+        #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
+        if((len(maskobject)==0) or (maskobject==[''])):
+            return
+        # determine number of input elements
+        if (type(maskobject)==str):
+            maskobject=[maskobject]
+        if(type(maskobject) != list):
+            ##don't know what to do with this
+            raise TypeError, 'Dont know how to deal with mask object'
+        if(type(maskobject[0])==int or type(maskobject[0])==float):
+            maskobject=[maskobject] 
+        if(type(maskobject[0][0])==list):
+            if(type(maskobject[0][0][0])!=int and type(maskobject[0][0][0])!=float):        
+                maskobject=maskobject[0]
+                    
+        # define maskimages
+        if(len(self.maskimages)==0):
+            for k in range(len(self.imageids)):
+                if(not self.maskimages.has_key(self.imagelist[k])):
+                    self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
+        # initialize maskimages
+        for k in range(len(self.imagelist)):
+            if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
+                ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
+                        infile=self.imagelist[k])
+                ia.open(self.maskimages[self.imagelist[k]])
+                ia.set(pixels=0.0)
+                ia.done()
+
+        # assume a file name list for each field
+        masktext=[]
+        # take out extra []'s
+        maskobject=self.flatten(maskobject)
+        for maskid in range(len(maskobject)):
+            masklist=[]
+            tablerecord=[]
+            if(type(maskobject[maskid]))==str:
+                if(maskobject[maskid])=='':
+                    #skipped
+                    continue
+                else:
+                    maskobject[maskid]=[maskobject[maskid]]
+            for masklets in maskobject[maskid]:
+                if(type(masklets)==int):
+                    masklist.append(maskobject[maskid])
+                if(type(masklets)==str):
+                    if(masklets==''):
+                        #skip
+                        continue
+                    if(os.path.exists(masklets)):
+                        if(commands.getoutput('file '+masklets).count('directory')):
+                            if(self.maskimages[self.imagelist[maskid]] == masklets):
+                                self.maskimages[self.imagelist[maskid]]=masklets
+                            else:
+                                # make a copy
+                                ia.open(self.imagelist[maskid])
+                                self.csys=ia.coordsys().torecord()
+                                shp = ia.shape()
+                                ia.done()
+                                self.copymaskimage(masklets,shp,'__tmp_mask')
+                                ia.open(self.maskimages[self.imagelist[maskid]])
+                                ia.calc(pixels='+ __tmp_mask')
+                                ia.done()
+                                ia.removefile('__tmp_mask')
+
+                        elif(commands.getoutput('file '+masklets).count('text')):
+                            masktext.append(masklets)
+                        else:
+                            tablerecord.append(masklets)
+                            #raise TypeError, 'Can only read text mask files or mask images'
+                    else:
+                        raise TypeError, masklets+' seems to be non-existant'
+
+                if(type(masklets)==list):
+                    masklist.append(masklets)
+            # initialize mask
+            #if (len(self.maskimages) > 0):
+            #    if(not (os.path.exists(self.maskimages[self.imagelist[maskid]]))):
+            #        ia.fromimage(outfile=self.maskimages[self.imagelist[maskid]],
+            #                     infile=self.imagelist[maskid])
+            #        ia.open(self.maskimages[self.imagelist[maskid]])
+            #        ia.set(pixels=0.0)
+            #        ia.done()
+            #        print "INITIALIZED: ",self.maskimages[self.imagelist[maskid]]
+
+            # handle boxes in lists
+            if(len(masklist) > 0):
+                self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
+            if(len(tablerecord) > 0 ):
+                reg={}
+                for tabl in tablerecord:
+                    reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+                if(len(reg)==1):
+                    reg=reg[reg.keys()[0]]
+                else:
+                    reg=rg.makeunion(reg)
+                self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], region=reg)
+        #boxfile handling done all at once
+        if(len(masktext) > 0):
+            # fill for all fields in boxfiles
+            circles, boxes=self.readmultifieldboxfile(masktext)
+            # doit for all fields
+            for k in range(len(self.imageids)):
+                if(circles.has_key(self.imageids[k]) and boxes.has_key(self.imageids[k])):
+                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
+                                              boxes=boxes[self.imageids[k]],
+                                              circles=circles[self.imageids[k]])
+                elif(circles.has_key(self.imageids[k])):
+                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
+                                              circles=circles[self.imageids[k]])
+                elif(boxes.has_key(self.imageids[k])):
+                    self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
+                                                   boxes=boxes[self.imageids[k]])
+        # set unused mask images to 1 for a whole field
+        for key in self.maskimages:
+            if(os.path.exists(self.maskimages[key])):
+                ia.open(self.maskimages[key])
+                fsum=ia.statistics()['sum']
+                if(fsum[0]==0.0):
+                    ia.set(pixels=1.0)
+                ia.done()
+                
         
     def makemaskimage(self, outputmask='', imagename='', maskobject=[]):
         """
@@ -568,6 +707,7 @@ class cleanhelper:
         elif (len(temprec) > 1):
             polyg=rg.dounion(temprec)
         return polyg,union
+
     def readmultifieldboxfile(self, boxfiles):
         circles={}
         boxes={}
@@ -585,17 +725,20 @@ class cleanhelper:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
+                        print "splitline2=",splitline2
                         if (len(splitline2)<6):
                             ##circles
                             if(int(splitline2[1]) <0):
                                 circlelist=[int(splitline2[2]),
                                             int(splitline2[3]),int(splitline2[4])]
-                                circles[splitline2[0]].append(circlelist)
+                                #circles[splitline2[0]].append(circlelist)
+                                circles[self.imageids[int(splitline2[0])]].append(circlelist)
                             else:
                                 #boxes
                                 boxlist=[int(splitline2[1]),int(splitline2[2]),
                                          int(splitline2[3]),int(splitline2[4])]
-                                boxes[splitline2[0]].append(boxlist)
+                                #boxes[splitline2[0]].append(boxlist)
+                                boxes[self.imageids[int(splitline2[0])]].append(boxlist)
                         else:
                            ## Don't know what that is
                            ## might be a facet definition 
@@ -615,6 +758,7 @@ class cleanhelper:
                 boxes.pop(self.imageids[k])
                 
         return circles,boxes
+
     def readoutlier(self, outlierfile):
         """ Read a file containing clean boxes (kind of
         compliant with AIPS FACET FILE)
@@ -686,3 +830,29 @@ class cleanhelper:
             ib=ia.regrid(outfile=outfile ,shape=shp, axes=[0,1], csys=self.csys, overwrite=True)
             ia.done()
             ib.done()
+
+
+    def flatten(self,l):
+        """
+        A utility function to flatten nested lists 
+        but allow nesting of [[elm1,elm2,elm3],[elm4,elm5],[elm6,elm7]]
+        to handle multifield masks.
+        This does not flatten if an element is a list of int or float. 
+        And also leave empty list as is.
+        """ 
+        retlist = []
+        l = list(l)
+        #print 'l=',l
+        for i in range(len(l)):
+            #print "ith l=",i, l[i] 
+            if isinstance(l[i],list) and l[i]:
+                # and (not isinstance(l[i][0],(int,float))):
+                #print "recursive l=",l
+                if isinstance(l[i][0],list) and isinstance(l[i][0][0],list):
+                   retlist.extend(self.flatten(l[i]))
+                else:
+                   retlist.append(l[i])
+            else:
+                retlist.append(l[i])
+        return retlist 
+

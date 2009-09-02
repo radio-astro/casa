@@ -471,8 +471,21 @@ QtRegionManager::QtRegionManager(
        AipsIO os(rName, ByteIO::Old);
        //os.open(rName);
        os >> rec;  
+       os.close();
        //cout << "infile region record:\n" << rec << endl;
        reg = ImageRegion::fromRecord(rec, rName+".tbl");
+       
+       /*
+       const WCRegion* ptr = reg->asWCRegionPtr();
+       WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(ptr);
+       //cout << "regions:" << unfolded->toRecord("") << endl;
+
+       ImageRegion* newReg = new ImageRegion(*unfolded);
+       //put reconstructed in, otherwise can not delete
+       AipsIO rs(rName, ByteIO::NewNoReplace);
+       rs << newReg->toRecord(rName+".tbl");  
+       rs.close();
+       */
 
        List<QtDisplayData*> DDs = qdp_->registeredDDs();
        ListIter<QtDisplayData*> qdds(DDs);
@@ -490,6 +503,8 @@ QtRegionManager::QtRegionManager(
        //cout << "------imageRegion\n" 
        //     << reg->toRecord("ab") << endl;
        regData[sName] = regionToShape(qdd, reg);
+
+       //regData[sName] = regionToShape(qdd, newReg);
        regState[sName] = false;
        currentRegionChanged(sName);
 
@@ -731,6 +746,15 @@ void QtRegionManager::loadRegionFromImage() {
           ImageRegion* reg = (qdd->imageInterface())
                     ->getImageRegionPtr(regionNames[kk]);
        
+          const WCRegion* ptr = reg->asWCRegionPtr();
+          WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(ptr);
+          //cout << "regions:" << unfolded->toRecord("") << endl;
+
+          ImageRegion* newReg = new ImageRegion(*unfolded);
+
+          //put reconstructed in, otherwise can not delete
+          qdp_->saveRegionInImage(regionNames[kk], *newReg);
+
           //cout << "======imageRegion\n" 
           //     << reg->toRecord("ab") << endl;
           QString sName = regionNames(kk).c_str();
@@ -739,7 +763,7 @@ void QtRegionManager::loadRegionFromImage() {
 
           //addRegionToMenu(sName, "Image");
            
-          regData[sName] = regionToShape(qdd, reg);
+          regData[sName] = regionToShape(qdd, newReg);
           regState[sName] = false;
           currentRegionChanged(sName);
        }
@@ -1664,13 +1688,13 @@ bool QtRegionManager::deleteBox(QString& group, int comp) {
          ->getImageRegionPtr(regname);
 
      const WCRegion* wcr = prev->asWCRegionPtr();
-     PtrBlock<const WCRegion*> regPtrs=
+     PtrBlock<const WCRegion*> regPtrs= 
           (static_cast<const WCCompound* >(wcr))->regions();
+    
      regPtrs.remove(comp);
      WCUnion nu(True, regPtrs);
      ImageRegion newReg(nu);
      qdp_->saveRegionInImage(regname, newReg);
-  
 
      if (ttl == "1") {
         //no more left, delete this group

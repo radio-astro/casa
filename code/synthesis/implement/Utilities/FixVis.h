@@ -148,13 +148,14 @@ private:
   //const ROArrayMeasColumn<MDirection>& getPhaseDirs() const;
   //ArrayMeasColumn<MDirection>& getPhaseDirs();
 
-  // Convert the phase tracking centers in the FIELD table to newFrame.
-  // Note that each direction column in the table only allows one
+  // Convert the directions (phase tracking centers, + DELAY_DIR and
+  // REFERENCE_DIR if they start in the same frame) in the FIELD table to
+  // newFrame.  Note that each direction column in the table only allows one
   // reference frame for the entire column, so all fields must share the same
   // frame.
-  void convertPhaseDirs(const MDirection::Types outType);
+  void convertFieldDirs(const MDirection::Types outType);
 
-  // Private worker function for convertPhaseDirs().
+  // Private worker function for convertFieldDirs().
   void convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
                         const MDirection::Ref& newFrame,
                         const Bool doAll3,

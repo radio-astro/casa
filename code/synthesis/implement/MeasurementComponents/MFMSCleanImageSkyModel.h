@@ -119,7 +119,6 @@ private:
   Scale_Method method_p;
 
   Int nscales_p;
-  Float smallScaleBias_p;
   Vector<Float> userScaleSizes_p;
 
   LatticeCleanProgress *progress_p;
@@ -132,6 +131,8 @@ private:
   // parameter which stops the cycle if you hit the smallest scale this many
   // consecutive times; if < 0, don't stop for this
   Int stopPointMode_p;
+
+  Float smallScaleBias_p;
 
 };
 

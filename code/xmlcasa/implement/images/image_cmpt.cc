@@ -1324,8 +1324,6 @@ image::fitsky(const ::casac::record& region,
     *itsLog << LogOrigin("image", "fitsky");
     if (detached()) return rstat;
 
-    String error;
-
     Array<Float> residPixels;  // output in out_pixels
     Array<Bool> residMask;     // output in out_pixelmask
 
@@ -1357,10 +1355,12 @@ image::fitsky(const ::casac::record& region,
 
     //call the fitsky
     Bool converged;
-    Record outrec=itsImage->fitsky(residPixels, residMask, converged, *Region,
-				   chan, String(stokes), mask, models, *Estimate, fixed, 
-				   includepix, 
-				   excludepix, fitIt, deconvolveIt, list);
+    ComponentList compList = itsImage->fitsky(
+        residPixels, residMask, converged, *Region,
+        chan, String(stokes), mask, models, *Estimate, fixed, 
+		includepix, excludepix, fitIt, deconvolveIt, list
+    );
+
 
     /*
     // Marshal residMask into output parameter out_pixelmask
@@ -1380,6 +1380,14 @@ image::fitsky(const ::casac::record& region,
     residPixels.shape().asVector().tovector(v_pshape);
     out_pixels = new ::casac::variant(vd_residPixels, v_pshape);
     */
+
+    Record outrec;
+    String error;
+    if (! compList.toRecord(error, outrec)) {
+        *itsLog << "Failed to generate output record from result. " << error
+                << LogIO::POST;
+    }    
+ 
     casa::Record outrec1;
     outrec1.define("converged", converged);
     outrec1.define("pixelmask", residMask);

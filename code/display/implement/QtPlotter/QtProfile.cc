@@ -77,7 +77,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
         :QWidget(parent), //MWCCrosshairTool(),
          pc(0), te(0), analysis(0), 
          coordinate("world"), coordinateType(""),
-         fileName(name), position(""), yUnit(""), xpos(""), ypos(""),
+         fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
+	 xpos(""), ypos(""),
 	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()) 
 {
 
@@ -256,7 +257,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
-    pc->setYLabel("("+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
 
     pc->setAutoScale(autoScale->checkState());
        
@@ -424,6 +425,8 @@ void QtProfile::writeText()
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
     ts << "#yLabel: " << "(" << yUnit << ")\n";
     
+    ts.setRealNumberNotation(QTextStream::ScientificNotation);
+
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
     }
@@ -578,7 +581,8 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
-    pc->setYLabel("("+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+    yUnitPrefix = "";
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
 
     xpos = "";
     ypos = "";
@@ -614,16 +618,18 @@ void QtProfile::wcChanged(const String c,
   
     Vector<Double> xv(ns);
     Vector<Double> yv(ns);
-    if (cube == -1)
-        for (Int i = 0; i < ns; i++) {
-            xv(i) = y(i);
-            yv(i) = x(i); 
+    if (cube == -1){
+	for (Int i = 0; i < ns; i++) {
+	    xv(i) = y(i);
+	    yv(i) = x(i); 
         }
-    else 
+    }
+    else{
         for (Int i = 0; i < ns; i++) {
             xv(i) = x(i);
             yv(i) = y(i); 
         }
+    }
 
     if (ns < 1) return;
     if (ns == 1) {
@@ -658,20 +664,79 @@ void QtProfile::wcChanged(const String c,
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
                 coordinate, coordinateType);
+
+    // scale for better display
+    // max absolute display numbers should be between 0.1 and 100.0
+    Double dmin = 0.1;
+    Double dmax = 100.;
+    Double ymin = min(z_yval);  	
+    Double ymax = max(z_yval);
+    ymax = max(abs(ymin), ymax);
+    Double symax;
+    Int ordersOfM = 0;
+
+    symax = ymax;
+    while(symax < dmin){
+	ordersOfM += 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+    while(symax > dmax){
+	ordersOfM -= 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+
+    if(ordersOfM!=0){
+	// correct display y axis values
+        for (uInt i = 0; i < z_yval.size(); i++) {
+            z_yval(i) *= pow(10.,ordersOfM);
+        }
+	// correct unit string 
+	if(yUnit.startsWith("(")||yUnit.startsWith("[")||yUnit.startsWith("\"")){
+	    // express factor as number
+	    ostringstream oss;
+	    oss << -ordersOfM;
+	    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+	}
+	else{
+	    // express factor as character
+	    switch(-ordersOfM){ // note the sign!
+	    case -9:
+		yUnitPrefix = "p";
+		break;
+	    case -6:
+		yUnitPrefix = "u";
+		break;
+	    case -3:
+		yUnitPrefix = "m";
+		break;
+	    case 3:
+		yUnitPrefix = "k";
+		break;
+	    case 6:
+		yUnitPrefix = "M";
+		break;
+	    case 9:
+		yUnitPrefix = "M";
+		break;
+	    default:
+		ostringstream oss;
+		oss << -ordersOfM;
+		yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+		break;
+	    }
+	}
+    }
+    else{ // no correction
+	yUnitPrefix = "";
+    }
+	
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
+    // plot the graph 
     pc->plotPolyLine(z_xval, z_yval);
 
     lastX.assign(xv);
     lastY.assign(yv);
-
-    //cout << "ok=" << ok << endl;
-    //cout << "xv=" << xv << " yv=" << yv << endl;
-    //cout << "coordinate=" << coordinate 
-    //     << " coordinateType=" << coordinateType << endl;
-    
-    //cout << "z_xval=" << z_xval 
-    //     << " z_yval=" << z_yval << endl;
-    //QMessageBox::warning(this, "QtProfile",
-    //                "pause to check the values\n");
 
 }
 

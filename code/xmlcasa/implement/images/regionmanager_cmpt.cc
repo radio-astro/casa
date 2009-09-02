@@ -491,6 +491,8 @@ regionmanager::fromfiletorecord(const std::string& filename,
 	const bool verbose, 
 	const std::string& regionname)
 {
+
+  
     if ( !itsIsSetup )
 	setup();
     *itsLog << LogOrigin("regionmanager", "fromfiletorecord");
@@ -499,7 +501,27 @@ regionmanager::fromfiletorecord(const std::string& filename,
 	itsRegMan->readImageFile( String(filename), String(regionname ) );
     return fromRecord( *leReg );
 }
+bool 
+regionmanager::tofile(const std::string& filename, const ::casac::record& region){
+    bool retval=false;
+    if ( !itsIsSetup )
+      setup();
+    *itsLog << LogOrigin("regionmanager", "fromfiletorecord");
+    try{
+      casa::Record* leRegion=toRecord(region);
+      //the string lolo below does not matter its being ignored it seems.
+      //may be it was meant for future use
+      retval=itsRegMan->writeImageFile(String(filename), "lolo", *leRegion);
+      if(leRegion)
+	delete leRegion;
+    } catch (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
 
+    return retval;
+
+  }
     
 bool
 regionmanager::fromglobaltotable(const std::string& tablename, const bool confirm, const bool verbose, const ::casac::variant& regionname, const ::casac::record& regions)

@@ -75,8 +75,6 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#include <fstream.h>
-#include <strstream>
 #include <images/Regions/WCBox.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>

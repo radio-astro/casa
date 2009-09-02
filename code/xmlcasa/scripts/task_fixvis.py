@@ -39,9 +39,20 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
             return
 
     if not refcode:   # measures must be told to use the one in vis.
-        tb.open(vis)
-        refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
-        tb.close()
+        # UVW is often mislabelled as ITRF when it is really J2000.
+        #refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
+
+        # Because of that bug, it is better to make UVW have the same frame as
+        # PHASE_DIR.  imager assumes that anyway.
+        try:
+            tb.open(vis + '/FIELD')
+            refcode = tb.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']
+            tb.close()
+        except Exception, instance:
+            casalog.post("*** Error \'%s\' getting the reference frame from PHASE_DIR of %s/FIELD." % (instance, vis),
+                         'SEVERE')
+            return
+            
 
     if outputvis != vis:
         try:

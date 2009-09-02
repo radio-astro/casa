@@ -52,7 +52,7 @@ class imager
 
     bool boxmask(const std::string& mask = "", const std::vector<int>& blc = ::casac::initialize_vector( 4, (int) 0, (int) 0, (int) 0, (int) 0 ), const std::vector<int>& trc = std::vector<int> (0), const double value = 1.0);
 
-    bool calcuvw(const std::vector<int>& fields = std::vector<int> (1, -1), const std::string& uvtype = "");
+    bool calcuvw(const std::vector<int>& fields = std::vector<int> (1, -1), const std::string& refcode = "");
 
     bool clean(const std::string& algorithm = "clark", const int niter = 1000, const double gain = 0.1, const ::casac::variant& threshold = ::casac::initialize_variant("0.0Jy"), const bool displayprogress = false, const std::vector<std::string>& model = std::vector<std::string> (1, ""), const std::vector<bool>& keepfixed = std::vector<bool> (1, false), const std::string& complist = "", const std::vector<std::string>& mask = std::vector<std::string> (1, ""), const std::vector<std::string>& image = std::vector<std::string> (1, ""), const std::vector<std::string>& residual = std::vector<std::string> (1, ""), const std::vector<std::string>& psfimage = std::vector<std::string> (1, ""), const bool interactive = false, const int npercycle = 100, const std::string& masktemplate = "", const bool async = false);
 

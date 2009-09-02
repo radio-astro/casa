@@ -280,10 +280,15 @@ mask.
        </description>
        <value>-1</value>
      </param>
-     <param type="string" name="uvtype">
+     <param type="string" name="refcode">
        <description>
-	 Reference code for the type of (u, v, w) coordinates to use in the output.
-	 '' = use the type in the input ms.
+         Reference frame to use for the generated (u, v, w)s.  WARNING: clean
+         and the im tool ignore the reference frame claimed by the UVW column
+         (it is often mislabelled as ITRF when it is really J2000) and instead
+         assume the (u, v, w)s are in the same frame as the phase tracking
+         center.  calcuvw does not yet force the UVW column and field centers to
+         use the same reference frame!  Blank = use the phase tracking frame of
+         vis.
        </description>
        <value></value>
      </param>
@@ -1323,11 +1328,11 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
 
      The effects include:
      \begin{itemize}
-       \item changing the phase tracking center(s),
-       \item correcting for differential aberration,
-       \item changing the equinox (i.e. B1950 to J2000 or 2006.78),
+       \item changing the phase tracking center(s),  (Not yet implemented)
+       \item correcting for differential aberration,  (Not yet implemented)
+       \item changing the equinox (i.e. B1950_VLA to J2000 or APP, etc.),
        \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-       \item refocusing.
+       \item refocusing.  (Not yet implemented)
      \end{itemize}
    </description>
    <input>
@@ -1347,8 +1352,13 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
      </param>
      <param type="string" direction="in" name="refcode">
        <description>
-	 Reference code for the type of (u, v, w) coordinates to use in the output.
-	 '' = use the type in the input ms.
+         Reference frame to use for the generated (u, v, w)s.  WARNING: clean
+         and the im tool ignore the reference frame claimed by the UVW column
+         (it is often mislabelled as ITRF when it is really J2000) and instead
+         assume the (u, v, w)s are in the same frame as the phase tracking
+         center.  calcuvw does not yet force the UVW column and field centers to
+         use the same reference frame!  Blank = use the phase tracking frame of
+         vis.
        </description>
        <value></value>
      </param>

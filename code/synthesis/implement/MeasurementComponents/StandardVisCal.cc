@@ -596,6 +596,7 @@ void TJonesCorruptor::initialize() {
 
 void TJonesCorruptor::initAtm() {
 
+#ifndef CASA_STANDALONE
   atm::Temperature  T( 270.0,"K" );   // Ground temperature
   atm::Pressure     P( 560.0,"mb");   // Ground Pressure
   atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (indication)
@@ -633,6 +634,7 @@ void TJonesCorruptor::initAtm() {
 
   //  itsSkyStatus = new atm::SkyStatus(*itsRIP);
 
+#endif
 }
 
 

@@ -31,7 +31,7 @@
 #include <display/QtViewer/QtViewerPrintGui.qo.h>
 #include <display/QtViewer/QtCanvasManager.qo.h>
 #include <display/QtViewer/QtRegionManager.qo.h>
-#include <display/QtViewer/QtAnnotatorGui.qo.h>
+#include <display/QtViewer/MakeMask.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
@@ -104,11 +104,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
                    dpMenu_->addAction(dpCloseAct_);
   
   tlMenu_        = menuBar()->addMenu("&Tools");
-   annotAct_     = tlMenu_->addAction("A&nnotations...");
-		   annotAct_->setEnabled(False);
-			// (disabled until it's working).
+   annotAct_     = tlMenu_->addAction("&File Box");
+   //annotAct_->setEnabled(False);
+
    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
    rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
+   rgnMgrAct_->setEnabled(False);
+
    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
   
   vwMenu_        = menuBar()->addMenu("&View");
@@ -733,16 +735,35 @@ void QtDisplayPanelGui::hideShapeManager() {
   if(qsm_==0) return;
   qsm_->hide();  }
 
-
     
 void QtDisplayPanelGui::showAnnotatorPanel() {
-  //if(qap_==0) qap_ = new QtAnnotatorGui(qdp_);
-  //qap_->showNormal();
-  //qap_->raise();
+
+  if (qap_ == 0) 
+     qap_ = new MakeMask(qdp_);
+
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged(String, String, String)),
+                   qap_, 
+                   SLOT(changeAxis(String, String, String)));
+        }
+      }
+  }
+  qap_->showNormal();
+  qap_->raise();  
+
 }
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
-  if(qap_==0) return;
+  if (qap_==0) 
+     return;
   qap_->hide();  
 }
 

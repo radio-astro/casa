@@ -130,6 +130,7 @@ private:
     QString fileName;
     QString position;
     QString yUnit;
+    QString yUnitPrefix;
 
     QString xpos;
     QString ypos;

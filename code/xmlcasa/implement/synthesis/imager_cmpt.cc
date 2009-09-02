@@ -1,4 +1,3 @@
-
 /***
  * Framework independent implementation file for imager...
  *
@@ -17,15 +16,15 @@
 #include <casa/Exceptions/Error.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/Utilities/FixVis.h>
-#include<casa/BasicSL/String.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
-#include<casa/Utilities/Assert.h>
-#include<measures/Measures/MDirection.h>
-#include<measures/Measures/MPosition.h>
-#include<measures/Measures/MeasureHolder.h>
+#include <casa/Utilities/Assert.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MeasTable.h>
-#include<casa/Quanta/QuantumHolder.h>
-#include<ms/MeasurementSets.h>
+#include <casa/Quanta/QuantumHolder.h>
+#include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
 #include <xmlcasa/synthesis/imager_cmpt.h>
 #include <xmlcasa/images/image_cmpt.h>
@@ -155,7 +154,9 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
     *itsLog << LogOrigin("im", "calcuvw");
     if(!itsMS->isWritable()){
       *itsLog << LogIO::SEVERE
-	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << "Please open im with a writable ms."
+              << " (i.e. use im.open(vis, usescratch=True) whether or not"
+              << "       you care about scratch columns)"
 	      << LogIO::POST;
       return false;
     }
@@ -487,7 +488,9 @@ bool imager::fixvis(const std::vector<int>& fields,
     *itsLog << LogOrigin("im", "fixvis");
     if(!itsMS->isWritable()){
       *itsLog << LogIO::SEVERE
-	      << "Please open im with a writable ms so the UVW column can be changed."
+	      << "Please open im with a writable ms."
+              << " (i.e. use im.open(vis, usescratch=True) whether or not"
+              << "       you care about scratch columns)"
 	      << LogIO::POST;
       return false;
     }

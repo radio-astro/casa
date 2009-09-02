@@ -138,7 +138,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     makeApproxPSFs(se);
   }
 
-  Bool converged=True;
+  Int converged=True;
+  Int converging=0;
+  
   // Validate PSFs for each field
   Vector<Float> psfmax(numberOfModels()); psfmax=0.0;
   Vector<Float> psfmin(numberOfModels()); psfmin=1.0;
@@ -203,6 +205,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     os << "*** Starting major cycle " << cycle+1 << LogIO::POST;
     cycle++;
 
+
     // Make the residual images. We do an incremental update
     // for cycles after the first one. If we have only one
     // model then we use convolutions to speed the processing
@@ -222,6 +225,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       }
     
     }
+    
+
     absmax=maxField(resmax, resmin);
 
     for (model=0;model<numberOfModels();model++) {
@@ -354,9 +359,18 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		  cleaner->stopPointMode(stopPointMode_p);
 		  cleaner->ignoreCenterBox(True);
-		  cleaner->clean( subDeltaImage, progress_p );
-		  
-		
+		  converging=cleaner->clean( subDeltaImage, progress_p );
+		  //diverging
+		  if(converging==-3)
+		    stop=True;
+		  if(converging==-2){
+		    if(userScaleSizes_p.nelements() > 1){
+		       userScaleSizes_p.resize(userScaleSizes_p.nelements()-1, True);
+		       cleaner->setscales(userScaleSizes_p); 
+		    }
+		    else
+		      stop=True;
+		  }
 		  iterations[model](chan)=cleaner->numberIterations();
 		  maxIterations=(iterations[model](chan)>maxIterations) ?
 		    iterations[model](chan) : maxIterations;
@@ -442,6 +456,10 @@ MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
 	 << " pixels" << LogIO::POST;
     }  
     cleaner.setscales(scaleSizes);   
+    //store the scales as user setscales..in case we need to reduce scales
+    userScaleSizes_p.resize();
+    userScaleSizes_p=scaleSizes;
+    method_p=USERVECTOR;
   }
 };
 

@@ -33,7 +33,7 @@
 	
 	</description>
 	<input>
-		<param type="string" name="infile">
+		<param type="string" name="infile" mustexist="true">
 			<description> (Optional)  Name of file to visualize.</description>
 			<value>.</value>
 		</param>

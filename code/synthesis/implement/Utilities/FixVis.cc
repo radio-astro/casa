@@ -148,9 +148,9 @@ void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
 // }
 
 
-void FixVis::convertPhaseDirs(const MDirection::Types outType)
+void FixVis::convertFieldDirs(const MDirection::Types outType)
 {
-  logSink() << LogOrigin("FixVis", "convertPhaseDirs");
+  logSink() << LogOrigin("FixVis", "convertFieldDirs");
 
   // Note that the each direction column in the FIELD table only allows one
   // reference frame for the entire column, but polynomials can be assigned on

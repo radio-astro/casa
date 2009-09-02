@@ -106,7 +106,8 @@ docs/% : $(DOCSAREA)/% ;
 $(DOCSAREA)/%.pdf : $(CODEDIR)/%.latex $(CODEDIR)/%.dir
 	-@ echo ""
 	 @ trap "cd $(AIPSROOT) ; $(RM) -r $(TMPDOCD)" 0 1 2 3 15 ; \
-	      cd $(DOCSAREA) && TEXINPUTS=.:$(<:latex=dir):$(TEXINPUTS) ; \
+	      cd $(DOCSAREA) ; \
+              TEXINPUTS=.:$(<:latex=dir):$(TEXINPUTS) ; \
 	      export TEXINPUTS ; \
 	      echo "$(PDFLATEX) $<" ; \
 	      echo "(1st pass, quiet)..." ; \

@@ -721,15 +721,18 @@ ICONS2LOCAL := $(AIPSARCH)/bin/redoicons.sh
 #
 TEXROOT        := $(TETEXROOT)/share/texmf
 TEXINPUTS      := $(TEXROOT)/tex//:$(TEXROOT)/pdftex//:$(TEXROOT)/tex4ht//
-TEXFONTS := $(TEXFONTS):$(TEXROOT)/fonts/tfm//:$(TEXROOT)/fonts/type1//:$(TEXROOT)/tex4ht/ht-fonts//
-TEXPKS         := $(TEXPKS):/var/tmp/texfonts/pk//:$(TEXROOT)/fontname//
+#
+# Commented out all these other to get pdfetex because they are not needed
+#
+#TEXFONTS := $(TEXFONTS):$(TEXROOT)/fonts/tfm//:$(TEXROOT)/fonts/type1//:$(TEXROOT)/tex4ht/ht-fonts//
+#TEXPKS         := $(TEXPKS):/var/tmp/texfonts/pk//:$(TEXROOT)/fontname//
 
-TEXFORMATS = $(TEXROOT)/web2c
-TEXPOOL    = $(TEXROOT)/web2c
+#TEXFORMATS = $(TEXROOT)/web2c
+#TEXPOOL    = $(TEXROOT)/web2c
 
-MFBASES    = $(TEXROOT)/web2c
-MFINPUTS   = $(TEXROOT)/metafont:$(TEXROOT)/fonts/source//
-MFPOOL     = $(TEXROOT)/web2c
+#MFBASES    = $(TEXROOT)/web2c
+#MFINPUTS   = $(TEXROOT)/metafont:$(TEXROOT)/fonts/source//
+#MFPOOL     = $(TEXROOT)/web2c
 
 # Variables which tell the makefiles what to do and how to do it
 #-----------------------------------------------------------------------------

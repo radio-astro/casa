@@ -283,6 +283,7 @@ traceEvent(1,"Entering imager::defaults",25);
   pointingDirCol_p="DIRECTION";
   logSink_p=LogSink(LogMessage::NORMAL, False);
   imwgt_p=VisImagingWeight();
+  smallScaleBias_p=0.6;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -356,6 +357,7 @@ Imager &Imager::operator=(const Imager & other)
   skyPosThreshold_p=other.skyPosThreshold_p;
   doTrackSource_p=other.doTrackSource_p;
   trackDir_p=other.trackDir_p;
+  smallScaleBias_p=other.smallScaleBias_p;
   if (mssel_p && this != &other) {
     *mssel_p = *(other.mssel_p);
   }

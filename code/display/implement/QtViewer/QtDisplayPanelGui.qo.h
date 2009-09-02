@@ -50,6 +50,7 @@ class QtViewerPrintGui;
 class QtMouseToolBar;
 class QtCanvasManager;
 class QtAnnotatorGui;
+class MakeMask;
 class QtProfile;
 class QtDisplayData;
 class TrackBox;
@@ -240,7 +241,8 @@ class QtDisplayPanelGui : public QMainWindow,
   QtDisplayPanel* qdp_;  	//# Central Widget this window operates.
   QtViewerPrintGui* qpm_;	//# Print dialog for this display panel.
   QtCanvasManager* qcm_;	//# display panel options window.
-  QtAnnotatorGui* qap_;
+  //QtAnnotatorGui* qap_;
+  MakeMask* qap_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
   

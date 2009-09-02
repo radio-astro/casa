@@ -13,14 +13,14 @@
 #ifndef _regionmanager_cmpt__H__
 #define _regionmanager_cmpt__H__
 
-// Include files
 #include <vector>
 #include <xmlcasa/casac.h>
 #include <xmlcasa/conversions.h>
 #include <xmlcasa/record.h>
 #include <xmlcasa/variant.h>
 #include <xmlcasa/images/regionmanager_forward.h>
-#include <images/Regions/ImageRegion.h>
+
+// put includes here
 
 namespace casac {
 
@@ -66,6 +66,8 @@ class regionmanager
     ::casac::record* extractsimpleregions(const ::casac::record& region = ::casac::initialize_record(""));
 
     ::casac::record* fromfiletorecord(const std::string& filename = "", const bool verbose = true, const std::string& regionname = "");
+
+    bool tofile(const std::string& filename = "", const ::casac::record& region = ::casac::initialize_record(""));
 
     bool fromglobaltotable(const std::string& tablename = "", const bool confirm = true, const bool verbose = true, const ::casac::variant& regionname = ::casac::initialize_variant(""), const ::casac::record& regions = ::casac::initialize_record(""));
 
