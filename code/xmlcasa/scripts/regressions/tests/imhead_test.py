@@ -1053,7 +1053,7 @@ def data():
 
 
 def doCopy():
-    return [1, 1 ]
+    return [1]
 
 def run():
     # To keep input files consistent we use some variables, but

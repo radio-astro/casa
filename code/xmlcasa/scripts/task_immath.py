@@ -225,6 +225,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     #
     # TODO add a size check to make sure all images are the
     # same size.  Is this
+    tmpfilenames=''
     if mode=='evalexpr':
 	tmpfilenames=_immath_parse( expr )
 	filenames=imagename

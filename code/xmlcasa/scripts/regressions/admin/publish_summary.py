@@ -577,8 +577,10 @@ class runTest:
                svnversion.find('casa') >= 0:  # or if an error happened but it didn't return non-zero
             return myf['casalog'].version()
 
-        return myf['casalog'].version() + \
-               ' r' + svnversion
+        # This didn't work in practise (getting the svnversion number from another process)
+        #return myf['casalog'].version() + \
+        #       ' r' + svnversion
+        return myf['casalog'].version()
 
     def create_log(self, product_file):
         filename = "%s/result-%s-%s.txt" % \

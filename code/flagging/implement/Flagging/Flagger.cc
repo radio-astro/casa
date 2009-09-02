@@ -195,7 +195,6 @@ namespace casa {
   // -----------------------------------------------------------------------
   bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
   {
-    
     nant = 0;
     setdata_p = False;
     selectdata_p = False;
@@ -222,8 +221,9 @@ namespace casa {
     bsort[0] = MS::FIELD_ID;
     bsort[1] = MS::DATA_DESC_ID;
     bsort[2] = MS::TIME;
-    
-    vs_p = new VisSet(mset,bsort,noselection,0.0);
+
+    Bool addScratch = False;
+    vs_p = new VisSet(mset, bsort, noselection, addScratch, 0.0);
     vs_p->resetVisIter(bsort, 0.0);
     
     // extract various interesting info from the MS
@@ -237,6 +237,7 @@ namespace casa {
     Vector<uInt> index,uniq;
     sort.sort(index,time.nelements());
     ntime = sort.unique(uniq,index);
+
     // obtain central frequencies of spws.
     const MSSpectralWindow spwin( ms.spectralWindow() );
     ROScalarColumn<Double> sfreqs(spwin, "REF_FREQUENCY");
@@ -258,13 +259,14 @@ namespace casa {
     ifr2ant1.set(-1);
     ifr2ant2.resize(nifr);
     ifr2ant2.set(-1);
-    for( uInt i1=0; i1<nant; i1++ )
-      for( uInt i2=0; i2<=i1; i2++ )
-	{
-	  uInt ifr = ifrNumber(i1,i2);
-	  ifr2ant1(ifr) = i1;
-	  ifr2ant2(ifr) = i2;
-	}
+    for( uInt i1=0; i1<nant; i1++ ) {
+      for( uInt i2=0; i2<=i1; i2++ ) {
+        uInt ifr = ifrNumber(i1,i2);
+        ifr2ant1(ifr) = i1;
+        ifr2ant2(ifr) = i2;
+      }
+    }
+
     // get feed info
     const MSFeed msfeed( ms.feed() );
     nfeed = msfeed.nrow();
@@ -273,7 +275,7 @@ namespace casa {
     sprintf(str,"attached MS %s: %d rows, %d times, %d baselines\n",ms.tableName().chars(),nrows,ntime,nifr);
     //os << "--------------------------------------------------" << LogIO::POST;
     os<<str<<LogIO::POST;
-    
+   
     return True;
   }    
   
@@ -509,7 +511,9 @@ namespace casa {
 	    throw AipsError("No measurement set selection available");
 	//vs_p = new VisSet(*mssel_p,sort,noselection,0.0);
 	
-	vs_p = new VisSet(*mssel_p,sort2,noselection,timeInterval);
+        Bool addScratch = False;
+	vs_p = new VisSet(*mssel_p, sort2, noselection, 
+                          addScratch, timeInterval);
 	// Use default sort order - and no scratch cols....
 	//vs_p = new VisSet(*mssel_p,noselection,0.0);
       }
@@ -760,6 +764,7 @@ namespace casa {
             << " quackmode=" << quackmode
             << " quackincrement=" << quackincrement
             << " opmode=" << opmode
+            << " diameter=" << diameter
             << endl;
 
     LogIO os(LogOrigin("Flagger", "setmanualflags()", WHERE));

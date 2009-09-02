@@ -395,6 +395,17 @@ KLUDGEASDMINCD += $(AIPSROOT)/code/include/alma/ASDM
 KLUDGEASDMDEFS := -DWITHOUT_ACS
 KLUDGEASDMLIB :=
 
+OLDKLUDGEASDMROOT := $(AIPSROOT)/code/oldalma/implement/asdm
+#KLUDGEASDMINCD := $(AIPSROOT)/code/include/alma/asdm
+OLDKLUDGEASDMINCD := $(AIPSROOT)/code/include/oldalma/Enumtcl
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/Enumerations
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDMBinaries
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDM2MSFiller
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDM
+
+OLDKLUDGEASDMDEFS := -DWITHOUT_ACS
+OLDKLUDGEASDMLIB :=
+
 #XML2 needed by the asdm2MS filler.
 
 XML2ROOT := /usr
@@ -453,6 +464,7 @@ XLIBLIST_shared_plotms      := CORE QT4 XERCES LAPACK F77 PGPLOT X11 CFITSIO
 XLIBLIST_shared_casaqt      := CORE QT4 XERCES C++DBUS
 XLIBLIST_shared_display := QT4 CORE CFITSIO ATM X11 MIRLIB WCSLIB LAPACK F77
 XLIBLIST_shared_alma  := $(XLIBLIST_shared_display)
+XLIBLIST_shared_oldalma  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_atnf  := CORE RPFITS MIRLIB WCSLIB CFITSIO LAPACK F77
 XLIBLIST_shared_nfra  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_nrao  := $(XLIBLIST_shared_synthesis)
@@ -626,6 +638,7 @@ LIBcontrib    = defeat defeat defeat defeat defeat defeat
 LIBdisplay    = defeat shatic defeat defeat defeat defeat
 #                                                          Consortia
 LIBalma       = defeat shatic defeat defeat defeat defeat
+LIBoldalma    = defeat shatic defeat defeat defeat defeat
 LIBatnf       = defeat shatic defeat defeat defeat defeat
 LIBbima       = defeat defeat defeat defeat defeat defeat
 LIBhia        = defeat defeat defeat defeat defeat defeat
@@ -667,6 +680,7 @@ LINKcontrib   := contrib vlbi synthesis dish aips
 LINKdisplay   := display graphics $(LINKsynthesis)
 
 LINKalma      := alma $(LINKsynthesis) display
+LINKoldalma   := oldalma $(LINKsynthesis) display
 LINKbima      := bima $(LINKsynthesis)
 LINKhia       := hia  $(LINKsynthesis)
 LINKjive      := jive $(LINKsynthesis)
@@ -765,7 +779,7 @@ CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis plotms
 AUXILIARY := casaqt display plotms casadbus
 
 # What consortium packages to build (atnf bima hia nfra nral nrao tifr).
-CONSORTIA := nrao atnf alma xmlcasa 
+CONSORTIA := nrao atnf alma oldalma xmlcasa 
 
 DOXYPACKAGES := $(PACKAGES) $(AUXILIARY) $(CONSORTIA)
 
@@ -1210,6 +1224,7 @@ export LIBdisplay   := $(LIBdisplay)
 export LIBvlbi      := $(LIBvlbi)
 export LIBcontrib   := $(LIBcontrib)
 export LIBalma      := $(LIBalma)
+export LIBoldalma   := $(LIBoldalma)
 export LIBatnf      := $(LIBatnf)
 export LIBbima      := $(LIBbima)
 export LIBhia       := $(LIBhia)

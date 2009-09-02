@@ -105,7 +105,8 @@ class SFIReducer:
         self._log['logTool'] = self._logTool.create()
         self._log['logTool'].origin('sfiReducer')
         if len(tasks) == 0:
-            self._log['logTool'].setglobal(True)
+            #self._log['logTool'].setglobal(True)
+            pass
 
 # open the html log
 
@@ -257,7 +258,7 @@ class SFIReducer:
                 self._html.logHTML('<font color="red">Failed</font>')
 
 
-    def reduce(self, start=None, source=[], flux=[], gain=[], bandpass=[]):
+    def reduce(self, start=None, source="-1", flux="-1", gain="-1", bandpass="-1"):
         """Method to reduce the MeasurementSet.
 
         Keyword arguments:
