@@ -145,8 +145,10 @@ namespace casa {
        ** Routines for reading/writing regions                     **
        **************************************************************/
 
-      //Reading of a file containing an ImageRegion
+      //Reading of a file containing an ImageRegion in the AipsIO format dump
       Record* readImageFile( String filename, String regionname );
+      //Writing a file of the AipsIO dump of the record representation of the region
+      Bool writeImageFile(const String& file, const String& regionname, const Record& regionRecord);
 
       
       //save region into a table (image, blank table or any other such)

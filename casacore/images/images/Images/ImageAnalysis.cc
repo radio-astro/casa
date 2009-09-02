@@ -2355,32 +2355,9 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 	return pResid;
 }
 
-Record ImageAnalysis::fitsky(Array<Float>& residPixels, Array<Bool>& residMask,
-		Bool& converged, Record& Region, const Int& chan,
-		const String& stokesString, const String& mask,
-		const Vector<String>& models, Record& Estimate,
-		const Vector<String>& fixed, const Vector<Float>& includepix,
-		const Vector<Float>& excludepix, const Bool fitIt,
-		const Bool deconvolveIt, const Bool list) {
-
-	ComponentList cl;
-	fitsky(residPixels, residMask, cl, converged, Region, chan, stokesString,
-			mask, models, Estimate, fixed, includepix, excludepix, fitIt,
-			deconvolveIt, list);
-
-	Record outrec;
-	String error;
-	if (!cl.toRecord(error, outrec)) {
-		*itsLog << "Failed to generate output record from result. " << error
-				<< LogIO::POST;
-	}
-
-	return outrec;
-}
-
-void ImageAnalysis::fitsky(
+ComponentList ImageAnalysis::fitsky(
     Array<Float>& residPixels, Array<Bool>& residMask,
-    ComponentList& cl, Bool& converged, Record& Region, const uInt& chan,
+    Bool& converged, Record& Region, const uInt& chan,
 	const String& stokesString, const String& mask,
 	const Vector<String>& models, Record& Estimate,
 	const Vector<String>& fixed, const Vector<Float>& includepix,
@@ -2584,7 +2561,8 @@ void ImageAnalysis::fitsky(
 	// Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
-	if (!fitIt) {
+    ComponentList cl;
+    if (!fitIt) {
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
 				maskedPixels, minVal, maxVal, minPos, maxPos, stokes, subImage,
@@ -2597,7 +2575,7 @@ void ImageAnalysis::fitsky(
 				convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 				deconvolveIt);
 		cl.add(result(0));
-		return;
+		return cl;
 	}
 
 	// For ease of use, make each model have a mask string
@@ -2691,7 +2669,7 @@ void ImageAnalysis::fitsky(
 	} else {
 		converged = False;
 		*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
-		return;
+		return cl;
 	}
 
 	// Compute residuals
@@ -2712,7 +2690,7 @@ void ImageAnalysis::fitsky(
 		cl.add(result(i));
 	}
 
-	return;
+	return cl;
 
 }
 
