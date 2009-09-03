@@ -149,11 +149,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
 
-    // Only bother to get chan & corr selection if row selection ok
-    if (rstat) {
-      mss->getChanSlices(chanSlices,&ms);
-      mss->getCorrSlices(corrSlices,&ms);
-    }
+    // Get in-row selection info
+    mss->getChanSlices(chanSlices,&ms);
+    mss->getCorrSlices(corrSlices,&ms);
 
     delete mss;
     return rstat;
