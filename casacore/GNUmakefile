@@ -56,7 +56,7 @@ os := $(shell uname | tr 'A-Z' 'a-z')
 arch := $(shell uname -p)
 
 ifeq "$(CFLAGS)" ""
-CFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW
+CFLAGS := $(OPT) -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT
 ifeq "$(os)" "linux"
 ifeq "$(arch)" "x86_64"
 CFLAGS += -m64
@@ -138,14 +138,6 @@ FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 ifeq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
 FC_LIB := -lgfortran
-endif
-
-
-ifeq "$(FC)" ""
-allsys: 
-	@echo "error could not find fortran compiler; please set the 'FC', GNUmakefile variable"
-else
-allsys: cleandep_recurse_allsys images msfits
 endif
 
 ifneq "$(ARCH)" ""
@@ -608,6 +600,17 @@ $(BINDIR)/% : measures/apps/measuresdata/%.cc
 %.o : $$(shell echo $$< | perl -pe "s|(.*?)/$(ARCH)/(\w+).o|\$$$$1/\$$$$2.f|")
 	@if test ! -d $(dir $@); then mkdir $(dir $@); fi
 	$(FC) $(FFLAGS) -fPIC $(COREINC) $(INC) -c $< -o $@
+
+ifeq "$(FC)" ""
+allsys: 
+	@echo "error could not find fortran compiler; please set the 'FC', GNUmakefile variable"
+else
+ifeq "$(ONELIB)" "1"
+allsys: libcasacore
+else
+allsys: cleandep_recurse_allsys images msfits
+endif
+endif
 
 ##
 ###  libcasacore
