@@ -83,6 +83,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
+#include <images/Images/ImageProperties.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -2365,36 +2366,10 @@ ComponentList ImageAnalysis::fitsky(
 	const Bool deconvolveIt, const Bool list
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-    Bool pa = pImage_p->hasPolarizationAxis();
 	String error;
-    String imagename = pImage_p->name();
-    if (pImage_p->hasPolarizationAxis() && pImage_p->hasSpectralAxis()) {
-        if (! pImage_p->areChannelAndStokesValid(error, chan, stokesString)) {
-            throw(AipsError(error, __FILE__, __LINE__));
-	    }
-    }
-    if (! pImage_p->hasPolarizationAxis()) {
-        *itsLog << LogIO::WARN << imagename 
-            << " has no polarization axis, ignoring stokes parameter."
-            << LogIO::POST;
-    }
-    else if ( ! pImage_p->isStokesValid(stokesString)) {
-        *itsLog << "Specified stokes "<< stokesString
-            << " is not valid in " << imagename << ". "
-            << LogIO::EXCEPTION; 
-    }
-    if (! pImage_p->hasSpectralAxis()) {
-        *itsLog << LogIO::WARN << imagename 
-            << " has no spectral axis, ignoring chan parameter."
-            << LogIO::POST;
-    }
-    else if (! pImage_p->isChannelNumberValid(chan)) {
-        *itsLog << "Specified 0-based channel number "<< chan
-            << " is not valid. " << imagename << " has only "
-            << pImage_p->nChannels() << "." << LogIO::EXCEPTION; 
-    }
-	Vector<SkyComponent> estimate;
 
+	Vector<SkyComponent> estimate;
+    
 	ComponentList compList;
 	if (!compList.fromRecord(error, Estimate)) {
 		*itsLog << LogIO::WARN
@@ -2409,11 +2384,9 @@ ComponentList ImageAnalysis::fitsky(
 	}
 
 	converged = False;
-	//
 	const uInt nModels = models.nelements();
 	const uInt nMasks = fixed.nelements();
 	const uInt nEstimates = estimate.nelements();
-	//
 	if (nModels == 0) {
 		*itsLog << "You have not specified any models" << LogIO::EXCEPTION;
 	}
@@ -2442,11 +2415,9 @@ ComponentList ImageAnalysis::fitsky(
 		*itsLog << "You cannot give both an include and an exclude pixel range"
 				<< LogIO::EXCEPTION;
 	}
-	const CoordinateSystem &cSys1 = pImage_p->coordinates();
 
     IPosition imShape = pImage_p->shape();
-
-	// pass in a Vector here
+    // pass in a Vector here
 	Vector<Int> tmpVector = imShape.asVector();
 	tmpVector.set(0);
 	IPosition startPos(tmpVector);
@@ -2456,50 +2427,50 @@ ComponentList ImageAnalysis::fitsky(
 	tmpVector.set(1);
 	IPosition stride(tmpVector);
 
-    if (pImage_p->hasSpectralAxis()) {
-        Int specIndex = cSys1.findCoordinate(Coordinate::SPECTRAL);
-        Vector<Int> specPixIdx = cSys1.pixelAxes(specIndex);
-        uInt spectralAxisNumber = pImage_p->spectralAxisNumber();
+    ImageProperties imProps(*pImage_p);
+    if (imProps.hasSpectralAxis()) {
+        uInt spectralAxisNumber = imProps.spectralAxisNumber();
 	    startPos[spectralAxisNumber] = chan;
 	    endPos[spectralAxisNumber] = chan;
     }
-	// TODO: check that chan passed in is within bounds
+    if (imProps.hasPolarizationAxis()) {
+        uInt stokesAxisNumber = imProps.polarizationAxisNumber();
+	    startPos[stokesAxisNumber] = imProps.stokesPixelNumber(stokesString);
+	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
+    }
 
-	// TODO: check if image has stokes axis, if not bypass this doing the
-	// correct thing afterward
-
-	// TODO if just direction axes in images, bypass all this and go directly to
-	// fitting.
-
-	uInt stokesCoordinateNumber = pImage_p->polarizationCoordinateNumber();
-    uInt stokesAxisNumber = pImage_p->polarizationAxisNumber();
-
-
-	startPos[stokesAxisNumber] = pImage_p->stokesPixelNumber(stokesString);
-	endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
-	Slicer sl(startPos, endPos, stride, Slicer::endIsLast);
-	SubImage<Float> subImageTmp(*pImage_p, sl, False);
+    Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
+	SubImage<Float> subImageTmp(*pImage_p, slice, False);
 
 	// Convert region from Glish record to ImageRegion. Convert mask
 	// to ImageRegion and make SubImage.  Drop degenerate axes.
 	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
+
+    ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
+
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
 			subImageTmp, *(tweakedRegionRecord(&Region)), mask, list, *itsLog,
 			False, axesSpec);
+
+    ostringstream oss;
+    Region.print(oss);
+
 	delete pRegionRegion;
 	delete pMaskRegion;
 
-	// Make sure the region is 2D and that it holds the sky.  Exception if not.
+    // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
-	//Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
+	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
-	Bool xIsLong = CoordinateUtil::isSky(*itsLog, subImage.coordinates());
+	//Bool xIsLong = CoordinateUtil::isSky(*itsLog, subImage.coordinates());
 	// Get 2D pixels and mask
+
 	Array<Float> pixels = subImage.get(True);
 	IPosition shape = pixels.shape();
+
 	residMask.resize(IPosition(0));
+
 	residMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
@@ -2515,7 +2486,7 @@ ComponentList ImageAnalysis::fitsky(
 	// Create fitter
 	Fit2D fitter(*itsLog);
 
-	// Set pixel range depending on Stokes type and min/max
+    // Set pixel range depending on Stokes type and min/max
 	if (!doInclude && !doExclude) {
 		if (stokes == Stokes::I) {
 			if (abs(maxVal) >= abs(minVal)) {
