@@ -334,6 +334,8 @@ protected:
   Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
   Vector<Float> imageFreq_p;
+  //Vector of float lsrfreq needed for regridding
+  Vector<Double> lsrFreq_p;
   Vector<Double> interpVisFreq_p;
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
   String pointingDirCol_p;

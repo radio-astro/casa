@@ -79,7 +79,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), pointingDirCol_p("DIRECTION")
 {
+
+
+  spectralCoord_p=SpectralCoordinate();
+
 }
+
 
 LogIO& FTMachine::logIO() {return logIO_p;};
 
@@ -328,9 +333,8 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 					     FTMachine::Type type){
 
     Cube<Complex> origdata;
-    Vector<Float> visFreq(vb.frequency().nelements());
-
-    convertArray(visFreq, vb.frequency());
+    Vector<Float> visFreq(lsrFreq_p.nelements());
+    convertArray(visFreq, lsrFreq_p);
 
     if(type==FTMachine::MODEL){
       origdata.reference(vb.modelVisCube());
@@ -357,7 +361,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flags(vb.flagCube())=True;
       weight.reference(wt);
       interpVisFreq_p.resize();
-      interpVisFreq_p=vb.frequency();
+      interpVisFreq_p=lsrFreq_p;
       return False;
     }
 
@@ -401,9 +405,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
       Int channum=0;
       Float step=imageFreq_p[1]-imageFreq_p[0];
-      Float origstep=visFreq[1]-visFreq[0];
+      Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
       while (!iter.pastEnd()){
-	Int closest=Int((imageFreq_p[channum]+step-visFreq[0])/origstep);
+	Int closest=Int((imageFreq_p[channum]+step-lsrFreq_p[0])/origstep);
 	//if(closest <0) closest=0;	
 	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
@@ -488,9 +492,9 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 					     FTMachine::Type type){
 
     Cube<Complex> *origdata;
-    Vector<Float> visFreq(vb.frequency().nelements());
+    Vector<Float> visFreq(lsrFreq_p.nelements());
 
-    convertArray(visFreq, vb.frequency());
+    convertArray(visFreq, lsrFreq_p);
 
     if(type==FTMachine::MODEL){
       origdata=&(vb.modelVisCube());
@@ -918,18 +922,18 @@ Bool FTMachine::matchChannel(const Int& spw,
   chanMap.resize(nvischan);
   chanMap.set(-1);
   Vector<Double> lsrFreq(0);
-  Bool convert=False;
+  Bool condoo=False;
  
-
   if(freqFrameValid_p){
-    vb.lsrFrequency(spw, lsrFreq, convert);
-    doConversion_p[spw]=convert;
+    vb.lsrFrequency(spw, lsrFreq, condoo);
+    doConversion_p[spw]=condoo;
   }
   else{
     lsrFreq=vb.lsrFrequency();
   }
+  lsrFreq_p.resize(lsrFreq.nelements());
+  lsrFreq_p=lsrFreq;
   
-
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
