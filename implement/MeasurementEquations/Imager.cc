@@ -279,7 +279,7 @@ traceEvent(1,"Entering imager::defaults",25);
   useModelCol_p=False;
   freqFrameValid_p=False;
   doTrackSource_p=False;
-  freqInterpMethod_p="linear";
+  freqInterpMethod_p="nearest";
   pointingDirCol_p="DIRECTION";
   logSink_p=LogSink(LogMessage::NORMAL, False);
   imwgt_p=VisImagingWeight();
