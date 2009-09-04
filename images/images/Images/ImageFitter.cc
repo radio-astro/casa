@@ -108,7 +108,7 @@ namespace casa {
         );   
 
         Flux<Double> flux;
-        for(Int k=0; k<compList.nelements(); ++k) {
+        for(uInt k=0; k<compList.nelements(); ++k) {
             SkyComponent skyComp = compList.component(k);
             flux = skyComp.flux();
             cout << "flux val " << flux.value(Stokes::I) << endl;
@@ -258,7 +258,7 @@ namespace casa {
         Vector<Double> blc(imShape.nelements());
         Vector<Double> trc(imShape.nelements());
 
-        for (Int i=0; i<imShape.nelements(); ++i) {
+        for (uInt i=0; i<imShape.nelements(); ++i) {
             blc[i] = 0;
             trc[i] = imShape[i] - 1;
         }
