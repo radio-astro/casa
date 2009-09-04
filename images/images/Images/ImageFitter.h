@@ -28,7 +28,7 @@
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
 
-#include <casa/casa/Logging/LogIO.h>
+#include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/PagedImage.h>
 #include <casa/namespace.h>
