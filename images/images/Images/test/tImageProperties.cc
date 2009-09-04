@@ -26,54 +26,33 @@
 //# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <images/Images/ImageProperties.h>
-#include <images/Images/PagedImage.h>
-/*
-#include <images/Images/ImageInfo.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
-
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Quanta/QLogical.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/iostream.h>
-#include <casa/stdlib.h>
-*/
+#include <images/Images/FITSImage.h>
 #include <casa/OS/Path.h>
 #include <casa/namespace.h>
 
 
 int main(Int argc, char *argv[]) {
   try {
+    // just to eliminate compiler warning about argc not being used
+    if (argc > 1) {
+        cerr << "WARNING: This test takes no command line options, "
+            << "so the options you specified will be ignored" << endl;
+    }
+
     Path path(argv[0]);
     String dir = path.dirName();
-    PagedImage<Float> fourAxesImage(
-        dir + "/fixtures/tImageProperties/ngc5921.clean.subimage"
+    FITSImage fourAxesImage(
+        dir + "/fixtures/tImageProperties/ngc5921.clean.fits"
     );
-    PagedImage<Float> twoAxesImage(
-        dir + "/fixtures/tImageProperties/ngc5921.clean.no_freq.no_stokes.subim"
+    FITSImage twoAxesImage(
+        dir + "/fixtures/tImageProperties/ngc5921.clean.no_freq.no_stokes.fits"
     );
    
     ImageProperties fourAxesImageProps(fourAxesImage);
     ImageProperties twoAxesImageProps(twoAxesImage);
     {
-        AlwaysAssert(fourAxesImageProps.spectralAxisNumber() == 3, AipsError);
+        // 3 in the casa format image, but 2 in the FITS image
+        AlwaysAssert(fourAxesImageProps.spectralAxisNumber() == 2, AipsError);
         AlwaysAssert(twoAxesImageProps.spectralAxisNumber() == -1, AipsError);
     }
 
