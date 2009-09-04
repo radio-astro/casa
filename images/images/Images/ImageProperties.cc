@@ -42,8 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     Bool ImageProperties::hasSpectralAxis() const {
-        uInt spectralCoordNum = spectralCoordinateNumber();
-        return (spectralCoordNum >= 0 && spectralCoordNum < itsCoordinates.nCoordinates());
+        Int spectralCoordNum = spectralCoordinateNumber();
+        return (spectralCoordNum >= 0 && spectralCoordNum < (Int)itsCoordinates.nCoordinates());
     } 
 
     Int ImageProperties::spectralAxisNumber() const {
@@ -74,10 +74,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     Bool ImageProperties::hasPolarizationAxis() const {
-        uInt polarizationCoordNum = polarizationCoordinateNumber();
+        Int polarizationCoordNum = polarizationCoordinateNumber();
         return (
             polarizationCoordNum >= 0 
-            && polarizationCoordNum < itsCoordinates.nCoordinates()
+            && polarizationCoordNum < (Int)itsCoordinates.nCoordinates()
         );
     } 
 
@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         StokesCoordinate stokesCoord = itsCoordinates.stokesCoordinate(polCoordNum);
         Int stokesPix;
         stokesCoord.toPixel(stokesPix, Stokes::type(stokesString));
-        if (stokesPix < 0 || stokesPix >= nStokes()) {
+        if (stokesPix < 0 || stokesPix >= (Int)nStokes()) {
             return -1;
         }
         return stokesPix;
@@ -114,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             return False;
         }
         Int stokesPixNum = stokesPixelNumber(stokesString);
-        return stokesPixNum >= 0 && stokesPixNum < nStokes(); 
+        return stokesPixNum >= 0 && stokesPixNum < (Int)nStokes(); 
     }
 
     Int ImageProperties::directionCoordinateNumber() const {
@@ -123,10 +123,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     Bool ImageProperties::hasDirectionCoordinate() const {
-        uInt directionCoordNum = directionCoordinateNumber();
+        Int directionCoordNum = directionCoordinateNumber();
         return (
             directionCoordNum >= 0 
-            && directionCoordNum < itsCoordinates.nCoordinates()
+            && directionCoordNum < (Int)itsCoordinates.nCoordinates()
         );
     } 
 
