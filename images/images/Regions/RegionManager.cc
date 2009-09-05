@@ -32,7 +32,9 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/LCSlicer.h>
 #include <lattices/Lattices/RegionType.h>
@@ -71,6 +73,8 @@ namespace casa { //# name space casa begins
   {
     if(itsLog !=0)
       delete itsLog;
+    if(itsCSys != 0)
+      delete itsCSys;
 
   }
 
@@ -99,7 +103,9 @@ namespace casa { //# name space casa begins
   void RegionManager::setcoordsys(const CoordinateSystem& csys){
     itsCSys= new CoordinateSystem(csys);
   }
-
+  const CoordinateSystem& RegionManager::getcoordsys() const{
+    return *itsCSys;
+  }
   bool RegionManager::isPixelRegion(const ImageRegion& reg ){
       *itsLog << LogOrigin("RegionManager", "isPixelRegion");
 
@@ -225,6 +231,73 @@ namespace casa { //# name space casa begins
     return leRecord;
 
 
+
+  }
+  void RegionManager::toQuantity(Quantity& out, const String& in){
+    String leString=in;
+    QuantumHolder qh;
+    if(leString.contains("pix")){
+      leString=leString.before("pix");
+      Double value=atof(leString.chars());
+      out=Quantity(value, "pix");
+    }
+    else{
+      String error; 
+      if(!qh.fromString(error, leString)){
+	ostringstream oss;
+	String err="Error " + error + " In converting quantity " + leString;
+	throw( AipsError(err));
+      }
+      out=qh.asQuantity();
+    }
+
+  }
+  Record* RegionManager::wbox(const Vector<String>& blc, 
+			      const Vector<String>& trc, 
+			      const Vector<Int>& pixelaxes,  
+			      const String& absrel, const String& comment){
+
+    Vector<Quantity> losBlc(blc.nelements());
+    Vector<Quantity> losTrc(trc.nelements());
+    QuantumHolder qh;
+    //Stokes is not known in Quantity
+    Int stInd = itsCSys->findCoordinate(Coordinate::STOKES);
+    StokesCoordinate  stCoord(Vector<Int>(1, Stokes::I));
+    Int wSt=-1;
+    if(stInd>=0){
+     wSt= (itsCSys->worldAxes(stInd))[0];
+     stCoord=itsCSys->stokesCoordinate(stInd);
+    }
+    for (Int k=0; k < blc.shape()(0); ++k){
+      if(k != wSt){
+	toQuantity(losBlc[k], blc[k]);
+	toQuantity(losTrc[k], trc[k]);
+      }
+      else{
+	//Stokes is not known in Quantity...have to convert them to pix
+	Int stpix=-1;
+	if(blc[k].contains("pix"))
+	  toQuantity(losBlc[k], blc[k]);
+	else if(stCoord.toPixel(stpix, Stokes::type(blc[k])))
+	  losBlc[k]=Quantity(stpix, "pix");
+	stpix=-1;
+	if(trc[k].contains("pix"))
+	  toQuantity(losTrc[k], trc[k]);
+	else if(stCoord.toPixel(stpix, Stokes::type(trc[k])))
+	  losTrc[k]=Quantity(stpix, "pix");
+      }
+    }
+
+    return wbox(losBlc, losTrc, pixelaxes, absrel, comment);
+
+  }
+
+  Record* RegionManager::wbox(const Vector<String>& blc, 
+			      const Vector<String>& trc, 
+			      const Vector<Int>& pixelaxes, const CoordinateSystem& csys,  
+			      const String& absrel, const String& comment){
+    setcoordsys(csys);    
+    return wbox(blc, trc, pixelaxes, absrel, comment);
 
   }
 
